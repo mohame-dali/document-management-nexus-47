@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { PlusCircle, LayoutGrid, LayoutList, Search, Calendar, Send, Clock, Users, Building } from 'lucide-react';
+import { PlusCircle, LayoutGrid, LayoutList, Search, Calendar, Send, Clock, Users, Building, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,11 +17,13 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 
-import { getOutgoingDocuments } from '@/services/documentService';
 import { getDepartments } from '@/services/departmentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { OutgoingDocument } from '@/types';
 import DocumentDataGrid from '@/components/documents/DocumentDataGrid';
+import { useInfiniteDocuments } from '@/hooks/useInfiniteDocuments';
+import { useYearPersistence } from '@/hooks/useYearPersistence';
+import { useQuery } from '@tanstack/react-query';
 
 const translations = {
   title: 'الوثائق الصادرة',
@@ -40,7 +41,9 @@ const translations = {
   source: 'المصدر',
   viewDetails: 'عرض التفاصيل',
   loading: 'جاري التحميل...',
-  error: 'حدث خطأ أثناء تحميل المستندات'
+  error: 'حدث خطأ أثناء تحميل المستندات',
+  loadingMore: 'تحميل المزيد...',
+  noMoreDocuments: 'لا توجد مستندات إضافية'
 };
 
 const OutgoingDocumentsPage: React.FC = () => {
@@ -50,8 +53,10 @@ const OutgoingDocumentsPage: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  
+  // Use year persistence hook
+  const { selectedYear, handleYearChange, isValidYear } = useYearPersistence('outgoingDocumentsSelectedYear');
 
   // AdminTuningDesk can now add documents (along with Admin)
   const canAddDocuments = currentUser?.role === 'Admin' || currentUser?.role === 'AdminTuningDesk';
@@ -63,48 +68,47 @@ const OutgoingDocumentsPage: React.FC = () => {
     enabled: currentUser?.role === 'AdminTuningDesk'
   });
 
-  // Only fetch documents when year has 4 digits
-  const shouldFetchDocuments = selectedYear.length === 4 && /^\d{4}$/.test(selectedYear);
-
-  // Fetch outgoing documents with filters
-  const { data: outgoingDocuments, isLoading, error } = useQuery({
-    queryKey: ['outgoingDocuments', selectedYear, selectedDepartment],
-    queryFn: () => getOutgoingDocuments({
-      year: selectedYear,
-      department: selectedDepartment === 'all' ? undefined : selectedDepartment
-    }),
-    enabled: shouldFetchDocuments,
-    refetchOnWindowFocus: true,
-    staleTime: 1000 * 30, // 30 seconds
-    meta: {
-      onError: (error: Error) => {
-        toast.error(translations.error);
-        console.error('Error fetching outgoing documents:', error);
-      }
-    }
+  // Use infinite scrolling hook
+  const {
+    documents,
+    totalCount,
+    isLoading,
+    isError,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    lastDocumentElementRef,
+    refetch
+  } = useInfiniteDocuments({
+    documentType: 'outgoing',
+    year: selectedYear,
+    department: selectedDepartment,
+    enabled: isValidYear
   });
 
   // Auto-refresh when user returns to this page
   React.useEffect(() => {
     const handleFocus = () => {
-      if (shouldFetchDocuments) {
-        queryClient.invalidateQueries({ queryKey: ['outgoingDocuments'] });
+      if (isValidYear) {
+        refetch();
       }
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [queryClient, shouldFetchDocuments]);
+  }, [refetch, isValidYear]);
 
   // Filter documents based on search query
-  const filteredDocuments = outgoingDocuments?.filter((doc: OutgoingDocument) => {
-    const matchesSearch = 
-      String(doc.serialNumber).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (doc.source?.name && doc.source.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredDocuments = useMemo(() => {
+    return documents.filter((doc: OutgoingDocument) => {
+      const matchesSearch = 
+        String(doc.serialNumber).toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (doc.source?.name && doc.source.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    return matchesSearch;
-  }) || [];
+      return matchesSearch;
+    });
+  }, [documents, searchQuery]);
 
   const handleAddDocument = () => {
     navigate('/dashboard/outgoing-documents/create');
@@ -114,21 +118,13 @@ const OutgoingDocumentsPage: React.FC = () => {
     navigate(`/dashboard/outgoing-documents/${id}`);
   };
 
-  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Allow empty value or valid 4-digit years
-    if (value === '' || /^\d{1,4}$/.test(value)) {
-      setSelectedYear(value);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ar-SA');
   };
 
   // Show loading only when actually fetching
-  if (isLoading && shouldFetchDocuments) {
+  if (isLoading && isValidYear) {
     return (
       <div className="container mx-auto p-4 space-y-6" dir="rtl">
         <div className="flex items-center justify-between">
@@ -156,7 +152,7 @@ const OutgoingDocumentsPage: React.FC = () => {
     );
   }
 
-  if (error && shouldFetchDocuments) {
+  if (isError && isValidYear) {
     return (
       <div className="container mx-auto p-4" dir="rtl">
         <div className="bg-red-50 border border-red-200 text-red-800 p-6 rounded-xl shadow-sm">
@@ -283,7 +279,13 @@ const OutgoingDocumentsPage: React.FC = () => {
             </Badge>
             {filteredDocuments.length > 0 && (
               <Badge variant="outline" className="text-sm bg-green-50 text-green-700 border-green-200 rounded-lg">
-                {filteredDocuments.length} وثيقة
+                {filteredDocuments.length} من {totalCount} وثيقة
+              </Badge>
+            )}
+            {isFetching && !isFetchingNextPage && (
+              <Badge variant="outline" className="text-sm bg-emerald-50 text-emerald-700 border-emerald-200 rounded-lg">
+                <Loader2 className="w-3 h-3 animate-spin ml-1" />
+                {translations.loading}
               </Badge>
             )}
           </div>
@@ -292,14 +294,14 @@ const OutgoingDocumentsPage: React.FC = () => {
         {/* Content Area */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
           {/* Show message if year is incomplete */}
-          {!shouldFetchDocuments ? (
+          {!isValidYear ? (
             <div className="text-center py-20">
               <div className="p-4 bg-emerald-50 rounded-2xl inline-block mb-4">
                 <Calendar className="h-12 w-12 text-emerald-500 mx-auto" />
               </div>
               <p className="text-slate-600 text-lg">أدخل سنة كاملة (4 أرقام) لعرض المستندات</p>
             </div>
-          ) : filteredDocuments.length === 0 ? (
+          ) : filteredDocuments.length === 0 && !isLoading ? (
             <div className="text-center py-20">
               <div className="p-4 bg-slate-50 rounded-2xl inline-block mb-4">
                 <Send className="h-12 w-12 text-slate-400 mx-auto" />
@@ -310,53 +312,64 @@ const OutgoingDocumentsPage: React.FC = () => {
             <div className="p-6">
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredDocuments.map((doc: OutgoingDocument) => (
-                    <Card 
-                      key={doc._id}
-                      className="group overflow-hidden cursor-pointer border-0 shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-white to-slate-50/50"
-                      onClick={() => handleViewDocument(doc._id)}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
-                            <Send className="h-5 w-5 text-emerald-600" />
-                          </div>
-                          <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200 rounded-md">
-                            #{doc.serialNumber}
-                          </Badge>
-                        </div>
-                        
-                        <h3 className="font-semibold text-slate-800 line-clamp-2 mb-3 group-hover:text-emerald-600 transition-colors">
-                          {doc.subject}
-                        </h3>
-                        
-                        <div className="space-y-2 text-sm text-slate-600">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-slate-400" />
-                            <span>{formatDate(doc.issueDate)}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Building className="h-4 w-4 text-slate-400" />
-                            <span className="truncate">{doc.source?.name || 'غير محدد'}</span>
-                          </div>
-                          {doc.assignedTo && doc.assignedTo.length > 0 && (
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-slate-400" />
-                              <span className="truncate text-xs">
-                                {doc.assignedTo.length === 1 
-                                  ? doc.assignedTo[0] 
-                                  : `${doc.assignedTo[0]} +${doc.assignedTo.length - 1}`
-                                }
-                              </span>
+                  {filteredDocuments.map((doc: OutgoingDocument, index: number) => {
+                    const isLast = index === filteredDocuments.length - 1;
+                    return (
+                      <Card 
+                        key={doc._id}
+                        ref={isLast ? lastDocumentElementRef : null}
+                        className="group overflow-hidden cursor-pointer border-0 shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-white to-slate-50/50"
+                        onClick={() => handleViewDocument(doc._id)}
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="p-2 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                              <Send className="h-5 w-5 text-emerald-600" />
                             </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                            <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200 rounded-md">
+                              #{doc.serialNumber}
+                            </Badge>
+                          </div>
+                          
+                          <h3 className="font-semibold text-slate-800 line-clamp-2 mb-3 group-hover:text-emerald-600 transition-colors">
+                            {doc.subject}
+                          </h3>
+                          
+                          <div className="space-y-2 text-sm text-slate-600">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-slate-400" />
+                              <span>{formatDate(doc.issueDate)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Building className="h-4 w-4 text-slate-400" />
+                              <span className="truncate">{doc.source?.name || 'غير محدد'}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               ) : (
                 <DocumentDataGrid documents={filteredDocuments} type="outgoing" />
+              )}
+
+              {/* Load More / Loading States */}
+              {isFetchingNextPage && (
+                <div className="text-center py-8">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-emerald-500" />
+                  <p className="text-slate-600">{translations.loadingMore}</p>
+                </div>
+              )}
+
+              {!hasNextPage && filteredDocuments.length > 0 && (
+                <div className="text-center py-8">
+                  <div className="p-3 bg-green-50 rounded-xl inline-block mb-2">
+                    <Clock className="w-6 h-6 text-green-500 mx-auto" />
+                  </div>
+                  <p className="text-slate-600">{translations.noMoreDocuments}</p>
+                  <p className="text-sm text-slate-500 mt-1">تم عرض جميع المستندات ({totalCount})</p>
+                </div>
               )}
             </div>
           )}

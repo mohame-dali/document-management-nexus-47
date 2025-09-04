@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { getIncomingDocuments, getOutgoingDocuments } from '@/services/documentService';
+import { getIncomingDocumentsList, getOutgoingDocumentsList } from '@/services/documentService';
 import { getUsers } from '@/services/userService';
 import { getFolders } from '@/services/folderService';
 import { FileText, Send, Users, Folder, Building } from 'lucide-react';
@@ -13,13 +13,13 @@ const DepartmentStats: React.FC = () => {
 
   const { data: incomingDocs } = useQuery({
     queryKey: ['incomingDocuments'],
-    queryFn: () => getIncomingDocuments(),
+    queryFn: () => getIncomingDocumentsList(),
     enabled: !!currentUser?.activeDepartment
   });
 
   const { data: outgoingDocs } = useQuery({
     queryKey: ['outgoingDocuments'],
-    queryFn: () => getOutgoingDocuments(),
+    queryFn: () => getOutgoingDocumentsList(),
     enabled: !!currentUser?.activeDepartment
   });
 

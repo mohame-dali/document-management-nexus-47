@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { getIncomingDocuments, getOutgoingDocuments } from '@/services/documentService';
+import { getIncomingDocumentsList, getOutgoingDocumentsList } from '@/services/documentService';
 import { getUsers } from '@/services/userService';
 import { getFolders } from '@/services/folderService';
 import { getDepartments } from '@/services/departmentService';
@@ -19,13 +19,13 @@ const DashboardPage = () => {
   // Fetch real data
   const { data: incomingDocs, isLoading: loadingIncoming } = useQuery({
     queryKey: ['incomingDocuments', currentYear],
-    queryFn: () => getIncomingDocuments({ year: currentYear }),
+    queryFn: () => getIncomingDocumentsList({ year: currentYear }),
     enabled: !!currentUser
   });
 
   const { data: outgoingDocs, isLoading: loadingOutgoing } = useQuery({
     queryKey: ['outgoingDocuments', currentYear],
-    queryFn: () => getOutgoingDocuments({ year: currentYear }),
+    queryFn: () => getOutgoingDocumentsList({ year: currentYear }),
     enabled: !!currentUser
   });
 

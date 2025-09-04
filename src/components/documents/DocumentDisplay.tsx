@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getIncomingDocuments, getOutgoingDocuments } from '@/services/documentService';
+import { getIncomingDocumentsList, getOutgoingDocumentsList } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Grid, List, Calendar, FileText, Send, Eye } from 'lucide-react';
 import { IncomingDocument, OutgoingDocument } from '@/types';
@@ -31,12 +31,12 @@ const DocumentDisplay: React.FC = () => {
 
   const { data: incomingDocuments, isLoading: loadingIncoming } = useQuery({
     queryKey: ['incomingDocuments', selectedYear],
-    queryFn: () => getIncomingDocuments({ year: selectedYear }),
+    queryFn: () => getIncomingDocumentsList({ year: selectedYear }),
   });
 
   const { data: outgoingDocuments, isLoading: loadingOutgoing } = useQuery({
     queryKey: ['outgoingDocuments', selectedYear],
-    queryFn: () => getOutgoingDocuments({ year: selectedYear }),
+    queryFn: () => getOutgoingDocumentsList({ year: selectedYear }),
   });
 
   // Filter documents by year and user permissions

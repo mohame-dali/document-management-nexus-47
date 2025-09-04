@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Folder, IncomingDocument, OutgoingDocument } from '@/types';
 import { getFolderDocuments, assignDocumentToFolder } from '@/services/folderService';
-import { getIncomingDocuments, getOutgoingDocuments } from '@/services/documentService';
+import { getIncomingDocumentsList, getOutgoingDocumentsList } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 
@@ -47,13 +47,13 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
   // Fetch uncategorized documents
   const { data: incomingDocs } = useQuery({
     queryKey: ['incomingDocuments', departmentId],
-    queryFn: () => getIncomingDocuments({}),
+    queryFn: () => getIncomingDocumentsList({}),
     enabled: !!departmentId,
   });
 
   const { data: outgoingDocs } = useQuery({
     queryKey: ['outgoingDocuments', departmentId],
-    queryFn: () => getOutgoingDocuments({}),
+    queryFn: () => getOutgoingDocumentsList({}),
     enabled: !!departmentId,
   });
 

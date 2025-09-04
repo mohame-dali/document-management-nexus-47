@@ -70,10 +70,20 @@ export const advancedSearchDocuments = async (filters: {
   }
 };
 
-// Incoming Documents API calls
-export const getIncomingDocuments = async (filters?: { department?: string; year?: string }): Promise<IncomingDocument[]> => {
+// Incoming Documents API calls with pagination
+export const getIncomingDocuments = async (filters?: { 
+  department?: string; 
+  year?: string; 
+  page?: number; 
+  limit?: number; 
+}): Promise<{
+  data: IncomingDocument[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}> => {
   try {
-    let url = `${API_URL}/incoming-documents`;
     const params = new URLSearchParams();
     
     if (filters?.department) {
@@ -84,12 +94,24 @@ export const getIncomingDocuments = async (filters?: { department?: string; year
       params.append('year', filters.year);
     }
     
-    if (params.toString()) {
-      url += `?${params.toString()}`;
+    if (filters?.page) {
+      params.append('page', filters.page.toString());
     }
     
+    if (filters?.limit) {
+      params.append('limit', filters.limit.toString());
+    }
+    
+    const url = `${API_URL}/incoming-documents?${params.toString()}`;
     const response = await api.get(url);
-    return response.data.data || response.data;
+    
+    return {
+      data: response.data.data || [],
+      totalCount: response.data.totalCount || 0,
+      page: response.data.page || 1,
+      limit: response.data.limit || 20,
+      hasMore: response.data.hasMore || false
+    };
   } catch (error) {
     console.error('Error fetching incoming documents:', error);
     throw error;
@@ -181,10 +203,20 @@ export const assignIncomingToFolder = async (documentId: string, folderId: strin
   }
 };
 
-// Outgoing Documents API calls
-export const getOutgoingDocuments = async (filters?: { department?: string; year?: string }): Promise<OutgoingDocument[]> => {
+// Outgoing Documents API calls with pagination
+export const getOutgoingDocuments = async (filters?: { 
+  department?: string; 
+  year?: string; 
+  page?: number; 
+  limit?: number; 
+}): Promise<{
+  data: OutgoingDocument[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}> => {
   try {
-    let url = `${API_URL}/outgoing-documents`;
     const params = new URLSearchParams();
     
     if (filters?.department) {
@@ -195,12 +227,24 @@ export const getOutgoingDocuments = async (filters?: { department?: string; year
       params.append('year', filters.year);
     }
     
-    if (params.toString()) {
-      url += `?${params.toString()}`;
+    if (filters?.page) {
+      params.append('page', filters.page.toString());
     }
     
+    if (filters?.limit) {
+      params.append('limit', filters.limit.toString());
+    }
+    
+    const url = `${API_URL}/outgoing-documents?${params.toString()}`;
     const response = await api.get(url);
-    return response.data.data || response.data;
+    
+    return {
+      data: response.data.data || [],
+      totalCount: response.data.totalCount || 0,
+      page: response.data.page || 1,
+      limit: response.data.limit || 20,
+      hasMore: response.data.hasMore || false
+    };
   } catch (error) {
     console.error('Error fetching outgoing documents:', error);
     throw error;
@@ -266,6 +310,27 @@ export const assignOutgoingToFolder = async (documentId: string, folderId: strin
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error assigning outgoing document ${documentId} to folder:`, error);
+    throw error;
+  }
+};
+
+// Backward compatibility functions for existing code
+export const getIncomingDocumentsList = async (filters?: { department?: string; year?: string }): Promise<IncomingDocument[]> => {
+  try {
+    const result = await getIncomingDocuments(filters);
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching incoming documents list:', error);
+    throw error;
+  }
+};
+
+export const getOutgoingDocumentsList = async (filters?: { department?: string; year?: string }): Promise<OutgoingDocument[]> => {
+  try {
+    const result = await getOutgoingDocuments(filters);
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching outgoing documents list:', error);
     throw error;
   }
 };

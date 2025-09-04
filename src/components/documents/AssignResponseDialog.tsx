@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { getOutgoingDocuments, addAnswer } from '@/services/documentService';
+import { getOutgoingDocumentsList, addAnswer } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 import { Search, FileOutput, Calendar, Filter, CheckCircle2, ArrowRight } from 'lucide-react';
@@ -34,7 +34,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
   // Fetch outgoing documents from the current user's active department with year filter
   const { data: outgoingDocuments, isLoading, refetch } = useQuery({
     queryKey: ['outgoingDocuments', currentUser?.activeDepartment?._id, searchYear],
-    queryFn: () => getOutgoingDocuments({
+    queryFn: () => getOutgoingDocumentsList({
       department: currentUser?.activeDepartment?._id,
       year: searchYear
     }),

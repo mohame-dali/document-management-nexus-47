@@ -2,7 +2,7 @@
 const OutgoingDocument = require('../../models/OutgoingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
 
-// @desc    Get all outgoing documents
+// @desc    Get all outgoing documents with pagination
 // @route   GET /api/outgoing-documents
 // @access  Private
 exports.getOutgoingDocuments = async (req, res, next) => {
@@ -39,16 +39,33 @@ exports.getOutgoingDocuments = async (req, res, next) => {
         count
       });
     }
+
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100); // Max 100 per request
+    const skip = (page - 1) * limit;
+
+    // Get total count for hasMore calculation
+    const totalCount = await OutgoingDocument.countDocuments(query);
     
     const documents = await OutgoingDocument.find(query)
       .populate('folder')
       .populate('reference')
       .select('-createdBy') // Exclude createdBy to avoid populate issues
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Calculate if there are more pages
+    const hasMore = (page * limit) < totalCount;
     
     res.status(200).json({
       success: true,
       count: documents.length,
+      totalCount,
+      page,
+      limit,
+      hasMore,
       data: documents
     });
   } catch (err) {
