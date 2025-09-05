@@ -1,13 +1,11 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from '@tanstack/react-query';
 import AdvancedSearch from '@/components/search/AdvancedSearch';
 import SearchResults from '@/components/search/SearchResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Filter } from 'lucide-react';
-import { advancedSearchDocuments } from '@/services/documentService';
-import { IncomingDocument, OutgoingDocument } from '@/types';
+import { useInfiniteSearch } from '@/hooks/useInfiniteSearch';
 
 interface SearchFilters {
   keyword: string;
@@ -17,6 +15,7 @@ interface SearchFilters {
   dateTo: string;
   serialNumber: string;
   subject: string;
+  source: string;
 }
 
 const AdvancedSearchPage = () => {
@@ -24,12 +23,16 @@ const AdvancedSearchPage = () => {
   const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
   const [searchPerformed, setSearchPerformed] = useState(false);
 
-  const { data: searchResults, isLoading, refetch } = useQuery({
-    queryKey: ['advancedSearch', searchFilters],
-    queryFn: () => {
-      if (!searchFilters) return { incoming: [], outgoing: [] };
-      return advancedSearchDocuments(searchFilters);
-    },
+  const {
+    incoming,
+    outgoing,
+    totalCount,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    lastElementRef,
+  } = useInfiniteSearch({
+    filters: searchFilters,
     enabled: !!searchFilters,
   });
 
@@ -37,7 +40,6 @@ const AdvancedSearchPage = () => {
     console.log('Performing advanced search with filters:', filters);
     setSearchFilters(filters);
     setSearchPerformed(true);
-    refetch();
   };
 
   const handleClearSearch = () => {
@@ -83,9 +85,14 @@ const AdvancedSearchPage = () => {
 
         {/* Search Results Section */}
         <SearchResults 
-          results={searchResults || { incoming: [], outgoing: [] }}
+          incoming={incoming}
+          outgoing={outgoing}
           isLoading={isLoading}
           searchPerformed={searchPerformed}
+          totalCount={totalCount}
+          isFetchingNextPage={isFetchingNextPage}
+          hasNextPage={hasNextPage}
+          lastElementRef={lastElementRef}
         />
       </div>
     </div>

@@ -7,7 +7,7 @@ const ErrorResponse = require('../../utils/errorResponse');
 // @access  Private
 exports.searchIncomingDocuments = async (req, res, next) => {
   try {
-    const { q, year, dateFrom, dateTo, serialNumber, subject } = req.query;
+    const { q, year, dateFrom, dateTo, serialNumber, subject, source, page, limit } = req.query;
     
     // Build the query object
     let query = {};
@@ -21,6 +21,11 @@ exports.searchIncomingDocuments = async (req, res, next) => {
         { description: { $regex: q, $options: 'i' } },
         { activity: { $regex: q, $options: 'i' } }
       ];
+    }
+    
+    // Filter by source if provided
+    if (source) {
+      query.source = { $regex: source, $options: 'i' };
     }
     
     // Filter by year if provided
@@ -58,6 +63,14 @@ exports.searchIncomingDocuments = async (req, res, next) => {
       query['assignedTo.id'] = req.user.activeDepartment._id;
     }
     
+    // Pagination parameters
+    const pageNum = parseInt(page) || 1;
+    const limitNum = Math.min(parseInt(limit) || 20, 100); // Max 100 per request
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for hasMore calculation
+    const totalCount = await IncomingDocument.countDocuments(query);
+    
     console.log('Incoming documents search query:', query);
     
     const documents = await IncomingDocument.find(query)
@@ -65,11 +78,20 @@ exports.searchIncomingDocuments = async (req, res, next) => {
       .populate('responsibleUser', 'username photo')
       .populate('answer')
       .populate('folder')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    // Calculate if there are more pages
+    const hasMore = (pageNum * limitNum) < totalCount;
     
     res.status(200).json({
       success: true,
       count: documents.length,
+      totalCount,
+      page: pageNum,
+      limit: limitNum,
+      hasMore,
       data: documents
     });
   } catch (err) {

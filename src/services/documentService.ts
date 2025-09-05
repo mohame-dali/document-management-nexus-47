@@ -30,9 +30,17 @@ export const advancedSearchDocuments = async (filters: {
   dateTo?: string;
   serialNumber?: string;
   subject?: string;
-}): Promise<{ incoming: IncomingDocument[]; outgoing: OutgoingDocument[] }> => {
+  source?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ 
+  incoming: IncomingDocument[]; 
+  outgoing: OutgoingDocument[];
+  hasMore?: boolean;
+  totalCount?: number;
+}> => {
   try {
-    const results = { incoming: [], outgoing: [] };
+    let results = { incoming: [], outgoing: [], hasMore: false, totalCount: 0 };
     
     // Build search parameters
     const params = new URLSearchParams();
@@ -42,12 +50,22 @@ export const advancedSearchDocuments = async (filters: {
     if (filters.dateTo) params.append('dateTo', filters.dateTo);
     if (filters.serialNumber) params.append('serialNumber', filters.serialNumber);
     if (filters.subject) params.append('subject', filters.subject);
+    if (filters.source) params.append('source', filters.source);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    
+    let incomingCount = 0;
+    let outgoingCount = 0;
+    let incomingHasMore = false;
+    let outgoingHasMore = false;
     
     // Search incoming documents if needed
     if (filters.documentType === 'all' || filters.documentType === 'incoming') {
       try {
         const response = await api.get(`${API_URL}/incoming-documents/search?${params.toString()}`);
         results.incoming = response.data.data || response.data || [];
+        incomingCount = response.data.totalCount || 0;
+        incomingHasMore = response.data.hasMore || false;
       } catch (error) {
         console.error('Error searching incoming documents:', error);
       }
@@ -58,10 +76,16 @@ export const advancedSearchDocuments = async (filters: {
       try {
         const response = await api.get(`${API_URL}/outgoing-documents/search?${params.toString()}`);
         results.outgoing = response.data.data || response.data || [];
+        outgoingCount = response.data.totalCount || 0;
+        outgoingHasMore = response.data.hasMore || false;
       } catch (error) {
         console.error('Error searching outgoing documents:', error);
       }
     }
+    
+    // Calculate combined totals
+    results.totalCount = incomingCount + outgoingCount;
+    results.hasMore = incomingHasMore || outgoingHasMore;
     
     return results;
   } catch (error) {

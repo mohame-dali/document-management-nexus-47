@@ -1,26 +1,39 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { IncomingDocument, OutgoingDocument } from '@/types';
-import { FileInput, FileOutput, Calendar, Building2, User, Eye } from 'lucide-react';
+import { FileInput, FileOutput, Calendar, Building2, User, Eye, Grid, List, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import ScrollToTop from '@/components/common/ScrollToTop';
 
 interface SearchResultsProps {
-  results: {
-    incoming: IncomingDocument[];
-    outgoing: OutgoingDocument[];
-  };
+  incoming: IncomingDocument[];
+  outgoing: OutgoingDocument[];
   isLoading: boolean;
   searchPerformed: boolean;
+  totalCount?: number;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  lastElementRef?: (node: HTMLElement | null) => void;
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({ results, isLoading, searchPerformed }) => {
+const SearchResults: React.FC<SearchResultsProps> = ({ 
+  incoming, 
+  outgoing, 
+  isLoading, 
+  searchPerformed,
+  totalCount = 0,
+  isFetchingNextPage = false,
+  hasNextPage = false,
+  lastElementRef
+}) => {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const totalResults = results.incoming.length + results.outgoing.length;
+  const combinedResults = incoming.length + outgoing.length;
 
   if (isLoading) {
     return (
@@ -37,49 +50,55 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, isLoading, searc
 
   if (!searchPerformed) {
     return (
-      <Card className="bg-white shadow-lg border border-slate-200 rounded-xl">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileInput className="h-6 w-6 text-blue-600" />
+      <>
+        <Card className="bg-white shadow-lg border border-slate-200 rounded-xl">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileInput className="h-6 w-6 text-blue-600" />
+              </div>
+              نتائج البحث
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileInput className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-slate-500 text-lg">
+                قم بإدخال معايير البحث واضغط على البحث لعرض النتائج
+              </p>
             </div>
-            نتائج البحث
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileInput className="h-8 w-8 text-slate-400" />
-            </div>
-            <p className="text-slate-500 text-lg">
-              قم بإدخال معايير البحث واضغط على البحث لعرض النتائج
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        <ScrollToTop />
+      </>
     );
   }
 
-  if (totalResults === 0) {
+  if (combinedResults === 0 && !isLoading) {
     return (
-      <Card className="bg-white shadow-lg border border-slate-200 rounded-xl">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileInput className="h-6 w-6 text-blue-600" />
+      <>
+        <Card className="bg-white shadow-lg border border-slate-200 rounded-xl">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileInput className="h-6 w-6 text-blue-600" />
+              </div>
+              نتائج البحث
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileInput className="h-8 w-8 text-slate-400" />
+              </div>
+              <p className="text-slate-500 text-lg">لم يتم العثور على نتائج تطابق معايير البحث</p>
             </div>
-            نتائج البحث
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileInput className="h-8 w-8 text-slate-400" />
-            </div>
-            <p className="text-slate-500 text-lg">لم يتم العثور على نتائج تطابق معايير البحث</p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        <ScrollToTop />
+      </>
     );
   }
 
@@ -94,25 +113,53 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, isLoading, searc
             نتائج البحث
           </div>
           <Badge variant="secondary" className="text-sm">
-            {totalResults} نتيجة
+            {combinedResults} نتيجة
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        {/* Documents Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* View Mode Toggle */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="h-8 px-3"
+            >
+              <Grid className="h-4 w-4 mr-2" />
+              شبكة
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-8 px-3"
+            >
+              <List className="h-4 w-4 mr-2" />
+              قائمة
+            </Button>
+          </div>
+        </div>
+
+        {/* Documents Display */}
+        <div className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-6" : "space-y-6"}>
           {/* Incoming Documents */}
-          {results.incoming.length > 0 && (
+          {incoming.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <FileInput className="h-5 w-5 text-orange-600" />
                 <h3 className="text-lg font-semibold text-slate-800">
-                  الوثائق الواردة ({results.incoming.length})
+                  الوثائق الواردة ({incoming.length})
                 </h3>
               </div>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {results.incoming.map((doc) => (
-                  <Card key={doc._id} className="border border-slate-200 hover:shadow-md transition-shadow">
+              <div className={`space-y-3 ${viewMode === 'grid' ? 'max-h-96 overflow-y-auto' : ''}`}>
+                {incoming.map((doc, index) => (
+                  <Card 
+                    key={doc._id} 
+                    className="border border-slate-200 hover:shadow-md transition-shadow"
+                    ref={index === incoming.length - 1 ? lastElementRef : null}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2 flex-1">
@@ -162,17 +209,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, isLoading, searc
           )}
 
           {/* Outgoing Documents */}
-          {results.outgoing.length > 0 && (
+          {outgoing.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <FileOutput className="h-5 w-5 text-red-600" />
                 <h3 className="text-lg font-semibold text-slate-800">
-                  الوثائق الصادرة ({results.outgoing.length})
+                  الوثائق الصادرة ({outgoing.length})
                 </h3>
               </div>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {results.outgoing.map((doc) => (
-                  <Card key={doc._id} className="border border-slate-200 hover:shadow-md transition-shadow">
+              <div className={`space-y-3 ${viewMode === 'grid' ? 'max-h-96 overflow-y-auto' : ''}`}>
+                {outgoing.map((doc, index) => (
+                  <Card 
+                    key={doc._id} 
+                    className="border border-slate-200 hover:shadow-md transition-shadow"
+                    ref={index === outgoing.length - 1 ? lastElementRef : null}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2 flex-1">
@@ -231,8 +282,25 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, isLoading, searc
           )}
         </div>
 
+        {/* Loading more indicator */}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <div className="flex items-center gap-2 text-blue-600">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">جاري تحميل المزيد...</span>
+            </div>
+          </div>
+        )}
+
+        {/* No more results indicator */}
+        {!hasNextPage && combinedResults > 0 && (
+          <div className="text-center py-4 text-slate-500 text-sm">
+            تم عرض جميع النتائج ({combinedResults} نتيجة)
+          </div>
+        )}
+
         {/* Show message when only one type has results */}
-        {results.incoming.length === 0 && results.outgoing.length > 0 && (
+        {incoming.length === 0 && outgoing.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="text-center py-8 text-muted-foreground">
               <FileInput className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -242,7 +310,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, isLoading, searc
           </div>
         )}
         
-        {results.outgoing.length === 0 && results.incoming.length > 0 && (
+        {outgoing.length === 0 && incoming.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div></div>
             <div className="text-center py-8 text-muted-foreground">
@@ -251,6 +319,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, isLoading, searc
             </div>
           </div>
         )}
+
+        <ScrollToTop />
       </CardContent>
     </Card>
   );

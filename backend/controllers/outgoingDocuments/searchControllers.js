@@ -7,7 +7,7 @@ const ErrorResponse = require('../../utils/errorResponse');
 // @access  Private
 exports.searchOutgoingDocuments = async (req, res, next) => {
   try {
-    const { q, year, dateFrom, dateTo, serialNumber, subject } = req.query;
+    const { q, year, dateFrom, dateTo, serialNumber, subject, page, limit } = req.query;
     
     // Build the query object
     let query = {};
@@ -58,17 +58,34 @@ exports.searchOutgoingDocuments = async (req, res, next) => {
       query['source.id'] = req.user.activeDepartment._id;
     }
     
+    // Pagination parameters
+    const pageNum = parseInt(page) || 1;
+    const limitNum = Math.min(parseInt(limit) || 20, 100); // Max 100 per request
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for hasMore calculation
+    const totalCount = await OutgoingDocument.countDocuments(query);
+    
     console.log('Outgoing documents search query:', query);
     
     const documents = await OutgoingDocument.find(query)
       .populate('folder')
       .populate('reference')
       .populate('createdBy', 'username')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    // Calculate if there are more pages
+    const hasMore = (pageNum * limitNum) < totalCount;
     
     res.status(200).json({
       success: true,
       count: documents.length,
+      totalCount,
+      page: pageNum,
+      limit: limitNum,
+      hasMore,
       data: documents
     });
   } catch (err) {

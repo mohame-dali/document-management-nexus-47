@@ -21,9 +21,12 @@ import {
   Hash, 
   MessageSquare,
   Sparkles,
-  Clock
+  Clock,
+  Building2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { getDocumentOptions } from '@/services/documentOptionsService';
 
 interface SearchFilters {
   keyword: string;
@@ -33,6 +36,7 @@ interface SearchFilters {
   dateTo: string;
   serialNumber: string;
   subject: string;
+  source: string;
 }
 
 interface AdvancedSearchProps {
@@ -50,9 +54,17 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
     dateTo: '',
     serialNumber: '',
     subject: '',
+    source: '',
   });
 
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Fetch source options for incoming documents
+  const { data: sourceOptions = [] } = useQuery({
+    queryKey: ['documentOptions', 'source', 'incoming'],
+    queryFn: () => getDocumentOptions({ category: 'source', documentType: 'incoming' }),
+    enabled: true,
+  });
 
   const handleFilterChange = (key: keyof SearchFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -78,12 +90,13 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
       dateTo: '',
       serialNumber: '',
       subject: '',
+      source: '',
     });
     onClear();
   };
 
   const hasActiveFilters = filters.keyword || filters.documentType !== 'all' || 
-    filters.dateFrom || filters.dateTo || filters.serialNumber || filters.subject;
+    filters.dateFrom || filters.dateTo || filters.serialNumber || filters.subject || filters.source;
 
   return (
     <div className="space-y-6">
@@ -171,6 +184,32 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Source Filter - Show only for incoming documents or all */}
+            {(filters.documentType === 'incoming' || filters.documentType === 'all') && (
+              <div className="space-y-3">
+                <Label className="text-base font-medium flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-gray-500" />
+                  المصدر
+                </Label>
+                <Select 
+                  value={filters.source} 
+                  onValueChange={(value) => handleFilterChange('source', value)}
+                >
+                  <SelectTrigger className="h-12 text-right border-gray-200 focus:border-blue-500">
+                    <SelectValue placeholder="اختر المصدر..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">جميع المصادر</SelectItem>
+                    {sourceOptions.filter(option => option.isActive).map((option) => (
+                      <SelectItem key={option._id} value={option.value}>
+                        {option.value}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <Separator />
 
