@@ -73,6 +73,7 @@ const IncomingDocumentsPage: React.FC = () => {
   const {
     documents,
     totalCount,
+    loadedCount,
     isLoading,
     isError,
     isFetching,
@@ -372,7 +373,7 @@ const IncomingDocumentsPage: React.FC = () => {
                     <Clock className="w-6 h-6 text-green-500 mx-auto" />
                   </div>
                   <p className="text-slate-600">{translations.noMoreDocuments}</p>
-                  <p className="text-sm text-slate-500 mt-1">تم عرض جميع المستندات ({totalCount})</p>
+                  <p className="text-sm text-slate-500 mt-1">تم عرض جميع المستندات ({loadedCount} من {totalCount})</p>
                 </div>
               )}
             </div>

@@ -120,12 +120,14 @@ export const useInfiniteDocuments = ({
   // Flatten all pages into a single array of documents
   const allDocuments = data?.pages.flatMap(page => page.data) || [];
   const totalCount = data?.pages[0]?.totalCount || 0;
+  const loadedCount = allDocuments.length; // Current number of loaded documents
   const isLoading = status === 'pending';
   const isError = status === 'error';
 
   return {
     documents: allDocuments,
     totalCount,
+    loadedCount,
     error,
     isLoading,
     isError,

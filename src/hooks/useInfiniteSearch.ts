@@ -50,7 +50,9 @@ export const useInfiniteSearch = ({
       const searchFilters = {
         ...filters,
         page: pageParam,
-        limit: 20
+        limit: 20,
+        // Convert 'all_sources' back to empty string for backend
+        source: filters.source === 'all_sources' ? '' : filters.source
       };
 
       const result = await advancedSearchDocuments(searchFilters);

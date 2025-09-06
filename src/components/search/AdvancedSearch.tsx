@@ -54,7 +54,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
     dateTo: '',
     serialNumber: '',
     subject: '',
-    source: '',
+    source: 'all_sources',
   });
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -90,7 +90,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
       dateTo: '',
       serialNumber: '',
       subject: '',
-      source: '',
+      source: 'all_sources',
     });
     onClear();
   };
@@ -200,7 +200,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
                     <SelectValue placeholder="اختر المصدر..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">جميع المصادر</SelectItem>
+                    <SelectItem value="all_sources">جميع المصادر</SelectItem>
                     {sourceOptions.filter(option => option.isActive).map((option) => (
                       <SelectItem key={option._id} value={option.value}>
                         {option.value}
