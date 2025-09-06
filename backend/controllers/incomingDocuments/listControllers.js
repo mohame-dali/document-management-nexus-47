@@ -31,6 +31,11 @@ exports.getIncomingDocuments = async (req, res, next) => {
       query.year = new Date().getFullYear();
     }
 
+    // Filter by source if provided
+    if (req.query.source && req.query.source.trim() !== '') {
+      query.source = { $regex: req.query.source, $options: 'i' };
+    }
+
     // Pagination parameters
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 20, 100); // Max 100 per request

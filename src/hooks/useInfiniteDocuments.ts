@@ -7,6 +7,7 @@ interface UseInfiniteDocumentsProps {
   documentType: 'incoming' | 'outgoing';
   year: string;
   department?: string;
+  source?: string;
   enabled?: boolean;
 }
 
@@ -21,7 +22,8 @@ interface DocumentPage {
 export const useInfiniteDocuments = ({ 
   documentType, 
   year, 
-  department, 
+  department,
+  source,
   enabled = true 
 }: UseInfiniteDocumentsProps) => {
   const observerRef = useRef<IntersectionObserver>();
@@ -32,6 +34,7 @@ export const useInfiniteDocuments = ({
       const filters = {
         year,
         department: department === 'all' ? undefined : department,
+        source: source && source !== 'all_sources' ? source : undefined,
         page: pageParam,
         limit: 20
       };
@@ -56,14 +59,15 @@ export const useInfiniteDocuments = ({
         };
       }
     },
-    [documentType, year, department]
+    [documentType, year, department, source]
   );
 
   const queryKey = [
     documentType === 'incoming' ? 'incomingDocuments' : 'outgoingDocuments',
     'infinite',
     year,
-    department
+    department,
+    source
   ];
 
   const {

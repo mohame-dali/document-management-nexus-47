@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 
 import { getDepartments } from '@/services/departmentService';
+import { getDocumentOptions } from '@/services/documentOptionsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { IncomingDocument } from '@/types';
 import DocumentDataGrid from '@/components/documents/DocumentDataGrid';
@@ -55,6 +56,7 @@ const IncomingDocumentsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [selectedSource, setSelectedSource] = useState<string>('all_sources');
   
   // Use year persistence hook
   const { selectedYear, handleYearChange, isValidYear } = useYearPersistence('incomingDocumentsSelectedYear');
@@ -67,6 +69,13 @@ const IncomingDocumentsPage: React.FC = () => {
     queryKey: ['departments'],
     queryFn: getDepartments,
     enabled: currentUser?.role === 'AdminTuningDesk'
+  });
+
+  // Fetch source options for source filtering
+  const { data: sourceOptions = [] } = useQuery({
+    queryKey: ['documentOptions', 'source', 'incoming'],
+    queryFn: () => getDocumentOptions({ category: 'source', documentType: 'incoming' }),
+    enabled: true,
   });
 
   // Use infinite scrolling hook
@@ -85,6 +94,7 @@ const IncomingDocumentsPage: React.FC = () => {
     documentType: 'incoming',
     year: selectedYear,
     department: selectedDepartment,
+    source: selectedSource,
     enabled: isValidYear
   });
 
@@ -242,6 +252,24 @@ const IncomingDocumentsPage: React.FC = () => {
                   </SelectContent>
                 </Select>
               )}
+
+              {/* Source Filter */}
+              <Select value={selectedSource} onValueChange={setSelectedSource}>
+                <SelectTrigger className="w-full sm:w-48 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-xl shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-slate-500" />
+                    <SelectValue placeholder="اختر المصدر..." />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                  <SelectItem value="all_sources" className="rounded-lg">جميع المصادر</SelectItem>
+                  {sourceOptions.filter(option => option.isActive).map((option) => (
+                    <SelectItem key={option._id} value={option.value} className="rounded-lg">
+                      {option.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             {/* View Mode Toggle */}
@@ -282,6 +310,11 @@ const IncomingDocumentsPage: React.FC = () => {
             {filteredDocuments.length > 0 && (
               <Badge variant="outline" className="text-sm bg-green-50 text-green-700 border-green-200 rounded-lg">
                 {filteredDocuments.length} من {totalCount} وثيقة
+              </Badge>
+            )}
+            {selectedSource !== 'all_sources' && (
+              <Badge variant="outline" className="text-sm bg-purple-50 text-purple-700 border-purple-200 rounded-lg">
+                المصدر: {selectedSource}
               </Badge>
             )}
             {isFetching && !isFetchingNextPage && (

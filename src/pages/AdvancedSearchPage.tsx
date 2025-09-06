@@ -15,7 +15,6 @@ interface SearchFilters {
   dateTo: string;
   serialNumber: string;
   subject: string;
-  source: string;
 }
 
 const AdvancedSearchPage = () => {
