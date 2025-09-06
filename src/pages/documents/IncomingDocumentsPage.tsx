@@ -24,6 +24,7 @@ import DocumentDataGrid from '@/components/documents/DocumentDataGrid';
 import { useInfiniteDocuments } from '@/hooks/useInfiniteDocuments';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { useQuery } from '@tanstack/react-query';
+import ScrollToTop from '@/components/common/ScrollToTop';
 
 const translations = {
   title: 'الوثائق الواردة',
@@ -378,6 +379,7 @@ const IncomingDocumentsPage: React.FC = () => {
           )}
         </div>
       </div>
+      <ScrollToTop />
     </div>
   );
 };
