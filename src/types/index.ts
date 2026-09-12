@@ -99,18 +99,23 @@ export interface Message {
   recipients: {
     user: User | string;
     read: boolean;
+    readAt?: string;
   }[];
   subject: string;
   content: string;
+  priority?: 'normal' | 'high' | 'urgent';
   attachments?: Array<{
     filename?: string;
     path?: string;
     size?: number;
     mimetype?: string;
-    priority?: 'low' | 'medium' | 'high';
+    url?: string;
   }>;
   messageType?: 'one-to-one' | 'one-to-many';
   crossDepartment?: boolean;
+  isRead?: boolean;
+  isSender?: boolean;
+  recipientCount?: number;
   createdAt: string;
   updatedAt?: string;
 }

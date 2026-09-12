@@ -10,11 +10,15 @@ const messageSchema = new mongoose.Schema({
   recipients: [{
     user: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
+      ref: 'User',
+      required: true
     },
     read: { 
       type: Boolean, 
       default: false 
+    },
+    readAt: {
+      type: Date
     }
   }],
   subject: { 
@@ -26,18 +30,17 @@ const messageSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  priority: {
+    type: String,
+    enum: ['normal', 'high', 'urgent'],
+    default: 'normal'
+  },
   attachments: [{
     filename: String,
     path: String,
     size: Number,
-    mimetype: String,
-    priority: { 
-      type: String,
-      enum: ['low', 'medium', 'high'],
-      default: 'medium'  
-    }
+    mimetype: String
   }],
-  // Enhanced fields for cross-department messaging
   messageType: {
     type: String,
     enum: ['one-to-one', 'one-to-many'],
@@ -46,16 +49,23 @@ const messageSchema = new mongoose.Schema({
   crossDepartment: {
     type: Boolean,
     default: false
-  }
+  },
+  deletedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, { 
   timestamps: true,
   toJSON: { virtuals: true },
   toObject: { virtuals: true } 
 });
 
-// Enhanced indexation for cross-department searches
-messageSchema.index({ sender: 1, 'recipients.user': 1});
+// Indexation for performance
+messageSchema.index({ sender: 1, createdAt: -1 });
+messageSchema.index({ 'recipients.user': 1, createdAt: -1 });
+messageSchema.index({ 'recipients.user': 1, 'recipients.read': 1 });
 messageSchema.index({ crossDepartment: 1, createdAt: -1 });
 
 const Message = mongoose.model('Message', messageSchema);
 module.exports = Message;
+

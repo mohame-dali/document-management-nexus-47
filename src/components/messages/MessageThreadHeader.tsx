@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,14 +7,15 @@ import {
   Trash2, 
   Clock,
   User,
-  Shield,
-  Building2,
-  Settings,
-  User as UserIcon
+  Shield, 
+  Building2, 
+  Settings, 
+  User as UserIcon,
+  AlertCircle
 } from 'lucide-react';
 import { Message } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatArabicDateTime } from '@/utils/arabicDateFormatter';
 
 interface MessageThreadHeaderProps {
   onBack: () => void;
@@ -44,9 +44,9 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'Admin': return 'bg-red-50 text-red-700 border-red-200';
-      case 'AdminDepartment': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'AdminTuningDesk': return 'bg-green-50 text-green-700 border-green-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+      case 'AdminDepartment': return 'bg-blue-50 text-[#2c5282] border-blue-200';
+      case 'AdminTuningDesk': return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -57,137 +57,127 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
   const senderInfo = message.sender && typeof message.sender === 'object' ? message.sender : null;
 
   return (
-    <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-gray-200 rounded-xl p-4 sm:p-6 mb-6 shadow-sm">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+    <div className="bg-white border-b border-[#e2e8f0] pb-4 mb-5" dir="rtl">
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between gap-3 mb-4">
         <Button 
-          variant="ghost" 
+          variant="outline" 
+          size="sm"
           onClick={onBack}
-          className="flex items-center gap-2 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200 px-4 py-2 rounded-lg"
+          className="flex items-center gap-1.5 h-8 px-3 rounded border-[#cbd5e1] text-slate-700 hover:bg-slate-100 transition-colors duration-200 text-xs font-medium"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span className="font-medium">{t('messages.backToMessages')}</span>
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>{t('messages.backToMessages')}</span>
         </Button>
         
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-2">
           {onReply && (
             <Button 
-              variant="outline" 
               size="sm" 
               onClick={() => onReply(message)}
-              className="flex items-center gap-2 bg-white hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors duration-200"
+              className="flex items-center gap-1.5 h-8 px-3 rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 text-xs font-medium"
             >
-              <Reply className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('messages.reply')}</span>
+              <Reply className="h-3.5 w-3.5" />
+              <span>{t('messages.reply')}</span>
             </Button>
           )}
           {onDelete && (
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex items-center gap-2 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors duration-200"
               onClick={() => onDelete(message._id)}
+              className="flex items-center gap-1.5 h-8 px-3 rounded border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-200 text-xs font-medium"
             >
-              <Trash2 className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('messages.delete')}</span>
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>{t('messages.delete')}</span>
             </Button>
           )}
         </div>
       </div>
 
-      {/* Message Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Message Details */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-3 leading-relaxed">
-              {message.subject}
-            </h2>
-            
-            {/* Message Type Badge */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              <Badge 
-                variant="secondary" 
-                className={`px-3 py-1 text-xs font-medium ${
-                  message.messageType === 'one-to-many' 
-                    ? 'bg-purple-100 text-purple-700 border-purple-200' 
-                    : 'bg-blue-100 text-blue-700 border-blue-200'
-                }`}
-              >
-                {message.messageType === 'one-to-many' ? 'رسالة جماعية' : 'رسالة فردية'}
+      {/* Subject & Meta */}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h2 className="text-lg font-bold text-slate-900 leading-snug">
+            {message.subject}
+          </h2>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {message.priority === 'urgent' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+                <AlertCircle className="h-3 w-3" />
+                عاجل جداً
+              </span>
+            )}
+            {message.priority === 'high' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#FFD758]/25 text-[#92400e] border border-[#FFCB56]">
+                أولوية مرتفعة
+              </span>
+            )}
+
+            <Badge 
+              variant="outline" 
+              className="px-2 py-0.5 text-xs rounded border-slate-200 bg-slate-50 text-slate-700 font-normal"
+            >
+              {message.messageType === 'one-to-many' ? 'رسالة جماعية' : 'رسالة فردية'}
+            </Badge>
+
+            {message.crossDepartment && (
+              <Badge variant="outline" className="bg-blue-50 text-[#2c5282] border-blue-200 px-2 py-0.5 text-xs rounded font-normal">
+                عبر الأقسام
               </Badge>
-              
-              {message.crossDepartment && (
-                <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1 text-xs font-medium">
-                  عبر الأقسام
+            )}
+          </div>
+        </div>
+
+        {/* Sender and Recipients Box */}
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-3 text-xs space-y-2">
+          {/* Sender */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 font-medium">المرسل:</span>
+              <span className="font-semibold text-slate-800">
+                {senderInfo ? senderInfo.username : t('messages.unknownUser')}
+              </span>
+              {senderInfo && (
+                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 rounded ${getRoleColor(senderInfo.role)}`}>
+                  {getRoleIcon(senderInfo.role)}
+                  <span className="mr-1">{getRoleDisplayName(senderInfo.role)}</span>
                 </Badge>
               )}
             </div>
 
-            {/* Timestamp */}
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Clock className="h-4 w-4" />
-              <span>{formatArabicDate(message.createdAt)}</span>
+            <div className="flex items-center gap-1 text-slate-500">
+              <Clock className="h-3.5 w-3.5 text-slate-400" />
+              <span>{formatArabicDateTime(message.createdAt)}</span>
             </div>
           </div>
-        </div>
 
-        {/* Right Column - Sender & Recipients Info */}
-        <div className="space-y-4">
-          {/* Sender Info */}
-          {senderInfo && (
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-2 mb-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-600">المرسل</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  {getRoleIcon(senderInfo.role)}
-                  <span className="font-semibold text-gray-800">{senderInfo.username}</span>
-                </div>
-                <Badge className={`text-xs px-2 py-1 border ${getRoleColor(senderInfo.role)}`}>
-                  {getRoleDisplayName(senderInfo.role)}
-                </Badge>
-              </div>
-            </div>
-          )}
-
-          {/* Recipients Info */}
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <User className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-600">
-                المستقبلون ({message.recipients?.length || 0})
-              </span>
-            </div>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
+          {/* Recipients */}
+          <div className="flex items-start gap-2 pt-1 border-t border-[#edf2f7]">
+            <span className="text-slate-500 font-medium whitespace-nowrap mt-0.5">المستلمون:</span>
+            <div className="flex flex-wrap items-center gap-1.5">
               {message.recipients?.map((recipient, index) => {
                 const recipientUser = recipient.user && typeof recipient.user === 'object' ? recipient.user : null;
-                if (!recipientUser) return null;
-                
+                const recipientName = recipientUser ? recipientUser.username : t('messages.unknownUser');
+                const isRead = recipient.read;
+
                 return (
-                  <div key={index} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      {getRoleIcon(recipientUser.role)}
-                      <span className="text-sm font-medium text-gray-700">
-                        {recipientUser.username}
+                  <span 
+                    key={index}
+                    className="inline-flex items-center gap-1.5 bg-white border border-[#e2e8f0] px-2 py-0.5 rounded text-[11px] text-slate-700"
+                  >
+                    <span>{recipientName}</span>
+                    {isRead ? (
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1 rounded border border-emerald-200">
+                        مقروءة
                       </span>
-                      <Badge className={`text-xs px-2 py-0.5 border ${getRoleColor(recipientUser.role)}`}>
-                        {getRoleDisplayName(recipientUser.role)}
-                      </Badge>
-                    </div>
-                    <Badge 
-                      variant={recipient.read ? "default" : "secondary"}
-                      className={`text-xs px-2 py-0.5 ${
-                        recipient.read 
-                          ? 'bg-green-100 text-green-700 border-green-200' 
-                          : 'bg-orange-100 text-orange-700 border-orange-200'
-                      }`}
-                    >
-                      {recipient.read ? 'مقروءة' : 'غير مقروءة'}
-                    </Badge>
-                  </div>
+                    ) : (
+                      <span className="text-[10px] text-[#854d0e] bg-[#FFD758]/20 px-1 rounded border border-[#FFCB56]">
+                        غير مقروءة
+                      </span>
+                    )}
+                  </span>
                 );
               })}
             </div>

@@ -2,86 +2,154 @@
 const Message = require('../../models/Message');
 const ErrorResponse = require('../../utils/errorResponse');
 
-// @desc    Get all messages for a user
+// Helper to format messages with read status and recipient info
+const formatMessages = (messages, userId) => {
+  return messages.map(message => {
+    const messageObj = message.toObject ? message.toObject() : { ...message };
+    
+    // Check if user is recipient and extract read status
+    const recipient = messageObj.recipients?.find(
+      r => r.user && (r.user._id ? r.user._id.toString() : r.user.toString()) === userId.toString()
+    );
+    
+    // Is user the sender?
+    const senderId = messageObj.sender && (messageObj.sender._id ? messageObj.sender._id.toString() : messageObj.sender.toString());
+    const isSender = senderId === userId.toString();
+    
+    // Set read status: if recipient, use their read status; if sender, true
+    messageObj.isRead = recipient ? recipient.read : true;
+    messageObj.isSender = isSender;
+    
+    // Fallback role
+    if (messageObj.sender && typeof messageObj.sender === 'object' && !messageObj.sender.role) {
+      messageObj.sender.role = 'User';
+    }
+    
+    // Fallback priority
+    if (!messageObj.priority) {
+      messageObj.priority = 'normal';
+    }
+    
+    // Fallback message type
+    if (!messageObj.messageType) {
+      messageObj.messageType = (messageObj.recipients && messageObj.recipients.length > 1) ? 'one-to-many' : 'one-to-one';
+    }
+    
+    messageObj.recipientCount = messageObj.recipients ? messageObj.recipients.length : 0;
+    
+    return messageObj;
+  });
+};
+
+// @desc    Get messages for a user (supports ?type=inbox|sent|all & ?search=)
 // @route   GET /api/messages
 // @access  Private
 exports.getMessages = async (req, res, next) => {
   try {
-    console.log('Getting messages for user:', req.user._id, 'Role:', req.user.role);
+    const { type, search } = req.query;
+    const userId = req.user._id;
     
-    // Enhanced query for all roles including User - get messages where user is either sender or recipient
-    const messages = await Message.find({
-      $or: [
-        { sender: req.user._id },
-        { 'recipients.user': req.user._id }
-      ]
-    }).populate({
-      path: 'sender',
-      select: 'username photo role activeDepartment',
-      populate: {
-        path: 'activeDepartment',
-        select: 'name'
-      }
-    }).populate({
-      path: 'recipients.user',
-      select: 'username photo role activeDepartment',
-      populate: {
-        path: 'activeDepartment',
-        select: 'name'
-      }
-    }).sort({ createdAt: -1 });
+    // Build query filter
+    const query = {
+      deletedBy: { $ne: userId }
+    };
     
-    console.log('Found messages:', messages.length);
+    if (type === 'sent') {
+      query.sender = userId;
+    } else if (type === 'inbox' || type === 'received') {
+      query['recipients.user'] = userId;
+    } else {
+      query.$or = [
+        { sender: userId },
+        { 'recipients.user': userId }
+      ];
+    }
     
-    // Enhanced message processing for all user roles including User
-    const messagesWithReadStatus = messages.map(message => {
-      const messageObj = message.toObject();
-      
-      // Determine if current user is a recipient and get read status
-      const recipient = messageObj.recipients.find(
-        r => r.user && r.user._id && r.user._id.toString() === req.user._id.toString()
-      );
-      
-      // Set read status: if user is recipient, use their read status; if sender, mark as read
-      messageObj.isRead = recipient ? recipient.read : true;
-      
-      // Ensure role information is properly available for cross-role messaging
-      if (messageObj.sender && !messageObj.sender.role) {
-        messageObj.sender.role = 'User'; // Default fallback
-      }
-      
-      // Ensure messageType and crossDepartment are set if not already present
-      if (!messageObj.messageType) {
-        messageObj.messageType = messageObj.recipients.length === 1 ? 'one-to-one' : 'one-to-many';
-      }
-      
-      if (messageObj.crossDepartment === undefined) {
-        messageObj.crossDepartment = false;
-      }
-      
-      // Add recipient count for better UI display
-      messageObj.recipientCount = messageObj.recipients.length;
-      
-      return messageObj;
-    });
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { subject: searchRegex },
+          { content: searchRegex }
+        ]
+      });
+    }
     
-    // Calculate comprehensive statistics
-    const unreadCount = messagesWithReadStatus.filter(msg => !msg.isRead).length;
-    const oneToOneCount = messagesWithReadStatus.filter(msg => msg.messageType === 'one-to-one').length;
-    const groupCount = messagesWithReadStatus.filter(msg => msg.messageType === 'one-to-many').length;
+    const messages = await Message.find(query)
+      .populate({
+        path: 'sender',
+        select: 'username photo role activeDepartment',
+        populate: {
+          path: 'activeDepartment',
+          select: 'name'
+        }
+      })
+      .populate({
+        path: 'recipients.user',
+        select: 'username photo role activeDepartment',
+        populate: {
+          path: 'activeDepartment',
+          select: 'name'
+        }
+      })
+      .sort({ createdAt: -1 });
+      
+    const formattedMessages = formatMessages(messages, userId);
     
-    console.log(`Messages for ${req.user.role}: Total: ${messagesWithReadStatus.length}, Unread: ${unreadCount}`);
+    // Calculate global stats for the user
+    const [unreadCount, inboxCount, sentCount] = await Promise.all([
+      Message.countDocuments({
+        'recipients': {
+          $elemMatch: {
+            'user': userId,
+            'read': false
+          }
+        },
+        deletedBy: { $ne: userId }
+      }),
+      Message.countDocuments({
+        'recipients.user': userId,
+        deletedBy: { $ne: userId }
+      }),
+      Message.countDocuments({
+        sender: userId,
+        deletedBy: { $ne: userId }
+      })
+    ]);
+    
+    const oneToOneCount = formattedMessages.filter(msg => msg.messageType === 'one-to-one').length;
+    const groupCount = formattedMessages.filter(msg => msg.messageType === 'one-to-many').length;
     
     res.status(200).json({
       success: true,
-      count: messagesWithReadStatus.length,
-      unreadCount: unreadCount,
-      oneToOneCount: oneToOneCount,
-      groupCount: groupCount,
-      data: messagesWithReadStatus
+      count: formattedMessages.length,
+      unreadCount,
+      inboxCount,
+      sentCount,
+      oneToOneCount,
+      groupCount,
+      data: formattedMessages
     });
   } catch (err) {
     console.error('Error getting messages:', err);
     next(err);
   }
 };
+
+// @desc    Get inbox messages (convenience endpoint)
+// @route   GET /api/messages/inbox
+// @access  Private
+exports.getInboxMessages = async (req, res, next) => {
+  req.query.type = 'inbox';
+  return exports.getMessages(req, res, next);
+};
+
+// @desc    Get sent messages (convenience endpoint)
+// @route   GET /api/messages/sent
+// @access  Private
+exports.getSentMessages = async (req, res, next) => {
+  req.query.type = 'sent';
+  return exports.getMessages(req, res, next);
+};
+

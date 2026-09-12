@@ -7,6 +7,7 @@ const ErrorResponse = require('../../utils/errorResponse');
 // @access  Private
 exports.getMessage = async (req, res, next) => {
   try {
+    const userId = req.user._id;
     const message = await Message.findById(req.params.id)
       .populate('sender', 'username photo role activeDepartment')
       .populate('recipients.user', 'username photo role activeDepartment');
@@ -17,56 +18,58 @@ exports.getMessage = async (req, res, next) => {
       );
     }
     
-    console.log('Checking message access for user:', req.user._id.toString());
-    console.log('Message sender:', message.sender._id.toString());
-    console.log('Message recipients:', message.recipients.map(r => ({
-      userId: r.user._id.toString(),
-      read: r.read
-    })));
+    // Check if user has deleted this message for themselves
+    if (message.deletedBy && message.deletedBy.some(id => id.toString() === userId.toString())) {
+      return next(
+        new ErrorResponse(`Message not found with id of ${req.params.id}`, 404)
+      );
+    }
     
     // Check if user has access to this message
-    const isSender = message.sender._id.toString() === req.user._id.toString();
-    const isRecipient = message.recipients.some(
-      r => r.user._id.toString() === req.user._id.toString()
+    const isSender = message.sender && message.sender._id.toString() === userId.toString();
+    const isRecipient = message.recipients && message.recipients.some(
+      r => r.user && r.user._id.toString() === userId.toString()
     );
     
-    console.log('Access check - isSender:', isSender, 'isRecipient:', isRecipient);
-    
-    // Enhanced authorization: Allow access if user is sender, recipient, or Admin/AdminTuningDesk
-    const hasAdminAccess = ['Admin', 'AdminTuningDesk'].includes(req.user.role);
+    const hasAdminAccess = ['Admin', 'AdminTuningDesk', 'SuperAdmin'].includes(req.user.role);
     const hasAccess = isSender || isRecipient || hasAdminAccess;
     
     if (!hasAccess) {
-      console.log(`User ${req.user.username} (${req.user.role}) denied access to message ${req.params.id}`);
       return next(
         new ErrorResponse(`Not authorized to access this message`, 403)
       );
     }
     
-    console.log(`User ${req.user.username} (${req.user.role}) granted access to message ${req.params.id}`);
-    
-    // Mark as read if user is a recipient
+    // Mark as read if user is a recipient and unread
     if (isRecipient) {
       let messageUpdated = false;
       message.recipients.forEach(recipient => {
-        if (recipient.user._id.toString() === req.user._id.toString() && !recipient.read) {
+        if (recipient.user && recipient.user._id.toString() === userId.toString() && !recipient.read) {
           recipient.read = true;
+          recipient.readAt = new Date();
           messageUpdated = true;
         }
       });
       
       if (messageUpdated) {
         await message.save();
-        console.log(`Message ${req.params.id} marked as read by user ${req.user.username}`);
       }
     }
     
+    const messageObj = message.toObject ? message.toObject() : { ...message };
+    const recipient = messageObj.recipients?.find(
+      r => r.user && (r.user._id ? r.user._id.toString() : r.user.toString()) === userId.toString()
+    );
+    messageObj.isRead = recipient ? recipient.read : true;
+    messageObj.isSender = isSender;
+    
     res.status(200).json({
       success: true,
-      data: message
+      data: messageObj
     });
   } catch (err) {
     console.error('Error in getMessage:', err);
     next(err);
   }
 };
+

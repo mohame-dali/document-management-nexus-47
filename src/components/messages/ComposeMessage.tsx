@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,10 @@ import {
   Upload, 
   Send,
   Paperclip,
-  MessageSquare
+  MessageSquare,
+  AlertCircle,
+  Clock,
+  Check
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { sendMessage } from '@/services/messageService';
@@ -22,36 +24,50 @@ import ContactSelector from './ContactSelector';
 interface ComposeMessageProps {
   onClose: () => void;
   onMessageSent: () => void;
+  initialRecipients?: User[];
 }
 
-const ComposeMessage: React.FC<ComposeMessageProps> = ({ onClose, onMessageSent }) => {
-  const [recipients, setRecipients] = useState<User[]>([]);
+const ComposeMessage: React.FC<ComposeMessageProps> = ({ 
+  onClose, 
+  onMessageSent,
+  initialRecipients = []
+}) => {
+  const [recipients, setRecipients] = useState<User[]>(initialRecipients);
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
+  const [priority, setPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
   const [attachments, setAttachments] = useState<File[]>([]);
 
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
   const sendMessageMutation = useMutation({
-    mutationFn: ({ recipientIds, subject, content, attachments }: {
+    mutationFn: ({ 
+      recipientIds, 
+      subject, 
+      content, 
+      attachments,
+      priority
+    }: {
       recipientIds: string[];
       subject: string;
       content: string;
       attachments?: File[];
-    }) => sendMessage(recipientIds, subject, content, attachments),
+      priority: 'normal' | 'high' | 'urgent';
+    }) => sendMessage(recipientIds, subject, content, attachments, priority),
     onSuccess: () => {
       toast({
         title: t('messages.sent'),
         description: t('messages.sentSuccess')
       });
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
       onMessageSent();
       onClose();
     },
-    onError: () => {
+    onError: (err: any) => {
       toast({
-        title: "خطأ",
-        description: t('messages.sendError'),
+        title: "خطأ في الإرسال",
+        description: err.response?.data?.message || t('messages.sendError'),
         variant: "destructive"
       });
     }
@@ -59,11 +75,11 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({ onClose, onMessageSent 
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setAttachments([...attachments, ...files]);
+    setAttachments(prev => [...prev, ...files]);
   };
 
   const removeAttachment = (index: number) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -71,7 +87,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({ onClose, onMessageSent 
     
     if (recipients.length === 0) {
       toast({
-        title: "خطأ",
+        title: "تنبيه",
         description: t('messages.selectRecipient'),
         variant: "destructive"
       });
@@ -80,7 +96,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({ onClose, onMessageSent 
 
     if (!subject.trim() || !content.trim()) {
       toast({
-        title: "خطأ",
+        title: "تنبيه",
         description: t('messages.fillFields'),
         variant: "destructive"
       });
@@ -88,46 +104,51 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({ onClose, onMessageSent 
     }
 
     const recipientIds = recipients.map(recipient => recipient._id);
-    sendMessageMutation.mutate({ recipientIds, subject, content, attachments });
+    sendMessageMutation.mutate({ 
+      recipientIds, 
+      subject: subject.trim(), 
+      content: content.trim(), 
+      attachments,
+      priority 
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 flex items-center justify-center" dir="rtl">
-      <Card className="w-full max-w-4xl mx-auto shadow-2xl border-0 overflow-hidden bg-white/95 backdrop-blur-sm">
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-1">
-          <CardHeader className="bg-white m-1 rounded-lg shadow-inner">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
-                  <MessageSquare className="h-8 w-8 text-blue-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    {t('messages.compose')}
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1 font-medium">إنشاء رسالة جديدة</p>
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onClose}
-                className="hover:bg-red-50 hover:text-red-600 p-2 rounded-full transition-colors duration-200"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+    <div className="bg-[#f7fafc] py-4 px-2 sm:px-6" dir="rtl">
+      <Card className="w-full max-w-4xl mx-auto shadow-sm border border-[#e2e8f0] rounded bg-white overflow-hidden">
+        {/* Sober AdminLTE Header */}
+        <div className="border-b border-[#e2e8f0] px-6 py-4 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-slate-100 rounded text-[#2c5282]">
+              <MessageSquare className="h-5 w-5" />
             </div>
-          </CardHeader>
+            <div>
+              <CardTitle className="text-lg font-bold text-slate-900">
+                {t('messages.compose')}
+              </CardTitle>
+              <p className="text-xs text-slate-500 mt-0.5">
+                إرسال رسالة رسمية جديدة إلى مستخدم أو مجموعة مستخدمين
+              </p>
+            </div>
+          </div>
+
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onClose}
+            className="h-8 w-8 p-0 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors duration-200"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
-        <CardContent className="p-6 sm:p-8 space-y-8">
-          <form onSubmit={handleSubmit} className="space-y-8">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Recipients Section */}
-            <div className="space-y-4">
-              <Label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-                {t('messages.recipients')}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>{t('messages.recipients')}</span>
+                <span className="text-red-500">*</span>
               </Label>
               <ContactSelector 
                 selectedContacts={recipients}
@@ -135,114 +156,171 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({ onClose, onMessageSent 
               />
             </div>
 
-            {/* Subject */}
-            <div className="space-y-3">
-              <Label htmlFor="subject" className="text-base font-semibold text-gray-800">
-                {t('messages.subject')}
-              </Label>
-              <Input
-                id="subject"
-                placeholder={t('messages.enterSubject')}
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                required
-                className="h-12 text-right border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200"
-              />
+            {/* Subject and Priority Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2 space-y-1.5">
+                <Label htmlFor="subject" className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <span>{t('messages.subject')}</span>
+                  <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="subject"
+                  placeholder={t('messages.enterSubject')}
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  required
+                  className="h-9 text-xs text-right border-[#cbd5e1] focus:border-[#2c5282] rounded"
+                />
+              </div>
+
+              {/* Priority Selector with subtle amber highlights */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">
+                  درجة الأولوية
+                </Label>
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setPriority('normal')}
+                    className={`flex-1 py-1.5 px-2 text-xs font-medium rounded border transition-colors duration-200 ${
+                      priority === 'normal'
+                        ? 'bg-slate-100 text-slate-800 border-slate-300 font-semibold'
+                        : 'bg-white text-slate-600 border-[#e2e8f0] hover:bg-slate-50'
+                    }`}
+                  >
+                    عادية
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPriority('high')}
+                    className={`flex-1 py-1.5 px-2 text-xs font-medium rounded border transition-colors duration-200 ${
+                      priority === 'high'
+                        ? 'bg-[#FFD758]/25 text-[#92400e] border-[#FFCB56] font-semibold'
+                        : 'bg-white text-slate-600 border-[#e2e8f0] hover:bg-amber-50/50'
+                    }`}
+                  >
+                    مرتفعة
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPriority('urgent')}
+                    className={`flex-1 py-1.5 px-2 text-xs font-medium rounded border transition-colors duration-200 ${
+                      priority === 'urgent'
+                        ? 'bg-[#FFCB56] text-[#78350f] border-[#FFD758] font-semibold'
+                        : 'bg-white text-slate-600 border-[#e2e8f0] hover:bg-amber-50'
+                    }`}
+                  >
+                    عاجلة
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Content */}
-            <div className="space-y-3">
-              <Label htmlFor="content" className="text-base font-semibold text-gray-800">
-                {t('messages.content')}
+            {/* Content Textarea */}
+            <div className="space-y-1.5">
+              <Label htmlFor="content" className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>{t('messages.content')}</span>
+                <span className="text-red-500">*</span>
               </Label>
               <Textarea
                 id="content"
                 placeholder={t('messages.typeMessage')}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                rows={8}
+                rows={7}
                 required
-                className="text-right border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 resize-none transition-colors duration-200"
+                className="text-xs text-right border-[#cbd5e1] focus:border-[#2c5282] resize-y rounded"
               />
             </div>
 
-            {/* Attachments */}
-            <div className="space-y-4">
-              <Label className="text-base font-semibold text-gray-800 flex items-center gap-2">
-                <Paperclip className="h-4 w-4 text-gray-600" />
-                {t('messages.attachments')}
-              </Label>
-              <div className="space-y-3">
-                <div>
-                  <input
-                    type="file"
-                    id="file-upload"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                    className="h-12 border-dashed border-2 border-gray-300 hover:border-blue-400 hover:bg-blue-50 w-full transition-colors duration-200"
-                  >
-                    <Upload className="h-5 w-5 ml-2 text-gray-500" />
-                    {t('messages.addAttachments')}
-                  </Button>
-                </div>
-                {attachments.length > 0 && (
-                  <div className="space-y-2">
-                    {attachments.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-lg hover:shadow-sm transition-shadow">
-                        <div className="flex items-center gap-2">
-                          <Paperclip className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm font-medium text-gray-700">{file.name}</span>
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAttachment(index)}
-                          className="hover:bg-red-100 hover:text-red-600 p-1 rounded transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Attachments Section */}
+            <div className="space-y-2 pt-1 border-t border-[#edf2f7]">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Paperclip className="h-3.5 w-3.5 text-slate-500" />
+                  <span>{t('messages.attachments')}</span>
+                </Label>
+                <span className="text-[11px] text-slate-400">
+                  (PDF, صور، مستندات)
+                </span>
               </div>
+
+              <div>
+                <input
+                  type="file"
+                  id="file-upload-input"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('file-upload-input')?.click()}
+                  className="h-9 text-xs border border-dashed border-[#cbd5e1] hover:border-[#2c5282] hover:bg-slate-50 w-full transition-colors duration-200 rounded text-slate-600 flex items-center justify-center gap-2"
+                >
+                  <Upload className="h-3.5 w-3.5 text-slate-500" />
+                  <span>{t('messages.addAttachments')}</span>
+                </Button>
+              </div>
+
+              {attachments.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {attachments.map((file, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between bg-[#f8fafc] border border-[#e2e8f0] px-3 py-1.5 rounded text-xs"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Paperclip className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                        <span className="font-medium text-slate-700 truncate">{file.name}</span>
+                        <span className="text-[10px] text-slate-400 flex-shrink-0">
+                          ({(file.size / 1024).toFixed(0)} ك.ب)
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAttachment(index)}
+                        className="h-6 w-6 p-0 text-slate-400 hover:text-red-600 rounded"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
+            {/* Form Actions */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#e2e8f0]">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={onClose}
-                className="h-12 px-8 border-2 border-gray-200 hover:bg-gray-50 transition-colors duration-200"
+                className="h-9 px-4 text-xs font-medium rounded border-[#cbd5e1] text-slate-700 hover:bg-slate-100 transition-colors duration-200"
               >
                 {t('messages.cancel')}
               </Button>
+
               <Button 
                 type="submit" 
                 disabled={sendMessageMutation.isPending}
-                className="h-12 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg transition-all duration-200 transform hover:scale-105"
+                className="h-9 px-5 text-xs font-medium rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 flex items-center gap-2"
               >
                 {sendMessageMutation.isPending ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    {t('messages.sending')}
-                  </div>
+                  <>
+                    <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
+                    <span>{t('messages.sending')}</span>
+                  </>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Send className="h-4 w-4" />
-                    {t('messages.send')}
-                  </div>
+                  <>
+                    <Send className="h-3.5 w-3.5" />
+                    <span>{t('messages.send')}</span>
+                  </>
                 )}
               </Button>
             </div>

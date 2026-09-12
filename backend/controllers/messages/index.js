@@ -8,6 +8,8 @@ const countControllers = require('./countControllers');
 module.exports = {
   // List controllers
   getMessages: listControllers.getMessages,
+  getInboxMessages: listControllers.getInboxMessages,
+  getSentMessages: listControllers.getSentMessages,
   
   // Detail controllers
   getMessage: detailControllers.getMessage,
@@ -16,7 +18,9 @@ module.exports = {
   sendMessage: managementControllers.sendMessage,
   deleteMessage: managementControllers.deleteMessage,
   markAsRead: managementControllers.markAsRead,
+  markAllAsRead: managementControllers.markAllAsRead,
   
   // Count controllers
   getUnreadCount: countControllers.getUnreadCount
 };
+

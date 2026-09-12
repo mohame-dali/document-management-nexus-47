@@ -1,12 +1,10 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { MessageSquare, Clock, User, Sparkles } from 'lucide-react';
+import { MessageSquare, Clock, Paperclip, AlertCircle, Check, CheckCheck } from 'lucide-react';
 import { getMessages } from '@/services/messageService';
 import { Message } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,126 +12,172 @@ import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface MessagesListProps {
   onSelectMessage: (messageId: string) => void;
-  selectedMessageId?: string;
+  selectedMessageId?: string | null;
   searchTerm?: string;
+  activeTab?: 'inbox' | 'sent';
 }
 
 const MessagesList: React.FC<MessagesListProps> = ({ 
   onSelectMessage, 
   selectedMessageId,
-  searchTerm = ''
+  searchTerm = '',
+  activeTab = 'inbox'
 }) => {
   const { currentUser } = useAuth();
   const { t } = useLanguage();
   
   const { data: messagesResponse, isLoading, error } = useQuery({
-    queryKey: ['messages'],
-    queryFn: getMessages
+    queryKey: ['messages', activeTab],
+    queryFn: () => getMessages(activeTab)
   });
 
   const messages = messagesResponse?.data || [];
 
   const filteredMessages = messages.filter((message: Message) => {
-    if (!searchTerm) return true;
+    if (!searchTerm.trim()) return true;
     
-    const searchLower = searchTerm.toLowerCase();
-    const subjectMatch = message.subject?.toLowerCase().includes(searchLower);
-    const contentMatch = message.content?.toLowerCase().includes(searchLower);
+    const term = searchTerm.toLowerCase().trim();
+    const subjectMatch = message.subject?.toLowerCase().includes(term);
+    const contentMatch = message.content?.toLowerCase().includes(term);
     
     let senderMatch = false;
     if (typeof message.sender === 'object' && message.sender?.username) {
-      senderMatch = message.sender.username.toLowerCase().includes(searchLower);
+      senderMatch = message.sender.username.toLowerCase().includes(term);
     }
     
-    return subjectMatch || contentMatch || senderMatch;
+    let recipientMatch = false;
+    if (Array.isArray(message.recipients)) {
+      recipientMatch = message.recipients.some(r => {
+        if (typeof r.user === 'object' && r.user?.username) {
+          return r.user.username.toLowerCase().includes(term);
+        }
+        return false;
+      });
+    }
+    
+    return subjectMatch || contentMatch || senderMatch || recipientMatch;
   });
 
   const isMessageRead = (message: Message): boolean => {
-    if (!currentUser?._id) return false;
+    if (!currentUser?._id) return true;
     
-    // Check if the message has an isRead property
+    // If active tab is sent, sender has already seen it
+    if (activeTab === 'sent') return true;
+    
+    // Check explicit boolean
     if ('isRead' in message && typeof message.isRead === 'boolean') {
       return message.isRead;
     }
     
-    // Check recipients array
     if (Array.isArray(message.recipients)) {
       const recipient = message.recipients.find((r: any) => {
         if (typeof r === 'object' && r.user) {
-          const userId = typeof r.user === 'object' ? r.user._id : r.user;
-          return userId === currentUser._id;
+          const uId = typeof r.user === 'object' ? r.user._id : r.user;
+          return uId?.toString() === currentUser._id?.toString();
         }
         return false;
       });
-      return recipient ? !!recipient.read : false;
+      return recipient ? !!recipient.read : true;
     }
     
-    return false;
+    return true;
   };
 
-  const getSenderName = (message: Message): string => {
+  const getDisplayName = (message: Message): string => {
+    if (activeTab === 'sent') {
+      if (Array.isArray(message.recipients) && message.recipients.length > 0) {
+        const names = message.recipients.map(r => {
+          if (typeof r.user === 'object' && r.user?.username) {
+            return r.user.username;
+          }
+          return t('messages.unknownUser');
+        });
+        if (names.length === 1) return `إلى: ${names[0]}`;
+        return `إلى: ${names[0]} (+${names.length - 1})`;
+      }
+      return 'إلى: مستلم غير معروف';
+    }
+
     if (typeof message.sender === 'object' && message.sender?.username) {
       return message.sender.username;
     }
     return t('messages.unknownUser');
   };
 
-  const getSenderPhoto = (message: Message): string => {
-    if (typeof message.sender === 'object' && message.sender?.photo) {
+  const getDisplayPhoto = (message: Message): string => {
+    const target = activeTab === 'sent' && Array.isArray(message.recipients) && message.recipients[0]?.user
+      ? message.recipients[0].user
+      : message.sender;
+
+    if (typeof target === 'object' && target?.photo) {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      return `${API_URL}${message.sender.photo}`;
+      return `${API_URL}${target.photo}`;
     }
     return '';
   };
 
-  const getSenderRole = (message: Message): string => {
-    if (typeof message.sender === 'object' && message.sender?.role) {
-      return message.sender.role;
+  const getDisplayRole = (message: Message): string => {
+    const target = activeTab === 'sent' && Array.isArray(message.recipients) && message.recipients[0]?.user
+      ? message.recipients[0].user
+      : message.sender;
+
+    if (typeof target === 'object' && target?.role) {
+      return target.role;
     }
     return 'User';
-  };
-
-  const getRecipientCount = (message: Message): number => {
-    if (Array.isArray(message.recipients)) {
-      return message.recipients.length;
-    }
-    return 0;
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'Admin':
-        return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300';
-      case 'AdminDepartment':
-        return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300';
-      case 'AdminTuningDesk':
-        return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
-      case 'User':
-        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
-      default:
-        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
-    }
   };
 
   const getRoleDisplayName = (role: string) => {
     return t(`roles.${role}`) || role;
   };
 
+  const getRoleBadgeClasses = (role: string) => {
+    switch (role) {
+      case 'Admin':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'AdminDepartment':
+        return 'bg-blue-50 text-[#2c5282] border-blue-200';
+      case 'AdminTuningDesk':
+        return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const getPriorityBadge = (priority?: string) => {
+    if (priority === 'urgent') {
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+          <AlertCircle className="h-3 w-3" />
+          عاجل
+        </span>
+      );
+    }
+    if (priority === 'high') {
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-[#FFD758]/25 text-[#92400e] border border-[#FFCB56]/50">
+          مرتفع
+        </span>
+      );
+    }
+    return null;
+  };
+
   if (isLoading) {
     return (
-      <div className="space-y-3 p-4">
-        {[1, 2, 3, 4, 5].map(i => (
-          <Card key={i} className="border-0 shadow-sm bg-gray-50">
-            <CardContent className="p-4">
-              <div className="animate-pulse flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                </div>
+      <div className="divide-y divide-[#e2e8f0]">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="p-4 bg-white animate-pulse flex items-start gap-3">
+            <div className="w-10 h-10 bg-slate-200 rounded flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="h-3.5 bg-slate-200 rounded w-28" />
+                <div className="h-3 bg-slate-200 rounded w-16" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="h-3.5 bg-slate-200 rounded w-44" />
+              <div className="h-3 bg-slate-100 rounded w-3/4" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -141,130 +185,148 @@ const MessagesList: React.FC<MessagesListProps> = ({
 
   if (error) {
     return (
-      <Card className="m-4 border-0 shadow-lg bg-red-50">
-        <CardContent className="p-8">
-          <div className="text-center text-red-500">
-            <div className="p-4 bg-red-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <MessageSquare className="h-8 w-8 text-red-400" />
-            </div>
-            <p className="text-lg font-bold mb-2 text-red-700">{t('messages.error')}</p>
-            <p className="text-sm text-red-600">{t('messages.tryAgain')}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6 text-center text-slate-600 bg-white">
+        <div className="inline-flex p-3 bg-red-50 text-red-600 rounded mb-3">
+          <MessageSquare className="h-6 w-6" />
+        </div>
+        <p className="text-sm font-semibold text-slate-800 mb-1">{t('messages.error')}</p>
+        <p className="text-xs text-slate-500">{t('messages.tryAgain')}</p>
+      </div>
     );
   }
 
   if (filteredMessages.length === 0) {
     return (
-      <Card className="m-4 border-0 shadow-lg bg-gray-50">
-        <CardContent className="p-8">
-          <div className="text-center text-gray-500">
-            <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <MessageSquare className="h-8 w-8 text-gray-400" />
-            </div>
-            <p className="text-lg font-bold mb-2 text-gray-700">
-              {searchTerm ? 'لم يتم العثور على رسائل' : t('messages.noMessages')}
-            </p>
-            <p className="text-sm text-gray-500">
-              {searchTerm 
-                ? t('messages.adjustSearch')
-                : 'ابدأ محادثة بإرسال أول رسالة لك'
-              }
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-8 text-center text-slate-500 bg-white">
+        <div className="inline-flex p-3 bg-slate-100 text-slate-400 rounded mb-3">
+          <MessageSquare className="h-6 w-6" />
+        </div>
+        <p className="text-sm font-semibold text-slate-700 mb-1">
+          {searchTerm ? 'لم يتم العثور على أي رسائل مطابقة' : (activeTab === 'sent' ? 'لا توجد رسائل مرسلة' : 'صندوق الوارد فارغ')}
+        </p>
+        <p className="text-xs text-slate-400 max-w-xs mx-auto">
+          {searchTerm ? 'جرّب تعديل كلمات البحث' : 'ابدأ بكتابة رسالة جديدة للتواصل مع زملائك'}
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-2 p-4">
-      {filteredMessages.map((message: Message) => (
-        <Card 
-          key={message._id}
-          className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-0 ${
-            selectedMessageId === message._id 
-              ? 'ring-2 ring-blue-500 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50' 
-              : 'bg-white hover:bg-gray-50 shadow-sm'
-          }`}
-          onClick={() => onSelectMessage(message._id)}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-start space-x-3">
-              <div className="relative">
-                <Avatar className="h-12 w-12 border-2 border-white shadow-md">
-                  {getSenderPhoto(message) ? (
-                    <AvatarImage 
-                      src={getSenderPhoto(message)} 
-                      alt={getSenderName(message)}
-                      className="object-cover"
-                    />
+    <div className="divide-y divide-[#edf2f7] bg-white" dir="rtl">
+      {filteredMessages.map((message: Message) => {
+        const isRead = isMessageRead(message);
+        const isSelected = selectedMessageId === message._id;
+        const displayName = getDisplayName(message);
+        const displayPhoto = getDisplayPhoto(message);
+        const displayRole = getDisplayRole(message);
+        const hasAttachments = Boolean(message.attachments && message.attachments.length > 0);
+
+        return (
+          <div
+            key={message._id}
+            onClick={() => onSelectMessage(message._id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                onSelectMessage(message._id);
+              }
+            }}
+            className={`p-3.5 cursor-pointer text-right transition-colors duration-200 border-r-4 ${
+              isSelected 
+                ? 'bg-[#ebf4ff] border-r-[#2c5282]' 
+                : !isRead 
+                  ? 'bg-amber-50/40 hover:bg-amber-50/70 border-r-[#FFCB56]' 
+                  : 'bg-white hover:bg-slate-50 border-r-transparent'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0 mt-0.5">
+                <Avatar className="h-9 w-9 rounded border border-[#e2e8f0]">
+                  {displayPhoto ? (
+                    <AvatarImage src={displayPhoto} alt={displayName} className="object-cover" />
                   ) : null}
-                  <AvatarFallback className={`font-bold text-sm ${getRoleColor(getSenderRole(message))}`}>
-                    {getSenderName(message).charAt(0).toUpperCase()}
+                  <AvatarFallback className="rounded bg-slate-100 text-[#2c5282] font-semibold text-xs">
+                    {displayName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                {!isMessageRead(message) && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-red-500 to-pink-500 rounded-full animate-pulse shadow-lg">
-                    <Sparkles className="h-2 w-2 text-white absolute top-1 left-1" />
-                  </div>
+                {!isRead && (
+                  <span 
+                    className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#FFCB56] ring-2 ring-white" 
+                    title="غير مقروءة"
+                  />
                 )}
               </div>
-              
+
+              {/* Message Details */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-sm truncate text-gray-800">
-                      {getSenderName(message)}
+                {/* Header row: Sender + Badges + Date */}
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`text-xs truncate ${!isRead ? 'font-bold text-slate-900' : 'font-medium text-slate-800'}`}>
+                      {displayName}
                     </span>
-                    <Badge className={`text-xs border ${getRoleColor(getSenderRole(message))}`}>
-                      {getRoleDisplayName(getSenderRole(message))}
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 rounded ${getRoleBadgeClasses(displayRole)}`}>
+                      {getRoleDisplayName(displayRole)}
                     </Badge>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {!isMessageRead(message) && (
-                      <Badge className="text-xs bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-sm animate-pulse">
-                        <Sparkles className="h-2 w-2 mr-1" />
-                        {t('messages.new')}
-                      </Badge>
+
+                  <div className="flex items-center gap-1.5 flex-shrink-0 text-[11px] text-slate-500">
+                    {activeTab === 'sent' && (
+                      <span title="مرسلة">
+                        <CheckCheck className="h-3.5 w-3.5 text-[#2c5282]" />
+                      </span>
                     )}
-                    {getRecipientCount(message) > 1 && (
-                      <Badge variant="outline" className="text-xs border-blue-200 bg-blue-50 text-blue-700">
-                        <User className="h-3 w-3 mr-1" />
-                        {getRecipientCount(message)}
-                      </Badge>
-                    )}
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-slate-400" />
+                      {message.createdAt
+                        ? formatDistanceToNow(new Date(message.createdAt), { addSuffix: true, locale: ar })
+                        : ''}
+                    </span>
                   </div>
                 </div>
-                
-                <h3 className="font-bold text-sm mb-2 truncate text-gray-800">
-                  {message.subject || t('messages.noSubject')}
-                </h3>
-                
-                <p className="text-xs text-gray-600 truncate mb-3 leading-relaxed">
+
+                {/* Subject & Priority */}
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className={`text-xs truncate ${!isRead ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
+                    {message.subject || t('messages.noSubject')}
+                  </h4>
+                  {getPriorityBadge(message.priority)}
+                </div>
+
+                {/* Content snippet */}
+                <p className="text-[11px] text-slate-500 line-clamp-1 leading-snug">
                   {message.content || t('messages.noContent')}
                 </p>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {message.createdAt ? 
-                      formatDistanceToNow(new Date(message.createdAt), { addSuffix: true, locale: ar }) :
-                      t('messages.unknownTime')
-                    }
+
+                {/* Footer indicators */}
+                <div className="flex items-center justify-between mt-1.5 pt-1 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-2">
+                    {hasAttachments && (
+                      <span className="inline-flex items-center gap-1 text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded text-[10px]">
+                        <Paperclip className="h-3 w-3" />
+                        {message.attachments?.length}
+                      </span>
+                    )}
+                    {message.crossDepartment && (
+                      <span className="text-[10px] text-[#2c5282] bg-blue-50 px-1.5 py-0.2 rounded border border-blue-100">
+                        عبر الأقسام
+                      </span>
+                    )}
                   </div>
-                  {message.attachments && message.attachments.length > 0 && (
-                    <Badge variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
-                      📎 {message.attachments.length}
-                    </Badge>
+
+                  {!isRead && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56]/20 text-[#78350f] border border-[#FFD758]">
+                      جديدة
+                    </span>
                   )}
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 };

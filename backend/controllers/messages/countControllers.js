@@ -7,23 +7,19 @@ const ErrorResponse = require('../../utils/errorResponse');
 // @access  Private
 exports.getUnreadCount = async (req, res, next) => {
   try {
-    console.log('Getting unread count for user:', req.user._id);
-    
-    // Count unread messages where user is a recipient
-    // Available for all roles: Admin, AdminDepartment, AdminTuningDesk, User
     const unreadCount = await Message.countDocuments({
       'recipients': {
         $elemMatch: {
           'user': req.user._id,
           'read': false
         }
-      }
+      },
+      deletedBy: { $ne: req.user._id }
     });
-    
-    console.log('Unread count:', unreadCount);
     
     res.status(200).json({
       success: true,
+      count: unreadCount,
       data: unreadCount
     });
   } catch (err) {
@@ -31,3 +27,4 @@ exports.getUnreadCount = async (req, res, next) => {
     next(err);
   }
 };
+

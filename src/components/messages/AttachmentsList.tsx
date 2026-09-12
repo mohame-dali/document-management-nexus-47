@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Download, FileText, Image, File } from 'lucide-react';
+import { Download, FileText, Image, File, ExternalLink, Paperclip } from 'lucide-react';
 import { Message } from '@/types';
 
 interface AttachmentsListProps {
@@ -10,78 +8,62 @@ interface AttachmentsListProps {
 }
 
 const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
-  const getFileIcon = (filename: string) => {
+  const getFileIcon = (filename?: string) => {
     const extension = filename?.split('.').pop()?.toLowerCase();
     
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(extension || '')) {
-      return <Image className="h-5 w-5" />;
-    } else if (['pdf'].includes(extension || '')) {
-      return <FileText className="h-5 w-5" />;
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(extension || '')) {
+      return <Image className="h-4 w-4 text-[#2c5282]" />;
+    } else if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
+      return <FileText className="h-4 w-4 text-[#2c5282]" />;
     } else {
-      return <File className="h-5 w-5" />;
+      return <File className="h-4 w-4 text-slate-500" />;
     }
   };
 
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = (bytes?: number): string => {
     if (!bytes) return '';
-    
     if (bytes < 1024) return `${bytes} بايت`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} كيلوبايت`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} ميجابايت`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ك.ب`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} م.ب`;
   };
 
   const getAttachmentUrl = (attachment: any): string => {
-    // Check if attachment has a full URL
     if (attachment.url && attachment.url.startsWith('http')) {
       return attachment.url;
     }
     
-    // If path exists, construct the proper URL
     if (attachment.path) {
-      // Remove any Windows-style absolute paths and use only the filename
       const filename = attachment.path.split(/[\/\\]/).pop();
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-      return `${apiBaseUrl}/uploads/attachments/${filename}`;
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      return `${apiBaseUrl}/api/messages/attachments/${filename}`;
     }
     
-    // Fallback: try to construct URL from filename
     if (attachment.filename) {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-      return `${apiBaseUrl}/uploads/attachments/${attachment.filename}`;
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      return `${apiBaseUrl}/api/messages/attachments/${attachment.filename}`;
     }
     
     return '';
   };
 
-  const handleDownloadAttachment = (attachment: any) => {
-    const downloadUrl = getAttachmentUrl(attachment);
-    
-    if (!downloadUrl) {
-      console.error('لا يوجد رابط تحميل للمرفق');
-      return;
-    }
-
-    console.log('تحميل المرفق من:', downloadUrl);
+  const handleDownload = (attachment: any) => {
+    const url = getAttachmentUrl(attachment);
+    if (!url) return;
     
     const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = attachment.filename || 'مرفق';
+    link.href = url;
+    link.download = attachment.filename || 'attachment';
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const openAttachment = (attachment: any) => {
-    const openUrl = getAttachmentUrl(attachment);
-    
-    if (!openUrl) {
-      console.error('لا يوجد رابط لفتح المرفق');
-      return;
+  const handleOpen = (attachment: any) => {
+    const url = getAttachmentUrl(attachment);
+    if (url) {
+      window.open(url, '_blank');
     }
-
-    console.log('فتح المرفق من:', openUrl);
-    window.open(openUrl, '_blank');
   };
 
   if (!attachments || attachments.length === 0) {
@@ -89,86 +71,64 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="font-medium mb-3">المرفقات ({attachments.length})</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {attachments.map((attachment, index) => {
-            if (!attachment || typeof attachment !== 'object') {
-              return (
-                <div key={index} className="p-3 border rounded-lg bg-gray-50">
-                  <div className="text-sm">مرفق بدون اسم</div>
+    <div className="mt-4 pt-4 border-t border-[#e2e8f0]" dir="rtl">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-2.5">
+        <Paperclip className="h-3.5 w-3.5 text-[#2c5282]" />
+        <span>المرفقات ({attachments.length})</span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {attachments.map((attachment, index) => {
+          if (!attachment) return null;
+          const url = getAttachmentUrl(attachment);
+
+          return (
+            <div 
+              key={index} 
+              className="flex items-center justify-between p-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs transition-colors duration-200 hover:border-[#cbd5e1] hover:bg-white"
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="p-1.5 bg-slate-100 rounded flex-shrink-0">
+                  {getFileIcon(attachment.filename)}
                 </div>
-              );
-            }
-
-            const attachmentUrl = getAttachmentUrl(attachment);
-
-            return (
-              <div key={index} className="p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 flex-1">
-                    {getFileIcon(attachment.filename)}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {attachment.filename || 'ملف بدون اسم'}
-                      </div>
-                      {attachment.size && (
-                        <div className="text-xs text-gray-500">
-                          {formatFileSize(attachment.size)}
-                        </div>
-                      )}
-                      {!attachmentUrl && (
-                        <div className="text-xs text-red-500">
-                          رابط المرفق غير متوفر
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    {attachment.priority && (
-                      <Badge 
-                        variant={
-                          attachment.priority === 'high' ? 'destructive' :
-                          attachment.priority === 'medium' ? 'default' : 'secondary'
-                        }
-                        className="text-xs"
-                      >
-                        {attachment.priority === 'high' ? 'عالية' :
-                         attachment.priority === 'medium' ? 'متوسطة' : 'منخفضة'}
-                      </Badge>
-                    )}
-                    
-                    <div className="flex space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openAttachment(attachment)}
-                        className="h-8 w-8 p-0"
-                        title="فتح المرفق"
-                        disabled={!attachmentUrl}
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownloadAttachment(attachment)}
-                        className="h-8 w-8 p-0"
-                        title="تحميل المرفق"
-                        disabled={!attachmentUrl}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-slate-800 truncate" title={attachment.filename}>
+                    {attachment.filename || 'ملف مرفق'}
+                  </p>
+                  {attachment.size ? (
+                    <p className="text-[10px] text-slate-400">
+                      {formatFileSize(attachment.size)}
+                    </p>
+                  ) : null}
                 </div>
               </div>
-            );
-          })}
-        </div>
+
+              <div className="flex items-center gap-1 flex-shrink-0 mr-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleOpen(attachment)}
+                  disabled={!url}
+                  className="h-7 w-7 p-0 text-slate-600 hover:text-[#2c5282] hover:bg-blue-50 rounded"
+                  title="عرض المرفق"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(attachment)}
+                  disabled={!url}
+                  className="h-7 px-2 text-[11px] rounded border-[#FFCB56] text-[#78350f] bg-[#FFD758]/15 hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
+                  title="تحميل"
+                >
+                  <Download className="h-3 w-3" />
+                  <span>تحميل</span>
+                </Button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

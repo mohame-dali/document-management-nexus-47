@@ -1,12 +1,16 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { 
   getMessages, 
+  getInboxMessages,
+  getSentMessages,
   getMessage, 
   sendMessage, 
   deleteMessage, 
   markAsRead,
+  markAllAsRead,
   getUnreadCount
 } = require('../controllers/messages');
 const { protect } = require('../middleware/auth');
@@ -14,12 +18,15 @@ const { upload } = require('../middleware/upload');
 
 const router = express.Router();
 
-// Protect all routes - but allow all authenticated users (no role restrictions)
+// Protect all routes with authentication
 router.use(protect);
 
-// Routes - accessible to all authenticated users
+// Collection & utility routes (Must be declared BEFORE /:id parameter)
 router.get('/', getMessages);
 router.get('/unread/count', getUnreadCount);
+router.get('/inbox', getInboxMessages);
+router.get('/sent', getSentMessages);
+router.put('/read-all', markAllAsRead);
 
 // Route to serve attachment files
 router.get('/attachments/:filename', (req, res) => {
@@ -27,23 +34,15 @@ router.get('/attachments/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, '..', 'uploads', 'attachments', filename);
     
-    console.log('طلب تحميل مرفق:', filename);
-    console.log('مسار الملف:', filePath);
-    
-    // Check if file exists
-    const fs = require('fs');
     if (!fs.existsSync(filePath)) {
-      console.error('الملف غير موجود:', filePath);
       return res.status(404).json({
         success: false,
         error: 'الملف غير موجود'
       });
     }
     
-    // Send the file
     res.sendFile(filePath, (err) => {
       if (err) {
-        console.error('خطأ في إرسال الملف:', err);
         res.status(500).json({
           success: false,
           error: 'خطأ في إرسال الملف'
@@ -51,7 +50,6 @@ router.get('/attachments/:filename', (req, res) => {
       }
     });
   } catch (error) {
-    console.error('خطأ في تحميل المرفق:', error);
     res.status(500).json({
       success: false,
       error: 'خطأ في الخادم'
@@ -59,10 +57,11 @@ router.get('/attachments/:filename', (req, res) => {
   }
 });
 
-// Individual message routes - accessible to all authenticated users
+// Individual message operations
 router.get('/:id', getMessage);
 router.post('/', upload.array('attachments'), sendMessage);
 router.delete('/:id', deleteMessage);
 router.put('/:id/read', markAsRead);
 
 module.exports = router;
+

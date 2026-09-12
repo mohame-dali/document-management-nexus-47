@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Mail, Users, Shield, Building2, Settings, User as UserIcon } from 'lucide-react';
+import { Search, Mail, Users, Shield, Building2, Settings, User as UserIcon, Check } from 'lucide-react';
 import { getMessagingUsers } from '@/services/userService';
 import { User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,22 +28,19 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
     queryFn: getMessagingUsers
   });
 
-  // Enhanced filtering for cross-role messaging
   const filteredUsers = users?.filter(user => {
-    // Exclude current user
     if (user._id === currentUser?._id) return false;
-    
-    // Role filter
     if (roleFilter !== 'all' && user.role !== roleFilter) return false;
     
-    // Search filter
-    const matchesSearch = 
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.activeDepartment && typeof user.activeDepartment === 'object' && 
-       user.activeDepartment.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+
+    const matchesUsername = user.username.toLowerCase().includes(term);
+    const matchesRole = user.role.toLowerCase().includes(term);
+    const matchesDept = user.activeDepartment && typeof user.activeDepartment === 'object' && 
+      user.activeDepartment.name.toLowerCase().includes(term);
     
-    return matchesSearch;
+    return matchesUsername || matchesRole || matchesDept;
   }) || [];
 
   const toggleUserSelection = (user: User) => {
@@ -67,31 +63,19 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'Admin':
-        return <Shield className="h-3 w-3" />;
-      case 'AdminDepartment':
-        return <Building2 className="h-3 w-3" />;
-      case 'AdminTuningDesk':
-        return <Settings className="h-3 w-3" />;
-      case 'User':
-        return <UserIcon className="h-3 w-3" />;
-      default:
-        return <UserIcon className="h-3 w-3" />;
+      case 'Admin': return <Shield className="h-3 w-3" />;
+      case 'AdminDepartment': return <Building2 className="h-3 w-3" />;
+      case 'AdminTuningDesk': return <Settings className="h-3 w-3" />;
+      default: return <UserIcon className="h-3 w-3" />;
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Admin':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'AdminDepartment':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'AdminTuningDesk':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'User':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Admin': return 'bg-red-50 text-red-700 border-red-200';
+      case 'AdminDepartment': return 'bg-blue-50 text-[#2c5282] border-blue-200';
+      case 'AdminTuningDesk': return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
@@ -107,7 +91,6 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
     return '';
   };
 
-  // Count users by role
   const roleCounts = users?.reduce((acc, user) => {
     if (user._id !== currentUser?._id) {
       acc[user.role] = (acc[user.role] || 0) + 1;
@@ -116,186 +99,169 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
   }, {} as Record<string, number>) || {};
 
   return (
-    <Card className="h-full border-0 shadow-2xl bg-white/90 backdrop-blur-sm" dir="rtl">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
-              <Users className="h-6 w-6 text-blue-600" />
+    <Card className="border border-[#e2e8f0] shadow-xs bg-white rounded" dir="rtl">
+      <CardHeader className="p-4 border-b border-[#e2e8f0] bg-white">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-slate-100 text-[#2c5282] rounded">
+              <Users className="h-4 w-4" />
             </div>
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              {t('messages.allContacts')} ({filteredUsers.length})
-            </span>
-          </CardTitle>
+            <div>
+              <CardTitle className="text-sm font-bold text-slate-900">
+                {t('messages.allContacts')} ({filteredUsers.length})
+              </CardTitle>
+              <p className="text-[11px] text-slate-500">دليل المستخدمين ومسؤولي الأقسام المتاحين للمراسلة</p>
+            </div>
+          </div>
+
           {selectedUsers.length > 0 && (
             <Button 
               size="sm" 
               onClick={handleComposeToSelected}
-              className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 shadow-lg"
+              className="h-8 px-3 rounded bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] font-semibold text-xs transition-colors duration-200 flex items-center gap-1.5"
             >
-              <Mail className="h-4 w-4 ml-2" />
-              رسالة ({selectedUsers.length})
+              <Mail className="h-3.5 w-3.5" />
+              <span>مراسلة ({selectedUsers.length})</span>
             </Button>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6 p-6">
-        {/* Search */}
+
+      <CardContent className="p-4 space-y-3">
+        {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+          <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             placeholder={t('messages.searchContact')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pr-10 text-right border-2 border-gray-200 focus:border-blue-400 bg-white shadow-sm h-12"
+            className="pr-8 text-xs text-right border-[#cbd5e1] focus:border-[#2c5282] rounded h-9"
           />
         </div>
 
-        {/* Role Filter */}
-        <div className="flex flex-wrap gap-2">
+        {/* Role Filters */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
           <Button
             variant={roleFilter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setRoleFilter('all')}
-            className={roleFilter === 'all' 
-              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700' 
-              : 'hover:bg-blue-50 border-2'
-            }
+            className={`h-7 px-2.5 text-xs rounded transition-colors duration-200 ${
+              roleFilter === 'all' 
+                ? 'bg-[#2c5282] hover:bg-[#234269] text-white border-transparent' 
+                : 'border-[#cbd5e1] text-slate-600 hover:bg-slate-50'
+            }`}
           >
             الكل ({Object.values(roleCounts).reduce((a, b) => a + b, 0)})
           </Button>
+
           {Object.entries(roleCounts).map(([role, count]) => (
             <Button
               key={role}
               variant={roleFilter === role ? 'default' : 'outline'}
               size="sm"
               onClick={() => setRoleFilter(role)}
-              className={`flex items-center gap-1 ${
+              className={`h-7 px-2.5 text-xs rounded transition-colors duration-200 flex items-center gap-1 ${
                 roleFilter === role
-                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
-                  : 'hover:bg-green-50 border-2'
+                  ? 'bg-[#2c5282] hover:bg-[#234269] text-white border-transparent'
+                  : 'border-[#cbd5e1] text-slate-600 hover:bg-slate-50'
               }`}
             >
               {getRoleIcon(role)}
-              {getRoleDisplayName(role)} ({count})
+              <span>{getRoleDisplayName(role)}</span>
+              <span className="text-[10px] opacity-80">({count})</span>
             </Button>
           ))}
         </div>
 
-        {/* Selected Users Summary */}
+        {/* Selected pill row */}
         {selectedUsers.length > 0 && (
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm">
-            <div className="text-sm font-medium text-blue-800 mb-3">
-              {t('messages.selected')} ({selectedUsers.length}):
-            </div>
-            <div className="flex flex-wrap gap-2">
+          <div className="p-2.5 bg-[#f8fafc] rounded border border-[#e2e8f0] text-xs">
+            <span className="text-slate-500 font-medium block mb-1.5">
+              المستخدمون المحددون ({selectedUsers.length}):
+            </span>
+            <div className="flex flex-wrap gap-1.5">
               {selectedUsers.map(user => (
-                <div key={user._id} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm border border-blue-200">
-                  <Avatar className="h-6 w-6">
-                    {getUserPhoto(user) ? (
-                      <AvatarImage 
-                        src={getUserPhoto(user)} 
-                        alt={user.username}
-                        className="object-cover"
-                      />
-                    ) : null}
-                    <AvatarFallback className={`text-xs font-medium ${getRoleColor(user.role)}`}>
-                      {user.username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Badge variant="secondary" className="text-xs">
-                    {user.username} ({getRoleDisplayName(user.role)})
-                  </Badge>
-                </div>
+                <span 
+                  key={user._id} 
+                  className="inline-flex items-center gap-1.5 bg-white px-2 py-0.5 rounded border border-[#cbd5e1] text-slate-700"
+                >
+                  <span className="font-medium">{user.username}</span>
+                  <button 
+                    type="button" 
+                    onClick={() => toggleUserSelection(user)}
+                    className="text-slate-400 hover:text-red-600"
+                  >
+                    ×
+                  </button>
+                </span>
               ))}
             </div>
           </div>
         )}
 
-        {/* Cross-role messaging info */}
-        <div className="text-xs text-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200 shadow-sm">
-          <div className="font-medium mb-2 text-blue-800">{t('messages.crossRoleInfo')}</div>
-          <div className="space-y-1 text-blue-700">
-            <div>• {t('messages.canMessageAny')}</div>
-            <div>• {t('messages.allUsersCanCommunicate')}</div>
-            <div>• {t('messages.noDepartmentRestriction')}</div>
-          </div>
-        </div>
-
-        {/* Users List */}
-        <div className="space-y-3 max-h-96 overflow-y-auto">
+        {/* Contact list items */}
+        <div className="divide-y divide-[#edf2f7] max-h-96 overflow-y-auto border border-[#e2e8f0] rounded">
           {isLoading ? (
-            <div className="space-y-3">
+            <div className="p-4 space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="animate-pulse flex items-center space-x-3 p-4 rounded-xl bg-gray-50">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div key={i} className="animate-pulse flex items-center gap-3">
+                  <div className="w-8 h-8 bg-slate-200 rounded-full" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-slate-200 rounded w-1/3" />
+                    <div className="h-2.5 bg-slate-100 rounded w-1/4" />
                   </div>
                 </div>
               ))}
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <Users className="h-8 w-8 opacity-50" />
-              </div>
-              <p className="font-medium mb-1">{t('messages.noContactsFound')}</p>
-              {searchTerm && <p className="text-xs">{t('messages.adjustSearch')}</p>}
+            <div className="text-center text-slate-500 py-6 text-xs">
+              <p>{t('messages.noContactsFound')}</p>
             </div>
           ) : (
-            filteredUsers.map(user => (
-              <div
-                key={user._id}
-                className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
-                  selectedUsers.some(u => u._id === user._id)
-                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300 shadow-md transform scale-105'
-                    : 'hover:bg-gray-50 border-gray-200 hover:shadow-lg hover:border-gray-300'
-                }`}
-                onClick={() => toggleUserSelection(user)}
-              >
-                <div className="flex items-center space-x-3 space-x-reverse">
-                  <div className="relative">
-                    <Avatar className="h-12 w-12 border-2 border-white shadow-lg">
-                      {getUserPhoto(user) ? (
-                        <AvatarImage 
-                          src={getUserPhoto(user)} 
-                          alt={user.username}
-                          className="object-cover"
-                        />
+            filteredUsers.map(user => {
+              const isSelected = selectedUsers.some(u => u._id === user._id);
+              const photo = getUserPhoto(user);
+
+              return (
+                <div
+                  key={user._id}
+                  onClick={() => toggleUserSelection(user)}
+                  className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
+                    isSelected ? 'bg-blue-50/70' : 'bg-white hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <input 
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}}
+                      className="rounded border-slate-300 text-[#2c5282] focus:ring-0"
+                    />
+
+                    <Avatar className="h-8 w-8 rounded border border-[#e2e8f0]">
+                      {photo ? (
+                        <AvatarImage src={photo} alt={user.username} className="object-cover" />
                       ) : null}
-                      <AvatarFallback className={`text-sm font-bold ${getRoleColor(user.role)}`}>
+                      <AvatarFallback className="rounded bg-slate-100 text-[#2c5282] text-xs font-semibold">
                         {user.username.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {!user.isActive && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-sm truncate text-gray-800">
-                        {user.username}
-                      </span>
-                      {!user.isActive && (
-                        <Badge variant="outline" className="text-xs border-red-200 text-red-600 bg-red-50">
-                          {t('messages.inactive')}
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-slate-800 truncate">{user.username}</span>
+                        <Badge variant="outline" className={`text-[10px] px-1 py-0 rounded ${getRoleColor(user.role)}`}>
+                          {getRoleDisplayName(user.role)}
                         </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={`text-xs border shadow-sm ${getRoleColor(user.role)} flex items-center gap-1`}>
-                        {getRoleIcon(user.role)}
-                        {getRoleDisplayName(user.role)}
-                      </Badge>
+                      </div>
                       {user.activeDepartment && typeof user.activeDepartment === 'object' && (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          {user.activeDepartment.name}
+                        <span className="text-[11px] text-slate-500 block truncate">
+                          قسم: {user.activeDepartment.name}
                         </span>
                       )}
                     </div>
                   </div>
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -303,13 +269,15 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
                       e.stopPropagation();
                       onSelectUser(user);
                     }}
-                    className="hover:bg-blue-100 hover:text-blue-600"
+                    className="h-7 px-2 text-xs text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
+                    title="مراسلة فورية"
                   >
-                    <Mail className="h-4 w-4" />
+                    <Mail className="h-3.5 w-3.5" />
+                    <span>مراسلة</span>
                   </Button>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </CardContent>

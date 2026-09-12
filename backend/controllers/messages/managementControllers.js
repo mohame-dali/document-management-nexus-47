@@ -5,84 +5,54 @@ const ErrorResponse = require('../../utils/errorResponse');
 const fs = require('fs');
 const path = require('path');
 
-// @desc    Send message (supports both one-to-one and one-to-many, cross-department)
+// @desc    Send message (supports one-to-one and one-to-many, priority, attachments)
 // @route   POST /api/messages
 // @access  Private - All authenticated users
 exports.sendMessage = async (req, res, next) => {
   try {
-    const { recipientIds, subject, content } = req.body;
-    
-    console.log(`Send message request from ${req.user.username} (${req.user.role}) - Department: ${req.user.activeDepartment?.name || 'No Department'}`);
-    console.log('Recipients:', recipientIds);
+    const { recipientIds, subject, content, priority = 'normal' } = req.body;
     
     // Validate required fields
     if (!recipientIds || !subject || !content) {
       return next(
-        new ErrorResponse('Please provide recipients, subject and content', 400)
+        new ErrorResponse('يرجى تحديد المستلمين والموضوع ونص الرسالة', 400)
       );
     }
     
-    // Parse and validate recipient IDs (support both single and multiple recipients)
-    const ids = Array.isArray(recipientIds) ? recipientIds : 
-               recipientIds.includes(',') ? recipientIds.split(',') : [recipientIds];
+    // Parse and validate recipient IDs
+    let ids = [];
+    if (Array.isArray(recipientIds)) {
+      ids = recipientIds;
+    } else if (typeof recipientIds === 'string') {
+      try {
+        const parsed = JSON.parse(recipientIds);
+        ids = Array.isArray(parsed) ? parsed : [recipientIds];
+      } catch {
+        ids = recipientIds.includes(',') ? recipientIds.split(',').map(id => id.trim()) : [recipientIds];
+      }
+    }
+    
+    ids = ids.filter(Boolean);
     
     if (ids.length === 0) {
       return next(
-        new ErrorResponse('At least one recipient is required', 400)
+        new ErrorResponse('يجب تحديد مستلم واحد على الأقل', 400)
       );
     }
     
-    // Enhanced validation for cross-department communication - fetch all active users
+    // Fetch all active recipients
     const recipients = await User.find({ 
       _id: { $in: ids },
       isActive: true
     }).populate('activeDepartment', 'name');
     
-    if (recipients.length !== ids.length) {
-      console.log(`Invalid recipients detected. Found: ${recipients.length}, Expected: ${ids.length}`);
+    if (recipients.length === 0) {
       return next(
-        new ErrorResponse(`Some recipient IDs are invalid or inactive`, 400)
+        new ErrorResponse('لم يتم العثور على مستلمين صالحين', 400)
       );
     }
     
-    // Enhanced cross-department messaging support - ALL users can communicate across departments
-    console.log(`Cross-department messaging: ${req.user.role} (${req.user.activeDepartment?.name || 'No Dept'}) sending to:`, 
-      recipients.map(r => `${r.username}(${r.role}-${r.activeDepartment?.name || 'No Dept'})`));
-    
-    // Allow all valid roles to communicate with each other regardless of department
-    const validRoles = ['SuperAdmin', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'];
-    const senderRoleValid = validRoles.includes(req.user.role);
-    const recipientRolesValid = recipients.every(r => validRoles.includes(r.role));
-    
-    if (!senderRoleValid || !recipientRolesValid) {
-      console.log(`Invalid roles detected. Sender: ${req.user.role}, Recipients: ${recipients.map(r => r.role)}`);
-      return next(
-        new ErrorResponse('Invalid user roles detected', 400)
-      );
-    }
-    
-    // Cross-department communication validation - explicitly allow all department combinations
-    const senderDept = req.user.activeDepartment?.name || 'System';
-    const recipientDepts = recipients.map(r => r.activeDepartment?.name || 'System');
-    
-    console.log(`Cross-department communication enabled: ${senderDept} → [${recipientDepts.join(', ')}]`);
-    
-    // Special logging for User role messaging
-    if (req.user.role === 'User') {
-      console.log(`User role messaging enabled: ${req.user.username} from ${senderDept} can send messages`);
-    }
-    
-    // Special logging for cross-department AdminDepartment communication
-    const crossDeptAdmins = recipients.filter(r => 
-      r.role === 'AdminDepartment' && 
-      r.activeDepartment?._id.toString() !== req.user.activeDepartment?._id.toString()
-    );
-    
-    if (crossDeptAdmins.length > 0) {
-      console.log(`Cross-department AdminDepartment communication: ${senderDept} → ${crossDeptAdmins.map(r => r.activeDepartment?.name).join(', ')}`);
-    }
-    
-    // Prepare recipients data for message storage
+    // Prepare recipients data
     const recipientsData = recipients.map(recipient => ({
       user: recipient._id,
       read: false
@@ -97,25 +67,32 @@ exports.sendMessage = async (req, res, next) => {
         size: file.size,
         mimetype: file.mimetype
       }));
-      console.log(`${attachments.length} attachments processed`);
     }
     
-    // Create message with enhanced metadata for cross-department messaging
+    // Check if cross-department
+    const senderDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : null;
+    const isCrossDepartment = recipients.some(r => {
+      const rDeptId = r.activeDepartment?._id ? r.activeDepartment._id.toString() : null;
+      return rDeptId !== senderDeptId;
+    });
+    
+    // Valid priority values
+    const validPriority = ['normal', 'high', 'urgent'].includes(priority) ? priority : 'normal';
+    
+    // Create message
     const message = await Message.create({
       sender: req.user._id,
       recipients: recipientsData,
-      subject,
-      content,
+      subject: subject.trim(),
+      content: content.trim(),
+      priority: validPriority,
       attachments,
-      // Add message type and metadata for better categorization
       messageType: recipientsData.length === 1 ? 'one-to-one' : 'one-to-many',
-      // Add cross-department flag for analytics
-      crossDepartment: recipients.some(r => 
-        r.activeDepartment?._id.toString() !== req.user.activeDepartment?._id.toString()
-      )
+      crossDepartment: isCrossDepartment,
+      deletedBy: []
     });
     
-    // Populate comprehensive data for response
+    // Populate message for response
     const populatedMessage = await Message.findById(message._id)
       .populate({
         path: 'sender',
@@ -133,17 +110,15 @@ exports.sendMessage = async (req, res, next) => {
           select: 'name'
         }
       });
-    
-    const messageTypeDesc = recipientsData.length === 1 ? 'One-to-One' : 'One-to-Many';
-    const crossDeptDesc = message.crossDepartment ? ' (Cross-Department)' : '';
-    
-    console.log(`Message sent successfully: ${messageTypeDesc}${crossDeptDesc} from ${req.user.role}(${senderDept}) to ${recipients.map(r => `${r.role}(${r.activeDepartment?.name || 'System'})`).join(', ')}`);
+      
+    const messageObj = populatedMessage.toObject ? populatedMessage.toObject() : populatedMessage;
+    messageObj.isRead = true;
+    messageObj.isSender = true;
+    messageObj.recipientCount = recipientsData.length;
     
     res.status(201).json({
       success: true,
-      messageType: messageTypeDesc,
-      crossDepartment: message.crossDepartment,
-      data: populatedMessage
+      data: messageObj
     });
   } catch (err) {
     console.error('Error sending message:', err);
@@ -151,11 +126,12 @@ exports.sendMessage = async (req, res, next) => {
   }
 };
 
-// @desc    Delete message
+// @desc    Delete message (soft delete for user, or permanent if admin/all deleted)
 // @route   DELETE /api/messages/:id
-// @access  Private - Sender, Admin, or AdminTuningDesk
+// @access  Private
 exports.deleteMessage = async (req, res, next) => {
   try {
+    const userId = req.user._id;
     const message = await Message.findById(req.params.id);
     
     if (!message) {
@@ -164,29 +140,46 @@ exports.deleteMessage = async (req, res, next) => {
       );
     }
     
-    // Enhanced deletion permissions - sender or Admin/AdminTuningDesk can delete
-    const isSender = message.sender.toString() === req.user._id.toString();
-    const hasAdminAccess = ['Admin', 'AdminTuningDesk'].includes(req.user.role);
+    const isSender = message.sender.toString() === userId.toString();
+    const isRecipient = message.recipients.some(
+      r => r.user && r.user.toString() === userId.toString()
+    );
+    const hasAdminAccess = ['Admin', 'AdminTuningDesk', 'SuperAdmin'].includes(req.user.role);
     
-    if (!isSender && !hasAdminAccess) {
+    if (!isSender && !isRecipient && !hasAdminAccess) {
       return next(
-        new ErrorResponse(`Not authorized to delete this message`, 403)
+        new ErrorResponse('غير مصرح لك بحذف هذه الرسالة', 403)
       );
     }
     
-    // Delete attachments if any
-    if (message.attachments && message.attachments.length > 0) {
-      message.attachments.forEach(attachment => {
-        const filePath = path.join(__dirname, '../..', attachment.path);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
+    // If admin explicitly requests hard delete or if already deleted by all others
+    message.deletedBy = message.deletedBy || [];
+    if (!message.deletedBy.some(id => id.toString() === userId.toString())) {
+      message.deletedBy.push(userId);
     }
     
-    await message.deleteOne();
+    // Check all relevant parties
+    const allPartyIds = [message.sender.toString(), ...message.recipients.map(r => r.user.toString())];
+    const deletedByAll = allPartyIds.every(id => 
+      message.deletedBy.some(dId => dId.toString() === id)
+    );
     
-    console.log(`Message deleted by ${req.user.role}: ${req.params.id}`);
+    if (deletedByAll || hasAdminAccess) {
+      // Remove physical attachments if needed
+      if (message.attachments && message.attachments.length > 0) {
+        message.attachments.forEach(attachment => {
+          if (attachment.path) {
+            const filePath = path.join(__dirname, '../..', attachment.path);
+            if (fs.existsSync(filePath)) {
+              try { fs.unlinkSync(filePath); } catch (e) { console.error(e); }
+            }
+          }
+        });
+      }
+      await message.deleteOne();
+    } else {
+      await message.save();
+    }
     
     res.status(200).json({
       success: true,
@@ -197,8 +190,12 @@ exports.deleteMessage = async (req, res, next) => {
   }
 };
 
+// @desc    Mark single message as read
+// @route   PUT /api/messages/:id/read
+// @access  Private
 exports.markAsRead = async (req, res, next) => {
   try {
+    const userId = req.user._id;
     let message = await Message.findById(req.params.id);
     
     if (!message) {
@@ -207,48 +204,26 @@ exports.markAsRead = async (req, res, next) => {
       );
     }
     
-    console.log(`Mark as read request from ${req.user.username} (${req.user.role}) for message ${req.params.id}`);
+    const recipient = message.recipients.find(
+      r => r.user && r.user.toString() === userId.toString()
+    );
     
-    // Enhanced permissions: Allow AdminTuningDesk to mark any message as read, and Users to mark their own messages
-    if (req.user.role === 'AdminTuningDesk') {
-      console.log(`AdminTuningDesk ${req.user.username} marking message as read with administrative privileges`);
-      
-      // Find if user is already a recipient, if not, we'll just mark it as read without modifying recipients
-      const recipient = message.recipients.find(
-        r => r.user.toString() === req.user._id.toString()
-      );
-      
-      if (recipient) {
-        recipient.read = true;
-      } else {
-        // For AdminTuningDesk, we'll add them as a recipient if they're not already
-        message.recipients.push({
-          user: req.user._id,
-          read: true
-        });
-      }
-      
+    const hasAdminAccess = ['Admin', 'AdminTuningDesk', 'SuperAdmin'].includes(req.user.role);
+    
+    if (recipient) {
+      recipient.read = true;
+      recipient.readAt = new Date();
+      await message.save();
+    } else if (hasAdminAccess) {
+      // Admin preview
       await message.save();
     } else {
-      // For other users (including User role), check if they are a recipient
-      const recipient = message.recipients.find(
-        r => r.user.toString() === req.user._id.toString()
+      return next(
+        new ErrorResponse('غير مصرح لك بتعديل حالة هذه الرسالة', 403)
       );
-      
-      if (!recipient) {
-        console.log(`User ${req.user.username} (${req.user.role}) is not a recipient of message ${req.params.id}`);
-        return next(
-          new ErrorResponse(`Not authorized to mark this message as read`, 403)
-        );
-      }
-      
-      // Update read status
-      recipient.read = true;
-      await message.save();
     }
     
-    // Populate comprehensive data for response
-    message = await Message.findById(req.params.id)
+    const populated = await Message.findById(req.params.id)
       .populate({
         path: 'sender',
         select: 'username photo role activeDepartment',
@@ -265,15 +240,56 @@ exports.markAsRead = async (req, res, next) => {
           select: 'name'
         }
       });
-    
-    console.log(`Message marked as read by ${req.user.role}: ${req.params.id}`);
+      
+    const messageObj = populated.toObject ? populated.toObject() : populated;
+    messageObj.isRead = true;
+    messageObj.isSender = messageObj.sender && (messageObj.sender._id ? messageObj.sender._id.toString() : messageObj.sender.toString()) === userId.toString();
     
     res.status(200).json({
       success: true,
-      data: message
+      data: messageObj
     });
   } catch (err) {
     console.error('Error marking message as read:', err);
     next(err);
   }
 };
+
+// @desc    Mark all unread messages as read for current user
+// @route   PUT /api/messages/read-all
+// @access  Private
+exports.markAllAsRead = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    
+    const result = await Message.updateMany(
+      {
+        'recipients': {
+          $elemMatch: {
+            'user': userId,
+            'read': false
+          }
+        },
+        deletedBy: { $ne: userId }
+      },
+      {
+        $set: {
+          'recipients.$[elem].read': true,
+          'recipients.$[elem].readAt': new Date()
+        }
+      },
+      {
+        arrayFilters: [{ 'elem.user': userId, 'elem.read': false }]
+      }
+    );
+    
+    res.status(200).json({
+      success: true,
+      updated: result.modifiedCount || 0
+    });
+  } catch (err) {
+    console.error('Error marking all as read:', err);
+    next(err);
+  }
+};
+

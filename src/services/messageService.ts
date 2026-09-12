@@ -27,15 +27,18 @@ api.interceptors.response.use(
   }
 );
 
-export const getMessages = async (): Promise<{ 
+export const getMessages = async (type?: 'inbox' | 'sent' | 'all'): Promise<{ 
   data: Message[]; 
   count: number;
   unreadCount: number; 
+  inboxCount?: number;
+  sentCount?: number;
   oneToOneCount: number;
   groupCount: number;
 }> => {
   try {
-    const response = await api.get('/messages');
+    const url = type && type !== 'all' ? `/messages?type=${type}` : '/messages';
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -57,7 +60,8 @@ export const sendMessage = async (
   recipientIds: string[],
   subject: string,
   content: string,
-  attachments?: File[]
+  attachments?: File[],
+  priority?: 'normal' | 'high' | 'urgent'
 ): Promise<Message> => {
   try {
     const formData = new FormData();
@@ -71,6 +75,9 @@ export const sendMessage = async (
     
     formData.append('subject', subject);
     formData.append('content', content);
+    if (priority) {
+      formData.append('priority', priority);
+    }
     
     if (attachments && attachments.length > 0) {
       attachments.forEach(file => {
@@ -91,6 +98,7 @@ export const sendMessage = async (
   }
 };
 
+
 export const markAsRead = async (messageId: string): Promise<Message> => {
   try {
     const response = await api.put(`/messages/${messageId}/read`);
@@ -100,6 +108,17 @@ export const markAsRead = async (messageId: string): Promise<Message> => {
     throw error;
   }
 };
+
+export const markAllAsRead = async (): Promise<{ success: boolean; updated: number }> => {
+  try {
+    const response = await api.put('/messages/read-all');
+    return response.data;
+  } catch (error) {
+    console.error('Error marking all messages as read:', error);
+    throw error;
+  }
+};
+
 
 export const deleteMessage = async (messageId: string): Promise<void> => {
   try {
@@ -136,16 +155,6 @@ export const getConversation = async (userId: string): Promise<Message[]> => {
     return response.data.data || response.data;
   } catch (error) {
     console.error('Error fetching conversation:', error);
-    throw error;
-  }
-};
-
-export const markAllAsRead = async (): Promise<{ updated: number }> => {
-  try {
-    const response = await api.put('/messages/read-all');
-    return response.data;
-  } catch (error) {
-    console.error('Error marking all messages as read:', error);
     throw error;
   }
 };
