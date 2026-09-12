@@ -39,12 +39,12 @@ app.use(express.json());
 // Cookie parser
 app.use(cookieParser());
 
-// Enable CORS with more specific configuration
+// Enable CORS
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://192.168.242.1:8080', 'http://192.168.43.168:8080'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma']
+  origin : 'http://localhost:3000',
+  credentials : true,
+  methods : ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders : ['Content-Type', 'Authorization']
 }));
 
 // Set static folders for uploads
