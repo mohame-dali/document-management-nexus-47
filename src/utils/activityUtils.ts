@@ -16,40 +16,40 @@ export const getActivityUrgency = (document: IncomingDocument) => {
     return {
       type: 'overdue',
       label: 'متأخر',
-      color: 'border-red-500 bg-red-50',
-      badgeColor: 'bg-red-500 text-white',
+      color: 'border-[#e53e3e] bg-[#feeeee]/30',
+      badgeColor: 'bg-[#feeeee] text-[#9b2c2c] border border-[#feb2b2]',
       daysDiff: Math.abs(daysDiff)
     };
   } else if (daysDiff === 0) {
     return {
       type: 'today',
       label: 'اليوم',
-      color: 'border-orange-500 bg-orange-50',
-      badgeColor: 'bg-orange-500 text-white',
+      color: 'border-[#d69e2e] bg-[#fef9e7]/30',
+      badgeColor: 'bg-[#fef9e7] text-[#744210] border border-[#fbd38d]',
       daysDiff
     };
   } else if (daysDiff === 1) {
     return {
       type: 'tomorrow',
       label: 'غداً',
-      color: 'border-yellow-500 bg-yellow-50',
-      badgeColor: 'bg-yellow-500 text-white',
+      color: 'border-[#d69e2e] bg-[#fef9e7]/20',
+      badgeColor: 'bg-[#fef9e7] text-[#744210] border border-[#fbd38d]',
       daysDiff
     };
   } else if (daysDiff === 2) {
     return {
       type: '2days',
       label: 'خلال يومين',
-      color: 'border-blue-500 bg-blue-50',
-      badgeColor: 'bg-blue-500 text-white',
+      color: 'border-[#2c5282] bg-[#ebf4ff]/30',
+      badgeColor: 'bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]',
       daysDiff
     };
   } else if (daysDiff <= 3) {
     return {
       type: '3days',
       label: 'خلال 3 أيام',
-      color: 'border-green-500 bg-green-50',
-      badgeColor: 'bg-green-500 text-white',
+      color: 'border-[#38a169] bg-[#ebf8f1]/30',
+      badgeColor: 'bg-[#ebf8f1] text-[#22543d] border border-[#bbf0d0]',
       daysDiff
     };
   }

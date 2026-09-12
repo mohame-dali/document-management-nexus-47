@@ -49,21 +49,21 @@ const AvailableFeatures = ({ currentUser }: AvailableFeaturesProps) => {
   };
 
   return (
-    <Card className="bg-white shadow-lg border border-slate-200 rounded-xl overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200">
-        <CardTitle className="flex items-center gap-3 text-xl">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Activity className="h-6 w-6 text-blue-600" />
+    <Card className="bg-white shadow-sm border border-[#e2e8f0] rounded overflow-hidden">
+      <CardHeader className="bg-[#f7fafc] border-b border-[#e2e8f0] px-5 py-4">
+        <CardTitle className="flex items-center gap-3 text-base sm:text-lg text-[#1a202c]">
+          <div className="p-2 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282]">
+            <Activity className="h-5 w-5" />
           </div>
           الميزات المتاحة لـ {currentUser?.role}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="p-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {getAvailableFeatures().map((feature, index) => (
-            <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-              <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex-shrink-0" />
-              <span className="text-slate-700 font-medium">{feature}</span>
+            <div key={index} className="flex items-center gap-2.5 p-3 bg-[#f7fafc] rounded border border-[#e2e8f0] hover:bg-[#edf2f7] transition-colors duration-200">
+              <div className="w-1.5 h-1.5 bg-[#2c5282] rounded-full flex-shrink-0" />
+              <span className="text-[#2d3748] text-sm font-medium">{feature}</span>
             </div>
           ))}
         </div>

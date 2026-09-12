@@ -180,56 +180,56 @@ const IncomingDocumentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30" dir="rtl">
-      <div className="container mx-auto p-4 space-y-6">
-        {/* Enhanced Header */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6">
+    <div className="min-h-screen bg-[#f7fafc]" dir="rtl">
+      <div className="container mx-auto p-4 sm:p-6 space-y-5">
+        {/* Header */}
+        <div className="bg-white rounded border border-[#e2e8f0] p-5 sm:p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                <FileText className="h-8 w-8 text-white" />
+            <div className="flex items-center gap-3.5">
+              <div className="p-2.5 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282] shadow-xs">
+                <FileText className="h-6 w-6 sm:h-7 sm:w-7" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">
                   {translations.title}
                 </h1>
-                <p className="text-slate-600 mt-1">إدارة ومتابعة الوثائق الواردة</p>
+                <p className="text-sm text-[#4a5568] mt-1">إدارة ومتابعة الوثائق الواردة</p>
               </div>
             </div>
 
             {/* Show add button for Admin and AdminTuningDesk */}
             {canAddDocuments && (
-              <Button onClick={handleAddDocument} className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                <PlusCircle className="w-5 h-5 ml-2" /> 
+              <Button onClick={handleAddDocument} className="bg-[#2c5282] hover:bg-[#234269] text-white rounded shadow-sm transition-colors duration-200">
+                <PlusCircle className="w-4 h-4 ml-2" /> 
                 {translations.addDocument}
               </Button>
             )}
           </div>
         </div>
 
-        {/* Enhanced Filters Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6">
+        {/* Filters Section */}
+        <div className="bg-white rounded border border-[#e2e8f0] p-5 sm:p-6 shadow-sm">
           <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto flex-wrap">
               {/* Search Input */}
-              <div className="relative min-w-80">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <div className="relative min-w-72">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder={translations.search}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10 text-right border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-xl shadow-sm"
+                  className="pr-9 text-right border-[#e2e8f0] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]/20 rounded shadow-xs text-sm"
                 />
               </div>
               
               {/* Year Filter */}
               <div className="relative">
-                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
                   placeholder={translations.enterYear}
                   value={selectedYear}
                   onChange={handleYearChange}
-                  className="w-32 pr-10 text-right border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-xl shadow-sm"
+                  className="w-32 pr-9 text-right border-[#e2e8f0] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]/20 rounded shadow-xs text-sm"
                   maxLength={4}
                   type="text"
                 />
@@ -238,16 +238,16 @@ const IncomingDocumentsPage: React.FC = () => {
               {/* Department Filter - Only for AdminTuningDesk */}
               {currentUser?.role === 'AdminTuningDesk' && departments && (
                 <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                  <SelectTrigger className="w-full sm:w-48 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-xl shadow-sm">
+                  <SelectTrigger className="w-full sm:w-48 border-[#e2e8f0] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]/20 rounded shadow-xs text-sm">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-slate-500" />
                       <SelectValue placeholder={translations.department} />
                     </div>
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                    <SelectItem value="all" className="rounded-lg">{translations.all}</SelectItem>
+                  <SelectContent className="rounded border-[#e2e8f0] shadow-md">
+                    <SelectItem value="all" className="rounded">{translations.all}</SelectItem>
                     {departments.map(dept => (
-                      <SelectItem key={dept._id} value={dept._id} className="rounded-lg">{dept.name}</SelectItem>
+                      <SelectItem key={dept._id} value={dept._id} className="rounded">{dept.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -255,16 +255,16 @@ const IncomingDocumentsPage: React.FC = () => {
 
               {/* Source Filter */}
               <Select value={selectedSource} onValueChange={setSelectedSource}>
-                <SelectTrigger className="w-full sm:w-48 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 rounded-xl shadow-sm">
+                <SelectTrigger className="w-full sm:w-48 border-[#e2e8f0] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]/20 rounded shadow-xs text-sm">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-slate-500" />
                     <SelectValue placeholder="اختر المصدر..." />
                   </div>
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                  <SelectItem value="all_sources" className="rounded-lg">جميع المصادر</SelectItem>
+                <SelectContent className="rounded border-[#e2e8f0] shadow-md">
+                  <SelectItem value="all_sources" className="rounded">جميع المصادر</SelectItem>
                   {sourceOptions.filter(option => option.isActive).map((option) => (
-                    <SelectItem key={option._id} value={option.value} className="rounded-lg">
+                    <SelectItem key={option._id} value={option.value} className="rounded">
                       {option.value}
                     </SelectItem>
                   ))}
@@ -273,15 +273,15 @@ const IncomingDocumentsPage: React.FC = () => {
             </div>
             
             {/* View Mode Toggle */}
-            <div className="flex bg-slate-100 rounded-xl p-1 shadow-inner">
+            <div className="flex bg-[#edf2f7] rounded p-1 border border-[#e2e8f0]">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className={`rounded-lg transition-all duration-200 ${
+                className={`rounded transition-colors duration-200 h-8 px-2.5 ${
                   viewMode === 'grid' 
-                    ? 'bg-white shadow-sm text-blue-600' 
-                    : 'text-slate-600 hover:text-slate-800'
+                    ? 'bg-[#2c5282] text-white shadow-xs' 
+                    : 'text-[#4a5568] hover:text-[#1a202c]'
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -290,10 +290,10 @@ const IncomingDocumentsPage: React.FC = () => {
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className={`rounded-lg transition-all duration-200 ${
+                className={`rounded transition-colors duration-200 h-8 px-2.5 ${
                   viewMode === 'list' 
-                    ? 'bg-white shadow-sm text-blue-600' 
-                    : 'text-slate-600 hover:text-slate-800'
+                    ? 'bg-[#2c5282] text-white shadow-xs' 
+                    : 'text-[#4a5568] hover:text-[#1a202c]'
                 }`}
               >
                 <LayoutList className="w-4 h-4" />
@@ -302,23 +302,23 @@ const IncomingDocumentsPage: React.FC = () => {
           </div>
 
           {/* Active Year Display */}
-          <div className="mt-4 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-blue-500" />
-            <Badge variant="secondary" className="text-sm bg-blue-50 text-blue-700 border-blue-200 rounded-lg">
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
+            <Clock className="w-4 h-4 text-[#2c5282]" />
+            <Badge variant="secondary" className="text-xs bg-[#ebf4ff] text-[#2c5282] border-[#bee3f8] rounded">
               {translations.year}: {selectedYear || new Date().getFullYear()}
             </Badge>
             {filteredDocuments.length > 0 && (
-              <Badge variant="outline" className="text-sm bg-green-50 text-green-700 border-green-200 rounded-lg">
+              <Badge variant="outline" className="text-xs bg-[#ebf8f1] text-[#22543d] border-[#bbf0d0] rounded">
                 {filteredDocuments.length} من {totalCount} وثيقة
               </Badge>
             )}
             {selectedSource !== 'all_sources' && (
-              <Badge variant="outline" className="text-sm bg-purple-50 text-purple-700 border-purple-200 rounded-lg">
+              <Badge variant="outline" className="text-xs bg-[#f1f5f9] text-[#475569] border-[#e2e8f0] rounded">
                 المصدر: {selectedSource}
               </Badge>
             )}
             {isFetching && !isFetchingNextPage && (
-              <Badge variant="outline" className="text-sm bg-blue-50 text-blue-700 border-blue-200 rounded-lg">
+              <Badge variant="outline" className="text-xs bg-[#ebf4ff] text-[#2c5282] border-[#bee3f8] rounded">
                 <Loader2 className="w-3 h-3 animate-spin ml-1" />
                 {translations.loading}
               </Badge>
@@ -327,7 +327,7 @@ const IncomingDocumentsPage: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <div className="bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
           {/* Show message if year is incomplete */}
           {!isValidYear ? (
             <div className="text-center py-20">
@@ -353,30 +353,30 @@ const IncomingDocumentsPage: React.FC = () => {
                       <Card 
                         key={doc._id}
                         ref={isLast ? lastDocumentElementRef : null}
-                        className="group overflow-hidden cursor-pointer border-0 shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-gradient-to-br from-white to-slate-50/50"
+                        className="group overflow-hidden cursor-pointer border border-[#e2e8f0] shadow-sm hover:shadow hover:border-[#cbd5e1] rounded transition-all duration-200 bg-white"
                         onClick={() => handleViewDocument(doc._id)}
                       >
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-                              <FileText className="h-5 w-5 text-blue-600" />
+                        <CardContent className="p-5">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="p-2 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282] transition-colors duration-200">
+                              <FileText className="h-4 w-4" />
                             </div>
-                            <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200 rounded-md">
+                            <Badge variant="outline" className="text-xs bg-[#f7fafc] text-[#4a5568] border-[#e2e8f0] rounded">
                               #{doc.serialNumber}
                             </Badge>
                           </div>
                           
-                          <h3 className="font-semibold text-slate-800 line-clamp-2 mb-3 group-hover:text-blue-600 transition-colors">
+                          <h3 className="font-medium text-sm text-[#1a202c] line-clamp-2 mb-2 group-hover:text-[#2c5282] transition-colors duration-200 leading-snug">
                             {doc.subject}
                           </h3>
                           
-                          <div className="space-y-2 text-sm text-slate-600">
+                          <div className="space-y-1.5 text-xs text-[#718096]">
                             <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-slate-400" />
+                              <Calendar className="h-3.5 w-3.5 text-[#a0aec0]" />
                               <span>{formatDate(doc.arrivalDate)}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-slate-400" />
+                              <Users className="h-3.5 w-3.5 text-[#a0aec0]" />
                               <span className="truncate">{doc.source}</span>
                             </div>
                           </div>

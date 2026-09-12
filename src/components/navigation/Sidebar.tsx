@@ -104,17 +104,17 @@ const Sidebar = () => {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'SuperAdmin':
-        return 'bg-gradient-to-r from-yellow-50 to-yellow-100 text-yellow-800 border-yellow-200 shadow-sm';
+        return 'border-[#d69e2e]/40 bg-[#d69e2e]/15 text-[#fbd38d]';
       case 'Admin':
-        return 'bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 shadow-sm';
+        return 'border-[#e53e3e]/40 bg-[#e53e3e]/15 text-[#feb2b2]';
       case 'AdminTuningDesk':
-        return 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 shadow-sm';
+        return 'border-[#2c5282]/40 bg-[#2c5282]/30 text-[#bee3f8]';
       case 'AdminDepartment':
-        return 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border-purple-200 shadow-sm';
+        return 'border-purple-400/30 bg-purple-500/15 text-purple-200';
       case 'User':
-        return 'bg-gradient-to-r from-green-50 to-green-100 text-green-800 border-green-200 shadow-sm';
+        return 'border-[#38a169]/40 bg-[#38a169]/15 text-[#9ae6b4]';
       default:
-        return 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 border-gray-200 shadow-sm';
+        return 'border-slate-600 bg-slate-700/50 text-slate-300';
     }
   };
 
@@ -138,37 +138,34 @@ const Sidebar = () => {
 
   return (
     <div className={cn(
-      "h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100 border-l border-border/50 shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out",
+      "h-screen flex flex-col bg-[#1a202c] text-slate-100 border-l border-slate-800 shadow-sm transition-all duration-200 ease-in-out select-none",
       isOpen ? "w-64" : "w-16"
     )} dir="rtl">
-      {/* Header with enhanced styling - Fixed */}
+      {/* Header - Fixed */}
       <div className={cn(
-        "flex-shrink-0 border-b border-border/50 bg-gradient-to-r from-white via-slate-50 to-white backdrop-blur-sm transition-all duration-300 relative",
-        isOpen ? "p-6" : "p-3"
+        "flex-shrink-0 border-b border-slate-800/80 bg-[#161b24] transition-all duration-200",
+        isOpen ? "p-4 sm:p-5" : "p-3"
       )}>
-        {/* Decorative gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent rounded-t-lg" />
-        
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl shadow-sm ring-1 ring-primary/10">
-              <FileText className="h-6 w-6 text-primary" />
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm">
+              <FileText className="h-5 w-5" />
             </div>
             {isOpen && (
-              <div>
-                <h1 className="text-xl font-bold text-foreground bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              <div className="min-w-0">
+                <h1 className="text-base font-bold text-white tracking-tight truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
-                <p className="text-xs text-muted-foreground/70">{t('sidebar.documentManagement')}</p>
+                <p className="text-xs text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
               </div>
             )}
           </div>
           
           {currentUser && (
-            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-200/50 shadow-sm ring-1 ring-slate-200/20 backdrop-blur-sm">
+            <div className="flex items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
               <ContextMenu>
                 <ContextMenuTrigger>
-                  <Avatar className="h-12 w-12 ring-2 ring-primary/20 shadow-md cursor-pointer hover:ring-primary/40 transition-all">
+                  <Avatar className="h-10 w-10 ring-1 ring-slate-600 cursor-pointer hover:ring-[#2c5282] transition-colors duration-200">
                     <AvatarImage 
                       src={getUserPhotoUrl(currentUser)} 
                       alt={currentUser.username}
@@ -181,7 +178,7 @@ const Sidebar = () => {
                         console.log('Image loaded successfully:', getUserPhotoUrl(currentUser));
                       }}
                     />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/5 text-primary font-medium text-sm">
+                    <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
                       {getUserInitials(currentUser.username)}
                     </AvatarFallback>
                   </Avatar>
@@ -195,17 +192,19 @@ const Sidebar = () => {
               </ContextMenu>
               {isOpen && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate mb-1">
+                  <p className="text-xs font-semibold text-white truncate">
                     {currentUser.username}
                   </p>
-                  <Badge 
-                    variant="outline" 
-                    className={cn("text-xs font-medium", getRoleBadgeColor(currentUser.role))}
-                  >
-                    {getRoleLabel(currentUser.role)}
-                  </Badge>
+                  <div className="mt-1">
+                    <Badge 
+                      variant="outline" 
+                      className={cn("text-[11px] px-2 py-0.2 rounded font-medium", getRoleBadgeColor(currentUser.role))}
+                    >
+                      {getRoleLabel(currentUser.role)}
+                    </Badge>
+                  </div>
                   {currentUser.activeDepartment && (
-                    <p className="text-xs text-muted-foreground/70 mt-1 truncate">
+                    <p className="text-[11px] text-slate-400 mt-1 truncate">
                       {currentUser.activeDepartment.name}
                     </p>
                   )}
@@ -219,54 +218,41 @@ const Sidebar = () => {
       {/* Scrollable Content Area */}
       <ScrollArea className="flex-1">
         <div className="flex flex-col h-full">
-          {/* Navigation with enhanced styling */}
-          <nav className="flex-1 p-4 space-y-2 relative">
-            {/* Decorative background pattern */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-50/30 to-transparent pointer-events-none" />
-            
-            <div className="relative z-10 space-y-2">
-              {menuItems.map((item, index) => (
-                <Button
+          {/* Navigation with clean calm styling */}
+          <nav className="flex-1 p-3 space-y-1">
+            {menuItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <button
                   key={item.path}
-                  variant={isActive(item.path) ? "default" : "ghost"}
+                  type="button"
                   className={cn(
-                    "w-full h-12 font-medium transition-all duration-300 ease-in-out group relative overflow-hidden",
-                    isOpen ? "justify-start gap-3 px-4" : "justify-center px-2",
-                    isActive(item.path) 
-                      ? "bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
-                      : "hover:bg-gradient-to-r hover:from-accent hover:to-accent/80 hover:text-accent-foreground hover:shadow-md hover:scale-105 hover:translate-x-1"
+                    "w-full h-10 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-right",
+                    isOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
+                    active 
+                      ? "bg-[#2c5282] text-white shadow-sm font-medium" 
+                      : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                   )}
                   onClick={() => navigate(item.path)}
                   title={!isOpen ? item.label : undefined}
                 >
-                  {/* Button glow effect */}
-                  {isActive(item.path) && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent rounded-md blur-sm" />
-                  )}
-                  
                   <item.icon className={cn(
-                    "h-5 w-5 transition-all duration-300 relative z-10",
-                    isActive(item.path) ? "text-primary-foreground" : item.color,
-                    "group-hover:scale-110"
+                    "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                    active ? "text-white" : "text-slate-400 group-hover:text-slate-200"
                   )} />
                   {isOpen && (
-                    <span className="truncate relative z-10 transition-all duration-300">
+                    <span className="truncate">
                       {item.label}
                     </span>
                   )}
-                  
-                  {/* Hover indicator */}
-                  {!isActive(item.path) && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary/60 to-primary/30 transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300 rounded-r-full" />
-                  )}
-                </Button>
-              ))}
-            </div>
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Folder Categorization Sidebar for Users with enhanced styling */}
+          {/* Folder Categorization Sidebar for Users */}
           {isOpen && currentUser?.role === 'User' && (
-            <div className="flex-shrink-0 p-4 border-t border-border/50 bg-gradient-to-r from-slate-50/50 to-white/50 backdrop-blur-sm">
+            <div className="flex-shrink-0 p-3 border-t border-slate-800 bg-[#161b24]/60">
               <FolderSidebar />
             </div>
           )}

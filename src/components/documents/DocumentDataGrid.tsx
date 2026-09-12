@@ -81,16 +81,16 @@ const DocumentDataGrid: React.FC<DocumentDataGridProps> = ({ documents, type }) 
 
   if (!documents || documents.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground" dir="rtl">
-        <FileInput className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>{translations.noDocuments}</p>
+      <div className="text-center py-12 text-[#718096]" dir="rtl">
+        <FileInput className="h-10 w-10 mx-auto mb-3 text-[#a0aec0]" />
+        <p className="text-sm">{translations.noDocuments}</p>
       </div>
     );
   }
 
   return (
     <div className="relative" dir="rtl">
-      <div className="rounded-md border bg-white shadow-sm">
+      <div className="rounded border border-[#e2e8f0] bg-white shadow-xs overflow-hidden">
         <Table>
           <DocumentTableHeader type={type} translations={translations} />
           <TableBody>

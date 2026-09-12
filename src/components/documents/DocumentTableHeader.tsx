@@ -18,35 +18,35 @@ interface DocumentTableHeaderProps {
 const DocumentTableHeader: React.FC<DocumentTableHeaderProps> = ({ type, translations }) => {
   return (
     <TableHeader>
-      <TableRow className="bg-gray-50/80">
-        <TableHead className="text-right font-semibold text-gray-700 w-32">
+      <TableRow className="bg-[#f7fafc] border-b border-[#e2e8f0] hover:bg-[#f7fafc]">
+        <TableHead className="text-right font-semibold text-[#2d3748] text-xs py-3 w-28">
           {translations.serialNumber}
         </TableHead>
-        <TableHead className="text-right font-semibold text-gray-700">
+        <TableHead className="text-right font-semibold text-[#2d3748] text-xs py-3">
           {translations.subject}
         </TableHead>
-        <TableHead className="text-right font-semibold text-gray-700 w-32">
+        <TableHead className="text-right font-semibold text-[#2d3748] text-xs py-3 w-32">
           {type === 'incoming' ? 'تاريخ الوصول' : 'تاريخ الإصدار'}
         </TableHead>
-        <TableHead className="text-right font-semibold text-gray-700 w-40">
+        <TableHead className="text-right font-semibold text-[#2d3748] text-xs py-3 w-36">
           {translations.source}
         </TableHead>
         {type === 'incoming' && (
           <>
-            <TableHead className="text-right font-semibold text-gray-700 w-40">
+            <TableHead className="text-right font-semibold text-[#2d3748] text-xs py-3 w-36">
               النشاط
             </TableHead>
-            <TableHead className="text-right font-semibold text-gray-700 w-32">
+            <TableHead className="text-right font-semibold text-[#2d3748] text-xs py-3 w-28">
               {translations.responsible}
             </TableHead>
           </>
         )}
         {type === 'outgoing' && (
-          <TableHead className="text-right font-semibold text-gray-700 w-40">
+          <TableHead className="text-right font-semibold text-[#2d3748] text-xs py-3 w-36">
             {translations.assignedTo}
           </TableHead>
         )}
-        <TableHead className="text-center font-semibold text-gray-700 w-24">
+        <TableHead className="text-center font-semibold text-[#2d3748] text-xs py-3 w-24">
           {translations.actions}
         </TableHead>
       </TableRow>

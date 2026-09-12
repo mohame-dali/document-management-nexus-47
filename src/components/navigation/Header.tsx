@@ -59,13 +59,14 @@ const Header = () => {
   const getRoleBadgeColor = () => {
     switch (currentUser.role) {
       case 'Admin':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case 'SuperAdmin':
+        return 'bg-[#feeeee] text-[#9b2c2c] border-[#feb2b2]';
       case 'AdminTuningDesk':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-[#ebf4ff] text-[#2c5282] border-[#bee3f8]';
       case 'AdminDepartment':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-purple-50 text-purple-800 border-purple-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]';
     }
   };
 
@@ -82,7 +83,7 @@ const Header = () => {
   };
 
   return (
-    <header className="h-16 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 flex items-center justify-between px-6 shadow-lg" dir="rtl">
+    <header className="h-16 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 sm:px-6 shadow-sm z-10 select-none" dir="rtl">
       {/* Left side - Sidebar Toggle */}
       <div className="flex items-center">
         <Button 
@@ -90,41 +91,43 @@ const Header = () => {
           size="icon" 
           onClick={toggle}
           title={t('header.toggleSidebar')}
-          className="hover:bg-blue-500/20 text-white"
+          className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded transition-colors duration-200"
         >
           <Menu className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Right side - All other header items grouped together */}
-      <div className="flex items-center space-x-reverse space-x-6">
+      {/* Right side - Header items */}
+      <div className="flex items-center space-x-reverse space-x-3 sm:space-x-4">
+        {/* Title with Icon */}
+        <div className="hidden md:flex items-center space-x-reverse space-x-2">
+          <div className="p-1.5 bg-[#ebf4ff] text-[#2c5282] rounded">
+            <FileText className="h-4 w-4" />
+          </div>
+          <h2 className="text-sm font-semibold text-[#1a202c]">
+            {getHeaderTitle()}
+          </h2>
+        </div>
+
         {/* User Info with Photo */}
-        <div className="flex items-center space-x-reverse space-x-3 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-          <Avatar className="h-8 w-8">
+        <div className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5">
+          <Avatar className="h-7 w-7 ring-1 ring-[#e2e8f0]">
             <AvatarImage 
               src={getUserPhotoUrl(currentUser)} 
               alt={currentUser.username}
             />
-            <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
+            <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
               {getUserInitials(currentUser.username)}
             </AvatarFallback>
           </Avatar>
           <div className="text-right">
-            <p className="text-sm font-medium text-white">
-              {t('header.welcome')} {currentUser.username}
+            <p className="text-xs font-semibold text-[#1a202c] leading-tight">
+              {currentUser.username}
             </p>
-            <Badge variant="secondary" className={`text-xs ${getRoleBadgeColor()}`}>
+            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded font-normal ${getRoleBadgeColor()}`}>
               {t(`roles.${currentUser.role}`)}
             </Badge>
           </div>
-        </div>
-
-        {/* Title with Icon */}
-        <div className="flex items-center space-x-reverse space-x-2">
-          <FileText className="h-6 w-6 text-white/80" />
-          <h2 className="text-lg font-semibold text-white">
-            {getHeaderTitle()}
-          </h2>
         </div>
 
         {/* Activity Notifications Bell */}
@@ -137,12 +140,12 @@ const Header = () => {
             size="icon" 
             onClick={handleNotificationClick}
             title={unreadCount > 0 ? `${unreadCount} ${t('header.unreadMessages')}` : t('header.viewMessages')}
-            className="hover:bg-white/20 text-white relative"
+            className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded relative transition-colors duration-200"
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
-              <div className="absolute -top-1 -right-1 h-5 w-5 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
-                <span className="text-xs text-white font-bold">
+              <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#38a169] rounded px-1 flex items-center justify-center shadow-xs">
+                <span className="text-[10px] text-white font-bold leading-none">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               </div>
@@ -155,7 +158,7 @@ const Header = () => {
           variant="outline"
           size="icon"
           onClick={logout}
-          className="bg-red-500 hover:bg-red-600 text-white border-red-600 hover:border-red-700 transition-all duration-200 shadow-lg"
+          className="text-[#e53e3e] hover:bg-[#feeeee] border border-[#feb2b2] hover:border-[#e53e3e] rounded transition-colors duration-200 shadow-xs"
           title={t('header.logout')}
         >
           <LogOut className="h-4 w-4" />

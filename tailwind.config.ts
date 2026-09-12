@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -30,7 +31,9 @@ export default {
         foreground: 'hsl(var(--foreground))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))'
+          foreground: 'hsl(var(--primary-foreground))',
+          dark: '#1e3a5f',
+          light: '#ebf4ff',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -39,6 +42,27 @@ export default {
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))'
+        },
+        success: {
+          DEFAULT: '#38a169',
+          foreground: '#ffffff',
+          soft: '#ebf8f1',
+          text: '#22543d',
+          border: '#bbf0d0',
+        },
+        warning: {
+          DEFAULT: '#d69e2e',
+          foreground: '#ffffff',
+          soft: '#fef9e7',
+          text: '#744210',
+          border: '#fbd38d',
+        },
+        danger: {
+          DEFAULT: '#e53e3e',
+          foreground: '#ffffff',
+          soft: '#feeeee',
+          text: '#9b2c2c',
+          border: '#feb2b2',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
@@ -68,9 +92,24 @@ export default {
         }
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
+        DEFAULT: '0.25rem',
+        none: '0',
+        sm: '0.125rem',
+        md: '0.25rem',
+        lg: '0.375rem',
+        xl: '0.5rem',
+        full: '9999px',
+      },
+      boxShadow: {
+        subtle: '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+        sm: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
+        DEFAULT: '0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        md: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+        lg: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+      },
+      transitionDuration: {
+        DEFAULT: '200ms',
+        '200': '200ms',
       },
       keyframes: {
         'accordion-down': {
@@ -112,5 +151,5 @@ export default {
       }
     }
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;
