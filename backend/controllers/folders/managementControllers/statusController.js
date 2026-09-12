@@ -1,8 +1,7 @@
-
 const Folder = require('../../../models/Folder');
 const ErrorResponse = require('../../../utils/errorResponse');
 
-// @desc    Update folder status
+// @desc    Update folder status (En cours / Fermé)
 // @route   PUT /api/folders/:id/status
 // @access  Private/AdminDepartment
 exports.updateFolderStatus = async (req, res, next) => {
@@ -11,7 +10,7 @@ exports.updateFolderStatus = async (req, res, next) => {
     
     if (!status || !['En cours', 'Fermé'].includes(status)) {
       return next(
-        new ErrorResponse('Please provide a valid status (En cours, Fermé)', 400)
+        new ErrorResponse('يرجى تحديد حالة صالحة (En cours أو Fermé)', 400)
       );
     }
     
@@ -19,29 +18,34 @@ exports.updateFolderStatus = async (req, res, next) => {
     
     if (!folder) {
       return next(
-        new ErrorResponse(`Folder not found with id of ${req.params.id}`, 404)
+        new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404)
       );
     }
     
-    // Check if folder belongs to the active department
-    if (folder.department.toString() !== req.user.activeDepartment._id.toString()) {
-      return next(
-        new ErrorResponse(`Not authorized to update this folder`, 403)
-      );
+    // Check if folder belongs to active department
+    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+      const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
+      const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
+      
+      if (folderDeptId !== activeDeptId) {
+        return next(
+          new ErrorResponse(`غير مصرح لك بتعديل حالة هذا المجلد`, 403)
+        );
+      }
     }
     
-    // Update folder status
-    folder = await Folder.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true, runValidators: true }
-    ).populate('department')
-      .populate('parent')
-      .populate('createdBy', 'username');
+    folder.status = status;
+    await folder.save();
+
+    const populatedFolder = await Folder.findById(folder._id)
+      .populate('department', 'name')
+      .populate('parent', 'name')
+      .populate('createdBy', 'username role');
     
     res.status(200).json({
       success: true,
-      data: folder
+      message: status === 'En cours' ? 'تم تنشيط المجلد بنجاح' : 'تم أرشفة/إغلاق المجلد بنجاح',
+      data: populatedFolder
     });
   } catch (err) {
     next(err);

@@ -1,4 +1,3 @@
-
 const Folder = require('../../../models/Folder');
 const ErrorResponse = require('../../../utils/errorResponse');
 
@@ -7,21 +6,25 @@ const ErrorResponse = require('../../../utils/errorResponse');
 // @access  Private/AdminDepartment
 exports.createFolder = async (req, res, next) => {
   try {
-    // Get folder data
-    const { name, parentId, department, createdBy } = req.body;
+    const { name, description, parentId, department, color } = req.body;
     
-    if (!name) {
+    if (!name || !name.trim()) {
       return next(
-        new ErrorResponse('Please provide a folder name', 400)
+        new ErrorResponse('يرجى إدخال اسم المجلد', 400)
       );
     }
     
-    // Use department from request body if provided, otherwise use active department
-    const targetDepartment = department || req.user.activeDepartment._id;
+    // Determine target department
+    let targetDepartment = department;
+    if (!targetDepartment) {
+      if (req.user.activeDepartment) {
+        targetDepartment = req.user.activeDepartment._id || req.user.activeDepartment;
+      }
+    }
     
     if (!targetDepartment) {
       return next(
-        new ErrorResponse('Department is required', 400)
+        new ErrorResponse('القسم الإداري مطلوب لإنشاء المجلد', 400)
       );
     }
     
@@ -31,47 +34,50 @@ exports.createFolder = async (req, res, next) => {
       
       if (!parentFolder) {
         return next(
-          new ErrorResponse(`Parent folder not found`, 404)
+          new ErrorResponse(`المجلد الأصل غير موجود`, 404)
         );
       }
       
       // Check if parent folder belongs to the same department
       if (parentFolder.department.toString() !== targetDepartment.toString()) {
         return next(
-          new ErrorResponse(`Parent folder must belong to the same department`, 403)
+          new ErrorResponse(`يجب أن ينتمي المجلد الأصل إلى نفس القسم الإداري`, 403)
         );
       }
     }
     
-    // Check for duplicate folder names within the same parent/department
+    // Check for duplicate folder names within the same parent and department
     const existingFolder = await Folder.findOne({
-      name,
+      name: name.trim(),
       parent: parentId || null,
       department: targetDepartment
     });
     
     if (existingFolder) {
       return next(
-        new ErrorResponse('A folder with this name already exists in this location', 400)
+        new ErrorResponse('يوجد مجلد آخر بنفس هذا الاسم في نفس المكان', 400)
       );
     }
     
     // Create folder
     const folder = await Folder.create({
-      name,
+      name: name.trim(),
+      description: description ? description.trim() : '',
       parent: parentId || null,
       department: targetDepartment,
-      createdBy: createdBy || req.user._id
+      createdBy: req.user._id,
+      color: color || '#2c5282'
     });
     
     // Populate fields for response
     const populatedFolder = await Folder.findById(folder._id)
-      .populate('department')
-      .populate('parent')
-      .populate('createdBy', 'username');
+      .populate('department', 'name')
+      .populate('parent', 'name')
+      .populate('createdBy', 'username role');
     
     res.status(201).json({
       success: true,
+      message: 'تم إنشاء المجلد بنجاح',
       data: populatedFolder
     });
   } catch (err) {

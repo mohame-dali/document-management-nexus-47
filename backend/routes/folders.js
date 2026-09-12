@@ -1,15 +1,18 @@
-
 const express = require('express');
 const {
   getFolders,
   getFolder,
   createFolder,
   updateFolder,
+  moveFolder,
   deleteFolder,
   getRootFolders,
   getSubFolders,
+  getFolderHierarchy,
   getFolderDocuments,
-  updateFolderStatus
+  updateFolderStatus,
+  assignDocumentToFolder,
+  batchMoveDocuments
 } = require('../controllers/folders');
 
 const { protect, authorize, checkDepartmentAccess } = require('../middleware/auth');
@@ -20,72 +23,68 @@ const router = express.Router();
 // Protect all routes
 router.use(protect);
 
-// Get all folders - AdminTuningDesk can view all, others restricted to their department
+// Department hierarchy routes
+router.get('/hierarchy', getFolderHierarchy);
+router.get('/department/:departmentId/hierarchy', getFolderHierarchy);
+router.get('/department/:departmentId/root', getRootFolders);
+
+// Document assignment / moving routes
+router.put(
+  '/assign-document',
+  authorize('AdminDepartment', 'Admin', 'SuperAdmin'),
+  auditDocumentActivity('document_folder_assigned'),
+  assignDocumentToFolder
+);
+
+router.put(
+  '/batch-move-documents',
+  authorize('AdminDepartment', 'Admin', 'SuperAdmin'),
+  auditDocumentActivity('documents_batch_moved'),
+  batchMoveDocuments
+);
+
+// Base collection routes
 router.route('/')
   .get(getFolders)
   .post(
-    authorize('AdminDepartment'), 
+    authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
     checkDepartmentAccess(),
     auditDocumentActivity('folder_create'),
     createFolder
   );
 
-// Specific folder routes
+// Specific folder item routes
 router.route('/:id')
   .get(getFolder)
   .put(
-    authorize('AdminDepartment'), 
+    authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
     checkDepartmentAccess(),
     auditDocumentActivity('folder_update'),
     updateFolder
   )
   .delete(
-    authorize('AdminDepartment'), 
+    authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
     checkDepartmentAccess(),
     auditDocumentActivity('folder_delete'),
     deleteFolder
   );
 
-// Get root folders (no parent) - AdminTuningDesk can access any department
-router.get('/department/:departmentId/root', getRootFolders);
-
-// Get subfolders of a folder - AdminTuningDesk can access any folder
+// Folder sub-resources
 router.get('/:id/subfolders', getSubFolders);
-
-// Get documents in a folder - AdminTuningDesk can access any folder
 router.get('/:id/documents', getFolderDocuments);
 
-// Update folder status - only AdminDepartment
 router.put('/:id/status', 
-  authorize('AdminDepartment'), 
+  authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
   checkDepartmentAccess(),
   auditDocumentActivity('folder_update'),
   updateFolderStatus
 );
 
-// Move folder - only AdminDepartment
 router.put('/:id/move',
-  authorize('AdminDepartment'), 
+  authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
   checkDepartmentAccess(),
-  auditDocumentActivity('folder_update'),
-  async (req, res, next) => {
-    try {
-      const { parentId } = req.body;
-      
-      const updatedFolder = await updateFolder(req, res, next, {
-        parent: parentId || null
-      });
-      
-      if (!updatedFolder) return;
-      
-      res.status(200).json({
-        success: true,
-        data: updatedFolder
-      });
-    } catch (err) {
-      next(err);
-    }
-  }
+  auditDocumentActivity('folder_move'),
+  moveFolder
 );
 
 module.exports = router;

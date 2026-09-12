@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronRight, Home, Folder } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,30 +38,32 @@ const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
   const breadcrumbPath = buildBreadcrumbPath(currentFolder);
 
   return (
-    <nav className="flex items-center gap-1 p-2 bg-gray-50 rounded-lg" dir="rtl">
+    <nav className="flex items-center flex-wrap gap-1 p-2 bg-white border border-[#e2e8f0] rounded text-xs" dir="rtl">
       <Button
         variant="ghost"
         size="sm"
         onClick={() => onNavigate(null)}
-        className="flex items-center gap-1 hover:bg-gray-200"
+        className="h-7 px-2 text-xs flex items-center gap-1.5 text-[#2c5282] hover:bg-gray-100 rounded transition-colors duration-200"
       >
-        <Home className="h-4 w-4" />
-        <span className="text-sm">الرئيسية</span>
+        <Home className="h-3.5 w-3.5" />
+        <span>الجذر (الكل)</span>
       </Button>
       
       {breadcrumbPath.map((folder, index) => (
         <React.Fragment key={folder._id}>
-          <ChevronRight className="h-4 w-4 text-gray-400" />
+          <ChevronRight className="h-3 w-3 text-gray-400 rotate-180" />
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onNavigate(folder)}
-            className={`flex items-center gap-1 hover:bg-gray-200 ${
-              index === breadcrumbPath.length - 1 ? 'text-blue-600 font-medium' : ''
+            className={`h-7 px-2 text-xs flex items-center gap-1.5 rounded transition-colors duration-200 ${
+              index === breadcrumbPath.length - 1 
+                ? 'bg-amber-50/70 text-[#78350f] font-semibold border border-[#FFCB56]' 
+                : 'text-gray-700 hover:bg-gray-100'
             }`}
           >
-            <Folder className="h-4 w-4" />
-            <span className="text-sm truncate max-w-32">{folder.name}</span>
+            <Folder className={`h-3.5 w-3.5 ${index === breadcrumbPath.length - 1 ? 'text-[#d97706]' : 'text-[#2c5282]'}`} />
+            <span className="truncate max-w-[150px]">{folder.name}</span>
           </Button>
         </React.Fragment>
       ))}

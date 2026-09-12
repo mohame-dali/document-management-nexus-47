@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -11,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Folder, FolderOpen, ChevronRight, Building2 } from 'lucide-react';
+import { Folder, FolderOpen, ChevronRight, Home, ArrowRight } from 'lucide-react';
 import { getFolders, moveFolder } from '@/services/folderService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Folder as FolderType } from '@/types';
@@ -55,7 +54,6 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
     },
   });
 
-  // Define helper functions first
   const isDescendant = (checkFolder: FolderType, ancestorId: string): boolean => {
     if (!checkFolder.parent) return false;
     const parentId = typeof checkFolder.parent === 'string' ? checkFolder.parent : checkFolder.parent._id;
@@ -76,17 +74,15 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
     });
   };
 
-  // Now define the filtered folders using the helper functions
   const availableFolders = folders?.filter(f => 
-    f._id !== folder?._id && // Cannot move to itself
-    !isDescendant(f, folder?._id || '') // Cannot move to its own descendant
+    f._id !== folder?._id && 
+    !isDescendant(f, folder?._id || '')
   ) || [];
 
   const rootFolders = availableFolders.filter(f => !f.parent);
 
   const handleMove = () => {
     if (!folder) return;
-    
     moveFolderMutation.mutate({
       folderId: folder._id,
       newParentId: selectedParentId
@@ -100,34 +96,25 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
     return (
       <div key={folderOption._id}>
         <div
-          className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all ${
+          className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors duration-200 border text-xs ${
             isSelected 
-              ? 'bg-blue-50 border border-blue-200' 
-              : 'hover:bg-gray-50 border border-transparent'
+              ? 'bg-amber-50/70 border-[#FFCB56] text-[#78350f] font-semibold' 
+              : 'hover:bg-gray-50 border-transparent text-gray-700'
           }`}
-          style={{ paddingRight: `${level * 20 + 12}px` }}
+          style={{ paddingRight: `${level * 18 + 8}px` }}
           onClick={() => setSelectedParentId(folderOption._id)}
         >
-          <div className="flex items-center gap-2 flex-1">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              {hasChildren ? (
-                <FolderOpen className="h-4 w-4 text-blue-600" />
-              ) : (
-                <Folder className="h-4 w-4 text-blue-600" />
-              )}
-            </div>
-            <div>
-              <div className="font-medium text-sm">{folderOption.name}</div>
-              <div className="text-xs text-gray-500">
-                {folderOption.status === 'En cours' ? 'نشط' : 'مؤرشف'}
-              </div>
-            </div>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Folder className={`h-3.5 w-3.5 flex-shrink-0 ${isSelected ? 'text-[#d97706]' : 'text-[#2c5282]'}`} />
+            <span className="truncate">{folderOption.name}</span>
           </div>
-          {hasChildren && <ChevronRight className="h-4 w-4 text-gray-400" />}
+          {folderOption.status === 'En cours' && (
+            <span className="text-[10px] text-gray-400">نشط</span>
+          )}
         </div>
         
         {hasChildren && (
-          <div className="ml-4">
+          <div className="mr-2">
             {getSubfolders(folderOption._id).map(subfolder => 
               renderFolderOption(subfolder, level + 1)
             )}
@@ -139,63 +126,67 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" dir="rtl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            نقل المجلد: {folder?.name}
+      <DialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden text-xs" dir="rtl">
+        <DialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+          <DialogTitle className="flex items-center gap-2 text-base font-bold text-[#2c5282]">
+            <ArrowRight className="h-4 w-4 rotate-180 text-[#2c5282]" />
+            <span>نقل المجلد: {folder?.name}</span>
           </DialogTitle>
+          <p className="text-gray-500 text-xs mt-1">
+            اختر المجلد الأصل الجديد، أو انقر على الجذر لجعله مجلداً رئيسياً
+          </p>
         </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-blue-800">
-              اختر المجلد الذي تريد نقل "{folder?.name}" إليه، أو اتركه فارغاً لجعله مجلد رئيسي.
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <div
-              className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all ${
-                selectedParentId === null 
-                  ? 'bg-blue-50 border border-blue-200' 
-                  : 'hover:bg-gray-50 border border-transparent'
-              }`}
-              onClick={() => setSelectedParentId(null)}
-            >
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Building2 className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <div className="font-medium text-sm">المجلدات الرئيسية</div>
-                <div className="text-xs text-gray-500">جعل هذا مجلد رئيسي</div>
-              </div>
+
+        <div className="p-4 space-y-3">
+          {/* Root option */}
+          <div
+            className={`flex items-center gap-2 p-2.5 rounded cursor-pointer border transition-colors duration-200 ${
+              selectedParentId === null
+                ? 'bg-amber-50/70 border-[#FFCB56] text-[#78350f] font-semibold'
+                : 'bg-gray-50 border-[#e2e8f0] text-gray-700 hover:bg-gray-100'
+            }`}
+            onClick={() => setSelectedParentId(null)}
+          >
+            <Home className="h-4 w-4 text-[#2c5282]" />
+            <div className="flex-1">
+              <span className="block font-medium">المستوى الرئيسي (الجذر)</span>
+              <span className="text-[11px] text-gray-500">جعل المجلد في المستوى الأول بدون أب</span>
             </div>
-            
-            <ScrollArea className="h-[300px] border rounded-lg p-2">
-              <div className="space-y-1">
-                {rootFolders.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Folder className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>لا توجد مجلدات متاحة للنقل إليها</p>
-                  </div>
-                ) : (
-                  rootFolders.map(folderOption => renderFolderOption(folderOption))
-                )}
+            {selectedParentId === null && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+                محدد
+              </span>
+            )}
+          </div>
+
+          <div className="border border-[#e2e8f0] rounded p-2 bg-[#fcfcfc]">
+            <div className="text-[11px] font-medium text-gray-500 mb-1.5 px-1">المجلدات المتاحة:</div>
+            <ScrollArea className="h-56">
+              <div className="space-y-0.5">
+                {rootFolders.map(rootFolder => renderFolderOption(rootFolder))}
               </div>
             </ScrollArea>
           </div>
         </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+
+        <DialogFooter className="p-3 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            className="h-8 px-3 rounded border-[#e2e8f0] text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+          >
             إلغاء
           </Button>
-          <Button 
+          <Button
+            type="button"
+            size="sm"
             onClick={handleMove}
             disabled={moveFolderMutation.isPending}
+            className="h-8 px-4 rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium transition-colors duration-200"
           >
-            {moveFolderMutation.isPending ? 'جاري النقل...' : 'نقل المجلد'}
+            {moveFolderMutation.isPending ? 'جاري النقل...' : 'تأكيد النقل'}
           </Button>
         </DialogFooter>
       </DialogContent>

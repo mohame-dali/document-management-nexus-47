@@ -1,5 +1,6 @@
-
 const Folder = require('../../models/Folder');
+const IncomingDocument = require('../../models/IncomingDocument');
+const OutgoingDocument = require('../../models/OutgoingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
 
 // @desc    Get single folder
@@ -8,28 +9,44 @@ const ErrorResponse = require('../../utils/errorResponse');
 exports.getFolder = async (req, res, next) => {
   try {
     const folder = await Folder.findById(req.params.id)
-      .populate('department')
-      .populate('parent')
-      .populate('createdBy', 'username');
+      .populate('department', 'name')
+      .populate('parent', 'name')
+      .populate('createdBy', 'username role photo');
     
     if (!folder) {
       return next(
-        new ErrorResponse(`Folder not found with id of ${req.params.id}`, 404)
+        new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404)
       );
     }
     
     // Check if user has access to this folder
     if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
-      if (folder.department.toString() !== req.user.activeDepartment._id.toString()) {
+      const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
+      const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
+      
+      if (folderDeptId !== activeDeptId) {
         return next(
-          new ErrorResponse(`Not authorized to access this folder`, 403)
+          new ErrorResponse(`غير مصرح لك بالوصول إلى هذا المجلد`, 403)
         );
       }
     }
+
+    // Get subfolders count and document counts
+    const [subfolderCount, incomingCount, outgoingCount] = await Promise.all([
+      Folder.countDocuments({ parent: folder._id }),
+      IncomingDocument.countDocuments({ folder: folder._id }),
+      OutgoingDocument.countDocuments({ folder: folder._id })
+    ]);
+
+    const folderData = folder.toObject();
+    folderData.subfolderCount = subfolderCount;
+    folderData.incomingCount = incomingCount;
+    folderData.outgoingCount = outgoingCount;
+    folderData.documentCount = incomingCount + outgoingCount;
     
     res.status(200).json({
       success: true,
-      data: folder
+      data: folderData
     });
   } catch (err) {
     next(err);

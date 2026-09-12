@@ -86,10 +86,16 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <Label>المجلد الحالي:</Label>
-          <Badge variant={currentFolder ? 'default' : 'secondary'} className="flex items-center gap-1">
-            {currentFolder ? <FolderOpen className="h-3 w-3" /> : <Folder className="h-3 w-3" />}
-            {getCurrentFolderName()}
-          </Badge>
+          {currentFolder ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              <FolderOpen className="h-3 w-3" />
+              {getCurrentFolderName()}
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600 border border-gray-200">
+              غير مصنف
+            </span>
+          )}
         </div>
 
         {isAdminDepartment ? (
@@ -97,7 +103,7 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
             <div className="space-y-2">
               <Label htmlFor="folder">اختر المجلد الجديد</Label>
               <Select value={selectedFolder} onValueChange={setSelectedFolder}>
-                <SelectTrigger id="folder">
+                <SelectTrigger id="folder" className="h-8 text-xs bg-white border-[#cbd5e1] rounded">
                   <SelectValue placeholder="اختر مجلداً أو اتركه فارغاً" />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,11 +116,15 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
                   {folders?.map((folder) => (
                     <SelectItem key={folder._id} value={folder._id}>
                       <div className="flex items-center gap-2">
-                        <FolderOpen className="h-4 w-4" />
-                        {folder.name}
-                        <Badge variant={folder.status === 'En cours' ? 'default' : 'secondary'} className="text-xs">
+                        <FolderOpen className="h-4 w-4 text-[#2c5282]" />
+                        <span>{folder.name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
+                          folder.status === 'En cours' 
+                            ? 'bg-[#FFCB56] text-[#78350f]' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
                           {folder.status === 'En cours' ? 'نشط' : 'مغلق'}
-                        </Badge>
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -124,7 +134,7 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
             <Button 
               onClick={handleCategorize} 
               disabled={categorizeMutation.isPending} 
-              className="w-full flex items-center gap-2"
+              className="w-full h-8 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium flex items-center justify-center gap-2 transition-colors duration-200"
             >
               {categorizeMutation.isPending ? (
                 'جاري التصنيف...'

@@ -1,25 +1,24 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Archive, 
   FolderOpen, 
   FileText, 
   Search, 
-  Filter,
-  ChevronRight,
-  Calendar,
-  Tag,
-  TrendingUp
+  Calendar, 
+  Tag, 
+  Inbox, 
+  Send, 
+  ArrowRight,
+  CheckCircle2,
+  FolderPlus,
+  Building,
+  Check
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Folder, IncomingDocument, OutgoingDocument } from '@/types';
-import { getFolderDocuments, assignDocumentToFolder } from '@/services/folderService';
+import { assignDocumentToFolder } from '@/services/folderService';
 import { getIncomingDocumentsList, getOutgoingDocumentsList } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
@@ -37,292 +36,284 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
+  
+  const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
-  const [uncategorizedDocuments, setUncategorizedDocuments] = useState<{
-    incoming: IncomingDocument[];
-    outgoing: OutgoingDocument[];
-  }>({ incoming: [], outgoing: [] });
+  const [selectedTargetFolderId, setSelectedTargetFolderId] = useState<string>('');
+  
+  const targetDepartmentId = departmentId || currentUser?.activeDepartment?._id;
 
-  // Fetch uncategorized documents
-  const { data: incomingDocs } = useQuery({
-    queryKey: ['incomingDocuments', departmentId],
+  // Fetch incoming & outgoing documents
+  const { data: incomingDocs, isLoading: isLoadingIncoming } = useQuery({
+    queryKey: ['incomingDocuments', targetDepartmentId],
     queryFn: () => getIncomingDocumentsList({}),
-    enabled: !!departmentId,
+    enabled: !!targetDepartmentId,
   });
 
-  const { data: outgoingDocs } = useQuery({
-    queryKey: ['outgoingDocuments', departmentId],
+  const { data: outgoingDocs, isLoading: isLoadingOutgoing } = useQuery({
+    queryKey: ['outgoingDocuments', targetDepartmentId],
     queryFn: () => getOutgoingDocumentsList({}),
-    enabled: !!departmentId,
+    enabled: !!targetDepartmentId,
   });
-
-  // Filter uncategorized documents
-  React.useEffect(() => {
-    if (incomingDocs && outgoingDocs) {
-      const uncategorizedIncoming = incomingDocs.filter(doc => !doc.folder);
-      const uncategorizedOutgoing = outgoingDocs.filter(doc => !doc.folder);
-      
-      setUncategorizedDocuments({
-        incoming: uncategorizedIncoming,
-        outgoing: uncategorizedOutgoing
-      });
-    }
-  }, [incomingDocs, outgoingDocs]);
 
   const assignMutation = useMutation({
     mutationFn: ({ documentId, folderId, type }: { 
-      documentId: string, 
-      folderId: string | null, 
-      type: 'incoming' | 'outgoing' 
+      documentId: string; 
+      folderId: string | null; 
+      type: 'incoming' | 'outgoing';
     }) => assignDocumentToFolder(documentId, folderId, type),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incomingDocuments'] });
       queryClient.invalidateQueries({ queryKey: ['outgoingDocuments'] });
-      toast.success('تم تصنيف المستند بنجاح');
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['folderDocuments'] });
+      toast.success(variables.folderId ? 'تم تصنيف المستند في المجلد بنجاح' : 'تمت إزالة المستند من المجلد');
     },
-    onError: () => {
-      toast.error('فشل في تصنيف المستند');
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'فشل في تصنيف المستند');
     }
   });
 
-  const handleDocumentAssign = (documentId: string, folderId: string, type: 'incoming' | 'outgoing') => {
+  const handleDocumentAssign = (documentId: string, folderId: string | null, type: 'incoming' | 'outgoing') => {
     if (!canManage) return;
-    
     assignMutation.mutate({ documentId, folderId, type });
   };
 
-  const filteredFolders = folders.filter(folder =>
-    folder.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter unclassified documents
+  const unclassifiedIncoming = (incomingDocs || []).filter(doc => !doc.folder);
+  const classifiedIncoming = (incomingDocs || []).filter(doc => !!doc.folder);
 
-  const getFolderIcon = (status: string, hasDocuments: boolean) => {
-    if (status === 'Fermé') return Archive;
-    return hasDocuments ? FolderOpen : Archive;
-  };
+  const unclassifiedOutgoing = (outgoingDocs || []).filter(doc => !doc.folder);
+  const classifiedOutgoing = (outgoingDocs || []).filter(doc => !!doc.folder);
 
-  const getFolderColor = (index: number) => {
-    const colors = [
-      'bg-blue-500',
-      'bg-gray-500', 
-      'bg-orange-500',
-      'bg-slate-600'
-    ];
-    return colors[index % colors.length];
-  };
+  const currentUnclassified = activeTab === 'incoming' ? unclassifiedIncoming : unclassifiedOutgoing;
 
-  const renderDocumentCard = (doc: IncomingDocument | OutgoingDocument, type: 'incoming' | 'outgoing') => {
-    const isIncoming = type === 'incoming';
-    const date = isIncoming ? (doc as IncomingDocument).arrivalDate : (doc as OutgoingDocument).issueDate;
-    
+  const filteredDocuments = currentUnclassified.filter(doc => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase();
     return (
-      <Card key={doc._id} className="hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="text-xs">
-                  #{doc.serialNumber}/{doc.year}
-                </Badge>
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {formatArabicDate(date)}
-                </span>
-              </div>
-              <h4 className="font-medium text-sm line-clamp-2 mb-2">{doc.subject}</h4>
-              <div className="flex items-center gap-2">
-                {isIncoming ? (
-                  <FileText className="h-4 w-4 text-blue-500" />
-                ) : (
-                  <FileText className="h-4 w-4 text-green-500" />
-                )}
-                <span className="text-xs text-muted-foreground">
-                  {isIncoming ? 'وارد' : 'صادر'}
-                </span>
-              </div>
-            </div>
-            
-            {canManage && (
-              <div className="flex flex-col gap-1">
-                {filteredFolders.slice(0, 3).map((folder, index) => (
-                  <Button
-                    key={folder._id}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDocumentAssign(doc._id, folder._id, type)}
-                    className="text-xs px-2 py-1 h-auto"
-                    disabled={assignMutation.isPending}
-                  >
-                    <div className={`w-2 h-2 rounded-full ${getFolderColor(index)} mr-1`} />
-                    {folder.name.substring(0, 8)}...
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      doc.subject?.toLowerCase().includes(term) ||
+      doc.serialNumber?.toString().includes(term) ||
+      ('source' in doc && (doc as IncomingDocument).source?.toLowerCase().includes(term))
     );
-  };
+  });
 
   return (
-    <div className="space-y-6" dir="rtl">
-      {/* Header with Statistics */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Archive className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">تصنيف المستندات</h3>
-                <p className="text-sm text-gray-600">تنظيم وأرشفة المستندات بطريقة هرمية</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {uncategorizedDocuments.incoming.length + uncategorizedDocuments.outgoing.length}
-                </div>
-                <div className="text-xs text-gray-600">غير مصنف</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{folders.length}</div>
-                <div className="text-xs text-gray-600">مجلد</div>
-              </div>
-            </div>
-          </CardTitle>
-        </CardHeader>
-      </Card>
-
-      {/* Search and Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="البحث في المجلدات..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10"
-              />
-            </div>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              تصفية
-            </Button>
+    <div className="space-y-4" dir="rtl">
+      {/* Header and Statistics Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">وارد غير مصنف</span>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-[#2c5282]">{unclassifiedIncoming.length}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+              مراسلة
+            </span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Folder Archive Visualization */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FolderOpen className="h-5 w-5" />
-              هيكل الأرشيف
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {filteredFolders.map((folder, index) => {
-                const FolderIcon = getFolderIcon(folder.status, true);
-                const folderColor = getFolderColor(index);
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">صادر غير مصنف</span>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-emerald-700">{unclassifiedOutgoing.length}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              مراسلة
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">إجمالي غير المصنف</span>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-[#78350f]">
+              {unclassifiedIncoming.length + unclassifiedOutgoing.length}
+            </span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              قيد التصنيف
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">المجلدات المتاحة</span>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-[#1a202c]">{folders.length}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+              مجلد
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Container */}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        {/* Navigation Bar */}
+        <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('incoming')}
+              className={`h-8 px-3 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors duration-200 ${
+                activeTab === 'incoming'
+                  ? 'bg-[#2c5282] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-[#cbd5e1]'
+              }`}
+            >
+              <Inbox className="h-3.5 w-3.5" />
+              <span>المراسلات الواردة ({unclassifiedIncoming.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('outgoing')}
+              className={`h-8 px-3 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors duration-200 ${
+                activeTab === 'outgoing'
+                  ? 'bg-emerald-700 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-[#cbd5e1]'
+              }`}
+            >
+              <Send className="h-3.5 w-3.5" />
+              <span>المراسلات الصادرة ({unclassifiedOutgoing.length})</span>
+            </button>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative max-w-xs w-full">
+            <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+            <Input
+              placeholder="البحث في المراسلات غير المصنفة..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8 pr-8 pl-3 text-xs bg-white border-[#cbd5e1] rounded"
+            />
+          </div>
+        </div>
+
+        {/* Global Target Folder Selector for quick assignment */}
+        {canManage && folders.length > 0 && (
+          <div className="p-3 bg-amber-50/40 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 text-xs text-[#78350f]">
+              <FolderPlus className="h-4 w-4 text-[#d97706]" />
+              <span className="font-semibold">تحديد مجلد الهدف للتصنيف السريع:</span>
+            </div>
+
+            <div className="flex items-center gap-2 flex-1 sm:max-w-md">
+              <select
+                value={selectedTargetFolderId}
+                onChange={(e) => setSelectedTargetFolderId(e.target.value)}
+                className="h-8 px-2.5 text-xs bg-white border border-[#FFCB56] rounded text-[#1a202c] flex-1 focus:outline-none focus:ring-1 focus:ring-[#2c5282]"
+              >
+                <option value="">-- اختر مجلداً من القائمة --</option>
+                {folders.map(folder => (
+                  <option key={folder._id} value={folder._id}>
+                    {folder.parent ? `↳ ${folder.name}` : folder.name} {folder.status === 'Fermé' ? '(مغلق)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* List of Uncategorized Documents */}
+        <div className="p-4">
+          {isLoadingIncoming || isLoadingOutgoing ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-2"></div>
+              <p className="text-xs">جاري تحميل المستندات غير المصنفة...</p>
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 space-y-2">
+              <CheckCircle2 className="h-10 w-10 mx-auto text-green-500 opacity-80" />
+              <p className="text-sm font-semibold text-gray-700">
+                {searchTerm ? 'لا توجد مراسلات مطابقة لمعايير البحث' : 'ممتاز! جميع المراسلات في هذا القسم مصنفة في مجلدات'}
+              </p>
+              <p className="text-xs text-gray-400">
+                يمكنك مراجعة المجلدات وتصفح مستنداتها من خلال تبويب شجرة المجلدات
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
+              {filteredDocuments.map(doc => {
+                const date = activeTab === 'incoming' 
+                  ? (doc as IncomingDocument).arrivalDate 
+                  : (doc as OutgoingDocument).issueDate;
                 
+                const isIncoming = activeTab === 'incoming';
+
                 return (
                   <div
-                    key={folder._id}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                      selectedFolder?._id === folder._id 
-                        ? 'border-blue-300 bg-blue-50' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setSelectedFolder(folder)}
+                    key={doc._id}
+                    className="p-3 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 flex flex-col md:flex-row md:items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 ${folderColor} rounded-lg shadow-md`}>
-                        <FolderIcon className="h-4 w-4 text-white" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                          isIncoming 
+                            ? 'bg-blue-50 text-[#2c5282] border-blue-200' 
+                            : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        }`}>
+                          #{doc.serialNumber}/{doc.year}
+                        </span>
+
+                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-gray-400" />
+                          {formatArabicDate(date)}
+                        </span>
+
+                        {'source' in doc && (doc as IncomingDocument).source && (
+                          <span className="text-[11px] text-gray-600 flex items-center gap-1">
+                            <Building className="h-3 w-3 text-gray-400" />
+                            {(doc as IncomingDocument).source}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{folder.name}</div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge 
-                            variant={folder.status === 'En cours' ? 'default' : 'secondary'}
-                            className="text-xs"
-                          >
-                            {folder.status === 'En cours' ? 'نشط' : 'مؤرشف'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
+
+                      <h4 className="font-semibold text-xs text-[#1a202c] line-clamp-1 leading-relaxed">
+                        {doc.subject}
+                      </h4>
                     </div>
+
+                    {/* Assignment Controls */}
+                    {canManage && (
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {selectedTargetFolderId && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleDocumentAssign(doc._id, selectedTargetFolderId, activeTab)}
+                            disabled={assignMutation.isPending}
+                            className="h-7 px-3 text-xs rounded border border-[#FFCB56] bg-[#FFD758]/20 text-[#78350f] hover:bg-[#FFD758]/40 font-medium flex items-center gap-1 transition-colors duration-200"
+                          >
+                            <Check className="h-3 w-3" />
+                            <span>تصنيف في المجلد المحدد</span>
+                          </Button>
+                        )}
+
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleDocumentAssign(doc._id, e.target.value, activeTab);
+                            }
+                          }}
+                          disabled={assignMutation.isPending}
+                          className="h-7 px-2 text-xs bg-white border border-[#cbd5e1] rounded text-gray-700 hover:border-[#2c5282] focus:outline-none"
+                        >
+                          <option value="">نقل إلى مجلد...</option>
+                          {folders.map(f => (
+                            <option key={f._id} value={f._id}>
+                              {f.name} {f.status === 'Fermé' ? '(مغلق)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Document Classification */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Tag className="h-5 w-5" />
-              المستندات غير المصنفة
-              {!canManage && (
-                <Badge variant="secondary" className="text-xs">للعرض فقط</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="incoming" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="incoming" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  واردة ({uncategorizedDocuments.incoming.length})
-                </TabsTrigger>
-                <TabsTrigger value="outgoing" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  صادرة ({uncategorizedDocuments.outgoing.length})
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="incoming" className="mt-4">
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {uncategorizedDocuments.incoming.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>جميع المستندات الواردة مصنفة</p>
-                    </div>
-                  ) : (
-                    uncategorizedDocuments.incoming.map(doc => 
-                      renderDocumentCard(doc, 'incoming')
-                    )
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="outgoing" className="mt-4">
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {uncategorizedDocuments.outgoing.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>جميع المستندات الصادرة مصنفة</p>
-                    </div>
-                  ) : (
-                    uncategorizedDocuments.outgoing.map(doc => 
-                      renderDocumentCard(doc, 'outgoing')
-                    )
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
     </div>
   );

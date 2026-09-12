@@ -1,24 +1,22 @@
-
 import axios from 'axios';
-import { Folder } from '@/types';
+import { Folder, IncomingDocument, OutgoingDocument } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Get all folders
-export const getFolders = async (departmentId?: string): Promise<Folder[]> => {
+export const getFolders = async (departmentId?: string, search?: string, status?: string): Promise<Folder[]> => {
   try {
-    const url = departmentId 
-      ? `${API_URL}/folders?department=${departmentId}` 
-      : `${API_URL}/folders`;
-    
-    console.log('Fetching folders from:', url);
+    const params = new URLSearchParams();
+    if (departmentId) params.append('department', departmentId);
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
+
+    const queryString = params.toString();
+    const url = `${API_URL}/folders${queryString ? `?${queryString}` : ''}`;
     
     const response = await axios.get(url);
     const folders = response.data.data || response.data;
-    
-    console.log('Fetched folders:', folders.length);
-    
-    return folders;
+    return Array.isArray(folders) ? folders : [];
   } catch (error) {
     console.error('Error fetching folders:', error);
     throw error;
@@ -37,9 +35,8 @@ export const getFolder = async (id: string): Promise<Folder> => {
 };
 
 // Create a new folder - AdminDepartment only
-export const createFolder = async (folderData: Partial<Folder & { parentId?: string }>): Promise<Folder> => {
+export const createFolder = async (folderData: Partial<Folder & { parentId?: string; color?: string }>): Promise<Folder> => {
   try {
-    console.log('Creating folder with data:', folderData);
     const response = await axios.post(`${API_URL}/folders`, folderData);
     return response.data.data || response.data;
   } catch (error) {
@@ -49,9 +46,8 @@ export const createFolder = async (folderData: Partial<Folder & { parentId?: str
 };
 
 // Update a folder - AdminDepartment only
-export const updateFolder = async (id: string, folderData: Partial<Folder>): Promise<Folder> => {
+export const updateFolder = async (id: string, folderData: Partial<Folder & { parentId?: string | null; color?: string }>): Promise<Folder> => {
   try {
-    console.log(`Updating folder ${id} with data:`, folderData);
     const response = await axios.put(`${API_URL}/folders/${id}`, folderData);
     return response.data.data || response.data;
   } catch (error) {
@@ -63,9 +59,7 @@ export const updateFolder = async (id: string, folderData: Partial<Folder>): Pro
 // Delete a folder - AdminDepartment only
 export const deleteFolder = async (id: string): Promise<void> => {
   try {
-    console.log(`Deleting folder ${id}`);
     await axios.delete(`${API_URL}/folders/${id}`);
-    console.log(`Successfully deleted folder ${id}`);
   } catch (error) {
     console.error(`Error deleting folder with id ${id}:`, error);
     throw error;
@@ -75,7 +69,6 @@ export const deleteFolder = async (id: string): Promise<void> => {
 // Change folder status - AdminDepartment only
 export const changeFolderStatus = async (id: string, status: 'En cours' | 'Ferm√©'): Promise<Folder> => {
   try {
-    console.log(`Changing status of folder ${id} to ${status}`);
     const response = await axios.put(`${API_URL}/folders/${id}/status`, { status });
     return response.data.data || response.data;
   } catch (error) {
@@ -85,10 +78,10 @@ export const changeFolderStatus = async (id: string, status: 'En cours' | 'Ferm√
 };
 
 // Get documents in a folder
-export const getFolderDocuments = async (id: string): Promise<any> => {
+export const getFolderDocuments = async (id: string): Promise<{ incomingDocuments: IncomingDocument[]; outgoingDocuments: OutgoingDocument[] }> => {
   try {
     const response = await axios.get(`${API_URL}/folders/${id}/documents`);
-    return response.data.data || response.data;
+    return response.data.data || response.data || { incomingDocuments: [], outgoingDocuments: [] };
   } catch (error) {
     console.error(`Error fetching documents for folder ${id}:`, error);
     throw error;
@@ -99,7 +92,8 @@ export const getFolderDocuments = async (id: string): Promise<any> => {
 export const getRootFolders = async (departmentId: string): Promise<Folder[]> => {
   try {
     const response = await axios.get(`${API_URL}/folders/department/${departmentId}/root`);
-    return response.data.data || response.data;
+    const data = response.data.data || response.data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error(`Error fetching root folders for department ${departmentId}:`, error);
     throw error;
@@ -110,7 +104,8 @@ export const getRootFolders = async (departmentId: string): Promise<Folder[]> =>
 export const getSubFolders = async (id: string): Promise<Folder[]> => {
   try {
     const response = await axios.get(`${API_URL}/folders/${id}/subfolders`);
-    return response.data.data || response.data;
+    const data = response.data.data || response.data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error(`Error fetching subfolders for folder ${id}:`, error);
     throw error;
@@ -120,7 +115,6 @@ export const getSubFolders = async (id: string): Promise<Folder[]> => {
 // Move folder to different parent - AdminDepartment only
 export const moveFolder = async (id: string, newParentId: string | null): Promise<Folder> => {
   try {
-    console.log(`Moving folder ${id} to parent ${newParentId}`);
     const response = await axios.put(`${API_URL}/folders/${id}/move`, { parentId: newParentId });
     return response.data.data || response.data;
   } catch (error) {
@@ -133,27 +127,56 @@ export const moveFolder = async (id: string, newParentId: string | null): Promis
 export const getFolderHierarchy = async (departmentId: string): Promise<Folder[]> => {
   try {
     const response = await axios.get(`${API_URL}/folders/department/${departmentId}/hierarchy`);
-    return response.data.data || response.data;
+    const data = response.data.data || response.data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error(`Error fetching folder hierarchy for department ${departmentId}:`, error);
     throw error;
   }
 };
 
-// Assign document to folder - AdminDepartment only
+// Assign or move a document to a folder
 export const assignDocumentToFolder = async (
   documentId: string,
   folderId: string | null,
   documentType: 'incoming' | 'outgoing'
-): Promise<any> => {
+): Promise<{ success: boolean; message?: string }> => {
   try {
-    console.log(`Assigning ${documentType} document ${documentId} to folder ${folderId}`);
-    const response = await axios.put(`${API_URL}/${documentType}-documents/${documentId}/folder`, {
-      folderId
+    // Try folders/assign-document first
+    const response = await axios.put(`${API_URL}/folders/assign-document`, {
+      documentId,
+      folderId,
+      type: documentType
     });
     return response.data.data || response.data;
+  } catch (error: unknown) {
+    // Fallback to document route if available
+    try {
+      const fallbackResponse = await axios.put(`${API_URL}/${documentType}-documents/${documentId}/folder`, {
+        folderId
+      });
+      return fallbackResponse.data.data || fallbackResponse.data;
+    } catch {
+      throw error;
+    }
+  }
+};
+
+// Batch move documents
+export const batchMoveDocuments = async (
+  documentIds: string[],
+  folderId: string | null,
+  documentType: 'incoming' | 'outgoing'
+): Promise<{ success: boolean; message?: string; count?: number }> => {
+  try {
+    const response = await axios.put(`${API_URL}/folders/batch-move-documents`, {
+      documentIds,
+      folderId,
+      type: documentType
+    });
+    return response.data;
   } catch (error) {
-    console.error(`Error assigning document ${documentId} to folder:`, error);
+    console.error('Error batch moving documents:', error);
     throw error;
   }
 };
@@ -162,12 +185,13 @@ export const assignDocumentToFolder = async (
 export const createSubfolder = async (
   parentId: string,
   name: string,
-  departmentId: string
+  departmentId: string,
+  description?: string
 ): Promise<Folder> => {
   try {
-    console.log(`Creating subfolder "${name}" under parent ${parentId} in department ${departmentId}`);
     const response = await axios.post(`${API_URL}/folders`, {
       name,
+      description: description || '',
       parentId,
       department: departmentId,
     });

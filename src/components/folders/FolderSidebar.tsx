@@ -1,22 +1,20 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   FolderOpen, 
   Folder, 
   ChevronDown, 
   ChevronRight, 
-  FileText,
   Eye
 } from 'lucide-react';
 import { getFolders } from '@/services/folderService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Folder as FolderType } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface FolderSidebarProps {
   className?: string;
@@ -28,7 +26,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const departmentId = currentUser?.activeDepartment?._id;
-  const canViewFolders = ['Admin', 'AdminTuningDesk', 'AdminDepartment', 'User'].includes(currentUser?.role || '');
+  const canViewFolders = ['SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment', 'User'].includes(currentUser?.role || '');
 
   const { data: folders, isLoading } = useQuery({
     queryKey: ['folders', departmentId],
@@ -105,7 +103,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
             variant="outline" 
             className={`text-[10px] px-1.5 py-0 rounded font-normal ${
               folder.status === 'En cours' 
-                ? 'bg-[#38a169]/20 text-[#9ae6b4] border-[#38a169]/40' 
+                ? 'bg-[#FFCB56]/20 text-[#FFD758] border-[#FFCB56]/40' 
                 : 'bg-slate-700/50 text-slate-300 border-slate-600'
             }`}
           >

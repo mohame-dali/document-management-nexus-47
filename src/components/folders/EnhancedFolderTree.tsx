@@ -1,47 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
   Folder, 
   FolderOpen, 
   ChevronDown, 
-  ChevronRight,
-  FileText,
-  Archive,
-  Circle,
-  Search,
-  Filter,
-  MoreVertical,
-  Eye,
-  Users,
-  Building2,
-  Sparkles,
-  Plus
+  ChevronRight, 
+  FileText, 
+  Archive, 
+  Search, 
+  Plus, 
+  Edit3, 
+  Trash2, 
+  MoveRight, 
+  Info, 
+  ExternalLink,
+  ChevronsDown,
+  ChevronsUp,
+  FolderPlus
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   getFolders, 
   getFolderDocuments, 
   createFolder, 
   updateFolder, 
-  deleteFolder,
+  deleteFolder, 
   changeFolderStatus 
 } from '@/services/folderService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Folder as FolderType } from '@/types';
-import FolderBreadcrumb from './FolderBreadcrumb';
 import FolderContextMenu from './FolderContextMenu';
 import FolderMoveDialog from './FolderMoveDialog';
 import FolderDetailsDialog from './FolderDetailsDialog';
+import { FolderDocumentsModal } from './FolderDocumentsModal';
 import DragDropWrapper from '@/components/common/DragDropWrapper';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 
 interface EnhancedFolderTreeProps {
-  onFolderSelect: (folder: FolderType | null) => void;
+  onFolderSelect?: (folder: FolderType | null) => void;
   selectedFolderId?: string | null;
   departmentId?: string;
   readOnly?: boolean;
@@ -55,27 +71,30 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
+  
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-  const [currentFolder, setCurrentFolder] = useState<FolderType | null>(null);
   const [documentCounts, setDocumentCounts] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'En cours' | 'Fermé'>('all');
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
+  
   const [selectedFolder, setSelectedFolder] = useState<FolderType | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<FolderType | null>(null);
   const [parentFolderId, setParentFolderId] = useState<string | null>(null);
-  const [newFolderName, setNewFolderName] = useState('');
+  
+  // Form state
+  const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
 
   const targetDepartmentId = departmentId || currentUser?.activeDepartment?._id;
-  
-  // AdminDepartment can manage folders in their department, AdminTuningDesk is read-only
   const canManageFolders = currentUser?.role === 'AdminDepartment' && !readOnly;
-  
-  // SuperAdmin can see everything but cannot perform department-specific actions, others see interface based on role
-  const isReadOnlyUser = currentUser?.role === 'SuperAdmin' || currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'User' || readOnly;
 
   const { data: folders, isLoading } = useQuery({
     queryKey: ['folders', targetDepartmentId],
@@ -83,9 +102,9 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
     enabled: !!targetDepartmentId,
   });
 
-  // Fetch document counts for folders
+  // Fetch document counts for all folders
   useEffect(() => {
-    if (folders) {
+    if (folders && folders.length > 0) {
       folders.forEach(async (folder) => {
         try {
           const documents = await getFolderDocuments(folder._id);
@@ -98,13 +117,16 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
     }
   }, [folders]);
 
+  // Mutations
   const createFolderMutation = useMutation({
-    mutationFn: createFolder,
+    mutationFn: (data: { name: string; description: string; parentId: string | null; department: string }) =>
+      createFolder(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       toast.success('تم إنشاء المجلد بنجاح');
       setIsCreateDialogOpen(false);
-      setNewFolderName('');
+      setFormName('');
+      setFormDescription('');
       setParentFolderId(null);
     },
     onError: (error: any) => {
@@ -117,10 +139,11 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       updateFolder(id, folderData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
-      toast.success('تم تحديث المجلد بنجاح');
+      toast.success('تم تحديث بيانات المجلد بنجاح');
       setIsEditDialogOpen(false);
       setSelectedFolder(null);
-      setNewFolderName('');
+      setFormName('');
+      setFormDescription('');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'فشل في تحديث المجلد');
@@ -132,17 +155,16 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       toast.success('تم حذف المجلد بنجاح');
-      if (selectedFolderId === selectedFolder?._id) {
+      setIsDeleteDialogOpen(false);
+      setFolderToDelete(null);
+      if (selectedFolderId === folderToDelete?._id && onFolderSelect) {
         onFolderSelect(null);
       }
-      setSelectedFolder(null);
     },
     onError: (error: any) => {
-      if (error.response?.status === 400) {
-        toast.error('لا يمكن حذف مجلد يحتوي على مجلدات فرعية أو مستندات');
-      } else {
-        toast.error(error.response?.data?.message || 'فشل في حذف المجلد');
-      }
+      setIsDeleteDialogOpen(false);
+      setFolderToDelete(null);
+      toast.error(error.response?.data?.message || 'فشل في حذف المجلد');
     },
   });
 
@@ -151,27 +173,26 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       changeFolderStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
-      toast.success('تم تغيير حالة المجلد بنجاح');
+      toast.success('تم تحديث حالة المجلد بنجاح');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'فشل في تغيير حالة المجلد');
     },
   });
 
-  const rootFolders = folders?.filter(folder => !folder.parent) || [];
-  const subfolders = folders?.filter(folder => folder.parent) || [];
+  const rootFolders = useMemo(() => {
+    return folders?.filter(folder => !folder.parent) || [];
+  }, [folders]);
 
-  // Filter folders based on search term
-  const filteredRootFolders = rootFolders.filter(folder =>
-    folder.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const subfolders = useMemo(() => {
+    return folders?.filter(folder => folder.parent) || [];
+  }, [folders]);
 
   const getSubfolders = (parentId: string) => {
-    return subfolders.filter(folder => 
-      typeof folder.parent === 'string' 
-        ? folder.parent === parentId 
-        : folder.parent?._id === parentId
-    );
+    return subfolders.filter(folder => {
+      const pId = typeof folder.parent === 'string' ? folder.parent : folder.parent?._id;
+      return pId === parentId;
+    });
   };
 
   const toggleExpanded = (folderId: string) => {
@@ -184,434 +205,579 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
     setExpandedFolders(newExpanded);
   };
 
-  const handleCreateFolder = () => {
-    if (!newFolderName.trim()) {
+  const expandAll = () => {
+    if (folders) {
+      setExpandedFolders(new Set(folders.map(f => f._id)));
+    }
+  };
+
+  const collapseAll = () => {
+    setExpandedFolders(new Set());
+  };
+
+  const handleOpenCreate = (parentId: string | null = null) => {
+    setParentFolderId(parentId);
+    setFormName('');
+    setFormDescription('');
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName.trim()) {
       toast.error('يرجى إدخال اسم المجلد');
+      return;
+    }
+    if (!targetDepartmentId) {
+      toast.error('لم يتم العثور على القسم الإداري');
       return;
     }
 
     createFolderMutation.mutate({
-      name: newFolderName.trim(),
+      name: formName.trim(),
+      description: formDescription.trim(),
       parentId: parentFolderId,
-      department: targetDepartmentId,
-      createdBy: currentUser?._id,
-    } as any);
+      department: targetDepartmentId
+    });
   };
 
-  const handleEditFolder = () => {
-    if (!newFolderName.trim() || !selectedFolder) {
+  const handleOpenEdit = (folder: FolderType) => {
+    setSelectedFolder(folder);
+    setFormName(folder.name);
+    setFormDescription(folder.description || '');
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFolder || !formName.trim()) {
       toast.error('يرجى إدخال اسم المجلد');
       return;
     }
 
     updateFolderMutation.mutate({
       id: selectedFolder._id,
-      folderData: { name: newFolderName.trim() }
+      folderData: {
+        name: formName.trim(),
+        description: formDescription.trim()
+      }
     });
   };
 
-  const handleContextMenuEdit = (folder: FolderType) => {
-    setSelectedFolder(folder);
-    setNewFolderName(folder.name);
-    setIsEditDialogOpen(true);
+  const handleOpenDelete = (folder: FolderType) => {
+    setFolderToDelete(folder);
+    setIsDeleteDialogOpen(true);
   };
 
-  const handleContextMenuDelete = (folder: FolderType) => {
-    setSelectedFolder(folder);
-    if (window.confirm(`هل أنت متأكد من حذف المجلد "${folder.name}"؟`)) {
-      deleteFolderMutation.mutate(folder._id);
+  const handleConfirmDelete = () => {
+    if (folderToDelete) {
+      deleteFolderMutation.mutate(folderToDelete._id);
     }
   };
 
-  const handleContextMenuCreateSubfolder = (parentId: string) => {
-    setParentFolderId(parentId);
-    setNewFolderName('');
-    setIsCreateDialogOpen(true);
-  };
-
-  const handleContextMenuMove = (folder: FolderType) => {
+  const handleOpenDocuments = (folder: FolderType) => {
     setSelectedFolder(folder);
-    setIsMoveDialogOpen(true);
-  };
-
-  const handleContextMenuToggleStatus = (folder: FolderType) => {
-    const newStatus = folder.status === 'En cours' ? 'Fermé' : 'En cours';
-    toggleStatusMutation.mutate({ id: folder._id, status: newStatus });
-  };
-
-  const handleContextMenuViewDetails = (folder: FolderType) => {
-    setSelectedFolder(folder);
-    setIsDetailsDialogOpen(true);
-  };
-
-  const handleFolderClick = (folder: FolderType) => {
-    setCurrentFolder(folder);
-    onFolderSelect(folder);
-  };
-
-  const getFolderColor = (index: number, status: string) => {
-    if (status === 'Fermé') return 'bg-gray-500';
-    
-    const colors = ['bg-blue-500', 'bg-orange-500', 'bg-green-500', 'bg-purple-500', 'bg-indigo-500', 'bg-pink-500'];
-    return colors[index % colors.length];
-  };
-
-  const getRoleDisplayInfo = () => {
-    switch (currentUser?.role) {
-      case 'AdminTuningDesk':
-        return {
-          title: 'مراقبة الأرشيف',
-          icon: Eye,
-          badge: { text: 'مراقبة شاملة', variant: 'secondary' as const }
-        };
-      case 'AdminDepartment':
-        return {
-          title: 'إدارة الأرشيف',
-          icon: Users,
-          badge: { text: 'إدارة كاملة', variant: 'default' as const }
-        };
-      case 'User':
-        return {
-          title: 'عرض الأرشيف',
-          icon: Eye,
-          badge: { text: 'للعرض فقط', variant: 'secondary' as const }
-        };
-      default:
-        return {
-          title: 'إدارة الأرشيف',
-          icon: Building2,
-          badge: { text: 'إدارة شاملة', variant: 'default' as const }
-        };
+    setIsDocsModalOpen(true);
+    if (onFolderSelect) {
+      onFolderSelect(folder);
     }
   };
 
-  const roleInfo = getRoleDisplayInfo();
+  const handleToggleStatus = (folder: FolderType) => {
+    const nextStatus = folder.status === 'En cours' ? 'Fermé' : 'En cours';
+    toggleStatusMutation.mutate({ id: folder._id, status: nextStatus });
+  };
 
-  const renderFolder = (folder: FolderType, level: number = 0, index: number = 0) => {
-    const hasChildren = getSubfolders(folder._id).length > 0;
+  // Filter root folders
+  const filteredRootFolders = useMemo(() => {
+    return rootFolders.filter(folder => {
+      const matchesSearch = !searchTerm.trim() || 
+        folder.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (folder.description && folder.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesStatus = statusFilter === 'all' || folder.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [rootFolders, searchTerm, statusFilter]);
+
+  const totalDocumentsAll = useMemo(() => {
+    return Object.values(documentCounts).reduce((acc, curr) => acc + curr, 0);
+  }, [documentCounts]);
+
+  const renderFolderNode = (folder: FolderType, level: number = 0) => {
+    const children = getSubfolders(folder._id);
+    const hasChildren = children.length > 0;
     const isExpanded = expandedFolders.has(folder._id);
     const isSelected = selectedFolderId === folder._id;
-    const documentCount = documentCounts[folder._id] || 0;
-    const folderColor = getFolderColor(index, folder.status);
-    
+    const docCount = documentCounts[folder._id] || 0;
+
     return (
-      <div key={folder._id} className="space-y-1">
+      <div key={folder._id} className="select-none">
         <FolderContextMenu
           folder={folder}
-          onEdit={handleContextMenuEdit}
-          onDelete={handleContextMenuDelete}
-          onCreateSubfolder={handleContextMenuCreateSubfolder}
-          onMove={handleContextMenuMove}
-          onToggleStatus={handleContextMenuToggleStatus}
-          onViewDetails={handleContextMenuViewDetails}
-          readOnly={isReadOnlyUser}
+          onEdit={handleOpenEdit}
+          onDelete={handleOpenDelete}
+          onCreateSubfolder={(pId) => handleOpenCreate(pId)}
+          onMove={(f) => { setSelectedFolder(f); setIsMoveDialogOpen(true); }}
+          onToggleStatus={handleToggleStatus}
+          onViewDetails={(f) => { setSelectedFolder(f); setIsDetailsDialogOpen(true); }}
+          onOpenDocuments={handleOpenDocuments}
+          readOnly={!canManageFolders}
         >
           <DragDropWrapper
             dragType="folder"
             dragData={folder}
             dropTypes={['folder', 'document']}
-            className={`group flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
+            className={`flex items-center justify-between gap-2 p-2 rounded border text-xs transition-colors duration-200 ${
               isSelected 
-                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-lg transform scale-[1.02]' 
-                : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 border-transparent hover:border-gray-200 hover:shadow-md'
+                ? 'bg-amber-50/60 border-[#FFCB56] text-[#78350f]' 
+                : 'bg-white hover:bg-gray-50/90 border-[#e2e8f0] text-gray-800'
             }`}
-            style={{ paddingRight: `${level * 24 + 16}px` }}
+            style={{ marginRight: `${level * 20}px` }}
           >
-            <div 
-              className="flex items-center gap-3 w-full"
-              style={{ paddingRight: `${level * 24}px` }}
-            >
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               {hasChildren ? (
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleExpanded(folder._id);
                   }}
-                  className="p-2 hover:bg-gray-200 rounded-full transition-all duration-200 hover:scale-110"
+                  className="p-1 rounded hover:bg-gray-200 text-gray-500 transition-colors duration-200"
+                  title={isExpanded ? 'طي المجلد' : 'توسيع المجلد'}
                 >
                   {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                    <ChevronDown className="h-3.5 w-3.5 text-[#2c5282]" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-600" />
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-500 rotate-180" />
                   )}
                 </button>
               ) : (
-                <div className="w-8" />
+                <div className="w-5" />
               )}
-              
-              <div
-                className="flex items-center gap-4 flex-1 min-w-0"
-                onClick={() => handleFolderClick(folder)}
-              >
-                <div className={`p-3 ${folderColor} rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                  {folder.status === 'Fermé' ? (
-                    <Archive className="h-5 w-5 text-white" />
-                  ) : isExpanded || hasChildren ? (
-                    <FolderOpen className="h-5 w-5 text-white" />
-                  ) : (
-                    <Folder className="h-5 w-5 text-white" />
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-semibold text-base text-gray-800 truncate">{folder.name}</span>
-                    {documentCount > 0 && (
-                      <Badge variant="outline" className="text-xs bg-white/80 border-gray-300">
-                        <FileText className="h-3 w-3 mr-1" />
-                        {documentCount} مستند
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge 
-                      variant={folder.status === 'En cours' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      <Circle className="h-2 w-2 mr-1" />
-                      {folder.status === 'En cours' ? 'نشط' : 'مؤرشف'}
-                    </Badge>
-                    <span className="text-xs text-gray-500">
-                      {formatArabicDate(folder.createdAt)}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
-              {canManageFolders && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleContextMenuCreateSubfolder(folder._id);
-                  }}
+              <div 
+                className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                onClick={() => handleOpenDocuments(folder)}
+              >
+                {folder.status === 'Fermé' ? (
+                  <Archive className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                ) : isExpanded || hasChildren ? (
+                  <FolderOpen className="h-4 w-4 text-[#2c5282] flex-shrink-0" />
+                ) : (
+                  <Folder className="h-4 w-4 text-[#2c5282] flex-shrink-0" />
+                )}
+
+                <span className="font-semibold text-xs truncate max-w-[260px] sm:max-w-md">
+                  {folder.name}
+                </span>
+
+                {folder.description && (
+                  <span className="text-[11px] text-gray-400 truncate hidden md:inline">
+                    — {folder.description}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Badges and Quick Actions */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Document count badge */}
+              <button
+                type="button"
+                onClick={() => handleOpenDocuments(folder)}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] hover:bg-[#FFD758] transition-colors duration-200"
+                title="عرض المستندات المصنفة"
+              >
+                <FileText className="h-3 w-3" />
+                <span>{docCount}</span>
+              </button>
+
+              {/* Status badge */}
+              <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium ${
+                folder.status === 'En cours'
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-gray-100 text-gray-600 border border-gray-200'
+              }`}>
+                {folder.status === 'En cours' ? 'نشط' : 'مغلق'}
+              </span>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => handleOpenDocuments(folder)}
+                  className="p-1 rounded text-gray-500 hover:text-[#2c5282] hover:bg-gray-100 transition-colors duration-200"
+                  title="عرض المستندات"
                 >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              )}
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </button>
+
+                {canManageFolders && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenCreate(folder._id)}
+                      className="p-1 rounded text-gray-500 hover:text-[#2c5282] hover:bg-gray-100 transition-colors duration-200"
+                      title="إنشاء مجلد فرعي"
+                    >
+                      <FolderPlus className="h-3.5 w-3.5" />
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(folder)}
+                      className="p-1 rounded text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors duration-200"
+                      title="تعديل المجلد"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDelete(folder)}
+                      className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
+                      title="حذف المجلد"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </DragDropWrapper>
         </FolderContextMenu>
-        
+
+        {/* Render children */}
         {hasChildren && isExpanded && (
-          <div className="space-y-1 ml-4 border-r-2 border-gray-100">
-            {getSubfolders(folder._id).map((subfolder, subIndex) => 
-              renderFolder(subfolder, level + 1, subIndex)
-            )}
+          <div className="mt-1 space-y-1 pr-3 border-r-2 border-[#e2e8f0]">
+            {children.map(child => renderFolderNode(child, level + 1))}
           </div>
         )}
       </div>
     );
   };
 
-  if (isLoading) {
-    return (
-      <Card className="shadow-xl border-0">
-        <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mx-auto mb-6"></div>
-          <p className="text-lg font-medium text-muted-foreground">جاري تحميل الهيكل الهرمي...</p>
-          <p className="text-sm text-muted-foreground mt-2">يرجى الانتظار</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-6" dir="rtl">
-      {/* Breadcrumb Navigation */}
-      {currentFolder && (
-        <FolderBreadcrumb
-          currentFolder={currentFolder}
-          folders={folders || []}
-          onNavigate={(folder) => {
-            setCurrentFolder(folder);
-            onFolderSelect(folder);
-          }}
-        />
-      )}
-
-      {/* Enhanced Header */}
-      <Card className="shadow-xl border-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50">
-        <CardHeader className="pb-4">
+    <div className="space-y-4" dir="rtl">
+      {/* Metrics Row - AdminLTE clean style */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">إجمالي المجلدات</span>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-                <roleInfo.icon className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl font-bold text-gray-800 mb-2">
-                  {roleInfo.title}
-                </CardTitle>
-                <p className="text-sm text-gray-600">
-                  تصفح وإدارة المجلدات بطريقة هرمية منظمة ومطورة
-                </p>
-              </div>
-            </div>
-            <Badge variant={roleInfo.badge.variant} className="flex items-center gap-2 px-4 py-2 text-sm">
-              <roleInfo.icon className="h-4 w-4" />
-              {roleInfo.badge.text}
-            </Badge>
+            <span className="text-lg font-bold text-[#1a202c]">{folders?.length || 0}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+              مجلد
+            </span>
           </div>
-        </CardHeader>
-      </Card>
+        </div>
 
-      {/* Search and Filters */}
-      <Card className="shadow-lg border-0">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                placeholder="البحث في المجلدات..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-12 pl-4 py-3 text-lg border-2 border-gray-200 focus:border-blue-400 rounded-xl"
-              />
-            </div>
-            <Button variant="outline" className="flex items-center gap-2 px-6 py-3 border-2 hover:bg-gray-50">
-              <Filter className="h-5 w-5" />
-              تصفية متقدمة
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">المجلدات الرئيسية</span>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-[#2c5282]">{rootFolders.length}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+              جذر
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">المجلدات الفرعية</span>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-slate-700">{subfolders.length}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-50 text-slate-700 border border-slate-200">
+              فرعي
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#e2e8f0] rounded p-3">
+          <span className="text-[11px] text-gray-500 block mb-0.5">المستندات المصنفة</span>
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-[#78350f]">{totalDocumentsAll}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              مستند
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Action and Filter Bar */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+        <div className="flex items-center gap-2 flex-1 max-w-md">
+          <div className="relative flex-1">
+            <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+            <Input
+              placeholder="البحث بالاسم أو الوصف..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8 pr-8 pl-3 text-xs bg-white border-[#cbd5e1] rounded"
+            />
+          </div>
+
+          <div className="flex items-center border border-[#cbd5e1] rounded overflow-hidden text-xs">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('all')}
+              className={`h-8 px-2 text-[11px] font-medium transition-colors duration-200 ${
+                statusFilter === 'all'
+                  ? 'bg-[#2c5282] text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              الكل
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('En cours')}
+              className={`h-8 px-2 text-[11px] font-medium transition-colors duration-200 border-x border-[#cbd5e1] ${
+                statusFilter === 'En cours'
+                  ? 'bg-[#2c5282] text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              نشط
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('Fermé')}
+              className={`h-8 px-2 text-[11px] font-medium transition-colors duration-200 ${
+                statusFilter === 'Fermé'
+                  ? 'bg-[#2c5282] text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              مغلق
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={expandAll}
+            className="h-8 px-2.5 text-xs rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-50 flex items-center gap-1"
+            title="توسيع جميع المجلدات"
+          >
+            <ChevronsDown className="h-3.5 w-3.5 text-gray-500" />
+            <span>توسيع الكل</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={collapseAll}
+            className="h-8 px-2.5 text-xs rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-50 flex items-center gap-1"
+            title="طي جميع المجلدات"
+          >
+            <ChevronsUp className="h-3.5 w-3.5 text-gray-500" />
+            <span>طي الكل</span>
+          </Button>
+
+          {canManageFolders && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => handleOpenCreate(null)}
+              className="h-8 px-3 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium flex items-center gap-1.5 transition-colors duration-200"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>إنشاء مجلد رئيسي</span>
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </div>
+      </div>
 
-      {/* Enhanced Folder Tree */}
-      <Card className="shadow-xl border-0">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">الهيكل الهرمي للمجلدات</h3>
-            {canManageFolders && (
+      {/* Tree Content Area */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-3 min-h-[350px]">
+        {isLoading ? (
+          <div className="text-center py-12 text-gray-500">
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-2"></div>
+            <p className="text-xs">جاري تحميل هيكل المجلدات...</p>
+          </div>
+        ) : filteredRootFolders.length === 0 ? (
+          <div className="text-center py-12 text-gray-400 space-y-2">
+            <Folder className="h-10 w-10 mx-auto opacity-30 text-gray-400" />
+            <p className="text-xs font-medium text-gray-600">
+              {searchTerm ? 'لا توجد مجلدات مطابقة لمعايير البحث' : 'لا توجد مجلدات مسجلة في هذا القسم'}
+            </p>
+            {canManageFolders && !searchTerm && (
               <Button
-                variant="outline"
+                type="button"
                 size="sm"
-                onClick={() => {
-                  setParentFolderId(null);
-                  setNewFolderName('');
-                  setIsCreateDialogOpen(true);
-                }}
-                className="flex items-center gap-2"
+                onClick={() => handleOpenCreate(null)}
+                className="h-8 px-3 text-xs rounded border border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 font-medium inline-flex items-center gap-1.5 transition-colors duration-200"
               >
-                <Plus className="h-4 w-4" />
-                مجلد جديد
+                <Plus className="h-3.5 w-3.5" />
+                <span>إنشاء المجلد الأول الآن</span>
               </Button>
             )}
           </div>
-          
-          <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
-            {filteredRootFolders.length === 0 ? (
-              <div className="text-center py-16 text-gray-500">
-                <div className="relative mb-6">
-                  <Archive className="h-24 w-24 mx-auto opacity-20" />
-                  <div className="absolute inset-0 animate-pulse">
-                    <Archive className="h-24 w-24 mx-auto opacity-10" />
-                  </div>
-                </div>
-                <p className="text-xl font-semibold mb-3">
-                  {searchTerm ? 'لا توجد مجلدات مطابقة للبحث' : 'لا توجد مجلدات'}
-                </p>
-                <p className="text-sm text-gray-400">
-                  {searchTerm ? 'حاول البحث بكلمات مختلفة' : 'ابدأ بإنشاء مجلد جديد لتنظيم مستنداتك'}
-                </p>
-              </div>
-            ) : (
-              filteredRootFolders.map((folder, index) => renderFolder(folder, 0, index))
-            )}
+        ) : (
+          <div className="space-y-1.5 max-h-[600px] overflow-y-auto pl-1">
+            {filteredRootFolders.map(folder => renderFolderNode(folder, 0))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-blue-600 mb-2">{rootFolders.length}</div>
-            <div className="text-sm font-medium text-blue-800">مجلد رئيسي</div>
-            <div className="text-xs text-blue-600 mt-1">المستوى الأول</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-green-100">
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">{subfolders.length}</div>
-            <div className="text-sm font-medium text-green-800">مجلد فرعي</div>
-            <div className="text-xs text-green-600 mt-1">المستويات الفرعية</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-purple-600 mb-2">
-              {Object.values(documentCounts).reduce((sum, count) => sum + count, 0)}
-            </div>
-            <div className="text-sm font-medium text-purple-800">إجمالي المستندات</div>
-            <div className="text-xs text-purple-600 mt-1">جميع المجلدات</div>
-          </CardContent>
-        </Card>
+        )}
       </div>
 
-      {/* Dialogs */}
+      {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent dir="rtl">
-          <DialogHeader>
-            <DialogTitle>
-              {parentFolderId ? 'إنشاء مجلد فرعي' : 'إنشاء مجلد جديد'}
+        <DialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden text-xs" dir="rtl">
+          <DialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+            <DialogTitle className="flex items-center gap-2 text-sm font-bold text-[#2c5282]">
+              <FolderPlus className="h-4 w-4 text-[#2c5282]" />
+              <span>{parentFolderId ? 'إنشاء مجلد فرعي' : 'إنشاء مجلد رئيسي جديد'}</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="اسم المجلد"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-            />
-            {parentFolderId && (
-              <p className="text-sm text-gray-600">
-                سيتم إنشاء هذا المجلد كمجلد فرعي
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button 
-              onClick={handleCreateFolder}
-              disabled={createFolderMutation.isPending}
-            >
-              {createFolderMutation.isPending ? 'جاري الإنشاء...' : 'إنشاء'}
-            </Button>
-          </DialogFooter>
+
+          <form onSubmit={handleCreateSubmit} className="p-4 space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                اسم المجلد <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="أدخل اسم المجلد الإداري..."
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                className="h-8 text-xs bg-white border-[#cbd5e1] rounded"
+                autoFocus
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                وصف المجلد (اختياري)
+              </label>
+              <Textarea
+                placeholder="وصف مختصر لمحتوى هذا المجلد أو طبيعة الوثائق المودعة به..."
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                className="text-xs bg-white border-[#cbd5e1] rounded min-h-[70px]"
+              />
+            </div>
+
+            <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsCreateDialogOpen(false)}
+                className="h-8 px-3 rounded border-[#e2e8f0] text-gray-700 hover:bg-gray-100"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={createFolderMutation.isPending}
+                className="h-8 px-4 rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium"
+              >
+                {createFolderMutation.isPending ? 'جاري الإنشاء...' : 'حفظ وإنشاء'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
+      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent dir="rtl">
-          <DialogHeader>
-            <DialogTitle>تعديل المجلد</DialogTitle>
+        <DialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden text-xs" dir="rtl">
+          <DialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+            <DialogTitle className="flex items-center gap-2 text-sm font-bold text-[#2c5282]">
+              <Edit3 className="h-4 w-4 text-[#2c5282]" />
+              <span>تعديل المجلد: {selectedFolder?.name}</span>
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="اسم المجلد"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button 
-              onClick={handleEditFolder}
-              disabled={updateFolderMutation.isPending}
-            >
-              {updateFolderMutation.isPending ? 'جاري التحديث...' : 'تحديث'}
-            </Button>
-          </DialogFooter>
+
+          <form onSubmit={handleEditSubmit} className="p-4 space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                اسم المجلد <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="اسم المجلد..."
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                className="h-8 text-xs bg-white border-[#cbd5e1] rounded"
+                autoFocus
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                الوصف
+              </label>
+              <Textarea
+                placeholder="وصف محتوى المجلد..."
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                className="text-xs bg-white border-[#cbd5e1] rounded min-h-[70px]"
+              />
+            </div>
+
+            <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditDialogOpen(false)}
+                className="h-8 px-3 rounded border-[#e2e8f0] text-gray-700 hover:bg-gray-100"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={updateFolderMutation.isPending}
+                className="h-8 px-4 rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium"
+              >
+                {updateFolderMutation.isPending ? 'جاري التحديث...' : 'حفظ التعديلات'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
+      {/* Delete Alert Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden text-xs" dir="rtl">
+          <AlertDialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+            <AlertDialogTitle className="text-sm font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-red-600" />
+              <span>تأكيد حذف المجلد</span>
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-gray-600 leading-relaxed mt-2">
+              هل أنت متأكد من حذف المجلد <span className="font-bold text-gray-900">"{folderToDelete?.name}"</span>؟
+              <br />
+              ملاحظة: لا يمكن حذف المجلد إذا كان يحتوي على مستندات أو مجلدات فرعية.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="p-3 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center justify-end gap-2">
+            <AlertDialogCancel 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="h-8 px-3 rounded border-[#e2e8f0] text-gray-700 hover:bg-gray-100 text-xs"
+            >
+              إلغاء
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteFolderMutation.isPending}
+              className="h-8 px-4 rounded bg-red-600 hover:bg-red-700 text-white font-medium text-xs"
+            >
+              {deleteFolderMutation.isPending ? 'جاري الحذف...' : 'نعم، احذف المجلد'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Move Dialog */}
       <FolderMoveDialog
         open={isMoveDialogOpen}
         onOpenChange={setIsMoveDialogOpen}
@@ -619,11 +785,20 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
         departmentId={targetDepartmentId}
       />
 
+      {/* Details Dialog */}
       <FolderDetailsDialog
         open={isDetailsDialogOpen}
         onOpenChange={setIsDetailsDialogOpen}
         folder={selectedFolder}
         documentCount={selectedFolder ? documentCounts[selectedFolder._id] || 0 : 0}
+      />
+
+      {/* Documents Modal */}
+      <FolderDocumentsModal
+        selectedFolder={selectedFolder}
+        isOpen={isDocsModalOpen}
+        onClose={() => { setIsDocsModalOpen(false); setSelectedFolder(null); }}
+        canManage={canManageFolders}
       />
     </div>
   );

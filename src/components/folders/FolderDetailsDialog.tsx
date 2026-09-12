@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -6,9 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { 
   Folder, 
   Archive, 
@@ -18,7 +14,7 @@ import {
   FileText,
   Clock,
   Circle,
-  Sparkles
+  Tag
 } from 'lucide-react';
 import { Folder as FolderType } from '@/types';
 import { formatArabicDate, formatArabicDateTime } from '@/utils/arabicDateFormatter';
@@ -40,134 +36,111 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-white to-gray-50" dir="rtl">
-        <DialogHeader className="relative">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-t-lg"></div>
-          <DialogTitle className="flex items-center gap-3 text-xl font-bold text-gray-800 pt-4">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+      <DialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden" dir="rtl">
+        {/* Institutional Header */}
+        <DialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+          <DialogTitle className="flex items-center gap-2.5 text-base font-bold text-[#2c5282]">
+            <div className="w-8 h-8 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
               {folder.status === 'Fermé' ? (
-                <Archive className="h-6 w-6 text-white" />
+                <Archive className="h-4 w-4" />
               ) : (
-                <Folder className="h-6 w-6 text-white" />
+                <Folder className="h-4 w-4" />
               )}
             </div>
-            تفاصيل المجلد
-            <Sparkles className="h-5 w-5 text-yellow-500" />
+            <span>تفاصيل المجلد: {folder.name}</span>
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 pt-4">
-          {/* Enhanced Folder Info */}
-          <Card className="shadow-lg border-0 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative">
-                  <div className={`absolute inset-0 ${
-                    folder.status === 'Fermé' ? 'bg-gray-400' : 'bg-blue-500'
-                  } rounded-2xl blur-lg opacity-30`}></div>
-                  <div className={`relative p-4 ${
-                    folder.status === 'Fermé' ? 'bg-gradient-to-r from-gray-400 to-gray-600' : 'bg-gradient-to-r from-blue-500 to-indigo-600'
-                  } rounded-2xl shadow-xl`}>
-                    {folder.status === 'Fermé' ? (
-                      <Archive className="h-8 w-8 text-white" />
-                    ) : (
-                      <Folder className="h-8 w-8 text-white" />
-                    )}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-2xl text-gray-800 mb-2">{folder.name}</h3>
-                  <Badge 
-                    variant={folder.status === 'En cours' ? 'default' : 'secondary'}
-                    className="text-sm font-medium shadow-sm"
-                  >
-                    <Circle className="h-3 w-3 mr-1" />
-                    {folder.status === 'En cours' ? 'نشط' : 'مؤرشف'}
-                  </Badge>
-                </div>
+        <div className="p-4 space-y-4 text-xs">
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-2.5">
+              <span className="text-gray-500 block mb-1">المستندات المصنفة</span>
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-bold text-[#1a202c]">{documentCount}</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+                  مستند
+                </span>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm">
-                  <FileText className="h-6 w-6 text-blue-600" />
-                  <div>
-                    <div className="text-2xl font-bold text-gray-800">{documentCount}</div>
-                    <div className="text-sm text-gray-600">مستند</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm">
-                  <Building2 className="h-6 w-6 text-green-600" />
-                  <div>
-                    <div className="text-sm font-medium text-gray-800">قسم رسمي</div>
-                    <div className="text-sm text-gray-600">مصنف</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Enhanced Creation Details */}
-          <Card className="shadow-lg border-0 bg-gradient-to-r from-purple-50 to-pink-50">
-            <CardContent className="p-6">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-3 text-gray-800">
-                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg">
-                  <Clock className="h-5 w-5 text-white" />
-                </div>
-                معلومات الإنشاء
-              </h4>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm">
-                  <span className="text-gray-700 flex items-center gap-2 font-medium">
-                    <Calendar className="h-4 w-4 text-purple-600" />
-                    تاريخ الإنشاء
-                  </span>
-                  <span className="font-bold text-gray-800">
-                    {formatArabicDate(folder.createdAt)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm">
-                  <span className="text-gray-700 flex items-center gap-2 font-medium">
-                    <Clock className="h-4 w-4 text-purple-600" />
-                    وقت الإنشاء
-                  </span>
-                  <span className="font-bold text-gray-800">
-                    {formatArabicDateTime(folder.createdAt)}
-                  </span>
-                </div>
-                {typeof folder.createdBy === 'object' && folder.createdBy?.username && (
-                  <>
-                    <Separator className="my-3" />
-                    <div className="flex items-center justify-between p-3 bg-white rounded-xl shadow-sm">
-                      <span className="text-gray-700 flex items-center gap-2 font-medium">
-                        <User className="h-4 w-4 text-purple-600" />
-                        أنشئ بواسطة
-                      </span>
-                      <span className="font-bold text-gray-800">{folder.createdBy.username}</span>
-                    </div>
-                  </>
-                )}
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-2.5">
+              <span className="text-gray-500 block mb-1">حالة المجلد</span>
+              <div className="flex items-center justify-between">
+                <span className={`font-bold ${folder.status === 'En cours' ? 'text-green-700' : 'text-slate-600'}`}>
+                  {folder.status === 'En cours' ? 'نشط (مفتوح)' : 'مؤرشف (مغلق)'}
+                </span>
+                <span className={`w-2 h-2 rounded-full ${folder.status === 'En cours' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Enhanced Hierarchy Info */}
-          {folder.parent && (
-            <Card className="shadow-lg border-0 bg-gradient-to-r from-emerald-50 to-teal-50">
-              <CardContent className="p-6">
-                <h4 className="font-bold text-lg mb-4 flex items-center gap-3 text-gray-800">
-                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg">
-                    <Folder className="h-5 w-5 text-white" />
-                  </div>
-                  الهيكل الهرمي
-                </h4>
-                <div className="p-4 bg-white rounded-xl shadow-sm">
-                  <div className="text-sm text-gray-700 font-medium">
-                    هذا مجلد فرعي ضمن مجلد آخر في النظام الهرمي
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Details Table */}
+          <div className="border border-[#e2e8f0] rounded divide-y divide-[#e2e8f0]">
+            <div className="p-2.5 flex items-center justify-between hover:bg-gray-50/50">
+              <span className="text-gray-500 flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5 text-gray-400" />
+                اسم المجلد
+              </span>
+              <span className="font-semibold text-[#1a202c]">{folder.name}</span>
+            </div>
+
+            {folder.description && (
+              <div className="p-2.5 flex items-start justify-between hover:bg-gray-50/50">
+                <span className="text-gray-500 flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-gray-400" />
+                  الوصف
+                </span>
+                <span className="text-gray-700 max-w-[220px] text-right">{folder.description}</span>
+              </div>
+            )}
+
+            <div className="p-2.5 flex items-center justify-between hover:bg-gray-50/50">
+              <span className="text-gray-500 flex items-center gap-1.5">
+                <Folder className="h-3.5 w-3.5 text-gray-400" />
+                المستوى الهرمي
+              </span>
+              <span className="font-medium text-gray-700">
+                {folder.parent ? 'مجلد فرعي' : 'مجلد رئيسي (جذر)'}
+              </span>
+            </div>
+
+            <div className="p-2.5 flex items-center justify-between hover:bg-gray-50/50">
+              <span className="text-gray-500 flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                تاريخ الإنشاء
+              </span>
+              <span className="text-gray-800">{formatArabicDate(folder.createdAt)}</span>
+            </div>
+
+            <div className="p-2.5 flex items-center justify-between hover:bg-gray-50/50">
+              <span className="text-gray-500 flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-gray-400" />
+                وقت الإنشاء
+              </span>
+              <span className="text-gray-800">{formatArabicDateTime(folder.createdAt)}</span>
+            </div>
+
+            {typeof folder.createdBy === 'object' && folder.createdBy?.username && (
+              <div className="p-2.5 flex items-center justify-between hover:bg-gray-50/50">
+                <span className="text-gray-500 flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 text-gray-400" />
+                  أنشئ بواسطة
+                </span>
+                <span className="font-medium text-[#2c5282]">{folder.createdBy.username}</span>
+              </div>
+            )}
+
+            {typeof folder.department === 'object' && folder.department?.name && (
+              <div className="p-2.5 flex items-center justify-between hover:bg-gray-50/50">
+                <span className="text-gray-500 flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                  القسم الإداري
+                </span>
+                <span className="text-gray-800">{folder.department.name}</span>
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

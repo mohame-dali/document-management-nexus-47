@@ -276,42 +276,44 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
           }`}
         >
           <Card 
-            className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-2 ${
+            className={`cursor-pointer transition-colors duration-200 border rounded ${
               isSelected 
-                ? 'border-blue-200 bg-blue-50' 
-                : 'border-transparent hover:border-gray-200'
+                ? 'border-[#FFCB56] bg-amber-50/50' 
+                : 'border-[#e2e8f0] bg-white hover:bg-gray-50'
             }`}
             onClick={() => onFolderSelect(folder)}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`p-3 ${folderColor} rounded-xl shadow-md`}>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="p-2 bg-blue-50 border border-blue-200 text-[#2c5282] rounded">
                   {folder.status === 'Fermé' ? (
-                    <Archive className="h-6 w-6 text-white" />
+                    <Archive className="h-4 w-4 text-gray-500" />
                   ) : (
-                    <Folder className="h-6 w-6 text-white" />
+                    <Folder className="h-4 w-4 text-[#2c5282]" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-base truncate">{folder.name}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge 
-                      variant={folder.status === 'En cours' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      <Circle className="h-2 w-2 mr-1" />
+                  <h3 className="font-semibold text-xs truncate text-[#1a202c]">{folder.name}</h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium ${
+                      folder.status === 'En cours'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200'
+                    }`}>
                       {folder.status === 'En cours' ? 'نشط' : 'مؤرشف'}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <FileText className="h-4 w-4" />
-                  <span>{documentCount} مستند</span>
+              <div className="flex items-center justify-between pt-1 border-t border-[#f1f5f9]">
+                <div className="flex items-center gap-1 text-[11px] text-[#78350f]">
+                  <FileText className="h-3 w-3" />
+                  <span className="font-semibold px-1 py-0.2 bg-[#FFCB56] text-[#78350f] rounded border border-[#FFD758]">
+                    {documentCount} مستند
+                  </span>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-[10px] text-gray-400">
                   {new Date(folder.createdAt).toLocaleDateString('ar-EG')}
                 </div>
               </div>
@@ -327,10 +329,9 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
     const isExpanded = expandedFolders.has(folder._id);
     const isSelected = selectedFolderId === folder._id;
     const documentCount = documentCounts[folder._id] || 0;
-    const folderColor = getFolderColor(index, folder.status);
     
     return (
-      <div key={folder._id}>
+      <div key={folder._id} className="space-y-1">
         <FolderContextMenu
           folder={folder}
           onEdit={handleContextMenuEdit}
@@ -345,15 +346,15 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
             dragType="folder"
             dragData={folder}
             dropTypes={['folder', 'document']}
-            className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+            className={`flex items-center gap-2 p-2 rounded border text-xs cursor-pointer transition-colors duration-200 ${
               isSelected 
-                ? 'bg-blue-50 border-2 border-blue-200 shadow-sm' 
-                : 'hover:bg-gray-50 border-2 border-transparent'
+                ? 'bg-amber-50/60 border-[#FFCB56] text-[#78350f]' 
+                : 'hover:bg-gray-50 bg-white border-[#e2e8f0] text-gray-800'
             }`}
           >
             <div 
               className="flex items-center gap-2 w-full"
-              style={{ paddingRight: `${level * 20 + 12}px` }}
+              style={{ paddingRight: `${level * 20 + 8}px` }}
             >
               {hasChildren ? (
                 <button
@@ -361,51 +362,47 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
                     e.stopPropagation();
                     toggleExpanded(folder._id);
                   }}
-                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                  className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"
                 >
                   {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                    <ChevronDown className="h-3.5 w-3.5 text-[#2c5282]" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-600" />
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-500 rotate-180" />
                   )}
                 </button>
               ) : (
-                <div className="w-6" />
+                <div className="w-5" />
               )}
               
               <div
-                className="flex items-center gap-3 flex-1 min-w-0"
+                className="flex items-center gap-2.5 flex-1 min-w-0"
                 onClick={() => onFolderSelect(folder)}
               >
-                {/* Enhanced color-coded folder icon */}
-                <div className={`p-2 ${folderColor} rounded-lg shadow-sm`}>
+                <div className="text-[#2c5282]">
                   {folder.status === 'Fermé' ? (
-                    <Archive className="h-4 w-4 text-white" />
+                    <Archive className="h-4 w-4 text-gray-400" />
                   ) : isExpanded || hasChildren ? (
-                    <FolderOpen className="h-4 w-4 text-white" />
+                    <FolderOpen className="h-4 w-4 text-[#2c5282]" />
                   ) : (
-                    <Folder className="h-4 w-4 text-white" />
+                    <Folder className="h-4 w-4 text-[#2c5282]" />
                   )}
                 </div>
                 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm truncate">{folder.name}</span>
-                    {documentCount > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        <FileText className="h-3 w-3 mr-1" />
-                        {documentCount}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge 
-                      variant={folder.status === 'En cours' ? 'default' : 'secondary'}
-                      className="text-xs"
-                    >
-                      <Circle className="h-2 w-2 mr-1" />
+                <div className="flex items-center justify-between flex-1 min-w-0 gap-2">
+                  <span className="font-semibold text-xs truncate">{folder.name}</span>
+                  
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+                      <FileText className="h-3 w-3" />
+                      {documentCount}
+                    </span>
+                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium ${
+                      folder.status === 'En cours'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200'
+                    }`}>
                       {folder.status === 'En cours' ? 'نشط' : 'مؤرشف'}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -414,7 +411,7 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         </FolderContextMenu>
         
         {hasChildren && isExpanded && (
-          <div>
+          <div className="mt-1 space-y-1 pr-3 border-r-2 border-[#e2e8f0]">
             {getSubfolders(folder._id).map((subfolder, subIndex) => 
               renderFolderList(subfolder, level + 1, subIndex)
             )}
@@ -426,99 +423,102 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
 
   if (isLoading) {
     return (
-      <Card className="shadow-xl border-0">
-        <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mx-auto mb-6"></div>
-          <p className="text-lg font-medium text-muted-foreground">جاري تحميل المجلدات...</p>
-        </CardContent>
-      </Card>
+      <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center text-xs">
+        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-3"></div>
+        <p className="text-gray-500">جاري تحميل شجرة المجلدات...</p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <Card className="shadow-lg border-0">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-bold">الهيكل الهرمي للمجلدات</CardTitle>
-            <div className="flex items-center gap-2">
-              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'list' | 'grid')}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="list" className="flex items-center gap-2">
-                    <List className="h-4 w-4" />
-                    قائمة
-                  </TabsTrigger>
-                  <TabsTrigger value="grid" className="flex items-center gap-2">
-                    <Grid3X3 className="h-4 w-4" />
-                    شبكة
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {canManageFolders && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openCreateDialog()}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  مجلد جديد
-                </Button>
-              )}
-            </div>
+    <div className="space-y-3" dir="rtl">
+      <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
+        <h3 className="text-xs font-bold text-[#1a202c]">الهيكل الهرمي للمجلدات</h3>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center border border-[#cbd5e1] rounded overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`h-7 px-2 text-xs flex items-center gap-1 ${
+                viewMode === 'list'
+                  ? 'bg-[#2c5282] text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              <span>قائمة</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`h-7 px-2 text-xs flex items-center gap-1 border-r border-[#cbd5e1] ${
+                viewMode === 'grid'
+                  ? 'bg-[#2c5282] text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Grid3X3 className="h-3.5 w-3.5" />
+              <span>شبكة</span>
+            </button>
           </div>
-        </CardHeader>
-      </Card>
-
-      <Card className="shadow-xl border-0">
-        <CardContent className="p-6">
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rootFolders.length === 0 ? (
-                <div className="col-span-full text-center py-16 text-gray-500">
-                  <Archive className="h-24 w-24 mx-auto mb-4 opacity-20" />
-                  <p className="text-xl font-semibold mb-2">لا توجد مجلدات</p>
-                  <p className="text-sm text-gray-400">ابدأ بإنشاء مجلد جديد</p>
-                  {canManageFolders && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openCreateDialog()}
-                      className="mt-4"
-                    >
-                      إنشاء مجلد جديد
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                rootFolders.map((folder, index) => renderFolderCard(folder, index))
-              )}
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {rootFolders.length === 0 ? (
-                <div className="text-center py-16 text-gray-500">
-                  <Archive className="h-24 w-24 mx-auto mb-4 opacity-20" />
-                  <p className="text-xl font-semibold mb-2">لا توجد مجلدات</p>
-                  <p className="text-sm text-gray-400">ابدأ بإنشاء مجلد جديد</p>
-                  {canManageFolders && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openCreateDialog()}
-                      className="mt-4"
-                    >
-                      إنشاء مجلد جديد
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                rootFolders.map((folder, index) => renderFolderList(folder, 0, index))
-              )}
-            </div>
+          {canManageFolders && (
+            <Button
+              size="sm"
+              onClick={() => openCreateDialog()}
+              className="h-7 px-2.5 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white flex items-center gap-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>مجلد جديد</span>
+            </Button>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      <div className="bg-white border border-[#e2e8f0] rounded p-3 min-h-[300px]">
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {rootFolders.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-gray-400">
+                <Archive className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p className="text-xs font-medium text-gray-600 mb-2">لا توجد مجلدات</p>
+                {canManageFolders && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openCreateDialog()}
+                    className="h-7 text-xs border border-[#FFCB56] bg-amber-50 text-[#78350f]"
+                  >
+                    إنشاء مجلد جديد
+                  </Button>
+                )}
+              </div>
+            ) : (
+              rootFolders.map((folder, index) => renderFolderCard(folder, index))
+            )}
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {rootFolders.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <Archive className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <p className="text-xs font-medium text-gray-600 mb-2">لا توجد مجلدات</p>
+                {canManageFolders && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openCreateDialog()}
+                    className="h-7 text-xs border border-[#FFCB56] bg-amber-50 text-[#78350f]"
+                  >
+                    إنشاء مجلد جديد
+                  </Button>
+                )}
+              </div>
+            ) : (
+              rootFolders.map((folder, index) => renderFolderList(folder, 0, index))
+            )}
+          </div>
+        )}
+      </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent dir="rtl">

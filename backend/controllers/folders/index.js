@@ -1,4 +1,3 @@
-
 // Main entry point that re-exports all folder controllers
 const listControllers = require('./listControllers');
 const detailControllers = require('./detailControllers');
@@ -10,6 +9,7 @@ module.exports = {
   getFolders: listControllers.getFolders,
   getRootFolders: listControllers.getRootFolders,
   getSubFolders: listControllers.getSubFolders,
+  getFolderHierarchy: listControllers.getFolderHierarchy,
   
   // Detail controllers
   getFolder: detailControllers.getFolder,
@@ -17,9 +17,12 @@ module.exports = {
   // Management controllers
   createFolder: managementControllers.createFolder,
   updateFolder: managementControllers.updateFolder,
+  moveFolder: managementControllers.moveFolder,
   deleteFolder: managementControllers.deleteFolder,
   updateFolderStatus: managementControllers.updateFolderStatus,
   
   // Document controllers
-  getFolderDocuments: documentControllers.getFolderDocuments
+  getFolderDocuments: documentControllers.getFolderDocuments,
+  assignDocumentToFolder: documentControllers.assignDocumentToFolder,
+  batchMoveDocuments: documentControllers.batchMoveDocuments
 };

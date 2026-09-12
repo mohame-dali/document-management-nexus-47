@@ -87,63 +87,67 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
   return (
     <div className="space-y-4" dir="rtl">
       {/* Current Folder Status */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Archive className="h-4 w-4" />
+      <div className="bg-white border border-[#e2e8f0] rounded p-3 text-xs">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-semibold text-gray-700 flex items-center gap-1.5">
+            <Archive className="h-3.5 w-3.5 text-[#2c5282]" />
             حالة التصنيف الحالية
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            {currentFolder ? (
-              <>
-                <FolderOpen className="h-4 w-4 text-blue-500" />
-                <span className="font-medium">{currentFolder.name}</span>
-                <Badge variant={currentFolder.status === 'En cours' ? 'default' : 'secondary'}>
-                  {currentFolder.status === 'En cours' ? 'نشط' : 'مغلق'}
-                </Badge>
-              </>
-            ) : (
-              <span className="text-gray-500">غير مصنف</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </span>
+          {currentFolder && (
+            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+              currentFolder.status === 'En cours'
+                ? 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
+                : 'bg-gray-100 text-gray-600 border border-gray-200'
+            }`}>
+              {currentFolder.status === 'En cours' ? 'نشط' : 'مغلق'}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {currentFolder ? (
+            <div className="flex items-center gap-1.5 font-medium text-gray-800">
+              <FolderOpen className="h-4 w-4 text-[#2c5282]" />
+              <span>{currentFolder.name}</span>
+            </div>
+          ) : (
+            <span className="text-gray-400">هذا المستند غير مصنف في أي مجلد بعد</span>
+          )}
+        </div>
+      </div>
 
       {/* Folder Tree */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <FolderOpen className="h-4 w-4" />
-            اختيار المجلد
-            {!isAdminDepartment && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Lock className="h-3 w-3" />
-                للعرض فقط
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-64 overflow-y-auto border rounded-md p-2">
-            <FolderTreeView
-              onFolderSelect={handleFolderSelect}
-              selectedFolderId={selectedFolder?._id}
-              departmentId={targetDepartmentId}
-              readOnly={!isAdminDepartment}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-white border border-[#e2e8f0] rounded p-3 text-xs">
+        <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#f1f5f9]">
+          <span className="font-semibold text-gray-700 flex items-center gap-1.5">
+            <FolderOpen className="h-3.5 w-3.5 text-[#2c5282]" />
+            اختيار المجلد المراد التصنيف فيه
+          </span>
+          {!isAdminDepartment && (
+            <span className="px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 border border-gray-200 flex items-center gap-1">
+              <Lock className="h-3 w-3" />
+              للعرض فقط
+            </span>
+          )}
+        </div>
+
+        <div className="max-h-72 overflow-y-auto">
+          <FolderTreeView
+            onFolderSelect={handleFolderSelect}
+            selectedFolderId={selectedFolder?._id}
+            departmentId={targetDepartmentId}
+            readOnly={!isAdminDepartment}
+          />
+        </div>
+      </div>
 
       {/* Actions */}
       {isAdminDepartment && (
         <div className="flex gap-2">
           <Button
             onClick={handleAssign}
-            disabled={assignMutation.isPending}
-            className="flex-1"
+            disabled={assignMutation.isPending || !selectedFolder}
+            className="flex-1 h-8 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium"
           >
             {assignMutation.isPending ? 'جاري التصنيف...' : 'تصنيف في المجلد المحدد'}
           </Button>
@@ -153,6 +157,7 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
               variant="outline"
               onClick={handleRemoveFromFolder}
               disabled={assignMutation.isPending}
+              className="h-8 text-xs rounded border border-red-200 text-red-600 hover:bg-red-50"
             >
               إزالة التصنيف
             </Button>

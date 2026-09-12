@@ -1,4 +1,3 @@
-
 // Re-export all folder management controllers
 const createController = require('./createController');
 const updateController = require('./updateController');
@@ -11,6 +10,7 @@ module.exports = {
   
   // Update operations
   updateFolder: updateController.updateFolder,
+  moveFolder: updateController.moveFolder,
   
   // Delete operation
   deleteFolder: deleteController.deleteFolder,

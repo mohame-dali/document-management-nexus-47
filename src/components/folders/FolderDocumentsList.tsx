@@ -1,19 +1,18 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  FileInput, 
-  FileOutput, 
   FolderOpen, 
   Eye, 
   Download,
   Calendar,
   FileText,
   Inbox,
-  Send
+  Send,
+  Building,
+  UserCheck
 } from 'lucide-react';
 import { getFolderDocuments } from '@/services/folderService';
 import { downloadDocument } from '@/services/documentService';
@@ -56,29 +55,22 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
 
   if (!selectedFolder) {
     return (
-      <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <CardContent className="p-8 text-center">
-          <div className="relative mb-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full blur-xl opacity-60"></div>
-            <div className="relative p-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full w-fit mx-auto">
-              <FolderOpen className="h-12 w-12 text-white" />
-            </div>
-          </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">اختر مجلداً</h3>
-          <p className="text-gray-600">انقر على مجلد لعرض المستندات المحفوظة به</p>
-        </CardContent>
-      </Card>
+      <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center" dir="rtl">
+        <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-400">
+          <FolderOpen className="h-6 w-6" />
+        </div>
+        <h3 className="text-sm font-bold text-[#1a202c] mb-1">اختر مجلداً لعرض محتواه</h3>
+        <p className="text-xs text-gray-500">انقر على أي مجلد في الشجرة لعرض المستندات الواردة والصادرة المصنفة به</p>
+      </div>
     );
   }
 
   if (isLoading) {
     return (
-      <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-        <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </CardContent>
-      </Card>
+      <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center" dir="rtl">
+        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-3"></div>
+        <p className="text-xs text-gray-500">جاري تحميل مستندات المجلد...</p>
+      </div>
     );
   }
 
@@ -87,226 +79,245 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
   const totalDocuments = incomingDocuments.length + outgoingDocuments.length;
 
   return (
-    <div className="space-y-6" dir="rtl">
-      {/* Folder Header - Only show if not in modal */}
+    <div className="space-y-4" dir="rtl">
+      {/* Folder Header - When not modal */}
       {!isModal && (
-        <Card className="shadow-lg border-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-cyan-500"></div>
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg">
-                  <FolderOpen className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-800">{selectedFolder.name}</h3>
-                  <p className="text-sm text-gray-600 mt-1">مستندات المجلد</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
-                  <FileText className="h-3 w-3 mr-1" />
-                  {totalDocuments}
-                </Badge>
-                <Badge variant={selectedFolder.status === 'En cours' ? 'default' : 'secondary'} className="bg-white/80 backdrop-blur-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
+              <FolderOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1a202c] flex items-center gap-2">
+                {selectedFolder.name}
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
+                  selectedFolder.status === 'En cours'
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-gray-100 text-gray-600 border border-gray-200'
+                }`}>
                   {selectedFolder.status === 'En cours' ? 'نشط' : 'مغلق'}
-                </Badge>
-              </div>
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      )}
+                </span>
+              </h3>
+              {selectedFolder.description && (
+                <p className="text-xs text-gray-500 mt-0.5">{selectedFolder.description}</p>
+              )}
+            </div>
+          </div>
 
-      {/* Documents Summary - Show in modal */}
-      {isModal && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Inbox className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-blue-800">الواردة</span>
-              </div>
-              <div className="text-2xl font-bold text-blue-900">{incomingDocuments.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Send className="h-5 w-5 text-green-600" />
-                <span className="font-semibold text-green-800">الصادرة</span>
-              </div>
-              <div className="text-2xl font-bold text-green-900">{outgoingDocuments.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <FileText className="h-5 w-5 text-purple-600" />
-                <span className="font-semibold text-purple-800">المجموع</span>
-              </div>
-              <div className="text-2xl font-bold text-purple-900">{totalDocuments}</div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              <FileText className="h-3.5 w-3.5" />
+              {totalDocuments} مستند محفوظ
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Documents Display - Side by Side */}
-      <div className={`grid grid-cols-1 ${isModal ? 'xl:grid-cols-2' : 'lg:grid-cols-2'} gap-6`}>
-        {/* Incoming Documents */}
-        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
-                <Inbox className="h-4 w-4 text-white" />
-              </div>
-              <span>الواردة</span>
-              <Badge variant="outline" className="ml-auto">
-                {incomingDocuments.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {incomingDocuments.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 bg-blue-100 rounded-full blur-xl opacity-60"></div>
-                  <div className="relative p-4 bg-gradient-to-r from-blue-100 to-blue-200 rounded-full w-fit mx-auto">
-                    <FileInput className="h-12 w-12 text-blue-600 opacity-70" />
-                  </div>
-                </div>
-                <p className="text-lg font-medium text-gray-600 mb-2">لا توجد مستندات واردة</p>
-                <p className="text-sm text-gray-500">لم يتم تصنيف أي مستندات واردة في هذا المجلد</p>
-              </div>
-            ) : (
-              <div className={`space-y-4 ${isModal ? 'max-h-[600px]' : 'max-h-96'} overflow-y-auto`}>
-                {incomingDocuments.map((doc: IncomingDocument) => (
-                  <div key={doc._id} className="p-5 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 hover:shadow-lg hover:border-blue-300 transition-all duration-300 group">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Badge variant="outline" className="bg-white/90 text-sm font-semibold px-3 py-1 border-blue-300">
-                            #{doc.serialNumber}/{doc.year}
-                          </Badge>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium">{formatArabicDate(doc.arrivalDate)}</span>
-                          </div>
-                        </div>
-                        <h4 className="font-bold text-gray-900 mb-3 line-clamp-2 leading-6 group-hover:text-blue-800 transition-colors">
-                          {doc.subject}
-                        </h4>
-                        {doc.source && (
-                          <p className="text-sm text-gray-600 mb-2 bg-white/60 rounded-lg px-3 py-1 inline-block">
-                            <span className="font-medium">من:</span> {doc.source}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDocument(doc._id, 'incoming')}
-                          className="h-10 w-10 p-0 hover:bg-blue-200 rounded-full transition-all duration-200 group-hover:scale-105"
-                        >
-                          <Eye className="h-5 w-5 text-blue-600" />
-                        </Button>
-                        {doc.scannedDocument && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'incoming')}
-                            className="h-10 w-10 p-0 hover:bg-blue-200 rounded-full transition-all duration-200 group-hover:scale-105"
-                          >
-                            <Download className="h-5 w-5 text-blue-600" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Metrics Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center text-[#2c5282]">
+              <Inbox className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-[11px] text-gray-500 block">المستندات الواردة</span>
+              <span className="text-base font-bold text-[#1a202c]">{incomingDocuments.length}</span>
+            </div>
+          </div>
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+            وارد
+          </span>
+        </div>
 
-        {/* Outgoing Documents */}
-        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-r from-green-500 to-green-600 rounded-lg">
-                <Send className="h-4 w-4 text-white" />
-              </div>
-              <span>الصادرة</span>
-              <Badge variant="outline" className="ml-auto">
-                {outgoingDocuments.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {outgoingDocuments.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 bg-green-100 rounded-full blur-xl opacity-60"></div>
-                  <div className="relative p-4 bg-gradient-to-r from-green-100 to-green-200 rounded-full w-fit mx-auto">
-                    <FileOutput className="h-12 w-12 text-green-600 opacity-70" />
-                  </div>
-                </div>
-                <p className="text-lg font-medium text-gray-600 mb-2">لا توجد مستندات صادرة</p>
-                <p className="text-sm text-gray-500">لم يتم تصنيف أي مستندات صادرة في هذا المجلد</p>
+        <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-700">
+              <Send className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-[11px] text-gray-500 block">المستندات الصادرة</span>
+              <span className="text-base font-bold text-[#1a202c]">{outgoingDocuments.length}</span>
+            </div>
+          </div>
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            صادر
+          </span>
+        </div>
+
+        <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded bg-amber-50 flex items-center justify-center text-[#78350f]">
+              <FileText className="h-4 w-4 text-[#d97706]" />
+            </div>
+            <div>
+              <span className="text-[11px] text-gray-500 block">إجمالي المستندات</span>
+              <span className="text-base font-bold text-[#1a202c]">{totalDocuments}</span>
+            </div>
+          </div>
+          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+            المجموع
+          </span>
+        </div>
+      </div>
+
+      {/* Two-column view: Incoming & Outgoing */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Incoming Column */}
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Inbox className="h-4 w-4 text-[#2c5282]" />
+              <span className="font-bold text-xs text-[#2c5282]">المراسلات والوثائق الواردة</span>
+            </div>
+            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+              {incomingDocuments.length}
+            </span>
+          </div>
+
+          <div className="p-3">
+            {incomingDocuments.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <Inbox className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p className="text-xs">لا توجد مستندات واردة في هذا المجلد</p>
               </div>
             ) : (
-              <div className={`space-y-4 ${isModal ? 'max-h-[600px]' : 'max-h-96'} overflow-y-auto`}>
-                {outgoingDocuments.map((doc: OutgoingDocument) => (
-                  <div key={doc._id} className="p-5 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border-2 border-green-200 hover:shadow-lg hover:border-green-300 transition-all duration-300 group">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Badge variant="outline" className="bg-white/90 text-sm font-semibold px-3 py-1 border-green-300">
-                            #{doc.serialNumber}/{doc.year}
-                          </Badge>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar className="h-4 w-4 text-green-600" />
-                            <span className="font-medium">{formatArabicDate(doc.issueDate)}</span>
-                          </div>
-                        </div>
-                        <h4 className="font-bold text-gray-900 mb-3 line-clamp-2 leading-6 group-hover:text-green-800 transition-colors">
-                          {doc.subject}
-                        </h4>
-                        {doc.assignedTo && doc.assignedTo.length > 0 && (
-                          <p className="text-sm text-gray-600 mb-2 bg-white/60 rounded-lg px-3 py-1 inline-block">
-                            <span className="font-medium">إلى:</span> {doc.assignedTo.join(', ')}
-                          </p>
-                        )}
+              <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+                {incomingDocuments.map((doc: IncomingDocument) => (
+                  <div 
+                    key={doc._id} 
+                    className="p-3 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1]">
+                          #{doc.serialNumber}/{doc.year}
+                        </span>
+                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-gray-400" />
+                          {formatArabicDate(doc.arrivalDate)}
+                        </span>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDocument(doc._id, 'outgoing')}
-                          className="h-10 w-10 p-0 hover:bg-green-200 rounded-full transition-all duration-200 group-hover:scale-105"
+                      
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleViewDocument(doc._id, 'incoming')}
+                          className="h-6 px-2 text-[11px] rounded border border-[#2c5282] text-[#2c5282] hover:bg-[#2c5282] hover:text-white transition-colors duration-200 flex items-center gap-1"
+                          title="عرض المستند"
                         >
-                          <Eye className="h-5 w-5 text-green-600" />
-                        </Button>
+                          <Eye className="h-3 w-3" />
+                          <span>عرض</span>
+                        </button>
                         {doc.scannedDocument && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'outgoing')}
-                            className="h-10 w-10 p-0 hover:bg-green-200 rounded-full transition-all duration-200 group-hover:scale-105"
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'incoming')}
+                            className="h-6 px-2 text-[11px] rounded border border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
+                            title="تحميل الملف الممسوح"
                           >
-                            <Download className="h-5 w-5 text-green-600" />
-                          </Button>
+                            <Download className="h-3 w-3" />
+                            <span>تحميل</span>
+                          </button>
                         )}
                       </div>
                     </div>
+
+                    <h4 className="font-semibold text-xs text-[#1a202c] mb-1 line-clamp-2 leading-relaxed">
+                      {doc.subject}
+                    </h4>
+
+                    {doc.source && (
+                      <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-1">
+                        <Building className="h-3 w-3 text-gray-400" />
+                        <span>الجهة المصدرة:</span>
+                        <span className="text-gray-700 font-medium">{doc.source}</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Outgoing Column */}
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Send className="h-4 w-4 text-emerald-700" />
+              <span className="font-bold text-xs text-emerald-800">المراسلات والوثائق الصادرة</span>
+            </div>
+            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              {outgoingDocuments.length}
+            </span>
+          </div>
+
+          <div className="p-3">
+            {outgoingDocuments.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <Send className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p className="text-xs">لا توجد مستندات صادرة في هذا المجلد</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+                {outgoingDocuments.map((doc: OutgoingDocument) => (
+                  <div 
+                    key={doc._id} 
+                    className="p-3 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f1f5f9] text-emerald-800 border border-[#cbd5e1]">
+                          #{doc.serialNumber}/{doc.year}
+                        </span>
+                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-gray-400" />
+                          {formatArabicDate(doc.issueDate)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleViewDocument(doc._id, 'outgoing')}
+                          className="h-6 px-2 text-[11px] rounded border border-emerald-700 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors duration-200 flex items-center gap-1"
+                          title="عرض المستند"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>عرض</span>
+                        </button>
+                        {doc.scannedDocument && (
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'outgoing')}
+                            className="h-6 px-2 text-[11px] rounded border border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
+                            title="تحميل الملف الممسوح"
+                          >
+                            <Download className="h-3 w-3" />
+                            <span>تحميل</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <h4 className="font-semibold text-xs text-[#1a202c] mb-1 line-clamp-2 leading-relaxed">
+                      {doc.subject}
+                    </h4>
+
+                    {doc.assignedTo && doc.assignedTo.length > 0 && (
+                      <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-1">
+                        <UserCheck className="h-3 w-3 text-gray-400" />
+                        <span>الجهة الموجه إليها:</span>
+                        <span className="text-gray-700 font-medium">{doc.assignedTo.join(', ')}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

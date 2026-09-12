@@ -1,75 +1,80 @@
-
 const Folder = require('../../../models/Folder');
 const ErrorResponse = require('../../../utils/errorResponse');
+
+// Helper to check if potentialParent is a descendant of folderId
+const checkIsDescendant = async (potentialParentId, folderId) => {
+  let currentParentId = potentialParentId;
+  const visited = new Set();
+  
+  while (currentParentId) {
+    if (currentParentId.toString() === folderId.toString()) {
+      return true;
+    }
+    if (visited.has(currentParentId.toString())) {
+      break;
+    }
+    visited.add(currentParentId.toString());
+
+    const parentFolder = await Folder.findById(currentParentId);
+    currentParentId = parentFolder ? parentFolder.parent : null;
+  }
+  return false;
+};
 
 // @desc    Update folder
 // @route   PUT /api/folders/:id
 // @access  Private/AdminDepartment
 exports.updateFolder = async (req, res, next) => {
   try {
-    const { name, parentId } = req.body;
+    const { name, description, parentId, status, color } = req.body;
     
     let folder = await Folder.findById(req.params.id);
     
     if (!folder) {
       return next(
-        new ErrorResponse(`Folder not found with id of ${req.params.id}`, 404)
+        new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404)
       );
     }
     
     // Check if folder belongs to the active department
-    if (folder.department.toString() !== req.user.activeDepartment._id.toString()) {
-      return next(
-        new ErrorResponse(`Not authorized to update this folder`, 403)
-      );
+    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+      const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
+      const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
+      
+      if (folderDeptId !== activeDeptId) {
+        return next(
+          new ErrorResponse(`غير مصرح لك بتعديل هذا المجلد`, 403)
+        );
+      }
     }
     
-    // Create update object
     const updateData = {};
-    
-    if (name) updateData.name = name;
+    if (name !== undefined) updateData.name = name.trim();
+    if (description !== undefined) updateData.description = description.trim();
+    if (status !== undefined) updateData.status = status;
+    if (color !== undefined) updateData.color = color;
     
     // Validate parent folder if provided
     if (parentId !== undefined) {
       if (parentId) {
-        const parentFolder = await Folder.findById(parentId);
-        
-        if (!parentFolder) {
+        if (parentId.toString() === req.params.id.toString()) {
           return next(
-            new ErrorResponse(`Parent folder not found`, 404)
+            new ErrorResponse(`لا يمكن أن يكون المجلد أصلاً لنفسه`, 400)
           );
         }
-        
-        if (parentFolder.department.toString() !== req.user.activeDepartment._id.toString()) {
+
+        const parentFolder = await Folder.findById(parentId);
+        if (!parentFolder) {
           return next(
-            new ErrorResponse(`Parent folder does not belong to your active department`, 403)
+            new ErrorResponse(`المجلد الأصل المحدد غير موجود`, 404)
           );
         }
         
         // Prevent circular references
-        if (parentId === req.params.id) {
-          return next(
-            new ErrorResponse(`Folder cannot be its own parent`, 400)
-          );
-        }
-        
-        // Check if parent is a descendant of the current folder
-        let isDescendant = false;
-        let currentParent = parentFolder.parent;
-        
-        while (currentParent) {
-          if (currentParent.toString() === req.params.id) {
-            isDescendant = true;
-            break;
-          }
-          
-          const parent = await Folder.findById(currentParent);
-          currentParent = parent ? parent.parent : null;
-        }
-        
+        const isDescendant = await checkIsDescendant(parentId, req.params.id);
         if (isDescendant) {
           return next(
-            new ErrorResponse(`Cannot create circular folder structure`, 400)
+            new ErrorResponse(`لا يمكن جعل المجلد تابعاً لأحد مجلداته الفرعية (دائرية غير مسموحة)`, 400)
           );
         }
         
@@ -79,18 +84,73 @@ exports.updateFolder = async (req, res, next) => {
       }
     }
     
-    // Update folder
     folder = await Folder.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('department')
-      .populate('parent')
-      .populate('createdBy', 'username');
+    ).populate('department', 'name')
+      .populate('parent', 'name')
+      .populate('createdBy', 'username role');
     
     res.status(200).json({
       success: true,
+      message: 'تم تحديث المجلد بنجاح',
       data: folder
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Move folder to new parent
+// @route   PUT /api/folders/:id/move
+// @access  Private/AdminDepartment
+exports.moveFolder = async (req, res, next) => {
+  try {
+    const { parentId } = req.body;
+    
+    let folder = await Folder.findById(req.params.id);
+    if (!folder) {
+      return next(new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404));
+    }
+    
+    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+      const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
+      const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
+      
+      if (folderDeptId !== activeDeptId) {
+        return next(new ErrorResponse(`غير مصرح لك بنقل هذا المجلد`, 403));
+      }
+    }
+
+    if (parentId) {
+      if (parentId.toString() === req.params.id.toString()) {
+        return next(new ErrorResponse(`لا يمكن نقل المجلد إلى نفسه`, 400));
+      }
+
+      const parentFolder = await Folder.findById(parentId);
+      if (!parentFolder) {
+        return next(new ErrorResponse(`المجلد الأصل المحدد غير موجود`, 404));
+      }
+
+      const isDescendant = await checkIsDescendant(parentId, req.params.id);
+      if (isDescendant) {
+        return next(new ErrorResponse(`لا يمكن نقل المجلد إلى أحد فروعه`, 400));
+      }
+    }
+
+    folder.parent = parentId || null;
+    await folder.save();
+
+    const populatedFolder = await Folder.findById(folder._id)
+      .populate('department', 'name')
+      .populate('parent', 'name')
+      .populate('createdBy', 'username');
+
+    res.status(200).json({
+      success: true,
+      message: 'تم نقل المجلد بنجاح',
+      data: populatedFolder
     });
   } catch (err) {
     next(err);

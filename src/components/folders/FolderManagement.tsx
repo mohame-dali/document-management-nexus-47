@@ -1,30 +1,22 @@
-
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { getFolders } from '@/services/folderService';
 import { 
-  Archive, 
   FolderTree, 
-  BarChart3, 
-  Settings,
+  Tag, 
+  Building2, 
+  Calendar, 
+  FileText, 
+  ShieldCheck,
   Eye,
-  Lock,
-  Users,
-  Building2,
-  Sparkles,
-  Calendar,
-  FileText,
-  Zap
+  Settings,
+  Folder
 } from 'lucide-react';
-import FolderTreeView from './FolderTreeView';
 import EnhancedFolderTree from './EnhancedFolderTree';
 import DocumentCategoryManager from './DocumentCategoryManager';
 import { FolderDocumentsModal } from './FolderDocumentsModal';
-import { Folder } from '@/types';
+import { Folder as FolderType } from '@/types';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 
 interface FolderManagementProps {
@@ -33,13 +25,13 @@ interface FolderManagementProps {
 
 const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false }) => {
   const { currentUser } = useAuth();
-  const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<FolderType | null>(null);
   const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('enhanced');
+  const [activeTab, setActiveTab] = useState<'tree' | 'categorization'>('tree');
   
-  // AdminTuningDesk can see all departments, others see their active department
+  // AdminTuningDesk sees all departments, others see their active department
   const targetDepartmentId = currentUser?.role === 'AdminTuningDesk' 
-    ? undefined // No filter - see all departments
+    ? undefined 
     : currentUser?.activeDepartment?._id;
 
   const { data: folders } = useQuery({
@@ -48,19 +40,20 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
     enabled: !!currentUser,
   });
 
-  // AdminDepartment can manage folders (create, edit, delete), AdminTuningDesk is read-only
+  // Role permissions
   const canManageFolders = currentUser?.role === 'AdminDepartment' && !readOnly;
   
-  // All specified roles can view folders
   const canViewFolders = currentUser?.role === 'SuperAdmin' ||
                         currentUser?.role === 'Admin' || 
                         currentUser?.role === 'AdminTuningDesk' || 
                         currentUser?.role === 'AdminDepartment' ||
                         currentUser?.role === 'User';
 
-  const handleFolderSelect = (folder: Folder) => {
-    setSelectedFolder(folder);
-    setIsDocumentsModalOpen(true);
+  const handleFolderSelect = (folder: FolderType | null) => {
+    if (folder) {
+      setSelectedFolder(folder);
+      setIsDocumentsModalOpen(true);
+    }
   };
 
   const handleCloseDocumentsModal = () => {
@@ -68,224 +61,143 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
     setSelectedFolder(null);
   };
 
-  // Get current date in Arabic format
-  const getCurrentArabicDate = () => {
-    return formatArabicDate(new Date());
-  };
-
-  const getRoleDisplayInfo = () => {
+  const getRoleBadge = () => {
     switch (currentUser?.role) {
-      case 'AdminTuningDesk':
-        return {
-          title: 'مراقبة الأرشيف المتقدمة',
-          subtitle: 'يمكنك عرض ومراقبة تنظيم المجلدات والمستندات لجميع الأقسام مع إحصائيات مفصلة',
-          badge: { text: 'مراقبة شاملة لجميع الأقسام', variant: 'secondary' as const, icon: Eye },
-          bgGradient: 'from-violet-50 via-purple-50 to-fuchsia-50',
-          iconBg: 'from-violet-500 via-purple-600 to-fuchsia-700',
-          accentColor: 'border-violet-400'
-        };
       case 'AdminDepartment':
         return {
-          title: 'إدارة الأرشيف الشاملة',
-          subtitle: 'إدارة كاملة للمجلدات وتصنيف المستندات مع صلاحيات الإنشاء والتعديل والحذف',
-          badge: { text: 'إدارة كاملة', variant: 'default' as const, icon: Settings },
-          bgGradient: 'from-cyan-50 via-blue-50 to-indigo-50',
-          iconBg: 'from-cyan-500 via-blue-600 to-indigo-700',
-          accentColor: 'border-blue-400'
+          text: 'إدارة كاملة للقسم',
+          className: 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
+        };
+      case 'AdminTuningDesk':
+        return {
+          text: 'مراقبة شاملة للأقسام',
+          className: 'bg-blue-50 text-[#2c5282] border border-blue-200'
         };
       case 'User':
         return {
-          title: 'عرض الأرشيف',
-          subtitle: 'يمكنك عرض تنظيم المجلدات والمستندات في قسمك مع واجهة سهلة الاستخدام',
-          badge: { text: 'للعرض فقط', variant: 'secondary' as const, icon: Lock },
-          bgGradient: 'from-slate-50 via-gray-50 to-zinc-50',
-          iconBg: 'from-slate-500 via-gray-600 to-zinc-700',
-          accentColor: 'border-gray-400'
+          text: 'عرض واستعلام فقط',
+          className: 'bg-gray-100 text-gray-700 border border-gray-200'
         };
       default:
         return {
-          title: 'إدارة الأرشيف المتطورة',
-          subtitle: 'إدارة شاملة لنظام الأرشيف مع أدوات متقدمة للتنظيم والمراقبة',
-          badge: { text: 'إدارة شاملة', variant: 'default' as const, icon: Settings },
-          bgGradient: 'from-emerald-50 via-teal-50 to-green-50',
-          iconBg: 'from-emerald-500 via-teal-600 to-green-700',
-          accentColor: 'border-emerald-400'
+          text: 'صلاحيات قيادية',
+          className: 'bg-slate-100 text-slate-800 border border-slate-200'
         };
     }
   };
 
-  const roleInfo = getRoleDisplayInfo();
-
   if (!canViewFolders) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-8">
-        <Card className="max-w-lg w-full shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-12 text-center">
-            <div className="relative mb-8">
-              <div className="absolute inset-0 bg-gradient-to-r from-red-100 to-orange-100 rounded-full blur-xl opacity-60"></div>
-              <div className="relative p-6 bg-gradient-to-r from-red-500 to-orange-600 rounded-full w-fit mx-auto">
-                <Lock className="h-16 w-16 text-white" />
-              </div>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">ليس لديك صلاحية للوصول</h2>
-            <p className="text-gray-600 text-lg leading-relaxed">ليس لديك الصلاحية لعرض إدارة المجلدات في هذا النظام</p>
-            <p className="text-gray-500 text-sm mt-4">يرجى التواصل مع مدير النظام للحصول على الصلاحيات المطلوبة</p>
-          </CardContent>
-        </Card>
+      <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center text-xs" dir="rtl">
+        <ShieldCheck className="h-10 w-10 text-gray-400 mx-auto mb-2" />
+        <h3 className="text-sm font-bold text-gray-800 mb-1">غير مصرح بالوصول</h3>
+        <p className="text-gray-500">ليس لديك الصلاحية لعرض نظام تصنيف المجلدات في هذا القسم.</p>
       </div>
     );
   }
 
+  const roleBadge = getRoleBadge();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-4 sm:p-6 lg:p-8" dir="rtl">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Enhanced Modern Header */}
-        <Card className={`shadow-2xl border-0 bg-gradient-to-r ${roleInfo.bgGradient} overflow-hidden relative group hover:shadow-3xl transition-all duration-500`}>
-          {/* Animated Border */}
-          <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${roleInfo.iconBg} animate-pulse`}></div>
-          
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-4 right-4 w-32 h-32 bg-gradient-to-br from-white to-transparent rounded-full blur-3xl"></div>
-            <div className="absolute bottom-4 left-4 w-24 h-24 bg-gradient-to-tl from-white to-transparent rounded-full blur-2xl"></div>
+    <div className="space-y-4" dir="rtl">
+      {/* Header Block - AdminLTE Institutional Header */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded bg-[#2c5282]/10 border border-[#2c5282]/20 flex items-center justify-center flex-shrink-0 text-[#2c5282]">
+            <Folder className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-[#1a202c]">
+                نظام تصنيف وأرشفة المجلدات
+              </h2>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${roleBadge.className}`}>
+                {roleBadge.text}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              تنظيم وتصنيف المراسلات الإدارية الرسمية بطريقة هرمية آمنة ومنهجية
+            </p>
+          </div>
+        </div>
+
+        {/* Department Info & Date Badges */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#f8fafc] border border-[#e2e8f0] text-xs text-gray-600">
+            <Building2 className="h-3.5 w-3.5 text-[#2c5282]" />
+            <span>
+              {currentUser?.role === 'AdminTuningDesk'
+                ? 'جميع الأقسام الإدارية'
+                : currentUser?.activeDepartment?.name || 'القسم الإداري'}
+            </span>
           </div>
 
-          <CardHeader className="relative pb-8 pt-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-8">
-                <div className="relative group">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${roleInfo.iconBg} rounded-3xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-300`}></div>
-                  <div className={`relative p-6 bg-gradient-to-br ${roleInfo.iconBg} rounded-3xl shadow-2xl group-hover:scale-105 transition-transform duration-300`}>
-                    <Archive className="h-12 w-12 text-white" />
-                    <div className="absolute -top-2 -right-2 animate-bounce">
-                      <Sparkles className="h-6 w-6 text-yellow-300" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <CardTitle className="text-4xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-                      {roleInfo.title}
-                      <Zap className="h-8 w-8 text-yellow-500 animate-pulse" />
-                    </CardTitle>
-                    <p className="text-lg text-gray-700 max-w-3xl leading-relaxed">
-                      {roleInfo.subtitle}
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center gap-6">
-                    <Badge variant="outline" className="bg-white/90 backdrop-blur-sm border-white/40 text-gray-700 px-4 py-2 text-sm font-medium shadow-lg">
-                      <Building2 className="h-4 w-4 mr-2 text-blue-600" />
-                      {currentUser?.role === 'AdminTuningDesk' 
-                        ? 'جميع الأقسام' 
-                        : currentUser?.activeDepartment?.name || 'جميع الأقسام'
-                      }
-                    </Badge>
-                    <Badge variant="outline" className="bg-white/90 backdrop-blur-sm border-white/40 text-gray-700 px-4 py-2 text-sm font-medium shadow-lg">
-                      <FileText className="h-4 w-4 mr-2 text-green-600" />
-                      {folders?.length || 0} مجلد
-                    </Badge>
-                    <Badge variant="outline" className="bg-white/90 backdrop-blur-sm border-white/40 text-gray-700 px-4 py-2 text-sm font-medium shadow-lg">
-                      <Calendar className="h-4 w-4 mr-2 text-purple-600" />
-                      محدث في {getCurrentArabicDate()}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              
-              <Badge variant={roleInfo.badge.variant} className={`flex items-center gap-3 px-6 py-3 text-lg font-medium shadow-2xl bg-white/90 backdrop-blur-sm ${roleInfo.accentColor} border-2 hover:scale-105 transition-transform duration-300`}>
-                <roleInfo.badge.icon className="h-6 w-6" />
-                {roleInfo.badge.text}
-              </Badge>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Main Content Layout - Full width tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-8">
-              <TabsList className="grid w-full grid-cols-3 h-16 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-2 shadow-inner">
-                <TabsTrigger 
-                  value="enhanced" 
-                  className="flex items-center gap-4 text-base font-semibold rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-purple-700 hover:bg-white/60 transition-all duration-300"
-                >
-                  <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg">
-                    <Sparkles className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="hidden sm:inline">العرض المحسن</span>
-                  <span className="sm:hidden">محسن</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="tree" 
-                  className="flex items-center gap-4 text-base font-semibold rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-blue-700 hover:bg-white/60 transition-all duration-300"
-                >
-                  <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg">
-                    <FolderTree className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="hidden sm:inline">الهيكل الهرمي</span>
-                  <span className="sm:hidden">هرمي</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="categorization" 
-                  className="flex items-center gap-4 text-base font-semibold rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-green-700 hover:bg-white/60 transition-all duration-300"
-                >
-                  <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg">
-                    <BarChart3 className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="hidden sm:inline">تصنيف المستندات</span>
-                  <span className="sm:hidden">تصنيف</span>
-                </TabsTrigger>
-              </TabsList>
-            </CardContent>
-          </Card>
-
-          <TabsContent value="enhanced" className="mt-8">
-            <div className="animate-fade-in">
-              <EnhancedFolderTree
-                onFolderSelect={handleFolderSelect}
-                selectedFolderId={selectedFolder?._id}
-                departmentId={targetDepartmentId}
-                readOnly={!canManageFolders}
-              />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="tree" className="mt-8">
-            <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
-              <CardContent className="p-10">
-                <div className="animate-scale-in">
-                  <FolderTreeView
-                    onFolderSelect={handleFolderSelect}
-                    selectedFolderId={selectedFolder?._id}
-                    departmentId={targetDepartmentId}
-                    readOnly={!canManageFolders}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="categorization" className="mt-8">
-            <div className="animate-fade-in">
-              <DocumentCategoryManager
-                folders={folders || []}
-                canManage={canManageFolders}
-                departmentId={targetDepartmentId}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Documents Modal */}
-        <FolderDocumentsModal
-          selectedFolder={selectedFolder}
-          isOpen={isDocumentsModalOpen}
-          onClose={handleCloseDocumentsModal}
-          canManage={canManageFolders}
-        />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#f8fafc] border border-[#e2e8f0] text-xs text-gray-600">
+            <Calendar className="h-3.5 w-3.5 text-gray-400" />
+            <span>{formatArabicDate(new Date())}</span>
+          </div>
+        </div>
       </div>
+
+      {/* Tabs Navigation Bar */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-1.5 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('tree')}
+          className={`flex-1 sm:flex-initial px-4 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2 transition-colors duration-200 ${
+            activeTab === 'tree'
+              ? 'bg-[#2c5282] text-white shadow-none'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-[#2c5282]'
+          }`}
+        >
+          <FolderTree className="h-4 w-4" />
+          <span>الهيكل الهرمي للمجلدات</span>
+          <span className={`px-1.5 py-0.2 rounded text-[10px] ${
+            activeTab === 'tree' 
+              ? 'bg-[#FFCB56] text-[#78350f] font-bold' 
+              : 'bg-gray-100 text-gray-600'
+          }`}>
+            {folders?.length || 0}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('categorization')}
+          className={`flex-1 sm:flex-initial px-4 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2 transition-colors duration-200 ${
+            activeTab === 'categorization'
+              ? 'bg-[#2c5282] text-white shadow-none'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-[#2c5282]'
+          }`}
+        >
+          <Tag className="h-4 w-4" />
+          <span>تصنيف المراسلات غير المصنفة</span>
+        </button>
+      </div>
+
+      {/* Tab Panels */}
+      {activeTab === 'tree' ? (
+        <EnhancedFolderTree
+          onFolderSelect={handleFolderSelect}
+          selectedFolderId={selectedFolder?._id}
+          departmentId={targetDepartmentId}
+          readOnly={!canManageFolders}
+        />
+      ) : (
+        <DocumentCategoryManager
+          folders={folders || []}
+          canManage={canManageFolders}
+          departmentId={targetDepartmentId}
+        />
+      )}
+
+      {/* Documents Modal */}
+      <FolderDocumentsModal
+        selectedFolder={selectedFolder}
+        isOpen={isDocumentsModalOpen}
+        onClose={handleCloseDocumentsModal}
+        canManage={canManageFolders}
+      />
     </div>
   );
 };
