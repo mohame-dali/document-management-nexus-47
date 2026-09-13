@@ -1,23 +1,11 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import AdvancedSearch from '@/components/search/AdvancedSearch';
+import AdvancedSearch, { SearchFilters } from '@/components/search/AdvancedSearch';
 import SearchResults from '@/components/search/SearchResults';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Filter } from 'lucide-react';
+import { Search, Building2, Layers } from 'lucide-react';
 import { useInfiniteSearch } from '@/hooks/useInfiniteSearch';
 
-interface SearchFilters {
-  keyword: string;
-  documentType: 'all' | 'incoming' | 'outgoing';
-  year: string;
-  dateFrom: string;
-  dateTo: string;
-  serialNumber: string;
-  subject: string;
-}
-
-const AdvancedSearchPage = () => {
+const AdvancedSearchPage: React.FC = () => {
   const { currentUser } = useAuth();
   const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
   const [searchPerformed, setSearchPerformed] = useState(false);
@@ -29,71 +17,75 @@ const AdvancedSearchPage = () => {
     isLoading,
     isFetchingNextPage,
     hasNextPage,
+    fetchNextPage,
     lastElementRef,
   } = useInfiniteSearch({
     filters: searchFilters,
     enabled: !!searchFilters,
   });
 
-  const handleSearch = async (filters: SearchFilters) => {
-    console.log('Performing advanced search with filters:', filters);
+  const handleSearch = (filters: SearchFilters) => {
     setSearchFilters(filters);
     setSearchPerformed(true);
   };
 
   const handleClearSearch = () => {
-    console.log('Clearing search');
     setSearchFilters(null);
     setSearchPerformed(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50" dir="rtl">
-      <div className="p-6 space-y-8">
-        {/* Header Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl shadow-lg">
-              <Search className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                البحث المتقدم
-              </h1>
-              <p className="text-lg text-slate-600 mt-1">
-                ابحث في الوثائق باستخدام فلاتر متقدمة والنصوص المستخرجة بـ OCR
-              </p>
-            </div>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      {/* Institutional AdminLTE Page Header */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
+            <Search className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal flex items-center gap-2.5">
+              البحث المتقدم في المراسلات
+            </h1>
+            <p className="text-base text-[#4a5568] leading-relaxed mt-1">
+              محرك استعلام إداري متقدم للبحث في نصوص وفهارس المراسلات الواردة والصادرة والنصوص المقروءة آلياً (OCR)
+            </p>
           </div>
         </div>
 
-        {/* Advanced Search Section */}
-        <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-cyan-100 rounded-lg">
-                <Filter className="h-6 w-6 text-cyan-600" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-800">فلاتر البحث</h2>
-            </div>
-          </div>
-          <div className="p-6">
-            <AdvancedSearch onSearch={handleSearch} onClear={handleClearSearch} />
-          </div>
-        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          {currentUser?.activeDepartment && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold bg-white border border-[#cbd5e1] text-[#2d3748]">
+              <Building2 className="h-4 w-4 text-[#2c5282]" />
+              <span>{currentUser.activeDepartment.name}</span>
+            </span>
+          )}
 
-        {/* Search Results Section */}
-        <SearchResults 
-          incoming={incoming}
-          outgoing={outgoing}
-          isLoading={isLoading}
-          searchPerformed={searchPerformed}
-          totalCount={totalCount}
-          isFetchingNextPage={isFetchingNextPage}
-          hasNextPage={hasNextPage}
-          lastElementRef={lastElementRef}
-        />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+            <Layers className="h-4 w-4 text-[#78350f]" />
+            <span>نظام الأرشيف والفهرسة</span>
+          </span>
+        </div>
       </div>
+
+      {/* Advanced Filters Section */}
+      <AdvancedSearch 
+        onSearch={handleSearch} 
+        onClear={handleClearSearch} 
+      />
+
+      {/* Search Results & Pagination Section */}
+      <SearchResults 
+        incoming={incoming}
+        outgoing={outgoing}
+        isLoading={isLoading}
+        searchPerformed={searchPerformed}
+        totalCount={totalCount}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={hasNextPage}
+        onFetchNextPage={fetchNextPage}
+        lastElementRef={lastElementRef}
+        searchedKeyword={searchFilters?.keyword || ''}
+      />
     </div>
   );
 };

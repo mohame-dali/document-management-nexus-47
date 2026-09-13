@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -11,22 +9,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { 
   Search, 
   Filter, 
-  X, 
+  RotateCcw, 
   Calendar, 
   FileText, 
   Hash, 
-  MessageSquare,
+  Building2,
+  Clock,
   Sparkles,
-  Clock
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from '@tanstack/react-query';
 
-interface SearchFilters {
+export interface SearchFilters {
   keyword: string;
   documentType: 'all' | 'incoming' | 'outgoing';
   year: string;
@@ -34,6 +32,7 @@ interface SearchFilters {
   dateTo: string;
   serialNumber: string;
   subject: string;
+  source: string;
 }
 
 interface AdvancedSearchProps {
@@ -51,9 +50,10 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
     dateTo: '',
     serialNumber: '',
     subject: '',
+    source: '',
   });
 
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const handleFilterChange = (key: keyof SearchFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -66,12 +66,13 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
     }
   };
 
-  const handleSearch = () => {
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     onSearch(filters);
   };
 
   const handleClear = () => {
-    setFilters({
+    const defaultFilters: SearchFilters = {
       keyword: '',
       documentType: 'all',
       year: new Date().getFullYear().toString(),
@@ -79,127 +80,176 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
       dateTo: '',
       serialNumber: '',
       subject: '',
-    });
+      source: '',
+    };
+    setFilters(defaultFilters);
     onClear();
   };
 
-  const hasActiveFilters = filters.keyword || filters.documentType !== 'all' || 
-    filters.dateFrom || filters.dateTo || filters.serialNumber || filters.subject;
+  const activeFiltersCount = [
+    Boolean(filters.keyword),
+    filters.documentType !== 'all',
+    Boolean(filters.source),
+    Boolean(filters.serialNumber),
+    Boolean(filters.subject),
+    Boolean(filters.dateFrom),
+    Boolean(filters.dateTo),
+  ].filter(Boolean).length;
 
   return (
-    <div className="space-y-6">
-      {/* Main Search Section */}
-      <Card className="shadow-lg border-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-cyan-500 to-blue-600 p-1">
-          <CardHeader className="bg-white m-1 rounded-lg">
-            <CardTitle className="flex items-center gap-3">
-              <div className="p-2 bg-cyan-100 rounded-lg">
-                <Sparkles className="h-6 w-6 text-cyan-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">البحث الذكي</h3>
-                <p className="text-sm text-gray-600 font-normal">ابحث في محتوى الوثائق والنصوص المستخرجة</p>
-              </div>
-            </CardTitle>
-          </CardHeader>
+    <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6" dir="rtl">
+      {/* Form Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] leading-normal flex items-center gap-2">
+            <Filter className="h-5 w-5 text-[#2c5282]" />
+            معايير وفلاتر البحث
+          </h2>
+          <p className="text-base text-[#4a5568] leading-relaxed mt-1">
+            حدد المعايير المطلوبة للبحث المتقدم في نصوص وفهارس المراسلات
+          </p>
         </div>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="keyword" className="text-base font-medium flex items-center gap-2">
-                <Search className="h-4 w-4 text-gray-500" />
-                البحث في النص (OCR)
-              </Label>
-              <Input
-                id="keyword"
-                placeholder="ابحث في محتوى الوثائق، الموضوع، المصدر..."
-                value={filters.keyword}
-                onChange={(e) => handleFilterChange('keyword', e.target.value)}
-                className="h-12 text-right border-gray-200 focus:border-cyan-500 focus:ring-cyan-500"
-              />
-              <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3">
-                <p className="text-xs text-cyan-700 flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  البحث في النصوص المستخرجة بواسطة OCR ومحتوى الوثائق
-                </p>
-              </div>
-            </div>
+
+        <div className="flex items-center gap-3">
+          {activeFiltersCount > 0 && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              {activeFiltersCount} فلاتر نشطة
+            </span>
+          )}
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-base text-[#2c5282] hover:bg-gray-100 flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors duration-200"
+          >
+            <span>{isExpanded ? 'طي الفلاتر الإضافية' : 'توسيع الفلاتر الإضافية'}</span>
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Primary Keyword / OCR Search Field */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="keyword" className="text-base font-semibold text-[#1a202c] flex items-center gap-2">
+              <Search className="h-4 w-4 text-[#2c5282]" />
+              البحث في النص والمحتوى المفهرس (OCR)
+            </Label>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-[#78350f] border border-[#FFD758]">
+              <Sparkles className="h-3 w-3 text-[#78350f]" />
+              يشمل النصوص المقروءة آلياً
+            </span>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Advanced Filters */}
-      <Card className="shadow-lg border-0">
-        <CardHeader 
-          className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Filter className="h-5 w-5 text-blue-600" />
-              </div>
-              <span className="text-lg font-semibold text-gray-800">الفلاتر المتقدمة</span>
-              {hasActiveFilters && (
-                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-              )}
-            </div>
-            <Button variant="ghost" size="sm" className="text-gray-500">
-              {isExpanded ? 'إخفاء' : 'إظهار'}
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        
+          <div className="relative">
+            <Input
+              id="keyword"
+              placeholder="اكتب كلمات مفتاحية للبحث في الموضوع، المحتوى أو النصوص المستخرجة عبر OCR..."
+              value={filters.keyword}
+              onChange={(e) => handleFilterChange('keyword', e.target.value)}
+              className="h-12 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200 pr-4"
+            />
+          </div>
+          <p className="text-sm text-[#4a5568] leading-relaxed">
+            يمكنك إدخال اسم ملف، عبارة من نص الخطاب، أو اسم مسؤول للبحث الفوري.
+          </p>
+        </div>
+
+        {/* Collapsible Advanced Criteria Grid */}
         {isExpanded && (
-          <CardContent className="p-6 space-y-6">
-            {/* Document Type */}
-            <div className="space-y-3">
-              <Label className="text-base font-medium flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-500" />
-                نوع الوثيقة
-              </Label>
-              <Select 
-                value={filters.documentType} 
-                onValueChange={(value) => handleFilterChange('documentType', value)}
-              >
-                <SelectTrigger className="h-12 text-right border-gray-200 focus:border-blue-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الوثائق</SelectItem>
-                  <SelectItem value="incoming">الوثائق الواردة</SelectItem>
-                  <SelectItem value="outgoing">الوثائق الصادرة</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Separator />
-
-            {/* Date Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Year */}
-              <div className="space-y-3">
-                <Label htmlFor="year" className="text-base font-medium flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  السنة
+          <div className="space-y-6 pt-4 border-t border-[#f1f5f9]">
+            {/* Row 1: Document Type & Source */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="documentType" className="text-base font-medium text-[#2d3748] flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-[#2c5282]" />
+                  نوع المراسلة
                 </Label>
-                <div className="relative">
-                  <Input
-                    id="year"
-                    placeholder="2024"
-                    value={filters.year}
-                    onChange={handleYearChange}
-                    className="h-12 text-right border-gray-200 focus:border-blue-500"
-                    maxLength={4}
-                    type="text"
-                  />
-                </div>
+                <Select 
+                  value={filters.documentType} 
+                  onValueChange={(value) => handleFilterChange('documentType', value as 'all' | 'incoming' | 'outgoing')}
+                >
+                  <SelectTrigger id="documentType" className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
+                    <SelectValue placeholder="اختر نوع المراسلة" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all" className="text-base">جميع الوثائق (الواردة والصادرة)</SelectItem>
+                    <SelectItem value="incoming" className="text-base">الوثائق الواردة فقط</SelectItem>
+                    <SelectItem value="outgoing" className="text-base">الوثائق الصادرة فقط</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Date From */}
-              <div className="space-y-3">
-                <Label htmlFor="dateFrom" className="text-base font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
+              <div className="space-y-2">
+                <Label htmlFor="source" className="text-base font-medium text-[#2d3748] flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-[#2c5282]" />
+                  المصدر / الجهة / المصلحة
+                </Label>
+                <Input
+                  id="source"
+                  placeholder="ابحث بالجهة المرسلة أو المصلحة المعنية..."
+                  value={filters.source}
+                  onChange={(e) => handleFilterChange('source', e.target.value)}
+                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Serial Number, Year, Subject */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="serialNumber" className="text-base font-medium text-[#2d3748] flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-[#2c5282]" />
+                  الرقم التسلسلي
+                </Label>
+                <Input
+                  id="serialNumber"
+                  type="text"
+                  placeholder="مثال: 1045"
+                  value={filters.serialNumber}
+                  onChange={(e) => handleFilterChange('serialNumber', e.target.value)}
+                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="year" className="text-base font-medium text-[#2d3748] flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-[#2c5282]" />
+                  السنة الإدارية
+                </Label>
+                <Input
+                  id="year"
+                  placeholder="مثال: 2026"
+                  value={filters.year}
+                  onChange={handleYearChange}
+                  maxLength={4}
+                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subject" className="text-base font-medium text-[#2d3748] flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-[#2c5282]" />
+                  موضوع المراسلة
+                </Label>
+                <Input
+                  id="subject"
+                  placeholder="ابحث في نص الموضوع مباشرة..."
+                  value={filters.subject}
+                  onChange={(e) => handleFilterChange('subject', e.target.value)}
+                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Date Range */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="dateFrom" className="text-base font-medium text-[#2d3748] flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-[#2c5282]" />
                   من تاريخ
                 </Label>
                 <Input
@@ -207,14 +257,13 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
                   type="date"
                   value={filters.dateFrom}
                   onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                  className="h-12 text-right border-gray-200 focus:border-blue-500"
+                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200 bg-white"
                 />
               </div>
 
-              {/* Date To */}
-              <div className="space-y-3">
-                <Label htmlFor="dateTo" className="text-base font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
+              <div className="space-y-2">
+                <Label htmlFor="dateTo" className="text-base font-medium text-[#2d3748] flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-[#2c5282]" />
                   إلى تاريخ
                 </Label>
                 <Input
@@ -222,80 +271,45 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
                   type="date"
                   value={filters.dateTo}
                   onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                  className="h-12 text-right border-gray-200 focus:border-blue-500"
+                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200 bg-white"
                 />
               </div>
             </div>
-
-            <Separator />
-
-            {/* Serial Number and Subject */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <Label htmlFor="serialNumber" className="text-base font-medium flex items-center gap-2">
-                  <Hash className="h-4 w-4 text-gray-500" />
-                  الرقم التسلسلي
-                </Label>
-                <Input
-                  id="serialNumber"
-                  placeholder="ابحث بالرقم التسلسلي..."
-                  value={filters.serialNumber}
-                  onChange={(e) => handleFilterChange('serialNumber', e.target.value)}
-                  className="h-12 text-right border-gray-200 focus:border-blue-500"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="subject" className="text-base font-medium flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-gray-500" />
-                  الموضوع
-                </Label>
-                <Input
-                  id="subject"
-                  placeholder="ابحث بالموضوع..."
-                  value={filters.subject}
-                  onChange={(e) => handleFilterChange('subject', e.target.value)}
-                  className="h-12 text-right border-gray-200 focus:border-blue-500"
-                />
-              </div>
-            </div>
-          </CardContent>
+          </div>
         )}
-      </Card>
 
-      {/* Action Buttons */}
-      <Card className="shadow-lg border-0">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              onClick={handleSearch} 
-              className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg"
+        {/* Action Controls & Department Scope */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#e2e8f0]">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
+              type="submit"
+              className="h-11 px-7 text-base font-semibold text-white bg-[#2c5282] hover:bg-[#234269] rounded flex items-center justify-center gap-2 transition-colors duration-200 w-full sm:w-auto"
             >
-              <Search className="h-5 w-5 mr-2" />
-              بحث متقدم
+              <Search className="h-4 w-4" />
+              <span>بحث متقدم</span>
             </Button>
-            <Button 
-              variant="outline" 
+
+            <Button
+              type="button"
               onClick={handleClear}
-              className="h-12 px-6 border-gray-200 hover:bg-gray-50"
+              className="h-11 px-5 text-base font-semibold bg-[#FFCB56] hover:bg-[#f6be3c] text-[#78350f] border border-[#FFD758] rounded flex items-center justify-center gap-2 transition-colors duration-200 w-full sm:w-auto"
             >
-              <X className="h-4 w-4 mr-2" />
-              مسح الفلاتر
+              <RotateCcw className="h-4 w-4" />
+              <span>مسح الفلاتر</span>
             </Button>
           </div>
-          
+
           {currentUser?.activeDepartment && (
-            <div className="mt-4 text-center">
-              <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-4 py-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <p className="text-sm text-blue-700 font-medium">
-                  البحث في: {currentUser.activeDepartment.name}
-                </p>
-              </div>
+            <div className="text-sm text-[#4a5568] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#FFCB56]" />
+              <span>نطاق البحث:</span>
+              <span className="font-semibold text-[#1a202c]">
+                {currentUser.activeDepartment.name}
+              </span>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </form>
     </div>
   );
 };
