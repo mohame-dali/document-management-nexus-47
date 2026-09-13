@@ -96,7 +96,37 @@ const IncomingDocumentsPage: React.FC = () => {
   const [deleteDoc, setDeleteDoc] = useState<IncomingDocument | null>(null);
 
   // Year persistence hook
-  const { selectedYear, handleYearChange, isValidYear } = useYearPersistence('incomingDocumentsSelectedYear');
+  const { selectedYear, setSelectedYear, isValidYear } = useYearPersistence('incomingDocumentsSelectedYear');
+
+  // Local state for year input to allow smooth 4-digit typing without premature validation or unmounting
+  const [yearInput, setYearInput] = useState<string>(selectedYear);
+
+  // Synchronize yearInput whenever selectedYear updates from storage or external events
+  useEffect(() => {
+    setYearInput(selectedYear);
+  }, [selectedYear]);
+
+  // Safe year input handler: allows typing freely up to 4 digits without premature view switching
+  const handleYearInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '' || /^\d{1,4}$/.test(val)) {
+      setYearInput(val);
+      if (val.length === 4 && /^\d{4}$/.test(val)) {
+        setSelectedYear(val);
+        setCurrentPage(1);
+      }
+    }
+  };
+
+  const handleApplyYear = (targetYear?: string) => {
+    const val = targetYear ?? yearInput;
+    if (val.length === 4 && /^\d{4}$/.test(val)) {
+      setSelectedYear(val);
+      setCurrentPage(1);
+    } else {
+      setYearInput(selectedYear);
+    }
+  };
 
   // Role permissions
   const isSuperAdmin = currentUser?.role === 'SuperAdmin';
@@ -304,15 +334,71 @@ const IncomingDocumentsPage: React.FC = () => {
           <p className="text-base text-[#4a5568] leading-relaxed">
             يرجى إدخال سنة كاملة مكونة من 4 أرقام (مثال: {new Date().getFullYear()}) لعرض وثائق ومراسلات الوارد.
           </p>
-          <div className="pt-2 flex justify-center">
-            <Input
-              value={selectedYear}
-              onChange={handleYearChange}
-              placeholder="2026"
-              maxLength={4}
-              className="w-36 h-12 text-center text-lg font-bold border-[#cbd5e1] rounded focus:border-[#2c5282]"
-            />
-          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleApplyYear();
+            }}
+            className="pt-2 flex flex-col items-center space-y-4"
+          >
+            <div className="relative">
+              <Calendar className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={yearInput}
+                onChange={handleYearInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleApplyYear();
+                  }
+                }}
+                placeholder={new Date().getFullYear().toString()}
+                maxLength={4}
+                autoFocus
+                className="w-40 h-12 pr-10 text-center text-lg font-bold border-[#cbd5e1] rounded focus:border-[#2c5282] bg-white"
+              />
+            </div>
+            {yearInput.length > 0 && yearInput.length < 4 && (
+              <p className="text-xs text-[#718096]">
+                يرجى إكمال إدخال السنة (4 أرقام)
+              </p>
+            )}
+            <div className="flex items-center gap-2">
+              <Button
+                type="submit"
+                disabled={yearInput.length !== 4 || !/^\d{4}$/.test(yearInput)}
+                className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+              >
+                تأكيد وعرض الوثائق
+              </Button>
+            </div>
+            {/* Quick Year Shortcuts */}
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs text-[#718096]">سنوات سريعة:</span>
+              {[
+                new Date().getFullYear(),
+                new Date().getFullYear() - 1,
+                new Date().getFullYear() - 2,
+              ].map((yr) => (
+                <button
+                  key={yr}
+                  type="button"
+                  onClick={() => {
+                    const yrStr = yr.toString();
+                    setYearInput(yrStr);
+                    setSelectedYear(yrStr);
+                    setCurrentPage(1);
+                  }}
+                  className="px-2.5 py-1 text-xs font-semibold rounded border border-[#cbd5e1] bg-slate-50 hover:bg-[#ebf4ff] hover:text-[#2c5282] text-[#4a5568] transition-colors"
+                >
+                  {yr}
+                </button>
+              ))}
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -425,9 +511,24 @@ const IncomingDocumentsPage: React.FC = () => {
             <div className="relative">
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
               <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="السنة (مثال: 2026)"
-                value={selectedYear}
-                onChange={handleYearChange}
+                value={yearInput}
+                onChange={handleYearInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleApplyYear();
+                  }
+                }}
+                onBlur={() => {
+                  if (yearInput.length === 4 && /^\d{4}$/.test(yearInput)) {
+                    handleApplyYear();
+                  } else {
+                    setYearInput(selectedYear);
+                  }
+                }}
                 maxLength={4}
                 className="h-11 pr-10 text-base text-center font-bold border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
               />
