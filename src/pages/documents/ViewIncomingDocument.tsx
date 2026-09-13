@@ -1,433 +1,1105 @@
-
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import { getIncomingDocument, getOutgoingDocument } from '@/services/documentService';
+import { toast } from 'sonner';
+import { 
+  ArrowRight,
+  FileText, 
+  FileInput, 
+  FileOutput, 
+  Edit, 
+  Download, 
+  ExternalLink, 
+  Eye, 
+  Copy, 
+  Check,
+  Calendar, 
+  Clock, 
+  Building2, 
+  User, 
+  Users, 
+  Hash, 
+  Bookmark, 
+  CheckCircle2, 
+  AlertCircle, 
+  AlertTriangle,
+  FolderOpen, 
+  MessageSquare, 
+  UserPlus, 
+  Loader2, 
+  History, 
+  Paperclip,
+  Share2,
+  FolderTree
+} from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Edit, FileText, Loader2, Eye, FileOutput, Activity, Calendar, User, Building, Hash, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import DocumentDetailCard from '@/components/documents/DocumentDetailCard';
-import PDFViewer from '@/components/documents/PDFViewer';
-import DocumentFolderDisplay from '@/components/documents/DocumentFolderDisplay';
-import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
 
-const ViewIncomingDocument = () => {
+import { useAuth } from '@/contexts/AuthContext';
+import { getIncomingDocument, getOutgoingDocument, downloadDocument, getDocumentUrl } from '@/services/documentService';
+import { getDocumentTimeline, AuditLog } from '@/services/auditService';
+import { formatArabicDate, formatArabicDateTime } from '@/utils/arabicDateFormatter';
+import { getActivityUrgency } from '@/utils/activityUtils';
+import { IncomingDocument, OutgoingDocument } from '@/types';
+
+import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
+import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
+import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
+import PDFViewer from '@/components/documents/PDFViewer';
+import ScrollToTop from '@/components/common/ScrollToTop';
+
+const ViewIncomingDocument: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  
+  // Section refs for smooth navigation
+  const pdfSectionRef = useRef<HTMLDivElement>(null);
+  const actionsSectionRef = useRef<HTMLDivElement>(null);
 
-  const { data: document, isLoading } = useQuery({
+  // Dialog states
+  const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
+  const [isResponseDialogOpen, setIsResponseDialogOpen] = useState(false);
+  const [isResponsibleDialogOpen, setIsResponsibleDialogOpen] = useState(false);
+
+  // UI View states
+  const [previewTab, setPreviewTab] = useState<'incoming' | 'answer' | 'split'>('incoming');
+  const [isCopiedOcr, setIsCopiedOcr] = useState(false);
+
+  // User permissions
+  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isAdmin = currentUser?.role === 'Admin';
+  const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
+  const isAdminDepartment = currentUser?.role === 'AdminDepartment';
+
+  const canEdit = isSuperAdmin || isAdminTuningDesk || isAdmin;
+  const canOrganizeDocuments = isAdminDepartment || isSuperAdmin || isAdmin;
+  const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk || isSuperAdmin;
+
+  // 1. Fetch main incoming document
+  const { 
+    data: document, 
+    isLoading: isDocLoading,
+    isError: isDocError,
+    refetch: refetchDocument 
+  } = useQuery<IncomingDocument>({
     queryKey: ['incomingDocument', id],
     queryFn: () => getIncomingDocument(id!),
-    enabled: !!id,
+    enabled: Boolean(id),
   });
 
-  // Fetch the answer document if it exists
-  const { data: answerDocument, isLoading: answerLoading } = useQuery({
-    queryKey: ['outgoingDocument', document?.answer],
-    queryFn: () => getOutgoingDocument(document?.answer as string),
-    enabled: !!document?.answer,
+  // 2. Fetch answer document (if exists)
+  const answerId = typeof document?.answer === 'object' ? document?.answer?._id : document?.answer;
+  const { 
+    data: answerDocument, 
+    isLoading: isAnswerLoading 
+  } = useQuery<OutgoingDocument>({
+    queryKey: ['outgoingDocument', answerId],
+    queryFn: () => getOutgoingDocument(answerId as string),
+    enabled: Boolean(answerId),
   });
 
-  if (isLoading) {
+  // 3. Fetch audit/timeline history
+  const { 
+    data: auditTimeline = [], 
+    isLoading: isTimelineLoading 
+  } = useQuery<AuditLog[]>({
+    queryKey: ['documentTimeline', id],
+    queryFn: () => getDocumentTimeline(id!),
+    enabled: Boolean(id),
+    retry: false,
+  });
+
+  // Copy OCR text handler
+  const handleCopyOcr = () => {
+    if (document?.ocrText) {
+      navigator.clipboard.writeText(document.ocrText);
+      setIsCopiedOcr(true);
+      toast.success('تم نسخ النص المستخرج بنجاح');
+      setTimeout(() => setIsCopiedOcr(false), 2500);
+    }
+  };
+
+  // Download PDF handler
+  const handleDownloadPDF = async () => {
+    if (document?.scannedDocument) {
+      try {
+        await downloadDocument(document.scannedDocument, `incoming-doc-${document.serialNumber}-${document.year}.pdf`);
+        toast.success('بدأ تحميل ملف PDF');
+      } catch (error) {
+        console.error('Download error:', error);
+        toast.error('تعذر تحميل ملف PDF');
+      }
+    } else {
+      toast.info('لا يوجد ملف PDF ممسوح ضوئياً لهذه الوثيقة');
+    }
+  };
+
+  // Scroll to PDF section
+  const handleScrollToPDF = () => {
+    if (pdfSectionRef.current) {
+      pdfSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Loading state
+  if (isDocLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center space-y-4" dir="rtl">
+        <Loader2 className="h-10 w-10 text-[#2c5282] animate-spin" />
+        <h2 className="text-xl font-bold text-[#1a202c]">جاري تحميل تفاصيل الوثيقة الواردة...</h2>
+        <p className="text-base text-[#4a5568]">يرجى الانتظار ريثما يتم جلب بيانات المراسلة وسجلاتها</p>
       </div>
     );
   }
 
-  if (!document) {
+  // Error / Not Found state
+  if (isDocError || !document) {
     return (
-      <div className="p-6">
-        <div className="flex flex-col items-center justify-center h-64">
-          <FileText className="h-16 w-16 text-gray-300 mb-4" />
-          <h2 className="text-xl font-medium text-gray-600">Document not found</h2>
-          <p className="text-gray-500 mb-4">The document you're looking for doesn't exist or you don't have permission to view it.</p>
-          <Button onClick={() => navigate('/dashboard/incoming-documents')}>
-            Back to Incoming Documents
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+        <div className="max-w-xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
+          <div className="w-14 h-14 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
+            <AlertCircle className="h-7 w-7" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#1a202c]">تعذر العثور على الوثيقة</h2>
+          <p className="text-base text-[#4a5568] leading-relaxed">
+            الوثيقة الواردة المطلوبة غير موجودة أو ليس لديك الصلاحيات الكافية للاطلاع عليها.
+          </p>
+          <div className="flex justify-center gap-3 pt-2">
+            <Button
+              onClick={() => navigate('/dashboard/incoming-documents')}
+              className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+            >
+              العودة إلى قائمة الوثائق الواردة
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Document urgency status
+  const urgency = getActivityUrgency(document);
+
+  // Folder name resolution
+  const folderName = typeof document.folder === 'object' && document.folder 
+    ? document.folder.name 
+    : (document.folder ? 'مجلد محدد' : 'غير مصنفة في مجلد');
+
+  // Responsible user resolution
+  const responsibleName = typeof document.responsibleUser === 'object' && document.responsibleUser
+    ? document.responsibleUser.username
+    : (document.responsibleUser || 'لم يُعيّن مسؤول بعد');
+
+  return (
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      
+      {/* 1. EN-TÊTE DE PAGE (Header with Navigation & Key Actions) */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        {/* Left in RTL: Back button + Title */}
+        <div className="flex items-start sm:items-center gap-3.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/dashboard/incoming-documents')}
+            className="h-10 px-4 text-base font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200"
+          >
+            <ArrowRight className="h-4 w-4" />
+            <span>العودة إلى القائمة</span>
+          </Button>
+
+          <div className="h-6 w-px bg-[#e2e8f0] hidden sm:block" />
+
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal">
+                الوثيقة الواردة #{document.serialNumber}
+              </h1>
+              <span className="text-base font-bold text-[#4a5568]">
+                / لسنة {document.year}
+              </span>
+            </div>
+            <p className="text-base text-[#4a5568] mt-0.5 leading-relaxed">
+              بطاقة المعاينة والتدقيق الإداري للمراسلة الواردة
+            </p>
+          </div>
+        </div>
+
+        {/* Right in RTL: Quick Action Buttons */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {document.scannedDocument && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleScrollToPDF}
+              className="h-10 px-4 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/50 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <Eye className="h-4 w-4 text-[#2c5282]" />
+              <span>معاينة المرفق PDF</span>
+            </Button>
+          )}
+
+          {canEdit && (
+            <Button
+              type="button"
+              onClick={() => navigate(`/dashboard/incoming-documents/${id}/edit`)}
+              className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <Edit className="h-4 w-4" />
+              <span>تعديل الوثيقة</span>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* 2. RÉSUMÉ EXÉCUTIF (Executive Summary Card) */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6">
+        {/* Top Badges & Status Row */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Serial & Year Tag */}
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
+              <FileInput className="h-4 w-4" />
+              وارد رقم: #{document.serialNumber} / {document.year}
+            </span>
+
+            {/* Answer Status Badge */}
+            {document.answer ? (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                تمت المعالجة والرد عليها
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-amber-50 text-[#1a202c] border border-[#FFD758]">
+                <Clock className="h-4 w-4 text-[#d69e2e]" />
+                بانتظار المعالجة / الرد
+              </span>
+            )}
+
+            {/* Document Type Badge (Institutional Gold with Dark Text) */}
+            {document.typeDocument && (
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded text-base font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]">
+                <Bookmark className="h-4 w-4 text-[#1a202c]" />
+                {document.typeDocument}
+              </span>
+            )}
+
+            {/* Urgency Alert Badge if applicable */}
+            {urgency && (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-bold ${urgency.badgeColor}`}>
+                <AlertTriangle className="h-4 w-4" />
+                درجة الأهمية: {urgency.label}
+              </span>
+            )}
+          </div>
+
+          {/* Registration Date Pill */}
+          <div className="text-sm font-medium text-[#718096] flex items-center gap-1.5">
+            <Clock className="h-4 w-4 text-[#718096]" />
+            <span>سُجلت في: {formatArabicDateTime(document.createdAt)}</span>
+          </div>
+        </div>
+
+        {/* Document Main Subject (H2 display) */}
+        <div className="space-y-2">
+          <span className="text-xs font-semibold text-[#718096] tracking-wider uppercase">
+            موضوع المراسلة الواردة
+          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] leading-relaxed">
+            {document.subject}
+          </h2>
+        </div>
+
+        {/* 4 Key Metrics Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          {/* 1. Source / Sender */}
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-[#718096]">
+              <Building2 className="h-4 w-4 text-[#2c5282]" />
+              <span className="font-semibold">المصدر / الجهة المرسلة</span>
+            </div>
+            <p className="text-base font-bold text-[#1a202c] truncate" title={document.source || 'غير محدد'}>
+              {document.source || 'غير محدد'}
+            </p>
+          </div>
+
+          {/* 2. Arrival Date */}
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-[#718096]">
+              <Calendar className="h-4 w-4 text-[#2c5282]" />
+              <span className="font-semibold">تاريخ الوصول</span>
+            </div>
+            <p className="text-base font-bold text-[#1a202c]">
+              {formatArabicDate(document.arrivalDate)}
+            </p>
+          </div>
+
+          {/* 3. Original Correspondence */}
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-[#718096]">
+              <Hash className="h-4 w-4 text-[#2c5282]" />
+              <span className="font-semibold">رقم وتاريخ المراسلة الأصلية</span>
+            </div>
+            <p className="text-base font-bold text-[#1a202c]">
+              {document.correspondenceNumber ? (
+                <>
+                  <span>#{document.correspondenceNumber}</span>
+                  {document.correspondenceDate && (
+                    <span className="text-xs text-[#718096] font-normal mr-1.5">
+                      ({formatArabicDate(document.correspondenceDate)})
+                    </span>
+                  )}
+                </>
+              ) : (
+                'غير مدون'
+              )}
+            </p>
+          </div>
+
+          {/* 4. Responsible Officer */}
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-[#718096]">
+              <User className="h-4 w-4 text-[#2c5282]" />
+              <span className="font-semibold">المسؤول عن المتابعة</span>
+            </div>
+            <p className="text-base font-bold text-[#1a202c] truncate">
+              {responsibleName}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SECTIONS D'INFORMATIONS DÉTAILLÉES (General, Sender, Assignment, Content) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Column 1 & 2: Main Info & Content */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Section: General & Correspondence Details */}
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-5">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-[#e2e8f0]">
+              <div className="w-9 h-9 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+                <FileText className="h-5 w-5" />
+              </div>
+              <h3 className="text-xl font-bold text-[#1a202c]">
+                المعلومات الإدارية والمراسلة
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-base">
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-1">رقم التسلسل الداخلي:</span>
+                <span className="text-base font-bold text-[#1a202c]">#{document.serialNumber} / {document.year}</span>
+              </div>
+
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-1">تاريخ الوصول إلى المؤسسة:</span>
+                <span className="text-base font-medium text-[#1a202c]">{formatArabicDate(document.arrivalDate)}</span>
+              </div>
+
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-1">رقم مراسلة الجهة الصادرة:</span>
+                <span className="text-base font-medium text-[#1a202c]">{document.correspondenceNumber || 'لا يوجد'}</span>
+              </div>
+
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-1">تاريخ تحرير المراسلة الأصلية:</span>
+                <span className="text-base font-medium text-[#1a202c]">
+                  {document.correspondenceDate ? formatArabicDate(document.correspondenceDate) : 'غير محدد'}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-1">نوع الوثيقة:</span>
+                <span className="text-base font-medium text-[#1a202c]">{document.typeDocument || 'غير مصنف'}</span>
+              </div>
+
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-1">النشاط أو الإجراء المرتبط:</span>
+                <span className="text-base font-medium text-[#1a202c]">
+                  {document.activity ? (
+                    <span className="inline-flex items-center gap-1.5 text-[#2c5282] font-semibold">
+                      <Bookmark className="h-4 w-4" />
+                      {document.activity}
+                      {document.dateActivity && (
+                        <span className="text-xs text-[#718096] font-normal">
+                          (بتاريخ {formatArabicDate(document.dateActivity)})
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    'لا يوجد نشاط مسجل'
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Sender & Target Departments */}
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-5">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-[#e2e8f0]">
+              <div className="w-9 h-9 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-xl font-bold text-[#1a202c]">
+                الجهة المرسلة والتوجيه الداخلي
+              </h3>
+            </div>
+
+            <div className="space-y-4 text-base">
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-1">المصدر / الجهة الراسلة:</span>
+                <p className="text-base font-bold text-[#1a202c]">
+                  {document.source || 'غير محدد'}
+                </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <span className="text-sm font-semibold text-[#718096] block mb-2">المصالح والأقسام الموجهة إليها:</span>
+                {document.assignedTo && document.assignedTo.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {document.assignedTo.map((dept, index) => (
+                      <span 
+                        key={index} 
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-semibold bg-slate-100 text-[#2d3748] border border-slate-300"
+                      >
+                        <Users className="h-4 w-4 text-[#718096]" />
+                        {dept.name}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-base text-[#718096]">لم يتم توجيه هذه الوثيقة إلى قسم محدد بعد.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Section: OCR Text (if present) */}
+          {document.ocrText && (
+            <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded bg-amber-50 border border-[#FFD758] text-[#1a202c] flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-[#1a202c]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1a202c]">
+                      النص المستخرج آلياً (OCR)
+                    </h3>
+                    <p className="text-xs text-[#718096]">تم التعرف على النص عبر خوارزميات المسح الضوئي</p>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyOcr}
+                  className="h-9 px-3 text-sm font-semibold border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
+                >
+                  {isCopiedOcr ? (
+                    <>
+                      <Check className="h-4 w-4 text-emerald-600" />
+                      <span className="text-emerald-700">تم النسخ</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 text-[#2c5282]" />
+                      <span>نسخ النص</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-base leading-relaxed text-[#2d3748] max-h-72 overflow-y-auto font-sans whitespace-pre-wrap">
+                {document.ocrText}
+              </div>
+            </div>
+          )}
+
+          {/* Section: Linked Answer / Outgoing Document (الرد الصادر) */}
+          {answerDocument && (
+            <div className="bg-white border border-emerald-200 rounded p-6 space-y-4 bg-emerald-50/20">
+              <div className="flex items-center justify-between pb-3 border-b border-emerald-200">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center justify-center">
+                    <FileOutput className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-emerald-900">
+                      الوثيقة الصادرة المرتبطة (الرد الرسمي)
+                    </h3>
+                    <p className="text-xs text-emerald-700">تم تسجيل ومعالجة الرد الصادر على هذه المراسلة</p>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => navigate(`/dashboard/outgoing-documents/${answerDocument._id}`)}
+                  className="h-9 px-3.5 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-1.5"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span>عرض تفاصيل الرد</span>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
+                <div>
+                  <span className="text-xs font-semibold text-[#718096] block mb-1">رقم وتاريخ الصادر:</span>
+                  <span className="font-bold text-[#1a202c]">
+                    #{answerDocument.serialNumber} / {answerDocument.year}
+                  </span>
+                  <span className="text-xs text-[#718096] mr-1.5 block">
+                    بتاريخ {formatArabicDate(answerDocument.issueDate)}
+                  </span>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <span className="text-xs font-semibold text-[#718096] block mb-1">موضوع الرد:</span>
+                  <p className="font-medium text-[#1a202c] line-clamp-2">
+                    {answerDocument.subject}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Column 3: Sidebar Details (Folder, Responsible, Timeline Summary) */}
+        <div className="space-y-6">
+          
+          {/* Card: Folder Categorization */}
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5 text-[#2c5282]" />
+                <h3 className="text-lg font-bold text-[#1a202c]">تصنيف المجلد</h3>
+              </div>
+              {canOrganizeDocuments && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFolderDialogOpen(true)}
+                  className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
+                >
+                  تغيير
+                </Button>
+              )}
+            </div>
+
+            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center gap-3">
+              <FolderTree className="h-6 w-6 text-[#718096] flex-shrink-0" />
+              <div>
+                <span className="text-xs text-[#718096] block">المجلد الحالي:</span>
+                <span className="text-base font-bold text-[#1a202c]">{folderName}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#718096] leading-relaxed">
+              يساعد التصنيف في تنظيم المراسلات وسهولة استرجاعها حسب الملفات والمشاريع.
+            </p>
+          </div>
+
+          {/* Card: Responsible Officer */}
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-[#2c5282]" />
+                <h3 className="text-lg font-bold text-[#1a202c]">المسؤول عن المعالجة</h3>
+              </div>
+              {canAssignOrRespond && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsResponsibleDialogOpen(true)}
+                  className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
+                >
+                  تعيين
+                </Button>
+              )}
+            </div>
+
+            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center flex-shrink-0 font-bold">
+                {responsibleName.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <span className="text-xs text-[#718096] block">المكلف بالمتابعة:</span>
+                <span className="text-base font-bold text-[#1a202c]">{responsibleName}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card: Document Stats & Timeline Highlights */}
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-[#e2e8f0]">
+              <History className="h-5 w-5 text-[#2c5282]" />
+              <h3 className="text-lg font-bold text-[#1a202c]">ملخص المسار الإداري</h3>
+            </div>
+
+            <ul className="space-y-3 text-sm text-[#4a5568]">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="font-semibold text-[#1a202c] block">تسجيل الوصول:</span>
+                  <span>{formatArabicDate(document.arrivalDate)}</span>
+                </div>
+              </li>
+
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.responsibleUser ? 'text-emerald-600' : 'text-[#a0aec0]'}`} />
+                <div>
+                  <span className="font-semibold text-[#1a202c] block">تعيين المسؤول:</span>
+                  <span>{document.responsibleUser ? responsibleName : 'قيد الانتظار'}</span>
+                </div>
+              </li>
+
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.answer ? 'text-emerald-600' : 'text-[#a0aec0]'}`} />
+                <div>
+                  <span className="font-semibold text-[#1a202c] block">الرد الصادر:</span>
+                  <span>{document.answer ? 'تم إعداد الرد' : 'لم يتم الرد بعد'}</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. PIÈCES JOINTES ET VISUALISATION PDF (Attachments & PDF Viewer) */}
+      <div ref={pdfSectionRef} className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+              <Paperclip className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+                الوثائق المرفقة والممسوحة ضوئياً
+              </h2>
+              <p className="text-base text-[#4a5568]">
+                معاينة مستندات PDF المرفقة مع إمكانية التحميل والطباعة
+              </p>
+            </div>
+          </div>
+
+          {/* View Mode Tabs (if dual preview exists) */}
+          {document.scannedDocument && answerDocument?.scannedDocument && (
+            <div className="inline-flex items-center border border-[#cbd5e1] rounded bg-white overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setPreviewTab('incoming')}
+                className={`h-9 px-3 text-sm font-semibold transition-colors duration-200 ${
+                  previewTab === 'incoming' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
+                }`}
+              >
+                الوثيقة الواردة
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewTab('answer')}
+                className={`h-9 px-3 text-sm font-semibold border-r border-[#cbd5e1] transition-colors duration-200 ${
+                  previewTab === 'answer' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
+                }`}
+              >
+                الرد الصادر
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewTab('split')}
+                className={`h-9 px-3 text-sm font-semibold border-r border-[#cbd5e1] transition-colors duration-200 ${
+                  previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
+                }`}
+              >
+                عرض مقارن جنباً إلى جنب
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* PDF Content Display */}
+        {document.scannedDocument || answerDocument?.scannedDocument ? (
+          <div>
+            {/* Split View for Dual Preview */}
+            {previewTab === 'split' && document.scannedDocument && answerDocument?.scannedDocument ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left (Incoming) */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                    <div className="flex items-center gap-2">
+                      <FileInput className="h-4 w-4 text-[#2c5282]" />
+                      <span className="text-base font-bold text-[#1a202c]">الوثيقة الواردة الأصلية</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadPDF}
+                      className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] border-[#cbd5e1]"
+                    >
+                      <Download className="h-3.5 w-3.5 ml-1" />
+                      تحميل
+                    </Button>
+                  </div>
+                  <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[500px]">
+                    <PDFViewer documentPath={document.scannedDocument} />
+                  </div>
+                </div>
+
+                {/* Right (Outgoing Answer) */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                    <div className="flex items-center gap-2">
+                      <FileOutput className="h-4 w-4 text-emerald-700" />
+                      <span className="text-base font-bold text-emerald-900">الوثيقة الصادرة (الرد)</span>
+                    </div>
+                    {answerDocument.scannedDocument && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadDocument(answerDocument.scannedDocument!, `answer-${answerDocument.serialNumber}.pdf`)}
+                        className="h-8 px-2.5 text-xs font-semibold text-emerald-800 border-[#cbd5e1]"
+                      >
+                        <Download className="h-3.5 w-3.5 ml-1" />
+                        تحميل
+                      </Button>
+                    )}
+                  </div>
+                  <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[500px]">
+                    <PDFViewer documentPath={answerDocument.scannedDocument} />
+                  </div>
+                </div>
+              </div>
+            ) : previewTab === 'answer' && answerDocument?.scannedDocument ? (
+              /* Answer Document Viewer */
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                  <div className="flex items-center gap-2">
+                    <FileOutput className="h-5 w-5 text-emerald-700" />
+                    <span className="text-base font-bold text-[#1a202c]">
+                      مرفق الرد الصادر #{answerDocument.serialNumber} / {answerDocument.year}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => downloadDocument(answerDocument.scannedDocument!, `answer-${answerDocument.serialNumber}.pdf`)}
+                    className="h-9 px-3 text-sm font-semibold text-emerald-800 border-[#cbd5e1]"
+                  >
+                    <Download className="h-4 w-4 ml-1.5" />
+                    تحميل ملف PDF
+                  </Button>
+                </div>
+                <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[600px]">
+                  <PDFViewer documentPath={answerDocument.scannedDocument} />
+                </div>
+              </div>
+            ) : document.scannedDocument ? (
+              /* Incoming Document Single Viewer */
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                  <div className="flex items-center gap-2">
+                    <FileInput className="h-5 w-5 text-[#2c5282]" />
+                    <span className="text-base font-bold text-[#1a202c]">
+                      مرفق الوثيقة الواردة #{document.serialNumber} / {document.year}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadPDF}
+                    className="h-9 px-3 text-sm font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50"
+                  >
+                    <Download className="h-4 w-4 ml-1.5" />
+                    تحميل ملف PDF
+                  </Button>
+                </div>
+                <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[600px]">
+                  <PDFViewer documentPath={document.scannedDocument} />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          /* Empty Attachments State */
+          <div className="p-8 sm:p-12 text-center bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-3">
+            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#718096]">
+              <Paperclip className="h-7 w-7 text-[#718096]" />
+            </div>
+            <h3 className="text-lg font-bold text-[#1a202c]">لا توجد وثيقة ممسوحة ضوئياً مرفقة</h3>
+            <p className="text-base text-[#718096] max-w-md mx-auto leading-relaxed">
+              لم يتم رفع نسخة رقمية (PDF) لهذه المراسلة بعد. يمكنك تعديل الوثيقة لإرفاق النسخة الممسوحة ضوئياً.
+            </p>
+            {canEdit && (
+              <Button
+                type="button"
+                onClick={() => navigate(`/dashboard/incoming-documents/${id}/edit`)}
+                className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+              >
+                إرفاق وثيقة ممسوحة ضوئياً
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 5. ACTIONS DISPONIBLES (Dedicated Administrative Actions Bar) */}
+      <div ref={actionsSectionRef} className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-4">
+        <div className="pb-3 border-b border-[#e2e8f0]">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+            الإجراءات الإدارية المتاحة
+          </h2>
+          <p className="text-base text-[#4a5568] mt-0.5">
+            العمليات الإدارية المباشرة المتاحة على هذه المراسلة الواردة
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap pt-2">
+          {/* Action 1: Voir PDF (معاينة PDF) */}
+          {document.scannedDocument && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleScrollToPDF}
+              className="h-11 px-5 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <Eye className="h-4 w-4" />
+              <span>معاينة ملف PDF</span>
+            </Button>
+          )}
+
+          {/* Action 2: Traiter (معالجة / إضافة رد) -> Institutional Gold Button with Dark Text! */}
+          {canAssignOrRespond && (
+            <Button
+              type="button"
+              onClick={() => setIsResponseDialogOpen(true)}
+              className="h-11 px-5 text-base font-bold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <MessageSquare className="h-4 w-4 text-[#1a202c]" />
+              <span>{document.answer ? 'تعديل أو استبدال الرد' : 'معالجة وإضافة رد'}</span>
+            </Button>
+          )}
+
+          {/* Action 3: Archiver (أرشفة في مجلد) */}
+          {canOrganizeDocuments && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsFolderDialogOpen(true)}
+              className="h-11 px-5 text-base font-semibold text-[#4a5568] border-[#cbd5e1] bg-slate-50 hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <FolderOpen className="h-4 w-4 text-[#4a5568]" />
+              <span>أرشفة وتنظيم في مجلد</span>
+            </Button>
+          )}
+
+          {/* Action 4: Transférer (تحويل / تعيين مسؤول) */}
+          {canAssignOrRespond && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsResponsibleDialogOpen(true)}
+              className="h-11 px-5 text-base font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded flex items-center gap-2 transition-colors duration-200"
+            >
+              <UserPlus className="h-4 w-4 text-purple-700" />
+              <span>تحويل / تعيين مسؤول</span>
+            </Button>
+          )}
+
+          {/* Action 5: Retour à la liste (العودة إلى القائمة) */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/dashboard/incoming-documents')}
+            className="h-11 px-5 text-base font-medium text-[#2d3748] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200 mr-auto"
+          >
+            <ArrowRight className="h-4 w-4" />
+            <span>العودة إلى قائمة الوثائق</span>
           </Button>
         </div>
       </div>
-    );
-  }
 
-  // Check if we have both documents for dual preview
-  const hasDualPreview = document.scannedDocument && answerDocument?.scannedDocument;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100" dir="rtl">
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        {/* Header Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/dashboard/incoming-documents')}
-                className="hover:bg-gray-100 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                رجوع
-              </Button>
-              <div className="h-8 w-px bg-gray-200"></div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">تفاصيل الوثيقة الواردة</h1>
-                <p className="text-sm text-gray-500">عرض شامل لمحتوى الوثيقة وتفاصيلها</p>
-              </div>
+      {/* 6. HISTORIQUE DE TRAITEMENT (Processing History & Audit Trail) */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6">
+        <div className="pb-3 border-b border-[#e2e8f0] flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+              <History className="h-5 w-5" />
             </div>
-            {(currentUser?.role === 'Admin' || currentUser?.role === 'AdminTuningDesk') && (
-              <Button 
-                onClick={() => navigate(`/dashboard/incoming-documents/${id}/edit`)}
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                تعديل الوثيقة
-              </Button>
-            )}
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+                سجل المتابعة والتاريخ الإداري
+              </h2>
+              <p className="text-base text-[#4a5568]">
+                التتبع الزمني لكافة الإجراءات والعمليات التي تمت على هذه المراسلة
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Document Information Card */}
-        <Card className="shadow-lg border-0 bg-white">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <CardTitle className="text-2xl mb-3 flex items-center gap-3 text-gray-900">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <FileText className="h-6 w-6 text-green-600" />
+        {/* Timeline Content */}
+        {auditTimeline.length > 0 ? (
+          <div className="relative border-r border-[#cbd5e1] pr-6 mr-3 space-y-6">
+            {auditTimeline.map((item, index) => (
+              <div key={item._id || index} className="relative group">
+                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-base font-bold text-[#1a202c]">
+                      {item.action || 'إجراء إداري'}
+                    </span>
+                    <span className="text-xs text-[#718096] font-medium">
+                      {formatArabicDateTime(item.createdAt)}
+                    </span>
                   </div>
-                  <span className="font-cairo">{document.subject}</span>
-                </CardTitle>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow-sm">
-                    <Hash className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium text-gray-700">#{document.serialNumber}</span>
-                    <span className="text-gray-500">-</span>
-                    <span className="text-gray-700">{document.year}</span>
-                  </div>
-                  {document.answer && (
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md">
-                      <CheckCircle className="h-3 w-3 ml-1" />
-                      تم الرد عليها
-                    </Badge>
-                  )}
+                  <p className="text-sm text-[#4a5568]">
+                    قام بالإجراء: <span className="font-semibold text-[#1a202c]">{item.userDetails?.username || 'مستخدم النظام'}</span>
+                  </p>
                 </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600 font-medium block">تاريخ الوصول</span>
-                  <span className="text-sm font-semibold text-gray-900">{formatArabicDate(document.arrivalDate)}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <Building className="h-4 w-4 text-purple-600" />
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600 font-medium block">المصدر</span>
-                  <span className="text-sm font-semibold text-gray-900">{document.source || 'غير محدد'}</span>
-                </div>
-              </div>
-
-              {document.responsibleUser && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="p-2 bg-indigo-100 rounded-full">
-                    <User className="h-4 w-4 text-indigo-600" />
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 font-medium block">المسؤول</span>
-                    <span className="text-sm font-semibold text-gray-900">{typeof document.responsibleUser === 'object' ? document.responsibleUser.username : document.responsibleUser}</span>
-                  </div>
-                </div>
-              )}
-
-              {document.activity && (
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="p-2 bg-blue-100 rounded-full">
-                    <Activity className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 font-medium block">النشاط</span>
-                    <span className="text-sm font-semibold text-blue-700">{document.activity}</span>
-                  </div>
-                </div>
-              )}
-
-              {document.dateActivity && (
-                <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
-                  <div className="p-2 bg-orange-100 rounded-full">
-                    <Clock className="h-4 w-4 text-orange-600" />
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 font-medium block">تاريخ النشاط</span>
-                    <span className="text-sm font-semibold text-orange-700">{formatArabicDate(document.dateActivity)}</span>
-                  </div>
-                </div>
-              )}
-
-              {document.typeDocument && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="p-2 bg-gray-100 rounded-full">
-                    <FileText className="h-4 w-4 text-gray-600" />
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 font-medium block">نوع الوثيقة</span>
-                    <Badge variant="secondary" className="mt-1 bg-gray-100 text-gray-800">{document.typeDocument}</Badge>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {document.assignedTo && document.assignedTo.length > 0 && (
-              <>
-                <Separator className="my-6" />
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <User className="h-5 w-5 text-gray-600" />
-                    موجه إلى
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {document.assignedTo.map((dept, index) => (
-                      <Badge key={index} variant="outline" className="text-sm py-1 px-3 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-colors">
-                        {dept.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Document Folder Classification */}
-        <Card className="shadow-lg border-0 bg-white">
-          <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50 border-b border-amber-100">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <FileOutput className="h-5 w-5 text-amber-600" />
-              </div>
-              تصنيف الوثيقة
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <DocumentFolderDisplay
-              folder={document.folder}
-              onFolderEdit={() => setIsFolderDialogOpen(true)}
-              className="w-full"
-            />
-          </CardContent>
-        </Card>
-
-        {/* Answer Document Section */}
-        {answerDocument && (
-          <Card className="shadow-lg border-0 bg-white">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <FileOutput className="h-5 w-5 text-green-600" />
-                </div>
-                الوثيقة الصادرة (الرد)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Hash className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <span className="text-sm text-gray-600 font-medium block">رقم التسلسل</span>
-                    <span className="text-sm font-semibold text-gray-900">#{answerDocument.serialNumber} - {answerDocument.year}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <div>
-                    <span className="text-sm text-gray-600 font-medium block">تاريخ الإصدار</span>
-                    <span className="text-sm font-semibold text-gray-900">{formatArabicDate(answerDocument.issueDate)}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mb-4">
-                <span className="text-sm text-gray-600 font-medium block mb-2">الموضوع:</span>
-                <p className="text-sm bg-gray-50 p-3 rounded-lg">{answerDocument.subject}</p>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="hover:bg-green-50 hover:border-green-300 transition-colors"
-                onClick={() => navigate(`/dashboard/outgoing-documents/${answerDocument._id}`)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                عرض تفاصيل الرد
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* PDF Previews Section */}
-        {hasDualPreview ? (
-          // Dual PDF Preview - Side by Side
-          <Card className="shadow-lg border-0 bg-white">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
-                    <FileText className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  معاينة المحادثة الكاملة
-                </CardTitle>
-                <Badge className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
-                  وثيقة واردة + رد
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Incoming Document Preview */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-blue-600" />
-                      <h3 className="text-md font-medium text-blue-900">الوثيقة الواردة</h3>
-                    </div>
-                    <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-200">
-                      #{document.serialNumber}/{document.year}
-                    </Badge>
-                  </div>
-                  <div className="rounded-lg overflow-hidden border border-gray-200">
-                    <PDFViewer documentPath={document.scannedDocument} />
-                  </div>
-                </div>
-
-                {/* Answer Document Preview */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FileOutput className="h-4 w-4 text-green-600" />
-                      <h3 className="text-md font-medium text-green-900">الوثيقة الصادرة (الرد)</h3>
-                    </div>
-                    <Badge variant="outline" className="text-xs bg-green-100 text-green-700 border-green-200">
-                      #{answerDocument.serialNumber}/{answerDocument.year}
-                    </Badge>
-                  </div>
-                  <div className="rounded-lg overflow-hidden border border-gray-200">
-                    <PDFViewer documentPath={answerDocument.scannedDocument} />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            ))}
+          </div>
         ) : (
-          // Single PDF Preview or No Preview
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Document Details */}
-            <Card className="shadow-lg border-0 bg-white">
-              <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 border-b border-gray-100">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <FileText className="h-5 w-5 text-gray-600" />
-                  </div>
-                  تفاصيل الوثيقة
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <DocumentDetailCard document={document} type="incoming" />
-              </CardContent>
-            </Card>
+          /* Institutional Lifecycle Fallback Timeline */
+          <div className="relative border-r border-[#cbd5e1] pr-6 mr-3 space-y-6">
+            {/* Step 1: Document Arrival / Registration */}
+            <div className="relative">
+              <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+              <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-base font-bold text-[#1a202c]">
+                    تسجيل وقيد الوثيقة في سجل الوارد
+                  </span>
+                  <span className="text-xs text-[#718096] font-medium">
+                    {formatArabicDateTime(document.createdAt || document.arrivalDate)}
+                  </span>
+                </div>
+                <p className="text-sm text-[#4a5568]">
+                  تم تسجيل المراسلة تحت رقم تسلسلي <span className="font-bold text-[#1a202c]">#{document.serialNumber}</span> لسنة {document.year} من المصدر: <span className="font-semibold text-[#1a202c]">{document.source || 'غير محدد'}</span>.
+                </p>
+              </div>
+            </div>
 
-            {/* Incoming Document Preview */}
-            {document.scannedDocument && (
-              <Card className="shadow-lg border-0 bg-white">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Eye className="h-5 w-5 text-blue-600" />
-                    </div>
-                    معاينة الوثيقة الواردة
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="rounded-lg overflow-hidden border border-gray-200">
-                    <PDFViewer documentPath={document.scannedDocument} />
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Step 2: Department Assignment */}
+            {document.assignedTo && document.assignedTo.length > 0 && (
+              <div className="relative">
+                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+                  <span className="text-base font-bold text-[#1a202c] block">
+                    توجيه المراسلة إلى المصالح المختصة
+                  </span>
+                  <p className="text-sm text-[#4a5568]">
+                    وجهت المراسلة إلى:{' '}
+                    <span className="font-semibold text-[#1a202c]">
+                      {document.assignedTo.map(d => d.name).join('، ')}
+                    </span>
+                  </p>
+                </div>
+              </div>
             )}
 
-            {/* Answer Document Preview (if exists but still loading) */}
-            {answerDocument?.scannedDocument && (
-              <Card className="shadow-lg border-0 bg-white">
-                <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <FileOutput className="h-5 w-5 text-green-600" />
-                    </div>
-                    معاينة الوثيقة الصادرة (الرد)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="rounded-lg overflow-hidden border border-gray-200">
-                    <PDFViewer documentPath={answerDocument.scannedDocument} />
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Step 3: Responsible Officer Assignment */}
+            {document.responsibleUser && (
+              <div className="relative">
+                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+                  <span className="text-base font-bold text-[#1a202c] block">
+                    تعيين الموظف المسؤول عن المتابعة
+                  </span>
+                  <p className="text-sm text-[#4a5568]">
+                    عُيّن الزميل <span className="font-semibold text-[#1a202c]">{responsibleName}</span> مسؤولاً عن متابعة ومعالجة هذه المراسلة.
+                  </p>
+                </div>
+              </div>
             )}
 
-            {/* Loading state for answer document */}
-            {document.answer && answerLoading && (
-              <Card className="shadow-lg border-0 bg-white">
-                <CardContent className="p-12">
-                  <div className="flex justify-center items-center h-64">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-                      <span className="text-sm text-muted-foreground">جاري تحميل الرد...</span>
-                    </div>
+            {/* Step 4: Folder Categorization */}
+            {document.folder && (
+              <div className="relative">
+                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+                  <span className="text-base font-bold text-[#1a202c] block">
+                    أرشفة وتصنيف المراسلة في مجلد
+                  </span>
+                  <p className="text-sm text-[#4a5568]">
+                    تم إدراج الوثيقة ضمن مجلد: <span className="font-semibold text-[#1a202c]">{folderName}</span>.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Answer / Processing Completion */}
+            {document.answer && (
+              <div className="relative">
+                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white" />
+                <div className="bg-emerald-50/40 border border-emerald-200 rounded p-4 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-base font-bold text-emerald-900">
+                      إتمام المعالجة وإصدار الرد الرسمي
+                    </span>
+                    {answerDocument?.issueDate && (
+                      <span className="text-xs text-emerald-700 font-medium">
+                        {formatArabicDate(answerDocument.issueDate)}
+                      </span>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                  <p className="text-sm text-emerald-800">
+                    تم تحرير وإصدار وثيقة الرد الصادر رقم{' '}
+                    <span className="font-bold">
+                      #{answerDocument ? answerDocument.serialNumber : ''} / {answerDocument ? answerDocument.year : ''}
+                    </span>.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         )}
-
-        {/* No Documents Message */}
-        {!document.scannedDocument && !answerDocument?.scannedDocument && (
-          <Card className="shadow-lg border-0 bg-white">
-            <CardContent className="p-12">
-              <div className="text-center">
-                <div className="p-6 bg-gray-100 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  <FileText className="h-12 w-12 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">لا توجد وثائق متاحة للمعاينة</h3>
-                <p className="text-gray-500">لم يتم رفع أي وثائق مرفقة مع هذا المستند حتى الآن</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Folder Assignment Dialog */}
-        {document && (
-          <DocumentFolderDialog
-            open={isFolderDialogOpen}
-            onOpenChange={setIsFolderDialogOpen}
-            document={document}
-            documentType="incoming"
-          />
-        )}
       </div>
+
+      {/* DIALOGS */}
+      {/* 1. Folder Categorization Dialog */}
+      {document && (
+        <DocumentFolderDialog
+          open={isFolderDialogOpen}
+          onOpenChange={setIsFolderDialogOpen}
+          document={document}
+          documentType="incoming"
+          readOnly={!canOrganizeDocuments}
+        />
+      )}
+
+      {/* 2. Assign Response Dialog */}
+      {document && (
+        <AssignResponseDialog
+          open={isResponseDialogOpen}
+          onOpenChange={setIsResponseDialogOpen}
+          document={document}
+        />
+      )}
+
+      {/* 3. Assign Responsible Dialog */}
+      {document && (
+        <AssignResponsibleDialog
+          open={isResponsibleDialogOpen}
+          onOpenChange={setIsResponsibleDialogOpen}
+          document={document}
+        />
+      )}
+
+      <ScrollToTop />
     </div>
   );
 };
