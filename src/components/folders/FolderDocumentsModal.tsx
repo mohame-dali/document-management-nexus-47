@@ -131,25 +131,25 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
           transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
           transition: isDragging ? 'none' : undefined,
         }}
-        className="max-w-5xl max-h-[85vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded"
+        className="w-[95vw] sm:w-[90vw] sm:max-w-5xl max-h-[88vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-2xl"
         dir="rtl"
       >
         <DialogHeader
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
           style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-          className="p-3.5 px-5 border-b border-[#e2e8f0] bg-[#f8fafc] select-none"
+          className="p-5 px-6 border-b border-[#e2e8f0] bg-[#f8fafc] select-none"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
-                <FolderOpen className="h-4 w-4" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+                <FolderOpen className="h-5 w-5" />
               </div>
               <div>
-                <DialogTitle className="text-base font-bold text-[#2c5282]">
+                <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
                   {selectedFolder ? `مستندات المجلد: ${selectedFolder.name}` : 'مستندات المجلد'}
                 </DialogTitle>
-                <p className="text-[11px] text-gray-500">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
+                <p className="text-sm text-gray-600 mt-0.5">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
               </div>
             </div>
 
@@ -157,14 +157,14 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-7 w-7 p-0 rounded hover:bg-gray-200 text-gray-500 transition-colors duration-200"
+              className="h-9 w-9 p-0 rounded hover:bg-gray-200 text-gray-500 transition-colors duration-200"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto p-4 bg-[#f7fafc]">
+        <div className="flex-1 overflow-y-auto p-6 bg-[#f7fafc]">
           <FolderDocumentsList
             selectedFolder={selectedFolder}
             canManage={canManage}

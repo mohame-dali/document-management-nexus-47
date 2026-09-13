@@ -1217,12 +1217,12 @@ const IncomingDocumentsPage: React.FC = () => {
 
       {/* 8. Delete Confirmation Dialog */}
       <AlertDialog open={Boolean(deleteDoc)} onOpenChange={(open) => { if (!open) setDeleteDoc(null); }}>
-        <AlertDialogContent dir="rtl" className="bg-white border border-[#e2e8f0] rounded p-6">
+        <AlertDialogContent dir="rtl" className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xl">
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">
               <Trash2 className="h-6 w-6" />
             </div>
-            <AlertDialogTitle className="text-xl font-bold text-[#1a202c]">
+            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
               تأكيد حذف الوثيقة الواردة
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-[#4a5568] leading-relaxed mt-2">
@@ -1233,7 +1233,7 @@ const IncomingDocumentsPage: React.FC = () => {
               هذا الإجراء نهائي ولا يمكن التراجع عنه.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-2 mt-4 pt-4 border-t border-[#e2e8f0]">
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-[#e2e8f0]">
             <AlertDialogAction
               onClick={() => {
                 if (deleteDoc) {
@@ -1241,13 +1241,13 @@ const IncomingDocumentsPage: React.FC = () => {
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-5 rounded"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none"
             >
               {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
             </AlertDialogAction>
             <AlertDialogCancel
               disabled={deleteMutation.isPending}
-              className="border-[#cbd5e1] text-[#2d3748] font-medium text-base h-11 px-5 rounded"
+              className="border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 font-medium text-base h-11 px-6 rounded"
             >
               إلغاء
             </AlertDialogCancel>

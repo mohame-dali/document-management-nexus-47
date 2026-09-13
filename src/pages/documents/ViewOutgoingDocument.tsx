@@ -1328,7 +1328,7 @@ const ViewOutgoingDocument: React.FC = () => {
 
       {/* 2. Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="max-w-md rounded bg-white text-right" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 rounded bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />

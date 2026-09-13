@@ -627,58 +627,58 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden text-xs" dir="rtl">
-          <DialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
-            <DialogTitle className="flex items-center gap-2 text-sm font-bold text-[#2c5282]">
-              <FolderPlus className="h-4 w-4 text-[#2c5282]" />
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-xl text-base" dir="rtl">
+          <DialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+            <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
+              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+                <FolderPlus className="h-5 w-5" />
+              </div>
               <span>{parentFolderId ? 'إنشاء مجلد فرعي' : 'إنشاء مجلد رئيسي جديد'}</span>
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleCreateSubmit} className="p-4 space-y-3">
+          <form onSubmit={handleCreateSubmit} className="p-6 space-y-5">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-base font-bold text-[#1a202c] mb-2">
                 اسم المجلد <span className="text-red-500">*</span>
               </label>
               <Input
                 placeholder="أدخل اسم المجلد الإداري..."
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                className="h-8 text-xs bg-white border-[#cbd5e1] rounded"
+                className="h-12 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
                 autoFocus
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-base font-bold text-[#1a202c] mb-2">
                 وصف المجلد (اختياري)
               </label>
               <Textarea
                 placeholder="وصف مختصر لمحتوى هذا المجلد أو طبيعة الوثائق المودعة به..."
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                className="text-xs bg-white border-[#cbd5e1] rounded min-h-[70px]"
+                className="text-base bg-white border-[#cbd5e1] rounded min-h-[100px] p-3 focus:border-[#2c5282]"
               />
             </div>
 
-            <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+            <DialogFooter className="pt-4 border-t border-[#e2e8f0] flex-row-reverse justify-start gap-3">
+              <Button
+                type="submit"
+                disabled={createFolderMutation.isPending}
+                className="h-11 px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-none"
+              >
+                {createFolderMutation.isPending ? 'جاري الإنشاء...' : 'حفظ وإنشاء'}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setIsCreateDialogOpen(false)}
-                className="h-8 px-3 rounded border-[#e2e8f0] text-gray-700 hover:bg-gray-100"
+                className="h-11 px-6 rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-100 text-base font-medium"
               >
                 إلغاء
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={createFolderMutation.isPending}
-                className="h-8 px-4 rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium"
-              >
-                {createFolderMutation.isPending ? 'جاري الإنشاء...' : 'حفظ وإنشاء'}
               </Button>
             </DialogFooter>
           </form>
@@ -687,58 +687,58 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden text-xs" dir="rtl">
-          <DialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
-            <DialogTitle className="flex items-center gap-2 text-sm font-bold text-[#2c5282]">
-              <Edit3 className="h-4 w-4 text-[#2c5282]" />
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-xl text-base" dir="rtl">
+          <DialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+            <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
+              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+                <Edit3 className="h-5 w-5" />
+              </div>
               <span>تعديل المجلد: {selectedFolder?.name}</span>
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleEditSubmit} className="p-4 space-y-3">
+          <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-base font-bold text-[#1a202c] mb-2">
                 اسم المجلد <span className="text-red-500">*</span>
               </label>
               <Input
                 placeholder="اسم المجلد..."
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                className="h-8 text-xs bg-white border-[#cbd5e1] rounded"
+                className="h-12 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
                 autoFocus
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-base font-bold text-[#1a202c] mb-2">
                 الوصف
               </label>
               <Textarea
                 placeholder="وصف محتوى المجلد..."
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                className="text-xs bg-white border-[#cbd5e1] rounded min-h-[70px]"
+                className="text-base bg-white border-[#cbd5e1] rounded min-h-[100px] p-3 focus:border-[#2c5282]"
               />
             </div>
 
-            <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+            <DialogFooter className="pt-4 border-t border-[#e2e8f0] flex-row-reverse justify-start gap-3">
+              <Button
+                type="submit"
+                disabled={updateFolderMutation.isPending}
+                className="h-11 px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-none"
+              >
+                {updateFolderMutation.isPending ? 'جاري التحديث...' : 'حفظ التعديلات'}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setIsEditDialogOpen(false)}
-                className="h-8 px-3 rounded border-[#e2e8f0] text-gray-700 hover:bg-gray-100"
+                className="h-11 px-6 rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-100 text-base font-medium"
               >
                 إلغاء
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={updateFolderMutation.isPending}
-                className="h-8 px-4 rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium"
-              >
-                {updateFolderMutation.isPending ? 'جاري التحديث...' : 'حفظ التعديلات'}
               </Button>
             </DialogFooter>
           </form>
@@ -747,32 +747,36 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Delete Alert Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden text-xs" dir="rtl">
-          <AlertDialogHeader className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
-            <AlertDialogTitle className="text-sm font-bold text-red-600 flex items-center gap-2">
-              <Trash2 className="h-4 w-4 text-red-600" />
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-xl text-base" dir="rtl">
+          <AlertDialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
+            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 flex items-center gap-3">
+              <div className="w-10 h-10 rounded bg-red-50 flex items-center justify-center text-red-600 shrink-0">
+                <Trash2 className="h-5 w-5" />
+              </div>
               <span>تأكيد حذف المجلد</span>
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-gray-600 leading-relaxed mt-2">
-              هل أنت متأكد من حذف المجلد <span className="font-bold text-gray-900">"{folderToDelete?.name}"</span>؟
+            <AlertDialogDescription className="text-base text-gray-700 leading-relaxed mt-3">
+              هل أنت متأكد من حذف المجلد <span className="font-bold text-[#1a202c]">"{folderToDelete?.name}"</span>؟
               <br />
-              ملاحظة: لا يمكن حذف المجلد إذا كان يحتوي على مستندات أو مجلدات فرعية.
+              <span className="text-sm text-gray-500 font-medium mt-1 block">
+                ملاحظة: لا يمكن حذف المجلد إذا كان يحتوي على مستندات أو مجلدات فرعية.
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="p-3 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center justify-end gap-2">
-            <AlertDialogCancel 
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="h-8 px-3 rounded border-[#e2e8f0] text-gray-700 hover:bg-gray-100 text-xs"
-            >
-              إلغاء
-            </AlertDialogCancel>
+          <AlertDialogFooter className="p-4 sm:p-6 bg-[#f8fafc] border-t border-[#e2e8f0] flex flex-row-reverse justify-start gap-3">
             <AlertDialogAction
               onClick={handleConfirmDelete}
               disabled={deleteFolderMutation.isPending}
-              className="h-8 px-4 rounded bg-red-600 hover:bg-red-700 text-white font-medium text-xs"
+              className="h-11 px-7 rounded bg-red-600 hover:bg-red-700 text-white font-semibold text-base shadow-none"
             >
               {deleteFolderMutation.isPending ? 'جاري الحذف...' : 'نعم، احذف المجلد'}
             </AlertDialogAction>
+            <AlertDialogCancel 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="h-11 px-6 rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-100 text-base font-medium"
+            >
+              إلغاء
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

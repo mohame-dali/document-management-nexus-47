@@ -85,53 +85,53 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
   const currentFolder = getCurrentFolder();
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-5" dir="rtl">
       {/* Current Folder Status */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-3 text-xs">
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-gray-700 flex items-center gap-1.5">
-            <Archive className="h-3.5 w-3.5 text-[#2c5282]" />
+      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 sm:p-5 text-base">
+        <div className="flex items-center justify-between mb-3">
+          <span className="font-bold text-[#1a202c] flex items-center gap-2 text-base">
+            <Archive className="h-5 w-5 text-[#2c5282]" />
             حالة التصنيف الحالية
           </span>
           {currentFolder && (
-            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+            <span className={`px-3 py-1 rounded text-sm font-bold ${
               currentFolder.status === 'En cours'
-                ? 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
-                : 'bg-gray-100 text-gray-600 border border-gray-200'
+                ? 'bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]'
+                : 'bg-gray-100 text-gray-700 border border-gray-300'
             }`}>
               {currentFolder.status === 'En cours' ? 'نشط' : 'مغلق'}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {currentFolder ? (
-            <div className="flex items-center gap-1.5 font-medium text-gray-800">
-              <FolderOpen className="h-4 w-4 text-[#2c5282]" />
+            <div className="flex items-center gap-2 font-bold text-[#2c5282] text-base">
+              <FolderOpen className="h-5 w-5 text-[#2c5282]" />
               <span>{currentFolder.name}</span>
             </div>
           ) : (
-            <span className="text-gray-400">هذا المستند غير مصنف في أي مجلد بعد</span>
+            <span className="text-gray-500 text-base">هذا المستند غير مصنف في أي مجلد بعد</span>
           )}
         </div>
       </div>
 
       {/* Folder Tree */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-3 text-xs">
-        <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#f1f5f9]">
-          <span className="font-semibold text-gray-700 flex items-center gap-1.5">
-            <FolderOpen className="h-3.5 w-3.5 text-[#2c5282]" />
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 text-base">
+        <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#e2e8f0]">
+          <span className="font-bold text-[#1a202c] flex items-center gap-2 text-base">
+            <FolderOpen className="h-5 w-5 text-[#2c5282]" />
             اختيار المجلد المراد التصنيف فيه
           </span>
           {!isAdminDepartment && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600 border border-gray-200 flex items-center gap-1">
-              <Lock className="h-3 w-3" />
+            <span className="px-2.5 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5" />
               للعرض فقط
             </span>
           )}
         </div>
 
-        <div className="max-h-72 overflow-y-auto">
+        <div className="max-h-80 overflow-y-auto">
           <FolderTreeView
             onFolderSelect={handleFolderSelect}
             selectedFolderId={selectedFolder?._id}
@@ -143,11 +143,11 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
 
       {/* Actions */}
       {isAdminDepartment && (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <Button
             onClick={handleAssign}
             disabled={assignMutation.isPending || !selectedFolder}
-            className="flex-1 h-8 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium"
+            className="flex-1 h-11 text-base rounded bg-[#2c5282] hover:bg-[#234269] text-white font-semibold shadow-none"
           >
             {assignMutation.isPending ? 'جاري التصنيف...' : 'تصنيف في المجلد المحدد'}
           </Button>
@@ -157,7 +157,7 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
               variant="outline"
               onClick={handleRemoveFromFolder}
               disabled={assignMutation.isPending}
-              className="h-8 text-xs rounded border border-red-200 text-red-600 hover:bg-red-50"
+              className="h-11 text-base rounded border border-red-300 text-red-600 hover:bg-red-50 font-semibold px-6"
             >
               إزالة التصنيف
             </Button>
@@ -166,9 +166,9 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
       )}
 
       {!isAdminDepartment && (
-        <div className="text-center py-4">
-          <Lock className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-          <p className="text-sm text-muted-foreground">
+        <div className="text-center py-6">
+          <Lock className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+          <p className="text-base text-gray-600">
             يمكن لمدير القسم فقط تغيير تصنيف المستندات
           </p>
         </div>

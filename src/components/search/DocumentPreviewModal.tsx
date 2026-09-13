@@ -83,26 +83,26 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className="max-w-2xl bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto"
+        className="w-[95vw] sm:w-[90vw] sm:max-w-4xl bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-xl"
         dir="rtl"
       >
         <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
-                <FileText className="h-5 w-5" />
+              <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
+                <FileText className="h-6 w-6" />
               </div>
               <div>
-                <DialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c] leading-normal">
+                <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] leading-normal">
                   معاينة الوثيقة
                 </DialogTitle>
                 <p className="text-base text-[#4a5568] leading-relaxed mt-1">
-                  الرقم التسلسلي: #{document.serialNumber} / {document.year}
+                  الرقم التسلسلي: <strong className="text-[#1a202c]">#{document.serialNumber} / {document.year}</strong>
                 </p>
               </div>
             </div>
 
-            <span className="inline-flex items-center px-3 py-1 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] flex-shrink-0">
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded text-sm font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758] flex-shrink-0">
               {isIncoming ? 'وثيقة واردة' : 'وثيقة صادرة'}
             </span>
           </div>
@@ -176,7 +176,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             type="button"
             variant="outline"
             onClick={onClose}
-            className="w-full sm:w-auto text-base font-medium px-5 py-2.5 rounded border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 transition-colors duration-200"
+            className="w-full sm:w-auto h-11 text-base font-medium px-6 rounded border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 transition-colors duration-200"
           >
             إغلاق
           </Button>
@@ -184,10 +184,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           <Button
             type="button"
             onClick={handleOpenFullPage}
-            className="w-full sm:w-auto text-base font-medium px-6 py-2.5 rounded bg-[#2c5282] hover:bg-[#234269] text-white flex items-center justify-center gap-2 transition-colors duration-200"
+            className="w-full sm:w-auto h-11 text-base font-semibold px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white flex items-center justify-center gap-2 transition-colors duration-200 shadow-none"
           >
             <span>عرض الصفحة الكاملة للوثيقة</span>
-            <ExternalLink className="h-4 w-4" />
+            <ExternalLink className="h-5 w-5" />
           </Button>
         </DialogFooter>
       </DialogContent>

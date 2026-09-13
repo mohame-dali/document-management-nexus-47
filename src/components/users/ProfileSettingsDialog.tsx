@@ -161,51 +161,53 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" dir="rtl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserIcon className="h-5 w-5" />
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-xl" dir="rtl">
+        <DialogHeader className="pb-4 border-b border-[#e2e8f0] text-right">
+          <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
+            <div className="w-10 h-10 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+              <UserIcon className="h-5 w-5" />
+            </div>
             إعدادات الملف الشخصي
           </DialogTitle>
-          <DialogDescription className="text-right">
-            تحديث كلمة المرور والصورة الشخصية
+          <DialogDescription className="text-base text-gray-600 text-right mt-1.5">
+            تحديث كلمة المرور والصورة الشخصية للمستخدم <strong className="text-[#1a202c] font-bold">{currentUser.username}</strong>
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="photo" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="photo" className="flex items-center gap-2">
-              <Camera className="h-4 w-4" />
+        <Tabs defaultValue="photo" className="w-full pt-2">
+          <TabsList className="grid w-full grid-cols-2 h-12 bg-gray-100 p-1 rounded">
+            <TabsTrigger value="photo" className="flex items-center justify-center gap-2 text-base font-bold data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm">
+              <Camera className="h-5 w-5" />
               الصورة الشخصية
             </TabsTrigger>
-            <TabsTrigger value="password" className="flex items-center gap-2">
-              <Key className="h-4 w-4" />
+            <TabsTrigger value="password" className="flex items-center justify-center gap-2 text-base font-bold data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm">
+              <Key className="h-5 w-5" />
               كلمة المرور
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="photo" className="space-y-4">
-            <form onSubmit={handlePhotoSubmit} className="space-y-4">
-              <div className="flex flex-col items-center space-y-4">
+          <TabsContent value="photo" className="space-y-6 pt-4">
+            <form onSubmit={handlePhotoSubmit} className="space-y-6">
+              <div className="flex flex-col items-center space-y-5 p-6 bg-[#f8fafc] border border-[#e2e8f0] rounded">
                 <div className="relative">
-                  <Avatar className="h-24 w-24 ring-2 ring-primary/20 shadow-lg">
+                  <Avatar className="h-28 w-28 ring-4 ring-white shadow-md">
                     <AvatarImage 
-                      src={photoPreview || getUserPhotoUrl(currentUser)} 
+                      src={photoPreview || getUserPhotoUrl(currentUser) || undefined} 
                       alt={currentUser.username}
                       className="object-cover"
                     />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/5 text-primary font-medium text-lg">
+                    <AvatarFallback className="bg-[#2c5282]/10 text-[#2c5282] font-bold text-2xl">
                       {getUserInitials(currentUser.username)}
                     </AvatarFallback>
                   </Avatar>
                   {selectedPhoto && (
-                    <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
-                      <Upload className="h-3 w-3" />
+                    <div className="absolute -top-1 -right-1 bg-emerald-600 text-white rounded-full p-1.5 shadow">
+                      <Upload className="h-4 w-4" />
                     </div>
                   )}
                 </div>
                 
-                <div className="w-full">
+                <div className="w-full text-center">
                   <Label htmlFor="photo-upload" className="sr-only">
                     اختيار صورة جديدة
                   </Label>
@@ -214,32 +216,33 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoChange}
-                    className="file:ml-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    className="h-12 text-base file:ml-4 file:py-2.5 file:px-4 file:rounded file:border-0 file:text-sm file:font-bold file:bg-[#2c5282] file:text-white hover:file:bg-[#234269] bg-white border-[#cbd5e1]"
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    JPG, PNG, GIF (حد أقصى 2 ميجابايت)
+                  <p className="text-sm text-gray-500 mt-2">
+                    JPG, PNG, GIF (الحد الأقصى المسموح به 2 ميجابايت)
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-2" dir="ltr">
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  إلغاء
-                </Button>
+              <div className="flex flex-row-reverse justify-start gap-3 pt-4 border-t border-[#e2e8f0]">
                 <Button 
                   type="submit" 
                   disabled={uploadPhotoMutation.isPending || !selectedPhoto}
+                  className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold rounded shadow-none"
                 >
                   {uploadPhotoMutation.isPending ? 'جاري التحديث...' : 'تحديث الصورة'}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleClose} className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700">
+                  إلغاء
                 </Button>
               </div>
             </form>
           </TabsContent>
           
-          <TabsContent value="password" className="space-y-4">
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+          <TabsContent value="password" className="space-y-5 pt-4">
+            <form onSubmit={handlePasswordSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">كلمة المرور الحالية</Label>
+                <Label htmlFor="currentPassword" className="text-base font-bold text-[#1a202c]">كلمة المرور الحالية</Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
@@ -247,27 +250,27 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="أدخل كلمة المرور الحالية"
-                    className="pl-10"
+                    className="h-12 text-base pl-12 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
                     required
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-gray-100 rounded text-gray-500"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
                     {showCurrentPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-5 w-5" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">كلمة المرور الجديدة</Label>
+                <Label htmlFor="newPassword" className="text-base font-bold text-[#1a202c]">كلمة المرور الجديدة</Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -275,67 +278,74 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="أدخل كلمة المرور الجديدة"
-                    className="pl-10"
+                    className="h-12 text-base pl-12 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
                     required
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-gray-100 rounded text-gray-500"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                   >
                     {showNewPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-5 w-5" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">تأكيد كلمة المرور الجديدة</Label>
+                <Label htmlFor="confirmPassword" className="text-base font-bold text-[#1a202c]">تأكيد كلمة المرور الجديدة</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="أعد إدخال كلمة المرور الجديدة"
-                    className="pl-10"
+                    placeholder="أعد إدخال كلمة المرور الجديدة للتأكيد"
+                    className="h-12 text-base pl-12 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
                     required
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-gray-100 rounded text-gray-500"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-5 w-5" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
               </div>
 
-              <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-md">
-                <p>• كلمة المرور يجب أن تكون 6 أحرف على الأقل</p>
-                <p>• استخدم مزيج من الأحرف والأرقام لكلمة مرور قوية</p>
+              <div className="text-sm text-gray-700 bg-[#f8fafc] p-4 rounded border border-[#e2e8f0] space-y-1">
+                <p className="flex items-center gap-2 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282] inline-block"></span>
+                  كلمة المرور يجب أن تكون 6 أحرف على الأقل
+                </p>
+                <p className="flex items-center gap-2 font-medium text-gray-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span>
+                  استخدم مزيجاً من الأحرف والأرقام لكلمة مرور قوية
+                </p>
               </div>
 
-              <div className="flex gap-2" dir="ltr">
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  إلغاء
-                </Button>
+              <div className="flex flex-row-reverse justify-start gap-3 pt-4 border-t border-[#e2e8f0]">
                 <Button 
                   type="submit" 
                   disabled={updatePasswordMutation.isPending || !currentPassword || !newPassword || !confirmPassword}
+                  className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold rounded shadow-none"
                 >
                   {updatePasswordMutation.isPending ? 'جاري التحديث...' : 'تحديث كلمة المرور'}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleClose} className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700">
+                  إلغاء
                 </Button>
               </div>
             </form>

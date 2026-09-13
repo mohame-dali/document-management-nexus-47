@@ -88,55 +88,58 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden" dir="rtl">
-        <DialogHeader className="space-y-4 pb-4">
-          {/* Enhanced Header with Gradient Background */}
-          <div className={`p-6 -m-6 mb-0 rounded-t-lg bg-gradient-to-r ${dialogInfo.bgGradient} border-b ${dialogInfo.accentColor} border-opacity-20`}>
-            <div className="flex items-center justify-between mb-3">
-              <DialogTitle className="flex items-center gap-3 text-xl font-bold text-gray-800">
-                <div className={`p-3 ${dialogInfo.iconBg} rounded-xl shadow-lg`}>
-                  <dialogInfo.icon className="h-6 w-6 text-white" />
-                </div>
-                <span className="gradient-text">{dialogInfo.title}</span>
-              </DialogTitle>
-              <Badge 
-                variant={dialogInfo.badge.variant} 
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium shadow-md hover:shadow-lg transition-shadow duration-200"
-              >
-                <dialogInfo.badge.icon className="h-4 w-4" />
-                {dialogInfo.badge.text}
-              </Badge>
-            </div>
-            
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              {dialogInfo.subtitle}
-            </p>
-
-            {/* Document Info Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/60 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-md">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-gray-700">موضوع المستند:</span>
-                    <Badge variant="outline" className="text-xs">
-                      {documentType === 'incoming' ? 'وارد' : 'صادر'}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-800 font-medium line-clamp-2">
-                    {document.subject}
-                  </p>
-                </div>
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[960px] md:max-w-[1000px] max-h-[90vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-xl" dir="rtl">
+        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] space-y-3 text-right">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+                <dialogInfo.icon className="h-6 w-6" />
               </div>
+              <div>
+                <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
+                  {dialogInfo.title}
+                </DialogTitle>
+                <p className="text-base text-gray-600 leading-relaxed mt-1">
+                  {dialogInfo.subtitle}
+                </p>
+              </div>
+            </div>
+
+            <Badge 
+              variant={dialogInfo.badge.variant} 
+              className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-semibold border border-[#cbd5e1] bg-white text-[#2c5282]"
+            >
+              <dialogInfo.badge.icon className="h-4 w-4" />
+              {dialogInfo.badge.text}
+            </Badge>
+          </div>
+
+          {/* Document Info Box */}
+          <div className="bg-white rounded border border-[#e2e8f0] p-4 flex items-start gap-3 mt-3">
+            <div className="w-10 h-10 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center shrink-0 mt-0.5">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-base font-semibold text-gray-700">موضوع المستند:</span>
+                <span className={`px-2.5 py-0.5 rounded text-sm font-semibold border ${
+                  documentType === 'incoming'
+                    ? 'bg-blue-50 text-[#2c5282] border-blue-200'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                }`}>
+                  {documentType === 'incoming' ? 'وارد' : 'صادر'}
+                </span>
+              </div>
+              <p className="text-base text-[#1a202c] font-medium leading-relaxed">
+                {document.subject}
+              </p>
             </div>
           </div>
         </DialogHeader>
         
-        {/* Enhanced Content Area */}
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)] px-1">
-          <div className="bg-gradient-to-b from-white to-gray-50/50 rounded-lg p-4 border border-gray-200/50 shadow-sm">
+        {/* Content Area */}
+        <div className="overflow-y-auto max-h-[calc(90vh-250px)] p-6 bg-[#f7fafc]">
+          <div className="bg-white rounded p-5 sm:p-6 border border-[#e2e8f0]">
             <DocumentFolderAssignment
               documentId={document._id}
               documentType={documentType}
@@ -147,16 +150,16 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Footer */}
-        <div className="border-t border-gray-200/50 pt-4 mt-4">
-          <div className="flex items-center justify-between text-xs text-gray-500">
+        {/* Footer */}
+        <div className="border-t border-[#e2e8f0] p-4 px-6 bg-[#f8fafc]">
+          <div className="flex items-center justify-between text-sm text-gray-600">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4 text-gray-500" />
               <span>آخر تحديث: اليوم</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>متصل</span>
+              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
+              <span className="font-medium text-emerald-700">متصل بالخادم</span>
             </div>
           </div>
         </div>

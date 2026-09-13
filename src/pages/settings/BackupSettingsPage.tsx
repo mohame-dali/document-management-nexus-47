@@ -492,31 +492,36 @@ const BackupSettingsPage = () => {
                    isYearlyBackup ? `إنشاء نسخة احتياطية لعام ${selectedYear}` : 'إنشاء نسخة احتياطية الآن'}
                 </Button>
               </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent dir="rtl">
               <AlertDialogHeader>
-                <AlertDialogTitle>تأكيد إنشاء النسخة الاحتياطية</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] text-right">تأكيد إنشاء النسخة الاحتياطية</AlertDialogTitle>
+                <AlertDialogDescription className="text-base text-gray-700 mt-2 text-right leading-relaxed">
                   {isYearlyBackup ? 
                     `هل تريد إنشاء نسخة احتياطية لوثائق عام ${selectedYear}؟` :
                     'هل تريد إنشاء نسخة احتياطية من جميع الوثائق؟'
                   } قد تستغرق هذه العملية عدة دقائق حسب حجم البيانات.
-                  <div className="mt-3 space-y-2">
-                    <div className="p-3 bg-muted rounded text-sm">
+                  <div className="mt-4 space-y-2 text-right">
+                    <div className="p-3 bg-muted rounded text-base border border-[#e2e8f0]">
                       <strong>مسار التصدير:</strong> {exportPath || savedBackupPath || '/tmp/backups'}
                     </div>
                     {isYearlyBackup && (
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded text-base text-[#2c5282]">
                         <strong>هيكل المجلد:</strong> courrier/{selectedYear}/[Incoming-Doc, Outgoing-Doc]
                       </div>
                     )}
                   </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction onClick={handleCreateBackup}>
+              <AlertDialogFooter className="flex flex-row-reverse justify-start gap-3 mt-4 pt-4 border-t border-[#e2e8f0]">
+                <AlertDialogAction 
+                  onClick={handleCreateBackup}
+                  className="h-11 px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-none"
+                >
                   إنشاء نسخة احتياطية
                 </AlertDialogAction>
+                <AlertDialogCancel className="h-11 px-6 rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-100 text-base font-medium">
+                  إلغاء
+                </AlertDialogCancel>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

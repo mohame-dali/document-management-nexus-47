@@ -89,138 +89,120 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col" dir="rtl">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="flex items-center gap-3 text-xl">
-            <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-full">
-              <UserPlus className="h-5 w-5 text-primary" />
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white border border-[#e2e8f0] rounded shadow-xl" dir="rtl">
+        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] text-right">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-12 h-12 bg-[#2c5282]/10 text-[#2c5282] rounded shrink-0">
+              <UserPlus className="h-6 w-6" />
             </div>
             <div>
-              <span>تعيين مسؤول عن الوثيقة</span>
-              <p className="text-sm font-normal text-muted-foreground mt-1">
+              <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
+                تعيين مسؤول عن الوثيقة
+              </DialogTitle>
+              <p className="text-base text-gray-600 mt-1">
                 اختر المستخدم المناسب لتولي مسؤولية هذه الوثيقة
               </p>
             </div>
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
-        <Separator className="my-2" />
-        
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-[#f7fafc]">
           {/* Document Info Card */}
-          <Card className="border-2 border-dashed border-primary/20 bg-primary/5">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
-                  <UserIcon className="h-4 w-4 text-primary" />
-                </div>
-                <h3 className="font-semibold text-primary">معلومات الوثيقة</h3>
+          <div className="bg-white border border-[#e2e8f0] rounded p-5">
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#e2e8f0]">
+              <UserIcon className="h-4 w-4 text-[#2c5282]" />
+              <h3 className="font-bold text-base text-[#1a202c]">معلومات الوثيقة</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
+              <div>
+                <p className="text-sm text-gray-500 font-medium">الرقم التسلسلي</p>
+                <p className="font-bold text-[#2c5282] mt-0.5">#{document.serialNumber}/{document.year}</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">الرقم التسلسلي</p>
-                  <p className="font-medium">#{document.serialNumber}/{document.year}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">الموضوع</p>
-                  <p className="font-medium line-clamp-2">{document.subject}</p>
-                </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">الموضوع</p>
+                <p className="font-bold text-[#1a202c] line-clamp-2 mt-0.5">{document.subject}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* User Selection */}
-          <div className="space-y-4">
-            <Label className="text-lg font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
+          <div className="space-y-3">
+            <Label className="text-base font-bold text-[#1a202c] flex items-center gap-2">
+              <Users className="h-5 w-5 text-[#2c5282]" />
               المستخدم المسؤول
             </Label>
             
-            <Card className="border-2 border-gray-200">
-              <CardContent className="p-5">
-                <Select value={selectedUser} onValueChange={setSelectedUser}>
-                  <SelectTrigger className="w-full h-12 text-lg border-2 focus:border-primary transition-colors">
-                    <SelectValue placeholder="اختر مستخدم..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {isLoading ? (
-                      <SelectItem value="loading" disabled>
-                        <div className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary"></div>
-                          <span>جاري التحميل...</span>
-                        </div>
-                      </SelectItem>
-                    ) : departmentUsers.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span>لا يوجد مستخدمون في القسم</span>
-                        </div>
-                      </SelectItem>
-                    ) : (
-                      departmentUsers.map((user: User) => (
-                        <SelectItem key={user._id} value={user._id} className="py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
-                              <UserIcon className="h-4 w-4 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{user.username}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  <Shield className="h-3 w-3 ml-1" />
-                                  {user.role}
-                                </Badge>
-                              </div>
+            <div className="bg-white border border-[#e2e8f0] rounded p-5">
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="w-full h-12 text-base border-[#cbd5e1] rounded focus:border-[#2c5282] bg-white">
+                  <SelectValue placeholder="اختر مستخدم..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-[#e2e8f0]">
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#2c5282]"></div>
+                        <span>جاري التحميل...</span>
+                      </div>
+                    </SelectItem>
+                  ) : departmentUsers.length === 0 ? (
+                    <SelectItem value="none" disabled>
+                      <div className="flex items-center gap-2 text-gray-500 py-2">
+                        <Users className="h-4 w-4" />
+                        <span>لا يوجد مستخدمون في القسم</span>
+                      </div>
+                    </SelectItem>
+                  ) : (
+                    departmentUsers.map((user: User) => (
+                      <SelectItem key={user._id} value={user._id} className="py-2.5 text-base">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 bg-[#2c5282]/10 text-[#2c5282] rounded">
+                            <UserIcon className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1 text-right">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-[#1a202c]">{user.username}</span>
+                              <Badge variant="outline" className="text-xs px-2 py-0.5 border-[#cbd5e1]">
+                                <Shield className="h-3 w-3 ml-1" />
+                                {user.role}
+                              </Badge>
                             </div>
                           </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                
-                {selectedUser && (
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-green-700">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span className="text-sm font-medium">تم اختيار المستخدم</span>
-                    </div>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              
+              {selectedUser && (
+                <div className="mt-4 p-3.5 bg-emerald-50 border border-emerald-200 rounded">
+                  <div className="flex items-center gap-2 text-emerald-800">
+                    <CheckCircle2 className="h-5 w-5" />
+                    <span className="text-base font-bold">تم اختيار المستخدم بنجاح</span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Department Info */}
-          <Card className="bg-gray-50 border-dashed border-2 border-gray-200">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Shield className="h-4 w-4" />
-                <span>القسم النشط: {currentUser?.activeDepartment?.name}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                سيتم عرض المستخدمين من هذا القسم فقط
-              </p>
-            </CardContent>
-          </Card>
+          <div className="bg-white border border-[#e2e8f0] rounded p-4 text-base">
+            <div className="flex items-center gap-2 text-gray-700 font-medium">
+              <Shield className="h-4 w-4 text-[#2c5282]" />
+              <span>القسم النشط: <strong className="text-[#1a202c]">{currentUser?.activeDepartment?.name}</strong></span>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              يتم حصر وتعيين المسؤولين من ضمن أعضاء هذا القسم فقط
+            </p>
+          </div>
         </div>
 
-        <Separator className="my-4" />
-
-        <DialogFooter className="gap-3 pt-4">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={assignResponsibleMutation.isPending}
-            className="px-6 border-2 hover:bg-gray-50"
-          >
-            إلغاء
-          </Button>
+        <DialogFooter className="p-4 sm:p-6 border-t border-[#e2e8f0] bg-[#f8fafc] flex-row-reverse justify-start gap-3">
           <Button
             onClick={handleAssignResponsible}
             disabled={!selectedUser || assignResponsibleMutation.isPending}
-            className="px-6 bg-primary hover:bg-primary/90 disabled:opacity-50"
+            className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold rounded disabled:opacity-50"
           >
             {assignResponsibleMutation.isPending ? (
               <div className="flex items-center gap-2">
@@ -229,10 +211,18 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
+                <UserPlus className="h-5 w-5" />
                 <span>تعيين المسؤول</span>
               </div>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={assignResponsibleMutation.isPending}
+            className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700"
+          >
+            إلغاء
           </Button>
         </DialogFooter>
       </DialogContent>

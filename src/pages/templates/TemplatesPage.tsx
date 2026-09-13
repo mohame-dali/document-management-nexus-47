@@ -233,22 +233,24 @@ const TemplatesPage = () => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 text-right">تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-gray-600 mt-2 text-right">
               هل أنت متأكد من حذف النموذج "{templateToDelete?.name}"؟ 
               هذا الإجراء لا يمكن التراجع عنه.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-row-reverse justify-start gap-3 mt-4 pt-4 border-t border-[#e2e8f0]">
             <AlertDialogAction
               onClick={() => templateToDelete && deleteMutation.mutate(templateToDelete._id)}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none"
             >
               حذف
             </AlertDialogAction>
+            <AlertDialogCancel className="h-11 px-6 rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-100 text-base font-medium">
+              إلغاء
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

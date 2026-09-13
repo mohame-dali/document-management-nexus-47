@@ -82,15 +82,15 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
     <div className="space-y-4" dir="rtl">
       {/* Folder Header - When not modal */}
       {!isModal && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="bg-white border border-[#e2e8f0] rounded p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
-              <FolderOpen className="h-5 w-5" />
+            <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+              <FolderOpen className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[#1a202c] flex items-center gap-2">
+              <h3 className="text-base font-bold text-[#1a202c] flex items-center gap-2">
                 {selectedFolder.name}
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold ${
                   selectedFolder.status === 'En cours'
                     ? 'bg-green-50 text-green-700 border border-green-200'
                     : 'bg-gray-100 text-gray-600 border border-gray-200'
@@ -99,14 +99,14 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                 </span>
               </h3>
               {selectedFolder.description && (
-                <p className="text-xs text-gray-500 mt-0.5">{selectedFolder.description}</p>
+                <p className="text-sm text-gray-600 mt-1">{selectedFolder.description}</p>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
-              <FileText className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-sm font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]">
+              <FileText className="h-4 w-4" />
               {totalDocuments} مستند محفوظ
             </span>
           </div>
@@ -114,124 +114,124 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
       )}
 
       {/* Metrics Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center text-[#2c5282]">
-              <Inbox className="h-4 w-4" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded bg-blue-50 flex items-center justify-center text-[#2c5282] shrink-0">
+              <Inbox className="h-5 w-5" />
             </div>
             <div>
-              <span className="text-[11px] text-gray-500 block">المستندات الواردة</span>
-              <span className="text-base font-bold text-[#1a202c]">{incomingDocuments.length}</span>
+              <span className="text-sm font-medium text-gray-600 block">المستندات الواردة</span>
+              <span className="text-2xl font-bold text-[#1a202c]">{incomingDocuments.length}</span>
             </div>
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+          <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-blue-50 text-[#2c5282] border border-blue-200">
             وارد
           </span>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-700">
-              <Send className="h-4 w-4" />
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded bg-emerald-50 flex items-center justify-center text-emerald-700 shrink-0">
+              <Send className="h-5 w-5" />
             </div>
             <div>
-              <span className="text-[11px] text-gray-500 block">المستندات الصادرة</span>
-              <span className="text-base font-bold text-[#1a202c]">{outgoingDocuments.length}</span>
+              <span className="text-sm font-medium text-gray-600 block">المستندات الصادرة</span>
+              <span className="text-2xl font-bold text-[#1a202c]">{outgoingDocuments.length}</span>
             </div>
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
             صادر
           </span>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-amber-50 flex items-center justify-center text-[#78350f]">
-              <FileText className="h-4 w-4 text-[#d97706]" />
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded bg-amber-50 flex items-center justify-center text-[#1a202c] shrink-0">
+              <FileText className="h-5 w-5 text-[#d97706]" />
             </div>
             <div>
-              <span className="text-[11px] text-gray-500 block">إجمالي المستندات</span>
-              <span className="text-base font-bold text-[#1a202c]">{totalDocuments}</span>
+              <span className="text-sm font-medium text-gray-600 block">إجمالي المستندات</span>
+              <span className="text-2xl font-bold text-[#1a202c]">{totalDocuments}</span>
             </div>
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+          <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]">
             المجموع
           </span>
         </div>
       </div>
 
       {/* Two-column view: Incoming & Outgoing */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Incoming Column */}
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-          <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Inbox className="h-4 w-4 text-[#2c5282]" />
-              <span className="font-bold text-xs text-[#2c5282]">المراسلات والوثائق الواردة</span>
+          <div className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Inbox className="h-5 w-5 text-[#2c5282]" />
+              <span className="font-bold text-base text-[#2c5282]">المراسلات والوثائق الواردة</span>
             </div>
-            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+            <span className="px-3 py-1 rounded text-xs sm:text-sm font-bold bg-blue-50 text-[#2c5282] border border-blue-200">
               {incomingDocuments.length}
             </span>
           </div>
 
-          <div className="p-3">
+          <div className="p-4">
             {incomingDocuments.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <Inbox className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-xs">لا توجد مستندات واردة في هذا المجلد</p>
+              <div className="text-center py-10 text-gray-400">
+                <Inbox className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p className="text-base text-gray-500">لا توجد مستندات واردة في هذا المجلد</p>
               </div>
             ) : (
-              <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {incomingDocuments.map((doc: IncomingDocument) => (
                   <div 
                     key={doc._id} 
-                    className="p-3 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200"
+                    className="p-4 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 min-h-[56px]"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1]">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1]">
                           #{doc.serialNumber}/{doc.year}
                         </span>
-                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-gray-400" />
+                        <span className="text-sm text-gray-600 flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4 text-gray-400" />
                           {formatArabicDate(doc.arrivalDate)}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => handleViewDocument(doc._id, 'incoming')}
-                          className="h-6 px-2 text-[11px] rounded border border-[#2c5282] text-[#2c5282] hover:bg-[#2c5282] hover:text-white transition-colors duration-200 flex items-center gap-1"
+                          className="h-8 px-3 text-xs sm:text-sm rounded border border-[#2c5282] text-[#2c5282] hover:bg-[#2c5282] hover:text-white transition-colors duration-200 flex items-center gap-1.5 font-medium"
                           title="عرض المستند"
                         >
-                          <Eye className="h-3 w-3" />
+                          <Eye className="h-4 w-4" />
                           <span>عرض</span>
                         </button>
                         {doc.scannedDocument && (
                           <button
                             type="button"
                             onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'incoming')}
-                            className="h-6 px-2 text-[11px] rounded border border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
+                            className="h-8 px-3 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#1a202c] hover:bg-[#eab308] transition-colors duration-200 flex items-center gap-1.5 font-bold"
                             title="تحميل الملف الممسوح"
                           >
-                            <Download className="h-3 w-3" />
+                            <Download className="h-4 w-4" />
                             <span>تحميل</span>
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <h4 className="font-semibold text-xs text-[#1a202c] mb-1 line-clamp-2 leading-relaxed">
+                    <h4 className="font-bold text-base text-[#1a202c] mb-1.5 line-clamp-2 leading-relaxed">
                       {doc.subject}
                     </h4>
 
                     {doc.source && (
-                      <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-1">
-                        <Building className="h-3 w-3 text-gray-400" />
+                      <div className="text-sm text-gray-600 flex items-center gap-1.5 mt-2">
+                        <Building className="h-4 w-4 text-gray-400" />
                         <span>الجهة المصدرة:</span>
-                        <span className="text-gray-700 font-medium">{doc.source}</span>
+                        <span className="text-gray-900 font-semibold">{doc.source}</span>
                       </div>
                     )}
                   </div>
@@ -243,73 +243,73 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
 
         {/* Outgoing Column */}
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-          <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Send className="h-4 w-4 text-emerald-700" />
-              <span className="font-bold text-xs text-emerald-800">المراسلات والوثائق الصادرة</span>
+          <div className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Send className="h-5 w-5 text-emerald-700" />
+              <span className="font-bold text-base text-emerald-800">المراسلات والوثائق الصادرة</span>
             </div>
-            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="px-3 py-1 rounded text-xs sm:text-sm font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
               {outgoingDocuments.length}
             </span>
           </div>
 
-          <div className="p-3">
+          <div className="p-4">
             {outgoingDocuments.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <Send className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-xs">لا توجد مستندات صادرة في هذا المجلد</p>
+              <div className="text-center py-10 text-gray-400">
+                <Send className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p className="text-base text-gray-500">لا توجد مستندات صادرة في هذا المجلد</p>
               </div>
             ) : (
-              <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {outgoingDocuments.map((doc: OutgoingDocument) => (
                   <div 
                     key={doc._id} 
-                    className="p-3 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200"
+                    className="p-4 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 min-h-[56px]"
                   >
-                    <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#f1f5f9] text-emerald-800 border border-[#cbd5e1]">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-emerald-800 border border-[#cbd5e1]">
                           #{doc.serialNumber}/{doc.year}
                         </span>
-                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-gray-400" />
+                        <span className="text-sm text-gray-600 flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4 text-gray-400" />
                           {formatArabicDate(doc.issueDate)}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => handleViewDocument(doc._id, 'outgoing')}
-                          className="h-6 px-2 text-[11px] rounded border border-emerald-700 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors duration-200 flex items-center gap-1"
+                          className="h-8 px-3 text-xs sm:text-sm rounded border border-emerald-700 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors duration-200 flex items-center gap-1.5 font-medium"
                           title="عرض المستند"
                         >
-                          <Eye className="h-3 w-3" />
+                          <Eye className="h-4 w-4" />
                           <span>عرض</span>
                         </button>
                         {doc.scannedDocument && (
                           <button
                             type="button"
                             onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'outgoing')}
-                            className="h-6 px-2 text-[11px] rounded border border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
+                            className="h-8 px-3 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#1a202c] hover:bg-[#eab308] transition-colors duration-200 flex items-center gap-1.5 font-bold"
                             title="تحميل الملف الممسوح"
                           >
-                            <Download className="h-3 w-3" />
+                            <Download className="h-4 w-4" />
                             <span>تحميل</span>
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <h4 className="font-semibold text-xs text-[#1a202c] mb-1 line-clamp-2 leading-relaxed">
+                    <h4 className="font-bold text-base text-[#1a202c] mb-1.5 line-clamp-2 leading-relaxed">
                       {doc.subject}
                     </h4>
 
                     {doc.assignedTo && doc.assignedTo.length > 0 && (
-                      <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-1">
-                        <UserCheck className="h-3 w-3 text-gray-400" />
+                      <div className="text-sm text-gray-600 flex items-center gap-1.5 mt-2">
+                        <UserCheck className="h-4 w-4 text-gray-400" />
                         <span>الجهة الموجه إليها:</span>
-                        <span className="text-gray-700 font-medium">{doc.assignedTo.join(', ')}</span>
+                        <span className="text-gray-900 font-semibold">{doc.assignedTo.join(', ')}</span>
                       </div>
                     )}
                   </div>

@@ -1117,12 +1117,12 @@ const OutgoingDocumentsPage: React.FC = () => {
           if (!open) setDeleteDoc(null);
         }}
       >
-        <AlertDialogContent className="rounded border border-[#e2e8f0] text-right" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-xl" dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold text-[#1a202c]">
+            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
               تأكيد حذف الوثيقة الصادرة
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-[#4a5568] mt-2 leading-relaxed">
+            <AlertDialogDescription className="text-base text-[#4a5568] mt-3 leading-relaxed">
               هل أنت متأكد من رغبتك في حذف الوثيقة الصادرة رقم{' '}
               <span className="font-bold text-[#1a202c]">
                 #{deleteDoc?.serialNumber}
@@ -1134,13 +1134,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
-            <AlertDialogCancel 
-              className="rounded font-semibold text-base"
-              disabled={deleteMutation.isPending}
-            >
-              إلغاء
-            </AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-[#e2e8f0]">
             <AlertDialogAction
               onClick={() => {
                 if (deleteDoc) {
@@ -1148,10 +1142,16 @@ const OutgoingDocumentsPage: React.FC = () => {
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="bg-[#e53e3e] hover:bg-[#c53030] text-white rounded font-semibold text-base transition-colors duration-200"
+              className="bg-[#e53e3e] hover:bg-[#c53030] text-white rounded font-semibold text-base h-11 px-7 transition-colors duration-200 shadow-none"
             >
               {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
             </AlertDialogAction>
+            <AlertDialogCancel 
+              className="rounded font-medium text-base h-11 px-6 border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100"
+              disabled={deleteMutation.isPending}
+            >
+              إلغاء
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1163,42 +1163,44 @@ const OutgoingDocumentsPage: React.FC = () => {
           if (!open) setTransferDoc(null);
         }}
       >
-        <DialogContent className="sm:max-w-lg rounded border border-[#e2e8f0] text-right" dir="rtl">
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-xl" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
-              <Share2 className="h-5 w-5 text-[#2c5282]" />
-              تحويل وتوجيه الوثيقة الصادرة
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] flex items-center gap-3">
+              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+                <Share2 className="h-5 w-5 text-[#2c5282]" />
+              </div>
+              <span>تحويل وتوجيه الوثيقة الصادرة</span>
             </DialogTitle>
-            <DialogDescription className="text-sm text-[#4a5568] mt-1">
-              تسجيل مسار الإرسال والتوجيه الإداري للمراسلة الصادرة رقم #{transferDoc?.serialNumber}
+            <DialogDescription className="text-base text-[#4a5568] mt-1.5 leading-relaxed">
+              تسجيل مسار الإرسال والتوجيه الإداري للمراسلة الصادرة رقم <strong className="text-[#1a202c]">#{transferDoc?.serialNumber}</strong>
             </DialogDescription>
           </DialogHeader>
 
           {transferDoc && (
-            <div className="space-y-4 py-2">
+            <div className="space-y-5 py-3">
               {/* Document mini-summary */}
-              <div className="p-3 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-1 text-sm">
+              <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-1.5 text-base">
                 <div className="font-bold text-[#1a202c]">
                   الموضوع: {transferDoc.subject}
                 </div>
-                <div className="text-xs text-[#718096] flex items-center gap-3">
+                <div className="text-sm text-[#718096] flex items-center gap-4">
                   <span>تاريخ الإصدار: {formatArabicDate(transferDoc.issueDate)}</span>
                   <span>المصدر: {transferDoc.source?.name || 'غير محدد'}</span>
                 </div>
               </div>
 
               {/* Destination department */}
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-[#2d3748]">
-                  الجهة أو القسم المستهدف للتحويل
+              <div className="space-y-2">
+                <Label className="text-base font-bold text-[#1a202c]">
+                  الجهة أو القسم المستهدف للتحويل <span className="text-red-600">*</span>
                 </Label>
                 <Select value={transferTargetDept} onValueChange={setTransferTargetDept}>
-                  <SelectTrigger className="h-10 text-base border-[#cbd5e1] rounded">
+                  <SelectTrigger className="h-11 text-base border-[#cbd5e1] rounded bg-white">
                     <SelectValue placeholder="اختر القسم أو المصلحة..." />
                   </SelectTrigger>
-                  <SelectContent className="rounded border-[#cbd5e1] text-base">
+                  <SelectContent className="rounded border-[#cbd5e1] text-base" dir="rtl">
                     {departments.map((dept) => (
-                      <SelectItem key={dept._id} value={dept._id}>
+                      <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
                         {dept.name}
                       </SelectItem>
                     ))}
@@ -1207,37 +1209,37 @@ const OutgoingDocumentsPage: React.FC = () => {
               </div>
 
               {/* Instructions / Orientation note */}
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-[#2d3748]">
+              <div className="space-y-2">
+                <Label className="text-base font-bold text-[#1a202c]">
                   تعليمات وملاحظات التوجيه
                 </Label>
                 <Textarea
                   value={transferNotes}
                   onChange={(e) => setTransferNotes(e.target.value)}
                   placeholder="مثال: للإجراء والمتابعة، للتنفيذ، للإطلاع والإفادة..."
-                  className="text-base border-[#cbd5e1] rounded min-h-[80px]"
+                  className="text-base border-[#cbd5e1] rounded min-h-[100px] p-3 focus:border-[#2c5282]"
                 />
               </div>
             </div>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-3 border-t border-[#e2e8f0]">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setTransferDoc(null)}
-              className="rounded font-semibold text-base"
-              disabled={isTransferSubmitting}
-            >
-              إلغاء
-            </Button>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-[#e2e8f0] mt-2">
             <Button
               type="button"
               onClick={handleTransferSubmit}
               disabled={isTransferSubmitting}
-              className="bg-[#2c5282] hover:bg-[#234269] text-white rounded font-semibold text-base transition-colors duration-200"
+              className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white rounded font-semibold text-base transition-colors duration-200 shadow-none"
             >
               {isTransferSubmitting ? 'جاري التسجيل...' : 'تأكيد التحويل والتوجيه'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setTransferDoc(null)}
+              className="h-11 px-6 rounded font-medium text-base border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100"
+              disabled={isTransferSubmitting}
+            >
+              إلغاء
             </Button>
           </DialogFooter>
         </DialogContent>
