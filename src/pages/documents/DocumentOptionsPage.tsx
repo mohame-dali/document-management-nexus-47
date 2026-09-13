@@ -1,64 +1,89 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { 
+  Plus, 
+  Sliders, 
+  Layers, 
+  Building2, 
+  FileText, 
+  Inbox, 
+  Send, 
+  Bookmark, 
+  ShieldAlert, 
+  CheckCircle2, 
+  XCircle,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { getDocumentOptions, createDocumentOption, updateDocumentOption, deleteDocumentOption, DocumentOption } from '@/services/documentOptionsService';
-import DocumentOptionDialog from '@/components/documents/options/DocumentOptionDialog';
+import { 
+  getDocumentOptions, 
+  createDocumentOption, 
+  updateDocumentOption, 
+  deleteDocumentOption, 
+  DocumentOption 
+} from '@/services/documentOptionsService';
+import DocumentOptionDialog, { DocumentOptionFormData } from '@/components/documents/options/DocumentOptionDialog';
 import DocumentOptionsList from '@/components/documents/options/DocumentOptionsList';
 import { useAuth } from '@/contexts/AuthContext';
 
-const DocumentOptionsPage = () => {
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+const DocumentOptionsPage: React.FC = () => {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOption, setEditingOption] = useState<DocumentOption | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const { data: options = [], isLoading, error } = useQuery({
+  const { data: options = [], isLoading, error, refetch } = useQuery({
     queryKey: ['documentOptions'],
     queryFn: () => getDocumentOptions(),
   });
 
   const createMutation = useMutation({
-    mutationFn: createDocumentOption,
+    mutationFn: (data: { category: string; documentType: string; value: string }) => 
+      createDocumentOption(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
       toast.success('تم إنشاء خيار الوثيقة بنجاح');
       setIsDialogOpen(false);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في إنشاء خيار الوثيقة');
+    onError: (err: ApiError) => {
+      toast.error(err.response?.data?.message || 'فشل في إنشاء خيار الوثيقة');
     }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => updateDocumentOption(id, data),
+    mutationFn: ({ id, data }: { id: string; data: { value?: string; isActive?: boolean; category?: string; documentType?: string } }) => 
+      updateDocumentOption(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
       toast.success('تم تحديث خيار الوثيقة بنجاح');
       setIsDialogOpen(false);
       setEditingOption(null);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في تحديث خيار الوثيقة');
+    onError: (err: ApiError) => {
+      toast.error(err.response?.data?.message || 'فشل في تحديث خيار الوثيقة');
     }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteDocumentOption,
+    mutationFn: (id: string) => deleteDocumentOption(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
       toast.success('تم حذف خيار الوثيقة بنجاح');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في حذف خيار الوثيقة');
+    onError: (err: ApiError) => {
+      toast.error(err.response?.data?.message || 'فشل في حذف خيار الوثيقة');
     }
   });
 
@@ -69,28 +94,29 @@ const DocumentOptionsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
       toast.success('تم تحديث حالة خيار الوثيقة');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في تحديث الحالة');
+    onError: (err: ApiError) => {
+      toast.error(err.response?.data?.message || 'فشل في تحديث الحالة');
     }
   });
 
-  // Check if user has permission to manage options
+  // Permission verification
   if (currentUser?.role !== 'AdminTuningDesk') {
     return (
-      <div className="container mx-auto p-6" dir="rtl">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2 text-red-800">الوصول مرفوض</h2>
-            <p className="text-red-600">
-              ليس لديك صلاحية لإدارة خيارات الوثائق.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+        <div className="max-w-2xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
+          <div className="w-14 h-14 rounded bg-amber-50 border border-[#FFD758] flex items-center justify-center mx-auto text-[#78350f]">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#1a202c]">الوصول مقيّد بالصلاحيات</h2>
+          <p className="text-base text-[#4a5568] leading-relaxed">
+            إدارة خيارات وحقول الوثائق تتطلب صلاحية مكتب الضبط (AdminTuningDesk). يرجى مراجعة مسؤول النظام للحصول على الصلاحيات المطلوبة.
+          </p>
+        </div>
       </div>
     );
   }
 
-  const handleCreate = (data: any) => {
+  const handleCreate = (data: DocumentOptionFormData) => {
     createMutation.mutate(data);
   };
 
@@ -99,14 +125,14 @@ const DocumentOptionsPage = () => {
     setIsDialogOpen(true);
   };
 
-  const handleUpdate = (data: any) => {
+  const handleUpdate = (data: DocumentOptionFormData) => {
     if (editingOption) {
       updateMutation.mutate({ id: editingOption._id, data });
     }
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('هل أنت متأكد من حذف هذا الخيار؟')) {
+    if (window.confirm('هل أنت متأكد من حذف هذا الخيار نهائياً؟')) {
       deleteMutation.mutate(id);
     }
   };
@@ -115,123 +141,230 @@ const DocumentOptionsPage = () => {
     toggleActiveMutation.mutate({ id, isActive: !isActive });
   };
 
-  const filteredOptions = options.filter(option => {
-    if (selectedCategory !== 'all' && option.category !== selectedCategory) return false;
-    if (selectedDocumentType !== 'all' && option.documentType !== selectedDocumentType && option.documentType !== 'both') return false;
-    if (searchTerm && !option.value.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    return true;
-  });
+  // Metrics calculation
+  const totalCount = options.length;
+  const activeCount = options.filter(o => o.isActive).length;
+  const inactiveCount = totalCount - activeCount;
+
+  const categoryStats = {
+    activity: options.filter(o => o.category === 'activity').length,
+    source: options.filter(o => o.category === 'source').length,
+    typeDocument: options.filter(o => o.category === 'typeDocument').length,
+    assignedTo: options.filter(o => o.category === 'assignedTo').length,
+    pourInfo: options.filter(o => o.category === 'pourInfo').length,
+  };
+
+  const categoryCards = [
+    {
+      id: 'activity',
+      label: 'النشاط',
+      description: 'تصنيف مجالات الأنشطة والمهام',
+      icon: <Bookmark className="h-5 w-5" />,
+      count: categoryStats.activity,
+    },
+    {
+      id: 'source',
+      label: 'المصدر / الجهة',
+      description: 'الهيئات والمؤسسات المتعامل معها',
+      icon: <Building2 className="h-5 w-5" />,
+      count: categoryStats.source,
+    },
+    {
+      id: 'typeDocument',
+      label: 'نوع الوثيقة',
+      description: 'المراسلات، التقارير والمذكرات',
+      icon: <FileText className="h-5 w-5" />,
+      count: categoryStats.typeDocument,
+    },
+    {
+      id: 'assignedTo',
+      label: 'مخصص إلى',
+      description: 'المصالح والوحدات المعنية بالتوجيه',
+      icon: <Inbox className="h-5 w-5" />,
+      count: categoryStats.assignedTo,
+    },
+    {
+      id: 'pourInfo',
+      label: 'للإعلام',
+      description: 'الجهات المعنية بالمتابعة والإعلام',
+      icon: <Send className="h-5 w-5" />,
+      count: categoryStats.pourInfo,
+    },
+  ];
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6" dir="rtl">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4" dir="rtl">
+        <Loader2 className="h-10 w-10 text-[#2c5282] animate-spin" />
+        <h2 className="text-xl font-bold text-[#1a202c]">جاري تحميل خيارات الوثائق...</h2>
+        <p className="text-base text-[#4a5568]">يتم استرجاع فئات وخيارات حقول الوثائق من قاعدة البيانات</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto p-6" dir="rtl">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2 text-red-800">خطأ</h2>
-            <p className="text-red-600">
-              فشل في تحميل خيارات الوثائق. يرجى المحاولة مرة أخرى.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+        <div className="max-w-xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
+          <div className="w-14 h-14 rounded bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-600">
+            <AlertCircle className="h-7 w-7" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#1a202c]">تعذر تحميل البيانات</h2>
+          <p className="text-base text-[#4a5568] leading-relaxed">
+            حدث خطأ أثناء الاتصال بالخادم لجلب خيارات الوثائق. يرجى المحاولة مجدداً.
+          </p>
+          <Button
+            onClick={() => refetch()}
+            className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+          >
+            إعادة المحاولة
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-        <div className="flex justify-between items-center">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      {/* 1. Page Institutional Header (En-tête) */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
+            <Sliders className="h-6 w-6" />
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-blue-900 mb-2">خيارات الوثائق</h1>
-            <p className="text-blue-700">
-              إدارة خيارات حقول الوثائق للوثائق الواردة والصادرة
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal flex items-center gap-2.5">
+              إدارة خيارات وحقول الوثائق
+            </h1>
+            <p className="text-base text-[#4a5568] leading-relaxed mt-1">
+              تخصيص وضبط القوائم المنسدلة للأنشطة، المصادر، أنواع الوثائق والجهات المسؤولة للوثائق الإدارية
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
           <Button 
-            onClick={() => setIsDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-            size="lg"
+            onClick={() => {
+              setEditingOption(null);
+              setIsDialogOpen(true);
+            }}
+            className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
           >
-            <Plus className="h-5 w-5 ml-2" />
-            إضافة خيار جديد
+            <Plus className="h-5 w-5" />
+            <span>إضافة خيار جديد</span>
           </Button>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-gray-800">
-            <Filter className="h-5 w-5" />
-            البحث والتصفية
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="البحث في الخيارات..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 border-gray-300 focus:border-blue-500"
-              />
+      {/* 2. Options Sections / Categories & Metrics Bar (Sections d'options) */}
+      <div className="space-y-4">
+        {/* Global Metric Indicators */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-sm font-medium text-[#718096]">إجمالي الخيارات المسجلة</span>
+              <div className="text-2xl font-bold text-[#1a202c]">{totalCount}</div>
+            </div>
+            <span className="w-10 h-10 rounded bg-[#f7fafc] border border-[#e2e8f0] flex items-center justify-center text-[#2c5282]">
+              <Layers className="h-5 w-5" />
+            </span>
+          </div>
+
+          <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-sm font-medium text-[#718096]">الخيارات المفعلة (نشطة)</span>
+              <div className="text-2xl font-bold text-emerald-700">{activeCount}</div>
+            </div>
+            <span className="w-10 h-10 rounded bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+              <CheckCircle2 className="h-5 w-5" />
+            </span>
+          </div>
+
+          <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-sm font-medium text-[#718096]">الخيارات المعطلة</span>
+              <div className="text-2xl font-bold text-[#78350f]">{inactiveCount}</div>
+            </div>
+            <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              {inactiveCount} خيار
+            </span>
+          </div>
+        </div>
+
+        {/* Category Configuration Cards Grid */}
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-[#1a202c]">
+                أقسام وتصنيفات خيارات الوثائق
+              </h2>
+              <p className="text-sm text-[#4a5568] mt-0.5">
+                اضغط على أي قسم للتصفية السريعة وعرض الخيارات التابعة له
+              </p>
             </div>
             
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('all')}
+              className={`px-3 py-1.5 rounded text-sm font-semibold transition-colors duration-200 ${
+                selectedCategory === 'all'
+                  ? 'bg-[#2c5282] text-white'
+                  : 'bg-gray-100 text-[#4a5568] hover:bg-gray-200'
+              }`}
             >
-              <option value="all">جميع الفئات</option>
-              <option value="activity">النشاط</option>
-              <option value="source">المصدر</option>
-              <option value="typeDocument">نوع الوثيقة</option>
-              <option value="assignedTo">مخصص إلى</option>
-              <option value="pourInfo">للإعلام</option>
-            </select>
-
-            <select
-              value={selectedDocumentType}
-              onChange={(e) => setSelectedDocumentType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="all">جميع أنواع الوثائق</option>
-              <option value="incoming">وارد</option>
-              <option value="outgoing">صادر</option>
-              <option value="both">كلاهما</option>
-            </select>
-
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-300">
-                المجموع: {filteredOptions.length}
-              </Badge>
-            </div>
+              عرض الكل ({totalCount})
+            </button>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Options List */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            {categoryCards.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(isSelected ? 'all' : cat.id)}
+                  className={`text-right p-4 rounded border transition-colors duration-200 flex flex-col justify-between min-h-[105px] ${
+                    isSelected
+                      ? 'border-[#2c5282] bg-blue-50/70'
+                      : 'border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:bg-slate-50/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 w-full">
+                    <div className="flex items-center gap-2 text-[#2c5282]">
+                      {cat.icon}
+                      <span className="font-bold text-base text-[#1a202c]">{cat.label}</span>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                      isSelected 
+                        ? 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
+                        : 'bg-gray-100 text-[#4a5568] border border-gray-200'
+                    }`}>
+                      {cat.count}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#718096] mt-2 line-clamp-1 leading-relaxed">
+                    {cat.description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Document Options List Section (Actions / Tableau) */}
       <DocumentOptionsList
-        options={filteredOptions}
+        options={options}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onToggleActive={handleToggleActive}
         isLoading={deleteMutation.isPending || toggleActiveMutation.isPending}
+        selectedCategoryFilter={selectedCategory}
+        onSelectCategoryFilter={setSelectedCategory}
       />
 
-      {/* Dialog */}
+      {/* 4. Document Option Dialog (Création / Modification) */}
       <DocumentOptionDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
