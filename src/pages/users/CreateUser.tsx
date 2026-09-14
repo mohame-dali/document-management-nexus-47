@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createUserWithPhoto } from '@/services/userService';
 import { getDepartments } from '@/services/departmentService';
@@ -8,12 +7,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Upload, ArrowLeft, UserPlus, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Upload, ArrowRight, UserPlus, X, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import UserForm from '@/components/users/UserForm';
+import UserForm, { UserFormData } from '@/components/users/UserForm';
 
-const CreateUser = () => {
+const CreateUser: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
@@ -27,15 +25,18 @@ const CreateUser = () => {
   });
   
   const createMutation = useMutation({
-    mutationFn: (data: any) => createUserWithPhoto(data, photoFile || undefined),
+    mutationFn: (data: UserFormData) => createUserWithPhoto(data, photoFile || undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('تم إنشاء المستخدم بنجاح');
       navigate('/dashboard/users');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error creating user:', error);
-      toast.error(error.response?.data?.error || 'فشل في إنشاء المستخدم');
+      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
+        : 'فشل في إنشاء المستخدم';
+      toast.error(errorMsg);
     }
   });
   
@@ -49,7 +50,7 @@ const CreateUser = () => {
       }
       
       if (!file.type.startsWith('image/')) {
-        toast.error('يرجى اختيار ملف صورة صحيح');
+        toast.error('يرجى اختيار ملف صورة صحيح (JPG, PNG, GIF)');
         return;
       }
       
@@ -68,149 +69,138 @@ const CreateUser = () => {
     setPreviewUrl('');
   };
   
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: UserFormData) => {
     createMutation.mutate(data);
   };
   
   if (departmentsLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">جاري تحميل البيانات...</p>
+      <div className="flex items-center justify-center min-h-[400px] w-full" dir="rtl">
+        <div className="flex flex-col items-center gap-4 p-8 bg-white border border-[#e2e8f0] rounded">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2c5282]"></div>
+          <p className="text-base text-gray-600 font-medium">جاري تحميل بيانات الأقسام والصلاحيات...</p>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6" dir="rtl">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/dashboard/users" 
-              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors bg-white rounded-lg px-4 py-2 shadow-sm border hover:shadow-md"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="font-medium">العودة للمستخدمين</span>
-            </Link>
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+            <UserPlus className="h-6 w-6" />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-primary/10 rounded-xl">
-              <UserPlus className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">إضافة مستخدم جديد</h1>
-              <p className="text-muted-foreground mt-1">قم بإنشاء حساب مستخدم جديد في النظام</p>
-            </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">إضافة مستخدم جديد</h1>
+            <p className="text-base text-gray-600 mt-1">إنشاء حساب مستخدم جديد وتحديد دوره والأقسام التابع لها</p>
           </div>
         </div>
 
-        {/* Photo Upload Section */}
-        <Card className="border-2 border-dashed border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 hover:border-primary/30 transition-colors">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-3 text-lg">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Upload className="h-5 w-5 text-primary" />
+        <Link 
+          to="/dashboard/users" 
+          className="inline-flex items-center gap-2 h-11 px-5 bg-white border border-[#cbd5e1] hover:bg-gray-100 text-[#1a202c] text-base font-medium rounded transition-colors w-fit"
+        >
+          <ArrowRight className="h-4 w-4" />
+          <span>العودة لقائمة المستخدمين</span>
+        </Link>
+      </div>
+
+      {/* Photo Upload Section */}
+      <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <CardHeader className="pb-4 border-b border-[#e2e8f0]">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-3 text-lg sm:text-xl font-bold text-[#1a202c]">
+              <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+                <ImageIcon className="h-5 w-5" />
               </div>
-              <span>صورة المستخدم</span>
-              <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-1 rounded-full">اختيارية</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <Avatar className="h-28 w-28 border-4 border-white shadow-lg">
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="معاينة" className="w-full h-full object-cover rounded-full" />
-                  ) : (
-                    <AvatarFallback className="text-2xl font-semibold bg-gradient-to-br from-primary/20 to-primary/30 text-primary border-primary/20">
-                      <Upload className="h-8 w-8 text-primary/60" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                {previewUrl && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-8 w-8 rounded-full shadow-lg"
-                    onClick={handleRemovePhoto}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+              <span>الصورة الشخصية</span>
+            </div>
+            <span className="text-sm font-semibold bg-gray-100 text-gray-700 px-3 py-1 rounded border border-gray-200">
+              اختيارية
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="relative shrink-0">
+              <Avatar className="h-24 w-24 border-2 border-[#cbd5e1] rounded-full overflow-hidden bg-gray-50">
+                {previewUrl ? (
+                  <img src={previewUrl} alt="معاينة الصورة" className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <AvatarFallback className="bg-gray-100 text-gray-500 text-lg font-bold flex flex-col items-center justify-center">
+                    <Upload className="h-6 w-6 text-gray-400" />
+                  </AvatarFallback>
                 )}
-              </div>
-              
-              <div className="flex-1 space-y-4">
+              </Avatar>
+              {previewUrl && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-1 -right-1 h-7 w-7 rounded-full shadow"
+                  onClick={handleRemovePhoto}
+                  title="حذف الصورة"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            
+            <div className="flex-1 space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <input
                   type="file"
                   accept="image/*"
-                  id="photo"
+                  id="user-photo-input"
                   className="hidden"
                   onChange={handlePhotoChange}
                 />
                 
-                <label htmlFor="photo">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="bg-white hover:bg-primary/5 border-primary/20 hover:border-primary/40 transition-all duration-200" 
-                    asChild
-                  >
-                    <span className="flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      {photoFile ? 'تغيير الصورة' : 'اختيار صورة'}
-                    </span>
-                  </Button>
-                </label>
-                
-                {photoFile && (
-                  <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-primary/10 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Upload className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{photoFile.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                <label htmlFor="user-photo-input" className="cursor-pointer">
+                  <div className="inline-flex items-center gap-2 h-11 px-5 bg-white hover:bg-amber-50/40 border border-[#cbd5e1] hover:border-[#FFCB56] text-[#1a202c] font-medium text-base rounded transition-colors">
+                    <Upload className="h-4 w-4 text-[#2c5282]" />
+                    <span>{photoFile ? 'تغيير الصورة المحددة' : 'اختيار صورة من الجهاز'}</span>
                   </div>
+                </label>
+
+                {photoFile && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRemovePhoto}
+                    className="h-11 px-4 border-[#cbd5e1] text-red-600 hover:bg-red-50 text-base rounded"
+                  >
+                    إلغاء التحديد
+                  </Button>
                 )}
-                
-                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                  <p className="text-xs text-blue-700 flex items-center gap-2">
-                    <div className="h-1 w-1 bg-blue-500 rounded-full"></div>
-                    الحد الأقصى للحجم: 5 ميجابايت
-                  </p>
-                  <p className="text-xs text-blue-700 flex items-center gap-2 mt-1">
-                    <div className="h-1 w-1 bg-blue-500 rounded-full"></div>
-                    الصيغ المدعومة: JPG, PNG, GIF
-                  </p>
+              </div>
+
+              {photoFile && (
+                <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-700">
+                  <p className="font-semibold text-[#1a202c]">{photoFile.name}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت</p>
                 </div>
+              )}
+              
+              <div className="p-3 bg-blue-50/60 border border-blue-200 rounded text-sm text-blue-900 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#2c5282] shrink-0"></span>
+                <span>الحد الأقصى المسموح به لحجم الصورة 5 ميجابايت • الصيغ المدعومة: JPG, PNG, GIF</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        {/* User Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          <UserForm 
-            onSubmit={handleSubmit} 
-            isSubmitting={createMutation.isPending} 
-            departments={departments || []}
-            currentUserRole={currentUser?.role || ''}
-            currentUserDepartment={currentUser?.activeDepartment?._id || ''}
-          />
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* User Form Container */}
+      <UserForm 
+        onSubmit={handleSubmit} 
+        isSubmitting={createMutation.isPending} 
+        departments={departments || []}
+        currentUserRole={currentUser?.role || ''}
+        currentUserDepartment={currentUser?.activeDepartment?._id || ''}
+      />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { 
@@ -20,17 +19,21 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { RefreshCw, ArrowLeft, User, Shield, Building, Check, AlertCircle } from 'lucide-react';
+import { RefreshCw, ArrowRight, User, Shield, Building, Check, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Department, User as UserType } from '@/types';
 
-interface Department {
-  _id: string;
-  name: string;
+export interface UserFormData {
+  username: string;
+  password?: string;
+  role: 'SuperAdmin' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
+  departments: string[];
+  isActive?: boolean;
 }
 
 interface UserFormProps {
-  user?: any;
-  onSubmit: (data: any) => void;
+  user?: UserType | null;
+  onSubmit: (data: UserFormData) => void;
   isSubmitting: boolean;
   departments: Department[];
   currentUserRole: string;
@@ -39,7 +42,7 @@ interface UserFormProps {
   isResettingPassword?: boolean;
 }
 
-const UserForm = ({ 
+const UserForm: React.FC<UserFormProps> = ({ 
   user, 
   onSubmit, 
   isSubmitting, 
@@ -48,15 +51,15 @@ const UserForm = ({
   currentUserDepartment,
   onResetPassword,
   isResettingPassword
-}: UserFormProps) => {
+}) => {
   const isEditMode = !!user;
   
-  const form = useForm({
+  const form = useForm<UserFormData>({
     defaultValues: {
       username: user?.username || '',
       password: '',
-      role: user?.role || 'User',
-      departments: user?.departments?.map((d: any) => d._id) || [],
+      role: (user?.role as UserFormData['role']) || 'User',
+      departments: user?.departments?.map((d: Department) => d._id) || [],
       isActive: user?.isActive !== undefined ? user.isActive : true
     }
   });
@@ -64,24 +67,24 @@ const UserForm = ({
   const availableRoles = () => {
     if (currentUserRole === 'Admin') {
       return [
-        { value: 'SuperAdmin', label: 'مدير أعلى', icon: Shield, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-        { value: 'Admin', label: 'مدير', icon: Shield, color: 'bg-red-100 text-red-800 border-red-200' },
-        { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, color: 'bg-blue-100 text-blue-800 border-blue-200' },
-        { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, color: 'bg-purple-100 text-purple-800 border-purple-200' },
-        { value: 'User', label: 'مستخدم', icon: User, color: 'bg-green-100 text-green-800 border-green-200' }
+        { value: 'SuperAdmin', label: 'مدير أعلى', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
+        { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
+        { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
+        { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
+        { value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }
       ];
     } else if (currentUserRole === 'SuperAdmin') {
       return [
-        { value: 'SuperAdmin', label: 'مدير أعلى', icon: Shield, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-        { value: 'Admin', label: 'مدير', icon: Shield, color: 'bg-red-100 text-red-800 border-red-200' },
-        { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, color: 'bg-blue-100 text-blue-800 border-blue-200' },
-        { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, color: 'bg-purple-100 text-purple-800 border-purple-200' },
-        { value: 'User', label: 'مستخدم', icon: User, color: 'bg-green-100 text-green-800 border-green-200' }
+        { value: 'SuperAdmin', label: 'مدير أعلى', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
+        { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
+        { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
+        { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
+        { value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }
       ];
     } else if (currentUserRole === 'AdminDepartment') {
-      return [{ value: 'User', label: 'مستخدم', icon: User, color: 'bg-green-100 text-green-800 border-green-200' }];
+      return [{ value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }];
     }
-    return [{ value: 'User', label: 'مستخدم', icon: User, color: 'bg-green-100 text-green-800 border-green-200' }];
+    return [{ value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }];
   };
   
   const availableDepartments = () => {
@@ -94,9 +97,9 @@ const UserForm = ({
   };
   
   const selectedRole = form.watch('role');
-  const selectedDepartments = form.watch('departments');
+  const selectedDepartments = form.watch('departments') || [];
   
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: UserFormData) => {
     if (data.role === 'AdminTuningDesk' || data.role === 'SuperAdmin') {
       data.departments = [];
     } else if (currentUserRole === 'AdminDepartment' && data.role === 'User') {
@@ -108,61 +111,65 @@ const UserForm = ({
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" dir="rtl">
         {/* Basic Information Section */}
-        <Card className="border-l-4 border-l-primary">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <User className="h-5 w-5 text-primary" />
+        <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+          <CardHeader className="pb-4 border-b border-[#e2e8f0]">
+            <CardTitle className="flex items-center gap-3 text-lg sm:text-xl font-bold text-[#1a202c]">
+              <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+                <User className="h-5 w-5" />
               </div>
-              المعلومات الأساسية
+              <span>المعلومات الأساسية</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="pt-6 space-y-6">
             {/* Username */}
             <FormField
               control={form.control}
               name="username"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    اسم المستخدم
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-base font-bold text-[#1a202c] flex items-center gap-2">
+                    <User className="h-4 w-4 text-[#2c5282]" />
+                    <span>اسم المستخدم</span>
+                    <span className="text-red-500 font-bold">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input 
                       {...field} 
-                      placeholder="أدخل اسم المستخدم"
+                      placeholder="أدخل اسم المستخدم (مثال: ahmad_ali)"
                       required
-                      className="text-right bg-white border-slate-300 focus:border-primary focus:ring-primary/20 transition-all duration-200"
+                      className="h-11 text-base px-4 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
                     />
                   </FormControl>
+                  <p className="text-sm text-gray-500">اسم فريد يُستخدم لتسجيل الدخول والتعريف في النظام</p>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            {/* Password (only required in create mode) */}
+            {/* Password (only in create mode) */}
             {!isEditMode && (
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      كلمة المرور
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-base font-bold text-[#1a202c] flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-[#2c5282]" />
+                      <span>كلمة المرور</span>
+                      <span className="text-red-500 font-bold">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input 
                         type="password" 
                         {...field} 
-                        placeholder="أدخل كلمة المرور"
+                        placeholder="أدخل كلمة المرور (6 أحرف على الأقل)"
                         required 
-                        className="text-right bg-white border-slate-300 focus:border-primary focus:ring-primary/20 transition-all duration-200"
+                        className="h-11 text-base px-4 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
                       />
                     </FormControl>
+                    <p className="text-sm text-gray-500">يُفضل استخدام مزيج من الأحرف والأرقام لضمان حماية الحساب</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -172,30 +179,29 @@ const UserForm = ({
         </Card>
 
         {/* Role & Permissions Section */}
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Shield className="h-5 w-5 text-blue-600" />
+        <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+          <CardHeader className="pb-4 border-b border-[#e2e8f0]">
+            <CardTitle className="flex items-center gap-3 text-lg sm:text-xl font-bold text-[#1a202c]">
+              <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+                <Shield className="h-5 w-5" />
               </div>
-              الدور والصلاحيات
+              <span>الدور والصلاحيات</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Role */}
+          <CardContent className="pt-6 space-y-6">
             <FormField
               control={form.control}
               name="role"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium">الدور</FormLabel>
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-base font-bold text-[#1a202c]">الدور الوظيفي في النظام</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     defaultValue={field.value}
                     disabled={currentUserRole === 'AdminDepartment'}
                   >
                     <FormControl>
-                      <SelectTrigger className="text-right bg-white border-slate-300 focus:border-primary focus:ring-primary/20 transition-all duration-200">
+                      <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                         <SelectValue placeholder="اختر الدور" />
                       </SelectTrigger>
                     </FormControl>
@@ -203,10 +209,10 @@ const UserForm = ({
                       {availableRoles().map(role => {
                         const IconComponent = role.icon;
                         return (
-                          <SelectItem key={role.value} value={role.value}>
+                          <SelectItem key={role.value} value={role.value} className="text-base py-2.5">
                             <div className="flex items-center gap-2">
-                              <IconComponent className="h-4 w-4" />
-                              <span>{role.label}</span>
+                              <IconComponent className="h-4 w-4 text-[#2c5282]" />
+                              <span className="font-medium">{role.label}</span>
                             </div>
                           </SelectItem>
                         );
@@ -220,9 +226,9 @@ const UserForm = ({
             
             {/* Display selected role as badge */}
             {selectedRole && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">الدور المحدد:</span>
-                <Badge className={availableRoles().find(r => r.value === selectedRole)?.color}>
+              <div className="flex items-center gap-3 p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                <span className="text-base font-medium text-gray-700">الدور الحالي المحدد:</span>
+                <Badge className={`${availableRoles().find(r => r.value === selectedRole)?.badgeClass || 'bg-gray-100 text-gray-800'} text-sm px-3 py-1`}>
                   {availableRoles().find(r => r.value === selectedRole)?.label}
                 </Badge>
               </div>
@@ -232,76 +238,81 @@ const UserForm = ({
 
         {/* Departments Section */}
         {selectedRole !== 'AdminTuningDesk' && selectedRole !== 'SuperAdmin' && availableDepartments().length > 0 && (
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Building className="h-5 w-5 text-green-600" />
+          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+            <CardHeader className="pb-4 border-b border-[#e2e8f0]">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-lg sm:text-xl font-bold text-[#1a202c]">
+                  <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+                    <Building className="h-5 w-5" />
+                  </div>
+                  <span>الأقسام التابعة</span>
                 </div>
-                <span>الأقسام</span>
                 {currentUserRole === 'AdminDepartment' && (
-                  <Badge variant="outline" className="text-xs">
-                    محدود لقسمك
+                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-800 border-blue-200">
+                    محدد لقسمك الحالي
                   </Badge>
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <FormField
                 control={form.control}
                 name="departments"
                 render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {availableDepartments().map(department => (
-                        <div 
-                          key={department._id} 
-                          className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
-                            field.value.includes(department._id)
-                              ? 'bg-primary/5 border-primary/30 shadow-sm'
-                              : 'bg-white border-slate-200 hover:border-slate-300'
-                          }`}
-                        >
-                          <Checkbox 
-                            id={`department-${department._id}`}
-                            checked={field.value.includes(department._id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                field.onChange([...field.value, department._id]);
-                              } else {
-                                field.onChange(field.value.filter((id: string) => id !== department._id));
-                              }
-                            }}
-                            disabled={currentUserRole === 'AdminDepartment'}
-                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                          />
-                          <label 
-                            htmlFor={`department-${department._id}`}
-                            className="flex-1 text-sm font-medium cursor-pointer"
+                      {availableDepartments().map(department => {
+                        const isChecked = field.value?.includes(department._id);
+                        return (
+                          <div 
+                            key={department._id} 
+                            className={`flex items-center gap-3 p-3.5 min-h-[52px] rounded border transition-colors duration-150 ${
+                              isChecked
+                                ? 'bg-blue-50/60 border-[#2c5282]/40'
+                                : 'bg-white border-[#cbd5e1] hover:border-gray-400'
+                            }`}
                           >
-                            {department.name}
-                          </label>
-                          {field.value.includes(department._id) && (
-                            <Check className="h-4 w-4 text-primary" />
-                          )}
-                        </div>
-                      ))}
+                            <Checkbox 
+                              id={`department-${department._id}`}
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...(field.value || []), department._id]);
+                                } else {
+                                  field.onChange((field.value || []).filter((id: string) => id !== department._id));
+                                }
+                              }}
+                              disabled={currentUserRole === 'AdminDepartment'}
+                              className="h-5 w-5 data-[state=checked]:bg-[#2c5282] data-[state=checked]:border-[#2c5282]"
+                            />
+                            <label 
+                              htmlFor={`department-${department._id}`}
+                              className="flex-1 text-base font-medium text-[#1a202c] cursor-pointer select-none"
+                            >
+                              {department.name}
+                            </label>
+                            {isChecked && (
+                              <Check className="h-4 w-4 text-[#2c5282] shrink-0" />
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                     
                     {selectedDepartments.length > 0 && (
-                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm text-green-700 flex items-center gap-2">
-                          <Check className="h-4 w-4" />
-                          تم تحديد {selectedDepartments.length} قسم
+                      <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded">
+                        <p className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
+                          <Check className="h-4 w-4 text-emerald-700" />
+                          تم تحديد {selectedDepartments.length} {selectedDepartments.length === 1 ? 'قسم' : 'أقسام'} لهذا الحساب
                         </p>
                       </div>
                     )}
                     
                     {currentUserRole === 'AdminDepartment' && (
-                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-xs text-blue-700 flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4" />
-                          المستخدمون المنشؤون من قبل مدير القسم يتم تعيينهم تلقائياً لقسمك النشط.
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                        <p className="text-sm text-blue-800 flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-blue-600 shrink-0" />
+                          المستخدمون المنشؤون من قبل مدير القسم يتم إسنادهم تلقائياً لقسمك النشط.
                         </p>
                       </div>
                     )}
@@ -314,28 +325,28 @@ const UserForm = ({
           </Card>
         )}
 
-        {/* Active Status - Only in edit mode for Admin */}
+        {/* Active Status - In edit mode for Admin */}
         {isEditMode && currentUserRole === 'Admin' && (
-          <Card className="border-l-4 border-l-amber-500">
+          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardContent className="pt-6">
               <FormField
                 control={form.control}
                 name="isActive"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center gap-3 space-y-0">
+                  <FormItem className="flex flex-row items-center gap-3 space-y-0 p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        className="h-5 w-5 data-[state=checked]:bg-[#2c5282] data-[state=checked]:border-[#2c5282]"
                       />
                     </FormControl>
                     <div className="flex-1">
-                      <FormLabel className="text-sm font-medium cursor-pointer">
-                        حساب نشط
+                      <FormLabel className="text-base font-bold text-[#1a202c] cursor-pointer">
+                        حساب نشط ومفعل
                       </FormLabel>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        يمكن للمستخدم النشط تسجيل الدخول واستخدام النظام
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        يمكن للمستخدم النشط تسجيل الدخول والوصول لكافة الصلاحيات الممنوحة له
                       </p>
                     </div>
                     <FormMessage />
@@ -346,48 +357,46 @@ const UserForm = ({
           </Card>
         )}
 
-        {/* Form Actions */}
-        <CardFooter className="flex justify-between bg-slate-50 rounded-lg p-6 border" dir="ltr">
+        {/* Form Actions Footer */}
+        <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#f8fafc] border border-[#e2e8f0] rounded p-6">
           <Button 
             type="button" 
             variant="outline" 
             onClick={() => window.history.back()}
-            className="flex items-center gap-2"
+            className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 flex items-center justify-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
-            إلغاء
+            <ArrowRight className="h-4 w-4" />
+            <span>إلغاء والعودة</span>
           </Button>
-          <div className="flex space-x-3">
+          
+          <div className="flex flex-wrap items-center gap-3">
             {isEditMode && onResetPassword && (
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={onResetPassword}
                 disabled={isResettingPassword}
-                className="flex items-center gap-2"
+                className="h-11 px-5 border border-[#FFCB56] bg-[#FFCB56]/15 hover:bg-[#FFCB56]/30 text-[#1a202c] font-semibold text-base rounded flex items-center gap-2"
               >
-                {isResettingPassword ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                إعادة تعيين كلمة المرور
+                <RefreshCw className={`h-4 w-4 ${isResettingPassword ? 'animate-spin' : ''}`} />
+                <span>إعادة تعيين كلمة المرور</span>
               </Button>
             )}
+            
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 flex items-center gap-2"
+              className="h-11 px-8 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-bold rounded shadow-none flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  جاري الحفظ...
+                  <span>جاري الحفظ...</span>
                 </>
               ) : (
                 <>
                   <Check className="h-4 w-4" />
-                  {isEditMode ? 'حفظ التغييرات' : 'إنشاء مستخدم'}
+                  <span>{isEditMode ? 'حفظ التعديلات' : 'إنشاء المستخدم'}</span>
                 </>
               )}
             </Button>

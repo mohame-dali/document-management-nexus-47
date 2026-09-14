@@ -47,9 +47,12 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
       setNewPassword('');
       setConfirmPassword('');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error updating password:', error);
-      toast.error(error.response?.data?.error || 'فشل في تحديث كلمة المرور');
+      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
+        : 'فشل في تحديث كلمة المرور';
+      toast.error(errorMsg);
     }
   });
 
@@ -63,9 +66,12 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
       // Refresh the page to update the sidebar photo
       window.location.reload();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error uploading photo:', error);
-      toast.error(error.response?.data?.error || 'فشل في تحديث الصورة الشخصية');
+      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
+        : 'فشل في تحديث الصورة الشخصية';
+      toast.error(errorMsg);
     }
   });
 

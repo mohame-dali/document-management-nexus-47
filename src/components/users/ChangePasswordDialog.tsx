@@ -40,9 +40,12 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
       toast.success('تم تحديث كلمة المرور بنجاح');
       handleClose();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Error updating password:', error);
-      toast.error(error.response?.data?.error || 'فشل في تحديث كلمة المرور');
+      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
+        : 'فشل في تحديث كلمة المرور';
+      toast.error(errorMsg);
     }
   });
 
