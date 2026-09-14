@@ -62,7 +62,7 @@ export const advancedSearchDocuments = async (filters: {
     // Search incoming documents if needed
     if (filters.documentType === 'all' || filters.documentType === 'incoming') {
       try {
-        const response = await api.get(`${API_URL}/incoming-documents/search?${params.toString()}`);
+        const response = await api.get(`/incoming-documents/search?${params.toString()}`);
         results.incoming = response.data.data || response.data || [];
         incomingCount = response.data.totalCount || 0;
         incomingHasMore = response.data.hasMore || false;
@@ -74,7 +74,7 @@ export const advancedSearchDocuments = async (filters: {
     // Search outgoing documents if needed
     if (filters.documentType === 'all' || filters.documentType === 'outgoing') {
       try {
-        const response = await api.get(`${API_URL}/outgoing-documents/search?${params.toString()}`);
+        const response = await api.get(`/outgoing-documents/search?${params.toString()}`);
         results.outgoing = response.data.data || response.data || [];
         outgoingCount = response.data.totalCount || 0;
         outgoingHasMore = response.data.hasMore || false;
@@ -126,7 +126,7 @@ export const getIncomingDocuments = async (filters?: {
       params.append('limit', filters.limit.toString());
     }
     
-    const url = `${API_URL}/incoming-documents?${params.toString()}`;
+    const url = `/incoming-documents?${params.toString()}`;
     const response = await api.get(url);
     
     return {
@@ -148,7 +148,7 @@ export const getIncomingDocument = async (id: string): Promise<IncomingDocument>
     const cleanId = typeof id === 'object' ? (id as any)._id || (id as any).id || String(id) : String(id);
     console.log('Fetching incoming document with ID:', cleanId);
     
-    const response = await api.get(`${API_URL}/incoming-documents/${cleanId}`);
+    const response = await api.get(`/incoming-documents/${cleanId}`);
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error fetching incoming document with id ${id}:`, error);
@@ -164,7 +164,7 @@ export const createIncomingDocument = async (documentData: FormData | any): Prom
       headers['Content-Type'] = 'application/json';
     }
     
-    const response = await api.post(`${API_URL}/incoming-documents`, documentData, { headers });
+    const response = await api.post(`/incoming-documents`, documentData, { headers });
     return response.data.data || response.data;
   } catch (error) {
     console.error('Error creating incoming document:', error);
@@ -174,7 +174,7 @@ export const createIncomingDocument = async (documentData: FormData | any): Prom
 
 export const updateIncomingDocument = async (id: string, formData: FormData) => {
   try {
-    const response = await api.put(`${API_URL}/incoming-documents/${id}`, formData, {
+    const response = await api.put(`/incoming-documents/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -197,7 +197,7 @@ export const deleteIncomingDocument = async (documentId: string): Promise<void> 
 
 export const assignResponsible = async (documentId: string, userId: string): Promise<IncomingDocument> => {
   try {
-    const response = await api.put(`${API_URL}/incoming-documents/${documentId}/responsible`, { userId });
+    const response = await api.put(`/incoming-documents/${documentId}/responsible`, { userId });
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error assigning responsible for document ${documentId}:`, error);
@@ -207,7 +207,7 @@ export const assignResponsible = async (documentId: string, userId: string): Pro
 
 export const addAnswer = async (documentId: string, outgoingDocumentId: string): Promise<IncomingDocument> => {
   try {
-    const response = await api.post(`${API_URL}/incoming-documents/${documentId}/answer`, { 
+    const response = await api.post(`/incoming-documents/${documentId}/answer`, { 
       outgoingDocumentId 
     });
     return response.data.data || response.data;
@@ -219,7 +219,7 @@ export const addAnswer = async (documentId: string, outgoingDocumentId: string):
 
 export const assignIncomingToFolder = async (documentId: string, folderId: string): Promise<IncomingDocument> => {
   try {
-    const response = await api.put(`${API_URL}/incoming-documents/${documentId}/folder`, { folderId });
+    const response = await api.put(`/incoming-documents/${documentId}/folder`, { folderId });
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error assigning document ${documentId} to folder:`, error);
@@ -259,7 +259,7 @@ export const getOutgoingDocuments = async (filters?: {
       params.append('limit', filters.limit.toString());
     }
     
-    const url = `${API_URL}/outgoing-documents?${params.toString()}`;
+    const url = `/outgoing-documents?${params.toString()}`;
     const response = await api.get(url);
     
     return {
@@ -281,7 +281,7 @@ export const getOutgoingDocument = async (id: string): Promise<OutgoingDocument>
     const cleanId = typeof id === 'object' ? (id as any)._id || (id as any).id || String(id) : String(id);
     console.log('Fetching outgoing document with ID:', cleanId);
     
-    const response = await api.get(`${API_URL}/outgoing-documents/${cleanId}`);
+    const response = await api.get(`/outgoing-documents/${cleanId}`);
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error fetching outgoing document with id ${id}:`, error);
@@ -297,7 +297,7 @@ export const createOutgoingDocument = async (documentData: FormData | any): Prom
       headers['Content-Type'] = 'application/json';
     }
     
-    const response = await api.post(`${API_URL}/outgoing-documents`, documentData, { headers });
+    const response = await api.post(`/outgoing-documents`, documentData, { headers });
     return response.data.data || response.data;
   } catch (error) {
     console.error('Error creating outgoing document:', error);
@@ -307,7 +307,7 @@ export const createOutgoingDocument = async (documentData: FormData | any): Prom
 
 export const updateOutgoingDocument = async (id: string, formData: FormData) => {
   try {
-    const response = await api.put(`${API_URL}/outgoing-documents/${id}`, formData, {
+    const response = await api.put(`/outgoing-documents/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -330,7 +330,7 @@ export const deleteOutgoingDocument = async (documentId: string): Promise<void> 
 
 export const assignOutgoingToFolder = async (documentId: string, folderId: string): Promise<OutgoingDocument> => {
   try {
-    const response = await api.put(`${API_URL}/outgoing-documents/${documentId}/folder`, { folderId });
+    const response = await api.put(`/outgoing-documents/${documentId}/folder`, { folderId });
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error assigning outgoing document ${documentId} to folder:`, error);
@@ -362,7 +362,7 @@ export const getOutgoingDocumentsList = async (filters?: { department?: string; 
 // Search functionalities
 export const searchIncomingDocuments = async (query: string): Promise<IncomingDocument[]> => {
   try {
-    const response = await api.get(`${API_URL}/incoming-documents/search?q=${encodeURIComponent(query)}`);
+    const response = await api.get(`/incoming-documents/search?q=${encodeURIComponent(query)}`);
     return response.data.data || response.data;
   } catch (error) {
     console.error('Error searching incoming documents:', error);
@@ -372,7 +372,7 @@ export const searchIncomingDocuments = async (query: string): Promise<IncomingDo
 
 export const searchOutgoingDocuments = async (query: string): Promise<OutgoingDocument[]> => {
   try {
-    const response = await api.get(`${API_URL}/outgoing-documents/search?q=${encodeURIComponent(query)}`);
+    const response = await api.get(`/outgoing-documents/search?q=${encodeURIComponent(query)}`);
     return response.data.data || response.data;
   } catch (error) {
     console.error('Error searching outgoing documents:', error);
@@ -383,7 +383,7 @@ export const searchOutgoingDocuments = async (query: string): Promise<OutgoingDo
 // Get documents by department
 export const getIncomingDocumentsByDepartment = async (departmentId: string): Promise<IncomingDocument[]> => {
   try {
-    const response = await api.get(`${API_URL}/incoming-documents?department=${departmentId}`);
+    const response = await api.get(`/incoming-documents?department=${departmentId}`);
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error fetching incoming documents for department ${departmentId}:`, error);
@@ -393,7 +393,7 @@ export const getIncomingDocumentsByDepartment = async (departmentId: string): Pr
 
 export const getOutgoingDocumentsByDepartment = async (departmentId: string): Promise<OutgoingDocument[]> => {
   try {
-    const response = await api.get(`${API_URL}/outgoing-documents?department=${departmentId}`);
+    const response = await api.get(`/outgoing-documents?department=${departmentId}`);
     return response.data.data || response.data;
   } catch (error) {
     console.error(`Error fetching outgoing documents for department ${departmentId}:`, error);
