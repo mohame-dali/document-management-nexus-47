@@ -10,6 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   Shield, 
   Lock, 
@@ -95,24 +105,24 @@ const SecurityPrivacyPage = () => {
     autoLogout: true
   });
 
-  const [loginSessions] = useState<LoginSession[]>([
+  const [loginSessions, setLoginSessions] = useState<LoginSession[]>([
     {
       id: '1',
-      device: 'كمبيوتر سطح المكتب',
+      device: 'كمبيوتر سطح المكتب (الإدارة)',
       browser: 'Chrome 120.0',
       location: 'الرياض، السعودية',
-      loginTime: '2024-01-15 09:30',
+      loginTime: '2025-01-15 09:30',
       lastActivity: 'الآن',
       current: true,
       ip: '192.168.1.100'
     },
     {
       id: '2',
-      device: 'هاتف محمول',
+      device: 'هاتف محمول (تطبيق الويب)',
       browser: 'Safari Mobile',
       location: 'جدة، السعودية',
-      loginTime: '2024-01-14 14:22',
-      lastActivity: 'منذ 2 ساعة',
+      loginTime: '2025-01-14 14:22',
+      lastActivity: 'منذ ساعتين',
       current: false,
       ip: '192.168.1.101'
     }
@@ -122,6 +132,7 @@ const SecurityPrivacyPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -130,9 +141,7 @@ const SecurityPrivacyPage = () => {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // Settings are already initialized in state
+      await new Promise(resolve => setTimeout(resolve, 600));
     } catch (error) {
       toast.error('خطأ في تحميل الإعدادات');
     } finally {
@@ -140,14 +149,14 @@ const SecurityPrivacyPage = () => {
     }
   };
 
-  const handleSecuritySettingsChange = (key: keyof SecuritySettings, value: any) => {
+  const handleSecuritySettingsChange = <K extends keyof SecuritySettings>(key: K, value: SecuritySettings[K]) => {
     setSecuritySettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
 
-  const handlePasswordPolicyChange = (key: string, value: any) => {
+  const handlePasswordPolicyChange = <K extends keyof SecuritySettings['passwordPolicy']>(key: K, value: SecuritySettings['passwordPolicy'][K]) => {
     setSecuritySettings(prev => ({
       ...prev,
       passwordPolicy: {
@@ -157,7 +166,7 @@ const SecurityPrivacyPage = () => {
     }));
   };
 
-  const handlePrivacySettingsChange = (key: keyof PrivacySettings, value: any) => {
+  const handlePrivacySettingsChange = <K extends keyof PrivacySettings>(key: K, value: PrivacySettings[K]) => {
     setPrivacySettings(prev => ({
       ...prev,
       [key]: value
@@ -181,9 +190,8 @@ const SecurityPrivacyPage = () => {
   const saveSettings = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success('تم حفظ الإعدادات بنجاح');
+      await new Promise(resolve => setTimeout(resolve, 800));
+      toast.success('تم حفظ إعدادات الأمان والخصوصية بنجاح');
     } catch (error) {
       toast.error('خطأ في حفظ الإعدادات');
     } finally {
@@ -193,8 +201,7 @@ const SecurityPrivacyPage = () => {
 
   const terminateSession = async (sessionId: string) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setLoginSessions(prev => prev.filter(s => s.id !== sessionId));
       toast.success('تم إنهاء الجلسة بنجاح');
     } catch (error) {
       toast.error('خطأ في إنهاء الجلسة');
@@ -203,129 +210,180 @@ const SecurityPrivacyPage = () => {
 
   const exportData = async () => {
     try {
-      // Simulate data export
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success('تم تصدير البيانات بنجاح');
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('تم تصدير سجلات الأمان بنجاح');
     } catch (error) {
       toast.error('خطأ في تصدير البيانات');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deleteAccount = async () => {
-    if (window.confirm('هل أنت متأكد من حذف الحساب؟ هذا الإجراء لا يمكن التراجع عنه.')) {
-      try {
-        // Simulate account deletion
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        toast.success('تم حذف الحساب');
-        navigate('/login');
-      } catch (error) {
-        toast.error('خطأ في حذف الحساب');
-      }
+  const confirmDeleteAccount = async () => {
+    setIsDeleteAccountModalOpen(false);
+    try {
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('تم حذف الحساب بنجاح');
+      navigate('/login');
+    } catch (error) {
+      toast.error('خطأ في حذف الحساب');
+    } finally {
+      setLoading(false);
     }
   };
 
   if (loading && !securitySettings) {
     return (
-      <div className="container-responsive min-h-screen flex items-center justify-center">
+      <div className="w-full min-h-[60vh] flex items-center justify-center bg-[#f7fafc]">
         <div className="text-center space-y-4">
-          <RefreshCw className="icon-responsive-lg mx-auto animate-spin text-primary" />
-          <p className="text-muted-foreground">جاري تحميل إعدادات الأمان...</p>
+          <RefreshCw className="h-10 w-10 mx-auto animate-spin text-[#2c5282]" />
+          <p className="text-base text-[#4a5568]">جاري تحميل إعدادات الأمان...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container-responsive padding-responsive-lg space-y-6" dir="rtl">
-      {/* Header */}
-      <div className="flex items-center gap-responsive mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/dashboard/settings')}
-          className="touch-target-sm"
-        >
-          <ChevronLeft className="icon-responsive rtl-mirror" />
-        </Button>
-        <Shield className="icon-responsive-lg text-primary" />
-        <div>
-          <h1 className="text-responsive-xl font-bold text-foreground">الأمان والخصوصية</h1>
-          <p className="text-muted-foreground text-responsive-sm">إدارة إعدادات الأمان وحماية البيانات</p>
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      {/* 1. Header Section */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/dashboard/settings')}
+            className="h-11 w-11 p-0 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 shrink-0"
+            title="العودة للإعدادات"
+          >
+            <ChevronLeft className="h-6 w-6 rtl-mirror" />
+          </Button>
+          <div className="w-12 h-12 rounded bg-[#2c5282]/10 border border-[#2c5282]/20 flex items-center justify-center text-[#2c5282] shrink-0">
+            <Shield className="h-6 w-6 text-[#2c5282]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">الأمان والخصوصية</h1>
+              <span className="inline-flex items-center px-3 py-1 rounded text-sm font-bold bg-[#FFCB56] text-[#1a202c]">
+                الحماية وسياسة الدخول
+              </span>
+            </div>
+            <p className="text-base text-[#4a5568] mt-1 leading-relaxed">
+              إدارة سياسات الدخول، تعقيد كلمات المرور، والتحكم بالجلسات النشطة
+            </p>
+          </div>
         </div>
+
+        <Button
+          onClick={saveSettings}
+          disabled={loading}
+          className="h-11 px-8 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded shadow-none gap-2 self-start sm:self-center"
+        >
+          {loading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Settings className="h-5 w-5" />}
+          <span>{loading ? 'جاري الحفظ...' : 'حفظ الإعدادات'}</span>
+        </Button>
       </div>
 
-      <Tabs defaultValue="security" className="w-full">
-        <TabsList className="grid-responsive-3 w-full">
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Lock className="icon-responsive" />
-            <span className="hidden sm:inline">الأمان</span>
+      {/* 2. Main Tabs */}
+      <Tabs defaultValue="security" className="w-full space-y-6">
+        <TabsList className="w-full flex flex-wrap h-auto p-1.5 bg-[#edf2f7] border border-[#e2e8f0] rounded gap-1.5">
+          <TabsTrigger
+            value="security"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+          >
+            <Lock className="h-5 w-5" />
+            <span>سياسات الأمان</span>
           </TabsTrigger>
-          <TabsTrigger value="privacy" className="flex items-center gap-2">
-            <Eye className="icon-responsive" />
-            <span className="hidden sm:inline">الخصوصية</span>
+
+          <TabsTrigger
+            value="privacy"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+          >
+            <Eye className="h-5 w-5" />
+            <span>الخصوصية وتصدير البيانات</span>
           </TabsTrigger>
-          <TabsTrigger value="sessions" className="flex items-center gap-2">
-            <Monitor className="icon-responsive" />
-            <span className="hidden sm:inline">الجلسات</span>
+
+          <TabsTrigger
+            value="sessions"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+          >
+            <Monitor className="h-5 w-5" />
+            <span>الجلسات النشطة</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6 mt-6">
-          {/* Password Policy */}
-          <Card className="enhanced-card">
-            <CardHeader>
-              <div className="flex items-center gap-responsive">
-                <Key className="icon-responsive text-primary" />
+        {/* TAB 1: Security Policies */}
+        <TabsContent value="security" className="space-y-6 mt-0">
+          {/* Password Policy Card */}
+          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+            <CardHeader className="p-6 border-b border-[#e2e8f0]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
+                  <Key className="h-5 w-5" />
+                </div>
                 <div>
-                  <CardTitle className="text-responsive-lg">سياسة كلمات المرور</CardTitle>
-                  <CardDescription>تكوين متطلبات كلمات المرور للنظام</CardDescription>
+                  <CardTitle className="text-xl font-bold text-[#1a202c]">سياسة تعقيد كلمات المرور</CardTitle>
+                  <CardDescription className="text-base text-[#718096]">
+                    تكوين شروط كلمة المرور الإلزامية للمستخدمين في النظام
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="form-grid-responsive">
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label>الحد الأدنى لطول كلمة المرور</Label>
+                  <Label className="text-base font-bold text-[#1a202c]">الحد الأدنى لطول كلمة المرور</Label>
                   <Input
                     type="number"
                     value={securitySettings.passwordPolicy.minLength}
-                    onChange={(e) => handlePasswordPolicyChange('minLength', parseInt(e.target.value))}
+                    onChange={(e) => handlePasswordPolicyChange('minLength', parseInt(e.target.value) || 8)}
                     min={6}
-                    max={128}
-                    className="input-responsive"
+                    max={64}
+                    className="h-11 text-base border-[#cbd5e1] rounded bg-white"
                   />
+                  <p className="text-sm text-gray-500">موصى به: 8 أحرف على الأقل</p>
                 </div>
+
                 <div className="space-y-2">
-                  <Label>انتهاء صلاحية كلمة المرور (أيام)</Label>
+                  <Label className="text-base font-bold text-[#1a202c]">دورة صلاحية كلمة المرور (أيام)</Label>
                   <Input
                     type="number"
                     value={securitySettings.passwordPolicy.expirationDays}
-                    onChange={(e) => handlePasswordPolicyChange('expirationDays', parseInt(e.target.value))}
+                    onChange={(e) => handlePasswordPolicyChange('expirationDays', parseInt(e.target.value) || 90)}
                     min={30}
                     max={365}
-                    className="input-responsive"
+                    className="h-11 text-base border-[#cbd5e1] rounded bg-white"
                   />
+                  <p className="text-sm text-gray-500">إلزام المستخدمين بتغيير كلمة المرور كل 90 يوماً</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>يجب أن تحتوي على أحرف كبيرة</Label>
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
+                  <Label className="text-base font-bold text-[#1a202c] cursor-pointer">
+                    إلزام باحتواء أحرف كبيرة (A-Z)
+                  </Label>
                   <Switch
                     checked={securitySettings.passwordPolicy.requireUppercase}
                     onCheckedChange={(checked) => handlePasswordPolicyChange('requireUppercase', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label>يجب أن تحتوي على أرقام</Label>
+
+                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
+                  <Label className="text-base font-bold text-[#1a202c] cursor-pointer">
+                    إلزام باحتواء أرقام (0-9)
+                  </Label>
                   <Switch
                     checked={securitySettings.passwordPolicy.requireNumbers}
                     onCheckedChange={(checked) => handlePasswordPolicyChange('requireNumbers', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label>يجب أن تحتوي على رموز خاصة</Label>
+
+                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
+                  <Label className="text-base font-bold text-[#1a202c] cursor-pointer">
+                    إلزام باحتواء رموز خاصة (@#$%...)
+                  </Label>
                   <Switch
                     checked={securitySettings.passwordPolicy.requireSpecialChars}
                     onCheckedChange={(checked) => handlePasswordPolicyChange('requireSpecialChars', checked)}
@@ -335,89 +393,27 @@ const SecurityPrivacyPage = () => {
             </CardContent>
           </Card>
 
-          {/* Change Password */}
-          <Card className="enhanced-card">
-            <CardHeader>
-              <CardTitle className="text-responsive-lg">تغيير كلمة المرور</CardTitle>
-              <CardDescription>قم بتحديث كلمة المرور الخاصة بك</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>كلمة المرور الجديدة</Label>
-                <div className="relative">
-                  <Input
-                    type={showPasswords ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => handlePasswordChange(e.target.value)}
-                    className="input-responsive pr-10"
-                    placeholder="أدخل كلمة المرور الجديدة"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 touch-target-sm"
-                    onClick={() => setShowPasswords(!showPasswords)}
-                  >
-                    {showPasswords ? <EyeOff className="icon-responsive" /> : <Eye className="icon-responsive" />}
-                  </Button>
+          {/* Two-Factor Authentication Card */}
+          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+            <CardHeader className="p-6 border-b border-[#e2e8f0]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
+                  <UserCheck className="h-5 w-5" />
                 </div>
-                {newPassword && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-responsive-xs">
-                      <span>قوة كلمة المرور</span>
-                      <span>{passwordStrength}%</span>
-                    </div>
-                    <Progress value={passwordStrength} className="h-2" />
-                    <div className="flex justify-center">
-                      <Badge variant={passwordStrength < 50 ? "destructive" : passwordStrength < 75 ? "secondary" : "default"}>
-                        {passwordStrength < 50 ? "ضعيفة" : passwordStrength < 75 ? "متوسطة" : "قوية"}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>تأكيد كلمة المرور</Label>
-                <Input
-                  type={showPasswords ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="input-responsive"
-                  placeholder="أعد إدخال كلمة المرور"
-                />
-                {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="text-destructive text-responsive-xs">كلمات المرور غير متطابقة</p>
-                )}
-              </div>
-
-              <Button 
-                className="w-full professional-button"
-                disabled={!newPassword || newPassword !== confirmPassword || passwordStrength < 50}
-              >
-                تحديث كلمة المرور
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Two-Factor Authentication */}
-          <Card className="enhanced-card">
-            <CardHeader>
-              <div className="flex items-center gap-responsive">
-                <UserCheck className="icon-responsive text-primary" />
                 <div>
-                  <CardTitle className="text-responsive-lg">المصادقة الثنائية</CardTitle>
-                  <CardDescription>أضف طبقة حماية إضافية لحسابك</CardDescription>
+                  <CardTitle className="text-xl font-bold text-[#1a202c]">المصادقة الثنائية (2FA)</CardTitle>
+                  <CardDescription className="text-base text-[#718096]">
+                    طبقة حماية إضافية تمنع الوصول غير المصرح به حتى عند تسرب كلمة المرور
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">تفعيل المصادقة الثنائية</p>
-                  <p className="text-responsive-sm text-muted-foreground">
-                    استخدم تطبيق المصادقة للحصول على رموز الأمان
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
+                <div className="space-y-1">
+                  <p className="text-base font-bold text-[#1a202c]">تفعيل المصادقة الثنائية للمستخدمين الإداريين</p>
+                  <p className="text-sm text-[#4a5568]">
+                    إرسال رمز تحقق مؤقت للبريد الإلكتروني عند الدخول من عنوان IP أو متصفح جديد
                   </p>
                 </div>
                 <Switch
@@ -425,110 +421,60 @@ const SecurityPrivacyPage = () => {
                   onCheckedChange={(checked) => handleSecuritySettingsChange('twoFactorAuth', checked)}
                 />
               </div>
+
               {securitySettings.twoFactorAuth && (
-                <Alert className="mt-4">
-                  <CheckCircle className="icon-responsive" />
-                  <AlertDescription>
-                    المصادقة الثنائية مفعلة. حسابك محمي بطبقة أمان إضافية.
+                <Alert className="border-blue-200 bg-blue-50 rounded">
+                  <CheckCircle className="h-5 w-5 text-[#2c5282]" />
+                  <AlertDescription className="text-base text-[#2c5282] font-medium mr-2">
+                    المصادقة الثنائية مفعلة لجميع الحسابات الإدارية.
                   </AlertDescription>
                 </Alert>
               )}
             </CardContent>
           </Card>
-
-          {/* Session Security */}
-          <Card className="enhanced-card">
-            <CardHeader>
-              <CardTitle className="text-responsive-lg">أمان الجلسات</CardTitle>
-              <CardDescription>إعدادات انتهاء الجلسات والأمان</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="form-grid-responsive">
-                <div className="space-y-2">
-                  <Label>انتهاء صلاحية الجلسة (دقيقة)</Label>
-                  <Input
-                    type="number"
-                    value={securitySettings.sessionTimeout}
-                    onChange={(e) => handleSecuritySettingsChange('sessionTimeout', parseInt(e.target.value))}
-                    min={5}
-                    max={480}
-                    className="input-responsive"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>عدد محاولات الدخول المسموحة</Label>
-                  <Input
-                    type="number"
-                    value={securitySettings.loginAttempts}
-                    onChange={(e) => handleSecuritySettingsChange('loginAttempts', parseInt(e.target.value))}
-                    min={3}
-                    max={10}
-                    className="input-responsive"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
-        {/* Privacy Tab */}
-        <TabsContent value="privacy" className="space-y-6 mt-6">
-          {/* Data Management */}
-          <Card className="enhanced-card">
-            <CardHeader>
-              <div className="flex items-center gap-responsive">
-                <FileText className="icon-responsive text-primary" />
+        {/* TAB 2: Privacy Settings */}
+        <TabsContent value="privacy" className="space-y-6 mt-0">
+          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+            <CardHeader className="p-6 border-b border-[#e2e8f0]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
+                  <Eye className="h-5 w-5" />
+                </div>
                 <div>
-                  <CardTitle className="text-responsive-lg">إدارة البيانات</CardTitle>
-                  <CardDescription>التحكم في بياناتك وخصوصيتها</CardDescription>
+                  <CardTitle className="text-xl font-bold text-[#1a202c]">الخصوصية وتصدير البيانات</CardTitle>
+                  <CardDescription className="text-base text-[#718096]">
+                    خيارات الاحتفاظ بسجلات الأمان وتصدير البيانات الإدارية
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>فترة الاحتفاظ بالبيانات (أيام)</Label>
-                <Input
-                  type="number"
-                  value={privacySettings.dataRetention}
-                  onChange={(e) => handlePrivacySettingsChange('dataRetention', parseInt(e.target.value))}
-                  min={30}
-                  max={2555}
-                  className="input-responsive"
-                />
-                <p className="text-responsive-xs text-muted-foreground">
-                  ستُحذف البيانات تلقائياً بعد انتهاء هذه المدة
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>مشاركة إحصائيات الاستخدام</Label>
-                    <p className="text-responsive-xs text-muted-foreground">مساعدتنا في تحسين النظام</p>
+            <CardContent className="p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
+                  <div className="space-y-1">
+                    <Label className="text-base font-bold text-[#1a202c] cursor-pointer">
+                      تفعيل تصدير سجلات الأمان
+                    </Label>
+                    <p className="text-sm text-[#4a5568]">
+                      السماح لمدير النظام بتنزيل تقرير بصيغة CSV لكافة عمليات الدخول
+                    </p>
                   </div>
                   <Switch
-                    checked={privacySettings.shareUsageStats}
-                    onCheckedChange={(checked) => handlePrivacySettingsChange('shareUsageStats', checked)}
+                    checked={privacySettings.dataExportEnabled}
+                    onCheckedChange={(checked) => handlePrivacySettingsChange('dataExportEnabled', checked)}
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>السماح بملفات تعريف الارتباط</Label>
-                    <p className="text-responsive-xs text-muted-foreground">ضروري لتشغيل النظام</p>
-                  </div>
-                  <Switch
-                    checked={privacySettings.allowCookies}
-                    onCheckedChange={(checked) => handlePrivacySettingsChange('allowCookies', checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>إظهار حالة الاتصال</Label>
-                    <p className="text-responsive-xs text-muted-foreground">إظهار متى كنت متصلاً آخر مرة</p>
+                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
+                  <div className="space-y-1">
+                    <Label className="text-base font-bold text-[#1a202c] cursor-pointer">
+                      إظهار حالة الاتصال (متصل الآن)
+                    </Label>
+                    <p className="text-sm text-[#4a5568]">
+                      إظهار شارة الاتصال في قائمة المستخدمين لزملائك في الإدارة
+                    </p>
                   </div>
                   <Switch
                     checked={privacySettings.showOnlineStatus}
@@ -536,126 +482,116 @@ const SecurityPrivacyPage = () => {
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Data Export & Deletion */}
-          <Card className="enhanced-card">
-            <CardHeader>
-              <CardTitle className="text-responsive-lg">تصدير وحذف البيانات</CardTitle>
-              <CardDescription>إدارة بياناتك الشخصية</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-[#e2e8f0]">
                 <Button 
                   onClick={exportData}
-                  className="flex-1 flex items-center gap-2"
-                  variant="outline"
+                  disabled={loading}
+                  className="h-11 px-6 text-base font-bold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] rounded flex items-center justify-center gap-2 shadow-none"
                 >
-                  <Download className="icon-responsive" />
-                  تصدير بياناتي
+                  <Download className="h-5 w-5" />
+                  <span>تصدير سجلات الأمان</span>
                 </Button>
+
                 <Button 
-                  onClick={deleteAccount}
-                  className="flex-1 flex items-center gap-2"
-                  variant="destructive"
+                  onClick={() => setIsDeleteAccountModalOpen(true)}
+                  className="h-11 px-6 text-base font-semibold bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center gap-2 shadow-none"
                 >
-                  <Trash2 className="icon-responsive" />
-                  حذف الحساب
+                  <Trash2 className="h-5 w-5" />
+                  <span>إلغاء تنشيط الحساب</span>
                 </Button>
               </div>
-              
-              <Alert>
-                <AlertTriangle className="icon-responsive" />
-                <AlertDescription>
-                  حذف الحساب إجراء نهائي ولا يمكن التراجع عنه. ستفقد جميع البيانات المرتبطة بحسابك.
-                </AlertDescription>
-              </Alert>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Sessions Tab */}
-        <TabsContent value="sessions" className="space-y-6 mt-6">
-          <Card className="enhanced-card">
-            <CardHeader>
-              <div className="flex items-center gap-responsive">
-                <Monitor className="icon-responsive text-primary" />
+        {/* TAB 3: Active Sessions */}
+        <TabsContent value="sessions" className="space-y-6 mt-0">
+          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+            <CardHeader className="p-6 border-b border-[#e2e8f0]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
+                  <Monitor className="h-5 w-5" />
+                </div>
                 <div>
-                  <CardTitle className="text-responsive-lg">الجلسات النشطة</CardTitle>
-                  <CardDescription>إدارة جلسات تسجيل الدخول الخاصة بك</CardDescription>
+                  <CardTitle className="text-xl font-bold text-[#1a202c]">الجلسات النشطة حالياً</CardTitle>
+                  <CardDescription className="text-base text-[#718096]">
+                    الأجهزة والمتصفحات المسجل الدخول إليها بحسابك في الوقت الراهن
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {loginSessions.map((session) => (
-                  <div key={session.id} className="border border-border rounded-lg card-responsive-sm">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-accent rounded-lg">
-                          {session.device.includes('محمول') ? 
-                            <Smartphone className="icon-responsive text-accent-foreground" /> : 
-                            <Monitor className="icon-responsive text-accent-foreground" />
-                          }
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-responsive-sm">{session.device}</p>
-                            {session.current && (
-                              <Badge variant="default" className="badge-responsive">الجلسة الحالية</Badge>
-                            )}
-                          </div>
-                          <p className="text-responsive-xs text-muted-foreground">{session.browser}</p>
-                          <p className="text-responsive-xs text-muted-foreground flex items-center gap-1">
-                            <Globe className="w-3 h-3" />
-                            {session.location}
-                          </p>
-                          <p className="text-responsive-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            آخر نشاط: {session.lastActivity}
-                          </p>
-                        </div>
+            <CardContent className="p-6 space-y-4">
+              {loginSessions.map((session) => (
+                <div key={session.id} className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+                      {session.device.includes('محمول') ? 
+                        <Smartphone className="h-6 w-6 text-[#2c5282]" /> : 
+                        <Monitor className="h-6 w-6 text-[#2c5282]" />
+                      }
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-bold text-base text-[#1a202c]">{session.device}</p>
+                        {session.current && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c]">
+                            الجلسة الحالية
+                          </span>
+                        )}
                       </div>
-                      {!session.current && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => terminateSession(session.id)}
-                          className="touch-target-sm"
-                        >
-                          إنهاء
-                        </Button>
-                      )}
+                      <p className="text-sm text-gray-500 mt-0.5">{session.browser} — {session.ip}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">الموقع: {session.location} | آخر نشاط: {session.lastActivity}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  {!session.current && (
+                    <Button
+                      variant="outline"
+                      onClick={() => terminateSession(session.id)}
+                      className="h-10 px-4 text-sm font-semibold border-red-200 text-red-600 hover:bg-red-50 rounded shrink-0 self-start sm:self-center"
+                    >
+                      إنهاء الجلسة
+                    </Button>
+                  )}
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Save Button */}
-      <div className="flex justify-center pt-6">
-        <Button 
-          onClick={saveSettings}
-          className="professional-button min-w-32"
-          disabled={loading}
+      {/* Confirmation Modal for Account Deletion / Deactivation (≥ 700px on desktop) */}
+      <AlertDialog open={isDeleteAccountModalOpen} onOpenChange={setIsDeleteAccountModalOpen}>
+        <AlertDialogContent
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xl"
+          dir="rtl"
         >
-          {loading ? (
-            <>
-              <RefreshCw className="icon-responsive animate-spin ml-2" />
-              جاري الحفظ...
-            </>
-          ) : (
-            <>
-              <Settings className="icon-responsive ml-2" />
-              حفظ الإعدادات
-            </>
-          )}
-        </Button>
-      </div>
+          <AlertDialogHeader>
+            <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-700">
+              تأكيد إلغاء تنشيط الحساب
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-[#4a5568] leading-relaxed mt-2">
+              هل أنت متأكد من رغبتك في إلغاء تنشيط هذا الحساب؟ لن تتمكن من تسجيل الدخول إلى المنظومة بعد تأكيد هذا الإجراء، وسيتم إخطار مدير النظام الرئيسي.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-[#e2e8f0]">
+            <AlertDialogAction
+              onClick={confirmDeleteAccount}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none"
+            >
+              تأكيد الإلغاء
+            </AlertDialogAction>
+            <AlertDialogCancel className="border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 font-medium text-base h-11 px-6 rounded">
+              تراجع
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
