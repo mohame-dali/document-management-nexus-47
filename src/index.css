@@ -92,7 +92,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-cairo antialiased;
+    @apply bg-background text-foreground font-cairo antialiased text-base leading-relaxed;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
@@ -103,15 +103,15 @@
   }
 
   h1 {
-    @apply text-2xl sm:text-3xl lg:text-4xl;
+    @apply text-[1.75rem] sm:text-3xl lg:text-4xl;
   }
 
   h2 {
-    @apply text-xl sm:text-2xl lg:text-3xl;
+    @apply text-[1.5rem] sm:text-2xl lg:text-3xl;
   }
 
   h3 {
-    @apply text-lg sm:text-xl lg:text-2xl;
+    @apply text-[1.25rem] sm:text-xl lg:text-2xl;
   }
 
   h4 {
@@ -159,16 +159,16 @@
 
   /* Enhanced responsive breakpoints for better mobile experience */
   .container-responsive {
-    @apply px-4 sm:px-6 lg:px-8 xl:px-12;
+    @apply px-6 sm:px-8 lg:px-10 xl:px-12;
   }
 
   /* Mobile-first responsive padding */
   .padding-responsive {
-    @apply p-3 sm:p-4 md:p-6 lg:p-8;
+    @apply p-4 sm:p-6 md:p-6 lg:p-8;
   }
 
   .padding-responsive-sm {
-    @apply p-2 sm:p-3 md:p-4;
+    @apply p-3 sm:p-4 md:p-4;
   }
 
   .padding-responsive-lg {
@@ -177,15 +177,15 @@
 
   /* Gap utilities for responsive spacing */
   .gap-responsive {
-    @apply gap-2 sm:gap-3 md:gap-4 lg:gap-6;
+    @apply gap-3 sm:gap-4 md:gap-6 lg:gap-6;
   }
 
   .gap-responsive-sm {
-    @apply gap-1 sm:gap-2 md:gap-3;
+    @apply gap-2 sm:gap-3 md:gap-3;
   }
 
   .gap-responsive-lg {
-    @apply gap-3 sm:gap-4 md:gap-6 lg:gap-8;
+    @apply gap-4 sm:gap-6 md:gap-6 lg:gap-8;
   }
 }
 
@@ -197,11 +197,11 @@
   
   /* Enhanced touch targets for mobile */
   .touch-target {
-    @apply min-h-[44px] min-w-[44px] sm:min-h-[40px] sm:min-w-[40px];
+    @apply min-h-[44px] min-w-[44px];
   }
 
   .touch-target-sm {
-    @apply min-h-[36px] min-w-[36px] sm:min-h-[32px] sm:min-w-[32px];
+    @apply min-h-[40px] min-w-[40px];
   }
 
   /* Custom scrollbar for folder tree - responsive */
@@ -250,24 +250,24 @@
 
   /* Calm professional primary button */
   .professional-button {
-    @apply bg-primary hover:bg-[#1e3a5f] text-primary-foreground font-medium px-4 py-2 sm:px-5 sm:py-2.5 rounded shadow-sm hover:shadow transition-colors duration-200 text-sm sm:text-base;
+    @apply bg-primary hover:bg-[#1e3a5f] text-primary-foreground font-medium px-5 py-2.5 rounded shadow-sm hover:shadow transition-colors duration-200 text-base;
   }
 
   /* Soft status badges (Badges statut doux) */
   .badge-soft-success {
-    @apply bg-[#ebf8f1] text-[#22543d] border border-[#bbf0d0] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#ebf8f1] text-[#22543d] border border-[#bbf0d0] font-medium rounded text-sm px-3 py-1;
   }
   .badge-soft-warning {
-    @apply bg-[#fef9e7] text-[#744210] border border-[#fbd38d] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#fef9e7] text-[#744210] border border-[#fbd38d] font-medium rounded text-sm px-3 py-1;
   }
   .badge-soft-danger {
-    @apply bg-[#feeeee] text-[#9b2c2c] border border-[#feb2b2] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#feeeee] text-[#9b2c2c] border border-[#feb2b2] font-medium rounded text-sm px-3 py-1;
   }
   .badge-soft-primary {
-    @apply bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8] font-medium rounded text-sm px-3 py-1;
   }
   .badge-soft-neutral {
-    @apply bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0] font-medium rounded text-sm px-3 py-1;
   }
 
   /* Subtle table row hover */
@@ -299,7 +299,7 @@
 
   /* Modal and dialog responsive sizing */
   .dialog-responsive {
-    @apply w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] max-w-4xl;
+    @apply w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] max-w-[900px];
   }
 
   .dialog-responsive-sm {
@@ -331,26 +331,26 @@
 
   /* Navigation responsive */
   .nav-responsive {
-    @apply flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4;
+    @apply flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4;
   }
 
   /* Card responsive padding */
   .card-responsive {
-    @apply p-3 sm:p-4 md:p-6;
+    @apply p-6;
   }
 
   .card-responsive-sm {
-    @apply p-2 sm:p-3 md:p-4;
+    @apply p-4;
   }
 
   /* Input and form control responsive sizing */
   .input-responsive {
-    @apply text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2.5;
+    @apply text-base px-4 py-2.5;
   }
 
   /* Badge and chip responsive sizing */
   .badge-responsive {
-    @apply text-xs sm:text-sm px-2 py-1 sm:px-2.5 sm:py-1;
+    @apply text-sm px-3 py-1;
   }
 
   /* Icon responsive sizing */
@@ -422,11 +422,11 @@
 /* Enhanced responsive media queries for better mobile support */
 @media (max-width: 640px) {
   .mobile-optimized {
-    @apply text-sm leading-relaxed;
+    @apply text-base leading-relaxed;
   }
 
   .mobile-padding {
-    @apply px-3 py-2;
+    @apply px-4 py-3;
   }
 
   .mobile-margin {

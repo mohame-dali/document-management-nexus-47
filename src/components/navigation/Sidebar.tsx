@@ -128,7 +128,7 @@ const Sidebar = () => {
 
   const getUserPhotoUrl = (user: any) => {
     if (user?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
       // Remove leading slash if it exists to avoid double slashes
       const photoPath = user.photo.startsWith('/') ? user.photo.slice(1) : user.photo;
       return `${API_URL}/${photoPath}`;

@@ -19,6 +19,7 @@ import {
 } from '@/services/scannerService';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = API_URL.replace('/api', '');
 
 const translations = {
   title: 'مسح الوثائق',
@@ -288,7 +289,7 @@ const ScanDocumentPage: React.FC = () => {
                 });
               }
             }}
-            API_URL={API_URL}
+            API_URL={BASE_URL}
           />
         </div>
 

@@ -34,12 +34,12 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
     
     if (attachment.path) {
       const filename = attachment.path.split(/[\/\\]/).pop();
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
       return `${apiBaseUrl}/api/messages/attachments/${filename}`;
     }
     
     if (attachment.filename) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
       return `${apiBaseUrl}/api/messages/attachments/${attachment.filename}`;
     }
     

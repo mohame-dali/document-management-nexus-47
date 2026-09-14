@@ -357,7 +357,7 @@ const SettingsPage = () => {
               <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
                 <Avatar className="h-28 w-28 border-2 border-[#2c5282] shadow-sm">
                   <AvatarImage
-                    src={photoPreview || (currentUser?.photo ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${currentUser.photo}` : undefined)}
+                    src={photoPreview || (currentUser?.photo ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '')}${currentUser.photo}` : undefined)}
                     alt={currentUser?.username}
                   />
                   <AvatarFallback className="bg-[#2c5282] text-white text-2xl font-bold">

@@ -110,7 +110,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
       : message.sender;
 
     if (typeof target === 'object' && target?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
       return `${API_URL}${target.photo}`;
     }
     return '';

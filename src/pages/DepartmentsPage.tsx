@@ -198,7 +198,7 @@ const DepartmentsPage: React.FC = () => {
   const getPhotoUrl = (photoPath: string) => {
     if (!photoPath) return '';
     if (photoPath.startsWith('http')) return photoPath;
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
     const cleanPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
     return `${baseUrl}${cleanPath}`;
   };
