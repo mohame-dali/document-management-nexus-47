@@ -99,44 +99,44 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f7fafc] font-cairo" dir="rtl">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="inline-flex items-center text-xs font-medium text-[#2c5282] hover:text-[#234269] transition-colors duration-200">
-          <ArrowLeft className="h-4 w-4 ml-1.5" />
+      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <Link to="/" className="inline-flex items-center text-sm font-medium text-[#2c5282] hover:text-[#234269] transition-colors duration-200">
+          <ArrowLeft className="h-5 w-5 ml-1.5" />
           العودة للرئيسية
         </Link>
       </div>
       
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-6">
         <Card className="w-full max-w-md shadow-sm border border-[#e2e8f0] bg-white rounded">
-          <CardHeader className="space-y-1 pb-4">
+          <CardHeader className="space-y-2 pb-4">
             <div className="flex justify-center mb-3">
-              <div className="w-12 h-12 bg-[#ebf4ff] rounded border border-[#bee3f8] flex items-center justify-center text-[#2c5282]">
-                <LogIn className="h-6 w-6" />
+              <div className="w-14 h-14 bg-[#ebf4ff] rounded border border-[#bee3f8] flex items-center justify-center text-[#2c5282]">
+                <LogIn className="h-7 w-7" />
               </div>
             </div>
             <CardTitle className="text-xl font-bold text-center text-[#1a202c]">مرحباً</CardTitle>
-            <CardDescription className="text-center text-xs text-[#718096]">
+            <CardDescription className="text-center text-sm text-[#718096]">
               تسجيل الدخول إلى نظام إدارة المراسلات
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loginError && (
               <Alert variant="destructive" className="mb-4 bg-[#fff5f5] border-[#fed7d7] text-[#742a2a] rounded">
-                <AlertCircle className="h-4 w-4 ml-2 text-[#e53e3e]" />
-                <AlertDescription className="text-xs">
+                <AlertCircle className="h-5 w-5 ml-2 text-[#e53e3e]" />
+                <AlertDescription className="text-sm">
                   {loginError}
                 </AlertDescription>
               </Alert>
             )}
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium text-[#4a5568]">اسم المستخدم</FormLabel>
+                      <FormLabel className="text-base font-medium text-[#4a5568]">اسم المستخدم</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="أدخل اسم المستخدم"
@@ -146,7 +146,7 @@ const LoginPage = () => {
                           autoFocus
                         />
                       </FormControl>
-                      <FormMessage className="text-xs text-[#e53e3e]" />
+                      <FormMessage className="text-sm text-[#e53e3e]" />
                     </FormItem>
                   )}
                 />
@@ -156,7 +156,7 @@ const LoginPage = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium text-[#4a5568]">كلمة المرور</FormLabel>
+                      <FormLabel className="text-base font-medium text-[#4a5568]">كلمة المرور</FormLabel>
                       <FormControl>
                         <Input 
                           type="password" 
@@ -166,7 +166,7 @@ const LoginPage = () => {
                           autoComplete="off"
                         />
                       </FormControl>
-                      <FormMessage className="text-xs text-[#e53e3e]" />
+                      <FormMessage className="text-sm text-[#e53e3e]" />
                     </FormItem>
                   )}
                 />
@@ -178,12 +178,12 @@ const LoginPage = () => {
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      <span className="mr-2 text-xs">جاري تسجيل الدخول...</span>
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <span className="mr-2 text-sm">جاري تسجيل الدخول...</span>
                     </div>
                   ) : (
                     <>
-                      <LogIn className="w-4 h-4 ml-2" />
+                      <LogIn className="w-5 h-5 ml-2" />
                       تسجيل الدخول
                     </>
                   )}
@@ -191,11 +191,11 @@ const LoginPage = () => {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex flex-col text-center text-xs text-[#718096] border-t border-[#f7fafc] pt-3">
+          <CardFooter className="flex flex-col text-center text-sm text-[#718096] border-t border-[#f7fafc] pt-4">
             <p className="w-full mb-1">
               حساب المدير الافتراضي: <strong className="text-[#2d3748]">admin / admin123</strong>
             </p>
-            <p className="text-[11px] text-[#a0aec0]">
+            <p className="text-sm text-[#a0aec0]">
               نظام إدارة المراسلات والوثائق
             </p>
           </CardFooter>

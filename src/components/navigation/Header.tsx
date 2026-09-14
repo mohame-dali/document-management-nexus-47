@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -46,13 +45,13 @@ const Header = () => {
   const getRoleIcon = () => {
     switch (currentUser.role) {
       case 'Admin':
-        return <Shield className="h-4 w-4 text-red-600" />;
+        return <Shield className="h-5 w-5 text-red-600" />;
       case 'AdminTuningDesk':
-        return <Settings className="h-4 w-4 text-blue-600" />;
+        return <Settings className="h-5 w-5 text-blue-600" />;
       case 'AdminDepartment':
-        return <Users className="h-4 w-4 text-green-600" />;
+        return <Users className="h-5 w-5 text-green-600" />;
       default:
-        return <User className="h-4 w-4 text-gray-600" />;
+        return <User className="h-5 w-5 text-gray-600" />;
     }
   };
 
@@ -93,7 +92,7 @@ const Header = () => {
           title={t('header.toggleSidebar')}
           className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded transition-colors duration-200"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6" />
         </Button>
       </div>
 
@@ -101,30 +100,30 @@ const Header = () => {
       <div className="flex items-center space-x-reverse space-x-3 sm:space-x-4">
         {/* Title with Icon */}
         <div className="hidden md:flex items-center space-x-reverse space-x-2">
-          <div className="p-1.5 bg-[#ebf4ff] text-[#2c5282] rounded">
-            <FileText className="h-4 w-4" />
+          <div className="p-2 bg-[#ebf4ff] text-[#2c5282] rounded">
+            <FileText className="h-5 w-5" />
           </div>
-          <h2 className="text-sm font-semibold text-[#1a202c]">
+          <h2 className="text-base font-semibold text-[#1a202c]">
             {getHeaderTitle()}
           </h2>
         </div>
 
         {/* User Info with Photo */}
-        <div className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5">
-          <Avatar className="h-7 w-7 ring-1 ring-[#e2e8f0]">
+        <div className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-4 py-2">
+          <Avatar className="h-9 w-9 ring-1 ring-[#e2e8f0]">
             <AvatarImage 
               src={getUserPhotoUrl(currentUser)} 
               alt={currentUser.username}
             />
-            <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
+            <AvatarFallback className="bg-[#2c5282] text-white font-medium text-sm">
               {getUserInitials(currentUser.username)}
             </AvatarFallback>
           </Avatar>
           <div className="text-right">
-            <p className="text-xs font-semibold text-[#1a202c] leading-tight">
+            <p className="text-sm font-semibold text-[#1a202c] leading-tight">
               {currentUser.username}
             </p>
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded font-normal ${getRoleBadgeColor()}`}>
+            <Badge variant="outline" className={`text-xs px-2 py-0 rounded font-normal ${getRoleBadgeColor()}`}>
               {t(`roles.${currentUser.role}`)}
             </Badge>
           </div>
@@ -142,10 +141,10 @@ const Header = () => {
             title={unreadCount > 0 ? `${unreadCount} ${t('header.unreadMessages')}` : t('header.viewMessages')}
             className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded relative transition-colors duration-200"
           >
-            <Bell className="h-4 w-4" />
+            <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#38a169] rounded px-1 flex items-center justify-center shadow-xs">
-                <span className="text-[10px] text-white font-bold leading-none">
+              <div className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-[#38a169] rounded px-1 flex items-center justify-center shadow-xs">
+                <span className="text-xs text-white font-bold leading-none">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               </div>
@@ -161,7 +160,7 @@ const Header = () => {
           className="text-[#e53e3e] hover:bg-[#feeeee] border border-[#feb2b2] hover:border-[#e53e3e] rounded transition-colors duration-200 shadow-xs"
           title={t('header.logout')}
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-5 w-5" />
         </Button>
       </div>
     </header>

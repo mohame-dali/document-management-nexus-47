@@ -49,22 +49,22 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
   };
 
   return (
-    <div className="bg-white rounded border border-[#e2e8f0] p-5 sm:p-6 shadow-sm" dir="rtl">
+    <div className="bg-white rounded border border-[#e2e8f0] p-6 shadow-sm" dir="rtl">
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
         <div className="flex-1 space-y-2">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="p-2.5 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282] shadow-xs">
+            <div className="p-3 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282] shadow-xs">
               <BarChart3 className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">
                 {t('sidebar.dashboard')}
               </h1>
-              <p className="text-sm text-[#4a5568] mt-1 leading-relaxed">
+              <p className="text-base text-[#4a5568] mt-1 leading-relaxed">
                 {getWelcomeMessage()}
               </p>
               {!isMobile && (
-                <p className="text-xs text-[#718096] mt-1">
+                <p className="text-sm text-[#718096] mt-1">
                   اليوم: {formatArabicDate(currentDate)}
                 </p>
               )}
@@ -75,24 +75,24 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Badge 
             variant="outline" 
-            className="text-xs px-3 py-1.5 bg-[#ebf4ff] border-[#bee3f8] text-[#2c5282] rounded w-full sm:w-auto justify-center sm:justify-start font-medium"
+            className="text-sm px-3 py-1.5 bg-[#ebf4ff] border-[#bee3f8] text-[#2c5282] rounded w-full sm:w-auto justify-center sm:justify-start font-medium"
           >
-            <Building2 className="h-3.5 w-3.5 ml-1.5" />
+            <Building2 className="h-4 w-4 ml-1.5" />
             {getRoleDisplayName(currentUser?.role)}
           </Badge>
           
           <Badge 
             variant="secondary" 
-            className="text-xs px-3 py-1.5 bg-[#edf2f7] text-[#1a202c] border border-[#e2e8f0] rounded w-full sm:w-auto justify-center sm:justify-start font-medium"
+            className="text-sm px-3 py-1.5 bg-[#edf2f7] text-[#1a202c] border border-[#e2e8f0] rounded w-full sm:w-auto justify-center sm:justify-start font-medium"
           >
-            <Calendar className="h-3.5 w-3.5 ml-1.5" />
+            <Calendar className="h-4 w-4 ml-1.5" />
             {currentYear}
           </Badge>
           
           {isMobile && (
             <Badge 
               variant="outline" 
-              className="text-xs px-2 py-1 w-full justify-center border-[#e2e8f0] text-[#718096] rounded"
+              className="text-sm px-3 py-1 w-full justify-center border-[#e2e8f0] text-[#718096] rounded"
             >
               {formatArabicDate(currentDate)}
             </Badge>

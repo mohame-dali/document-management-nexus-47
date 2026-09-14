@@ -325,11 +325,11 @@ const OutgoingDocumentsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8" dir="rtl">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
+      <div className="container mx-auto px-6 lg:px-8 space-y-6 max-w-[1400px]">
         
         {/* 1. Header Section */}
         <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xs">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded bg-[#ebf8f1] border border-[#bbf0d0] flex items-center justify-center text-[#276749] flex-shrink-0 mt-0.5">
                 <Send className="h-6 w-6" />
@@ -396,7 +396,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#718096] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#718096] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
                   >
                     مسح
                   </button>
@@ -558,7 +558,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               </span>
 
               {isFetching && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 text-[#4a5568] border border-slate-300">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-sm font-semibold bg-slate-100 text-[#4a5568] border border-slate-300">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
                   جاري المزامنة...
                 </span>
@@ -665,7 +665,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               <span className="font-bold text-base text-[#1a202c]">
                                 #{highlightMatch(String(doc.serialNumber), searchQuery)}
                               </span>
-                              <span className="text-xs text-[#718096]">
+                              <span className="text-sm text-[#718096]">
                                 {doc.year}
                               </span>
                             </div>
@@ -685,13 +685,13 @@ const OutgoingDocumentsPage: React.FC = () => {
 
                             <div className="flex items-center gap-2 flex-wrap">
                               {doc.typeDocument && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-[#2d3748] border border-slate-300">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-semibold bg-slate-100 text-[#2d3748] border border-slate-300">
                                   {doc.typeDocument}
                                 </span>
                               )}
 
                               {doc.scannedDocument && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
                                   <FileOutput className="h-3 w-3" />
                                   ملف مرفق
                                 </span>
@@ -725,31 +725,31 @@ const OutgoingDocumentsPage: React.FC = () => {
                               {doc.assignedTo.slice(0, 2).map((dest, idx) => (
                                 <span 
                                   key={idx}
-                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#ebf8f1] text-[#22543d] border border-[#bbf0d0]"
+                                  className="inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-[#ebf8f1] text-[#22543d] border border-[#bbf0d0]"
                                 >
                                   {dest}
                                 </span>
                               ))}
                               {doc.assignedTo.length > 2 && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-[#4a5568] border border-slate-200">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-sm font-semibold bg-slate-100 text-[#4a5568] border border-slate-200">
                                   +{doc.assignedTo.length - 2} أخرى
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-[#a0aec0]">غير محدد</span>
+                            <span className="text-sm text-[#a0aec0]">غير محدد</span>
                           )}
                         </td>
 
                         {/* Folder / Classification */}
                         <td className="py-4 px-4 whitespace-nowrap">
                           {doc.folder ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                               <FolderOpen className="h-3.5 w-3.5 text-emerald-600" />
                               {typeof doc.folder === 'object' ? doc.folder.name : 'مصنفة في مجلد'}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#718096] bg-slate-100 border border-slate-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm font-medium text-[#718096] bg-slate-100 border border-slate-200">
                               غير مصنفة
                             </span>
                           )}
@@ -765,7 +765,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => handleView(doc._id)}
                               title="عرض تفاصيل الوثيقة"
-                              className="h-8 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
+                              className="h-9 px-3 text-sm font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
                             >
                               <Eye className="h-3.5 w-3.5 ml-1" />
                               عرض
@@ -779,7 +779,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => handleEdit(doc._id)}
                                 title="تعديل بيانات الوثيقة"
-                                className="h-8 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
+                                className="h-9 px-3 text-sm font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
                               >
                                 <Edit className="h-3.5 w-3.5 ml-1" />
                                 تعديل
@@ -794,7 +794,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => setFolderDoc(doc)}
                                 title={canOrganizeDocuments ? 'أرشفة وتنظيم في مجلد' : 'عرض المجلد والأرشفة'}
-                                className="h-8 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
+                                className="h-9 px-3 text-sm font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
                               >
                                 <FolderOpen className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
                                 أرشفة
@@ -808,7 +808,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => setTransferDoc(doc)}
                               title="تحويل وتوجيه المراسلة"
-                              className="h-8 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
+                              className="h-9 px-3 text-sm font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
                             >
                               <Share2 className="h-3.5 w-3.5 ml-1" />
                               تحويل
@@ -822,7 +822,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => handleDownload(doc)}
                                 title="تحميل ملف PDF"
-                                className="h-8 px-2 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-white hover:bg-blue-50 transition-colors duration-200"
+                                className="h-9 px-3 text-sm font-semibold rounded text-[#2c5282] border-blue-200 bg-white hover:bg-blue-50 transition-colors duration-200"
                               >
                                 <Download className="h-3.5 w-3.5" />
                               </Button>
@@ -836,7 +836,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 w-8 p-0 rounded hover:bg-slate-100 text-[#718096]"
+                                    className="h-9 w-9 p-0 rounded hover:bg-slate-100 text-[#718096]"
                                   >
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
@@ -862,12 +862,12 @@ const OutgoingDocumentsPage: React.FC = () => {
             </div>
           ) : (
             /* GRID VIEW (Cards Layout) */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedDocuments.map((doc: OutgoingDocument) => {
                 return (
                   <div
                     key={doc._id}
-                    className="bg-white border border-[#e2e8f0] rounded p-5 hover:border-[#cbd5e1] hover:shadow-xs transition-all duration-200 flex flex-col justify-between"
+                    className="bg-white border border-[#e2e8f0] rounded p-6 hover:border-[#cbd5e1] hover:shadow-xs transition-all duration-200 flex flex-col justify-between"
                   >
                     <div>
                       {/* Card Top: Serial & Type */}
@@ -879,12 +879,12 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </div>
 
                         {doc.folder ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                             <FolderOpen className="h-3 w-3" />
                             {typeof doc.folder === 'object' ? doc.folder.name : 'مؤرشفة'}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#718096] border border-slate-200">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-slate-100 text-[#718096] border border-slate-200">
                             غير مصنفة
                           </span>
                         )}
@@ -916,12 +916,12 @@ const OutgoingDocumentsPage: React.FC = () => {
                             <Users className="h-4 w-4 text-[#718096] flex-shrink-0 mt-0.5" />
                             <div className="flex flex-wrap gap-1">
                               {doc.assignedTo.slice(0, 2).map((d, i) => (
-                                <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-[#2d3748] border border-slate-200">
+                                <span key={i} className="text-sm px-1.5 py-0.5 rounded bg-slate-100 text-[#2d3748] border border-slate-200">
                                   {d}
                                 </span>
                               ))}
                               {doc.assignedTo.length > 2 && (
-                                <span className="text-xs text-[#718096]">
+                                <span className="text-sm text-[#718096]">
                                   +{doc.assignedTo.length - 2}
                                 </span>
                               )}
@@ -938,7 +938,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleView(doc._id)}
-                        className="h-8 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100"
+                        className="h-9 px-3 text-sm font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100"
                       >
                         <Eye className="h-3.5 w-3.5 ml-1" />
                         عرض
@@ -950,7 +950,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(doc._id)}
-                          className="h-8 px-2 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100"
+                          className="h-9 px-3 text-sm font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100"
                         >
                           <Edit className="h-3.5 w-3.5 ml-1" />
                           تعديل
@@ -963,7 +963,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => setFolderDoc(doc)}
-                          className="h-8 px-2 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56]"
+                          className="h-9 px-3 text-sm font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56]"
                         >
                           <FolderOpen className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
                           أرشفة
@@ -975,7 +975,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setTransferDoc(doc)}
-                        className="h-8 px-2 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
+                        className="h-9 px-3 text-sm font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
                       >
                         <Share2 className="h-3.5 w-3.5 ml-1" />
                         تحويل
@@ -987,7 +987,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDownload(doc)}
-                          className="h-8 px-2 text-xs rounded text-[#2c5282] border-blue-200"
+                          className="h-9 px-3 text-sm rounded text-[#2c5282] border-blue-200"
                           title="تحميل PDF"
                         >
                           <Download className="h-3.5 w-3.5" />
@@ -1025,14 +1025,14 @@ const OutgoingDocumentsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 {/* Page Size Selector */}
                 <div className="flex items-center gap-1.5 ml-3">
-                  <span className="text-xs font-semibold text-[#718096]">العناصر:</span>
+                  <span className="text-sm font-semibold text-[#718096]">العناصر:</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
                       setPageSize(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="h-8 px-2 text-xs font-semibold border border-[#cbd5e1] rounded bg-white text-[#1a202c] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+                    className="h-9 px-3 text-sm font-semibold border border-[#cbd5e1] rounded bg-white text-[#1a202c] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
                   >
                     <option value={10}>10</option>
                     <option value={20}>20</option>
@@ -1047,7 +1047,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={clampedPage <= 1}
-                  className="h-8 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
+                  className="h-9 px-3 text-sm font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
                   السابق
@@ -1067,7 +1067,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         key={pageNum}
                         type="button"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`h-8 w-8 text-xs font-bold rounded transition-colors duration-200 ${
+                        className={`h-9 w-9 text-sm font-bold rounded transition-colors duration-200 ${
                           clampedPage === pageNum
                             ? 'bg-[#2c5282] text-white'
                             : 'border border-[#cbd5e1] text-[#2d3748] hover:bg-slate-50'
@@ -1086,7 +1086,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={clampedPage >= totalPages}
-                  className="h-8 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
+                  className="h-9 px-3 text-sm font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
                 >
                   التالي
                   <ChevronLeft className="h-4 w-4 mr-1" />

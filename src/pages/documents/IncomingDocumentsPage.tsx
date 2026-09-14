@@ -362,7 +362,7 @@ const IncomingDocumentsPage: React.FC = () => {
               />
             </div>
             {yearInput.length > 0 && yearInput.length < 4 && (
-              <p className="text-xs text-[#718096]">
+              <p className="text-sm text-[#718096]">
                 يرجى إكمال إدخال السنة (4 أرقام)
               </p>
             )}
@@ -377,7 +377,7 @@ const IncomingDocumentsPage: React.FC = () => {
             </div>
             {/* Quick Year Shortcuts */}
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-xs text-[#718096]">سنوات سريعة:</span>
+              <span className="text-sm text-[#718096]">سنوات سريعة:</span>
               {[
                 new Date().getFullYear(),
                 new Date().getFullYear() - 1,
@@ -392,7 +392,7 @@ const IncomingDocumentsPage: React.FC = () => {
                     setSelectedYear(yrStr);
                     setCurrentPage(1);
                   }}
-                  className="px-2.5 py-1 text-xs font-semibold rounded border border-[#cbd5e1] bg-slate-50 hover:bg-[#ebf4ff] hover:text-[#2c5282] text-[#4a5568] transition-colors"
+                  className="px-2.5 py-1 text-sm font-semibold rounded border border-[#cbd5e1] bg-slate-50 hover:bg-[#ebf4ff] hover:text-[#2c5282] text-[#4a5568] transition-colors"
                 >
                   {yr}
                 </button>
@@ -439,7 +439,7 @@ const IncomingDocumentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 lg:p-8 space-y-6" dir="rtl">
       {/* 1. Page Header (En-tête) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="flex items-start sm:items-center gap-3.5">
@@ -490,7 +490,7 @@ const IncomingDocumentsPage: React.FC = () => {
       </div>
 
       {/* 2. Filters and Sorting Section (Filtres / Tri) */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 space-y-4">
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search Input */}
           <div className="relative lg:col-span-2">
@@ -646,7 +646,7 @@ const IncomingDocumentsPage: React.FC = () => {
           {/* Right controls: View Toggle and Live Fetch indicator */}
           <div className="flex items-center gap-3">
             {isFetching && !isFetchingNextPage && (
-              <span className="text-xs text-[#2c5282] font-semibold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded border border-blue-200">
+              <span className="text-sm text-[#2c5282] font-semibold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded border border-blue-200">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 تحديث البيانات...
               </span>
@@ -742,7 +742,7 @@ const IncomingDocumentsPage: React.FC = () => {
                             <span className="font-bold text-base text-[#1a202c]">
                               #{highlightMatch(String(doc.serialNumber), searchQuery)}
                             </span>
-                            <span className="text-xs text-[#718096]">
+                            <span className="text-sm text-[#718096]">
                               {doc.year}
                             </span>
                           </div>
@@ -762,20 +762,20 @@ const IncomingDocumentsPage: React.FC = () => {
 
                           <div className="flex items-center gap-2 flex-wrap">
                             {doc.typeDocument && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-[#2d3748] border border-slate-300">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-semibold bg-slate-100 text-[#2d3748] border border-slate-300">
                                 {doc.typeDocument}
                               </span>
                             )}
 
                             {doc.activity && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
                                 <Bookmark className="h-3 w-3" />
                                 {doc.activity}
                               </span>
                             )}
 
                             {urgency && (
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${urgency.badgeColor}`}>
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-sm font-bold ${urgency.badgeColor}`}>
                                 <AlertTriangle className="h-3 w-3" />
                                 {urgency.label}
                               </span>
@@ -806,19 +806,19 @@ const IncomingDocumentsPage: React.FC = () => {
                       <td className="py-4 px-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           {doc.answer ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 w-fit">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 w-fit">
                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                               تم الرد
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold bg-amber-50 text-[#1a202c] border border-[#FFD758] w-fit">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-sm font-bold bg-amber-50 text-[#1a202c] border border-[#FFD758] w-fit">
                               <Clock className="h-3.5 w-3.5 text-[#d69e2e]" />
                               بانتظار المعالجة
                             </span>
                           )}
 
                           {doc.responsibleUser && typeof doc.responsibleUser === 'object' && (
-                            <span className="text-xs text-[#718096] flex items-center gap-1">
+                            <span className="text-sm text-[#718096] flex items-center gap-1">
                               <Users className="h-3 w-3 text-[#718096]" />
                               المسؤول: {doc.responsibleUser.username}
                             </span>
@@ -836,7 +836,7 @@ const IncomingDocumentsPage: React.FC = () => {
                             size="sm"
                             onClick={() => handleView(doc._id)}
                             title="عرض تفاصيل الوثيقة"
-                            className="h-8 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
+                            className="h-9 px-3 text-sm font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
                           >
                             <Eye className="h-3.5 w-3.5 ml-1" />
                             عرض
@@ -850,7 +850,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => setResponseDoc(doc)}
                               title="معالجة وإضافة رد"
-                              className="h-8 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
+                              className="h-9 px-3 text-sm font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
                             >
                               <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
                               معالجة
@@ -865,7 +865,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => setFolderDoc(doc)}
                               title={canOrganizeDocuments ? 'أرشفة وتنظيم في مجلد' : 'عرض المجلد والأرشفة'}
-                              className="h-8 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
+                              className="h-9 px-3 text-sm font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
                             >
                               <FolderOpen className="h-3.5 w-3.5 ml-1" />
                               أرشفة
@@ -880,7 +880,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => setResponsibleDoc(doc)}
                               title="تعيين مسؤول ومتابعة التحويل"
-                              className="h-8 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
+                              className="h-9 px-3 text-sm font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
                             >
                               <UserPlus className="h-3.5 w-3.5 ml-1" />
                               تحويل
@@ -945,14 +945,14 @@ const IncomingDocumentsPage: React.FC = () => {
           </div>
         ) : (
           /* CARD GRID VIEW */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedDocuments.map((doc: IncomingDocument) => {
               const urgency = getActivityUrgency(doc);
 
               return (
                 <div
                   key={doc._id}
-                  className="bg-white border border-[#e2e8f0] hover:border-[#cbd5e1] rounded p-5 space-y-4 transition-colors duration-200 flex flex-col justify-between"
+                  className="bg-white border border-[#e2e8f0] hover:border-[#cbd5e1] rounded p-6 space-y-4 transition-colors duration-200 flex flex-col justify-between"
                 >
                   <div className="space-y-3">
                     {/* Card Top: Serial and Status */}
@@ -962,12 +962,12 @@ const IncomingDocumentsPage: React.FC = () => {
                       </span>
 
                       {doc.answer ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                           <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                           مُجاب
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-amber-50 text-[#1a202c] border border-[#FFD758]">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-sm font-bold bg-amber-50 text-[#1a202c] border border-[#FFD758]">
                           <Clock className="h-3 w-3 text-[#d69e2e]" />
                           بانتظار المعالجة
                         </span>
@@ -986,24 +986,24 @@ const IncomingDocumentsPage: React.FC = () => {
                     {/* Meta badges */}
                     <div className="flex items-center gap-2 flex-wrap">
                       {doc.typeDocument && (
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-[#2d3748] border border-slate-300">
+                        <span className="px-2 py-0.5 rounded text-sm font-semibold bg-slate-100 text-[#2d3748] border border-slate-300">
                           {doc.typeDocument}
                         </span>
                       )}
                       {doc.activity && (
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+                        <span className="px-2 py-0.5 rounded text-sm font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
                           {doc.activity}
                         </span>
                       )}
                       {urgency && (
-                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${urgency.badgeColor}`}>
+                        <span className={`px-2 py-0.5 rounded text-sm font-bold ${urgency.badgeColor}`}>
                           {urgency.label}
                         </span>
                       )}
                     </div>
 
                     {/* Source & Date Info */}
-                    <div className="space-y-1.5 text-xs text-[#4a5568] pt-2 border-t border-[#f1f5f9]">
+                    <div className="space-y-1.5 text-sm text-[#4a5568] pt-2 border-t border-[#f1f5f9]">
                       <div className="flex items-center gap-1.5">
                         <Building2 className="h-3.5 w-3.5 text-[#718096]" />
                         <span className="truncate">{doc.source || 'مصدر غير محدد'}</span>
@@ -1028,7 +1028,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleView(doc._id)}
-                      className="flex-1 h-8 text-xs font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
+                      className="flex-1 h-8 text-sm font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
                     >
                       <Eye className="h-3.5 w-3.5 ml-1" />
                       عرض
@@ -1040,7 +1040,7 @@ const IncomingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setResponseDoc(doc)}
-                        className="flex-1 h-8 text-xs font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
+                        className="flex-1 h-8 text-sm font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
                       >
                         <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
                         معالجة
@@ -1053,7 +1053,7 @@ const IncomingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setFolderDoc(doc)}
-                        className="flex-1 h-8 text-xs font-semibold text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 rounded"
+                        className="flex-1 h-8 text-sm font-semibold text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 rounded"
                       >
                         <FolderOpen className="h-3.5 w-3.5 ml-1" />
                         أرشفة
@@ -1066,7 +1066,7 @@ const IncomingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setResponsibleDoc(doc)}
-                        className="flex-1 h-8 text-xs font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded"
+                        className="flex-1 h-8 text-sm font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded"
                       >
                         <UserPlus className="h-3.5 w-3.5 ml-1" />
                         تحويل
@@ -1088,7 +1088,7 @@ const IncomingDocumentsPage: React.FC = () => {
               <span className="font-semibold text-[#1a202c]">{endIndex}</span> من أصل{' '}
               <span className="font-semibold text-[#1a202c]">{totalFiltered}</span> وثيقة
               {totalCount > loadedCount && (
-                <span className="text-xs text-[#718096] mr-2">
+                <span className="text-sm text-[#718096] mr-2">
                   (محمّل {loadedCount} من إجمالي {totalCount})
                 </span>
               )}

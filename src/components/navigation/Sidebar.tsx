@@ -148,15 +148,15 @@ const Sidebar = () => {
       )}>
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm">
-              <FileText className="h-5 w-5" />
+            <div className="p-2.5 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm">
+              <FileText className="h-6 w-6" />
             </div>
             {isOpen && (
               <div className="min-w-0">
                 <h1 className="text-base font-bold text-white tracking-tight truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
-                <p className="text-xs text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
+                <p className="text-sm text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
               </div>
             )}
           </div>
@@ -178,33 +178,33 @@ const Sidebar = () => {
                         console.log('Image loaded successfully:', getUserPhotoUrl(currentUser));
                       }}
                     />
-                    <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
+                    <AvatarFallback className="bg-[#2c5282] text-white font-medium text-sm">
                       {getUserInitials(currentUser.username)}
                     </AvatarFallback>
                   </Avatar>
                 </ContextMenuTrigger>
                 <ContextMenuContent className="text-right">
                   <ContextMenuItem onClick={() => setProfileDialogOpen(true)}>
-                    <User className="h-4 w-4 ml-2" />
+                    <User className="h-5 w-5 ml-2" />
                     إعدادات الملف الشخصي
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>
               {isOpen && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">
+                  <p className="text-sm font-semibold text-white truncate">
                     {currentUser.username}
                   </p>
                   <div className="mt-1">
                     <Badge 
                       variant="outline" 
-                      className={cn("text-[11px] px-2 py-0.2 rounded font-medium", getRoleBadgeColor(currentUser.role))}
+                      className={cn("text-sm px-2 py-0.5 rounded font-medium", getRoleBadgeColor(currentUser.role))}
                     >
                       {getRoleLabel(currentUser.role)}
                     </Badge>
                   </div>
                   {currentUser.activeDepartment && (
-                    <p className="text-[11px] text-slate-400 mt-1 truncate">
+                    <p className="text-sm text-slate-400 mt-1 truncate">
                       {currentUser.activeDepartment.name}
                     </p>
                   )}
@@ -219,7 +219,7 @@ const Sidebar = () => {
       <ScrollArea className="flex-1">
         <div className="flex flex-col h-full">
           {/* Navigation with clean calm styling */}
-          <nav className="flex-1 p-3 space-y-1">
+          <nav className="flex-1 p-3 space-y-1.5">
             {menuItems.map((item) => {
               const active = isActive(item.path);
               return (
@@ -227,7 +227,7 @@ const Sidebar = () => {
                   key={item.path}
                   type="button"
                   className={cn(
-                    "w-full h-10 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-right",
+                    "w-full h-11 text-base font-medium rounded transition-colors duration-200 flex items-center group text-right",
                     isOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
                     active 
                       ? "bg-[#2c5282] text-white shadow-sm font-medium" 
@@ -237,7 +237,7 @@ const Sidebar = () => {
                   title={!isOpen ? item.label : undefined}
                 >
                   <item.icon className={cn(
-                    "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                    "h-5 w-5 flex-shrink-0 transition-colors duration-200",
                     active ? "text-white" : "text-slate-400 group-hover:text-slate-200"
                   )} />
                   {isOpen && (

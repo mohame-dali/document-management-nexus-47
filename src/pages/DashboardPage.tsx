@@ -84,7 +84,7 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f7fafc]" dir="rtl">
-      <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-6 max-w-[1400px] mx-auto space-y-6">
         {/* Dashboard Header */}
         <DashboardHeader currentUser={currentUser} currentYear={currentYear} />
 
