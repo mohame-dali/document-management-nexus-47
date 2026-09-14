@@ -1,0 +1,10 @@
+{
+  "name": "Système de Gestion du Courrier",
+  "description": "Application professionnelle de gestion et suivi du courrier et des documents administratifs conçue pour une utilisation quotidienne intensive.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
