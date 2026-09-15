@@ -99,46 +99,46 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
   });
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-5" dir="rtl">
       {/* Header and Statistics Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">وارد غير مصنف</span>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">وارد غير مصنف</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#2c5282]">{unclassifiedIncoming.length}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+            <span className="text-2xl sm:text-3xl font-bold text-[#2c5282]">{unclassifiedIncoming.length}</span>
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-blue-50 text-[#2c5282] border border-blue-200">
               مراسلة
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">صادر غير مصنف</span>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">صادر غير مصنف</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-emerald-700">{unclassifiedOutgoing.length}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="text-2xl sm:text-3xl font-bold text-emerald-700">{unclassifiedOutgoing.length}</span>
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
               مراسلة
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">إجمالي غير المصنف</span>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">إجمالي غير المصنف</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#78350f]">
+            <span className="text-2xl sm:text-3xl font-bold text-[#78350f]">
               {unclassifiedIncoming.length + unclassifiedOutgoing.length}
             </span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
               قيد التصنيف
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">المجلدات المتاحة</span>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">المجلدات المتاحة</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#1a202c]">{folders.length}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+            <span className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{folders.length}</span>
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">
               مجلد
             </span>
           </div>
@@ -146,64 +146,64 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
       </div>
 
       {/* Main Container */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-xs">
         {/* Navigation Bar */}
-        <div className="p-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="p-4 bg-[#f8fafc] border-b border-[#e2e8f0] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               type="button"
               onClick={() => setActiveTab('incoming')}
-              className={`h-8 px-3 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors duration-200 ${
+              className={`h-11 min-h-[44px] px-5 rounded text-sm sm:text-base font-bold flex items-center gap-2.5 transition-colors duration-200 shadow-2xs ${
                 activeTab === 'incoming'
                   ? 'bg-[#2c5282] text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-[#cbd5e1]'
               }`}
             >
-              <Inbox className="h-3.5 w-3.5" />
+              <Inbox className="h-5 w-5" />
               <span>المراسلات الواردة ({unclassifiedIncoming.length})</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('outgoing')}
-              className={`h-8 px-3 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors duration-200 ${
+              className={`h-11 min-h-[44px] px-5 rounded text-sm sm:text-base font-bold flex items-center gap-2.5 transition-colors duration-200 shadow-2xs ${
                 activeTab === 'outgoing'
                   ? 'bg-emerald-700 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-[#cbd5e1]'
               }`}
             >
-              <Send className="h-3.5 w-3.5" />
+              <Send className="h-5 w-5" />
               <span>المراسلات الصادرة ({unclassifiedOutgoing.length})</span>
             </button>
           </div>
 
           {/* Search bar */}
-          <div className="relative max-w-xs w-full">
-            <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
               placeholder="البحث في المراسلات غير المصنفة..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-8 pr-8 pl-3 text-xs bg-white border-[#cbd5e1] rounded"
+              className="h-11 min-h-[44px] pr-11 pl-4 text-sm sm:text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
             />
           </div>
         </div>
 
         {/* Global Target Folder Selector for quick assignment */}
         {canManage && folders.length > 0 && (
-          <div className="p-3 bg-amber-50/40 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2 text-xs text-[#78350f]">
-              <FolderPlus className="h-4 w-4 text-[#d97706]" />
-              <span className="font-semibold">تحديد مجلد الهدف للتصنيف السريع:</span>
+          <div className="p-4 bg-amber-50/60 border-b border-[#e2e8f0] flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-sm sm:text-base text-[#78350f]">
+              <FolderPlus className="h-5 w-5 text-[#d97706] flex-shrink-0" />
+              <span className="font-bold">تحديد مجلد الهدف للتصنيف السريع:</span>
             </div>
 
-            <div className="flex items-center gap-2 flex-1 sm:max-w-md">
+            <div className="flex items-center gap-2 flex-1 md:max-w-md">
               <select
                 value={selectedTargetFolderId}
                 onChange={(e) => setSelectedTargetFolderId(e.target.value)}
-                className="h-8 px-2.5 text-xs bg-white border border-[#FFCB56] rounded text-[#1a202c] flex-1 focus:outline-none focus:ring-1 focus:ring-[#2c5282]"
+                className="h-11 min-h-[44px] px-3.5 text-sm sm:text-base bg-white border border-[#FFCB56] rounded text-[#1a202c] font-medium flex-1 focus:outline-none focus:ring-2 focus:ring-[#2c5282]/30 shadow-2xs"
               >
-                <option value="">-- اختر مجلداً من القائمة --</option>
+                <option value="">-- اختر مجلداً من القائمة للتصنيف الفوري --</option>
                 {folders.map(folder => (
                   <option key={folder._id} value={folder._id}>
                     {folder.parent ? `↳ ${folder.name}` : folder.name} {folder.status === 'Fermé' ? '(مغلق)' : ''}
@@ -215,24 +215,24 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
         )}
 
         {/* List of Uncategorized Documents */}
-        <div className="p-4">
+        <div className="p-4 sm:p-6">
           {isLoadingIncoming || isLoadingOutgoing ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-2"></div>
-              <p className="text-xs">جاري تحميل المستندات غير المصنفة...</p>
+            <div className="text-center py-16 text-gray-500 space-y-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] mx-auto"></div>
+              <p className="text-base text-gray-600 font-medium">جاري تحميل المستندات غير المصنفة...</p>
             </div>
           ) : filteredDocuments.length === 0 ? (
-            <div className="text-center py-12 text-gray-400 space-y-2">
-              <CheckCircle2 className="h-10 w-10 mx-auto text-green-500 opacity-80" />
-              <p className="text-sm font-semibold text-gray-700">
+            <div className="text-center py-16 text-gray-400 space-y-3">
+              <CheckCircle2 className="h-14 w-14 mx-auto text-green-500 opacity-90" />
+              <p className="text-base sm:text-lg font-bold text-gray-800">
                 {searchTerm ? 'لا توجد مراسلات مطابقة لمعايير البحث' : 'ممتاز! جميع المراسلات في هذا القسم مصنفة في مجلدات'}
               </p>
-              <p className="text-xs text-gray-400">
-                يمكنك مراجعة المجلدات وتصفح مستنداتها من خلال تبويب شجرة المجلدات
+              <p className="text-sm sm:text-base text-gray-500">
+                يمكنك مراجعة المجلدات وتصفح مستنداتها من خلال تبويب الهيكل الهرمي للمجلدات
               </p>
             </div>
           ) : (
-            <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1 pl-1 custom-scrollbar">
               {filteredDocuments.map(doc => {
                 const date = activeTab === 'incoming' 
                   ? (doc as IncomingDocument).arrivalDate 
@@ -243,11 +243,11 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
                 return (
                   <div
                     key={doc._id}
-                    className="p-3 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 flex flex-col md:flex-row md:items-center justify-between gap-3"
+                    className="p-4 sm:p-5 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-2xs min-h-[64px]"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className={`px-2.5 py-1 rounded text-xs sm:text-sm font-bold border shadow-2xs ${
                           isIncoming 
                             ? 'bg-blue-50 text-[#2c5282] border-blue-200' 
                             : 'bg-emerald-50 text-emerald-800 border-emerald-200'
@@ -255,36 +255,35 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
                           #{doc.serialNumber}/{doc.year}
                         </span>
 
-                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-gray-400" />
+                        <span className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 font-medium">
+                          <Calendar className="h-4 w-4 text-gray-500" />
                           {formatArabicDate(date)}
                         </span>
 
                         {'source' in doc && (doc as IncomingDocument).source && (
-                          <span className="text-[11px] text-gray-600 flex items-center gap-1">
-                            <Building className="h-3 w-3 text-gray-400" />
+                          <span className="text-xs sm:text-sm text-gray-700 flex items-center gap-1.5 font-semibold">
+                            <Building className="h-4 w-4 text-[#2c5282]" />
                             {(doc as IncomingDocument).source}
                           </span>
                         )}
                       </div>
 
-                      <h4 className="font-semibold text-xs text-[#1a202c] line-clamp-1 leading-relaxed">
+                      <h4 className="font-bold text-base sm:text-lg text-[#1a202c] line-clamp-2 leading-relaxed">
                         {doc.subject}
                       </h4>
                     </div>
 
                     {/* Assignment Controls */}
                     {canManage && (
-                      <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-2.5 flex-shrink-0 flex-wrap">
                         {selectedTargetFolderId && (
                           <Button
                             type="button"
-                            size="sm"
                             onClick={() => handleDocumentAssign(doc._id, selectedTargetFolderId, activeTab)}
                             disabled={assignMutation.isPending}
-                            className="h-7 px-3 text-xs rounded border border-[#FFCB56] bg-[#FFD758]/20 text-[#78350f] hover:bg-[#FFD758]/40 font-medium flex items-center gap-1 transition-colors duration-200"
+                            className="h-10 min-h-[40px] px-4 text-sm rounded border border-[#FFCB56] bg-[#FFD758]/20 text-[#78350f] hover:bg-[#FFD758]/40 font-bold flex items-center gap-2 transition-colors duration-200 shadow-xs"
                           >
-                            <Check className="h-3 w-3" />
+                            <Check className="h-4 w-4" />
                             <span>تصنيف في المجلد المحدد</span>
                           </Button>
                         )}
@@ -297,7 +296,7 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
                             }
                           }}
                           disabled={assignMutation.isPending}
-                          className="h-7 px-2 text-xs bg-white border border-[#cbd5e1] rounded text-gray-700 hover:border-[#2c5282] focus:outline-none"
+                          className="h-10 min-h-[40px] px-3 text-sm font-medium bg-white border border-[#cbd5e1] rounded text-gray-700 hover:border-[#2c5282] focus:outline-none shadow-2xs"
                         >
                           <option value="">نقل إلى مجلد...</option>
                           {folders.map(f => (

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, MessageSquare, Shield, Users, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Building2, MessageSquare, Shield, Users, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,51 +27,73 @@ const CrossRoleMessagingInfo: React.FC = () => {
   };
 
   return (
-    <div className="mb-4 bg-white border border-[#e2e8f0] rounded text-right shadow-xs overflow-hidden" dir="rtl">
-      <div className="p-3.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1.5 bg-slate-100 rounded text-[#2c5282] flex-shrink-0">
-            <Building2 className="h-4 w-4" />
+    <div className="mb-6 bg-white border border-[#e2e8f0] rounded text-right shadow-xs overflow-hidden" dir="rtl">
+      <div className="p-5 sm:p-6 lg:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="flex items-start sm:items-center gap-4 min-w-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282] flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
+            <Building2 className="h-6 w-6 sm:h-7 sm:w-7" />
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-slate-800 truncate">
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-base sm:text-lg lg:text-xl font-bold text-[#1a202c] leading-relaxed">
               {getUserRoleMessage()}
             </p>
-            <p className="text-[11px] text-slate-500">
-              نظام المراسلات الإدارية الموحدة — قناة آمنة وموثقة للمراسلات بين الأقسام
+            <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
+              نظام المراسلات الإدارية الموحدة — قناة آمنة وموثقة للمراسلات بين مختلف الإدارات والأقسام
             </p>
           </div>
         </div>
 
         <Button
-          variant="ghost"
-          size="sm"
+          variant="outline"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="h-7 px-2 text-xs text-slate-600 hover:text-[#2c5282] hover:bg-slate-50 rounded flex items-center gap-1 flex-shrink-0"
+          className="h-11 min-h-[44px] px-5 py-2.5 text-base font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-[#ebf4ff] hover:text-[#234269] hover:border-[#bee3f8] rounded flex items-center gap-2.5 flex-shrink-0 self-end sm:self-center transition-colors duration-200"
         >
           <span>{isExpanded ? 'إخفاء التفاصيل' : 'دليل الصلاحيات'}</span>
-          {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
         </Button>
       </div>
 
       {isExpanded && (
-        <div className="px-4 pb-3.5 pt-1 border-t border-[#edf2f7] bg-[#f8fafc] text-xs space-y-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
-            <div className="p-2 bg-white rounded border border-[#e2e8f0]">
-              <span className="font-semibold text-red-700 block mb-0.5">الإدارة العامة (Admin)</span>
-              <span className="text-[11px] text-slate-500">مراسلات مركزية، إعلانات عامة وتوجيهات لكافة المكاتب</span>
+        <div className="px-5 sm:px-6 lg:px-7 pb-6 pt-5 border-t border-[#e2e8f0] bg-[#f8fafc] space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
+              <div className="flex items-center gap-2.5">
+                <Shield className="h-5 w-5 text-[#9b2c2c] flex-shrink-0" />
+                <span className="text-base sm:text-lg font-bold text-[#9b2c2c]">الإدارة العامة (Admin)</span>
+              </div>
+              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
+                مراسلات مركزية، توجيهات عامة وإعلانات رسمية لكافة المكاتب والأقسام.
+              </p>
             </div>
-            <div className="p-2 bg-white rounded border border-[#e2e8f0]">
-              <span className="font-semibold text-[#2c5282] block mb-0.5">مديرو الأقسام (Department)</span>
-              <span className="text-[11px] text-slate-500">مراسلات رسمية داخلية وخارجية بين مختلف الإدارات</span>
+
+            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
+              <div className="flex items-center gap-2.5">
+                <Building2 className="h-5 w-5 text-[#2c5282] flex-shrink-0" />
+                <span className="text-base sm:text-lg font-bold text-[#2c5282]">مديرو الأقسام (Department)</span>
+              </div>
+              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
+                مراسلات رسمية متبادلة وتنسيق مباشر بين الإدارات والأقسام المعتمدة.
+              </p>
             </div>
-            <div className="p-2 bg-white rounded border border-[#e2e8f0]">
-              <span className="font-semibold text-emerald-700 block mb-0.5">مكتب التنسيق (TuningDesk)</span>
-              <span className="text-[11px] text-slate-500">متابعة سير المعاملات وتبادل المذكرات التنسيقية</span>
+
+            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
+              <div className="flex items-center gap-2.5">
+                <MessageSquare className="h-5 w-5 text-[#276749] flex-shrink-0" />
+                <span className="text-base sm:text-lg font-bold text-[#276749]">مكتب التنسيق (TuningDesk)</span>
+              </div>
+              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
+                متابعة سير المعاملات الإدارية وتبادل المذكرات التنسيقية المشتركة.
+              </p>
             </div>
-            <div className="p-2 bg-white rounded border border-[#e2e8f0]">
-              <span className="font-semibold text-slate-700 block mb-0.5">الموظفون (User)</span>
-              <span className="text-[11px] text-slate-500">رفع التقارير والتواصل المباشر مع المسؤولين والزملاء</span>
+
+            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
+              <div className="flex items-center gap-2.5">
+                <Users className="h-5 w-5 text-[#4a5568] flex-shrink-0" />
+                <span className="text-base sm:text-lg font-bold text-[#4a5568]">الموظفون (User)</span>
+              </div>
+              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
+                رفع التقارير الميدانية والمراسلة المباشرة مع المسؤولين والمصالح المعنية.
+              </p>
             </div>
           </div>
         </div>

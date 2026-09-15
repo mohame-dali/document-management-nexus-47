@@ -329,14 +329,14 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
             dragType="folder"
             dragData={folder}
             dropTypes={['folder', 'document']}
-            className={`flex items-center justify-between gap-2 p-2 rounded border text-xs transition-colors duration-200 ${
+            className={`flex items-center justify-between gap-3 p-3 sm:p-3.5 rounded border transition-colors duration-200 min-h-[52px] ${
               isSelected 
-                ? 'bg-amber-50/60 border-[#FFCB56] text-[#78350f]' 
-                : 'bg-white hover:bg-gray-50/90 border-[#e2e8f0] text-gray-800'
+                ? 'bg-amber-50/70 border-[#FFCB56] text-[#78350f] shadow-xs' 
+                : 'bg-white hover:bg-gray-50/90 border-[#e2e8f0] text-gray-800 shadow-2xs'
             }`}
-            style={{ marginRight: `${level * 20}px` }}
+            style={{ marginRight: `${level * 24}px` }}
           >
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
               {hasChildren ? (
                 <button
                   type="button"
@@ -344,37 +344,37 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
                     e.stopPropagation();
                     toggleExpanded(folder._id);
                   }}
-                  className="p-1 rounded hover:bg-gray-200 text-gray-500 transition-colors duration-200"
+                  className="h-8 w-8 min-h-[32px] min-w-[32px] flex items-center justify-center rounded hover:bg-gray-200 text-gray-600 transition-colors duration-200"
                   title={isExpanded ? 'طي المجلد' : 'توسيع المجلد'}
                 >
                   {isExpanded ? (
-                    <ChevronDown className="h-3.5 w-3.5 text-[#2c5282]" />
+                    <ChevronDown className="h-4 w-4 text-[#2c5282]" />
                   ) : (
-                    <ChevronRight className="h-3.5 w-3.5 text-gray-500 rotate-180" />
+                    <ChevronRight className="h-4 w-4 text-gray-500 rotate-180" />
                   )}
                 </button>
               ) : (
-                <div className="w-5" />
+                <div className="w-8" />
               )}
 
               <div 
-                className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
                 onClick={() => handleOpenDocuments(folder)}
               >
                 {folder.status === 'Fermé' ? (
-                  <Archive className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <Archive className="h-5 w-5 text-gray-400 flex-shrink-0" />
                 ) : isExpanded || hasChildren ? (
-                  <FolderOpen className="h-4 w-4 text-[#2c5282] flex-shrink-0" />
+                  <FolderOpen className="h-5 w-5 text-[#2c5282] flex-shrink-0" />
                 ) : (
-                  <Folder className="h-4 w-4 text-[#2c5282] flex-shrink-0" />
+                  <Folder className="h-5 w-5 text-[#2c5282] flex-shrink-0" />
                 )}
 
-                <span className="font-semibold text-xs truncate max-w-[260px] sm:max-w-md">
+                <span className="font-bold text-sm sm:text-base text-[#1a202c] truncate max-w-[280px] sm:max-w-md">
                   {folder.name}
                 </span>
 
                 {folder.description && (
-                  <span className="text-[11px] text-gray-400 truncate hidden md:inline">
+                  <span className="text-xs sm:text-sm text-gray-500 truncate hidden md:inline">
                     — {folder.description}
                   </span>
                 )}
@@ -382,20 +382,20 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
             </div>
 
             {/* Badges and Quick Actions */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2.5 flex-shrink-0">
               {/* Document count badge */}
               <button
                 type="button"
                 onClick={() => handleOpenDocuments(folder)}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] hover:bg-[#FFD758] transition-colors duration-200"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] hover:bg-[#FFD758] transition-colors duration-200 shadow-2xs"
                 title="عرض المستندات المصنفة"
               >
-                <FileText className="h-3 w-3" />
+                <FileText className="h-3.5 w-3.5" />
                 <span>{docCount}</span>
               </button>
 
               {/* Status badge */}
-              <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium ${
+              <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-bold ${
                 folder.status === 'En cours'
                   ? 'bg-green-50 text-green-700 border border-green-200'
                   : 'bg-gray-100 text-gray-600 border border-gray-200'
@@ -404,14 +404,14 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
               </span>
 
               {/* Action buttons */}
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => handleOpenDocuments(folder)}
-                  className="p-1 rounded text-gray-500 hover:text-[#2c5282] hover:bg-gray-100 transition-colors duration-200"
+                  className="h-8 w-8 min-h-[32px] min-w-[32px] rounded flex items-center justify-center text-gray-600 hover:text-[#2c5282] hover:bg-gray-100 transition-colors duration-200"
                   title="عرض المستندات"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <ExternalLink className="h-4 w-4" />
                 </button>
 
                 {canManageFolders && (
@@ -419,28 +419,28 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenCreate(folder._id)}
-                      className="p-1 rounded text-gray-500 hover:text-[#2c5282] hover:bg-gray-100 transition-colors duration-200"
+                      className="h-8 w-8 min-h-[32px] min-w-[32px] rounded flex items-center justify-center text-gray-600 hover:text-[#2c5282] hover:bg-gray-100 transition-colors duration-200"
                       title="إنشاء مجلد فرعي"
                     >
-                      <FolderPlus className="h-3.5 w-3.5" />
+                      <FolderPlus className="h-4 w-4" />
                     </button>
                     
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(folder)}
-                      className="p-1 rounded text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors duration-200"
+                      className="h-8 w-8 min-h-[32px] min-w-[32px] rounded flex items-center justify-center text-gray-600 hover:text-[#1a202c] hover:bg-gray-100 transition-colors duration-200"
                       title="تعديل المجلد"
                     >
-                      <Edit3 className="h-3.5 w-3.5" />
+                      <Edit3 className="h-4 w-4" />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleOpenDelete(folder)}
-                      className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
+                      className="h-8 w-8 min-h-[32px] min-w-[32px] rounded flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
                       title="حذف المجلد"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </>
                 )}
@@ -451,7 +451,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
         {/* Render children */}
         {hasChildren && isExpanded && (
-          <div className="mt-1 space-y-1 pr-3 border-r-2 border-[#e2e8f0]">
+          <div className="mt-1.5 space-y-1.5 pr-4 border-r-2 border-[#cbd5e1]">
             {children.map(child => renderFolderNode(child, level + 1))}
           </div>
         )}
@@ -460,44 +460,44 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
   };
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-5" dir="rtl">
       {/* Metrics Row - AdminLTE clean style */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">إجمالي المجلدات</span>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">إجمالي المجلدات</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#1a202c]">{folders?.length || 0}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+            <span className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{folders?.length || 0}</span>
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">
               مجلد
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">المجلدات الرئيسية</span>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">المجلدات الرئيسية</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#2c5282]">{rootFolders.length}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+            <span className="text-2xl sm:text-3xl font-bold text-[#2c5282]">{rootFolders.length}</span>
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-blue-50 text-[#2c5282] border border-blue-200">
               جذر
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">المجلدات الفرعية</span>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">المجلدات الفرعية</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-slate-700">{subfolders.length}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-50 text-slate-700 border border-slate-200">
+            <span className="text-2xl sm:text-3xl font-bold text-slate-700">{subfolders.length}</span>
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-slate-50 text-slate-700 border border-slate-200">
               فرعي
             </span>
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-3">
-          <span className="text-[11px] text-gray-500 block mb-0.5">المستندات المصنفة</span>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
+          <span className="text-xs sm:text-sm font-semibold text-gray-600 block">المستندات المصنفة</span>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#78350f]">{totalDocumentsAll}</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+            <span className="text-2xl sm:text-3xl font-bold text-[#78350f]">{totalDocumentsAll}</span>
+            <span className="px-2.5 py-1 rounded text-xs font-bold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
               مستند
             </span>
           </div>
@@ -505,26 +505,26 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       </div>
 
       {/* Action and Filter Bar */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-        <div className="flex items-center gap-2 flex-1 max-w-md">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3 flex-1 max-w-xl">
           <div className="relative flex-1">
-            <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
-              placeholder="البحث بالاسم أو الوصف..."
+              placeholder="البحث بالاسم أو الوصف في المجلدات..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-8 pr-8 pl-3 text-xs bg-white border-[#cbd5e1] rounded"
+              className="h-11 min-h-[44px] pr-11 pl-4 text-sm sm:text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
             />
           </div>
 
-          <div className="flex items-center border border-[#cbd5e1] rounded overflow-hidden text-xs">
+          <div className="flex items-center border border-[#cbd5e1] rounded overflow-hidden h-11 min-h-[44px] shrink-0">
             <button
               type="button"
               onClick={() => setStatusFilter('all')}
-              className={`h-8 px-2 text-[11px] font-medium transition-colors duration-200 ${
+              className={`h-full px-3.5 text-xs sm:text-sm font-bold transition-colors duration-200 ${
                 statusFilter === 'all'
                   ? 'bg-[#2c5282] text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
               الكل
@@ -532,10 +532,10 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
             <button
               type="button"
               onClick={() => setStatusFilter('En cours')}
-              className={`h-8 px-2 text-[11px] font-medium transition-colors duration-200 border-x border-[#cbd5e1] ${
+              className={`h-full px-3.5 text-xs sm:text-sm font-bold transition-colors duration-200 border-x border-[#cbd5e1] ${
                 statusFilter === 'En cours'
                   ? 'bg-[#2c5282] text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
               نشط
@@ -543,10 +543,10 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
             <button
               type="button"
               onClick={() => setStatusFilter('Fermé')}
-              className={`h-8 px-2 text-[11px] font-medium transition-colors duration-200 ${
+              className={`h-full px-3.5 text-xs sm:text-sm font-bold transition-colors duration-200 ${
                 statusFilter === 'Fermé'
                   ? 'bg-[#2c5282] text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
               مغلق
@@ -554,39 +554,36 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={expandAll}
-            className="h-8 px-2.5 text-xs rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-50 flex items-center gap-1"
+            className="h-11 min-h-[44px] px-4 text-sm font-semibold rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-50 flex items-center gap-2"
             title="توسيع جميع المجلدات"
           >
-            <ChevronsDown className="h-3.5 w-3.5 text-gray-500" />
+            <ChevronsDown className="h-4 w-4 text-gray-600" />
             <span>توسيع الكل</span>
           </Button>
 
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={collapseAll}
-            className="h-8 px-2.5 text-xs rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-50 flex items-center gap-1"
+            className="h-11 min-h-[44px] px-4 text-sm font-semibold rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-50 flex items-center gap-2"
             title="طي جميع المجلدات"
           >
-            <ChevronsUp className="h-3.5 w-3.5 text-gray-500" />
+            <ChevronsUp className="h-4 w-4 text-gray-600" />
             <span>طي الكل</span>
           </Button>
 
           {canManageFolders && (
             <Button
               type="button"
-              size="sm"
               onClick={() => handleOpenCreate(null)}
-              className="h-8 px-3 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium flex items-center gap-1.5 transition-colors duration-200"
+              className="h-11 min-h-[44px] px-5 text-sm sm:text-base rounded bg-[#2c5282] hover:bg-[#234269] text-white font-bold flex items-center gap-2 transition-colors duration-200 shadow-xs"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-5 w-5" />
               <span>إنشاء مجلد رئيسي</span>
             </Button>
           )}
@@ -594,32 +591,31 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       </div>
 
       {/* Tree Content Area */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-3 min-h-[350px]">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-6 min-h-[420px] shadow-xs">
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500">
-            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-2"></div>
-            <p className="text-xs">جاري تحميل هيكل المجلدات...</p>
+          <div className="text-center py-16 text-gray-500 space-y-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] mx-auto"></div>
+            <p className="text-base text-gray-600 font-medium">جاري تحميل هيكل المجلدات...</p>
           </div>
         ) : filteredRootFolders.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 space-y-2">
-            <Folder className="h-10 w-10 mx-auto opacity-30 text-gray-400" />
-            <p className="text-xs font-medium text-gray-600">
+          <div className="text-center py-16 text-gray-500 space-y-3">
+            <Folder className="h-14 w-14 mx-auto opacity-30 text-gray-400" />
+            <p className="text-base sm:text-lg font-bold text-gray-700">
               {searchTerm ? 'لا توجد مجلدات مطابقة لمعايير البحث' : 'لا توجد مجلدات مسجلة في هذا القسم'}
             </p>
             {canManageFolders && !searchTerm && (
               <Button
                 type="button"
-                size="sm"
                 onClick={() => handleOpenCreate(null)}
-                className="h-8 px-3 text-xs rounded border border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 font-medium inline-flex items-center gap-1.5 transition-colors duration-200"
+                className="h-11 min-h-[44px] px-6 text-base rounded border border-[#FFCB56] bg-[#FFD758]/20 text-[#78350f] hover:bg-[#FFD758]/40 font-bold inline-flex items-center gap-2 transition-colors duration-200"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-5 w-5" />
                 <span>إنشاء المجلد الأول الآن</span>
               </Button>
             )}
           </div>
         ) : (
-          <div className="space-y-1.5 max-h-[600px] overflow-y-auto pl-1">
+          <div className="space-y-2 max-h-[650px] overflow-y-auto pl-1 pr-1 custom-scrollbar">
             {filteredRootFolders.map(folder => renderFolderNode(folder, 0))}
           </div>
         )}
