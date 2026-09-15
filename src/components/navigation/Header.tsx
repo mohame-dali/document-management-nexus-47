@@ -1,13 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useQuery } from '@tanstack/react-query';
 import { getUnreadCount } from '@/services/messageService';
+import { getMyProfile, getPhotoUrl } from '@/services/hr/personnelApi';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Bell, User, Menu, LogOut, FileText, Shield, Users, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -17,6 +17,17 @@ const Header = () => {
   const { toggle } = useSidebar();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [photoError, setPhotoError] = useState(false);
+
+  // Charger la fiche Personnel liée via React Query
+  const { data: myProfile } = useQuery({
+    queryKey: ['hr', 'my-profile'],
+    queryFn: getMyProfile,
+    enabled: !!currentUser,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: false, // Ne pas insister si pas de fiche Personnel (ex: admin système)
+    refetchOnWindowFocus: false,
+  });
 
   // Fetch unread message count
   const { data: unreadData } = useQuery({
@@ -33,7 +44,6 @@ const Header = () => {
     navigate('/dashboard/messages');
   };
 
-
   if (!currentUser) return null;
 
   const getHeaderTitle = () => {
@@ -41,19 +51,6 @@ const Header = () => {
       return `${t('header.departmentDashboard')} - ${currentUser.activeDepartment.name}`;
     }
     return t('header.title');
-  };
-
-  const getRoleIcon = () => {
-    switch (currentUser.role) {
-      case 'Admin':
-        return <Shield className="h-4 w-4 text-red-600" />;
-      case 'AdminTuningDesk':
-        return <Settings className="h-4 w-4 text-blue-600" />;
-      case 'AdminDepartment':
-        return <Users className="h-4 w-4 text-green-600" />;
-      default:
-        return <User className="h-4 w-4 text-gray-600" />;
-    }
   };
 
   const getRoleBadgeColor = () => {
@@ -70,17 +67,14 @@ const Header = () => {
     }
   };
 
-  const getUserInitials = (username: string) => {
-    return username ? username.charAt(0).toUpperCase() : 'U';
-  };
+  // Priorité 1 : photo fiche Personnel, Priorité 2 : photo User
+  const photoSource = myProfile?.photo || currentUser?.photo;
 
-  const getUserPhotoUrl = (user: any) => {
-    if (user?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      return `${API_URL}/${user.photo}`;
-    }
-    return null;
-  };
+  // Initiales : prénom + nom de la fiche Personnel, ou initiale du username
+  const initials = [
+    myProfile?.prenom?.trim().charAt(0) || '',
+    myProfile?.nom?.trim().charAt(0) || '',
+  ].filter(Boolean).join('') || (currentUser?.username?.charAt(0)?.toUpperCase() || 'U');
 
   return (
     <header className="h-16 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 sm:px-6 shadow-sm z-10 select-none" dir="rtl">
@@ -109,17 +103,24 @@ const Header = () => {
           </h2>
         </div>
 
-        {/* User Info with Photo */}
+        {/* User Info with Photo (Priorité Personnel liée) */}
         <div className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5">
-          <Avatar className="h-7 w-7 ring-1 ring-[#e2e8f0]">
-            <AvatarImage 
-              src={getUserPhotoUrl(currentUser)} 
-              alt={currentUser.username}
-            />
-            <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
-              {getUserInitials(currentUser.username)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="h-9 w-9 rounded-full border border-[#cbd5e1] overflow-hidden bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+            {photoSource && !photoError ? (
+              <img 
+                src={getPhotoUrl(photoSource)} 
+                alt={currentUser.username}
+                className="w-full h-full object-cover"
+                onError={() => setPhotoError(true)}
+              />
+            ) : initials ? (
+              <span className="text-sm font-bold text-[#2c5282] select-none">
+                {initials}
+              </span>
+            ) : (
+              <User className="w-5 h-5 text-[#2c5282]" />
+            )}
+          </div>
           <div className="text-right">
             <p className="text-xs font-semibold text-[#1a202c] leading-tight">
               {currentUser.username}

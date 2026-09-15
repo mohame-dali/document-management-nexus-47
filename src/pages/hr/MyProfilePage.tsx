@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMyProfile, getMyDocuments } from '@/services/hr/personnelApi';
+import { getMyProfile, getMyDocuments, getPhotoUrl } from '@/services/hr/personnelApi';
 import { Personnel, PersonnelDocument } from '@/types/hr';
 import { Department } from '@/types';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
@@ -22,6 +22,8 @@ import {
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 
 export const MyProfilePage: React.FC = () => {
+  const [photoError, setPhotoError] = useState(false);
+
   // 1. Récupération de la fiche Personnel de l'utilisateur connecté
   const {
     data: personnel,
@@ -97,13 +99,33 @@ export const MyProfilePage: React.FC = () => {
       ? (personnel.activeDepartment as Department)
       : null;
 
+  const initials = [
+    personnel.prenom?.trim().charAt(0) || '',
+    personnel.nom?.trim().charAt(0) || '',
+  ]
+    .filter(Boolean)
+    .join('');
+
   return (
     <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right" dir="rtl">
       {/* 1. En-tête : Nom + Prénom + badge de statut (lecture seule) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded bg-[#ebf4ff] border border-[#cbd5e1] text-[#2c5282] flex items-center justify-center text-2xl font-bold shrink-0">
-            {personnel.prenom ? personnel.prenom.charAt(0) : <UserIcon className="w-8 h-8" />}
+          <div className="w-24 h-24 rounded-full bg-[#2c5282]/10 border-2 border-[#cbd5e1] text-[#2c5282] flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+            {personnel.photo && !photoError ? (
+              <img
+                src={getPhotoUrl(personnel.photo)}
+                alt={`${personnel.nom} ${personnel.prenom}`}
+                className="w-full h-full object-cover"
+                onError={() => setPhotoError(true)}
+              />
+            ) : initials ? (
+              <span className="text-3xl font-bold text-[#2c5282] select-none tracking-wider">
+                {initials}
+              </span>
+            ) : (
+              <UserIcon className="w-10 h-10 text-[#2c5282]" />
+            )}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-3">
