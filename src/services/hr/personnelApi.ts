@@ -75,6 +75,31 @@ export const uploadPersonnelPhoto = async (
   return response.data.data;
 };
 
+// Supprimer la photo d'un personnel
+export const deletePersonnelPhoto = async (personnelId: string): Promise<Personnel> => {
+  return updatePersonnel(personnelId, { photo: '' });
+};
+
+// Obtenir l'URL absolue d'affichage d'une photo de personnel
+export const getPhotoUrl = (photoPath?: string): string => {
+  if (!photoPath) return '';
+  if (
+    photoPath.startsWith('http://') ||
+    photoPath.startsWith('https://') ||
+    photoPath.startsWith('blob:') ||
+    photoPath.startsWith('data:')
+  ) {
+    return photoPath;
+  }
+  const cleanPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    const cleanBase = envUrl.replace(/\/api\/?$/, '');
+    return `${cleanBase}${cleanPath}`;
+  }
+  return cleanPath;
+};
+
 // Supprimer une fiche de personnel (Admin / SuperAdmin uniquement, statut !== actif)
 export const deletePersonnel = async (id: string): Promise<{ success: boolean; message?: string }> => {
   try {

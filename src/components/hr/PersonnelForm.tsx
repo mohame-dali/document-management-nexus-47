@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getDepartments } from '@/services/departmentService';
 import { Department } from '@/types';
 import { Personnel, PersonnelSexe } from '@/types/hr';
+import { uploadPersonnelPhoto, getPhotoUrl } from '@/services/hr/personnelApi';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Save, X, AlertCircle } from 'lucide-react';
+import { Save, X, AlertCircle, Camera, Upload, Trash2, User as UserIcon, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PersonnelFormProps {
   initialData?: Partial<Personnel>;
@@ -53,6 +55,16 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   );
   const [notes, setNotes] = useState(initialData?.notes || '');
 
+  // Gestion de la photo
+  const [photo, setPhoto] = useState<string>(initialData?.photo || '');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    initialData?.photo ? getPhotoUrl(initialData.photo) : ''
+  );
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [errors, setErrors] = useState<{ nom?: string; prenom?: string }>({});
 
   useEffect(() => {
@@ -84,6 +96,11 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
           : ''
       );
       setNotes(initialData.notes || '');
+
+      setPhoto(initialData.photo || '');
+      setPreviewUrl(initialData.photo ? getPhotoUrl(initialData.photo) : '');
+      setPhotoFile(null);
+      setPhotoError(null);
     }
   }, [initialData]);
 
@@ -92,6 +109,62 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
     queryKey: ['departments'],
     queryFn: getDepartments,
   });
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhotoError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validation du type de fichier
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('يرجى اختيار ملف صورة صالح (JPG, PNG, WEBP)');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // Validation de la taille (2 Mo max)
+    const MAX_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setPhotoError('حجم الصورة يتجاوز الحد الأقصى المسموح به (2 ميغابايت)');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setPhotoFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  };
+
+  const handleRemovePhoto = () => {
+    setPhoto('');
+    setPhotoFile(null);
+    setPreviewUrl('');
+    setPhotoError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Upload immédiat optionnel en mode édition
+  const handleDirectPhotoUpload = async () => {
+    if (!initialData?._id || !photoFile) return;
+
+    try {
+      setIsUploadingPhoto(true);
+      setPhotoError(null);
+      const res = await uploadPersonnelPhoto(initialData._id, photoFile);
+      setPhoto(res.photo);
+      setPreviewUrl(getPhotoUrl(res.photo));
+      setPhotoFile(null);
+      toast.success('تم تحديث صورة الموظف بنجاح');
+    } catch (err: unknown) {
+      console.error('Error uploading photo:', err);
+      setPhotoError('حدث خطأ أثناء رفع الصورة، يرجى المحاولة مرة أخرى');
+      toast.error('تعذر رفع الصورة');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   const validate = () => {
     const newErrors: { nom?: string; prenom?: string } = {};
@@ -105,9 +178,25 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
+    let finalPhoto = photo;
+
+    // Si une nouvelle photo est sélectionnée et qu'on est en mode édition, on la téléverse d'abord
+    if (initialData?._id && photoFile) {
+      try {
+        setIsUploadingPhoto(true);
+        const res = await uploadPersonnelPhoto(initialData._id, photoFile);
+        finalPhoto = res.photo;
+      } catch (err: unknown) {
+        console.error('Error uploading photo during submit:', err);
+        toast.error('تعذر رفع الصورة، سيتم حفظ باقي البيانات');
+      } finally {
+        setIsUploadingPhoto(false);
+      }
+    }
 
     const payload: Partial<Personnel> = {
       nom: nom.trim(),
@@ -123,6 +212,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       activeDepartment: activeDepartment !== 'NONE' ? activeDepartment : null,
       dateEmbauche: dateEmbauche ? new Date(dateEmbauche).toISOString() : null,
       notes: notes.trim(),
+      photo: finalPhoto,
     };
 
     onSubmit(payload);
@@ -135,6 +225,123 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
         <h2 className="text-xl font-bold text-[#1a202c] border-b border-[#e2e8f0] pb-3 mb-6">
           المعلومات الشخصية
         </h2>
+
+        {/* Zone de téléversement de la photo */}
+        <div className="mb-8 p-5 bg-[#f7fafc] border border-[#e2e8f0] rounded">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            {/* Avatar circulaire */}
+            <div className="relative group shrink-0">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-2 border-[#cbd5e1] overflow-hidden bg-white shadow-sm flex items-center justify-center">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="صورة الموظف"
+                    className="w-full h-full object-cover"
+                    onError={() => setPreviewUrl('')}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-[#2c5282]/60 bg-[#ebf4ff]/50">
+                    <UserIcon className="w-12 h-12" />
+                    <span className="text-xs text-gray-500 mt-1 font-medium">بدون صورة</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Bouton rapide d'upload sur l'avatar */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                title="تغيير الصورة"
+                className="absolute bottom-1 right-1 p-2 rounded-full bg-[#2c5282] hover:bg-[#234269] text-white shadow transition-transform hover:scale-105"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Informations et contrôles */}
+            <div className="flex-1 text-center sm:text-right space-y-3">
+              <div>
+                <h3 className="text-base font-bold text-[#1a202c]">صورة الموظف (Photo)</h3>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  الصيغ المدعومة: <strong className="font-semibold text-gray-700">JPG، PNG، WEBP</strong>.
+                  الحد الأقصى للحجم: <strong className="font-semibold text-gray-700">2 ميغابايت</strong>.
+                  يُفضل استخدام صورة شخصية حديثة مربعة الأبعاد وواضحة الملامح.
+                </p>
+              </div>
+
+              {/* Input de fichier caché */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/jpg"
+                onChange={handlePhotoSelect}
+                className="hidden"
+                id="personnel-photo-input"
+              />
+
+              {/* Boutons d'action pour la photo */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isUploadingPhoto}
+                  className="h-9 px-4 text-sm font-medium border-[#cbd5e1] text-gray-700 hover:bg-white hover:text-[#2c5282] rounded flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4 text-[#2c5282]" />
+                  <span>{previewUrl ? 'تغيير الصورة' : 'اختيار صورة'}</span>
+                </Button>
+
+                {/* Bouton d'upload direct si fichier sélectionné en mode édition */}
+                {initialData?._id && photoFile && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleDirectPhotoUpload}
+                    disabled={isUploadingPhoto || isLoading}
+                    className="h-9 px-4 text-sm font-medium bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 shadow-sm"
+                  >
+                    {isUploadingPhoto ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>جاري الرفع...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>حفظ الصورة الآن</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                {/* Bouton de suppression de la photo */}
+                {(previewUrl || photo || photoFile) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemovePhoto}
+                    disabled={isLoading || isUploadingPhoto}
+                    className="h-9 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>حذف الصورة</span>
+                  </Button>
+                )}
+              </div>
+
+              {/* Message d'erreur de validation pour la photo */}
+              {photoError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2 mt-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{photoError}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Nom */}

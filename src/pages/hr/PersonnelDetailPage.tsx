@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getPersonnelById } from '@/services/hr/personnelApi';
+import { getPersonnelById, getPhotoUrl } from '@/services/hr/personnelApi';
 import { Personnel } from '@/types/hr';
 import { Department, User } from '@/types';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
@@ -29,6 +29,7 @@ import PersonnelDocumentsList from '@/components/hr/PersonnelDocumentsList';
 export const PersonnelDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [photoError, setPhotoError] = useState(false);
 
   const {
     data: personnel,
@@ -87,8 +88,19 @@ export const PersonnelDetailPage: React.FC = () => {
       {/* 1. En-tête de la fiche */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded bg-[#ebf4ff] border border-[#cbd5e1] text-[#2c5282] flex items-center justify-center text-2xl font-bold shrink-0">
-            {personnel.prenom ? personnel.prenom.charAt(0) : <UserIcon className="w-8 h-8" />}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#ebf4ff] border-2 border-[#cbd5e1] text-[#2c5282] flex items-center justify-center text-2xl font-bold shrink-0 overflow-hidden shadow-sm">
+            {personnel.photo && !photoError ? (
+              <img
+                src={getPhotoUrl(personnel.photo)}
+                alt={`${personnel.nom} ${personnel.prenom}`}
+                className="w-full h-full object-cover"
+                onError={() => setPhotoError(true)}
+              />
+            ) : personnel.prenom ? (
+              personnel.prenom.charAt(0)
+            ) : (
+              <UserIcon className="w-8 h-8" />
+            )}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-3">
