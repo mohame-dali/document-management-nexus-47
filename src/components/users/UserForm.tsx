@@ -1,5 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Form, 
   FormControl, 
@@ -19,9 +21,11 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { RefreshCw, ArrowRight, User, Shield, Building, Check, AlertCircle } from 'lucide-react';
+import { RefreshCw, ArrowRight, User, Shield, Building, Check, AlertCircle, UserCheck, UserPlus, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Department, User as UserType } from '@/types';
+import { getPersonnelEnAttente, getOrganizationSettings } from '@/services/hr/personnelApi';
+import { Personnel } from '@/types/hr';
 
 export interface UserFormData {
   username: string;
@@ -29,6 +33,7 @@ export interface UserFormData {
   role: 'SuperAdmin' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
   departments: string[];
   isActive?: boolean;
+  personnelId?: string | null;
 }
 
 interface UserFormProps {
@@ -60,9 +65,45 @@ const UserForm: React.FC<UserFormProps> = ({
       password: '',
       role: (user?.role as UserFormData['role']) || 'User',
       departments: user?.departments?.map((d: Department) => d._id) || [],
-      isActive: user?.isActive !== undefined ? user.isActive : true
+      isActive: user?.isActive !== undefined ? user.isActive : true,
+      personnelId: user?.personnelId || '',
     }
   });
+
+  // LOT 7: Récupération des fiches Personnel en attente d'association
+  const { data: personnelEnAttente = [], isLoading: loadingPersonnel } = useQuery({
+    queryKey: ['personnel-en-attente'],
+    queryFn: getPersonnelEnAttente,
+    enabled: !isEditMode,
+    staleTime: 1000 * 30,
+  });
+
+  // LOT B: Charger OrganizationSettings via React Query
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 60000,
+  });
+
+  // LOT B: Fonction pour détecter si un département est fonctionnel (Bureau Directeur ou Bureau d'Ordre)
+  const isFunctionalDepartment = (departmentId?: string | { _id: string; name?: string } | null) => {
+    if (!orgSettings || !departmentId) return false;
+    const deptId = typeof departmentId === 'object' && departmentId ? String(departmentId._id) : String(departmentId);
+    if (!deptId) return false;
+
+    const bureauDirecteurId = typeof orgSettings.bureauDirecteurDepartmentId === 'object' && orgSettings.bureauDirecteurDepartmentId
+      ? String(orgSettings.bureauDirecteurDepartmentId._id)
+      : String(orgSettings.bureauDirecteurDepartmentId || '');
+
+    const bureauOrdreId = typeof orgSettings.bureauOrdreDepartmentId === 'object' && orgSettings.bureauOrdreDepartmentId
+      ? String(orgSettings.bureauOrdreDepartmentId._id)
+      : String(orgSettings.bureauOrdreDepartmentId || '');
+
+    return (
+      (bureauDirecteurId !== '' && bureauDirecteurId === deptId) ||
+      (bureauOrdreId !== '' && bureauOrdreId === deptId)
+    );
+  };
   
   const availableRoles = () => {
     if (currentUserRole === 'Admin') {
@@ -98,12 +139,60 @@ const UserForm: React.FC<UserFormProps> = ({
   
   const selectedRole = form.watch('role');
   const selectedDepartments = form.watch('departments') || [];
+  const selectedPersonnelId = form.watch('personnelId');
+  const selectedPersonnel = personnelEnAttente.find((p: Personnel) => p._id === selectedPersonnelId);
+
+  // LOT 7 : obligatoire pour AdminDepartment, AdminTuningDesk, User ; optionnel pour SuperAdmin
+  const isPersonnelRequired = ['AdminDepartment', 'AdminTuningDesk', 'User'].includes(selectedRole);
+  const isTechnicalSuperAdmin = selectedRole === 'SuperAdmin';
+
+  // LOT B : Détection si la fiche Personnel sélectionnée appartient à une unité fonctionnelle
+  const isSelectedPersonnelFunctional = selectedPersonnel?.activeDepartment
+    ? isFunctionalDepartment(selectedPersonnel.activeDepartment)
+    : false;
+
+  // LOT B: Gestion du choix de fiche Personnel avec détection d'unité fonctionnelle
+  const handlePersonnelChange = (personnelId: string) => {
+    form.setValue('personnelId', personnelId || '', { shouldValidate: true, shouldDirty: true });
+    form.clearErrors('personnelId');
+    
+    if (personnelId) {
+      const found = personnelEnAttente.find((p: Personnel) => p._id === personnelId);
+      if (found?.activeDepartment) {
+        const deptId = typeof found.activeDepartment === 'object' && found.activeDepartment
+          ? (found.activeDepartment as Department)._id
+          : String(found.activeDepartment);
+        
+        // LOT B: Si le département est fonctionnel (Bureau Directeur / Bureau d'Ordre), vider departments. Sinon assigner deptId.
+        if (isFunctionalDepartment(found.activeDepartment)) {
+          form.setValue('departments', [], { shouldValidate: true, shouldDirty: true });
+        } else if (deptId) {
+          form.setValue('departments', [deptId], { shouldValidate: true, shouldDirty: true });
+        }
+      }
+    }
+  };
   
   const handleSubmit = (data: UserFormData) => {
     if (data.role === 'AdminTuningDesk' || data.role === 'SuperAdmin') {
       data.departments = [];
     } else if (currentUserRole === 'AdminDepartment' && data.role === 'User') {
       data.departments = [currentUserDepartment];
+    }
+
+    // Validation du champ personnelId obligatoire pour AdminDepartment, AdminTuningDesk, User
+    const isRequired = ['AdminDepartment', 'AdminTuningDesk', 'User'].includes(data.role);
+    if (!isEditMode && isRequired && !data.personnelId) {
+      form.setError('personnelId', {
+        type: 'manual',
+        message: 'بطاقة الموظف إلزامية لهذا الدور. يرجى اختيار بطاقة من القائمة.'
+      });
+      return;
+    }
+
+    // Nettoyage de l'ID si vide pour les comptes techniques / optionnels
+    if (!data.personnelId) {
+      delete data.personnelId;
     }
     
     onSubmit(data);
@@ -177,6 +266,166 @@ const UserForm: React.FC<UserFormProps> = ({
             )}
           </CardContent>
         </Card>
+
+        {/* Fiche Personnel Associée Section (LOT 7) */}
+        {!isEditMode && (
+          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+            <CardHeader className="pb-4 border-b border-[#e2e8f0]">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-lg sm:text-xl font-bold text-[#1a202c]">
+                  <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+                    <UserCheck className="h-5 w-5" />
+                  </div>
+                  <span>بطاقة الموظف المرتبطة (Fiche Personnel associée)</span>
+                </div>
+                {isPersonnelRequired ? (
+                  <Badge className="bg-red-50 text-red-700 border border-red-200 text-xs px-2.5 py-0.5">
+                    إلزامي لهذا الدور *
+                  </Badge>
+                ) : isTechnicalSuperAdmin ? (
+                  <Badge className="bg-gray-100 text-gray-700 border border-gray-300 text-xs px-2.5 py-0.5">
+                    حساب تقني (اختياري)
+                  </Badge>
+                ) : (
+                  <Badge className="bg-gray-100 text-gray-700 border border-gray-300 text-xs px-2.5 py-0.5">
+                    اختياري
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                اختر ملف الموظف في طور الانتظار لربطه بهذا الحساب وتعبئة القسم الإداري تلقائياً.
+              </p>
+
+              {loadingPersonnel ? (
+                <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-600 flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 animate-spin text-[#2c5282]" />
+                  <span>جاري تحميل بطاقات الموظفين في الانتظار...</span>
+                </div>
+              ) : personnelEnAttente.length === 0 ? (
+                <div className="p-4 bg-amber-50 border border-[#FFCB56] rounded text-[#1a202c] space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-sm text-[#1a202c]">
+                    <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
+                    <span>Aucune fiche Personnel en attente. Créez d'abord une fiche via le module RH.</span>
+                  </div>
+                  <p className="text-xs text-gray-700">
+                    لا توجد أي بطاقة موظف بانتظار تفعيل حساب مستخدم حالياً. يرجى إنشاء ملف موظف جديد أولاً عبر وحدة الموارد البشرية.
+                  </p>
+                  <div className="pt-1">
+                    <Link
+                      to="/dashboard/hr/personnel/new"
+                      className="inline-flex items-center gap-1.5 h-11 px-5 bg-[#2c5282] hover:bg-[#1a365d] text-white text-sm font-bold rounded transition-colors"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>إنشاء بطاقة موظف جديدة (Créer une fiche Personnel)</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="personnelId"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-base font-bold text-[#1a202c] flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <span>اختيار ملف الموظف</span>
+                          {isPersonnelRequired && <span className="text-red-500 font-bold">*</span>}
+                        </span>
+                        <span className="text-xs font-normal text-gray-500">
+                          {personnelEnAttente.length} بطاقة متاحة للربط
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <select
+                          value={field.value || ''}
+                          onChange={(e) => handlePersonnelChange(e.target.value)}
+                          className="w-full h-11 px-4 text-base bg-white border border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-[#1a202c]"
+                        >
+                          <option value="">
+                            {isPersonnelRequired 
+                              ? '-- اختر بطاقة الموظف من القائمة (إلزامي) --' 
+                              : '-- بدون ربط بملف موظف (اختياري) --'}
+                          </option>
+                          {personnelEnAttente.map((p: Personnel) => {
+                            const label = `${p.nom} ${p.prenom}${p.cin ? ` — ${p.cin}` : ''}${p.poste ? ` — ${p.poste}` : ''}`;
+                            return (
+                              <option key={p._id} value={p._id}>
+                                {label}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* Selected Personnel Details Banner */}
+              {selectedPersonnel && (
+                <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#e2e8f0] pb-2">
+                    <span className="text-xs font-bold text-gray-600">
+                      تفاصيل البطاقة المختارة:
+                    </span>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded bg-[#FFCB56] text-[#1a202c] border border-[#e2be40]">
+                      بطاقة في الانتظار (En attente)
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <span className="text-xs text-gray-500 block">الاسم الكامل:</span>
+                      <span className="font-bold text-[#1a202c]">
+                        {selectedPersonnel.nom} {selectedPersonnel.prenom}
+                      </span>
+                    </div>
+                    {selectedPersonnel.cin && (
+                      <div>
+                        <span className="text-xs text-gray-500 block">رقم البطاقة الوطنية (CIN):</span>
+                        <span className="font-mono font-bold text-[#1a202c]">
+                          {selectedPersonnel.cin}
+                        </span>
+                      </div>
+                    )}
+                    {selectedPersonnel.poste && (
+                      <div>
+                        <span className="text-xs text-gray-500 block">المنصب / الرتبة:</span>
+                        <span className="font-semibold text-[#1a202c]">
+                          {selectedPersonnel.poste}
+                        </span>
+                      </div>
+                    )}
+                    {selectedPersonnel.activeDepartment && (
+                      <div className="sm:col-span-2 md:col-span-3 pt-1">
+                        <span className="text-xs text-gray-500 block">القسم الإداري الأصلي:</span>
+                        <span className="inline-flex items-center gap-1 font-semibold text-[#2c5282] bg-blue-50 px-2.5 py-1 rounded border border-blue-200 text-xs mt-0.5">
+                          <Building className="w-3.5 h-3.5" />
+                          {typeof selectedPersonnel.activeDepartment === 'object' 
+                            ? selectedPersonnel.activeDepartment.name 
+                            : String(selectedPersonnel.activeDepartment)}
+                        </span>
+                        {isSelectedPersonnelFunctional ? (
+                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-900">
+                            Cet employé appartient à une unité fonctionnelle transversale (Bureau Directeur / Bureau d'Ordre). Le compte n'aura pas de département assigné.
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-500 mr-2">
+                            (تم تحديد هذا القسم تلقائياً أدناه، ويمكن تعديله من قبل الإدارة)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Role & Permissions Section */}
         <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
@@ -299,6 +548,12 @@ const UserForm: React.FC<UserFormProps> = ({
                       })}
                     </div>
                     
+                    {isSelectedPersonnelFunctional && (
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-900">
+                        Cet employé appartient à une unité fonctionnelle transversale (Bureau Directeur / Bureau d'Ordre). Le compte n'aura pas de département assigné.
+                      </div>
+                    )}
+
                     {selectedDepartments.length > 0 && (
                       <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded">
                         <p className="text-sm font-semibold text-emerald-900 flex items-center gap-2">

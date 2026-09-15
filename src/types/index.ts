@@ -8,6 +8,7 @@ export interface User {
   photo: string;
   isActive: boolean;
   createdAt: string;
+  personnelId?: string | null;
 }
 
 export interface Department {
@@ -123,3 +124,5 @@ export interface Message {
 export type PriorityType = 'low' | 'normal' | 'high' | 'urgent';
 export type FolderStatus = 'En cours' | 'Fermé';
 export type UserRole = 'SuperAdmin' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
+
+export * from './hr';

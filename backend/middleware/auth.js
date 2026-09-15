@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const ErrorResponse = require('../utils/errorResponse');
+const OrganizationSettings = require('../models/OrganizationSettings');
 
 // Protect routes
 exports.protect = async (req, res, next) => {
@@ -164,3 +165,63 @@ exports.checkDepartmentAccess = (checkActiveDepartment = true) => {
     next();
   };
 };
+
+// Check if user has access to HR module
+exports.checkRHAccess = async (req, res, next) => {
+  try {
+    // a. Vérifier que req.user existe (sinon 401)
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Non autorisé à accéder à cette ressource'
+      });
+    }
+
+    const { role } = req.user;
+
+    // b. Si role === 'Admin' → next() (accès autorisé)
+    if (role === 'Admin') {
+      return next();
+    }
+
+    // c. Si role === 'SuperAdmin' → next() (accès autorisé, conserve son comportement actuel)
+    if (role === 'SuperAdmin') {
+      return next();
+    }
+
+    // d. Si role === 'AdminDepartment' :
+    if (role === 'AdminDepartment') {
+      const settings = await OrganizationSettings.findOne();
+      if (!settings || !settings.rhDepartmentId) {
+        return res.status(403).json({
+          success: false,
+          message: "Le département RH n'est pas encore configuré"
+        });
+      }
+
+      const rhDeptId = settings.rhDepartmentId.toString();
+      const userActiveDept = req.user.activeDepartment;
+      const userActiveDeptId = userActiveDept
+        ? (userActiveDept._id ? userActiveDept._id.toString() : userActiveDept.toString())
+        : null;
+
+      if (userActiveDeptId && userActiveDeptId === rhDeptId) {
+        return next();
+      }
+
+      return res.status(403).json({
+        success: false,
+        message: 'Accès réservé au département RH'
+      });
+    }
+
+    // e. Sinon → 403 "Accès refusé"
+    return res.status(403).json({
+      success: false,
+      message: 'Accès refusé'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

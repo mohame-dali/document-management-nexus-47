@@ -50,6 +50,7 @@ app.use(cors({
 // Set static folders for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads/usersphoto', express.static(path.join(__dirname, 'uploads/usersphoto')));
+app.use('/uploads/personnelphoto', express.static(path.join(__dirname, 'uploads/personnelphoto')));
 
 // Add static serving for courrier documents
 app.use('/courrier', express.static(path.join(__dirname, 'courrier')));
@@ -74,6 +75,9 @@ const auditLogs = require('./routes/auditLogs');
 const activityNotifications = require('./routes/activityNotifications');
 const messageSettings = require('./routes/messageSettings');
 const backup = require('./routes/backup');
+const organizationSettings = require('./routes/organizationSettingsRoutes');
+const hrPersonnel = require('./routes/personnelRoutes');
+const hrPersonnelDocuments = require('./routes/personnelDocumentRoutes');
 
 // Mount routers
 app.use('/api/auth', auth);
@@ -92,6 +96,9 @@ app.use('/api/audit-logs', auditLogs);
 app.use('/api/activity-notifications', activityNotifications);
 app.use('/api/message-settings', messageSettings);
 app.use('/api/backup', backup);
+app.use('/api/organization-settings', organizationSettings);
+app.use('/api/hr', hrPersonnel);
+app.use('/api/hr', hrPersonnelDocuments);
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {

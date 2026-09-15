@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema({
     ref: 'Department',
     default: null
   },
+  personnelId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Personnel',
+    default: null
+  },
   photo: { 
     type: String, 
     default: '' 

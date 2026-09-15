@@ -41,6 +41,10 @@ import AuditTrailPage from './pages/audit/AuditTrailPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import MessageRetentionPage from './pages/settings/MessageRetentionPage';
 import BackupSettingsPage from './pages/settings/BackupSettingsPage';
+import PersonnelListPage from './pages/hr/PersonnelListPage';
+import PersonnelFormPage from './pages/hr/PersonnelFormPage';
+import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
+import MyProfilePage from './pages/hr/MyProfilePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -215,6 +219,45 @@ function App() {
                         <Route path="settings/backup" element={
                           <ProtectedRoute allowedRoles={['Admin']}>
                             <BackupSettingsPage />
+                          </ProtectedRoute>
+                        } />
+                        
+                        {/* HR Personnel routes */}
+                        <Route path="hr/my-profile" element={
+                          <ProtectedRoute>
+                            <MyProfilePage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/personnel" element={
+                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                            <PersonnelListPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/personnel/new" element={
+                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                            <PersonnelFormPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/personnel/:id" element={
+                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                            <PersonnelDetailPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/personnel/:id/edit" element={
+                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                            <PersonnelFormPage />
+                          </ProtectedRoute>
+                        } />
+
+                        {/* Document view alias routes */}
+                        <Route path="documents/incoming/:id" element={
+                          <ProtectedRoute>
+                            <ViewIncomingDocument />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="documents/outgoing/:id" element={
+                          <ProtectedRoute>
+                            <ViewOutgoingDocument />
                           </ProtectedRoute>
                         } />
                       </Route>

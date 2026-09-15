@@ -63,6 +63,7 @@ import { OutgoingDocument, IncomingDocument } from '@/types';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import PDFViewer from '@/components/documents/PDFViewer';
 import ScrollToTop from '@/components/common/ScrollToTop';
+import PersonnelAssociatedToDocument from '@/components/hr/PersonnelAssociatedToDocument';
 
 const ViewOutgoingDocument: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -1177,6 +1178,14 @@ const ViewOutgoingDocument: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* 5.5 PERSONNEL ASSOCIÉ (الموظفون المرتبطون بالوثيقة) */}
+      {document && (
+        <PersonnelAssociatedToDocument
+          documentType="OutgoingDocument"
+          documentId={document._id}
+        />
+      )}
 
       {/* 6. HISTORIQUE DE TRAITEMENT (Processing History & Audit Trail) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 print:hidden">

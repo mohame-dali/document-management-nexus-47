@@ -35,7 +35,11 @@ import {
   XCircle,
   FolderTree,
   Calendar,
-  Layers
+  Layers,
+  MoreVertical,
+  Award,
+  ShieldCheck,
+  FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,11 +61,19 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import { Department, User } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getOrganizationSettings, setBureauDepartments, setRhDepartment } from '@/services/hr/personnelApi';
 
 const DepartmentsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -95,6 +107,106 @@ const DepartmentsPage: React.FC = () => {
     queryFn: () => (selectedDepartmentForView?._id ? getDepartmentUsers(selectedDepartmentForView._id) : Promise.resolve([])),
     enabled: !!selectedDepartmentForView?._id,
   });
+
+  // LOT C: Fetch OrganizationSettings pour bureauDirecteurDepartmentId et bureauOrdreDepartmentId
+  const { data: orgSettings, refetch: refetchOrgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 60000,
+  });
+
+  // Helpers pour extraire l'ID propre des départements transversaux
+  const bureauDirecteurId = useMemo(() => {
+    if (!orgSettings?.bureauDirecteurDepartmentId) return '';
+    return typeof orgSettings.bureauDirecteurDepartmentId === 'object'
+      ? String(orgSettings.bureauDirecteurDepartmentId._id || '')
+      : String(orgSettings.bureauDirecteurDepartmentId);
+  }, [orgSettings?.bureauDirecteurDepartmentId]);
+
+  const bureauOrdreId = useMemo(() => {
+    if (!orgSettings?.bureauOrdreDepartmentId) return '';
+    return typeof orgSettings.bureauOrdreDepartmentId === 'object'
+      ? String(orgSettings.bureauOrdreDepartmentId._id || '')
+      : String(orgSettings.bureauOrdreDepartmentId);
+  }, [orgSettings?.bureauOrdreDepartmentId]);
+
+  // ID du département RH
+  const rhDepartmentId = useMemo(() => {
+    if (!orgSettings?.rhDepartmentId) return '';
+    return typeof orgSettings.rhDepartmentId === 'object'
+      ? String(orgSettings.rhDepartmentId._id || '')
+      : String(orgSettings.rhDepartmentId);
+  }, [orgSettings?.rhDepartmentId]);
+
+  // LOT C: Mutation pour marquer/démarquer les départements transversaux
+  const setBureauMutation = useMutation({
+    mutationFn: setBureauDepartments,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-settings'] });
+      toast.success('تم تحديث إعدادات الوحدة الوظيفية بنجاح');
+    },
+    onError: (error: unknown) => {
+      console.error('Error updating bureau departments:', error);
+      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { message?: string; error?: string } } }).response?.data?.message
+        ? (error as { response?: { data?: { message?: string } } }).response!.data!.message
+        : 'فشل في تحديث إعدادات الوحدة الوظيفية';
+      toast.error(errorMsg);
+    }
+  });
+
+  // Mutation pour marquer/démarquer le département RH
+  const setRhMutation = useMutation({
+    mutationFn: setRhDepartment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-settings'] });
+      toast.success('تم تحديث إعدادات قسم الموارد البشرية بنجاح');
+    },
+    onError: (error: unknown) => {
+      console.error('Error updating RH department:', error);
+      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { message?: string; error?: string } } }).response?.data?.message
+        ? (error as { response?: { data?: { message?: string } } }).response!.data!.message
+        : 'فشل في تحديث إعدادات قسم الموارد البشرية';
+      toast.error(errorMsg);
+    }
+  });
+
+  const handleMarkAsBureauDirecteur = (deptId: string) => {
+    // Si déjà ce département, démarquer (null), sinon l'assigner (l'ancien est automatiquement remplacé)
+    const newId = bureauDirecteurId === deptId ? null : deptId;
+    setBureauMutation.mutate({ bureauDirecteurDepartmentId: newId });
+  };
+
+  const handleMarkAsBureauOrdre = (deptId: string) => {
+    // Si déjà ce département, démarquer (null), sinon l'assigner (l'ancien est automatiquement remplacé)
+    const newId = bureauOrdreId === deptId ? null : deptId;
+    setBureauMutation.mutate({ bureauOrdreDepartmentId: newId });
+  };
+
+  const handleMarkAsRh = (deptId: string) => {
+    // Si déjà ce département, démarquer (null), sinon l'assigner (l'ancien est automatiquement remplacé)
+    const newId = rhDepartmentId === deptId ? null : deptId;
+    setRhMutation.mutate({ rhDepartmentId: newId });
+  };
+
+  const handleUnmarkBureau = (deptId: string) => {
+    const payload: { bureauDirecteurDepartmentId?: string | null; bureauOrdreDepartmentId?: string | null } = {};
+    if (bureauDirecteurId === deptId) {
+      payload.bureauDirecteurDepartmentId = null;
+    }
+    if (bureauOrdreId === deptId) {
+      payload.bureauOrdreDepartmentId = null;
+    }
+    if (Object.keys(payload).length > 0) {
+      setBureauMutation.mutate(payload);
+    }
+  };
+
+  const handleUnmark = (deptId: string) => {
+    handleUnmarkBureau(deptId);
+    if (rhDepartmentId === deptId) {
+      setRhMutation.mutate({ rhDepartmentId: null });
+    }
+  };
 
   // Mutations
   const deleteMutation = useMutation({
@@ -150,6 +262,7 @@ const DepartmentsPage: React.FC = () => {
 
   const handleManualRefresh = () => {
     refetch();
+    refetchOrgSettings();
     toast.success('تم تحديث بيانات الأقسام بنجاح');
   };
 
@@ -384,6 +497,11 @@ const DepartmentsPage: React.FC = () => {
               ) : (
                 paginatedDepartments.map((department) => {
                   const isActive = department.isActive !== false;
+                  const isBureauDirecteur = bureauDirecteurId === department._id;
+                  const isBureauOrdre = bureauOrdreId === department._id;
+                  const isRh = rhDepartmentId === department._id;
+                  const isMarked = isBureauDirecteur || isBureauOrdre || isRh;
+
                   return (
                     <TableRow 
                       key={department._id} 
@@ -395,9 +513,36 @@ const DepartmentsPage: React.FC = () => {
                           <div className="w-8 h-8 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
                             <Building className="h-4 w-4" />
                           </div>
-                          <span className="font-bold text-base text-[#1a202c]">
-                            {department.name}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-bold text-base text-[#1a202c]">
+                              {department.name}
+                            </span>
+                            {/* Badge doré pour Bureau Directeur ou Bureau d'Ordre ou Département RH */}
+                            {isBureauDirecteur && (
+                              <span 
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold text-[#1a202c] bg-[#FFCB56] border border-[#e2be40] rounded-[0.25rem] shadow-none select-none"
+                              >
+                                <Award className="w-3.5 h-3.5 shrink-0" />
+                                <span>Bureau Directeur</span>
+                              </span>
+                            )}
+                            {isBureauOrdre && (
+                              <span 
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold text-[#1a202c] bg-[#FFCB56] border border-[#e2be40] rounded-[0.25rem] shadow-none select-none"
+                              >
+                                <Award className="w-3.5 h-3.5 shrink-0" />
+                                <span>Bureau d'Ordre</span>
+                              </span>
+                            )}
+                            {isRh && (
+                              <span 
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-bold text-[#1a202c] bg-[#FFCB56] border border-[#e2be40] rounded-[0.25rem] shadow-none select-none"
+                              >
+                                <Users className="w-3.5 h-3.5 shrink-0" />
+                                <span>Département RH</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
 
@@ -427,7 +572,7 @@ const DepartmentsPage: React.FC = () => {
                         {department.createdAt ? formatArabicDate(department.createdAt) : 'غير مسجل'}
                       </TableCell>
 
-                      {/* Actions: View, Edit, Deactivate/Activate, Delete */}
+                      {/* Actions: View, Edit, Deactivate/Activate, Delete, Bureau / RH assignment */}
                       <TableCell className="py-3 px-4">
                         <div className="flex items-center justify-center gap-1.5">
                           {/* View Affiliated Users */}
@@ -483,6 +628,78 @@ const DepartmentsPage: React.FC = () => {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
+
+                              {/* Menu d'action rapide: Bureau Directeur / Bureau d'Ordre / Département RH */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="icon"
+                                    disabled={setBureauMutation.isPending || setRhMutation.isPending}
+                                    className={`h-10 w-10 rounded transition-colors ${
+                                      isMarked 
+                                        ? 'bg-[#FFCB56]/20 border-[#e2be40] text-[#1a202c] hover:bg-[#FFCB56]/30' 
+                                        : 'border-[#cbd5e1] hover:bg-gray-100 text-gray-700'
+                                    }`}
+                                    title="تخصيص الوحدة الوظيفية / قسم الموارد البشرية"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-60 text-right" dir="rtl">
+                                  <DropdownMenuItem
+                                    onClick={() => handleMarkAsBureauDirecteur(department._id)}
+                                    className="cursor-pointer flex items-center justify-between text-sm py-2"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <ShieldCheck className="h-4 w-4 text-amber-600" />
+                                      <span>Marquer comme Bureau Directeur</span>
+                                    </span>
+                                    {isBureauDirecteur && (
+                                      <span className="w-2 h-2 rounded-full bg-[#FFCB56] border border-[#e2be40]" />
+                                    )}
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => handleMarkAsBureauOrdre(department._id)}
+                                    className="cursor-pointer flex items-center justify-between text-sm py-2"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <FileText className="h-4 w-4 text-amber-600" />
+                                      <span>Marquer comme Bureau d'Ordre</span>
+                                    </span>
+                                    {isBureauOrdre && (
+                                      <span className="w-2 h-2 rounded-full bg-[#FFCB56] border border-[#e2be40]" />
+                                    )}
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => handleMarkAsRh(department._id)}
+                                    className="cursor-pointer flex items-center justify-between text-sm py-2"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <Users className="h-4 w-4 text-amber-600" />
+                                      <span>Marquer comme Département RH</span>
+                                    </span>
+                                    {isRh && (
+                                      <span className="w-2 h-2 rounded-full bg-[#FFCB56] border border-[#e2be40]" />
+                                    )}
+                                  </DropdownMenuItem>
+
+                                  {isMarked && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => handleUnmark(department._id)}
+                                        className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 text-sm py-2 flex items-center gap-2"
+                                      >
+                                        <X className="h-4 w-4" />
+                                        <span>Démarquer</span>
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </>
                           )}
                         </div>

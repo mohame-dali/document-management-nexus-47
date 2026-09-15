@@ -5,6 +5,7 @@ const fs = require('fs');
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, '..', 'uploads');
 const usersPhotoDir = path.join(uploadDir, 'usersphoto');
+const personnelPhotoDir = path.join(uploadDir, 'personnelphoto');
 const tempDir = path.join(uploadDir, 'temp');
 
 if (!fs.existsSync(uploadDir)) {
@@ -13,6 +14,10 @@ if (!fs.existsSync(uploadDir)) {
 
 if (!fs.existsSync(usersPhotoDir)) {
   fs.mkdirSync(usersPhotoDir, { recursive: true });
+}
+
+if (!fs.existsSync(personnelPhotoDir)) {
+  fs.mkdirSync(personnelPhotoDir, { recursive: true });
 }
 
 if (!fs.existsSync(tempDir)) {
@@ -29,6 +34,19 @@ const userPhotoStorage = multer.diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
     cb(null, 'user-' + uniqueSuffix + ext);
+  }
+});
+
+// Configure storage for personnel photos
+const personnelPhotoStorage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, personnelPhotoDir);
+  },
+  filename: function(req, file, cb) {
+    // Generate unique filename with original extension
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'personnel-' + uniqueSuffix + ext);
   }
 });
 
@@ -125,6 +143,12 @@ exports.handleScannedDocument = (req, res, next) => {
 // Export configured multer instances
 exports.uploadUserPhoto = multer({ 
   storage: userPhotoStorage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: photoFilter
+});
+
+exports.uploadPersonnelPhoto = multer({ 
+  storage: personnelPhotoStorage,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
   fileFilter: photoFilter
 });

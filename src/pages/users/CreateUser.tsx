@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createUserWithPhoto } from '@/services/userService';
 import { getDepartments } from '@/services/departmentService';
+import { linkUserToPersonnel } from '@/services/hr/personnelApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,43 @@ const CreateUser: React.FC = () => {
   });
   
   const createMutation = useMutation({
-    mutationFn: (data: UserFormData) => createUserWithPhoto(data, photoFile || undefined),
-    onSuccess: () => {
+    mutationFn: async (data: UserFormData) => {
+      // 1. Création du compte utilisateur
+      const newUser = await createUserWithPhoto(data, photoFile || undefined);
+
+      // 2. Si un personnelId a été envoyé, lier le User à la fiche Personnel
+      let linkSuccess = true;
+      if (data.personnelId && newUser?._id) {
+        try {
+          await linkUserToPersonnel(data.personnelId, newUser._id);
+        } catch (linkError) {
+          console.error('Error linking user to personnel:', linkError);
+          linkSuccess = false;
+        }
+      }
+
+      return {
+        newUser,
+        hasPersonnel: Boolean(data.personnelId),
+        linkSuccess,
+      };
+    },
+    onSuccess: (result) => {
+      // Invalider les caches requis
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('تم إنشاء المستخدم بنجاح');
+      queryClient.invalidateQueries({ queryKey: ['personnel-en-attente'] });
+      queryClient.invalidateQueries({ queryKey: ['hr', 'personnel'] });
+
+      if (result.hasPersonnel && !result.linkSuccess) {
+        toast.warning(
+          "Compte créé, mais l'association à la fiche Personnel a échoué. Veuillez réessayer depuis le module RH."
+        );
+      } else if (result.hasPersonnel && result.linkSuccess) {
+        toast.success('Compte créé et fiche Personnel associée avec succès.');
+      } else {
+        toast.success('تم إنشاء المستخدم بنجاح');
+      }
+
       navigate('/dashboard/users');
     },
     onError: (error: unknown) => {

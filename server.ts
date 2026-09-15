@@ -58,6 +58,7 @@ app.use(cors({
 const backendDir = path.join(process.cwd(), 'backend');
 app.use('/uploads', express.static(path.join(backendDir, 'uploads')));
 app.use('/uploads/usersphoto', express.static(path.join(backendDir, 'uploads/usersphoto')));
+app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads/personnelphoto')));
 app.use('/courrier', express.static(path.join(backendDir, 'courrier')));
 app.use('/uploads/templates', express.static(path.join(backendDir, 'uploads/templates')));
 
@@ -87,6 +88,9 @@ try {
   app.use('/api/activity-notifications', require('./backend/routes/activityNotifications'));
   app.use('/api/message-settings', require('./backend/routes/messageSettings'));
   app.use('/api/backup', require('./backend/routes/backup'));
+  app.use('/api/organization-settings', require('./backend/routes/organizationSettingsRoutes'));
+  app.use('/api/hr', require('./backend/routes/personnelRoutes'));
+  app.use('/api/hr', require('./backend/routes/personnelDocumentRoutes'));
 } catch (err: any) {
   console.warn('Notice loading backend routes:', err.message);
 }

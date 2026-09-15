@@ -50,6 +50,7 @@ import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
 import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
 import PDFViewer from '@/components/documents/PDFViewer';
 import ScrollToTop from '@/components/common/ScrollToTop';
+import PersonnelAssociatedToDocument from '@/components/hr/PersonnelAssociatedToDocument';
 
 const ViewIncomingDocument: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -931,6 +932,14 @@ const ViewIncomingDocument: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* 5.5 PERSONNEL ASSOCIÉ (الموظفون المرتبطون بالوثيقة) */}
+      {document && (
+        <PersonnelAssociatedToDocument
+          documentType="IncomingDocument"
+          documentId={document._id}
+        />
+      )}
 
       {/* 6. HISTORIQUE DE TRAITEMENT (Processing History & Audit Trail) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6">
