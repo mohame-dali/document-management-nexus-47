@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 
 interface PersonnelFormProps {
   initialData?: Partial<Personnel>;
-  onSubmit: (data: Partial<Personnel>) => void;
+  onSubmit: (data: Partial<Personnel>, photoFile?: File | null) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -178,25 +178,9 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-
-    let finalPhoto = photo;
-
-    // Si une nouvelle photo est sélectionnée et qu'on est en mode édition, on la téléverse d'abord
-    if (initialData?._id && photoFile) {
-      try {
-        setIsUploadingPhoto(true);
-        const res = await uploadPersonnelPhoto(initialData._id, photoFile);
-        finalPhoto = res.photo;
-      } catch (err: unknown) {
-        console.error('Error uploading photo during submit:', err);
-        toast.error('تعذر رفع الصورة، سيتم حفظ باقي البيانات');
-      } finally {
-        setIsUploadingPhoto(false);
-      }
-    }
 
     const payload: Partial<Personnel> = {
       nom: nom.trim(),
@@ -212,10 +196,10 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       activeDepartment: activeDepartment !== 'NONE' ? activeDepartment : null,
       dateEmbauche: dateEmbauche ? new Date(dateEmbauche).toISOString() : null,
       notes: notes.trim(),
-      photo: finalPhoto,
+      photo: photo,
     };
 
-    onSubmit(payload);
+    onSubmit(payload, photoFile || null);
   };
 
   return (
@@ -231,7 +215,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             {/* Avatar circulaire */}
             <div className="relative group shrink-0">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-2 border-[#cbd5e1] overflow-hidden bg-white shadow-sm flex items-center justify-center">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-2 border-[#cbd5e1] overflow-hidden bg-white shadow-sm flex items-center justify-center relative">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
@@ -245,14 +229,23 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
                     <span className="text-xs text-gray-500 mt-1 font-medium">بدون صورة</span>
                   </div>
                 )}
+
+                {/* Spinner discret de chargement sur l'avatar */}
+                {(isUploadingPhoto || (isLoading && Boolean(photoFile))) && (
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center text-white z-10">
+                    <RefreshCw className="w-6 h-6 animate-spin text-white" />
+                    <span className="text-[11px] font-medium mt-1">جاري الرفع...</span>
+                  </div>
+                )}
               </div>
 
               {/* Bouton rapide d'upload sur l'avatar */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isUploadingPhoto}
                 title="تغيير الصورة"
-                className="absolute bottom-1 right-1 p-2 rounded-full bg-[#2c5282] hover:bg-[#234269] text-white shadow transition-transform hover:scale-105"
+                className="absolute bottom-1 right-1 p-2 rounded-full bg-[#2c5282] hover:bg-[#234269] text-white shadow transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Camera className="w-4 h-4" />
               </button>

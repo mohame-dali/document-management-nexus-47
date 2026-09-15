@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import {
   getPersonnelById,
   createPersonnel,
   updatePersonnel,
+  uploadPersonnelPhoto,
 } from '@/services/hr/personnelApi';
 import { Personnel } from '@/types/hr';
 import PersonnelForm from '@/components/hr/PersonnelForm';
@@ -19,6 +20,9 @@ export const PersonnelFormPage: React.FC = () => {
   const queryClient = useQueryClient();
   const isEditMode = Boolean(id);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
   // En mode édition, charger les données existantes
   const {
     data: initialData,
@@ -30,40 +34,72 @@ export const PersonnelFormPage: React.FC = () => {
     enabled: isEditMode,
   });
 
-  // Mutation pour la création
-  const createMutation = useMutation({
-    mutationFn: (data: Partial<Personnel>) => createPersonnel(data),
-    onSuccess: (newPersonnel) => {
-      queryClient.invalidateQueries({ queryKey: ['personnel'] });
-      toast.success('تمت إضافة الموظف بنجاح');
-      navigate(`/dashboard/hr/personnel/${newPersonnel._id}`);
-    },
-    onError: (error: unknown) => {
-      const msg = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
-      toast.error(msg || 'تعذر تسجيل بيانات الموظف');
-    },
-  });
+  const handleSubmit = async (formData: Partial<Personnel>, photoFile?: File | null) => {
+    setIsSaving(true);
 
-  // Mutation pour l'édition
-  const updateMutation = useMutation({
-    mutationFn: (data: Partial<Personnel>) => updatePersonnel(id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['personnel'] });
-      queryClient.invalidateQueries({ queryKey: ['personnel', id] });
-      toast.success('تم تعديل بيانات الموظف بنجاح');
-      navigate(`/dashboard/hr/personnel/${id}`);
-    },
-    onError: (error: unknown) => {
-      const msg = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
-      toast.error(msg || 'تعذر تعديل بيانات الموظف');
-    },
-  });
+    if (isEditMode && id) {
+      try {
+        await updatePersonnel(id, formData);
 
-  const handleSubmit = (formData: Partial<Personnel>) => {
-    if (isEditMode) {
-      updateMutation.mutate(formData);
+        if (photoFile) {
+          setIsUploadingPhoto(true);
+          try {
+            await uploadPersonnelPhoto(id, photoFile);
+            toast.success('تم تعديل بيانات الموظف وتحديث الصورة بنجاح');
+          } catch (photoErr) {
+            console.error('Error uploading photo during edit:', photoErr);
+            toast.warning('تم تعديل بيانات الموظف، لكن تعذر رفع الصورة. يمكنك المحاولة مجددًا.');
+          } finally {
+            setIsUploadingPhoto(false);
+          }
+        } else {
+          toast.success('تم تعديل بيانات الموظف بنجاح');
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['personnel'] });
+        queryClient.invalidateQueries({ queryKey: ['hr', 'personnel'] });
+        queryClient.invalidateQueries({ queryKey: ['personnel', id] });
+        navigate(`/dashboard/hr/personnel/${id}`);
+      } catch (error: unknown) {
+        const msg = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+        toast.error(msg || 'تعذر تعديل بيانات الموظف');
+      } finally {
+        setIsSaving(false);
+      }
     } else {
-      createMutation.mutate(formData);
+      // Mode Création
+      try {
+        const newPersonnel = await createPersonnel(formData);
+        const newId = newPersonnel?._id;
+
+        if (newId && photoFile) {
+          setIsUploadingPhoto(true);
+          try {
+            await uploadPersonnelPhoto(newId, photoFile);
+            toast.success('تم تسجيل بطاقة الموظف ورفع الصورة بنجاح');
+          } catch (photoErr) {
+            console.error('Error uploading photo during creation:', photoErr);
+            toast.warning('تم تسجيل بطاقة الموظف، لكن تعذر رفع الصورة. يمكنك المحاولة مجددًا من شاشة التعديل.');
+          } finally {
+            setIsUploadingPhoto(false);
+          }
+        } else {
+          toast.success('تمت إضافة الموظف بنجاح');
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['personnel'] });
+        queryClient.invalidateQueries({ queryKey: ['hr', 'personnel'] });
+        if (newId) {
+          navigate(`/dashboard/hr/personnel/${newId}`);
+        } else {
+          navigate('/dashboard/hr/personnel');
+        }
+      } catch (error: unknown) {
+        const msg = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
+        toast.error(msg || 'تعذر تسجيل بيانات الموظف');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -74,8 +110,6 @@ export const PersonnelFormPage: React.FC = () => {
       navigate('/dashboard/hr/personnel');
     }
   };
-
-  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right" dir="rtl">
@@ -131,7 +165,7 @@ export const PersonnelFormPage: React.FC = () => {
           initialData={initialData}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          isLoading={isSaving}
+          isLoading={isSaving || isUploadingPhoto}
         />
       )}
     </div>
