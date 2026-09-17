@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { getPersonnelList, deletePersonnel, getPhotoUrl } from '@/services/hr/personnelApi';
+import { getPersonnelList, deletePersonnel } from '@/services/hr/personnelApi';
 import { getDepartments } from '@/services/departmentService';
 import { Personnel, PersonnelFilters } from '@/types/hr';
 import { Department } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import {
   Table,
   TableBody,
@@ -51,29 +52,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-const PersonnelAvatar: React.FC<{ photo?: string; name: string; initial: string }> = ({
-  photo,
-  name,
-  initial,
-}) => {
-  const [imgError, setImgError] = useState(false);
-
-  return (
-    <div className="w-10 h-10 rounded-full border border-[#cbd5e1] overflow-hidden bg-[#ebf4ff] text-[#2c5282] font-bold flex items-center justify-center shrink-0 shadow-xs">
-      {photo && !imgError ? (
-        <img
-          src={getPhotoUrl(photo)}
-          alt={name}
-          className="w-full h-full object-cover"
-          onError={() => setImgError(true)}
-        />
-      ) : (
-        <span className="text-sm font-bold">{initial}</span>
-      )}
-    </div>
-  );
-};
 
 export const PersonnelListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -359,8 +337,9 @@ export const PersonnelListPage: React.FC = () => {
                         <div className="flex items-center gap-3">
                           <PersonnelAvatar
                             photo={p.photo}
-                            name={`${p.nom} ${p.prenom}`}
-                            initial={p.prenom ? p.prenom.charAt(0) : 'م'}
+                            nom={p.nom}
+                            prenom={p.prenom}
+                            size="sm"
                           />
                           <div>
                             <div>{p.nom} {p.prenom}</div>

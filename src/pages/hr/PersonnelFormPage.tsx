@@ -70,7 +70,8 @@ export const PersonnelFormPage: React.FC = () => {
       // Mode Création
       try {
         const newPersonnel = await createPersonnel(formData);
-        const newId = newPersonnel?._id || (newPersonnel as any)?.data?._id || (newPersonnel as any)?.id;
+        const nestedData = newPersonnel as unknown as { data?: { _id?: string }; id?: string } | undefined;
+        const newId = newPersonnel?._id || nestedData?.data?._id || nestedData?.id;
 
         if (newId && photoFile) {
           setIsUploadingPhoto(true);

@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useQuery } from '@tanstack/react-query';
 import { getUnreadCount } from '@/services/messageService';
-import { getMyProfile, getPhotoUrl } from '@/services/hr/personnelApi';
+import { getMyProfile } from '@/services/hr/personnelApi';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, User, Menu, LogOut, FileText, Shield, Users, Settings } from 'lucide-react';
@@ -17,7 +18,6 @@ const Header = () => {
   const { toggle } = useSidebar();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [photoError, setPhotoError] = useState(false);
 
   // Charger la fiche Personnel liée via React Query
   const { data: myProfile } = useQuery({
@@ -70,12 +70,6 @@ const Header = () => {
   // Priorité 1 : photo fiche Personnel, Priorité 2 : photo User
   const photoSource = myProfile?.photo || currentUser?.photo;
 
-  // Initiales : prénom + nom de la fiche Personnel, ou initiale du username
-  const initials = [
-    myProfile?.prenom?.trim().charAt(0) || '',
-    myProfile?.nom?.trim().charAt(0) || '',
-  ].filter(Boolean).join('') || (currentUser?.username?.charAt(0)?.toUpperCase() || 'U');
-
   return (
     <header className="h-16 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 sm:px-6 shadow-sm z-10 select-none" dir="rtl">
       {/* Left side - Sidebar Toggle */}
@@ -105,22 +99,13 @@ const Header = () => {
 
         {/* User Info with Photo (Priorité Personnel liée) */}
         <div className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5">
-          <div className="h-9 w-9 rounded-full border border-[#cbd5e1] overflow-hidden bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
-            {photoSource && !photoError ? (
-              <img 
-                src={getPhotoUrl(photoSource)} 
-                alt={currentUser.username}
-                className="w-full h-full object-cover"
-                onError={() => setPhotoError(true)}
-              />
-            ) : initials ? (
-              <span className="text-sm font-bold text-[#2c5282] select-none">
-                {initials}
-              </span>
-            ) : (
-              <User className="w-5 h-5 text-[#2c5282]" />
-            )}
-          </div>
+          <PersonnelAvatar
+            photo={photoSource}
+            nom={myProfile?.nom}
+            prenom={myProfile?.prenom}
+            username={currentUser.username}
+            size="md"
+          />
           <div className="text-right">
             <p className="text-xs font-semibold text-[#1a202c] leading-tight">
               {currentUser.username}

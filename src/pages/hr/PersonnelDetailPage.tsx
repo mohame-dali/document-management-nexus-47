@@ -5,6 +5,7 @@ import { getPersonnelById, getPhotoUrl } from '@/services/hr/personnelApi';
 import { Personnel } from '@/types/hr';
 import { Department, User } from '@/types';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
@@ -29,7 +30,6 @@ import PersonnelDocumentsList from '@/components/hr/PersonnelDocumentsList';
 export const PersonnelDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [photoError, setPhotoError] = useState(false);
 
   const {
     data: personnel,
@@ -83,34 +83,17 @@ export const PersonnelDetailPage: React.FC = () => {
       ? (personnel.userId as User)
       : null;
 
-  const initials = [
-    personnel.prenom?.trim().charAt(0) || '',
-    personnel.nom?.trim().charAt(0) || '',
-  ]
-    .filter(Boolean)
-    .join('');
-
   return (
     <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right" dir="rtl">
       {/* 1. En-tête de la fiche */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-24 h-24 rounded-full bg-[#2c5282]/10 border-2 border-[#cbd5e1] text-[#2c5282] flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-            {personnel.photo && !photoError ? (
-              <img
-                src={getPhotoUrl(personnel.photo)}
-                alt={`${personnel.nom} ${personnel.prenom}`}
-                className="w-full h-full object-cover"
-                onError={() => setPhotoError(true)}
-              />
-            ) : initials ? (
-              <span className="text-3xl font-bold text-[#2c5282] select-none tracking-wider">
-                {initials}
-              </span>
-            ) : (
-              <UserIcon className="w-10 h-10 text-[#2c5282]" />
-            )}
-          </div>
+          <PersonnelAvatar
+            photo={personnel.photo}
+            nom={personnel.nom}
+            prenom={personnel.prenom}
+            size="lg"
+          />
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-bold text-[#1a202c]">
