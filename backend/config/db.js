@@ -8,7 +8,8 @@ const DEFAULT_ADMIN = {
   username: 'admin',
   password: 'admin123', // This will be hashed
   role: 'Admin',
-  isActive: true
+  isActive: true,
+  mustChangePassword: true
 };
 
 // Default MongoDB URI if not provided in environment variables
@@ -28,7 +29,8 @@ const createDefaultAdmin = async () => {
         username: DEFAULT_ADMIN.username,
         password: DEFAULT_ADMIN.password, // This will be hashed by the pre-save hook in User model
         role: DEFAULT_ADMIN.role,
-        isActive: DEFAULT_ADMIN.isActive
+        isActive: DEFAULT_ADMIN.isActive,
+        mustChangePassword: DEFAULT_ADMIN.mustChangePassword
       });
       
       console.log('Default admin user created successfully.');

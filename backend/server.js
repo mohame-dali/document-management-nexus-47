@@ -22,11 +22,29 @@ connectDB();
 const app = express();
 const httpServer = createServer(app);
 
+// CORS Allowed Origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 // Socket.io setup
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origine non autorisée par CORS'));
+      }
+    },
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
@@ -41,11 +59,64 @@ app.use(cookieParser());
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origine non autorisée par CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires']
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'X-Requested-With']
 }));
+
+const helmet = require('helmet');
+
+app.use(helmet({
+  contentSecurityPolicy: false,           // Désactiver CSP pour éviter les blocages frontend (React, Axios, images)
+  crossOriginResourcePolicy: { policy: 'cross-origin' },  // Autorise les images /uploads depuis le frontend
+  crossOriginEmbedderPolicy: false,       // Évite les blocages d'embed
+  hsts: {
+    maxAge: 31536000,                     // 1 an en secondes (HSTS uniquement en production HTTPS)
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+const rateLimit = require('express-rate-limit');
+
+// Trust proxy si derrière un reverse proxy (Nginx, Heroku, etc.)
+// app.set('trust proxy', 1);   // Décommenter si nécessaire
+
+// Limiteur global pour toutes les APIs
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,        // Fenêtre de 15 minutes
+  max: 500,                         // 500 requêtes max par IP
+  standardHeaders: true,            // Retourne les headers RateLimit-*
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Trop de requêtes. Réessayez dans 15 minutes.'
+  }
+});
+
+// Limiteur strict pour le login (anti brute-force)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,                           // 5 tentatives max par IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,     // Ne compte pas les logins réussis
+  message: {
+    success: false,
+    message: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.'
+  }
+});
+
+// Appliquer les limiteurs
+app.use('/api', globalLimiter);
+app.use('/api/auth/login', loginLimiter);
 
 // Set static folders for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
