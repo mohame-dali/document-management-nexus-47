@@ -93,14 +93,21 @@ app.use(cors({
 const helmet = require('helmet');
 
 app.use(helmet({
-  contentSecurityPolicy: false,           // Désactiver CSP pour éviter les blocages frontend (React, Axios, images)
-  crossOriginResourcePolicy: { policy: 'cross-origin' },  // Autorise les images /uploads depuis le frontend
+  contentSecurityPolicy: false,           // Nécessaire pour React/Axios
+  crossOriginResourcePolicy: { policy: 'cross-origin' },  // Autorise les images /uploads
   crossOriginEmbedderPolicy: false,       // Évite les blocages d'embed
-  hsts: {
-    maxAge: 31536000,                     // 1 an en secondes (HSTS uniquement en production HTTPS)
+  
+  // HSTS uniquement en production HTTPS
+  // En dev local (HTTP), le désactiver pour éviter la redirection https://localhost:5000
+  hsts: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000,
     includeSubDomains: true,
     preload: true
-  }
+  } : false,
+  
+  // Autoriser l'affichage dans une iframe (pour l'aperçu PDF)
+  // En production, remplacer par : frameguard: { action: 'sameorigin' } si tout est sur le même domaine
+  frameguard: false
 }));
 
 const rateLimit = require('express-rate-limit');
