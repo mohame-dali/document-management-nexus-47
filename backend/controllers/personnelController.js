@@ -488,19 +488,19 @@ exports.linkUserToPersonnel = async (req, res, next) => {
       });
     }
 
-    // d. Vérifier que la fiche Personnel est encore en statut 'en_attente' ET userId null
-    if (personnel.statut !== 'en_attente' || personnel.userId) {
+    // d. Vérifier que la fiche Personnel n'est pas déjà liée à un AUTRE compte
+    if (personnel.userId && personnel.userId.toString() !== userId.toString()) {
       return res.status(400).json({
         success: false,
-        message: 'Cette fiche Personnel est déjà associée à un compte utilisateur'
+        message: 'Cette fiche Personnel est déjà associée à un autre compte utilisateur'
       });
     }
 
-    // e. Vérifier que le User n'a PAS déjà un personnelId
-    if (user.personnelId) {
+    // e. Vérifier que le User n'est pas déjà lié à une AUTRE fiche Personnel
+    if (user.personnelId && user.personnelId.toString() !== personnelId.toString()) {
       return res.status(400).json({
         success: false,
-        message: 'Cet utilisateur est déjà associé à une fiche Personnel'
+        message: 'Cet utilisateur est déjà associé à une autre fiche Personnel'
       });
     }
 
