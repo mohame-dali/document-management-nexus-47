@@ -320,28 +320,30 @@ const Sidebar = () => {
                             <button
                               type="button"
                               onClick={() => navigate('/dashboard/hr/personnel')}
+                              title={!isOpen ? "الموظفون" : undefined}
                               className={cn(
-                                "w-full h-9 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-9 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/personnel'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                               )}
                             >
-                              <Users2 className="h-3.5 w-3.5 text-slate-400" />
+                              <Users2 className="h-4 w-4 text-slate-400" />
                               <span className="truncate">الموظفون</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => navigate('/dashboard/hr/personnel/new')}
+                              title={!isOpen ? "إضافة موظف" : undefined}
                               className={cn(
-                                "w-full h-9 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-9 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/personnel/new'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                               )}
                             >
-                              <UserPlus className="h-3.5 w-3.5 text-slate-400" />
+                              <UserPlus className="h-4 w-4 text-slate-400" />
                               <span className="truncate">إضافة موظف</span>
                             </button>
                           </div>

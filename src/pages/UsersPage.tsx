@@ -57,6 +57,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import ChangePasswordDialog from '@/components/users/ChangePasswordDialog';
+import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -68,11 +69,11 @@ const UsersPage: React.FC = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [passwordDialogUser, setPasswordDialogUser] = useState<User | null>(null);
 
-  // Filter & Search states
+  // Filter & Search states with persistence
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL');
-  const [departmentFilter, setDepartmentFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [roleFilter, setRoleFilter] = useLocalStorageState<string>('users_roleFilter', 'ALL');
+  const [departmentFilter, setDepartmentFilter] = useLocalStorageState<string>('users_departmentFilter', 'ALL');
+  const [statusFilter, setStatusFilter] = useLocalStorageState<string>('users_statusFilter', 'ALL');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);

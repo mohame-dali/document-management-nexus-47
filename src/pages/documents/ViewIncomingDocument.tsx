@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -30,7 +30,8 @@ import {
   History, 
   Paperclip,
   Share2,
-  FolderTree
+  FolderTree,
+  ChevronLeft
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -196,8 +197,19 @@ const ViewIncomingDocument: React.FC = () => {
     : (document.responsibleUser || 'لم يُعيّن مسؤول بعد');
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-4" dir="rtl">
       
+      {/* Fil d'Ariane (Breadcrumbs) */}
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
+        <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <Link to="/dashboard/incoming-documents" className="hover:text-[#2c5282] transition-colors">المستندات الواردة</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <span className="text-[#1a202c] font-medium truncate max-w-md">
+          {document.subject || `وثيقة رقم #${document.serialNumber}`}
+        </span>
+      </nav>
+
       {/* 1. EN-TÊTE DE PAGE (Header with Navigation & Key Actions) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         {/* Left in RTL: Back button + Title */}

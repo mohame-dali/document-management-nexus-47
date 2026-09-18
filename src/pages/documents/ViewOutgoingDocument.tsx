@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -262,8 +262,19 @@ const ViewOutgoingDocument: React.FC = () => {
   const pourInfoCount = document.pourInfo?.length || 0;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-4" dir="rtl">
       
+      {/* Fil d'Ariane (Breadcrumbs) */}
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500 print:hidden" dir="rtl">
+        <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <Link to="/dashboard/outgoing-documents" className="hover:text-[#2c5282] transition-colors">المستندات الصادرة</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <span className="text-[#1a202c] font-medium truncate max-w-md">
+          {document.subject || `وثيقة رقم #${document.serialNumber}`}
+        </span>
+      </nav>
+
       {/* PRINT-ONLY OFFICIAL ADMINISTRATIVE SHEET */}
       <div className="hidden print:block bg-white p-8 text-black text-right" dir="rtl">
         <div className="border-b-2 border-black pb-4 mb-6 text-center">

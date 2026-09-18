@@ -86,6 +86,7 @@ const Header = () => {
           size="icon" 
           onClick={toggle}
           title={t('header.toggleSidebar')}
+          aria-label={t('header.toggleSidebar') || "القائمة الجانبية"}
           className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded transition-colors duration-200"
         >
           <Menu className="h-5 w-5" />
@@ -159,6 +160,7 @@ const Header = () => {
             size="icon" 
             onClick={handleNotificationClick}
             title={unreadCount > 0 ? `${unreadCount} ${t('header.unreadMessages')}` : t('header.viewMessages')}
+            aria-label={unreadCount > 0 ? `${unreadCount} ${t('header.unreadMessages')}` : (t('header.viewMessages') || "الرسائل")}
             className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded relative transition-colors duration-200"
           >
             <Bell className="h-4 w-4" />
