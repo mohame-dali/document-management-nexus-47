@@ -9,11 +9,11 @@ const attachDocumentCounts = async (folders) => {
   
   const [incomingCounts, outgoingCounts] = await Promise.all([
     IncomingDocument.aggregate([
-      { $match: { folder: { $in: folderIds } } },
+      { $match: { folder: { $in: folderIds }, isDeleted: false } },
       { $group: { _id: '$folder', count: { $sum: 1 } } }
     ]),
     OutgoingDocument.aggregate([
-      { $match: { folder: { $in: folderIds } } },
+      { $match: { folder: { $in: folderIds }, isDeleted: false } },
       { $group: { _id: '$folder', count: { $sum: 1 } } }
     ])
   ]);
@@ -38,7 +38,7 @@ const attachDocumentCounts = async (folders) => {
 // @access  Private
 exports.getFolders = async (req, res, next) => {
   try {
-    let query = {};
+    let query = { isDeleted: false };
     
     // SuperAdmin, AdminTuningDesk and Admin can see all departments' folders
     if (req.user.role === 'SuperAdmin' || req.user.role === 'AdminTuningDesk' || req.user.role === 'Admin') {
@@ -108,7 +108,8 @@ exports.getRootFolders = async (req, res, next) => {
     
     const folders = await Folder.find({
       department: departmentId,
-      parent: null
+      parent: null,
+      isDeleted: false
     }).populate('department', 'name')
       .populate('createdBy', 'username role')
       .sort({ name: 1 });
@@ -132,7 +133,7 @@ exports.getSubFolders = async (req, res, next) => {
   try {
     const parentFolder = await Folder.findById(req.params.id);
     
-    if (!parentFolder) {
+    if (!parentFolder || parentFolder.isDeleted) {
       return next(new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404));
     }
     
@@ -145,7 +146,8 @@ exports.getSubFolders = async (req, res, next) => {
     }
     
     const subfolders = await Folder.find({
-      parent: req.params.id
+      parent: req.params.id,
+      isDeleted: false
     }).populate('department', 'name')
       .populate('createdBy', 'username role')
       .sort({ name: 1 });
@@ -180,7 +182,7 @@ exports.getFolderHierarchy = async (req, res, next) => {
       }
     }
 
-    const allFolders = await Folder.find({ department: departmentId })
+    const allFolders = await Folder.find({ department: departmentId, isDeleted: false })
       .populate('createdBy', 'username role')
       .sort({ name: 1 });
 

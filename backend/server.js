@@ -176,6 +176,7 @@ const organizationSettings = require('./routes/organizationSettingsRoutes');
 const hrPersonnel = require('./routes/personnelRoutes');
 const hrPersonnelDocuments = require('./routes/personnelDocumentRoutes');
 const organizationChart = require('./routes/organizationChartRoutes');
+const trash = require('./routes/trashRoutes');
 
 // Mount routers
 app.use('/api/auth', auth);
@@ -198,6 +199,7 @@ app.use('/api/organization-settings', organizationSettings);
 app.use('/api/hr', hrPersonnel);
 app.use('/api/hr', hrPersonnelDocuments);
 app.use('/api/organization-chart', organizationChart);
+app.use('/api/trash', trash);
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {

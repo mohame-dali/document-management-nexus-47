@@ -23,7 +23,8 @@ import {
   UserCheck,
   UserPlus,
   ChevronDown,
-  ChevronLeft
+  ChevronLeft,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
@@ -85,6 +86,7 @@ const Sidebar = () => {
       { path: '/dashboard/folders', label: t('sidebar.folders'), icon: FolderOpen, color: 'text-yellow-600' },
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
+      { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
     ] : []),
 
     // Admin menu items (avec mon-profil)
@@ -98,6 +100,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
       { path: '/dashboard/settings', label: 'الإعدادات', icon: Settings, color: 'text-gray-600' },
     ] : []),
 

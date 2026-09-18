@@ -35,7 +35,7 @@ exports.getOutgoingDocument = async (req, res, next) => {
       .populate('reference')
       .populate('createdBy', 'username');
     
-    if (!document) {
+    if (!document || document.isDeleted) {
       return next(
         new ErrorResponse(`Document not found with id of ${documentId}`, 404)
       );

@@ -46,6 +46,7 @@ import PersonnelFormPage from './pages/hr/PersonnelFormPage';
 import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
 import MyProfilePage from './pages/hr/MyProfilePage';
 import OrganizationChartPage from './pages/organization/OrganizationChartPage';
+import TrashPage from './pages/trash/TrashPage';
 import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
 const queryClient = new QueryClient({
@@ -264,6 +265,13 @@ function App() {
                         <Route path="documents/outgoing/:id" element={
                           <ProtectedRoute>
                             <ViewOutgoingDocument />
+                          </ProtectedRoute>
+                        } />
+
+                        {/* Trash route */}
+                        <Route path="trash" element={
+                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                            <TrashPage />
                           </ProtectedRoute>
                         } />
                       </Route>

@@ -7,7 +7,7 @@ const ErrorResponse = require('../../utils/errorResponse');
 // @access  Private
 exports.getOutgoingDocuments = async (req, res, next) => {
   try {
-    let query = {};
+    let query = { isDeleted: false };
     
     // If not AdminTuningDesk, Admin, or SuperAdmin, filter by department
     if (req.user.role !== 'SuperAdmin' && req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
