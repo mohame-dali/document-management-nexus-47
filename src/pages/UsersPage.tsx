@@ -26,11 +26,15 @@ import {
   X, 
   ChevronRight, 
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
   Shield,
   Building,
   UserCheck,
   UserX,
-  MoreHorizontal
+  MoreHorizontal,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,6 +78,17 @@ const UsersPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useLocalStorageState<string>('users_roleFilter', 'ALL');
   const [departmentFilter, setDepartmentFilter] = useLocalStorageState<string>('users_departmentFilter', 'ALL');
   const [statusFilter, setStatusFilter] = useLocalStorageState<string>('users_statusFilter', 'ALL');
+  const [sortField, setSortField] = useLocalStorageState<string>('users_sortField', 'createdAt');
+  const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('users_sortDirection', 'desc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -214,12 +229,41 @@ const UsersPage: React.FC = () => {
     });
   }, [users, searchTerm, roleFilter, departmentFilter, statusFilter]);
 
+  // Sort users after filtering
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
+      let valA: string | number = '';
+      let valB: string | number = '';
+
+      if (sortField === 'username') {
+        valA = a.username.toLowerCase();
+        valB = b.username.toLowerCase();
+      } else if (sortField === 'role') {
+        valA = a.role.toLowerCase();
+        valB = b.role.toLowerCase();
+      } else if (sortField === 'departments') {
+        valA = (a.departments?.map(d => d.name).join(', ') || '').toLowerCase();
+        valB = (b.departments?.map(d => d.name).join(', ') || '').toLowerCase();
+      } else if (sortField === 'createdAt') {
+        valA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        valB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      } else if (sortField === 'isActive') {
+        valA = a.isActive ? 1 : 0;
+        valB = b.isActive ? 1 : 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredUsers, sortField, sortDirection]);
+
   // Pagination calculation
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / itemsPerPage));
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filteredUsers.slice(start, start + itemsPerPage);
-  }, [filteredUsers, currentPage, itemsPerPage]);
+    return sortedUsers.slice(start, start + itemsPerPage);
+  }, [sortedUsers, currentPage, itemsPerPage]);
 
   const hasActiveFilters = searchTerm !== '' || roleFilter !== 'ALL' || departmentFilter !== 'ALL' || statusFilter !== 'ALL';
 
@@ -436,11 +480,61 @@ const UsersPage: React.FC = () => {
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 w-16">الصورة</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[160px]">اسم المستخدم</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[130px]">الدور</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[180px]">القسم / الأقسام</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">تاريخ الإنشاء</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[120px]">الحالة</TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[160px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('username')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>اسم المستخدم</span>
+                    {sortField === 'username' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'username' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'username' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[130px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('role')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>الدور</span>
+                    {sortField === 'role' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'role' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'role' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[180px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('departments')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>القسم / الأقسام</span>
+                    {sortField === 'departments' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'departments' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'departments' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('createdAt')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>تاريخ الإنشاء</span>
+                    {sortField === 'createdAt' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'createdAt' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'createdAt' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[120px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('isActive')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>الحالة</span>
+                    {sortField === 'isActive' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'isActive' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
                 <TableHead className="text-center py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
@@ -703,9 +797,16 @@ const UsersPage: React.FC = () => {
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               disabled={deleteMutation.isPending}
-              className="h-11 px-7 bg-red-600 hover:bg-red-700 text-white text-base font-semibold rounded shadow-none"
+              className="h-11 px-7 bg-red-600 hover:bg-red-700 text-white text-base font-semibold rounded shadow-none inline-flex items-center gap-2"
             >
-              {deleteMutation.isPending ? 'جاري الحذف...' : 'نعم، تأكيد الحذف'}
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>جاري الحذف...</span>
+                </>
+              ) : (
+                'نعم، تأكيد الحذف'
+              )}
             </AlertDialogAction>
             <AlertDialogCancel 
               className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 mt-0"

@@ -46,6 +46,7 @@ import PersonnelFormPage from './pages/hr/PersonnelFormPage';
 import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
 import MyProfilePage from './pages/hr/MyProfilePage';
 import OrganizationChartPage from './pages/organization/OrganizationChartPage';
+import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,7 @@ function App() {
           <LanguageProvider>
             <AuthProvider>
               <DepartmentProvider>
+                <KeyboardShortcuts />
                 <div className="min-h-screen bg-background">
                   <Suspense fallback={
                     <div className="flex items-center justify-center min-h-screen">

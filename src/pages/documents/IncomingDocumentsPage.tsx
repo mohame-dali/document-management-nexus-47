@@ -29,12 +29,22 @@ import {
   Building2,
   ChevronRight,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
   ShieldAlert,
   Inbox
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -62,9 +72,9 @@ import {
 
 import { getDepartments } from '@/services/departmentService';
 import { getDocumentOptions } from '@/services/documentOptionsService';
-import { deleteIncomingDocument, downloadDocument } from '@/services/documentService';
+import { deleteIncomingDocument, downloadDocument, createIncomingDocument } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
-import { IncomingDocument } from '@/types';
+import { IncomingDocument, Department } from '@/types';
 import { useInfiniteDocuments } from '@/hooks/useInfiniteDocuments';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
@@ -87,8 +97,93 @@ const IncomingDocumentsPage: React.FC = () => {
   const [selectedSource, setSelectedSource] = useLocalStorageState<string>('incomingDocs_selectedSource', 'all_sources');
   const [statusFilter, setStatusFilter] = useLocalStorageState<string>('incomingDocs_statusFilter', 'all');
   const [sortBy, setSortBy] = useLocalStorageState<string>('incomingDocs_sortBy', 'newest-arrival');
+  const [sortField, setSortField] = useLocalStorageState<string>('incomingDocs_sortField', 'arrivalDate');
+  const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('incomingDocs_sortDirection', 'desc');
+
+  const handleTableSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+
+  // 3-Section Create Document Dialog State
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
+  const [createFormData, setCreateFormData] = useState({
+    serialNumber: '',
+    year: '2026',
+    typeDocument: '',
+    subject: '',
+    source: '',
+    correspondenceNumber: '',
+    correspondenceDate: new Date().toISOString().split('T')[0],
+    arrivalDate: new Date().toISOString().split('T')[0],
+    departmentId: '',
+    notes: '',
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isSubmittingForm, setIsSubmittingForm] = useState<boolean>(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errors: Record<string, string> = {};
+    if (!createFormData.serialNumber.trim()) errors.serialNumber = 'رقم التسلسل مطلوب';
+    if (!createFormData.year.trim()) errors.year = 'السنة مطلوبة';
+    if (!createFormData.subject.trim()) errors.subject = 'الموضوع مطلوب';
+    if (!createFormData.arrivalDate) errors.arrivalDate = 'تاريخ الوصول مطلوب';
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      toast.error('يرجى ملء الحقول المطلوبة');
+      return;
+    }
+
+    try {
+      setIsSubmittingForm(true);
+      const data = new FormData();
+      data.append('serialNumber', createFormData.serialNumber);
+      data.append('year', createFormData.year);
+      if (createFormData.typeDocument) data.append('typeDocument', createFormData.typeDocument);
+      data.append('subject', createFormData.subject);
+      if (createFormData.source) data.append('source', createFormData.source);
+      if (createFormData.correspondenceNumber) data.append('correspondenceNumber', createFormData.correspondenceNumber);
+      if (createFormData.correspondenceDate) data.append('correspondenceDate', createFormData.correspondenceDate);
+      data.append('arrivalDate', createFormData.arrivalDate);
+      if (createFormData.departmentId) data.append('departments', JSON.stringify([createFormData.departmentId]));
+      if (createFormData.notes) data.append('activity', createFormData.notes);
+      if (selectedFile) data.append('document', selectedFile);
+
+      await createIncomingDocument(data);
+      queryClient.invalidateQueries({ queryKey: ['incomingDocuments'] });
+      toast.success('تم إنشاء الوثيقة الواردة بنجاح');
+      setIsCreateDialogOpen(false);
+      setCreateFormData({
+        serialNumber: '',
+        year: '2026',
+        typeDocument: '',
+        subject: '',
+        source: '',
+        correspondenceNumber: '',
+        correspondenceDate: new Date().toISOString().split('T')[0],
+        arrivalDate: new Date().toISOString().split('T')[0],
+        departmentId: '',
+        notes: '',
+      });
+      setSelectedFile(null);
+      setFormErrors({});
+    } catch (err: unknown) {
+      console.error('Error creating incoming document:', err);
+      const errObj = err as { response?: { data?: { message?: string; error?: string } } };
+      toast.error(errObj.response?.data?.message || errObj.response?.data?.error || 'حدث خطأ أثناء إنشاء الوثيقة');
+    } finally {
+      setIsSubmittingForm(false);
+    }
+  };
 
   // Dialogs State
   const [folderDoc, setFolderDoc] = useState<IncomingDocument | null>(null);
@@ -142,11 +237,10 @@ const IncomingDocumentsPage: React.FC = () => {
   const canViewCategorization = isAdmin || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
   const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk;
 
-  // Fetch departments for AdminTuningDesk filtering
-  const { data: departments } = useQuery({
+  // Fetch departments for AdminTuningDesk filtering and document assignment
+  const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
     queryFn: getDepartments,
-    enabled: currentUser?.role === 'AdminTuningDesk',
   });
 
   // Fetch source options for source filtering
@@ -235,21 +329,42 @@ const IncomingDocumentsPage: React.FC = () => {
   // Sort documents
   const sortedDocuments = useMemo(() => {
     return [...filteredDocuments].sort((a, b) => {
-      if (sortBy === 'newest-arrival') {
-        return new Date(b.arrivalDate || 0).getTime() - new Date(a.arrivalDate || 0).getTime();
+      let valA: string | number = '';
+      let valB: string | number = '';
+
+      if (sortField === 'serialNumber') {
+        valA = Number(a.serialNumber) || 0;
+        valB = Number(b.serialNumber) || 0;
+      } else if (sortField === 'arrivalDate') {
+        valA = a.arrivalDate ? new Date(a.arrivalDate).getTime() : 0;
+        valB = b.arrivalDate ? new Date(b.arrivalDate).getTime() : 0;
+      } else if (sortField === 'subject') {
+        valA = (a.subject || '').toLowerCase();
+        valB = (b.subject || '').toLowerCase();
+      } else if (sortField === 'status') {
+        valA = a.answer ? 1 : 0;
+        valB = b.answer ? 1 : 0;
+      } else {
+        if (sortBy === 'newest-arrival') {
+          return new Date(b.arrivalDate || 0).getTime() - new Date(a.arrivalDate || 0).getTime();
+        }
+        if (sortBy === 'oldest-arrival') {
+          return new Date(a.arrivalDate || 0).getTime() - new Date(b.arrivalDate || 0).getTime();
+        }
+        if (sortBy === 'serial-desc') {
+          return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
+        }
+        if (sortBy === 'serial-asc') {
+          return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
+        }
+        return 0;
       }
-      if (sortBy === 'oldest-arrival') {
-        return new Date(a.arrivalDate || 0).getTime() - new Date(b.arrivalDate || 0).getTime();
-      }
-      if (sortBy === 'serial-desc') {
-        return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
-      }
-      if (sortBy === 'serial-asc') {
-        return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
-      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [filteredDocuments, sortBy]);
+  }, [filteredDocuments, sortField, sortDirection, sortBy]);
 
   // Pagination calculation
   const totalFiltered = sortedDocuments.length;
@@ -287,13 +402,20 @@ const IncomingDocumentsPage: React.FC = () => {
     navigate(`/dashboard/incoming-documents/${id}/edit`);
   };
 
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
+
   const handleDownload = async (doc: IncomingDocument) => {
     if (doc.scannedDocument) {
       try {
+        setDownloadingDocId(doc._id);
+        toast.info('جاري بدء تحميل ملف PDF...');
         await downloadDocument(doc.scannedDocument, `incoming-doc-${doc.serialNumber}-${doc.year}.pdf`);
+        toast.success('تم تحميل الملف بنجاح');
       } catch (error) {
         console.error('Error downloading document:', error);
         toast.error('تعذر تحميل ملف PDF');
+      } finally {
+        setDownloadingDocId(null);
       }
     } else {
       toast.info('لا يوجد ملف ممسوح ضوئياً لهذه الوثيقة');
@@ -487,7 +609,10 @@ const IncomingDocumentsPage: React.FC = () => {
           {/* Add Document Action Button */}
           {canAddDocuments && (
             <Button
-              onClick={() => navigate('/dashboard/incoming-documents/create')}
+              onClick={() => {
+                setCreateFormData(prev => ({ ...prev, year: selectedYear }));
+                setIsCreateDialogOpen(true);
+              }}
               className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200 flex items-center gap-2"
             >
               <PlusCircle className="h-5 w-5" />
@@ -725,11 +850,51 @@ const IncomingDocumentsPage: React.FC = () => {
             <table className="w-full text-right border-collapse text-base">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#1a202c]">
-                  <th className="py-4 px-4 font-semibold text-sm whitespace-nowrap">رقم التسلسل</th>
-                  <th className="py-4 px-4 font-semibold text-sm">الموضوع والنوع</th>
-                  <th className="py-4 px-4 font-semibold text-sm whitespace-nowrap">تاريخ الوصول</th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('serialNumber')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>رقم التسلسل</span>
+                      {sortField === 'serialNumber' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'serialNumber' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'serialNumber' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('subject')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>الموضوع والنوع</span>
+                      {sortField === 'subject' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'subject' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'subject' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('arrivalDate')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>تاريخ الوصول</span>
+                      {sortField === 'arrivalDate' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'arrivalDate' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'arrivalDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
                   <th className="py-4 px-4 font-semibold text-sm">المصدر / الجهة</th>
-                  <th className="py-4 px-4 font-semibold text-sm">حالة المتابعة والرد</th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('status')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>حالة المتابعة والرد</span>
+                      {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
                   <th className="py-4 px-4 font-semibold text-sm text-center">الإجراءات</th>
                 </tr>
               </thead>
@@ -912,10 +1077,15 @@ const IncomingDocumentsPage: React.FC = () => {
                               {doc.scannedDocument && (
                                 <DropdownMenuItem 
                                   onClick={() => handleDownload(doc)}
+                                  disabled={downloadingDocId === doc._id}
                                   className="text-sm py-2 cursor-pointer"
                                 >
-                                  <Download className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                  تحميل ملف PDF
+                                  {downloadingDocId === doc._id ? (
+                                    <Loader2 className="ml-2 h-4 w-4 text-[#2c5282] animate-spin" />
+                                  ) : (
+                                    <Download className="ml-2 h-4 w-4 text-[#2c5282]" />
+                                  )}
+                                  {downloadingDocId === doc._id ? 'جاري التحميل...' : 'تحميل ملف PDF'}
                                 </DropdownMenuItem>
                               )}
 
@@ -1249,9 +1419,16 @@ const IncomingDocumentsPage: React.FC = () => {
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none inline-flex items-center gap-2"
             >
-              {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>جاري الحذف...</span>
+                </>
+              ) : (
+                'تأكيد الحذف'
+              )}
             </AlertDialogAction>
             <AlertDialogCancel
               disabled={deleteMutation.isPending}
@@ -1262,6 +1439,218 @@ const IncomingDocumentsPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 9. Divided 3-Section Create Document Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent dir="rtl" className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] max-h-[90vh] overflow-y-auto bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
+              إضافة وثيقة واردة جديدة
+            </DialogTitle>
+            <DialogDescription className="text-sm text-[#718096]">
+              يرجى إدخال بيانات الوثيقة الواردة مقسمة حسب الأقسام المحددة.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateSubmit} className="space-y-6 mt-4">
+            <div className="space-y-6">
+              {/* SECTION 1 — Informations générales */}
+              <div>
+                <h3 className="text-base font-bold text-[#2c5282] mb-4 pb-2 border-b border-[#e2e8f0]">
+                  معلومات عامة
+                </h3>
+                <div className="space-y-4">
+                  {/* Numéro de série */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">
+                      الرقم التسلسلي <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      type="number"
+                      placeholder="أدخل رقم التسلسل"
+                      value={createFormData.serialNumber}
+                      onChange={(e) => setCreateFormData({ ...createFormData, serialNumber: e.target.value })}
+                      className={formErrors.serialNumber ? 'border-red-500' : ''}
+                    />
+                    {formErrors.serialNumber && <p className="text-xs text-red-500">{formErrors.serialNumber}</p>}
+                  </div>
+
+                  {/* Année */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">
+                      السنة <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      type="number"
+                      placeholder="2026"
+                      value={createFormData.year}
+                      onChange={(e) => setCreateFormData({ ...createFormData, year: e.target.value })}
+                      className={formErrors.year ? 'border-red-500' : ''}
+                    />
+                    {formErrors.year && <p className="text-xs text-red-500">{formErrors.year}</p>}
+                  </div>
+
+                  {/* Type de document */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">نوع الوثيقة</label>
+                    <Input 
+                      placeholder="مثال: مراسلة إدارية، تقرير، قرار..."
+                      value={createFormData.typeDocument}
+                      onChange={(e) => setCreateFormData({ ...createFormData, typeDocument: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Objet */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">
+                      الموضوع <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      placeholder="أدخل موضوع الوثيقة"
+                      value={createFormData.subject}
+                      onChange={(e) => setCreateFormData({ ...createFormData, subject: e.target.value })}
+                      className={formErrors.subject ? 'border-red-500' : ''}
+                    />
+                    {formErrors.subject && <p className="text-xs text-red-500">{formErrors.subject}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2 — Expéditeur et dates */}
+              <div>
+                <h3 className="text-base font-bold text-[#2c5282] mb-4 pb-2 border-b border-[#e2e8f0]">
+                  المرسل والتواريخ
+                </h3>
+                <div className="space-y-4">
+                  {/* Source */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">المصدر / الجهة المرسلة</label>
+                    <Input 
+                      placeholder="أدخل الجهة المرسلة"
+                      value={createFormData.source}
+                      onChange={(e) => setCreateFormData({ ...createFormData, source: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Numéro de correspondance */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">رقم المراسلة</label>
+                    <Input 
+                      placeholder="أدخل رقم مراسلة المصدر"
+                      value={createFormData.correspondenceNumber}
+                      onChange={(e) => setCreateFormData({ ...createFormData, correspondenceNumber: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Date de correspondance */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">تاريخ المراسلة</label>
+                    <Input 
+                      type="date"
+                      value={createFormData.correspondenceDate}
+                      onChange={(e) => setCreateFormData({ ...createFormData, correspondenceDate: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Date d'arrivée */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">
+                      تاريخ الوصول <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      type="date"
+                      value={createFormData.arrivalDate}
+                      onChange={(e) => setCreateFormData({ ...createFormData, arrivalDate: e.target.value })}
+                      className={formErrors.arrivalDate ? 'border-red-500' : ''}
+                    />
+                    {formErrors.arrivalDate && <p className="text-xs text-red-500">{formErrors.arrivalDate}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3 — Contenu et affectation */}
+              <div>
+                <h3 className="text-base font-bold text-[#2c5282] mb-4 pb-2 border-b border-[#e2e8f0]">
+                  المحتوى والإحالة
+                </h3>
+                <div className="space-y-4">
+                  {/* Département(s) destinataire(s) */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">القسم / الأقسام المستقبلة</label>
+                    <Select 
+                      value={createFormData.departmentId} 
+                      onValueChange={(val) => setCreateFormData({ ...createFormData, departmentId: val })}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="اختر القسم المعني" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept: Department) => (
+                          <SelectItem key={dept._id} value={dept._id}>{dept.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Fichier scanné (PDF) */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">ملف الوثيقة (PDF أو صورة)</label>
+                    <Input 
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSelectedFile(e.target.files[0]);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                    {selectedFile && (
+                      <p className="text-xs text-green-600 font-medium">تم اختيار: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} كيلوبايت)</p>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-[#2d3748]">ملاحظات وتوجيهات</label>
+                    <Input 
+                      placeholder="أدخل أي ملاحظات إضافية"
+                      value={createFormData.notes}
+                      onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Footer */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#e2e8f0]">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+                disabled={isSubmittingForm}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#2c5282] hover:bg-[#234269] text-white"
+                disabled={isSubmittingForm}
+              >
+                {isSubmittingForm ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>جاري الحفظ...</span>
+                  </div>
+                ) : (
+                  <span>حفظ الوثيقة</span>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <ScrollToTop />
     </div>

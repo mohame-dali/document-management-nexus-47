@@ -26,6 +26,9 @@ import {
   Building2, 
   ChevronRight, 
   ChevronLeft, 
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
   Share2,
   Tag,
   Building,
@@ -94,6 +97,17 @@ const OutgoingDocumentsPage: React.FC = () => {
   const [selectedType, setSelectedType] = useLocalStorageState<string>('outgoingDocs_selectedType', 'all_types');
   const [folderFilter, setFolderFilter] = useLocalStorageState<string>('outgoingDocs_folderFilter', 'all');
   const [sortBy, setSortBy] = useLocalStorageState<string>('outgoingDocs_sortBy', 'newest-issue');
+  const [sortField, setSortField] = useLocalStorageState<string>('outgoingDocs_sortField', 'issueDate');
+  const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('outgoingDocs_sortDirection', 'desc');
+
+  const handleTableSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
@@ -220,21 +234,42 @@ const OutgoingDocumentsPage: React.FC = () => {
   // Sort documents
   const sortedDocuments = useMemo(() => {
     return [...filteredDocuments].sort((a, b) => {
-      if (sortBy === 'newest-issue') {
-        return new Date(b.issueDate || 0).getTime() - new Date(a.issueDate || 0).getTime();
+      let valA: string | number = '';
+      let valB: string | number = '';
+
+      if (sortField === 'serialNumber') {
+        valA = Number(a.serialNumber) || 0;
+        valB = Number(b.serialNumber) || 0;
+      } else if (sortField === 'issueDate') {
+        valA = a.issueDate ? new Date(a.issueDate).getTime() : 0;
+        valB = b.issueDate ? new Date(b.issueDate).getTime() : 0;
+      } else if (sortField === 'subject') {
+        valA = (a.subject || '').toLowerCase();
+        valB = (b.subject || '').toLowerCase();
+      } else if (sortField === 'status') {
+        valA = (a.folder || a.status || '').toLowerCase();
+        valB = (b.folder || b.status || '').toLowerCase();
+      } else {
+        if (sortBy === 'newest-issue') {
+          return new Date(b.issueDate || 0).getTime() - new Date(a.issueDate || 0).getTime();
+        }
+        if (sortBy === 'oldest-issue') {
+          return new Date(a.issueDate || 0).getTime() - new Date(b.issueDate || 0).getTime();
+        }
+        if (sortBy === 'serial-desc') {
+          return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
+        }
+        if (sortBy === 'serial-asc') {
+          return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
+        }
+        return 0;
       }
-      if (sortBy === 'oldest-issue') {
-        return new Date(a.issueDate || 0).getTime() - new Date(b.issueDate || 0).getTime();
-      }
-      if (sortBy === 'serial-desc') {
-        return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
-      }
-      if (sortBy === 'serial-asc') {
-        return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
-      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [filteredDocuments, sortBy]);
+  }, [filteredDocuments, sortField, sortDirection, sortBy]);
 
   // Pagination calculation
   const totalFiltered = sortedDocuments.length;
@@ -279,9 +314,12 @@ const OutgoingDocumentsPage: React.FC = () => {
     navigate(`/dashboard/outgoing-documents/${id}/edit`);
   };
 
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
+
   const handleDownload = async (doc: OutgoingDocument) => {
     if (doc.scannedDocument) {
       try {
+        setDownloadingDocId(doc._id);
         toast.info('جاري بدء تحميل الوثيقة...');
         await downloadDocument(
           doc.scannedDocument, 
@@ -291,6 +329,8 @@ const OutgoingDocumentsPage: React.FC = () => {
       } catch (err) {
         console.error('Download error:', err);
         toast.error('تعذر تحميل الوثيقة الرقمية');
+      } finally {
+        setDownloadingDocId(null);
       }
     } else {
       toast.error('لا يوجد ملف PDF ممسوح ضوئياً لهذه الوثيقة');
@@ -649,12 +689,52 @@ const OutgoingDocumentsPage: React.FC = () => {
               <table className="w-full text-right border-collapse text-base">
                 <thead>
                   <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#1a202c]">
-                    <th className="py-4 px-4 font-semibold text-sm whitespace-nowrap">رقم التسلسل</th>
-                    <th className="py-4 px-4 font-semibold text-sm">الموضوع والنوع</th>
-                    <th className="py-4 px-4 font-semibold text-sm whitespace-nowrap">تاريخ الإصدار</th>
+                    <th 
+                      className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('serialNumber')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>رقم التسلسل</span>
+                        {sortField === 'serialNumber' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'serialNumber' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'serialNumber' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
+                    <th 
+                      className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('subject')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>الموضوع والنوع</span>
+                        {sortField === 'subject' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'subject' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'subject' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
+                    <th 
+                      className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('issueDate')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>تاريخ الإصدار</span>
+                        {sortField === 'issueDate' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'issueDate' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'issueDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
                     <th className="py-4 px-4 font-semibold text-sm">المصدر (القسم)</th>
                     <th className="py-4 px-4 font-semibold text-sm">الموجه إليهم</th>
-                    <th className="py-4 px-4 font-semibold text-sm whitespace-nowrap">التصنيف والأرشيف</th>
+                    <th 
+                      className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('status')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>التصنيف والأرشيف</span>
+                        {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
                     <th className="py-4 px-4 font-semibold text-sm text-center whitespace-nowrap">الإجراءات</th>
                   </tr>
                 </thead>
@@ -829,10 +909,15 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleDownload(doc)}
+                                disabled={downloadingDocId === doc._id}
                                 title="تحميل ملف PDF"
                                 className="h-8 px-2 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-white hover:bg-blue-50 transition-colors duration-200"
                               >
-                                <Download className="h-3.5 w-3.5" />
+                                {downloadingDocId === doc._id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
+                                ) : (
+                                  <Download className="h-3.5 w-3.5" />
+                                )}
                               </Button>
                             )}
 
@@ -995,10 +1080,15 @@ const OutgoingDocumentsPage: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDownload(doc)}
+                          disabled={downloadingDocId === doc._id}
                           className="h-8 px-2 text-xs rounded text-[#2c5282] border-blue-200"
                           title="تحميل PDF"
                         >
-                          <Download className="h-3.5 w-3.5" />
+                          {downloadingDocId === doc._id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5" />
+                          )}
                         </Button>
                       )}
                     </div>
@@ -1150,9 +1240,16 @@ const OutgoingDocumentsPage: React.FC = () => {
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="bg-[#e53e3e] hover:bg-[#c53030] text-white rounded font-semibold text-base h-11 px-7 transition-colors duration-200 shadow-none"
+              className="bg-[#e53e3e] hover:bg-[#c53030] text-white rounded font-semibold text-base h-11 px-7 transition-colors duration-200 shadow-none inline-flex items-center gap-2"
             >
-              {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>جاري الحذف...</span>
+                </>
+              ) : (
+                'تأكيد الحذف'
+              )}
             </AlertDialogAction>
             <AlertDialogCancel 
               className="rounded font-medium text-base h-11 px-6 border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100"
