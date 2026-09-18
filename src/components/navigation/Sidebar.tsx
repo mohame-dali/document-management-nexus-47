@@ -194,7 +194,7 @@ const Sidebar = () => {
                 <h1 className="text-base font-bold text-white tracking-tight truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
-                <p className="text-xs text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
+                <p className="text-sm text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
               </div>
             )}
           </div>
@@ -203,7 +203,10 @@ const Sidebar = () => {
             <div className="flex items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
               <ContextMenu>
                 <ContextMenuTrigger>
-                  <Avatar className="h-10 w-10 ring-1 ring-slate-600 cursor-pointer hover:ring-[#2c5282] transition-colors duration-200">
+                  <Avatar 
+                    className="h-10 w-10 ring-1 ring-slate-600 cursor-pointer hover:ring-[#2c5282] transition-colors duration-200"
+                    title={!isOpen ? currentUser.username : undefined}
+                  >
                     <AvatarImage 
                       src={getUserPhotoUrl(currentUser)} 
                       alt={currentUser.username}
@@ -230,7 +233,7 @@ const Sidebar = () => {
               </ContextMenu>
               {isOpen && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">
+                  <p className="text-sm font-semibold text-white truncate">
                     {currentUser.username}
                   </p>
                   <div className="mt-1">
@@ -273,7 +276,7 @@ const Sidebar = () => {
                         : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                     )}
                     onClick={() => navigate(item.path)}
-                    title={!isOpen ? item.label : undefined}
+                    title={item.label}
                   >
                     <item.icon className={cn(
                       "h-4 w-4 flex-shrink-0 transition-colors duration-200",

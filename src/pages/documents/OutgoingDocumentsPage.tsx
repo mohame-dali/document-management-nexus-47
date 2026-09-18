@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -80,19 +80,20 @@ import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import ScrollToTop from '@/components/common/ScrollToTop';
+import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 
 const OutgoingDocumentsPage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Filters & UI State
+  // Filters & UI State with persistence
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
-  const [selectedType, setSelectedType] = useState<string>('all_types');
-  const [folderFilter, setFolderFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('newest-issue');
+  const [viewMode, setViewMode] = useLocalStorageState<'table' | 'grid'>('outgoingDocs_viewMode', 'table');
+  const [selectedDepartment, setSelectedDepartment] = useLocalStorageState<string>('outgoingDocs_selectedDepartment', 'all');
+  const [selectedType, setSelectedType] = useLocalStorageState<string>('outgoingDocs_selectedType', 'all_types');
+  const [folderFilter, setFolderFilter] = useLocalStorageState<string>('outgoingDocs_folderFilter', 'all');
+  const [sortBy, setSortBy] = useLocalStorageState<string>('outgoingDocs_sortBy', 'newest-issue');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
@@ -325,8 +326,15 @@ const OutgoingDocumentsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8" dir="rtl">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-4 max-w-7xl">
         
+        {/* Fil d'Ariane (Breadcrumbs) */}
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
+          <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>
+          <ChevronLeft className="w-4 h-4 text-gray-400" />
+          <span className="text-[#1a202c] font-medium">الوثائق والمراسلات الصادرة</span>
+        </nav>
+
         {/* 1. Header Section */}
         <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">

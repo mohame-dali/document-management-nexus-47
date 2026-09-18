@@ -108,7 +108,10 @@ const Header = () => {
         {/* User Info with DropdownMenu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5 hover:bg-[#edf2f7] transition-colors cursor-pointer outline-none">
+            <button 
+              aria-label="قائمة المستخدم"
+              className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5 hover:bg-[#edf2f7] transition-colors cursor-pointer outline-none"
+            >
               <PersonnelAvatar
                 photo={photoSource}
                 nom={myProfile?.nom}
