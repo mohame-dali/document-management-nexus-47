@@ -9,7 +9,14 @@ import { getMyProfile } from '@/services/hr/personnelApi';
 import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, User, Menu, LogOut, FileText, Shield, Users, Settings } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Bell, User, Menu, LogOut, FileText, Shield, Users, Settings, Network, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
@@ -97,24 +104,50 @@ const Header = () => {
           </h2>
         </div>
 
-        {/* User Info with Photo (Priorité Personnel liée) */}
-        <div className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5">
-          <PersonnelAvatar
-            photo={photoSource}
-            nom={myProfile?.nom}
-            prenom={myProfile?.prenom}
-            username={currentUser.username}
-            size="md"
-          />
-          <div className="text-right">
-            <p className="text-xs font-semibold text-[#1a202c] leading-tight">
-              {currentUser.username}
-            </p>
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded font-normal ${getRoleBadgeColor()}`}>
-              {t(`roles.${currentUser.role}`)}
-            </Badge>
-          </div>
-        </div>
+        {/* User Info with DropdownMenu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5 hover:bg-[#edf2f7] transition-colors cursor-pointer outline-none">
+              <PersonnelAvatar
+                photo={photoSource}
+                nom={myProfile?.nom}
+                prenom={myProfile?.prenom}
+                username={currentUser.username}
+                size="md"
+              />
+              <div className="text-right">
+                <p className="text-xs font-semibold text-[#1a202c] leading-tight">
+                  {currentUser.username}
+                </p>
+                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded font-normal ${getRoleBadgeColor()}`}>
+                  {t(`roles.${currentUser.role}`)}
+                </Badge>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 mr-1" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 text-right" dir="rtl">
+            <DropdownMenuItem onClick={() => navigate('/dashboard/hr/my-profile')} className="cursor-pointer">
+              <User className="w-4 h-4 ml-2" />
+              <span>ملفي الشخصي</span>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem onClick={() => navigate('/dashboard/organization-chart')} className="cursor-pointer">
+              <Network className="w-4 h-4 ml-2" />
+              <span>الهيكل التنظيمي</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem 
+              onClick={logout} 
+              className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50"
+            >
+              <LogOut className="w-4 h-4 ml-2" />
+              <span>تسجيل الخروج</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Activity Notifications Bell */}
         <NotificationBell />
@@ -138,17 +171,6 @@ const Header = () => {
             )}
           </Button>
         </div>
-
-        {/* Logout Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={logout}
-          className="text-[#e53e3e] hover:bg-[#feeeee] border border-[#feb2b2] hover:border-[#e53e3e] rounded transition-colors duration-200 shadow-xs"
-          title={t('header.logout')}
-        >
-          <LogOut className="h-4 w-4" />
-        </Button>
       </div>
     </header>
   );

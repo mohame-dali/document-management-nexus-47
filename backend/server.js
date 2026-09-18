@@ -175,6 +175,7 @@ const backup = require('./routes/backup');
 const organizationSettings = require('./routes/organizationSettingsRoutes');
 const hrPersonnel = require('./routes/personnelRoutes');
 const hrPersonnelDocuments = require('./routes/personnelDocumentRoutes');
+const organizationChart = require('./routes/organizationChartRoutes');
 
 // Mount routers
 app.use('/api/auth', auth);
@@ -196,6 +197,7 @@ app.use('/api/backup', backup);
 app.use('/api/organization-settings', organizationSettings);
 app.use('/api/hr', hrPersonnel);
 app.use('/api/hr', hrPersonnelDocuments);
+app.use('/api/organization-chart', organizationChart);
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {

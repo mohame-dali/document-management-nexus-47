@@ -45,6 +45,7 @@ import PersonnelListPage from './pages/hr/PersonnelListPage';
 import PersonnelFormPage from './pages/hr/PersonnelFormPage';
 import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
 import MyProfilePage from './pages/hr/MyProfilePage';
+import OrganizationChartPage from './pages/organization/OrganizationChartPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -248,6 +249,9 @@ function App() {
                             <PersonnelFormPage />
                           </ProtectedRoute>
                         } />
+
+                        {/* Organization Chart route */}
+                        <Route path="organization-chart" element={<OrganizationChartPage />} />
 
                         {/* Document view alias routes */}
                         <Route path="documents/incoming/:id" element={
