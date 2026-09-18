@@ -110,26 +110,32 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
       {/* Popover trigger */}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between h-9 text-xs text-right border-[#cbd5e1] hover:border-[#2c5282] hover:bg-slate-50 transition-colors duration-200 rounded font-normal text-slate-700"
+            className="h-11 w-full justify-between bg-white border-[#cbd5e1] hover:border-[#2c5282] rounded-lg px-4 text-right transition-colors"
           >
             <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 text-slate-500" />
-              <span>
+              <Users className="h-4 w-4 text-gray-500" />
+              <span className="text-sm text-gray-600">
                 {selectedContacts.length > 0 
-                  ? `${selectedContacts.length} مستلم محدد`
-                  : t('messages.selectContacts')
-                }
+                  ? `${selectedContacts.length} مستلم محدد` 
+                  : (t('messages.selectContacts') || 'اختر المستلمين...')}
               </span>
             </div>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+            <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent className="w-[340px] sm:w-[420px] p-0 rounded border border-[#e2e8f0]" align="start" dir="rtl">
+        <PopoverContent 
+          className="p-0 rounded-lg border border-[#e2e8f0] shadow-lg max-h-[300px] overflow-y-auto"
+          align="start"
+          side="bottom"
+          sideOffset={6}
+          style={{ width: 'var(--radix-popover-trigger-width)' }}
+          dir="rtl"
+        >
           <Command>
             <CommandInput 
               placeholder={t('messages.searchContacts')} 

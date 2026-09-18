@@ -146,7 +146,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Recipients Section */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+              <Label className="text-sm font-semibold text-[#4a5568] flex items-center gap-1.5">
                 <span>{t('messages.recipients')}</span>
                 <span className="text-red-500">*</span>
               </Label>
@@ -156,71 +156,69 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
               />
             </div>
 
-            {/* Subject and Priority Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2 space-y-1.5">
-                <Label htmlFor="subject" className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                  <span>{t('messages.subject')}</span>
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="subject"
-                  placeholder={t('messages.enterSubject')}
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  required
-                  className="h-9 text-xs text-right border-[#cbd5e1] focus:border-[#2c5282] rounded"
-                />
-              </div>
+            {/* Subject — Full Width */}
+            <div className="space-y-1.5">
+              <Label htmlFor="subject" className="text-sm font-semibold text-[#4a5568] flex items-center gap-1.5">
+                <span>{t('messages.subject')}</span>
+                <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="subject"
+                placeholder={t('messages.enterSubject') || "أدخل موضوع الرسالة..."}
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                required
+                className="h-11 w-full bg-white border-[#cbd5e1] rounded-lg px-4 text-base focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right"
+              />
+            </div>
 
-              {/* Priority Selector with subtle amber highlights */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">
-                  درجة الأولوية
-                </Label>
-                <div className="flex items-center gap-1.5 pt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setPriority('normal')}
-                    className={`flex-1 py-1.5 px-2 text-xs font-medium rounded border transition-colors duration-200 ${
-                      priority === 'normal'
-                        ? 'bg-slate-100 text-slate-800 border-slate-300 font-semibold'
-                        : 'bg-white text-slate-600 border-[#e2e8f0] hover:bg-slate-50'
-                    }`}
-                  >
-                    عادية
-                  </button>
+            {/* Priority Selector on dedicated row with segmented controls */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold text-[#4a5568]">
+                درجة الأولوية
+              </Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPriority('normal')}
+                  className={`flex-1 h-11 rounded-lg text-sm font-medium transition-colors ${
+                    priority === 'normal'
+                      ? 'bg-[#2c5282] text-white'
+                      : 'bg-[#f7fafc] text-[#1a202c] border border-[#cbd5e1] hover:bg-[#edf2f7]'
+                  }`}
+                >
+                  عادية
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setPriority('high')}
-                    className={`flex-1 py-1.5 px-2 text-xs font-medium rounded border transition-colors duration-200 ${
-                      priority === 'high'
-                        ? 'bg-[#FFD758]/25 text-[#92400e] border-[#FFCB56] font-semibold'
-                        : 'bg-white text-slate-600 border-[#e2e8f0] hover:bg-amber-50/50'
-                    }`}
-                  >
-                    مرتفعة
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => setPriority('high')}
+                  className={`flex-1 h-11 rounded-lg text-sm font-medium transition-colors ${
+                    priority === 'high'
+                      ? 'bg-[#2c5282] text-white'
+                      : 'bg-[#f7fafc] text-[#1a202c] border border-[#cbd5e1] hover:bg-[#edf2f7]'
+                  }`}
+                >
+                  مرتفعة
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setPriority('urgent')}
-                    className={`flex-1 py-1.5 px-2 text-xs font-medium rounded border transition-colors duration-200 ${
-                      priority === 'urgent'
-                        ? 'bg-[#FFCB56] text-[#78350f] border-[#FFD758] font-semibold'
-                        : 'bg-white text-slate-600 border-[#e2e8f0] hover:bg-amber-50'
-                    }`}
-                  >
-                    عاجلة
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setPriority('urgent')}
+                  className={`flex-1 h-11 rounded-lg text-sm font-medium transition-colors ${
+                    priority === 'urgent'
+                      ? 'bg-[#2c5282] text-white'
+                      : 'bg-[#f7fafc] text-[#1a202c] border border-[#cbd5e1] hover:bg-[#edf2f7]'
+                  }`}
+                >
+                  عاجلة
+                </button>
               </div>
             </div>
 
             {/* Content Textarea */}
             <div className="space-y-1.5">
-              <Label htmlFor="content" className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+              <Label htmlFor="content" className="text-sm font-semibold text-[#4a5568] flex items-center gap-1.5">
                 <span>{t('messages.content')}</span>
                 <span className="text-red-500">*</span>
               </Label>
@@ -231,7 +229,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                 onChange={(e) => setContent(e.target.value)}
                 rows={7}
                 required
-                className="text-xs text-right border-[#cbd5e1] focus:border-[#2c5282] resize-y rounded"
+                className="min-h-[180px] w-full bg-white border-[#cbd5e1] rounded-lg p-4 text-base focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right resize-y"
               />
             </div>
 
