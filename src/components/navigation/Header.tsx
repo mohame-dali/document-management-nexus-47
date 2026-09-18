@@ -119,7 +119,7 @@ const Header = () => {
                 <p className="text-xs font-semibold text-[#1a202c] leading-tight">
                   {currentUser.username}
                 </p>
-                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded font-normal ${getRoleBadgeColor()}`}>
+                <Badge variant="outline" className={`text-xs px-2 py-0.5 rounded font-medium ${getRoleBadgeColor()}`}>
                   {t(`roles.${currentUser.role}`)}
                 </Badge>
               </div>
