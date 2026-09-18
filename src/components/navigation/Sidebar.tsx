@@ -280,7 +280,7 @@ const Sidebar = () => {
                   >
                     <item.icon className={cn(
                       "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                      active ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                      active ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                     )} />
                     {isOpen && (
                       <span className="truncate">
@@ -307,14 +307,14 @@ const Sidebar = () => {
                           <div className="flex items-center gap-3 min-w-0">
                             <UserCheck className={cn(
                               "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                              isHrPersonnelActive ? "text-amber-400" : "text-slate-400 group-hover:text-slate-200"
+                              isHrPersonnelActive ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                             )} />
                             <span className="truncate">الموارد البشرية</span>
                           </div>
                           {hrExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-slate-400" />
+                            <ChevronDown className="h-4 w-4 text-gray-400" />
                           ) : (
-                            <ChevronLeft className="h-4 w-4 text-slate-400" />
+                            <ChevronLeft className="h-4 w-4 text-gray-400" />
                           )}
                         </button>
 
@@ -331,7 +331,10 @@ const Sidebar = () => {
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                               )}
                             >
-                              <Users2 className="h-4 w-4 text-slate-400" />
+                              <Users2 className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/personnel' ? "text-white" : "text-gray-400"
+                              )} />
                               <span className="truncate">الموظفون</span>
                             </button>
 
@@ -346,7 +349,10 @@ const Sidebar = () => {
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                               )}
                             >
-                              <UserPlus className="h-4 w-4 text-slate-400" />
+                              <UserPlus className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/personnel/new' ? "text-white" : "text-gray-400"
+                              )} />
                               <span className="truncate">إضافة موظف</span>
                             </button>
                           </div>
@@ -366,7 +372,7 @@ const Sidebar = () => {
                       >
                         <UserCheck className={cn(
                           "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                          isHrPersonnelActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                          isHrPersonnelActive ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                         )} />
                       </button>
                     )

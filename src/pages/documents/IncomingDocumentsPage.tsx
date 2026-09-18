@@ -562,7 +562,7 @@ const IncomingDocumentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-4" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
       {/* Fil d'Ariane (Breadcrumbs) */}
       <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
         <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>

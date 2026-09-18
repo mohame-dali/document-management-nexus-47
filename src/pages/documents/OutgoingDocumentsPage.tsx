@@ -366,7 +366,7 @@ const OutgoingDocumentsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8" dir="rtl">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-4 max-w-7xl">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
         
         {/* Fil d'Ariane (Breadcrumbs) */}
         <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
