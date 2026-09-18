@@ -7,8 +7,8 @@ exports.getOrganizationChart = async (req, res, next) => {
     const settings = await OrganizationSettings.findOne();
     const departments = await Department.find({ isActive: true })
       .select('name description').lean();
-    const personnel = await Personnel.find({ statut: 'actif' })
-      .select('nom prenom poste photo activeDepartment')
+    const personnel = await Personnel.find({ statut: { $in: ['actif', 'en_attente'] } })
+      .select('nom prenom poste photo activeDepartment departments')
       .populate('activeDepartment', 'name').lean();
 
     const isBureauDirecteur = (id) => settings?.bureauDirecteurDepartmentId?.toString() === id?.toString();
@@ -17,7 +17,9 @@ exports.getOrganizationChart = async (req, res, next) => {
 
     const personnelByDept = {};
     personnel.forEach((p) => {
-      const deptId = p.activeDepartment?._id?.toString();
+      const deptId = p.activeDepartment?._id?.toString()
+        || p.activeDepartment?.toString()
+        || (p.departments && p.departments[0]?.toString());
       if (!deptId) return;
       if (!personnelByDept[deptId]) personnelByDept[deptId] = [];
       personnelByDept[deptId].push({
