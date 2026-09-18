@@ -161,8 +161,8 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
             const isIncoming = assoc.documentType === 'IncomingDocument';
             const doc = assoc.document;
             const docLink = isIncoming
-              ? `/documents/incoming/${assoc.documentId}`
-              : `/documents/outgoing/${assoc.documentId}`;
+              ? `/dashboard/documents/incoming/${assoc.documentId}`
+              : `/dashboard/documents/outgoing/${assoc.documentId}`;
 
             return (
               <div

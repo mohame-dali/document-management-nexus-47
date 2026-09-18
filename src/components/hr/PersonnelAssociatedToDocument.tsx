@@ -267,7 +267,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <Link
-                      to={`/hr/personnel/${p?._id}`}
+                      to={`/dashboard/hr/personnel/${p?._id}`}
                       className="font-bold text-base text-[#1a202c] hover:text-[#2c5282] hover:underline flex items-center gap-1.5"
                     >
                       <User className="w-4 h-4 text-[#2c5282] shrink-0" />
