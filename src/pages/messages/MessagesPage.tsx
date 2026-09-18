@@ -1,25 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getMessages, 
+  sendMessage,
   markAsRead, 
   markAllAsRead, 
-  deleteMessage as deleteMessageService 
 } from '@/services/messageService';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { 
   Inbox, 
   Send, 
   Users, 
   Plus, 
   RefreshCw, 
-  Search, 
-  CheckCheck, 
   MessageSquare, 
-  AlertCircle,
   MailCheck
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -27,48 +21,165 @@ import { Message, User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import ComposeMessage from '@/components/messages/ComposeMessage';
-import MessageThread from '@/components/messages/MessageThread';
 import ContactsList from '@/components/messages/ContactsList';
-import MessagesList from '@/components/messages/MessagesList';
 import MessageComposer from '@/components/messages/MessageComposer';
 import MessageHistoryStats from '@/components/messages/MessageHistoryStats';
 import CrossRoleMessagingInfo from '@/components/messages/CrossRoleMessagingInfo';
+import ConversationList from '@/components/messages/ConversationList';
+import ConversationThread, { ConversationData } from '@/components/messages/ConversationThread';
 
 type ActiveTab = 'inbox' | 'sent' | 'contacts';
 
+interface InterlocutorDetails {
+  _id: string;
+  username?: string;
+  nom?: string;
+  prenom?: string;
+  role?: string;
+  photo?: string | null;
+  department?: string | { name?: string };
+}
+
 const MessagesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('inbox');
-  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [mobileShowThread, setMobileShowThread] = useState<boolean>(false);
   const [isComposing, setIsComposing] = useState<boolean>(false);
   const [composeRecipients, setComposeRecipients] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showQuickComposer, setShowQuickComposer] = useState(false);
+  const [showQuickComposer, setShowQuickComposer] = useState<boolean>(false);
+  const [isSending, setIsSending] = useState<boolean>(false);
 
   const { currentUser } = useAuth();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
 
-  // Load messages based on activeTab (inbox / sent)
+  const currentUserId = String(currentUser?._id || (currentUser as User & { id?: string })?.id || '');
+
+  // Load all messages (inbox + sent)
   const { 
     data: messagesResponse, 
     isLoading, 
     isFetching, 
     refetch, 
-    error 
   } = useQuery({
-    queryKey: ['messages', activeTab === 'contacts' ? 'inbox' : activeTab],
-    queryFn: () => getMessages(activeTab === 'contacts' ? 'inbox' : activeTab),
+    queryKey: ['messages', 'all'],
+    queryFn: () => getMessages('all'),
     retry: 2,
     staleTime: 1000 * 60 * 3, // 3 minutes
   });
 
-  const messages = messagesResponse?.data || [];
+  const messages: Message[] = useMemo(() => {
+    return Array.isArray(messagesResponse?.data) ? messagesResponse.data : [];
+  }, [messagesResponse?.data]);
+
   const messageStats = {
     totalMessages: messagesResponse?.count || messages.length || 0,
     unreadCount: messagesResponse?.unreadCount || 0,
     oneToOneCount: messagesResponse?.oneToOneCount || 0,
     groupCount: messagesResponse?.groupCount || 0
   };
+
+  // Group messages into conversations by interlocutor
+  const allConversations = useMemo(() => {
+    if (!messages.length) return [];
+
+    const convMap = new Map<string, ConversationData>();
+
+    messages.forEach((msg: Message) => {
+      const isSender = msg.isSender ?? (
+        typeof msg.sender === 'object'
+          ? String(msg.sender?._id) === currentUserId
+          : String(msg.sender) === currentUserId
+      );
+
+      let interlocutor: InterlocutorDetails | null = null;
+
+      if (isSender) {
+        // If current user is sender, the interlocutor is the recipient
+        if (Array.isArray(msg.recipients) && msg.recipients.length > 0) {
+          const rec = msg.recipients[0]?.user;
+          if (rec && typeof rec === 'object') {
+            interlocutor = rec as InterlocutorDetails;
+          }
+        }
+      } else {
+        // If current user received it, the interlocutor is the sender
+        if (msg.sender && typeof msg.sender === 'object') {
+          interlocutor = msg.sender as InterlocutorDetails;
+        }
+      }
+
+      if (!interlocutor) return;
+
+      const interlocutorId = String(interlocutor._id);
+      if (!interlocutorId || interlocutorId === currentUserId) return;
+
+      const interlocutorName = interlocutor.nom && interlocutor.prenom
+        ? `${interlocutor.prenom} ${interlocutor.nom}`
+        : (interlocutor.username || 'مستخدم');
+
+      const interlocutorRole = interlocutor.role;
+      const interlocutorPhoto = interlocutor.photo;
+      const interlocutorUsername = interlocutor.username;
+      const interlocutorDepartment = typeof interlocutor.department === 'object'
+        ? interlocutor.department?.name
+        : interlocutor.department;
+
+      const isUnread = !isSender && !msg.isRead;
+
+      if (!convMap.has(interlocutorId)) {
+        convMap.set(interlocutorId, {
+          interlocutorId,
+          interlocutorName,
+          interlocutorRole,
+          interlocutorPhoto,
+          interlocutorUsername,
+          interlocutorDepartment,
+          lastMessage: msg.content || msg.subject || '',
+          lastMessageTime: msg.createdAt,
+          unreadCount: isUnread ? 1 : 0,
+          messages: [msg],
+        });
+      } else {
+        const existing = convMap.get(interlocutorId)!;
+        existing.messages.push(msg);
+        if (isUnread) {
+          existing.unreadCount = (existing.unreadCount || 0) + 1;
+        }
+        if (new Date(msg.createdAt).getTime() > new Date(existing.lastMessageTime || 0).getTime()) {
+          existing.lastMessage = msg.content || msg.subject || '';
+          existing.lastMessageTime = msg.createdAt;
+        }
+      }
+    });
+
+    // Sort: unread first, then by latest message date descending
+    return Array.from(convMap.values()).sort((a, b) => {
+      if ((a.unreadCount || 0) > 0 && (b.unreadCount || 0) === 0) return -1;
+      if ((a.unreadCount || 0) === 0 && (b.unreadCount || 0) > 0) return 1;
+      return new Date(b.lastMessageTime || 0).getTime() - new Date(a.lastMessageTime || 0).getTime();
+    });
+  }, [messages, currentUserId]);
+
+  // Filter conversations according to tab (if 'sent', show conversations where user sent messages)
+  const conversations = useMemo(() => {
+    if (activeTab === 'sent') {
+      return allConversations.filter((conv) =>
+        conv.messages.some((m: Message) => {
+          if (m.isSender !== undefined) return m.isSender;
+          const senderId = typeof m.sender === 'object' ? m.sender?._id : m.sender;
+          return String(senderId) === currentUserId;
+        })
+      );
+    }
+    return allConversations;
+  }, [allConversations, activeTab, currentUserId]);
+
+  // Selected conversation object
+  const selectedConversation = useMemo(() => {
+    if (!selectedConversationId) return null;
+    return allConversations.find((c) => c.interlocutorId === selectedConversationId) || null;
+  }, [allConversations, selectedConversationId]);
 
   // Mark single message as read
   const markAsReadMutation = useMutation({
@@ -87,6 +198,7 @@ const MessagesPage: React.FC = () => {
         description: "تم تحديد كافة الرسائل كمقروءة"
       });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
+      refetch();
     },
     onError: () => {
       toast({
@@ -97,37 +209,25 @@ const MessagesPage: React.FC = () => {
     }
   });
 
-  // Delete message
-  const deleteMessageMutation = useMutation({
-    mutationFn: deleteMessageService,
-    onSuccess: () => {
-      toast({
-        title: t('messages.messageDeleted'),
-        description: t('messages.messageDeletedPermanently')
-      });
-      setSelectedMessageId(null);
-      queryClient.invalidateQueries({ queryKey: ['messages'] });
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "تعذر حذف الرسالة",
-        variant: "destructive"
-      });
-    }
-  });
-
   const { mutate: markSingleAsRead } = markAsReadMutation;
 
+  // When a conversation with unread messages is selected, automatically mark them as read
   useEffect(() => {
-    if (selectedMessageId && activeTab === 'inbox') {
-      markSingleAsRead(selectedMessageId);
-    }
-  }, [selectedMessageId, activeTab, markSingleAsRead]);
+    if (selectedConversation && (selectedConversation.unreadCount || 0) > 0) {
+      const unreadMsgs = selectedConversation.messages.filter((m: Message) => {
+        const isSender = m.isSender ?? (
+          typeof m.sender === 'object'
+            ? String(m.sender?._id) === currentUserId
+            : String(m.sender) === currentUserId
+        );
+        return !isSender && !m.isRead;
+      });
 
-  const handleSelectMessage = (id: string) => {
-    setSelectedMessageId(id);
-  };
+      unreadMsgs.forEach((m: Message) => {
+        markSingleAsRead(m._id);
+      });
+    }
+  }, [selectedConversation, currentUserId, markSingleAsRead]);
 
   const handleRefresh = () => {
     refetch();
@@ -135,19 +235,6 @@ const MessagesPage: React.FC = () => {
       title: t('messages.messagesUpdated'),
       description: t('messages.messagesListUpdated')
     });
-  };
-
-  const handleDeleteMessage = async (id?: string) => {
-    const targetId = id || selectedMessageId;
-    if (!targetId) return;
-    deleteMessageMutation.mutate(targetId);
-  };
-
-  const handleReply = (message: Message) => {
-    if (typeof message.sender === 'object') {
-      setComposeRecipients([message.sender]);
-    }
-    setIsComposing(true);
   };
 
   const handleComposeMessage = (recipients: User[] = []) => {
@@ -159,18 +246,58 @@ const MessagesPage: React.FC = () => {
     refetch();
     setIsComposing(false);
     setShowQuickComposer(false);
-    setActiveTab('sent');
   };
 
   const handleSelectUserFromContacts = (user: User) => {
-    setComposeRecipients([user]);
-    setIsComposing(true);
+    const existingConv = allConversations.find((c) => c.interlocutorId === user._id);
+    if (existingConv) {
+      setSelectedConversationId(user._id);
+      setMobileShowThread(true);
+      setActiveTab('inbox');
+    } else {
+      setComposeRecipients([user]);
+      setIsComposing(true);
+    }
+  };
+
+  // Quick send from chat thread
+  const handleSendMessageFromThread = async (content: string, files: File[]) => {
+    if (!selectedConversation) return;
+
+    try {
+      setIsSending(true);
+      const lastMsg = selectedConversation.messages?.[selectedConversation.messages.length - 1];
+      const lastSubject = lastMsg?.subject;
+      const subject = lastSubject
+        ? (lastSubject.startsWith('Re: ') ? lastSubject : `Re: ${lastSubject}`)
+        : 'محادثة فورية';
+
+      await sendMessage(
+        [selectedConversation.interlocutorId],
+        subject,
+        content,
+        files.length > 0 ? files : undefined,
+        'normal'
+      );
+
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      await refetch();
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      toast({
+        title: "خطأ",
+        description: errorObj?.response?.data?.message || errorObj?.message || "تعذر إرسال الرسالة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 text-right" dir="rtl">
       {/* Top Header Bar */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 mb-4 shadow-xs">
+      <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-4 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Title & Stats Badges */}
           <div className="flex items-center gap-3">
@@ -204,7 +331,7 @@ const MessagesPage: React.FC = () => {
               <span>{t('messages.newMessage')}</span>
             </Button>
 
-            {messageStats.unreadCount > 0 && activeTab === 'inbox' && (
+            {messageStats.unreadCount > 0 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -238,7 +365,6 @@ const MessagesPage: React.FC = () => {
             onClick={() => {
               setActiveTab('inbox');
               setIsComposing(false);
-              setSelectedMessageId(null);
             }}
             className={`px-3.5 py-1.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'inbox' && !isComposing
@@ -247,13 +373,9 @@ const MessagesPage: React.FC = () => {
             }`}
           >
             <Inbox className="h-3.5 w-3.5" />
-            <span>الرسائل الواردة (Reçus)</span>
+            <span>المحادثات والوارد</span>
             {messageStats.unreadCount > 0 && (
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'inbox' && !isComposing
-                  ? 'bg-[#FFCB56] text-[#78350f]'
-                  : 'bg-[#FFCB56] text-[#78350f]'
-              }`}>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#FFCB56] text-[#78350f]">
                 {messageStats.unreadCount}
               </span>
             )}
@@ -264,7 +386,6 @@ const MessagesPage: React.FC = () => {
             onClick={() => {
               setActiveTab('sent');
               setIsComposing(false);
-              setSelectedMessageId(null);
             }}
             className={`px-3.5 py-1.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'sent' && !isComposing
@@ -273,7 +394,7 @@ const MessagesPage: React.FC = () => {
             }`}
           >
             <Send className="h-3.5 w-3.5" />
-            <span>الرسائل المرسلة (Envoyés)</span>
+            <span>المرسلة (Envoyés)</span>
           </button>
 
           <button
@@ -281,7 +402,6 @@ const MessagesPage: React.FC = () => {
             onClick={() => {
               setActiveTab('contacts');
               setIsComposing(false);
-              setSelectedMessageId(null);
             }}
             className={`px-3.5 py-1.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'contacts' && !isComposing
@@ -314,75 +434,38 @@ const MessagesPage: React.FC = () => {
           onComposeMessage={handleComposeMessage}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* Messages Column (List) */}
-          <div className="lg:col-span-5 xl:col-span-4">
-            <Card className="border border-[#e2e8f0] rounded bg-white shadow-xs overflow-hidden">
-              {/* List Header & Search */}
-              <div className="p-3 border-b border-[#e2e8f0] bg-white space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800">
-                    {activeTab === 'inbox' ? 'صندوق الوارد' : 'صندوق المرسل'}
-                  </span>
-                  <span className="text-[11px] text-slate-500">
-                    {messages.length} رسالة
-                  </span>
-                </div>
-
-                <div className="relative">
-                  <Search className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                  <Input
-                    placeholder="بحث في الرسائل أو المرسل..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-8 text-xs text-right pr-8 border-[#cbd5e1] focus:border-[#2c5282] rounded"
-                  />
-                </div>
-              </div>
-
-              {/* Messages list container */}
-              <div className="max-h-[640px] overflow-y-auto">
-                <MessagesList
-                  onSelectMessage={handleSelectMessage}
-                  selectedMessageId={selectedMessageId}
-                  searchTerm={searchTerm}
-                  activeTab={activeTab}
-                />
-              </div>
-            </Card>
+        /* Modern 2-Column Chat Layout */
+        <div className="flex h-[calc(100vh-250px)] min-h-[550px] border border-[#e2e8f0] rounded-lg overflow-hidden bg-white shadow-xs">
+          {/* Left Column: Conversations List (35%) */}
+          <div
+            className={`w-full md:w-[35%] border-l border-[#e2e8f0] flex flex-col ${
+              mobileShowThread ? 'hidden md:flex' : 'flex'
+            }`}
+          >
+            <ConversationList
+              conversations={conversations}
+              selectedId={selectedConversationId}
+              onSelect={(id) => {
+                setSelectedConversationId(id);
+                setMobileShowThread(true);
+              }}
+              loading={isLoading}
+            />
           </div>
 
-          {/* Message Thread Preview / Detail Column */}
-          <div className="lg:col-span-7 xl:col-span-8">
-            {selectedMessageId ? (
-              <div className="bg-white border border-[#e2e8f0] rounded shadow-xs overflow-hidden">
-                <MessageThread
-                  messageId={selectedMessageId}
-                  onBack={() => setSelectedMessageId(null)}
-                  onReply={handleReply}
-                  onDelete={handleDeleteMessage}
-                />
-              </div>
-            ) : (
-              <div className="bg-white border border-[#e2e8f0] rounded shadow-xs p-10 text-center min-h-[420px] flex flex-col items-center justify-center">
-                <div className="p-3 bg-slate-100 rounded text-slate-400 mb-3">
-                  <MessageSquare className="h-8 w-8" />
-                </div>
-                <h3 className="text-sm font-bold text-slate-800 mb-1">
-                  {t('messages.selectMessage')}
-                </h3>
-                <p className="text-xs text-slate-500 max-w-sm mb-4 leading-relaxed">
-                  اختر رسالة من القائمة لعرض كامل تفاصيلها ومرفقاتها والرد عليها رسمياً
-                </p>
-                <Button 
-                  onClick={() => handleComposeMessage()}
-                  className="h-8 px-4 text-xs font-medium rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 flex items-center gap-1.5"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>{t('messages.newMessage')}</span>
-                </Button>
-              </div>
-            )}
+          {/* Right Column: Chat Thread & Bubbles (65%) */}
+          <div
+            className={`flex-1 flex flex-col ${
+              mobileShowThread ? 'flex' : 'hidden md:flex'
+            }`}
+          >
+            <ConversationThread
+              conversation={selectedConversation}
+              currentUserId={currentUserId}
+              onSendMessage={handleSendMessageFromThread}
+              onBack={() => setMobileShowThread(false)}
+              isSending={isSending}
+            />
           </div>
         </div>
       )}
