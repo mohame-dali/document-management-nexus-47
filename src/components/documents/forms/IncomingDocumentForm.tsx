@@ -70,25 +70,25 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-green-500/5 to-green-500/10 border-b border-border/50">
-          <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
-            <div className="w-2 h-8 bg-green-500 rounded-full"></div>
+      <Card className="border border-[#e2e8f0] bg-white rounded shadow-none">
+        <CardHeader className="bg-[#f8fafc] border-b border-[#e2e8f0] p-5 rounded-t">
+          <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-3">
+            <div className="w-1.5 h-6 bg-[#2c5282] rounded"></div>
             {t.title}
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="p-8">
+        <CardContent className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               {/* Serial Information Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-6 bg-green-500/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">معلومات الرقم التسلسلي</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-1 h-5 bg-[#2c5282] rounded"></div>
+                  <h3 className="text-base font-bold text-[#1a202c]">معلومات الرقم التسلسلي</h3>
                 </div>
                 
-                <div className="bg-green-50/50 dark:bg-green-500/5 rounded-lg p-6 border border-green-200/50 dark:border-green-500/20">
+                <div className="bg-[#f8fafc] rounded p-5 border border-[#e2e8f0]">
                   <SerialInfoFields 
                     form={form} 
                     t={t} 
@@ -97,44 +97,44 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                 </div>
               </div>
 
-              <Separator className="my-8" />
+              <Separator className="my-8 bg-[#e2e8f0]" />
 
               {/* Correspondence Information Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-6 bg-blue-500/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">معلومات المراسلة</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-1 h-5 bg-[#2c5282] rounded"></div>
+                  <h3 className="text-base font-bold text-[#1a202c]">معلومات المراسلة</h3>
                 </div>
                 
-                <div className="bg-blue-50/50 dark:bg-blue-500/5 rounded-lg p-6 border border-blue-200/50 dark:border-blue-500/20">
+                <div className="bg-[#f8fafc] rounded p-5 border border-[#e2e8f0]">
                   <CorrespondenceFields form={form} />
                 </div>
               </div>
 
-              <Separator className="my-8" />
+              <Separator className="my-8 bg-[#e2e8f0]" />
 
               {/* Document Details Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-6 bg-purple-500/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">تفاصيل الوثيقة</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-1 h-5 bg-[#2c5282] rounded"></div>
+                  <h3 className="text-base font-bold text-[#1a202c]">تفاصيل الوثيقة</h3>
                 </div>
                 
-                <div className="bg-purple-50/50 dark:bg-purple-500/5 rounded-lg p-6 border border-purple-200/50 dark:border-purple-500/20">
+                <div className="bg-[#f8fafc] rounded p-5 border border-[#e2e8f0]">
                   <DocumentDetailsFields form={form} t={t} departments={departments} />
                 </div>
               </div>
 
-              <Separator className="my-8" />
+              <Separator className="my-8 bg-[#e2e8f0]" />
 
               {/* Attachment Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-6 bg-orange-500/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">مرفقات الوثيقة</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-1 h-5 bg-[#2c5282] rounded"></div>
+                  <h3 className="text-base font-bold text-[#1a202c]">مرفقات الوثيقة</h3>
                 </div>
                 
-                <div className="bg-orange-50/50 dark:bg-orange-500/5 rounded-lg p-6 border border-orange-200/50 dark:border-orange-500/20">
+                <div className="bg-[#f8fafc] rounded p-5 border border-[#e2e8f0]">
                   <AttachmentSection
                     t={t}
                     activeTab={activeTab}
@@ -157,7 +157,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
           </Form>
         </CardContent>
         
-        <CardFooter className="bg-muted/20 border-t border-border/50 p-6">
+        <CardFooter className="bg-[#f8fafc] border-t border-[#e2e8f0] p-5 rounded-b">
           <FormActions
             form={form}
             onSubmit={handleSubmit}

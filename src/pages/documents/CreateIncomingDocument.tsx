@@ -97,10 +97,10 @@ const CreateIncomingDocument = () => {
 
   if (loadingDepartments) {
     return (
-      <div className="flex justify-center items-center h-64 bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="flex justify-center items-center h-64 bg-[#f7fafc]">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-blue-600 font-medium">جاري تحميل البيانات...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-[#2c5282] mx-auto mb-4" />
+          <p className="text-[#2c5282] font-medium text-base">جاري تحميل البيانات...</p>
         </div>
       </div>
     );
@@ -108,7 +108,7 @@ const CreateIncomingDocument = () => {
 
   if (departmentsError) {
     return (
-      <div className="p-6 min-h-screen bg-gradient-to-br from-red-50 to-pink-100">
+      <div className="p-6 min-h-screen bg-[#f7fafc]">
         <Alert variant="destructive" className="max-w-md mx-auto">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{translations.errorLoading}</AlertDescription>
@@ -118,22 +118,22 @@ const CreateIncomingDocument = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" dir="rtl">
-      {/* Enhanced Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
-        <div className="p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#f7fafc]" dir="rtl">
+      {/* Header card: carte blanche avec bordure #e2e8f0 */}
+      <div className="pt-6 px-6 max-w-6xl mx-auto">
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
           <div className="flex items-center space-x-reverse space-x-4">
-            <div className="bg-white/20 p-3 rounded-full">
-              <Inbox className="h-8 w-8 text-white" />
+            <div className="bg-[#2c5282] p-3 rounded text-white flex-shrink-0">
+              <Inbox className="h-7 w-7 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <FormSectionHeader 
                 title={translations.title}
                 backUrl="/dashboard/incoming-documents"
                 backText={translations.back}
-                className="text-white"
+                className="text-[#1a202c] mb-1"
               />
-              <p className="text-blue-100 mt-2">أضف وثيقة واردة جديدة إلى النظام</p>
+              <p className="text-base text-[#4a5568]">أضف وثيقة واردة جديدة إلى النظام</p>
             </div>
           </div>
         </div>
@@ -141,11 +141,11 @@ const CreateIncomingDocument = () => {
 
       {/* Form Container */}
       <div className="p-6 max-w-6xl mx-auto">
-        <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
+        <div className="bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
+          <div className="bg-[#f8fafc] p-5 border-b border-[#e2e8f0]">
             <div className="flex items-center space-x-reverse space-x-3">
-              <FileDown className="h-6 w-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-800">تفاصيل الوثيقة الواردة</h2>
+              <FileDown className="h-5 w-5 text-[#2c5282]" />
+              <h2 className="text-lg font-bold text-[#1a202c]">تفاصيل الوثيقة الواردة</h2>
             </div>
           </div>
           
