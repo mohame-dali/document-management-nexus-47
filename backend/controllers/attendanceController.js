@@ -131,6 +131,38 @@ const saveBatchAttendance = async (req, res, next) => {
     const settings = await PresenceSettings.findOne({ annee: year }).lean();
     const motifsDeductibles = settings?.motifsDeductibles || DEFAULT_DEDUCTIBLE_MOTIFS;
 
+    // Vérification des autorisations de saisie temporelle (autoriserSaisieFuture et autoriserSaisieRetroactive)
+    const autoriserSaisieFuture = settings ? settings.autoriserSaisieFuture !== false : true;
+    const autoriserSaisieRetroactive = settings ? settings.autoriserSaisieRetroactive !== false : true;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const defaultDateStr = targetDate.toISOString().split('T')[0];
+
+    for (const entry of entries) {
+      let entryDateStr = defaultDateStr;
+      if (entry.date) {
+        try {
+          entryDateStr = parseDateToUTCStartOfDay(entry.date).toISOString().split('T')[0];
+        } catch (err) {
+          entryDateStr = defaultDateStr;
+        }
+      }
+
+      if (!autoriserSaisieFuture && entryDateStr > todayStr) {
+        return res.status(403).json({
+          success: false,
+          message: 'غير مسموح بتسجيل الحضور لتواريخ مستقبلية'
+        });
+      }
+
+      if (!autoriserSaisieRetroactive && entryDateStr < todayStr) {
+        return res.status(403).json({
+          success: false,
+          message: 'غير مسموح بتسجيل الحضور لتواريخ سابقة'
+        });
+      }
+    }
+
     // Charger les types de motifs pour correspondance dynamique par code
     const leaveReasons = await LeaveReason.find().lean();
     const leaveReasonMap = new Map();

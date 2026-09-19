@@ -16,7 +16,6 @@ const presenceSettingsSchema = new mongoose.Schema({
     default: [
       'conge_annuel',
       'absence_injustifiee',
-      'recuperation',
       'conge_exceptionnel'
     ]
   },
