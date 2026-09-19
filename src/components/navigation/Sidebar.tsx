@@ -23,6 +23,8 @@ import {
   UserCheck,
   UserPlus,
   CalendarDays,
+  CalendarCheck,
+  CalendarRange,
   ChevronDown,
   ChevronLeft,
   Trash2
@@ -101,6 +103,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
       { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
       { path: '/dashboard/settings', label: 'الإعدادات', icon: Settings, color: 'text-gray-600' },
     ] : []),
@@ -116,6 +119,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
     ] : []),
 
     // AdminDepartment menu items (avec mon-profil)
@@ -129,6 +133,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
     ] : []),
 
     // User menu items (avec mon-profil)
@@ -140,6 +145,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
     ] : []),
   ];
 
@@ -376,6 +382,42 @@ const Sidebar = () => {
                                 location.pathname === '/dashboard/hr/leave-reasons' ? "text-white" : "text-gray-400"
                               )} />
                               <span className="truncate">أنواع الغياب</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/attendance')}
+                              title={!isOpen ? "تسجيل الحضور" : undefined}
+                              className={cn(
+                                "w-full h-9 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/attendance'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <CalendarCheck className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/attendance' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">تسجيل الحضور</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/all-personnel-situation')}
+                              title={!isOpen ? "وضعية الموظفين" : undefined}
+                              className={cn(
+                                "w-full h-9 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/all-personnel-situation'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <CalendarRange className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/all-personnel-situation' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">وضعية الموظفين</span>
                             </button>
                           </div>
                         )}

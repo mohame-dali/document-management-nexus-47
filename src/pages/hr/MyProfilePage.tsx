@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getMyProfile, getMyDocuments } from '@/services/hr/personnelApi';
 import { Personnel, PersonnelDocument } from '@/types/hr';
@@ -14,6 +15,7 @@ import {
   Building2,
   Briefcase,
   Calendar,
+  CalendarCheck,
   MapPin,
   RefreshCw,
   Info,
@@ -137,6 +139,18 @@ export const MyProfilePage: React.FC = () => {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link to="/dashboard/hr/my-attendance">
+            <Button
+              variant="outline"
+              className="h-10 px-4 text-xs font-bold border-[#2c5282] text-[#2c5282] hover:bg-blue-50 flex items-center gap-2 rounded"
+            >
+              <CalendarCheck className="h-4 w-4" />
+              <span>عرض تقويم حضوري</span>
+            </Button>
+          </Link>
         </div>
       </div>
 
