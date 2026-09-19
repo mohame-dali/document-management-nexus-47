@@ -1,5 +1,6 @@
 import React from 'react';
-import { LeaveReason } from '@/services/leaveReasonService';
+import { useQuery } from '@tanstack/react-query';
+import { LeaveReason, getLeaveReasons } from '@/services/leaveReasonService';
 import { AttendanceRecord } from '@/services/attendanceService';
 
 export interface StatusVisualInfo {
@@ -45,7 +46,8 @@ export const getStatusVisualInfo = (
 
   // Absent : rechercher le LeaveReason correspondant
   const motif = attendance.motif;
-  const reason = leaveReasons.find((r) => r.code === motif || r._id === attendance.leaveReasonId);
+  const safeReasonsList = Array.isArray(leaveReasons) ? leaveReasons : [];
+  const reason = safeReasonsList.find((r) => r.code === motif || r._id === attendance.leaveReasonId);
 
   const label = reason?.labelAr || (motif ? motif.replace(/_/g, ' ') : 'غائب');
   const baseColor = reason?.color || '#dd6b20';
@@ -64,11 +66,25 @@ export const getStatusVisualInfo = (
 };
 
 interface MyAttendanceLegendProps {
-  leaveReasons: LeaveReason[];
+  leaveReasons?: LeaveReason[];
 }
 
-export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveReasons }) => {
-  const activeReasons = leaveReasons.filter((r) => r.isActive);
+export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveReasons: propLeaveReasons }) => {
+  const { data: leaveReasons = [] } = useQuery({
+    queryKey: ['leave-reasons-active'],
+    queryFn: async () => {
+      const res = await getLeaveReasons({ isActive: true });
+      if (Array.isArray((res as any)?.data)) return (res as any).data;
+      if (Array.isArray(res)) return res;
+      return [];
+    },
+    enabled: !propLeaveReasons,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const effectiveReasons = propLeaveReasons ?? leaveReasons;
+  const safeReasons = Array.isArray(effectiveReasons) ? effectiveReasons : [];
+  const activeReasons = safeReasons.filter((r) => r && r.isActive);
 
   return (
     <div className="bg-white border border-[#e2e8f0] rounded p-4 space-y-3 shadow-none" dir="rtl">
