@@ -178,6 +178,7 @@ const hrPersonnelDocuments = require('./routes/personnelDocumentRoutes');
 const organizationChart = require('./routes/organizationChartRoutes');
 const trash = require('./routes/trashRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const leaveReasonRoutes = require('./routes/leaveReasonRoutes');
 
 // Mount routers
 app.use('/api/auth', auth);
@@ -202,6 +203,7 @@ app.use('/api/hr', hrPersonnelDocuments);
 app.use('/api/organization-chart', organizationChart);
 app.use('/api/trash', trash);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/hr/leave-reasons', leaveReasonRoutes);
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {
