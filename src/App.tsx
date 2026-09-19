@@ -45,6 +45,7 @@ import PersonnelListPage from './pages/hr/PersonnelListPage';
 import PersonnelFormPage from './pages/hr/PersonnelFormPage';
 import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
 import MyProfilePage from './pages/hr/MyProfilePage';
+import LeaveReasonsManagementPage from './pages/hr/LeaveReasonsManagementPage';
 import OrganizationChartPage from './pages/organization/OrganizationChartPage';
 import TrashPage from './pages/trash/TrashPage';
 import KeyboardShortcuts from './components/common/KeyboardShortcuts';
@@ -250,6 +251,11 @@ function App() {
                         <Route path="hr/personnel/:id/edit" element={
                           <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
                             <PersonnelFormPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/leave-reasons" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                            <LeaveReasonsManagementPage />
                           </ProtectedRoute>
                         } />
 

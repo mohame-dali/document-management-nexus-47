@@ -22,6 +22,7 @@ import {
   Settings,
   UserCheck,
   UserPlus,
+  CalendarDays,
   ChevronDown,
   ChevronLeft,
   Trash2
@@ -70,7 +71,7 @@ const Sidebar = () => {
       Boolean(userActiveDeptId) &&
       String(userActiveDeptId) === String(rhDepartmentId));
 
-  const isHrPersonnelActive = location.pathname.startsWith('/dashboard/hr/personnel');
+  const isHrPersonnelActive = location.pathname.startsWith('/dashboard/hr');
   const [hrExpanded, setHrExpanded] = React.useState(true);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
@@ -357,6 +358,24 @@ const Sidebar = () => {
                                 location.pathname === '/dashboard/hr/personnel/new' ? "text-white" : "text-gray-400"
                               )} />
                               <span className="truncate">إضافة موظف</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/leave-reasons')}
+                              title={!isOpen ? "أنواع الغياب" : undefined}
+                              className={cn(
+                                "w-full h-9 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/leave-reasons'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <CalendarDays className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/leave-reasons' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">أنواع الغياب</span>
                             </button>
                           </div>
                         )}
