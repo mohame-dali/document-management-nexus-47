@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Attendance = require('../models/Attendance');
 const PresenceSettings = require('../models/PresenceSettings');
+const LeaveReason = require('../models/LeaveReason');
 const Personnel = require('../models/Personnel');
 const Department = require('../models/Department');
 const { logAuditAction } = require('../utils/auditLogger');
@@ -130,6 +131,11 @@ const saveBatchAttendance = async (req, res, next) => {
     const settings = await PresenceSettings.findOne({ annee: year }).lean();
     const motifsDeductibles = settings?.motifsDeductibles || DEFAULT_DEDUCTIBLE_MOTIFS;
 
+    // Charger les types de motifs pour correspondance dynamique par code
+    const leaveReasons = await LeaveReason.find().lean();
+    const leaveReasonMap = new Map();
+    leaveReasons.forEach(lr => leaveReasonMap.set(lr.code, lr));
+
     // Récupérer les fiches de personnel pour vérification des départements
     const personnelIds = entries.map(e => e.personnelId);
     const personnels = await Personnel.find({ _id: { $in: personnelIds } }).lean();
@@ -164,7 +170,22 @@ const saveBatchAttendance = async (req, res, next) => {
 
       const isPresent = entry.statut === 'present';
       const motif = isPresent ? null : (entry.motif || null);
-      const impacteSolde = isPresent ? false : motifsDeductibles.includes(motif);
+      
+      let impacteSolde = false;
+      let leaveReasonId = null;
+
+      if (!isPresent && motif) {
+        const foundReason = leaveReasonMap.get(motif);
+        if (foundReason) {
+          impacteSolde = Boolean(foundReason.impacteSolde);
+          leaveReasonId = foundReason._id;
+        } else {
+          // Fallback rétrocompatibilité
+          impacteSolde = motifsDeductibles.includes(motif);
+          leaveReasonId = null;
+        }
+      }
+
       const heureArrivee = isPresent ? (entry.heureArrivee || null) : null;
       const detailsMotif = isPresent ? {} : (entry.detailsMotif || {});
       const departmentId = agent.activeDepartment || req.userRestrictedToDepartment;
@@ -179,6 +200,7 @@ const saveBatchAttendance = async (req, res, next) => {
             departmentId,
             statut: isPresent ? 'present' : 'absent',
             motif,
+            leaveReasonId,
             impacteSolde,
             detailsMotif,
             heureArrivee,
@@ -324,12 +346,27 @@ const getPersonnelBalance = async (req, res, next) => {
     const start = new Date(Date.UTC(targetYear, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
 
-    // Récupérer toutes les absences déductibles de l'année
+    // 1. Récupérer les LeaveReason avec impacteSolde = true ET isActive = true
+    const activeDeductibleReasons = await LeaveReason.find({
+      impacteSolde: true,
+      isActive: true
+    }).lean();
+
+    // 2. Construire une liste de codes déductibles
+    const deductibleCodesSet = new Set(activeDeductibleReasons.map(r => r.code));
+
+    // 3. Ajouter en fallback les codes depuis PresenceSettings.motifsDeductibles (pour rétrocompatibilité)
+    const fallbackMotifs = settings.motifsDeductibles || DEFAULT_DEDUCTIBLE_MOTIFS;
+    fallbackMotifs.forEach(code => deductibleCodesSet.add(code));
+    const codesDeductibles = Array.from(deductibleCodesSet);
+
+    // 4. Compter les Attendance avec : statut = 'absent', impacteSolde = true, motif dans la liste des codes déductibles
     const deductedAttendances = await Attendance.find({
       personnelId,
       date: { $gte: start, $lte: end },
       statut: 'absent',
-      impacteSolde: true
+      impacteSolde: true,
+      motif: { $in: codesDeductibles }
     }).lean();
 
     const totalDays = settings.soldeAnnuelDefaut || 45;

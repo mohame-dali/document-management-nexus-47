@@ -44,6 +44,11 @@ const attendanceSchema = new mongoose.Schema({
     ],
     default: null
   },
+  leaveReasonId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'LeaveReason',
+    default: null
+  },
   impacteSolde: {
     type: Boolean,
     default: false
