@@ -118,7 +118,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
             <Button 
               size="sm" 
               onClick={handleComposeToSelected}
-              className="h-8 px-3 rounded bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] font-semibold text-xs transition-colors duration-200 flex items-center gap-1.5"
+              className="h-11 px-3 rounded bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] font-semibold text-xs transition-colors duration-200 flex items-center gap-1.5"
             >
               <Mail className="h-3.5 w-3.5" />
               <span>مراسلة ({selectedUsers.length})</span>
@@ -189,6 +189,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
                   <button 
                     type="button" 
                     onClick={() => toggleUserSelection(user)}
+                    aria-label={`إلغاء تحديد ${user.username}`}
                     className="text-slate-400 hover:text-red-600"
                   >
                     ×

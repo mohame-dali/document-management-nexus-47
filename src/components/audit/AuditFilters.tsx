@@ -166,11 +166,11 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-4">
-          <Button onClick={onApplyFilters} className="flex-1">
+          <Button onClick={onApplyFilters} className="flex-1 h-11">
             <Filter className="h-4 w-4 mr-2" />
             تطبيق المرشحات
           </Button>
-          <Button onClick={onResetFilters} variant="outline">
+          <Button onClick={onResetFilters} variant="outline" aria-label="إعادة تعيين المرشحات" className="h-11 w-11 p-0">
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>

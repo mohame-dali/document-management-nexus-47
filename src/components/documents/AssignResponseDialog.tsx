@@ -173,6 +173,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                     variant="outline" 
                     onClick={handleSerialSearch}
                     disabled={!serialNumberSearch.trim()}
+                    aria-label="بحث بالرقم التسلسلي"
                     className="h-12 px-5 border-[#cbd5e1] hover:bg-gray-100 rounded text-gray-700"
                   >
                     <Search className="h-5 w-5" />

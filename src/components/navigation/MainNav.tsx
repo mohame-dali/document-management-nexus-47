@@ -136,7 +136,7 @@ const MainNav = () => {
       <div className="md:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" aria-label="تبديل القائمة">
               <Menu />
               <span className="sr-only">Toggle menu</span>
             </Button>

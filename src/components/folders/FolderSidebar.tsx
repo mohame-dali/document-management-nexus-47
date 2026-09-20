@@ -160,7 +160,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
           <Button
             variant="outline"
             size="sm"
-            className="w-full h-8 text-xs flex items-center justify-center gap-1.5 bg-[#1a202c] hover:bg-[#2d3748] text-slate-200 hover:text-white border-slate-700 rounded transition-colors duration-200"
+            className="w-full h-11 text-xs flex items-center justify-center gap-1.5 bg-[#1a202c] hover:bg-[#2d3748] text-slate-200 hover:text-white border-slate-700 rounded transition-colors duration-200"
             onClick={() => navigate('/dashboard/folders')}
           >
             <Eye className="h-3.5 w-3.5" />

@@ -25,6 +25,7 @@ const NotificationBell: React.FC = () => {
             variant="ghost" 
             size="icon" 
             title={notificationCount > 0 ? `${notificationCount} إشعارات نشاط جديدة` : 'عرض الإشعارات'}
+            aria-label={notificationCount > 0 ? `${notificationCount} إشعارات نشاط جديدة` : 'الإشعارات'}
             className="hover:bg-white/20 text-white relative"
           >
             <Bell className="h-5 w-5" />

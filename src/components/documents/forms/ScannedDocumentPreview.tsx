@@ -41,7 +41,8 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
               variant="ghost"
               size="sm"
               onClick={onRemove}
-              className="text-red-500 hover:text-red-700"
+              aria-label="حذف المسح الضوئي"
+              className="h-11 w-11 p-0 text-red-500 hover:text-red-700"
             >
               <X className="h-4 w-4" />
             </Button>

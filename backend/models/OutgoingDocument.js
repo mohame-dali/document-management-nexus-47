@@ -44,6 +44,20 @@ const outgoingDocumentSchema = new mongoose.Schema({
     ref: "User",
     required: false
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

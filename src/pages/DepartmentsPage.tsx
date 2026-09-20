@@ -416,7 +416,7 @@ const DepartmentsPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-9 px-3 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
+              className="h-11 px-3 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
             >
               <X className="h-4 w-4" />
               <span>إعادة ضبط التصفية</span>
@@ -486,7 +486,7 @@ const DepartmentsPage: React.FC = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={resetFilters}
-                          className="mt-2 h-9 border-[#cbd5e1] text-sm"
+                          className="mt-2 h-11 border-[#cbd5e1] text-sm"
                         >
                           إعادة ضبط التصفية
                         </Button>
@@ -580,7 +580,8 @@ const DepartmentsPage: React.FC = () => {
                             variant="outline" 
                             size="icon"
                             onClick={() => setSelectedDepartmentForView(department)}
-                            className="h-10 w-10 border-[#cbd5e1] hover:bg-blue-50 hover:text-[#2c5282] text-gray-700 rounded transition-colors"
+                            aria-label="عرض تفاصيل ومنسوبي القسم"
+                            className="h-11 w-11 border-[#cbd5e1] hover:bg-blue-50 hover:text-[#2c5282] text-gray-700 rounded transition-colors"
                             title="عرض تفاصيل ومنسوبي القسم"
                           >
                             <Eye className="h-4 w-4" />
@@ -593,7 +594,8 @@ const DepartmentsPage: React.FC = () => {
                                 variant="outline" 
                                 size="icon"
                                 onClick={() => navigate(`/dashboard/departments/edit/${department._id}`)}
-                                className="h-10 w-10 border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded transition-colors"
+                                aria-label="تعديل بيانات القسم"
+                                className="h-11 w-11 border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded transition-colors"
                                 title="تعديل بيانات القسم"
                               >
                                 <Edit className="h-4 w-4" />
@@ -605,7 +607,8 @@ const DepartmentsPage: React.FC = () => {
                                 size="icon"
                                 onClick={() => handleToggleStatus(department)}
                                 disabled={toggleStatusMutation.isPending}
-                                className={`h-10 w-10 border-[#cbd5e1] rounded transition-colors ${
+                                aria-label={isActive ? 'تعطيل القسم' : 'تنشيط القسم'}
+                                className={`h-11 w-11 border-[#cbd5e1] rounded transition-colors ${
                                   isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
                                 }`}
                                 title={isActive ? 'تعطيل القسم' : 'تنشيط القسم'}
@@ -623,7 +626,8 @@ const DepartmentsPage: React.FC = () => {
                                 size="icon"
                                 onClick={() => handleDeleteClick(department._id)}
                                 disabled={deleteMutation.isPending}
-                                className="h-10 w-10 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded transition-colors"
+                                aria-label="حذف القسم نهائياً"
+                                className="h-11 w-11 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded transition-colors"
                                 title="حذف القسم نهائياً"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -636,7 +640,8 @@ const DepartmentsPage: React.FC = () => {
                                     variant="outline" 
                                     size="icon"
                                     disabled={setBureauMutation.isPending || setRhMutation.isPending}
-                                    className={`h-10 w-10 rounded transition-colors ${
+                                    aria-label="تخصيص الوحدة الوظيفية أو قسم الموارد البشرية"
+                                    className={`h-11 w-11 rounded transition-colors ${
                                       isMarked 
                                         ? 'bg-[#FFCB56]/20 border-[#e2be40] text-[#1a202c] hover:bg-[#FFCB56]/30' 
                                         : 'border-[#cbd5e1] hover:bg-gray-100 text-gray-700'
@@ -728,7 +733,7 @@ const DepartmentsPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="h-10 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
                   <span>السابق</span>
@@ -739,7 +744,7 @@ const DepartmentsPage: React.FC = () => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`h-10 w-10 text-base font-bold rounded transition-colors ${
+                      className={`h-11 w-11 text-base font-bold rounded transition-colors ${
                         currentPage === pageNum
                           ? 'bg-[#2c5282] text-white'
                           : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
@@ -755,7 +760,7 @@ const DepartmentsPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="h-10 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
                   <span>التالي</span>
                   <ChevronLeft className="h-4 w-4 mr-1" />

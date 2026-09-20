@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -30,7 +30,8 @@ import {
   History, 
   Paperclip,
   Share2,
-  FolderTree
+  FolderTree,
+  ChevronLeft
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -196,8 +197,19 @@ const ViewIncomingDocument: React.FC = () => {
     : (document.responsibleUser || 'لم يُعيّن مسؤول بعد');
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-4" dir="rtl">
       
+      {/* Fil d'Ariane (Breadcrumbs) */}
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
+        <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <Link to="/dashboard/incoming-documents" className="hover:text-[#2c5282] transition-colors">المستندات الواردة</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <span className="text-[#1a202c] font-medium truncate max-w-md">
+          {document.subject || `وثيقة رقم #${document.serialNumber}`}
+        </span>
+      </nav>
+
       {/* 1. EN-TÊTE DE PAGE (Header with Navigation & Key Actions) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         {/* Left in RTL: Back button + Title */}
@@ -237,7 +249,7 @@ const ViewIncomingDocument: React.FC = () => {
               type="button"
               variant="outline"
               onClick={handleScrollToPDF}
-              className="h-10 px-4 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/50 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-4 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/50 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
             >
               <Eye className="h-4 w-4 text-[#2c5282]" />
               <span>معاينة المرفق PDF</span>
@@ -248,7 +260,7 @@ const ViewIncomingDocument: React.FC = () => {
             <Button
               type="button"
               onClick={() => navigate(`/dashboard/incoming-documents/${id}/edit`)}
-              className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
             >
               <Edit className="h-4 w-4" />
               <span>تعديل الوثيقة</span>
@@ -503,7 +515,7 @@ const ViewIncomingDocument: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleCopyOcr}
-                  className="h-9 px-3 text-sm font-semibold border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
+                  className="h-11 px-3 text-sm font-semibold border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
                 >
                   {isCopiedOcr ? (
                     <>
@@ -746,7 +758,7 @@ const ViewIncomingDocument: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleDownloadPDF}
-                      className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] border-[#cbd5e1]"
+                      className="h-11 px-3 text-xs font-semibold text-[#2c5282] border-[#cbd5e1]"
                     >
                       <Download className="h-3.5 w-3.5 ml-1" />
                       تحميل
@@ -822,7 +834,7 @@ const ViewIncomingDocument: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={handleDownloadPDF}
-                    className="h-9 px-3 text-sm font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50"
+                    className="h-11 px-3 text-sm font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50"
                   >
                     <Download className="h-4 w-4 ml-1.5" />
                     تحميل ملف PDF

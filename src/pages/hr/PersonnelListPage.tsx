@@ -8,6 +8,7 @@ import { Personnel, PersonnelFilters } from '@/types/hr';
 import { Department } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import {
   Table,
   TableBody,
@@ -195,7 +196,7 @@ export const PersonnelListPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-9 px-3 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
+              className="h-11 px-3 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
             >
               <X className="w-4 h-4" />
               <span>إعادة ضبط التصفية</span>
@@ -334,9 +335,12 @@ export const PersonnelListPage: React.FC = () => {
                       {/* Nom complet */}
                       <TableCell className="py-4 px-4 font-bold text-[#1a202c] text-base">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded bg-[#f1f5f9] text-[#2c5282] font-bold flex items-center justify-center shrink-0">
-                            {p.prenom ? p.prenom.charAt(0) : 'م'}
-                          </div>
+                          <PersonnelAvatar
+                            photo={p.photo}
+                            nom={p.nom}
+                            prenom={p.prenom}
+                            size="sm"
+                          />
                           <div>
                             <div>{p.nom} {p.prenom}</div>
                             {p.telephone && (
@@ -387,7 +391,8 @@ export const PersonnelListPage: React.FC = () => {
                             size="sm"
                             onClick={() => navigate(`/dashboard/hr/personnel/${p._id}`)}
                             title="عرض التفاصيل"
-                            className="h-9 w-9 p-0 text-gray-600 hover:text-[#2c5282] hover:bg-[#ebf4ff] rounded"
+                            aria-label="عرض التفاصيل"
+                            className="h-11 w-11 p-0 text-gray-600 hover:text-[#2c5282] hover:bg-[#ebf4ff] rounded"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -398,7 +403,8 @@ export const PersonnelListPage: React.FC = () => {
                             size="sm"
                             onClick={() => navigate(`/dashboard/hr/personnel/${p._id}/edit`)}
                             title="تعديل البطاقة"
-                            className="h-9 w-9 p-0 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded"
+                            aria-label="تعديل البطاقة"
+                            className="h-11 w-11 p-0 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -418,7 +424,12 @@ export const PersonnelListPage: React.FC = () => {
                                   ? 'لا يمكن حذف موظف في حالة نشط'
                                   : 'حذف بطاقة الموظف'
                               }
-                              className={`h-9 w-9 p-0 rounded ${
+                              aria-label={
+                                p.statut === 'actif'
+                                  ? 'لا يمكن حذف موظف في حالة نشط'
+                                  : 'حذف بطاقة الموظف'
+                              }
+                              className={`h-11 w-11 p-0 rounded ${
                                 p.statut === 'actif'
                                   ? 'text-gray-300 cursor-not-allowed'
                                   : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
@@ -475,7 +486,7 @@ export const PersonnelListPage: React.FC = () => {
               size="sm"
               disabled={currentPage <= 1 || isLoading}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="h-9 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
+              className="h-11 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
             >
               <ChevronRight className="w-4 h-4" />
               <span>السابق</span>
@@ -486,7 +497,7 @@ export const PersonnelListPage: React.FC = () => {
               size="sm"
               disabled={currentPage >= pagination.pages || isLoading}
               onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
-              className="h-9 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
+              className="h-11 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
             >
               <span>التالي</span>
               <ChevronLeft className="w-4 h-4" />
@@ -515,14 +526,14 @@ export const PersonnelListPage: React.FC = () => {
           <AlertDialogFooter className="flex gap-3 justify-end mt-4">
             <AlertDialogCancel
               disabled={deleteMutation.isPending}
-              className="h-10 px-4 rounded text-gray-700"
+              className="h-11 px-4 rounded text-gray-700"
             >
               إلغاء
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={deleteMutation.isPending}
-              className="h-10 px-5 rounded bg-red-600 hover:bg-red-700 text-white font-bold"
+              className="h-11 px-5 rounded bg-red-600 hover:bg-red-700 text-white font-bold"
             >
               {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
             </AlertDialogAction>

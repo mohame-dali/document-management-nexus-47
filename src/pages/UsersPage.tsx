@@ -26,11 +26,15 @@ import {
   X, 
   ChevronRight, 
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
   Shield,
   Building,
   UserCheck,
   UserX,
-  MoreHorizontal
+  MoreHorizontal,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,6 +61,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import ChangePasswordDialog from '@/components/users/ChangePasswordDialog';
+import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -68,11 +73,22 @@ const UsersPage: React.FC = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [passwordDialogUser, setPasswordDialogUser] = useState<User | null>(null);
 
-  // Filter & Search states
+  // Filter & Search states with persistence
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL');
-  const [departmentFilter, setDepartmentFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [roleFilter, setRoleFilter] = useLocalStorageState<string>('users_roleFilter', 'ALL');
+  const [departmentFilter, setDepartmentFilter] = useLocalStorageState<string>('users_departmentFilter', 'ALL');
+  const [statusFilter, setStatusFilter] = useLocalStorageState<string>('users_statusFilter', 'ALL');
+  const [sortField, setSortField] = useLocalStorageState<string>('users_sortField', 'createdAt');
+  const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('users_sortDirection', 'desc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -213,12 +229,41 @@ const UsersPage: React.FC = () => {
     });
   }, [users, searchTerm, roleFilter, departmentFilter, statusFilter]);
 
+  // Sort users after filtering
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
+      let valA: string | number = '';
+      let valB: string | number = '';
+
+      if (sortField === 'username') {
+        valA = a.username.toLowerCase();
+        valB = b.username.toLowerCase();
+      } else if (sortField === 'role') {
+        valA = a.role.toLowerCase();
+        valB = b.role.toLowerCase();
+      } else if (sortField === 'departments') {
+        valA = (a.departments?.map(d => d.name).join(', ') || '').toLowerCase();
+        valB = (b.departments?.map(d => d.name).join(', ') || '').toLowerCase();
+      } else if (sortField === 'createdAt') {
+        valA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        valB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      } else if (sortField === 'isActive') {
+        valA = a.isActive ? 1 : 0;
+        valB = b.isActive ? 1 : 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredUsers, sortField, sortDirection]);
+
   // Pagination calculation
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / itemsPerPage));
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filteredUsers.slice(start, start + itemsPerPage);
-  }, [filteredUsers, currentPage, itemsPerPage]);
+    return sortedUsers.slice(start, start + itemsPerPage);
+  }, [sortedUsers, currentPage, itemsPerPage]);
 
   const hasActiveFilters = searchTerm !== '' || roleFilter !== 'ALL' || departmentFilter !== 'ALL' || statusFilter !== 'ALL';
 
@@ -337,7 +382,7 @@ const UsersPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-9 px-3 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
+              className="h-11 px-3 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
             >
               <X className="h-4 w-4" />
               <span>إعادة ضبط التصفية</span>
@@ -435,11 +480,61 @@ const UsersPage: React.FC = () => {
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 w-16">الصورة</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[160px]">اسم المستخدم</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[130px]">الدور</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[180px]">القسم / الأقسام</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">تاريخ الإنشاء</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[120px]">الحالة</TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[160px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('username')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>اسم المستخدم</span>
+                    {sortField === 'username' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'username' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'username' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[130px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('role')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>الدور</span>
+                    {sortField === 'role' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'role' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'role' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[180px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('departments')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>القسم / الأقسام</span>
+                    {sortField === 'departments' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'departments' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'departments' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('createdAt')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>تاريخ الإنشاء</span>
+                    {sortField === 'createdAt' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'createdAt' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'createdAt' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[120px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  onClick={() => handleSort('isActive')}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>الحالة</span>
+                    {sortField === 'isActive' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField === 'isActive' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                    {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                  </div>
+                </TableHead>
                 <TableHead className="text-center py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
@@ -455,7 +550,7 @@ const UsersPage: React.FC = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={resetFilters}
-                          className="mt-2 h-9 border-[#cbd5e1] text-sm"
+                          className="mt-2 h-11 border-[#cbd5e1] text-sm"
                         >
                           إعادة ضبط التصفية
                         </Button>
@@ -558,7 +653,8 @@ const UsersPage: React.FC = () => {
                               <Button 
                                 variant="outline" 
                                 size="icon"
-                                className="h-10 w-10 border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
+                                aria-label="خيارات التعديل"
+                                className="h-11 w-11 border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
                                 title="خيارات التعديل"
                               >
                                 <Edit className="h-4 w-4" />
@@ -593,7 +689,8 @@ const UsersPage: React.FC = () => {
                             size="icon"
                             onClick={() => handleToggleActivation(user)}
                             disabled={toggleActivationMutation.isPending}
-                            className={`h-10 w-10 border-[#cbd5e1] rounded transition-colors ${
+                            aria-label={user.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب'}
+                            className={`h-11 w-11 border-[#cbd5e1] rounded transition-colors ${
                               user.isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
                             }`}
                             title={user.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب'}
@@ -612,7 +709,8 @@ const UsersPage: React.FC = () => {
                             size="icon"
                             onClick={() => handleDeleteClick(user._id)}
                             disabled={deleteMutation.isPending}
-                            className="h-10 w-10 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
+                            aria-label="حذف المستخدم نهائياً"
+                            className="h-11 w-11 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
                             title="حذف المستخدم نهائياً"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -643,7 +741,7 @@ const UsersPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="h-10 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
                   <span>السابق</span>
@@ -654,7 +752,7 @@ const UsersPage: React.FC = () => {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`h-10 w-10 text-base font-bold rounded transition-colors ${
+                      className={`h-11 w-11 text-base font-bold rounded transition-colors ${
                         currentPage === pageNum
                           ? 'bg-[#2c5282] text-white'
                           : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
@@ -670,7 +768,7 @@ const UsersPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="h-10 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
                   <span>التالي</span>
                   <ChevronLeft className="h-4 w-4 mr-1" />
@@ -702,9 +800,16 @@ const UsersPage: React.FC = () => {
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               disabled={deleteMutation.isPending}
-              className="h-11 px-7 bg-red-600 hover:bg-red-700 text-white text-base font-semibold rounded shadow-none"
+              className="h-11 px-7 bg-red-600 hover:bg-red-700 text-white text-base font-semibold rounded shadow-none inline-flex items-center gap-2"
             >
-              {deleteMutation.isPending ? 'جاري الحذف...' : 'نعم، تأكيد الحذف'}
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>جاري الحذف...</span>
+                </>
+              ) : (
+                'نعم، تأكيد الحذف'
+              )}
             </AlertDialogAction>
             <AlertDialogCancel 
               className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 mt-0"

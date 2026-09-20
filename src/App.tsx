@@ -45,6 +45,13 @@ import PersonnelListPage from './pages/hr/PersonnelListPage';
 import PersonnelFormPage from './pages/hr/PersonnelFormPage';
 import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
 import MyProfilePage from './pages/hr/MyProfilePage';
+import LeaveReasonsManagementPage from './pages/hr/LeaveReasonsManagementPage';
+import AttendancePage from './pages/hr/AttendancePage';
+import MyAttendanceCalendarPage from './pages/hr/MyAttendanceCalendarPage';
+import AllPersonnelSituationPage from './pages/hr/AllPersonnelSituationPage';
+import OrganizationChartPage from './pages/organization/OrganizationChartPage';
+import TrashPage from './pages/trash/TrashPage';
+import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +69,7 @@ function App() {
           <LanguageProvider>
             <AuthProvider>
               <DepartmentProvider>
+                <KeyboardShortcuts />
                 <div className="min-h-screen bg-background">
                   <Suspense fallback={
                     <div className="flex items-center justify-center min-h-screen">
@@ -228,6 +236,11 @@ function App() {
                             <MyProfilePage />
                           </ProtectedRoute>
                         } />
+                        <Route path="hr/my-attendance" element={
+                          <ProtectedRoute>
+                            <MyAttendanceCalendarPage />
+                          </ProtectedRoute>
+                        } />
                         <Route path="hr/personnel" element={
                           <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
                             <PersonnelListPage />
@@ -248,6 +261,24 @@ function App() {
                             <PersonnelFormPage />
                           </ProtectedRoute>
                         } />
+                        <Route path="hr/leave-reasons" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                            <LeaveReasonsManagementPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/attendance" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                            <AttendancePage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/all-personnel-situation" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                            <AllPersonnelSituationPage />
+                          </ProtectedRoute>
+                        } />
+
+                        {/* Organization Chart route */}
+                        <Route path="organization-chart" element={<OrganizationChartPage />} />
 
                         {/* Document view alias routes */}
                         <Route path="documents/incoming/:id" element={
@@ -258,6 +289,13 @@ function App() {
                         <Route path="documents/outgoing/:id" element={
                           <ProtectedRoute>
                             <ViewOutgoingDocument />
+                          </ProtectedRoute>
+                        } />
+
+                        {/* Trash route */}
+                        <Route path="trash" element={
+                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                            <TrashPage />
                           </ProtectedRoute>
                         } />
                       </Route>

@@ -64,7 +64,7 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
           variant="outline" 
           size="sm"
           onClick={onBack}
-          className="flex items-center gap-1.5 h-8 px-3 rounded border-[#cbd5e1] text-slate-700 hover:bg-slate-100 transition-colors duration-200 text-xs font-medium"
+          className="flex items-center gap-1.5 h-11 px-3.5 rounded border-[#cbd5e1] text-slate-700 hover:bg-slate-100 transition-colors duration-200 text-xs font-medium"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>{t('messages.backToMessages')}</span>
@@ -75,7 +75,7 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
             <Button 
               size="sm" 
               onClick={() => onReply(message)}
-              className="flex items-center gap-1.5 h-8 px-3 rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 text-xs font-medium"
+              className="flex items-center gap-1.5 h-11 px-3.5 rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 text-xs font-medium"
             >
               <Reply className="h-3.5 w-3.5" />
               <span>{t('messages.reply')}</span>
@@ -86,7 +86,7 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
               variant="outline" 
               size="sm" 
               onClick={() => onDelete(message._id)}
-              className="flex items-center gap-1.5 h-8 px-3 rounded border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-200 text-xs font-medium"
+              className="flex items-center gap-1.5 h-11 px-3.5 rounded border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-200 text-xs font-medium"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>{t('messages.delete')}</span>

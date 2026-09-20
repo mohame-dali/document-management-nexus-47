@@ -166,13 +166,15 @@ const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                        aria-label="إزالة من المفضلة"
+                        title="إزالة من المفضلة"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-11 w-11 p-0 flex items-center justify-center shrink-0"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFavoriteMutation.mutate(folder._id);
                         }}
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   </DragDropWrapper>

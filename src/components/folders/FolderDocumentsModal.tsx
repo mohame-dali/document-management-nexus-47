@@ -157,7 +157,9 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-9 w-9 p-0 rounded hover:bg-gray-200 text-gray-500 transition-colors duration-200"
+              aria-label="إغلاق النافذة"
+              title="إغلاق النافذة"
+              className="h-11 w-11 p-0 rounded hover:bg-gray-200 text-gray-500 transition-colors duration-200 flex items-center justify-center shrink-0"
             >
               <X className="h-5 w-5" />
             </Button>

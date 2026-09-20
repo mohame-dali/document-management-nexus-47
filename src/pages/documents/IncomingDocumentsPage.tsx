@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -29,6 +29,9 @@ import {
   Building2,
   ChevronRight,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
   ShieldAlert,
   Inbox
 } from 'lucide-react';
@@ -64,7 +67,7 @@ import { getDepartments } from '@/services/departmentService';
 import { getDocumentOptions } from '@/services/documentOptionsService';
 import { deleteIncomingDocument, downloadDocument } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
-import { IncomingDocument } from '@/types';
+import { IncomingDocument, Department } from '@/types';
 import { useInfiniteDocuments } from '@/hooks/useInfiniteDocuments';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
@@ -73,19 +76,33 @@ import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
 import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
 import ScrollToTop from '@/components/common/ScrollToTop';
+import { useLocalStorageState } from '@/hooks/useLocalStorageState';
+import { usePdfExport } from '@/hooks/usePdfExport';
 
 const IncomingDocumentsPage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isExporting, exportPdf } = usePdfExport();
 
-  // Filters & UI State
+  // Filters & UI State with persistence
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
-  const [selectedSource, setSelectedSource] = useState<string>('all_sources');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('newest-arrival');
+  const [viewMode, setViewMode] = useLocalStorageState<'table' | 'grid'>('incomingDocs_viewMode', 'table');
+  const [selectedDepartment, setSelectedDepartment] = useLocalStorageState<string>('incomingDocs_selectedDepartment', 'all');
+  const [selectedSource, setSelectedSource] = useLocalStorageState<string>('incomingDocs_selectedSource', 'all_sources');
+  const [statusFilter, setStatusFilter] = useLocalStorageState<string>('incomingDocs_statusFilter', 'all');
+  const [sortBy, setSortBy] = useLocalStorageState<string>('incomingDocs_sortBy', 'newest-arrival');
+  const [sortField, setSortField] = useLocalStorageState<string>('incomingDocs_sortField', 'arrivalDate');
+  const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('incomingDocs_sortDirection', 'desc');
+
+  const handleTableSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
@@ -141,11 +158,10 @@ const IncomingDocumentsPage: React.FC = () => {
   const canViewCategorization = isAdmin || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
   const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk;
 
-  // Fetch departments for AdminTuningDesk filtering
-  const { data: departments } = useQuery({
+  // Fetch departments for AdminTuningDesk filtering and document assignment
+  const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
     queryFn: getDepartments,
-    enabled: currentUser?.role === 'AdminTuningDesk',
   });
 
   // Fetch source options for source filtering
@@ -234,21 +250,42 @@ const IncomingDocumentsPage: React.FC = () => {
   // Sort documents
   const sortedDocuments = useMemo(() => {
     return [...filteredDocuments].sort((a, b) => {
-      if (sortBy === 'newest-arrival') {
-        return new Date(b.arrivalDate || 0).getTime() - new Date(a.arrivalDate || 0).getTime();
+      let valA: string | number = '';
+      let valB: string | number = '';
+
+      if (sortField === 'serialNumber') {
+        valA = Number(a.serialNumber) || 0;
+        valB = Number(b.serialNumber) || 0;
+      } else if (sortField === 'arrivalDate') {
+        valA = a.arrivalDate ? new Date(a.arrivalDate).getTime() : 0;
+        valB = b.arrivalDate ? new Date(b.arrivalDate).getTime() : 0;
+      } else if (sortField === 'subject') {
+        valA = (a.subject || '').toLowerCase();
+        valB = (b.subject || '').toLowerCase();
+      } else if (sortField === 'status') {
+        valA = a.answer ? 1 : 0;
+        valB = b.answer ? 1 : 0;
+      } else {
+        if (sortBy === 'newest-arrival') {
+          return new Date(b.arrivalDate || 0).getTime() - new Date(a.arrivalDate || 0).getTime();
+        }
+        if (sortBy === 'oldest-arrival') {
+          return new Date(a.arrivalDate || 0).getTime() - new Date(b.arrivalDate || 0).getTime();
+        }
+        if (sortBy === 'serial-desc') {
+          return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
+        }
+        if (sortBy === 'serial-asc') {
+          return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
+        }
+        return 0;
       }
-      if (sortBy === 'oldest-arrival') {
-        return new Date(a.arrivalDate || 0).getTime() - new Date(b.arrivalDate || 0).getTime();
-      }
-      if (sortBy === 'serial-desc') {
-        return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
-      }
-      if (sortBy === 'serial-asc') {
-        return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
-      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [filteredDocuments, sortBy]);
+  }, [filteredDocuments, sortField, sortDirection, sortBy]);
 
   // Pagination calculation
   const totalFiltered = sortedDocuments.length;
@@ -286,13 +323,53 @@ const IncomingDocumentsPage: React.FC = () => {
     navigate(`/dashboard/incoming-documents/${id}/edit`);
   };
 
+  const handleExportPdf = async () => {
+    if (sortedDocuments.length === 0) {
+      toast.info('لا توجد وثائق لتصديرها في القائمة الحالية');
+      return;
+    }
+
+    const rows = sortedDocuments.map((doc: IncomingDocument) => ({
+      serialNumber: doc.serialNumber || '',
+      arrivalDate: formatArabicDate(doc.arrivalDate),
+      subject: doc.subject || '',
+      source: doc.source || 'غير محدد',
+      typeDocument: doc.typeDocument || 'عام',
+      status: doc.answer ? 'تم الرد' : 'بانتظار المعالجة',
+    }));
+
+    await exportPdf({
+      title: 'قائمة الوثائق والمراسلات الواردة',
+      subtitle: `سنة ${selectedYear} - العدد الإجمالي: ${rows.length} وثيقة`,
+      columns: [
+        { header: 'الرقم التسلسلي', dataKey: 'serialNumber', align: 'center', width: 28 },
+        { header: 'تاريخ الوصول', dataKey: 'arrivalDate', align: 'center', width: 32 },
+        { header: 'الموضوع', dataKey: 'subject', align: 'right' },
+        { header: 'المصدر', dataKey: 'source', align: 'right', width: 40 },
+        { header: 'نوع الوثيقة', dataKey: 'typeDocument', align: 'center', width: 28 },
+        { header: 'الحالة', dataKey: 'status', align: 'center', width: 30 },
+      ],
+      rows,
+      fileName: `الوثائق_الواردة_${selectedYear}`,
+      orientation: 'landscape',
+      footerText: 'نظام إدارة المراسلات والوثائق الإدارية',
+    });
+  };
+
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
+
   const handleDownload = async (doc: IncomingDocument) => {
     if (doc.scannedDocument) {
       try {
+        setDownloadingDocId(doc._id);
+        toast.info('جاري بدء تحميل ملف PDF...');
         await downloadDocument(doc.scannedDocument, `incoming-doc-${doc.serialNumber}-${doc.year}.pdf`);
+        toast.success('تم تحميل الملف بنجاح');
       } catch (error) {
         console.error('Error downloading document:', error);
         toast.error('تعذر تحميل ملف PDF');
+      } finally {
+        setDownloadingDocId(null);
       }
     } else {
       toast.info('لا يوجد ملف ممسوح ضوئياً لهذه الوثيقة');
@@ -440,6 +517,13 @@ const IncomingDocumentsPage: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      {/* Fil d'Ariane (Breadcrumbs) */}
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
+        <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <span className="text-[#1a202c] font-medium">الوثائق والمراسلات الواردة</span>
+      </nav>
+
       {/* 1. Page Header (En-tête) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div className="flex items-start sm:items-center gap-3.5">
@@ -475,6 +559,23 @@ const IncomingDocumentsPage: React.FC = () => {
               سنة {selectedYear}
             </span>
           </div>
+
+          {/* Export PDF Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleExportPdf}
+            disabled={isExporting || sortedDocuments.length === 0}
+            className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200 flex items-center gap-2"
+            title="تصدير القائمة الحالية كملف PDF"
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            <span>تصدير PDF</span>
+          </Button>
 
           {/* Add Document Action Button */}
           {canAddDocuments && (
@@ -635,7 +736,7 @@ const IncomingDocumentsPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleFilterReset}
-                className="h-9 px-4 text-sm font-semibold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] rounded flex items-center gap-1.5 transition-colors duration-200"
+                className="h-11 px-4 text-sm font-semibold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] rounded flex items-center gap-1.5 transition-colors duration-200"
               >
                 <RotateCcw className="h-3.5 w-3.5 text-[#1a202c]" />
                 <span>إعادة ضبط الفلاتر</span>
@@ -657,7 +758,8 @@ const IncomingDocumentsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
-                className={`h-9 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
+                aria-label="عرض كجدول بيانات"
+                className={`h-11 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
                   viewMode === 'table'
                     ? 'bg-[#2c5282] text-white'
                     : 'text-[#4a5568] hover:bg-gray-50'
@@ -670,7 +772,8 @@ const IncomingDocumentsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`h-9 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
+                aria-label="عرض كبطاقات"
+                className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
                   viewMode === 'grid'
                     ? 'bg-[#2c5282] text-white'
                     : 'text-[#4a5568] hover:bg-gray-50'
@@ -705,7 +808,7 @@ const IncomingDocumentsPage: React.FC = () => {
               <Button
                 type="button"
                 onClick={handleFilterReset}
-                className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+                className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
               >
                 عرض كافة وثائق سنة {selectedYear}
               </Button>
@@ -717,11 +820,51 @@ const IncomingDocumentsPage: React.FC = () => {
             <table className="w-full text-right border-collapse text-base">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#1a202c]">
-                  <th className="py-4 px-4 font-semibold text-sm whitespace-nowrap">رقم التسلسل</th>
-                  <th className="py-4 px-4 font-semibold text-sm">الموضوع والنوع</th>
-                  <th className="py-4 px-4 font-semibold text-sm whitespace-nowrap">تاريخ الوصول</th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('serialNumber')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>رقم التسلسل</span>
+                      {sortField === 'serialNumber' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'serialNumber' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'serialNumber' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('subject')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>الموضوع والنوع</span>
+                      {sortField === 'subject' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'subject' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'subject' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('arrivalDate')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>تاريخ الوصول</span>
+                      {sortField === 'arrivalDate' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'arrivalDate' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'arrivalDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
                   <th className="py-4 px-4 font-semibold text-sm">المصدر / الجهة</th>
-                  <th className="py-4 px-4 font-semibold text-sm">حالة المتابعة والرد</th>
+                  <th 
+                    className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    onClick={() => handleTableSort('status')}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>حالة المتابعة والرد</span>
+                      {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                      {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    </div>
+                  </th>
                   <th className="py-4 px-4 font-semibold text-sm text-center">الإجراءات</th>
                 </tr>
               </thead>
@@ -836,7 +979,7 @@ const IncomingDocumentsPage: React.FC = () => {
                             size="sm"
                             onClick={() => handleView(doc._id)}
                             title="عرض تفاصيل الوثيقة"
-                            className="h-8 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
+                            className="h-11 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
                           >
                             <Eye className="h-3.5 w-3.5 ml-1" />
                             عرض
@@ -850,7 +993,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => setResponseDoc(doc)}
                               title="معالجة وإضافة رد"
-                              className="h-8 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
+                              className="h-11 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
                             >
                               <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
                               معالجة
@@ -865,7 +1008,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => setFolderDoc(doc)}
                               title={canOrganizeDocuments ? 'أرشفة وتنظيم في مجلد' : 'عرض المجلد والأرشفة'}
-                              className="h-8 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
+                              className="h-11 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
                             >
                               <FolderOpen className="h-3.5 w-3.5 ml-1" />
                               أرشفة
@@ -880,7 +1023,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               size="sm"
                               onClick={() => setResponsibleDoc(doc)}
                               title="تعيين مسؤول ومتابعة التحويل"
-                              className="h-8 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
+                              className="h-11 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
                             >
                               <UserPlus className="h-3.5 w-3.5 ml-1" />
                               تحويل
@@ -894,7 +1037,8 @@ const IncomingDocumentsPage: React.FC = () => {
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 text-[#718096] hover:text-[#1a202c] hover:bg-gray-100 rounded"
+                                aria-label="المزيد من الإجراءات"
+                                className="h-11 w-11 p-0 text-[#718096] hover:text-[#1a202c] hover:bg-gray-100 rounded"
                                 title="المزيد من الإجراءات"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
@@ -904,10 +1048,15 @@ const IncomingDocumentsPage: React.FC = () => {
                               {doc.scannedDocument && (
                                 <DropdownMenuItem 
                                   onClick={() => handleDownload(doc)}
+                                  disabled={downloadingDocId === doc._id}
                                   className="text-sm py-2 cursor-pointer"
                                 >
-                                  <Download className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                  تحميل ملف PDF
+                                  {downloadingDocId === doc._id ? (
+                                    <Loader2 className="ml-2 h-4 w-4 text-[#2c5282] animate-spin" />
+                                  ) : (
+                                    <Download className="ml-2 h-4 w-4 text-[#2c5282]" />
+                                  )}
+                                  {downloadingDocId === doc._id ? 'جاري التحميل...' : 'تحميل ملف PDF'}
                                 </DropdownMenuItem>
                               )}
 
@@ -1028,7 +1177,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleView(doc._id)}
-                      className="flex-1 h-8 text-xs font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
+                      className="flex-1 h-11 text-xs font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
                     >
                       <Eye className="h-3.5 w-3.5 ml-1" />
                       عرض
@@ -1040,7 +1189,7 @@ const IncomingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setResponseDoc(doc)}
-                        className="flex-1 h-8 text-xs font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
+                        className="flex-1 h-11 text-xs font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
                       >
                         <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
                         معالجة
@@ -1053,7 +1202,7 @@ const IncomingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setFolderDoc(doc)}
-                        className="flex-1 h-8 text-xs font-semibold text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 rounded"
+                        className="flex-1 h-11 text-xs font-semibold text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 rounded"
                       >
                         <FolderOpen className="h-3.5 w-3.5 ml-1" />
                         أرشفة
@@ -1066,7 +1215,7 @@ const IncomingDocumentsPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => setResponsibleDoc(doc)}
-                        className="flex-1 h-8 text-xs font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded"
+                        className="flex-1 h-11 text-xs font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded"
                       >
                         <UserPlus className="h-3.5 w-3.5 ml-1" />
                         تحويل
@@ -1103,7 +1252,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   size="sm"
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
-                  className="h-9 px-3 text-sm font-semibold border-[#FFCB56] bg-amber-50 hover:bg-[#FFCB56] text-[#1a202c] rounded transition-colors duration-200"
+                  className="h-11 px-3 text-sm font-semibold border-[#FFCB56] bg-amber-50 hover:bg-[#FFCB56] text-[#1a202c] rounded transition-colors duration-200"
                 >
                   {isFetchingNextPage ? (
                     <>
@@ -1145,7 +1294,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={clampedPage <= 1}
-                  className="h-9 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
+                  className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
                   السابق
@@ -1169,7 +1318,7 @@ const IncomingDocumentsPage: React.FC = () => {
                     }
                   }}
                   disabled={clampedPage >= totalPages && !hasNextPage}
-                  className="h-9 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
+                  className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
                 >
                   التالي
                   <ChevronLeft className="h-4 w-4 mr-1" />
@@ -1241,9 +1390,16 @@ const IncomingDocumentsPage: React.FC = () => {
                 }
               }}
               disabled={deleteMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none inline-flex items-center gap-2"
             >
-              {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>جاري الحذف...</span>
+                </>
+              ) : (
+                'تأكيد الحذف'
+              )}
             </AlertDialogAction>
             <AlertDialogCancel
               disabled={deleteMutation.isPending}

@@ -49,7 +49,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
   const FolderIcon = getFolderIcon();
 
   return (
-    <Card className={`border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-50/50 to-white ${className}`}>
+    <Card className={`border border-[#e2e8f0] bg-white shadow-sm ${className}`}>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -63,7 +63,9 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
               variant="ghost"
               size="sm"
               onClick={onFolderEdit}
-              className="h-8 w-8 p-0 hover:bg-blue-100 rounded-full transition-colors duration-200"
+              aria-label="تعديل تصنيف المستند"
+              title="تعديل تصنيف المستند"
+              className="h-11 w-11 p-0 hover:bg-blue-100 rounded-full transition-colors duration-200"
             >
               <Edit className="h-4 w-4 text-blue-600" />
             </Button>
@@ -71,8 +73,8 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
-        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
-          <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+        <div className="flex items-center gap-3 p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+          <div className="p-3 bg-[#2c5282] rounded shadow-sm">
             <FolderIcon className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
@@ -89,7 +91,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
           </div>
         </div>
         
-        <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
+        <div className="bg-[#f8fafc] rounded p-4 border border-[#e2e8f0]">
           <div className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
             <Calendar className="h-4 w-4 text-blue-600" />
             معلومات التصنيف

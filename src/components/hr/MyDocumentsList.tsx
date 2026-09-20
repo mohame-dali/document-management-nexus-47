@@ -188,7 +188,7 @@ export const MyDocumentsList: React.FC<MyDocumentsListProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 px-3 text-xs font-semibold text-[#2c5282] border-[#cbd5e1] rounded hover:bg-[#ebf4ff] hover:border-[#2c5282] flex items-center gap-1.5"
+                    className="h-11 px-3.5 text-xs font-semibold text-[#2c5282] border-[#cbd5e1] rounded hover:bg-[#ebf4ff] hover:border-[#2c5282] flex items-center gap-1.5"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(targetUrl);

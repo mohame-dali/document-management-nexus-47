@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -262,8 +262,19 @@ const ViewOutgoingDocument: React.FC = () => {
   const pourInfoCount = document.pourInfo?.length || 0;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-4" dir="rtl">
       
+      {/* Fil d'Ariane (Breadcrumbs) */}
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500 print:hidden" dir="rtl">
+        <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <Link to="/dashboard/outgoing-documents" className="hover:text-[#2c5282] transition-colors">المستندات الصادرة</Link>
+        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <span className="text-[#1a202c] font-medium truncate max-w-md">
+          {document.subject || `وثيقة رقم #${document.serialNumber}`}
+        </span>
+      </nav>
+
       {/* PRINT-ONLY OFFICIAL ADMINISTRATIVE SHEET */}
       <div className="hidden print:block bg-white p-8 text-black text-right" dir="rtl">
         <div className="border-b-2 border-black pb-4 mb-6 text-center">
@@ -354,7 +365,7 @@ const ViewOutgoingDocument: React.FC = () => {
               type="button"
               variant="outline"
               onClick={handleScrollToPDF}
-              className="h-10 px-4 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/50 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-4 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/50 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
             >
               <Eye className="h-4 w-4 text-[#2c5282]" />
               <span>معاينة المرفق PDF</span>
@@ -365,7 +376,7 @@ const ViewOutgoingDocument: React.FC = () => {
             type="button"
             variant="outline"
             onClick={handlePrintFiche}
-            className="h-10 px-4 text-base font-semibold text-[#4a5568] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200"
+            className="h-11 px-4 text-base font-semibold text-[#4a5568] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200"
           >
             <Printer className="h-4 w-4" />
             <span>طباعة البطاقة</span>
@@ -375,7 +386,7 @@ const ViewOutgoingDocument: React.FC = () => {
             <Button
               type="button"
               onClick={() => navigate(`/dashboard/outgoing-documents/${id}/edit`)}
-              className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
             >
               <Edit className="h-4 w-4" />
               <span>تعديل الوثيقة</span>
@@ -442,7 +453,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleCopySerial}
-                className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
+                className="h-11 px-3 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
                 title="نسخ المرجع الإداري"
               >
                 {isCopiedSerial ? (
@@ -463,7 +474,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleCopySubject}
-                className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
+                className="h-11 px-3 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
                 title="نسخ موضوع المراسلة"
               >
                 {isCopiedSubject ? (
@@ -699,7 +710,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={handleCopyOcr}
-                    className="h-9 px-3 text-sm font-semibold border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
+                    className="h-11 px-3 text-sm font-semibold border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
                   >
                     {isCopiedOcr ? (
                       <>
@@ -961,7 +972,7 @@ const ViewOutgoingDocument: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleDownloadPDF}
-                      className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] border-[#cbd5e1]"
+                      className="h-11 px-3 text-xs font-semibold text-[#2c5282] border-[#cbd5e1]"
                     >
                       <Download className="h-3.5 w-3.5 ml-1" />
                       تحميل
@@ -1038,7 +1049,7 @@ const ViewOutgoingDocument: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleDownloadPDF}
-                      className="h-8 px-3 text-xs font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
+                      className="h-11 px-3 text-xs font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
                     >
                       <Download className="h-3.5 w-3.5" />
                       <span>تحميل ملف PDF</span>

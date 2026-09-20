@@ -90,7 +90,7 @@ export const PersonnelCard: React.FC<PersonnelCardProps> = ({
           variant="outline"
           size="sm"
           onClick={handleView}
-          className="h-10 px-4 text-sm font-medium text-[#2c5282] border-[#2c5282] hover:bg-[#2c5282] hover:text-white rounded flex items-center gap-2"
+          className="h-11 px-4 text-sm font-medium text-[#2c5282] border-[#2c5282] hover:bg-[#2c5282] hover:text-white rounded flex items-center gap-2"
         >
           <Eye className="w-4 h-4" />
           <span>عرض التفاصيل</span>

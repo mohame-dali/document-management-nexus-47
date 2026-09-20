@@ -232,7 +232,8 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('table')}
-              className={`h-9 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
+              aria-label="عرض كجدول بيانات"
+              className={`h-11 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
                 viewMode === 'table'
                   ? 'bg-[#2c5282] text-white'
                   : 'text-[#4a5568] hover:bg-gray-50'
@@ -245,7 +246,8 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              className={`h-9 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
+              aria-label="عرض كبطاقات"
+              className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
                 viewMode === 'grid'
                   ? 'bg-[#2c5282] text-white'
                   : 'text-[#4a5568] hover:bg-gray-50'
@@ -361,7 +363,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
               variant="outline"
               size="sm"
               onClick={handleResetFilters}
-              className="h-9 px-3.5 text-sm font-semibold bg-[#FFCB56] hover:bg-[#f6be3c] text-[#78350f] border border-[#FFD758] rounded flex items-center gap-1.5 transition-colors duration-200 w-full sm:w-auto justify-center"
+              className="h-11 px-3.5 text-sm font-semibold bg-[#FFCB56] hover:bg-[#f6be3c] text-[#78350f] border border-[#FFD758] rounded flex items-center gap-1.5 transition-colors duration-200 w-full sm:w-auto justify-center"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>إعادة ضبط الفلاتر</span>
@@ -389,7 +391,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
             <Button
               type="button"
               onClick={handleResetFilters}
-              className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+              className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
             >
               عرض كافة الخيارات
             </Button>
@@ -486,7 +488,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                         onClick={() => onToggleActive(option._id, option.isActive)}
                         disabled={isLoading}
                         title={option.isActive ? 'تعطيل الخيار' : 'تفعيل الخيار'}
-                        className={`h-8 px-2.5 text-xs font-semibold rounded border transition-colors duration-200 ${
+                        className={`h-11 px-3 text-xs font-semibold rounded border transition-colors duration-200 ${
                           option.isActive
                             ? 'border-gray-300 text-[#4a5568] hover:bg-gray-100'
                             : 'border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
@@ -513,7 +515,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                         onClick={() => onEdit(option)}
                         disabled={isLoading}
                         title="تعديل هذا الخيار"
-                        className="h-8 px-2.5 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
+                        className="h-11 px-3 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
                       >
                         <Edit3 className="h-3.5 w-3.5 ml-1" />
                         تعديل
@@ -527,7 +529,8 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                         onClick={() => onDelete(option._id)}
                         disabled={isLoading}
                         title="حذف هذا الخيار"
-                        className="h-8 px-2.5 text-xs font-semibold border-red-200 text-red-700 hover:bg-red-50 rounded transition-colors duration-200"
+                        aria-label="حذف هذا الخيار"
+                        className="h-11 px-3 text-xs font-semibold border-red-200 text-red-700 hover:bg-red-50 rounded transition-colors duration-200"
                       >
                         <Trash2 className="h-3.5 w-3.5 ml-1" />
                         حذف
@@ -609,7 +612,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                   size="sm"
                   onClick={() => onToggleActive(option._id, option.isActive)}
                   disabled={isLoading}
-                  className={`flex-1 h-9 text-xs font-semibold rounded ${
+                  className={`flex-1 h-11 text-xs font-semibold rounded ${
                     option.isActive
                       ? 'border-gray-300 text-[#4a5568] hover:bg-gray-100'
                       : 'border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
@@ -634,7 +637,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                   size="sm"
                   onClick={() => onEdit(option)}
                   disabled={isLoading}
-                  className="flex-1 h-9 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
+                  className="flex-1 h-11 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
                 >
                   <Edit3 className="h-3.5 w-3.5 ml-1" />
                   تعديل
@@ -646,7 +649,8 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                   size="sm"
                   onClick={() => onDelete(option._id)}
                   disabled={isLoading}
-                  className="h-9 px-3 text-xs font-semibold border-red-200 text-red-700 hover:bg-red-50 rounded transition-colors duration-200"
+                  aria-label="حذف هذا الخيار"
+                  className="h-11 px-3 text-xs font-semibold border-red-200 text-red-700 hover:bg-red-50 rounded transition-colors duration-200"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -696,7 +700,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={clampedPage <= 1}
-                className="h-9 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
+                className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
               >
                 <ChevronRight className="h-4 w-4 ml-1" />
                 السابق
@@ -712,7 +716,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                 disabled={clampedPage >= totalPages}
-                className="h-9 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
+                className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
               >
                 التالي
                 <ChevronLeft className="h-4 w-4 mr-1" />

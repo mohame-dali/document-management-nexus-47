@@ -467,7 +467,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               type="button"
               onClick={onFetchNextPage}
               disabled={isFetchingNextPage}
-              className="h-10 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
             >
               {isFetchingNextPage ? (
                 <>

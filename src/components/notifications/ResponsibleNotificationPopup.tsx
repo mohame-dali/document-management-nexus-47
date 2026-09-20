@@ -33,7 +33,7 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
       dir="rtl"
     >
       <Card className="w-96 bg-white border-2 border-blue-500 shadow-2xl">
-        <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardHeader className="pb-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-blue-600" />
@@ -43,7 +43,8 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
               variant="ghost"
               size="sm"
               onClick={onTemporaryDismiss}
-              className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
+              aria-label="إغلاق الإشعار"
+              className="h-11 w-11 p-0 text-gray-500 hover:text-gray-700"
             >
               <X className="h-4 w-4" />
             </Button>

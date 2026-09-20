@@ -108,7 +108,9 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={onClose}
-            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700 rounded"
+            aria-label="إغلاق النافذة"
+            title="إغلاق النافذة"
+            className="h-11 w-11 p-0 text-slate-400 hover:text-slate-700 rounded flex items-center justify-center shrink-0"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -186,7 +188,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => document.getElementById('quick-file-upload')?.click()}
-                className="h-8 text-xs border-dashed border-[#cbd5e1] hover:border-[#2c5282] text-slate-600 rounded flex items-center gap-1.5"
+                className="h-11 text-xs border-dashed border-[#cbd5e1] hover:border-[#2c5282] text-slate-600 rounded flex items-center gap-1.5"
               >
                 <Paperclip className="h-3.5 w-3.5" />
                 <span>إرفاق ملفات ({attachments.length})</span>
@@ -199,7 +201,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                 variant="outline" 
                 size="sm"
                 onClick={onClose}
-                className="h-8 px-3 text-xs rounded border-[#cbd5e1] text-slate-700"
+                className="h-11 px-3.5 text-xs rounded border-[#cbd5e1] text-slate-700"
               >
                 {t('messages.cancel')}
               </Button>
@@ -208,7 +210,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                 type="submit" 
                 size="sm"
                 disabled={sendMessageMutation.isPending}
-                className="h-8 px-4 text-xs font-medium rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 flex items-center gap-1.5"
+                className="h-11 px-4 text-xs font-medium rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 flex items-center gap-1.5"
               >
                 <Send className="h-3.5 w-3.5" />
                 <span>{sendMessageMutation.isPending ? t('messages.sending') : t('messages.send')}</span>

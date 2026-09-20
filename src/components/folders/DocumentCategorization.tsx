@@ -134,7 +134,7 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
             <Button 
               onClick={handleCategorize} 
               disabled={categorizeMutation.isPending} 
-              className="w-full h-8 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium flex items-center justify-center gap-2 transition-colors duration-200"
+              className="w-full h-11 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white font-medium flex items-center justify-center gap-2 transition-colors duration-200"
             >
               {categorizeMutation.isPending ? (
                 'جاري التصنيف...'

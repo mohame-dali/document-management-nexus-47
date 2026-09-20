@@ -10,7 +10,7 @@ exports.getFolderDocuments = async (req, res, next) => {
   try {
     const folder = await Folder.findById(req.params.id);
     
-    if (!folder) {
+    if (!folder || folder.isDeleted) {
       return next(
         new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404)
       );
@@ -30,7 +30,8 @@ exports.getFolderDocuments = async (req, res, next) => {
     
     // Get incoming documents
     const incomingDocuments = await IncomingDocument.find({
-      folder: req.params.id
+      folder: req.params.id,
+      isDeleted: false
     }).populate('responsibleUser', 'username')
       .populate('answer')
       .populate('createdBy', 'username')
@@ -38,7 +39,8 @@ exports.getFolderDocuments = async (req, res, next) => {
     
     // Get outgoing documents
     const outgoingDocuments = await OutgoingDocument.find({
-      folder: req.params.id
+      folder: req.params.id,
+      isDeleted: false
     }).populate('reference')
       .populate('createdBy', 'username')
       .sort({ issueDate: -1, createdAt: -1 });
@@ -74,7 +76,7 @@ exports.assignDocumentToFolder = async (req, res, next) => {
     // If folderId is provided, verify folder exists and user has access
     if (folderId) {
       const targetFolder = await Folder.findById(folderId);
-      if (!targetFolder) {
+      if (!targetFolder || targetFolder.isDeleted) {
         return next(new ErrorResponse('المجلد المستهدف غير موجود', 404));
       }
 
@@ -90,14 +92,14 @@ exports.assignDocumentToFolder = async (req, res, next) => {
 
     let updatedDocument;
     if (type === 'incoming') {
-      updatedDocument = await IncomingDocument.findByIdAndUpdate(
-        documentId,
+      updatedDocument = await IncomingDocument.findOneAndUpdate(
+        { _id: documentId, isDeleted: false },
         { folder: folderId || null },
         { new: true, runValidators: true }
       );
     } else {
-      updatedDocument = await OutgoingDocument.findByIdAndUpdate(
-        documentId,
+      updatedDocument = await OutgoingDocument.findOneAndUpdate(
+        { _id: documentId, isDeleted: false },
         { folder: folderId || null },
         { new: true, runValidators: true }
       );
@@ -130,14 +132,14 @@ exports.batchMoveDocuments = async (req, res, next) => {
 
     if (folderId) {
       const targetFolder = await Folder.findById(folderId);
-      if (!targetFolder) {
+      if (!targetFolder || targetFolder.isDeleted) {
         return next(new ErrorResponse('المجلد المستهدف غير موجود', 404));
       }
     }
 
     const Model = type === 'incoming' ? IncomingDocument : OutgoingDocument;
     await Model.updateMany(
-      { _id: { $in: documentIds } },
+      { _id: { $in: documentIds }, isDeleted: false },
       { folder: folderId || null }
     );
 

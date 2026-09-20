@@ -7,7 +7,7 @@ const ErrorResponse = require('../../utils/errorResponse');
 // @access  Private
 exports.getIncomingDocuments = async (req, res, next) => {
   try {
-    let query = {};
+    let query = { isDeleted: false };
     
     // Filter by department for AdminDepartment and User roles (not for SuperAdmin, Admin, or AdminTuningDesk)
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {

@@ -170,7 +170,13 @@ const DocumentAttachmentSection: React.FC<DocumentAttachmentSectionProps> = ({
                     <span className="font-medium">تم المسح بنجاح</span>
                   </div>
                   {onRemoveScan && (
-                    <Button variant="ghost" size="sm" onClick={onRemoveScan}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={onRemoveScan}
+                      aria-label="حذف المسح الضوئي"
+                      className="h-11 w-11 p-0 text-red-500 hover:text-red-700"
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   )}

@@ -5,10 +5,18 @@ import { useSidebar } from '@/contexts/SidebarContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useQuery } from '@tanstack/react-query';
 import { getUnreadCount } from '@/services/messageService';
+import { getMyProfile } from '@/services/hr/personnelApi';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Bell, User, Menu, LogOut, FileText, Shield, Users, Settings } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Bell, User, Menu, LogOut, FileText, Shield, Users, Settings, Network, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
@@ -17,6 +25,16 @@ const Header = () => {
   const { toggle } = useSidebar();
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  // Charger la fiche Personnel liée via React Query
+  const { data: myProfile } = useQuery({
+    queryKey: ['hr', 'my-profile'],
+    queryFn: getMyProfile,
+    enabled: !!currentUser,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: false, // Ne pas insister si pas de fiche Personnel (ex: admin système)
+    refetchOnWindowFocus: false,
+  });
 
   // Fetch unread message count
   const { data: unreadData } = useQuery({
@@ -33,7 +51,6 @@ const Header = () => {
     navigate('/dashboard/messages');
   };
 
-
   if (!currentUser) return null;
 
   const getHeaderTitle = () => {
@@ -41,19 +58,6 @@ const Header = () => {
       return `${t('header.departmentDashboard')} - ${currentUser.activeDepartment.name}`;
     }
     return t('header.title');
-  };
-
-  const getRoleIcon = () => {
-    switch (currentUser.role) {
-      case 'Admin':
-        return <Shield className="h-4 w-4 text-red-600" />;
-      case 'AdminTuningDesk':
-        return <Settings className="h-4 w-4 text-blue-600" />;
-      case 'AdminDepartment':
-        return <Users className="h-4 w-4 text-green-600" />;
-      default:
-        return <User className="h-4 w-4 text-gray-600" />;
-    }
   };
 
   const getRoleBadgeColor = () => {
@@ -70,17 +74,8 @@ const Header = () => {
     }
   };
 
-  const getUserInitials = (username: string) => {
-    return username ? username.charAt(0).toUpperCase() : 'U';
-  };
-
-  const getUserPhotoUrl = (user: any) => {
-    if (user?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      return `${API_URL}/${user.photo}`;
-    }
-    return null;
-  };
+  // Priorité 1 : photo fiche Personnel, Priorité 2 : photo User
+  const photoSource = myProfile?.photo || currentUser?.photo;
 
   return (
     <header className="h-16 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 sm:px-6 shadow-sm z-10 select-none" dir="rtl">
@@ -91,6 +86,7 @@ const Header = () => {
           size="icon" 
           onClick={toggle}
           title={t('header.toggleSidebar')}
+          aria-label={t('header.toggleSidebar') || "القائمة الجانبية"}
           className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded transition-colors duration-200"
         >
           <Menu className="h-5 w-5" />
@@ -109,26 +105,53 @@ const Header = () => {
           </h2>
         </div>
 
-        {/* User Info with Photo */}
-        <div className="flex items-center space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5">
-          <Avatar className="h-7 w-7 ring-1 ring-[#e2e8f0]">
-            <AvatarImage 
-              src={getUserPhotoUrl(currentUser)} 
-              alt={currentUser.username}
-            />
-            <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
-              {getUserInitials(currentUser.username)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="text-right">
-            <p className="text-xs font-semibold text-[#1a202c] leading-tight">
-              {currentUser.username}
-            </p>
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded font-normal ${getRoleBadgeColor()}`}>
-              {t(`roles.${currentUser.role}`)}
-            </Badge>
-          </div>
-        </div>
+        {/* User Info with DropdownMenu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button 
+              aria-label="قائمة المستخدم"
+              className="flex items-center min-h-[44px] space-x-reverse space-x-2.5 bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5 hover:bg-[#edf2f7] transition-colors cursor-pointer outline-none"
+            >
+              <PersonnelAvatar
+                photo={photoSource}
+                nom={myProfile?.nom}
+                prenom={myProfile?.prenom}
+                username={currentUser.username}
+                size="md"
+              />
+              <div className="text-right">
+                <p className="text-xs font-semibold text-[#1a202c] leading-tight">
+                  {currentUser.username}
+                </p>
+                <Badge variant="outline" className={`text-xs px-2 py-0.5 rounded font-medium ${getRoleBadgeColor()}`}>
+                  {t(`roles.${currentUser.role}`)}
+                </Badge>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 mr-1" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 text-right" dir="rtl">
+            <DropdownMenuItem onClick={() => navigate('/dashboard/hr/my-profile')} className="cursor-pointer">
+              <User className="w-4 h-4 ml-2" />
+              <span>ملفي الشخصي</span>
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem onClick={() => navigate('/dashboard/organization-chart')} className="cursor-pointer">
+              <Network className="w-4 h-4 ml-2" />
+              <span>الهيكل التنظيمي</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem 
+              onClick={logout} 
+              className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50"
+            >
+              <LogOut className="w-4 h-4 ml-2" />
+              <span>تسجيل الخروج</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Activity Notifications Bell */}
         <NotificationBell />
@@ -140,6 +163,7 @@ const Header = () => {
             size="icon" 
             onClick={handleNotificationClick}
             title={unreadCount > 0 ? `${unreadCount} ${t('header.unreadMessages')}` : t('header.viewMessages')}
+            aria-label={unreadCount > 0 ? `${unreadCount} ${t('header.unreadMessages')}` : (t('header.viewMessages') || "الرسائل")}
             className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded relative transition-colors duration-200"
           >
             <Bell className="h-4 w-4" />
@@ -152,17 +176,6 @@ const Header = () => {
             )}
           </Button>
         </div>
-
-        {/* Logout Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={logout}
-          className="text-[#e53e3e] hover:bg-[#feeeee] border border-[#feb2b2] hover:border-[#e53e3e] rounded transition-colors duration-200 shadow-xs"
-          title={t('header.logout')}
-        >
-          <LogOut className="h-4 w-4" />
-        </Button>
       </div>
     </header>
   );

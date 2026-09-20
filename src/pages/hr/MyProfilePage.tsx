@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getMyProfile, getMyDocuments } from '@/services/hr/personnelApi';
 import { Personnel, PersonnelDocument } from '@/types/hr';
 import { Department } from '@/types';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import MyDocumentsList from '@/components/hr/MyDocumentsList';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,6 +15,7 @@ import {
   Building2,
   Briefcase,
   Calendar,
+  CalendarCheck,
   MapPin,
   RefreshCw,
   Info,
@@ -81,7 +84,7 @@ export const MyProfilePage: React.FC = () => {
             <Button
               variant="outline"
               onClick={() => refetchProfile()}
-              className="h-10 px-5 text-sm font-medium border-[#cbd5e1] rounded text-[#2c5282] hover:bg-gray-50 inline-flex items-center gap-2"
+              className="h-11 px-5 text-sm font-medium border-[#cbd5e1] rounded text-[#2c5282] hover:bg-gray-50 inline-flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               <span>تحديث الصفحة</span>
@@ -102,9 +105,12 @@ export const MyProfilePage: React.FC = () => {
       {/* 1. En-tête : Nom + Prénom + badge de statut (lecture seule) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded bg-[#ebf4ff] border border-[#cbd5e1] text-[#2c5282] flex items-center justify-center text-2xl font-bold shrink-0">
-            {personnel.prenom ? personnel.prenom.charAt(0) : <UserIcon className="w-8 h-8" />}
-          </div>
+          <PersonnelAvatar
+            photo={personnel.photo}
+            nom={personnel.nom}
+            prenom={personnel.prenom}
+            size="lg"
+          />
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-2xl font-bold text-[#1a202c]">
@@ -133,6 +139,18 @@ export const MyProfilePage: React.FC = () => {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link to="/dashboard/hr/my-attendance">
+            <Button
+              variant="outline"
+              className="h-11 px-4 text-xs font-bold border-[#2c5282] text-[#2c5282] hover:bg-blue-50 flex items-center gap-2 rounded"
+            >
+              <CalendarCheck className="h-4 w-4" />
+              <span>عرض تقويم حضوري</span>
+            </Button>
+          </Link>
         </div>
       </div>
 

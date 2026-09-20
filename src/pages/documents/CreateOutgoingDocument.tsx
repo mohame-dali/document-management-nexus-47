@@ -81,7 +81,7 @@ const CreateOutgoingDocument = () => {
 
   if (loadingDepartments) {
     return (
-      <div className="flex justify-center items-center h-64 bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="flex justify-center items-center h-64 bg-[#f7fafc]">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
           <p className="text-green-600 font-medium">جاري تحميل البيانات...</p>
@@ -92,7 +92,7 @@ const CreateOutgoingDocument = () => {
 
   if (departmentsError) {
     return (
-      <div className="p-6 min-h-screen bg-gradient-to-br from-red-50 to-pink-100">
+      <div className="p-6 min-h-screen bg-[#f7fafc]">
         <Alert variant="destructive" className="max-w-md mx-auto">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{translations.errorLoading}</AlertDescription>
@@ -102,9 +102,9 @@ const CreateOutgoingDocument = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50" dir="rtl">
+    <div className="min-h-screen bg-[#f7fafc]" dir="rtl">
       {/* Enhanced Header */}
-      <div className="bg-gradient-to-r from-green-600 to-emerald-700 shadow-lg">
+      <div className="bg-[#2c5282] shadow-sm">
         <div className="p-6 max-w-6xl mx-auto">
           <div className="flex items-center space-x-reverse space-x-4">
             <div className="bg-white/20 p-3 rounded-full">
@@ -126,7 +126,7 @@ const CreateOutgoingDocument = () => {
       {/* Form Container */}
       <div className="p-6 max-w-6xl mx-auto">
         <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
+          <div className="bg-[#f8fafc] p-6 border-b border-[#e2e8f0]">
             <div className="flex items-center space-x-reverse space-x-3">
               <FileUp className="h-6 w-6 text-green-600" />
               <h2 className="text-xl font-bold text-gray-800">تفاصيل الوثيقة الصادرة</h2>

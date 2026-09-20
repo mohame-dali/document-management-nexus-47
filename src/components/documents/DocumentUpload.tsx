@@ -134,6 +134,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   variant="ghost" 
                   size="icon" 
                   onClick={() => removeFile(index)}
+                  aria-label="إزالة الملف"
                   title="إزالة الملف"
                 >
                   <X className="h-4 w-4" />
@@ -164,6 +165,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                       variant="ghost" 
                       size="icon" 
                       onClick={() => onRemoveExisting(fileUrl)}
+                      aria-label="إزالة الملف"
                       title="إزالة الملف"
                     >
                       <X className="h-4 w-4" />

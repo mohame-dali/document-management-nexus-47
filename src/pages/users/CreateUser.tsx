@@ -27,14 +27,17 @@ const CreateUser: React.FC = () => {
   
   const createMutation = useMutation({
     mutationFn: async (data: UserFormData) => {
-      // 1. Création du compte utilisateur
-      const newUser = await createUserWithPhoto(data, photoFile || undefined);
+      // 1. Extraire personnelId pour l'envoyer via link-user uniquement
+      const { personnelId, ...userData } = data;
 
-      // 2. Si un personnelId a été envoyé, lier le User à la fiche Personnel
+      // 2. Création du compte utilisateur
+      const newUser = await createUserWithPhoto(userData, photoFile || undefined);
+
+      // 3. Si un personnelId a été envoyé, lier le User à la fiche Personnel
       let linkSuccess = true;
-      if (data.personnelId && newUser?._id) {
+      if (personnelId && newUser?._id) {
         try {
-          await linkUserToPersonnel(data.personnelId, newUser._id);
+          await linkUserToPersonnel(personnelId, newUser._id);
         } catch (linkError) {
           console.error('Error linking user to personnel:', linkError);
           linkSuccess = false;
@@ -43,7 +46,7 @@ const CreateUser: React.FC = () => {
 
       return {
         newUser,
-        hasPersonnel: Boolean(data.personnelId),
+        hasPersonnel: Boolean(personnelId),
         linkSuccess,
       };
     },
@@ -173,8 +176,9 @@ const CreateUser: React.FC = () => {
                   type="button"
                   variant="destructive"
                   size="icon"
-                  className="absolute -top-1 -right-1 h-7 w-7 rounded-full shadow"
+                  className="absolute -top-2 -right-2 h-11 w-11 rounded-full shadow"
                   onClick={handleRemovePhoto}
+                  aria-label="حذف الصورة"
                   title="حذف الصورة"
                 >
                   <X className="h-4 w-4" />

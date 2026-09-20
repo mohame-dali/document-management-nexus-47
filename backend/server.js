@@ -22,11 +22,39 @@ connectDB();
 const app = express();
 const httpServer = createServer(app);
 
+// CORS Allowed Origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 // Socket.io setup
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origine non autorisée par CORS'));
+      }
+    },
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cache-Control',
+      'Pragma',
+      'Expires',
+      'X-Requested-With',
+      'Accept',
+      'Origin'
+    ]
   }
 });
 
@@ -41,11 +69,80 @@ app.use(cookieParser());
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origine non autorisée par CORS'));
+    }
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires']
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Cache-Control',
+    'Pragma',
+    'Expires',
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ]
 }));
+
+const helmet = require('helmet');
+
+app.use(helmet({
+  contentSecurityPolicy: false,           // Nécessaire pour React/Axios
+  crossOriginResourcePolicy: { policy: 'cross-origin' },  // Autorise les images /uploads
+  crossOriginEmbedderPolicy: false,       // Évite les blocages d'embed
+  
+  // HSTS uniquement en production HTTPS
+  // En dev local (HTTP), le désactiver pour éviter la redirection https://localhost:5000
+  hsts: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  } : false,
+  
+  // Autoriser l'affichage dans une iframe (pour l'aperçu PDF)
+  // En production, remplacer par : frameguard: { action: 'sameorigin' } si tout est sur le même domaine
+  frameguard: false
+}));
+
+const rateLimit = require('express-rate-limit');
+
+// Trust proxy si derrière un reverse proxy (Nginx, Heroku, etc.)
+// app.set('trust proxy', 1);   // Décommenter si nécessaire
+
+// Limiteur global pour toutes les APIs
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,        // Fenêtre de 15 minutes
+  max: 500,                         // 500 requêtes max par IP
+  standardHeaders: true,            // Retourne les headers RateLimit-*
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Trop de requêtes. Réessayez dans 15 minutes.'
+  }
+});
+
+// Limiteur strict pour le login (anti brute-force)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,                           // 5 tentatives max par IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,     // Ne compte pas les logins réussis
+  message: {
+    success: false,
+    message: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.'
+  }
+});
+
+// Appliquer les limiteurs
+app.use('/api', globalLimiter);
+app.use('/api/auth/login', loginLimiter);
 
 // Set static folders for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -78,6 +175,10 @@ const backup = require('./routes/backup');
 const organizationSettings = require('./routes/organizationSettingsRoutes');
 const hrPersonnel = require('./routes/personnelRoutes');
 const hrPersonnelDocuments = require('./routes/personnelDocumentRoutes');
+const organizationChart = require('./routes/organizationChartRoutes');
+const trash = require('./routes/trashRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const leaveReasonRoutes = require('./routes/leaveReasonRoutes');
 
 // Mount routers
 app.use('/api/auth', auth);
@@ -99,6 +200,10 @@ app.use('/api/backup', backup);
 app.use('/api/organization-settings', organizationSettings);
 app.use('/api/hr', hrPersonnel);
 app.use('/api/hr', hrPersonnelDocuments);
+app.use('/api/organization-chart', organizationChart);
+app.use('/api/trash', trash);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/hr/leave-reasons', leaveReasonRoutes);
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {

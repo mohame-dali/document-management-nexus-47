@@ -212,7 +212,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
               setCommentaire('');
               setIsAddOpen(true);
             }}
-            className="h-10 px-4 bg-[#2c5282] hover:bg-[#1a365d] text-white font-bold text-xs rounded flex items-center gap-1.5 shadow-none"
+            className="h-11 px-4 bg-[#2c5282] hover:bg-[#1a365d] text-white font-bold text-xs rounded flex items-center gap-1.5 shadow-none"
           >
             <UserPlus className="w-4 h-4" />
             <span>ربط موظف</span>
@@ -246,7 +246,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
               variant="outline"
               size="sm"
               onClick={() => setIsAddOpen(true)}
-              className="mt-2 h-9 px-4 border-[#2c5282] text-[#2c5282] hover:bg-[#ebf4ff] font-bold text-xs rounded"
+              className="mt-2 h-11 px-4 border-[#2c5282] text-[#2c5282] hover:bg-[#ebf4ff] font-bold text-xs rounded"
             >
               <UserPlus className="w-3.5 h-3.5 ml-1" />
               <span>ربط موظف الآن</span>
@@ -267,7 +267,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <Link
-                      to={`/hr/personnel/${p?._id}`}
+                      to={`/dashboard/hr/personnel/${p?._id}`}
                       className="font-bold text-base text-[#1a202c] hover:text-[#2c5282] hover:underline flex items-center gap-1.5"
                     >
                       <User className="w-4 h-4 text-[#2c5282] shrink-0" />
@@ -318,7 +318,8 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                           setTypeAssociation(assoc.typeAssociation);
                           setCommentaire(assoc.commentaire || '');
                         }}
-                        className="h-8 w-8 text-gray-500 hover:text-[#2c5282] rounded"
+                        aria-label="تعديل الربط"
+                        className="h-11 w-11 text-gray-500 hover:text-[#2c5282] rounded"
                         title="تعديل الربط"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -329,7 +330,8 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeletingAssoc(assoc)}
-                        className="h-8 w-8 text-gray-400 hover:text-red-600 rounded"
+                        aria-label="إلغاء الربط"
+                        className="h-11 w-11 text-gray-400 hover:text-red-600 rounded"
                         title="إلغاء الربط"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -386,7 +388,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedPersonnel(null)}
-                    className="border-[#cbd5e1] text-red-600 hover:bg-red-50 h-8 px-2 text-xs"
+                    className="border-[#cbd5e1] text-red-600 hover:bg-red-50 h-11 px-3 text-xs"
                   >
                     <X className="w-3.5 h-3.5 ml-1" />
                     تغيير

@@ -161,8 +161,8 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
             const isIncoming = assoc.documentType === 'IncomingDocument';
             const doc = assoc.document;
             const docLink = isIncoming
-              ? `/documents/incoming/${assoc.documentId}`
-              : `/documents/outgoing/${assoc.documentId}`;
+              ? `/dashboard/documents/incoming/${assoc.documentId}`
+              : `/dashboard/documents/outgoing/${assoc.documentId}`;
 
             return (
               <div
@@ -241,7 +241,7 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-10 px-3 text-xs font-bold text-[#2c5282] border-[#cbd5e1] hover:bg-[#ebf4ff] rounded flex items-center gap-1.5"
+                      className="h-11 px-3 text-xs font-bold text-[#2c5282] border-[#cbd5e1] hover:bg-[#ebf4ff] rounded flex items-center gap-1.5"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                       <span>عرض الوثيقة</span>
@@ -255,8 +255,9 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
                         variant="ghost"
                         size="icon"
                         onClick={() => setEditingAssociation(assoc)}
+                        aria-label="تعديل الربط"
                         title="تعديل الربط"
-                        className="h-10 w-10 text-gray-600 hover:text-[#2c5282] hover:bg-gray-100 rounded"
+                        className="h-11 w-11 text-gray-600 hover:text-[#2c5282] hover:bg-gray-100 rounded"
                       >
                         <Edit3 className="w-4 h-4" />
                       </Button>
@@ -266,8 +267,9 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeletingAssociation(assoc)}
+                        aria-label="إلغاء الربط"
                         title="إلغاء الربط"
-                        className="h-10 w-10 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                        className="h-11 w-11 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

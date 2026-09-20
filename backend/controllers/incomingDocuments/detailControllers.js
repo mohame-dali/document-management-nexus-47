@@ -32,7 +32,7 @@ exports.getIncomingDocument = async (req, res, next) => {
       .populate('answer') // This will populate the full outgoing document
       .populate('folder');
     
-    if (!document) {
+    if (!document || document.isDeleted) {
       return next(
         new ErrorResponse(`Document not found with id of ${documentId}`, 404)
       );

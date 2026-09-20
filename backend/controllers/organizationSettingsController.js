@@ -88,28 +88,28 @@ exports.setRhDepartment = async (req, res, next) => {
   try {
     const { rhDepartmentId } = req.body;
 
-    if (!rhDepartmentId) {
-      return res.status(400).json({
-        success: false,
-        message: "L'identifiant du département RH (rhDepartmentId) est requis"
-      });
-    }
+    let targetDepartmentId = null;
 
-    // Vérifier la validité du format ObjectId
-    if (!mongoose.Types.ObjectId.isValid(rhDepartmentId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Identifiant de département invalide'
-      });
-    }
+    // Si rhDepartmentId === null ou vide, c'est un DÉMARQUAGE (autorisé)
+    if (rhDepartmentId !== null && rhDepartmentId !== undefined && rhDepartmentId !== '') {
+      // Validation ObjectId uniquement si une valeur est fournie
+      if (!mongoose.Types.ObjectId.isValid(rhDepartmentId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Identifiant de département invalide'
+        });
+      }
 
-    // Valider que le département existe dans la collection Department
-    const department = await Department.findById(rhDepartmentId);
-    if (!department) {
-      return res.status(404).json({
-        success: false,
-        message: `Département introuvable avec l'identifiant : ${rhDepartmentId}`
-      });
+      // Valider que le département existe dans la collection Department
+      const department = await Department.findById(rhDepartmentId);
+      if (!department) {
+        return res.status(404).json({
+          success: false,
+          message: `Département introuvable avec l'identifiant : ${rhDepartmentId}`
+        });
+      }
+
+      targetDepartmentId = department._id;
     }
 
     let settings = await OrganizationSettings.findOne();
@@ -125,7 +125,7 @@ exports.setRhDepartment = async (req, res, next) => {
       });
     }
 
-    settings.rhDepartmentId = department._id;
+    settings.rhDepartmentId = targetDepartmentId;
     settings.misAJourPar = req.user ? (req.user._id || req.user.id) : null;
 
     await settings.save();

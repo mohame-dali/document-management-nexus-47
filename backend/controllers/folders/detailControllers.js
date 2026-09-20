@@ -13,7 +13,7 @@ exports.getFolder = async (req, res, next) => {
       .populate('parent', 'name')
       .populate('createdBy', 'username role photo');
     
-    if (!folder) {
+    if (!folder || folder.isDeleted) {
       return next(
         new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404)
       );
@@ -33,9 +33,9 @@ exports.getFolder = async (req, res, next) => {
 
     // Get subfolders count and document counts
     const [subfolderCount, incomingCount, outgoingCount] = await Promise.all([
-      Folder.countDocuments({ parent: folder._id }),
-      IncomingDocument.countDocuments({ folder: folder._id }),
-      OutgoingDocument.countDocuments({ folder: folder._id })
+      Folder.countDocuments({ parent: folder._id, isDeleted: false }),
+      IncomingDocument.countDocuments({ folder: folder._id, isDeleted: false }),
+      OutgoingDocument.countDocuments({ folder: folder._id, isDeleted: false })
     ]);
 
     const folderData = folder.toObject();

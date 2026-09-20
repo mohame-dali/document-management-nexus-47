@@ -22,8 +22,12 @@ import {
   Settings,
   UserCheck,
   UserPlus,
+  CalendarDays,
+  CalendarCheck,
+  CalendarRange,
   ChevronDown,
-  ChevronLeft
+  ChevronLeft,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
@@ -69,7 +73,7 @@ const Sidebar = () => {
       Boolean(userActiveDeptId) &&
       String(userActiveDeptId) === String(rhDepartmentId));
 
-  const isHrPersonnelActive = location.pathname.startsWith('/dashboard/hr/personnel');
+  const isHrPersonnelActive = location.pathname.startsWith('/dashboard/hr');
   const [hrExpanded, setHrExpanded] = React.useState(true);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
@@ -85,6 +89,7 @@ const Sidebar = () => {
       { path: '/dashboard/folders', label: t('sidebar.folders'), icon: FolderOpen, color: 'text-yellow-600' },
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
+      { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
     ] : []),
 
     // Admin menu items (avec mon-profil)
@@ -98,6 +103,8 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
+      { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
       { path: '/dashboard/settings', label: 'الإعدادات', icon: Settings, color: 'text-gray-600' },
     ] : []),
 
@@ -112,6 +119,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
     ] : []),
 
     // AdminDepartment menu items (avec mon-profil)
@@ -125,6 +133,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
     ] : []),
 
     // User menu items (avec mon-profil)
@@ -136,6 +145,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
+      { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
     ] : []),
   ];
 
@@ -194,7 +204,7 @@ const Sidebar = () => {
                 <h1 className="text-base font-bold text-white tracking-tight truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
-                <p className="text-xs text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
+                <p className="text-sm text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
               </div>
             )}
           </div>
@@ -203,7 +213,10 @@ const Sidebar = () => {
             <div className="flex items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
               <ContextMenu>
                 <ContextMenuTrigger>
-                  <Avatar className="h-10 w-10 ring-1 ring-slate-600 cursor-pointer hover:ring-[#2c5282] transition-colors duration-200">
+                  <Avatar 
+                    className="h-10 w-10 ring-1 ring-slate-600 cursor-pointer hover:ring-[#2c5282] transition-colors duration-200"
+                    title={!isOpen ? currentUser.username : undefined}
+                  >
                     <AvatarImage 
                       src={getUserPhotoUrl(currentUser)} 
                       alt={currentUser.username}
@@ -230,7 +243,7 @@ const Sidebar = () => {
               </ContextMenu>
               {isOpen && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">
+                  <p className="text-sm font-semibold text-white truncate">
                     {currentUser.username}
                   </p>
                   <div className="mt-1">
@@ -266,18 +279,18 @@ const Sidebar = () => {
                   <button
                     type="button"
                     className={cn(
-                      "w-full h-10 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-right",
+                      "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-right",
                       isOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
                       active 
                         ? "bg-[#2c5282] text-white shadow-sm font-medium" 
                         : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                     )}
                     onClick={() => navigate(item.path)}
-                    title={!isOpen ? item.label : undefined}
+                    title={item.label}
                   >
                     <item.icon className={cn(
                       "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                      active ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                      active ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                     )} />
                     {isOpen && (
                       <span className="truncate">
@@ -294,7 +307,7 @@ const Sidebar = () => {
                           type="button"
                           onClick={() => setHrExpanded(!hrExpanded)}
                           className={cn(
-                            "w-full h-10 text-sm font-medium rounded transition-colors duration-200 flex items-center justify-between group text-right px-3",
+                            "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center justify-between group text-right px-3",
                             isHrPersonnelActive
                               ? "bg-[#2c5282]/50 text-white font-medium"
                               : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -304,14 +317,14 @@ const Sidebar = () => {
                           <div className="flex items-center gap-3 min-w-0">
                             <UserCheck className={cn(
                               "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                              isHrPersonnelActive ? "text-amber-400" : "text-slate-400 group-hover:text-slate-200"
+                              isHrPersonnelActive ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                             )} />
                             <span className="truncate">الموارد البشرية</span>
                           </div>
                           {hrExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-slate-400" />
+                            <ChevronDown className="h-4 w-4 text-gray-400" />
                           ) : (
-                            <ChevronLeft className="h-4 w-4 text-slate-400" />
+                            <ChevronLeft className="h-4 w-4 text-gray-400" />
                           )}
                         </button>
 
@@ -320,29 +333,91 @@ const Sidebar = () => {
                             <button
                               type="button"
                               onClick={() => navigate('/dashboard/hr/personnel')}
+                              title={!isOpen ? "الموظفون" : undefined}
                               className={cn(
-                                "w-full h-9 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/personnel'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                               )}
                             >
-                              <Users2 className="h-3.5 w-3.5 text-slate-400" />
+                              <Users2 className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/personnel' ? "text-white" : "text-gray-400"
+                              )} />
                               <span className="truncate">الموظفون</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => navigate('/dashboard/hr/personnel/new')}
+                              title={!isOpen ? "إضافة موظف" : undefined}
                               className={cn(
-                                "w-full h-9 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/personnel/new'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                               )}
                             >
-                              <UserPlus className="h-3.5 w-3.5 text-slate-400" />
+                              <UserPlus className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/personnel/new' ? "text-white" : "text-gray-400"
+                              )} />
                               <span className="truncate">إضافة موظف</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/leave-reasons')}
+                              title={!isOpen ? "أنواع الغياب" : undefined}
+                              className={cn(
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/leave-reasons'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <CalendarDays className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/leave-reasons' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">أنواع الغياب</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/attendance')}
+                              title={!isOpen ? "تسجيل الحضور" : undefined}
+                              className={cn(
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/attendance'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <CalendarCheck className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/attendance' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">تسجيل الحضور</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/all-personnel-situation')}
+                              title={!isOpen ? "وضعية الموظفين" : undefined}
+                              className={cn(
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/all-personnel-situation'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <CalendarRange className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/all-personnel-situation' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">وضعية الموظفين</span>
                             </button>
                           </div>
                         )}
@@ -353,7 +428,7 @@ const Sidebar = () => {
                         onClick={() => navigate('/dashboard/hr/personnel')}
                         title="الموارد البشرية"
                         className={cn(
-                          "w-full h-10 text-sm font-medium rounded transition-colors duration-200 flex items-center justify-center px-2 group",
+                          "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center justify-center px-2 group",
                           isHrPersonnelActive
                             ? "bg-[#2c5282] text-white shadow-sm font-medium"
                             : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -361,7 +436,7 @@ const Sidebar = () => {
                       >
                         <UserCheck className={cn(
                           "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                          isHrPersonnelActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                          isHrPersonnelActive ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                         )} />
                       </button>
                     )
