@@ -195,7 +195,7 @@ const LoginPage = () => {
             <p className="w-full mb-1">
               حساب المدير الافتراضي: <strong className="text-[#2d3748]">admin / admin123</strong>
             </p>
-            <p className="text-[11px] text-[#a0aec0]">
+            <p className="text-xs text-[#a0aec0]">
               نظام إدارة المراسلات والوثائق
             </p>
           </CardFooter>

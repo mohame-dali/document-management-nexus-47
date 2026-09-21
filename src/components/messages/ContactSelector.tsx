@@ -114,7 +114,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
             variant="outline" 
             role="combobox"
             aria-expanded={open}
-            className="h-11 w-full justify-between bg-white border-[#cbd5e1] hover:border-[#2c5282] rounded-lg px-4 text-right transition-colors"
+            className="h-11 w-full justify-between bg-white border-[#cbd5e1] hover:border-[#2c5282] rounded px-4 text-right transition-colors"
           >
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-gray-500" />
@@ -129,7 +129,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
         </PopoverTrigger>
 
         <PopoverContent 
-          className="p-0 rounded-lg border border-[#e2e8f0] shadow-lg max-h-[300px] overflow-y-auto"
+          className="p-0 rounded border border-[#e2e8f0] shadow-sm max-h-[300px] overflow-y-auto"
           align="start"
           side="bottom"
           sideOffset={6}

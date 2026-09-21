@@ -131,7 +131,7 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
           transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
           transition: isDragging ? 'none' : undefined,
         }}
-        className="w-[95vw] sm:w-[90vw] sm:max-w-5xl max-h-[88vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-2xl"
+        className="w-[95vw] sm:w-[90vw] sm:max-w-5xl max-h-[88vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-sm"
         dir="rtl"
       >
         <DialogHeader

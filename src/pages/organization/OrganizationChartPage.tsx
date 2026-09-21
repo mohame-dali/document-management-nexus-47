@@ -276,7 +276,7 @@ const OrganizationChartPage: React.FC = () => {
             <span className="text-gray-600">أقسام ومصالح أخرى</span>
           </div>
         </div>
-        <div className="text-gray-400 text-[11px]">
+        <div className="text-gray-400 text-xs">
           * انقر على أي موظف للانتقال إلى ملفه الشخصي
         </div>
       </div>

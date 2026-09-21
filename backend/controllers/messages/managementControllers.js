@@ -152,20 +152,24 @@ exports.deleteMessage = async (req, res, next) => {
       );
     }
     
-    // If admin explicitly requests hard delete or if already deleted by all others
+    // Tous les rôles : masquer le message pour soi via deletedBy
     message.deletedBy = message.deletedBy || [];
     if (!message.deletedBy.some(id => id.toString() === userId.toString())) {
       message.deletedBy.push(userId);
     }
     
-    // Check all relevant parties
-    const allPartyIds = [message.sender.toString(), ...message.recipients.map(r => r.user.toString())];
+    // Vérifier si tous les participants (expéditeur + destinataires) ont supprimé le message
+    const allPartyIds = [
+      message.sender.toString(),
+      ...message.recipients.map(r => (r.user ? r.user.toString() : r.toString()))
+    ];
     const deletedByAll = allPartyIds.every(id => 
       message.deletedBy.some(dId => dId.toString() === id)
     );
     
-    if (deletedByAll || hasAdminAccess) {
-      // Remove physical attachments if needed
+    // Suppression physique UNIQUEMENT si tous les participants ont supprimé le message
+    if (deletedByAll) {
+      // Nettoyage physique des pièces jointes
       if (message.attachments && message.attachments.length > 0) {
         message.attachments.forEach(attachment => {
           if (attachment.path) {

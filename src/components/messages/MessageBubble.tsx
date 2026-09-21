@@ -60,8 +60,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
       <div
         className={`max-w-[70%] px-4 py-2.5 shadow-sm transition-all duration-200 ${
           isOwn
-            ? 'bg-[#2c5282] text-white rounded-lg rounded-tr-none'
-            : 'bg-white text-[#1a202c] border border-[#e2e8f0] rounded-lg rounded-tl-none'
+            ? 'bg-[#2c5282] text-white rounded-tr-none'
+            : 'bg-white text-[#1a202c] border border-[#e2e8f0] rounded-tl-none'
         }`}
       >
         {/* Message Content */}

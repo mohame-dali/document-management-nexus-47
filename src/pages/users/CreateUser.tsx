@@ -216,13 +216,13 @@ const CreateUser: React.FC = () => {
               </div>
 
               {photoFile && (
-                <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-700">
+                <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-700">
                   <p className="font-semibold text-[#1a202c]">{photoFile.name}</p>
                   <p className="text-gray-500 text-xs mt-0.5">الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت</p>
                 </div>
               )}
               
-              <div className="p-3 bg-blue-50/60 border border-blue-200 rounded text-sm text-blue-900 flex items-center gap-2">
+              <div className="p-4 bg-blue-50/60 border border-blue-200 rounded text-sm text-blue-900 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#2c5282] shrink-0"></span>
                 <span>الحد الأقصى المسموح به لحجم الصورة 5 ميجابايت • الصيغ المدعومة: JPG, PNG, GIF</span>
               </div>

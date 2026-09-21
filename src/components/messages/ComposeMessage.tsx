@@ -170,7 +170,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 required
-                className="h-11 w-full bg-white border-[#cbd5e1] rounded-lg px-4 text-base focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right"
+                className="h-11 w-full bg-white border-[#cbd5e1] rounded px-4 text-base focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right"
               />
             </div>
 
@@ -183,7 +183,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                 <button
                   type="button"
                   onClick={() => setPriority('normal')}
-                  className={`flex-1 h-11 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 h-11 rounded text-sm font-medium transition-colors ${
                     priority === 'normal'
                       ? 'bg-[#2c5282] text-white'
                       : 'bg-[#f7fafc] text-[#1a202c] border border-[#cbd5e1] hover:bg-[#edf2f7]'
@@ -195,7 +195,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                 <button
                   type="button"
                   onClick={() => setPriority('high')}
-                  className={`flex-1 h-11 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 h-11 rounded text-sm font-medium transition-colors ${
                     priority === 'high'
                       ? 'bg-[#2c5282] text-white'
                       : 'bg-[#f7fafc] text-[#1a202c] border border-[#cbd5e1] hover:bg-[#edf2f7]'
@@ -207,7 +207,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                 <button
                   type="button"
                   onClick={() => setPriority('urgent')}
-                  className={`flex-1 h-11 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 h-11 rounded text-sm font-medium transition-colors ${
                     priority === 'urgent'
                       ? 'bg-[#2c5282] text-white'
                       : 'bg-[#f7fafc] text-[#1a202c] border border-[#cbd5e1] hover:bg-[#edf2f7]'
@@ -231,7 +231,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                 onChange={(e) => setContent(e.target.value)}
                 rows={7}
                 required
-                className="min-h-[180px] w-full bg-white border-[#cbd5e1] rounded-lg p-4 text-base focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right resize-y"
+                className="min-h-[180px] w-full bg-white border-[#cbd5e1] rounded p-4 text-base focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right resize-y"
               />
             </div>
 

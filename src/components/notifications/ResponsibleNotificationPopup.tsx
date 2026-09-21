@@ -29,10 +29,10 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
 }) => {
   return (
     <div 
-      className="fixed top-4 right-4 z-[9999] animate-in slide-in-from-right-full duration-500"
+      className="fixed top-4 right-4 z-[9999] animate-in slide-in-from-right-full duration-200"
       dir="rtl"
     >
-      <Card className="w-96 bg-white border-2 border-blue-500 shadow-2xl">
+      <Card className="w-96 bg-white border-2 border-blue-500 shadow-sm">
         <CardHeader className="pb-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

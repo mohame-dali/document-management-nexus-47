@@ -271,7 +271,7 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
           dragType="folder"
           dragData={folder}
           dropTypes={['folder', 'document']}
-          className={`group transition-all duration-300 ${
+          className={`group transition-all duration-200 ${
             isSelected ? 'ring-2 ring-blue-400 ring-opacity-50' : ''
           }`}
         >
@@ -295,7 +295,7 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-xs truncate text-[#1a202c]">{folder.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium ${
+                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-xs font-medium ${
                       folder.status === 'En cours'
                         ? 'bg-green-50 text-green-700 border border-green-200'
                         : 'bg-gray-100 text-gray-600 border border-gray-200'
@@ -307,13 +307,13 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
               </div>
               
               <div className="flex items-center justify-between pt-1 border-t border-[#f1f5f9]">
-                <div className="flex items-center gap-1 text-[11px] text-[#78350f]">
+                <div className="flex items-center gap-1 text-xs text-[#78350f]">
                   <FileText className="h-3 w-3" />
                   <span className="font-semibold px-1 py-0.2 bg-[#FFCB56] text-[#78350f] rounded border border-[#FFD758]">
                     {documentCount} مستند
                   </span>
                 </div>
-                <div className="text-[10px] text-gray-400">
+                <div className="text-xs text-gray-400">
                   {new Date(folder.createdAt).toLocaleDateString('ar-EG')}
                 </div>
               </div>
@@ -392,11 +392,11 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
                   <span className="font-semibold text-xs truncate">{folder.name}</span>
                   
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
                       <FileText className="h-3 w-3" />
                       {documentCount}
                     </span>
-                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium ${
+                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-xs font-medium ${
                       folder.status === 'En cours'
                         ? 'bg-green-50 text-green-700 border border-green-200'
                         : 'bg-gray-100 text-gray-600 border border-gray-200'

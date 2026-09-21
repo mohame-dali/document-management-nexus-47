@@ -184,7 +184,7 @@ const DocumentDisplay: React.FC = () => {
       {/* Header Controls - Responsive */}
       <div className="flex-responsive-col gap-responsive items-start sm:items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-responsive-xl font-bold gradient-text">إدارة الوثائق</h2>
+          <h2 className="text-responsive-xl font-bold text-[#1a202c]">إدارة الوثائق</h2>
           <p className="text-responsive-sm text-muted-foreground">
             العرض: {getRoleDisplayScope()} • السنة: {selectedYear}
           </p>
@@ -207,7 +207,7 @@ const DocumentDisplay: React.FC = () => {
             </SelectContent>
           </Select>
           
-          <div className="flex border rounded-md">
+          <div className="flex border rounded">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size={isMobile ? "sm" : "default"}

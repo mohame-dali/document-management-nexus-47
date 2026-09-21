@@ -84,7 +84,7 @@ export const UpdateAssociationDialog: React.FC<UpdateAssociationDialogProps> = (
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] p-6 bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
+      <DialogContent className="sm:max-w-[540px] p-6 bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
         <DialogHeader className="text-right space-y-1.5 border-b border-[#e2e8f0] pb-3">
           <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
             <Edit3 className="w-5 h-5 text-[#2c5282]" />

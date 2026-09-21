@@ -89,13 +89,44 @@ export const AttendancePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
 
-  // Vérifier si l'utilisateur est restreint à un département
-  const isDepartmentRestricted = currentUser?.role === 'AdminDepartment';
+  // Rôles et département de l'utilisateur connecté
+  const userRole = currentUser?.role;
   const userDeptId = currentUser?.activeDepartment
     ? typeof currentUser.activeDepartment === 'object'
       ? (currentUser.activeDepartment as { _id?: string })._id || null
       : currentUser.activeDepartment
     : null;
+
+  const userDepartmentName =
+    (typeof currentUser?.activeDepartment === 'object'
+      ? (currentUser.activeDepartment as { name?: string }).name
+      : null) ||
+    departments.find((d) => String(d._id) === String(userDeptId))?.name ||
+    '';
+
+  const userDepartmentCode =
+    (typeof currentUser?.activeDepartment === 'object'
+      ? (currentUser.activeDepartment as { code?: string }).code
+      : null) ||
+    departments.find((d) => String(d._id) === String(userDeptId))?.code ||
+    '';
+
+  // Déterminer si l'utilisateur est rattaché aux RH
+  const isRHDepartment =
+    userDepartmentName === 'RH' ||
+    userDepartmentCode === 'RH' ||
+    userDepartmentName.toUpperCase().includes('RH') ||
+    userDepartmentName === 'الموارد البشرية' ||
+    currentUser?.username === 'RHadmin';
+
+  // Déterminer si l'utilisateur peut voir tous les départements
+  const canSeeAllDepartments =
+    userRole === 'Admin' ||
+    userRole === 'SuperAdmin' ||
+    (userRole === 'AdminDepartment' && (userDepartmentName === 'RH' || isRHDepartment));
+
+  // Vérifier si l'utilisateur est restreint à un département
+  const isDepartmentRestricted = !canSeeAllDepartments;
 
   // 1. Charger les départements
   useEffect(() => {
@@ -136,12 +167,13 @@ export const AttendancePage: React.FC = () => {
   const loadDailyAttendance = useCallback(async () => {
     try {
       setLoading(true);
-      const effectiveDept =
-        isDepartmentRestricted && userDeptId
-          ? userDeptId
-          : selectedDepartment !== 'all'
+      // Si l'utilisateur peut voir tous les départements, ne pas filtrer sauf sélection spécifique
+      // Sinon, filtrer sur son propre département
+      const effectiveDept = canSeeAllDepartments
+        ? selectedDepartment !== 'all'
           ? selectedDepartment
-          : undefined;
+          : undefined
+        : userDeptId || undefined;
 
       const res = await getDailyAttendance(selectedDate, effectiveDept);
       const agentList = res.data || [];
@@ -175,7 +207,7 @@ export const AttendancePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, selectedDepartment, isDepartmentRestricted, userDeptId]);
+  }, [selectedDate, selectedDepartment, canSeeAllDepartments, userDeptId]);
 
   useEffect(() => {
     loadDailyAttendance();
@@ -367,7 +399,7 @@ export const AttendancePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 space-y-5" dir="rtl">
       {/* 1. En-tête sobre */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-none">
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumbs */}
@@ -418,11 +450,11 @@ export const AttendancePage: React.FC = () => {
       </div>
 
       {/* 2. Filtres & Sélecteurs */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 space-y-4 shadow-none">
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4 shadow-none">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
           {/* Sélecteur de date */}
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#4a5568] flex items-center gap-1.5">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[#4a5568] flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
               <span>تاريخ الحضور :</span>
             </label>
@@ -435,8 +467,8 @@ export const AttendancePage: React.FC = () => {
           </div>
 
           {/* Sélecteur de département */}
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#4a5568] flex items-center gap-1.5">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[#4a5568] flex items-center gap-1.5">
               <Building2 className="h-3.5 w-3.5 text-[#2c5282]" />
               <span>القسم / المصلحة :</span>
             </label>
@@ -449,14 +481,14 @@ export const AttendancePage: React.FC = () => {
                     ? (currentUser.activeDepartment as { name?: string })?.name || 'القسم المخصص'
                     : 'القسم المخصص'
                 }
-                className="h-10 border-[#e2e8f0] bg-gray-50 text-gray-700 rounded text-sm cursor-not-allowed"
+                className="h-11 border-[#e2e8f0] bg-gray-50 text-gray-700 rounded text-sm cursor-not-allowed"
               />
             ) : (
               <Select
                 value={selectedDepartment}
                 onValueChange={(val) => setSelectedDepartment(val)}
               >
-                <SelectTrigger className="h-10 border-[#e2e8f0] rounded text-sm bg-white">
+                <SelectTrigger className="h-11 border-[#e2e8f0] rounded text-sm bg-white">
                   <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
                 <SelectContent dir="rtl">
@@ -472,8 +504,8 @@ export const AttendancePage: React.FC = () => {
           </div>
 
           {/* Recherche textuelle */}
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-[#4a5568] flex items-center gap-1.5">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[#4a5568] flex items-center gap-1.5">
               <Search className="h-3.5 w-3.5 text-[#718096]" />
               <span>بحث عن موظف :</span>
             </label>
@@ -490,13 +522,13 @@ export const AttendancePage: React.FC = () => {
           </div>
 
           {/* Bouton action rapide */}
-          <div className="space-y-1 flex flex-col justify-end">
+          <div className="space-y-2 flex flex-col justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={handleMarkAllPresent}
               disabled={loading || attendanceRows.length === 0}
-              className="h-11 border-[#e2e8f0] text-[#2c5282] hover:bg-[#f7fafc] rounded font-medium gap-2 text-xs"
+              className="h-11 border-[#e2e8f0] text-[#2c5282] hover:bg-[#f7fafc] rounded font-medium gap-2 text-sm"
             >
               <Check className="h-4 w-4 text-green-600" />
               <span>تحديد الكل كحاضر</span>
@@ -505,7 +537,7 @@ export const AttendancePage: React.FC = () => {
         </div>
 
         {/* Barre de stats et filtre d'affichage */}
-        <div className="pt-3 border-t border-[#edf2f7] flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="pt-3 border-t border-[#edf2f7] flex flex-wrap items-center justify-between gap-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[#718096]">إجمالي الموظفين:</span>
             <span className="font-bold text-[#1a202c] px-2 py-0.5 bg-gray-100 rounded">
@@ -523,7 +555,7 @@ export const AttendancePage: React.FC = () => {
             </span>
 
             {stats.saved > 0 && (
-              <span className="text-gray-500 text-[11px] mr-2">
+              <span className="text-gray-500 text-xs mr-2">
                 (تم حفظ {stats.saved} مسبقاً لهذا اليوم)
               </span>
             )}
@@ -622,7 +654,7 @@ export const AttendancePage: React.FC = () => {
                           </h3>
                           {row.hasSavedRecord && (
                             <span
-                              className="text-[10px] text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200"
+                              className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200"
                               title="تم تسجيل هذه الحالة مسبقاً"
                             >
                               مُسجل
@@ -707,27 +739,27 @@ export const AttendancePage: React.FC = () => {
 
                   {/* Section Spécifique si ABSENT */}
                   {!isPresent && (
-                    <div className="mt-3.5 pt-3.5 border-t border-[#fbd38d]/40 bg-white p-3.5 rounded border border-[#fbd38d]/60 space-y-3">
+                    <div className="mt-3.5 pt-3.5 border-t border-[#fbd38d]/40 bg-white p-4 rounded border border-[#fbd38d]/60 space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         {/* Sélection du Motif */}
                         <div className="flex-1 min-w-[240px]">
-                          <label className="text-xs font-bold text-[#744210] mb-1 block">
+                          <label className="text-sm font-medium text-[#744210] mb-1.5 block">
                             سبب الغياب <span className="text-red-600">*</span> :
                           </label>
                           <Select
                             value={row.motif || ''}
                             onValueChange={(val) => handleMotifChange(originalIndex, val)}
                           >
-                            <SelectTrigger className="h-9 border-[#cbd5e0] rounded text-xs bg-white">
+                            <SelectTrigger className="h-10 border-[#cbd5e0] rounded text-sm bg-white">
                               <SelectValue placeholder="اختر سبب الغياب" />
                             </SelectTrigger>
                             <SelectContent dir="rtl" className="max-h-60">
                               {leaveReasons.map((lr) => (
-                                <SelectItem key={lr._id} value={lr.code} className="text-xs py-2">
+                                <SelectItem key={lr._id} value={lr.code} className="text-sm py-2">
                                   <div className="flex items-center justify-between gap-3 w-full">
                                     <span className="font-semibold text-gray-900">{lr.labelAr}</span>
                                     {lr.labelFr && (
-                                      <span className="text-gray-400 text-[11px] font-mono">
+                                      <span className="text-gray-400 text-xs font-mono">
                                         ({lr.labelFr})
                                       </span>
                                     )}
@@ -740,7 +772,7 @@ export const AttendancePage: React.FC = () => {
 
                         {/* Badge Impact Solde */}
                         <div className="sm:text-left flex flex-col justify-end">
-                          <label className="text-xs text-gray-500 mb-1 block">
+                          <label className="text-sm font-medium text-gray-600 mb-1.5 block">
                             تأثير الغياب على الرصيد :
                           </label>
                           <div>
@@ -768,8 +800,8 @@ export const AttendancePage: React.FC = () => {
                       {/* Champs conditionnels selon le motif */}
                       {/* Cas 1: Motif "service" */}
                       {row.motif === 'service' && (
-                        <div className="bg-[#fffaf0] p-3 rounded border border-amber-200/80 space-y-1">
-                          <label className="text-xs font-semibold text-[#744210]">
+                        <div className="bg-[#fffaf0] p-4 rounded border border-amber-200/80 space-y-2">
+                          <label className="text-sm font-medium text-[#744210]">
                             اسم المصلحة أو الوجهة الإدارية :
                           </label>
                           <Input
@@ -779,16 +811,16 @@ export const AttendancePage: React.FC = () => {
                             onChange={(e) =>
                               handleDetailChange(originalIndex, 'nomService', e.target.value)
                             }
-                            className="h-9 text-xs border-[#cbd5e0] rounded bg-white"
+                            className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                           />
                         </div>
                       )}
 
                       {/* Cas 2: Motif "mission" */}
                       {row.motif === 'mission' && (
-                        <div className="bg-[#fffaf0] p-3 rounded border border-amber-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[#744210]">
+                        <div className="bg-[#fffaf0] p-4 rounded border border-amber-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#744210]">
                               مكان المهمة :
                             </label>
                             <Input
@@ -798,11 +830,11 @@ export const AttendancePage: React.FC = () => {
                               onChange={(e) =>
                                 handleDetailChange(originalIndex, 'lieuMission', e.target.value)
                               }
-                              className="h-9 text-xs border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[#744210]">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#744210]">
                               موضوع المهمة :
                             </label>
                             <Input
@@ -812,7 +844,7 @@ export const AttendancePage: React.FC = () => {
                               onChange={(e) =>
                                 handleDetailChange(originalIndex, 'objetMission', e.target.value)
                               }
-                              className="h-9 text-xs border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
                           </div>
                         </div>
@@ -820,9 +852,9 @@ export const AttendancePage: React.FC = () => {
 
                       {/* Cas 3: Motif "formation" */}
                       {row.motif === 'formation' && (
-                        <div className="bg-[#fffaf0] p-3 rounded border border-amber-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[#744210]">
+                        <div className="bg-[#fffaf0] p-4 rounded border border-amber-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#744210]">
                               عنوان التكوين :
                             </label>
                             <Input
@@ -836,11 +868,11 @@ export const AttendancePage: React.FC = () => {
                                   e.target.value
                                 )
                               }
-                              className="h-9 text-xs border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[#744210]">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#744210]">
                               الهيئة المؤطرة :
                             </label>
                             <Input
@@ -854,11 +886,11 @@ export const AttendancePage: React.FC = () => {
                                   e.target.value
                                 )
                               }
-                              className="h-9 text-xs border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-xs font-semibold text-[#744210]">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-[#744210]">
                               مدة التكوين :
                             </label>
                             <Input
@@ -868,7 +900,7 @@ export const AttendancePage: React.FC = () => {
                               onChange={(e) =>
                                 handleDetailChange(originalIndex, 'dureeFormation', e.target.value)
                               }
-                              className="h-9 text-xs border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
                           </div>
                         </div>
@@ -884,7 +916,7 @@ export const AttendancePage: React.FC = () => {
 
       {/* 4. Bouton "Enregistrer" en bas */}
       {filteredRows.length > 0 && (
-        <div className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+        <div className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
           <div className="text-xs text-[#718096]">
             <span>التاريخ المحدد: </span>
             <span className="font-bold text-[#1a202c] ml-3">{selectedDate}</span>

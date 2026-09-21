@@ -1,6 +1,7 @@
 const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
 const Folder = require('../models/Folder');
+const Message = require('../models/Message');
 const ErrorResponse = require('../utils/errorResponse');
 const fs = require('fs');
 const path = require('path');
@@ -36,6 +37,7 @@ exports.getTrash = async (req, res, next) => {
     let incomingQuery = { isDeleted: true };
     let outgoingQuery = { isDeleted: true };
     let folderQuery = { isDeleted: true };
+    let messageQuery = { deletedBy: req.user._id };
 
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
       if (!req.user.activeDepartment) {
@@ -65,13 +67,18 @@ exports.getTrash = async (req, res, next) => {
         { documentId: searchRegex }
       ];
       folderQuery.name = searchRegex;
+      messageQuery.$or = [
+        { subject: searchRegex },
+        { content: searchRegex }
+      ];
     }
 
     // Get counts
-    const [incomingCount, outgoingCount, folderCount] = await Promise.all([
+    const [incomingCount, outgoingCount, folderCount, messageCount] = await Promise.all([
       IncomingDocument.countDocuments(incomingQuery),
       OutgoingDocument.countDocuments(outgoingQuery),
-      Folder.countDocuments(folderQuery)
+      Folder.countDocuments(folderQuery),
+      Message.countDocuments(messageQuery)
     ]);
 
     let items = [];
@@ -121,11 +128,25 @@ exports.getTrash = async (req, res, next) => {
         ...f.toObject(),
         itemType: 'folder'
       }));
+    } else if (type === 'message') {
+      totalCount = messageCount;
+      const msgs = await Message.find(messageQuery)
+        .populate('sender', 'username photo role activeDepartment')
+        .populate('recipients.user', 'username photo role activeDepartment')
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limitNum);
+
+      items = msgs.map(msg => ({
+        ...msg.toObject(),
+        itemType: 'message',
+        deletedAt: msg.updatedAt
+      }));
     } else {
       // 'all' type: combine all deleted items
-      totalCount = incomingCount + outgoingCount + folderCount;
+      totalCount = incomingCount + outgoingCount + folderCount + messageCount;
 
-      const [incomingDocs, outgoingDocs, folders] = await Promise.all([
+      const [incomingDocs, outgoingDocs, folders, messages] = await Promise.all([
         IncomingDocument.find(incomingQuery)
           .populate('deletedBy', 'username role photo')
           .populate('assignedTo.id', 'name')
@@ -144,15 +165,21 @@ exports.getTrash = async (req, res, next) => {
           .populate('department', 'name')
           .populate('parent', 'name')
           .sort({ deletedAt: -1 })
+          .limit(limitNum),
+        Message.find(messageQuery)
+          .populate('sender', 'username photo role activeDepartment')
+          .populate('recipients.user', 'username photo role activeDepartment')
+          .sort({ updatedAt: -1 })
           .limit(limitNum)
       ]);
 
       const formattedIncoming = incomingDocs.map(d => ({ ...d.toObject(), itemType: 'incoming' }));
       const formattedOutgoing = outgoingDocs.map(d => ({ ...d.toObject(), itemType: 'outgoing' }));
       const formattedFolders = folders.map(f => ({ ...f.toObject(), itemType: 'folder' }));
+      const formattedMessages = messages.map(m => ({ ...m.toObject(), itemType: 'message', deletedAt: m.updatedAt }));
 
       // Merge and sort by deletedAt descending
-      const allItems = [...formattedIncoming, ...formattedOutgoing, ...formattedFolders].sort((a, b) => {
+      const allItems = [...formattedIncoming, ...formattedOutgoing, ...formattedFolders, ...formattedMessages].sort((a, b) => {
         const dateA = a.deletedAt ? new Date(a.deletedAt).getTime() : 0;
         const dateB = b.deletedAt ? new Date(b.deletedAt).getTime() : 0;
         return dateB - dateA;
@@ -166,10 +193,11 @@ exports.getTrash = async (req, res, next) => {
     res.status(200).json({
       success: true,
       counts: {
-        total: incomingCount + outgoingCount + folderCount,
+        total: incomingCount + outgoingCount + folderCount + messageCount,
         incoming: incomingCount,
         outgoing: outgoingCount,
-        folder: folderCount
+        folder: folderCount,
+        message: messageCount
       },
       totalCount,
       count: items.length,
@@ -190,8 +218,26 @@ exports.restoreItem = async (req, res, next) => {
   try {
     const { type, id } = req.params;
 
-    if (!['incoming', 'outgoing', 'folder'].includes(type)) {
-      return next(new ErrorResponse('نوع العنصر غير صالح (incoming, outgoing, folder)', 400));
+    if (!['incoming', 'outgoing', 'folder', 'message'].includes(type)) {
+      return next(new ErrorResponse('نوع العنصر غير صالح (incoming, outgoing, folder, message)', 400));
+    }
+
+    if (type === 'message') {
+      const message = await Message.findOne({ _id: id, deletedBy: req.user._id });
+      if (!message) {
+        return next(new ErrorResponse(`الرسالة غير موجودة في سلة المهملات برمز ${id}`, 404));
+      }
+
+      await Message.updateOne(
+        { _id: id, deletedBy: req.user._id },
+        { $pull: { deletedBy: req.user._id } }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'تم استرجاع الرسالة بنجاح',
+        data: message
+      });
     }
 
     let item;
@@ -270,8 +316,39 @@ exports.permanentDelete = async (req, res, next) => {
   try {
     const { type, id } = req.params;
 
-    if (!['incoming', 'outgoing', 'folder'].includes(type)) {
-      return next(new ErrorResponse('نوع العنصر غير صالح (incoming, outgoing, folder)', 400));
+    if (!['incoming', 'outgoing', 'folder', 'message'].includes(type)) {
+      return next(new ErrorResponse('نوع العنصر غير صالح (incoming, outgoing, folder, message)', 400));
+    }
+
+    if (type === 'message') {
+      const message = await Message.findOne({ _id: id, deletedBy: req.user._id });
+      if (!message) {
+        return next(new ErrorResponse(`الرسالة غير موجودة في سلة المهملات برمز ${id}`, 404));
+      }
+
+      // Check if all parties have deleted it
+      const allPartyIds = [
+        message.sender.toString(),
+        ...message.recipients.map(r => (r.user ? r.user.toString() : r.toString()))
+      ];
+      const deletedByAll = allPartyIds.every(pId =>
+        message.deletedBy.some(dId => dId.toString() === pId)
+      );
+
+      if (deletedByAll) {
+        if (message.attachments && message.attachments.length > 0) {
+          message.attachments.forEach(att => {
+            if (att.path) deleteFileFromDisk(att.path);
+          });
+        }
+        await message.deleteOne();
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'تم الحذف النهائي للرسالة بنجاح',
+        data: {}
+      });
     }
 
     if (type === 'incoming') {
@@ -383,7 +460,7 @@ exports.emptyTrash = async (req, res, next) => {
       folderFilter.department = deptId;
     }
 
-    let deletedCounts = { incoming: 0, outgoing: 0, folder: 0 };
+    let deletedCounts = { incoming: 0, outgoing: 0, folder: 0, message: 0 };
 
     if (type === 'all' || type === 'incoming') {
       const incomingDocs = await IncomingDocument.find(incomingFilter);
@@ -418,6 +495,28 @@ exports.emptyTrash = async (req, res, next) => {
         await OutgoingDocument.updateMany({ folder: f._id }, { folder: null });
         await f.deleteOne();
         deletedCounts.folder++;
+      }
+    }
+
+    if (type === 'all' || type === 'message') {
+      const messages = await Message.find({ deletedBy: req.user._id });
+      for (const msg of messages) {
+        const allPartyIds = [
+          msg.sender.toString(),
+          ...msg.recipients.map(r => (r.user ? r.user.toString() : r.toString()))
+        ];
+        const deletedByAll = allPartyIds.every(pId =>
+          msg.deletedBy.some(dId => dId.toString() === pId)
+        );
+        if (deletedByAll) {
+          if (msg.attachments && msg.attachments.length > 0) {
+            msg.attachments.forEach(att => {
+              if (att.path) deleteFileFromDisk(att.path);
+            });
+          }
+          await msg.deleteOne();
+        }
+        deletedCounts.message++;
       }
     }
 

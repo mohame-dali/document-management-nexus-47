@@ -31,7 +31,7 @@ const AuditTrailPage = () => {
       <div className="space-y-4 sm:space-y-6">
         {/* Page Header */}
         <div className="space-y-2">
-          <h1 className="text-responsive-xl font-bold gradient-text">
+          <h1 className="text-responsive-xl font-bold text-[#1a202c]">
             سجل التدقيق والمراجعة
           </h1>
           <p className="text-responsive-sm text-muted-foreground">

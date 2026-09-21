@@ -83,7 +83,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className="w-[95vw] sm:w-[90vw] sm:max-w-4xl bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-xl"
+        className="w-[95vw] sm:w-[90vw] sm:max-w-4xl bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-sm"
         dir="rtl"
       >
         <DialogHeader className="pb-4 border-b border-[#e2e8f0]">

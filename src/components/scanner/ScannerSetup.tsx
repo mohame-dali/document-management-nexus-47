@@ -59,7 +59,7 @@ const ScannerSetup: React.FC<ScannerSetupProps> = ({
                   </SelectContent>
                 </Select>
               ) : (
-                <div className="text-center py-4 bg-gray-50 rounded-md">
+                <div className="text-center py-4 bg-gray-50 rounded">
                   <Laptop className="w-10 h-10 mx-auto text-gray-400" />
                   <p className="mt-2 text-gray-500">{t.noScannersDetected}</p>
                 </div>

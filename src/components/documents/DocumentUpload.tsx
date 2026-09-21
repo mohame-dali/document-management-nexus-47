@@ -86,7 +86,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   return (
     <div className="space-y-4" dir="rtl">
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center ${
+        className={`border-2 border-dashed rounded p-6 text-center ${
           isDragging ? 'border-primary bg-primary/10' : 'border-gray-300'
         }`}
         onDragEnter={handleDragEnter}
@@ -124,7 +124,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
             {files.map((file, index) => (
               <div 
                 key={`${file.name}-${index}`}
-                className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
+                className="flex items-center justify-between bg-gray-50 p-2 rounded"
               >
                 <div className="flex items-center">
                   {getFileIcon(file.name)}
@@ -154,7 +154,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
               return (
                 <div 
                   key={`existing-${index}`}
-                  className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
+                  className="flex items-center justify-between bg-gray-50 p-2 rounded"
                 >
                   <div className="flex items-center">
                     {getFileIcon(fileName)}

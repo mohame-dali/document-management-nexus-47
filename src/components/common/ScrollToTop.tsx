@@ -22,10 +22,9 @@ const ScrollToTop: React.FC<ScrollToTopProps> = ({
       onClick={scrollToTop}
       size="icon"
       className={cn(
-        "fixed bottom-6 left-6 z-50 h-12 w-12 rounded-full shadow-lg",
-        "bg-gradient-to-r from-blue-500 to-blue-600",
-        "hover:from-blue-600 hover:to-blue-700",
-        "transition-all duration-300 ease-in-out",
+        "fixed bottom-6 left-6 z-50 h-12 w-12 rounded-full shadow-sm",
+        "bg-[#2c5282] hover:bg-[#234269]",
+        "transition-all duration-200 ease-in-out",
         "animate-in fade-in slide-in-from-bottom-4",
         className
       )}

@@ -145,7 +145,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xl" dir="rtl">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm" dir="rtl">
         <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
           <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
             {isEditing ? 'تعديل النموذج' : 'إضافة نموذج جديد'}
@@ -188,7 +188,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
             </Label>
             
             <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+              className={`border-2 border-dashed rounded p-6 text-center cursor-pointer transition-colors ${
                 dragActive 
                   ? 'border-[#2c5282] bg-[#2c5282]/5' 
                   : 'border-gray-300 hover:border-[#2c5282]'

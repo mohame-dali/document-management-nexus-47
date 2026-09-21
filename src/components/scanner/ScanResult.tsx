@@ -44,7 +44,7 @@ const ScanResult: React.FC<ScanResultProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             {scanResult.filePath && (
-              <div className="bg-gray-50 p-4 rounded-md">
+              <div className="bg-gray-50 p-4 rounded">
                 <p className="font-medium mb-2">File: {scanResult.filePath.split('/').pop()}</p>
                 {scanResult.serialNumber && (
                   <p>{t.documentType}: {scanResult.documentType}, Serial: {scanResult.serialNumber}</p>
@@ -55,7 +55,7 @@ const ScanResult: React.FC<ScanResultProps> = ({
             {scanResult.ocrText && (
               <div className="space-y-2">
                 <h3 className="font-medium">{t.ocrText}</h3>
-                <div className="bg-gray-50 p-4 rounded-md max-h-48 overflow-y-auto">
+                <div className="bg-gray-50 p-4 rounded max-h-48 overflow-y-auto">
                   <p className="whitespace-pre-wrap">{scanResult.ocrText}</p>
                 </div>
               </div>

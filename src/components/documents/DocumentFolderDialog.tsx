@@ -47,9 +47,8 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
           subtitle: 'يمكنك تنظيم المستند في المجلدات أو نقله بين المجلدات',
           icon: FolderOpen,
           badge: { text: 'إدارة كاملة', variant: 'default' as const, icon: Users },
-          bgGradient: 'from-blue-50 to-indigo-50',
-          iconBg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
-          accentColor: 'border-blue-500'
+          iconBg: 'bg-[#2c5282] text-white',
+          accentColor: 'border-[#2c5282]'
         };
       case 'AdminTuningDesk':
         return {
@@ -57,8 +56,7 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
           subtitle: 'يمكنك عرض تصنيف المستند في المجلدات فقط',
           icon: Eye,
           badge: { text: 'مراقبة التصنيف', variant: 'secondary' as const, icon: Eye },
-          bgGradient: 'from-amber-50 to-orange-50',
-          iconBg: 'bg-gradient-to-br from-amber-500 to-orange-600',
+          iconBg: 'bg-[#d97706] text-white',
           accentColor: 'border-amber-500'
         };
       case 'User':
@@ -67,8 +65,7 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
           subtitle: 'يمكنك عرض تصنيف المستند في قسمك',
           icon: Eye,
           badge: { text: 'للعرض فقط', variant: 'secondary' as const, icon: Lock },
-          bgGradient: 'from-gray-50 to-slate-50',
-          iconBg: 'bg-gradient-to-br from-gray-500 to-slate-600',
+          iconBg: 'bg-[#4a5568] text-white',
           accentColor: 'border-gray-500'
         };
       default:
@@ -77,9 +74,8 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
           subtitle: 'إدارة شاملة لتصنيف المستند',
           icon: FolderOpen,
           badge: { text: 'إدارة شاملة', variant: 'default' as const, icon: Users },
-          bgGradient: 'from-blue-50 to-indigo-50',
-          iconBg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
-          accentColor: 'border-blue-500'
+          iconBg: 'bg-[#2c5282] text-white',
+          accentColor: 'border-[#2c5282]'
         };
     }
   };
@@ -88,7 +84,7 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[960px] md:max-w-[1000px] max-h-[90vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-xl" dir="rtl">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[960px] md:max-w-[1000px] max-h-[90vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
         <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] space-y-3 text-right">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

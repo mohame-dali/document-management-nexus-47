@@ -81,7 +81,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
               size="icon"
               onClick={onBack}
               aria-label="العودة للقائمة"
-              className="md:hidden h-11 w-11 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg p-0"
+              className="md:hidden h-11 w-11 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded p-0"
               title="العودة للقائمة"
             >
               <ArrowRight className="h-5 w-5" />

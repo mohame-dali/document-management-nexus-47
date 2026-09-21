@@ -262,8 +262,8 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-green-500/5 to-green-500/10 border-b border-border/50">
+      <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
           <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
             <div className="w-2 h-8 bg-green-500 rounded-full"></div>
             {t.title}
@@ -280,7 +280,7 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
                   <h3 className="text-lg font-semibold text-foreground">{t.serialInfo}</h3>
                 </div>
                 
-                <div className="bg-green-50/50 dark:bg-green-500/5 rounded-lg p-6 border border-green-200/50 dark:border-green-500/20">
+                <div className="bg-green-50/50 dark:bg-green-500/5 rounded p-6 border border-green-200/50 dark:border-green-500/20">
                   <SerialInfoFields form={form} t={t} />
                 </div>
               </div>
@@ -294,7 +294,7 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
                   <h3 className="text-lg font-semibold text-foreground">{t.correspondence}</h3>
                 </div>
                 
-                <div className="bg-blue-50/50 dark:bg-blue-500/5 rounded-lg p-6 border border-blue-200/50 dark:border-blue-500/20">
+                <div className="bg-blue-50/50 dark:bg-blue-500/5 rounded p-6 border border-blue-200/50 dark:border-blue-500/20">
                   <CorrespondenceFields form={form} />
                 </div>
               </div>
@@ -308,7 +308,7 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
                   <h3 className="text-lg font-semibold text-foreground">{t.documentDetails}</h3>
                 </div>
                 
-                <div className="bg-purple-50/50 dark:bg-purple-500/5 rounded-lg p-6 border border-purple-200/50 dark:border-purple-500/20">
+                <div className="bg-purple-50/50 dark:bg-purple-500/5 rounded p-6 border border-purple-200/50 dark:border-purple-500/20">
                   <DocumentDetailsFields form={form} t={t} departments={departments} />
                 </div>
               </div>
@@ -320,12 +320,12 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-orange-500/70 rounded-full"></div>
                   <h3 className="text-lg font-semibold text-foreground">{t.attachments}</h3>
-                  <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                  <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
                     {t.attachmentsDesc}
                   </span>
                 </div>
                 
-                <div className="bg-orange-50/50 dark:bg-orange-500/5 rounded-lg p-6 border border-orange-200/50 dark:border-orange-500/20">
+                <div className="bg-orange-50/50 dark:bg-orange-500/5 rounded p-6 border border-orange-200/50 dark:border-orange-500/20">
                   <AttachmentSection
                     t={t}
                     activeTab={activeTab}

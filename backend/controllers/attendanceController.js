@@ -38,6 +38,34 @@ const getUTCDayRange = (dateInput) => {
   return { start, end };
 };
 
+/**
+ * Détermine si l'utilisateur peut voir/gérer tous les départements :
+ * - Admin ou SuperAdmin
+ * - AdminDepartment du département RH (via req.isAdminRH, nom/code 'RH', ou username 'RHadmin')
+ */
+const canUserSeeAllDepartments = (req) => {
+  if (!req.user) return false;
+  const role = req.user.role;
+  if (role === 'Admin' || role === 'SuperAdmin') {
+    return true;
+  }
+  if (role === 'AdminDepartment') {
+    if (req.isAdminRH) return true;
+    const deptName = req.user.activeDepartment?.name || '';
+    const deptCode = req.user.activeDepartment?.code || '';
+    if (
+      deptName === 'RH' ||
+      deptCode === 'RH' ||
+      deptName.toUpperCase().includes('RH') ||
+      deptName === 'الموارد البشرية' ||
+      req.user.username === 'RHadmin'
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
+
 // @desc    Obtenir la feuille de présence quotidienne (collectif)
 // @route   GET /api/attendance/daily
 // @access  Private (Admin, SuperAdmin, AdminDepartment)
@@ -54,16 +82,20 @@ const getDailyAttendance = async (req, res, next) => {
 
     const { start, end } = getUTCDayRange(targetDate);
 
-    // Filtrage départemental : forcer le département de rattachement pour un Chef de département
-    let effectiveDepartmentId = departmentId;
-    if (req.userRestrictedToDepartment) {
-      effectiveDepartmentId = req.userRestrictedToDepartment;
+    // Filtrage départemental conditionnel :
+    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
+    const canSeeAll = canUserSeeAllDepartments(req);
+    let effectiveDepartmentId = null;
+
+    if (!canSeeAll) {
+      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
+    } else if (departmentId && departmentId !== 'all') {
+      effectiveDepartmentId = departmentId;
     }
 
-    // Filtrer les personnels actifs
-    const personnelFilter = {
-      statut: { $ne: 'inactif' }
-    };
+    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
+    const personnelFilter = {};
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
@@ -174,8 +206,8 @@ const saveBatchAttendance = async (req, res, next) => {
     const personnelMap = new Map();
     personnels.forEach(p => personnelMap.set(p._id.toString(), p));
 
-    // Vérification de sécurité stricte : un Chef de département ne peut modifier que son département
-    if (req.userRestrictedToDepartment) {
+    // Vérification de sécurité stricte : un Chef de département hors RH ne peut modifier que son département
+    if (!canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
       const restrictedDeptStr = req.userRestrictedToDepartment.toString();
       for (const entry of entries) {
         const agent = personnelMap.get(entry.personnelId.toString());
@@ -295,7 +327,7 @@ const getPersonnelCalendar = async (req, res, next) => {
       if (!isOwnPersonnel) {
         return res.status(403).json({ success: false, message: 'Accès refusé au calendrier d\'un autre agent' });
       }
-    } else if (req.userRestrictedToDepartment) {
+    } else if (!canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
       const agentDept = personnel.activeDepartment ? personnel.activeDepartment.toString() : '';
       if (agentDept !== req.userRestrictedToDepartment.toString()) {
         return res.status(403).json({ success: false, message: 'Accès refusé aux agents hors de votre département' });
@@ -358,7 +390,7 @@ const getPersonnelBalance = async (req, res, next) => {
       if (!isOwnPersonnel) {
         return res.status(403).json({ success: false, message: 'Accès refusé au solde d\'un autre agent' });
       }
-    } else if (req.userRestrictedToDepartment) {
+    } else if (!canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
       const agentDept = personnel.activeDepartment ? personnel.activeDepartment.toString() : '';
       if (agentDept !== req.userRestrictedToDepartment.toString()) {
         return res.status(403).json({ success: false, message: 'Accès refusé' });
@@ -451,12 +483,20 @@ const getDailyReport = async (req, res, next) => {
 
     const { start, end } = getUTCDayRange(targetDate);
 
-    let effectiveDepartmentId = departmentId;
-    if (req.userRestrictedToDepartment) {
-      effectiveDepartmentId = req.userRestrictedToDepartment;
+    // Filtrage départemental conditionnel :
+    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
+    const canSeeAll = canUserSeeAllDepartments(req);
+    let effectiveDepartmentId = null;
+
+    if (!canSeeAll) {
+      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
+    } else if (departmentId && departmentId !== 'all') {
+      effectiveDepartmentId = departmentId;
     }
 
-    const personnelFilter = { statut: { $ne: 'inactif' } };
+    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
+    const personnelFilter = {};
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
@@ -528,12 +568,20 @@ const getMonthlyReport = async (req, res, next) => {
     const start = new Date(Date.UTC(targetYear, targetMonth - 1, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, targetMonth, 0, 23, 59, 59, 999));
 
-    let effectiveDepartmentId = departmentId;
-    if (req.userRestrictedToDepartment) {
-      effectiveDepartmentId = req.userRestrictedToDepartment;
+    // Filtrage départemental conditionnel :
+    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
+    const canSeeAll = canUserSeeAllDepartments(req);
+    let effectiveDepartmentId = null;
+
+    if (!canSeeAll) {
+      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
+    } else if (departmentId && departmentId !== 'all') {
+      effectiveDepartmentId = departmentId;
     }
 
-    const personnelFilter = { statut: { $ne: 'inactif' } };
+    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
+    const personnelFilter = {};
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
@@ -616,12 +664,20 @@ const getYearlyReport = async (req, res, next) => {
     const start = new Date(Date.UTC(targetYear, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
 
-    let effectiveDepartmentId = departmentId;
-    if (req.userRestrictedToDepartment) {
-      effectiveDepartmentId = req.userRestrictedToDepartment;
+    // Filtrage départemental conditionnel :
+    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
+    const canSeeAll = canUserSeeAllDepartments(req);
+    let effectiveDepartmentId = null;
+
+    if (!canSeeAll) {
+      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
+    } else if (departmentId && departmentId !== 'all') {
+      effectiveDepartmentId = departmentId;
     }
 
-    const personnelFilter = { statut: { $ne: 'inactif' } };
+    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
+    const personnelFilter = {};
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }

@@ -185,7 +185,7 @@ const DocumentAttachmentSection: React.FC<DocumentAttachmentSectionProps> = ({
                 {scanResult.ocrText && (
                   <div className="space-y-2">
                     <Label>النص المستخرج (OCR)</Label>
-                    <div className="bg-muted p-3 rounded-md max-h-32 overflow-y-auto text-sm">
+                    <div className="bg-muted p-3 rounded max-h-32 overflow-y-auto text-sm">
                       <p className="whitespace-pre-wrap">{scanResult.ocrText}</p>
                     </div>
                   </div>

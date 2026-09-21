@@ -232,7 +232,7 @@ const EditUser: React.FC = () => {
               </div>
 
               {photoFile && (
-                <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-700">
+                <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-700">
                   <p className="font-semibold text-[#1a202c]">الصورة المختارة: {photoFile.name}</p>
                   <p className="text-xs text-gray-500 mt-0.5">الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت</p>
                 </div>
@@ -254,12 +254,12 @@ const EditUser: React.FC = () => {
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-base">
-            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1">
+            <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
               <span className="text-sm font-semibold text-gray-500 block">تاريخ الإنشاء</span>
               <p className="font-medium text-[#1a202c]">{formatArabicDate(user.createdAt)}</p>
             </div>
             
-            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1">
+            <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
               <span className="text-sm font-semibold text-gray-500 block">الحالة الحالية</span>
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                 user.isActive 
@@ -270,7 +270,7 @@ const EditUser: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1">
+            <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
               <span className="text-sm font-semibold text-gray-500 block">الدور المسجل</span>
               <div>
                 {user.role === 'SuperAdmin' || user.role === 'Admin' ? (
@@ -293,7 +293,7 @@ const EditUser: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1">
+            <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
               <span className="text-sm font-semibold text-gray-500 block">الأقسام المرتبطة</span>
               <p className="font-medium text-[#1a202c] truncate">
                 {user.departments && user.departments.length > 0 

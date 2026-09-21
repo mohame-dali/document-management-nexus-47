@@ -55,7 +55,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             placeholder="بحث في المحادثات أو الأسماء..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-9 text-xs text-right pr-9 pl-3 border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded-lg bg-[#f7fafc]"
+            className="h-9 text-xs text-right pr-9 pl-3 border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-[#f7fafc]"
           />
         </div>
       </div>

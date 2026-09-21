@@ -75,15 +75,15 @@ const AuditTrailViewer: React.FC = () => {
       <AuditStats />
 
       {/* Header */}
-      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-0 shadow-lg">
+      <Card className="bg-white border border-[#e2e8f0] shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg">
+              <div className="p-3 bg-[#2c5282] rounded shadow-sm">
                 <Shield className="h-8 w-8 text-white" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold text-gray-800">
+                <CardTitle className="text-2xl font-bold text-[#1a202c]">
                   سجل التدقيق والمراجعة
                 </CardTitle>
                 <p className="text-gray-600">مراقبة شاملة لجميع العمليات والأنشطة في النظام</p>

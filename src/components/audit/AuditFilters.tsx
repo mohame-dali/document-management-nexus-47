@@ -56,13 +56,13 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
   };
 
   return (
-    <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+    <Card className="bg-white border border-[#e2e8f0] shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-indigo-800">
+        <CardTitle className="flex items-center gap-2 text-[#2c5282]">
           <Filter className="h-5 w-5" />
           مرشحات سجل التدقيق
           {getActiveFiltersCount() > 0 && (
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ml-2 bg-[#edf2f7] text-[#2c5282]">
               {getActiveFiltersCount()} نشط
             </Badge>
           )}

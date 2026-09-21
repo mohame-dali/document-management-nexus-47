@@ -835,9 +835,9 @@ const ViewOutgoingDocument: React.FC = () => {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
+                  size="default"
                   onClick={() => setIsFolderDialogOpen(true)}
-                  className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
+                  className="h-11 px-3 text-sm font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
                 >
                   تعديل
                 </Button>
@@ -995,12 +995,12 @@ const ViewOutgoingDocument: React.FC = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
+                      size="default"
                       onClick={() => referenceDocument.scannedDocument && downloadDocument(referenceDocument.scannedDocument, `ref-incoming-${referenceDocument.serialNumber}.pdf`)}
-                      className="h-8 px-2.5 text-xs font-semibold text-emerald-700 border-[#cbd5e1]"
+                      className="h-11 px-3 text-sm font-semibold text-emerald-700 border-[#cbd5e1] hover:bg-emerald-50 rounded flex items-center gap-1.5"
                     >
-                      <Download className="h-3.5 w-3.5 ml-1" />
-                      تحميل
+                      <Download className="h-4 w-4" />
+                      <span>تحميل</span>
                     </Button>
                   </div>
                   <div className="border border-[#cbd5e1] rounded bg-[#f8fafc] min-h-[600px] overflow-hidden">
@@ -1021,11 +1021,11 @@ const ViewOutgoingDocument: React.FC = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={() => downloadDocument(referenceDocument.scannedDocument!, `ref-incoming-${referenceDocument.serialNumber}.pdf`)}
-                    className="h-8 px-3 text-xs font-semibold text-emerald-700 border-[#cbd5e1] hover:bg-emerald-50 rounded flex items-center gap-1.5"
+                    className="h-11 px-3 text-sm font-semibold text-emerald-700 border-[#cbd5e1] hover:bg-emerald-50 rounded flex items-center gap-1.5"
                   >
-                    <Download className="h-3.5 w-3.5" />
+                    <Download className="h-4 w-4" />
                     <span>تحميل الوارد</span>
                   </Button>
                 </div>
@@ -1348,7 +1348,7 @@ const ViewOutgoingDocument: React.FC = () => {
 
       {/* 2. Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 rounded bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 rounded bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />

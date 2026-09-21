@@ -108,7 +108,7 @@ const DepartmentSwitcher: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-2 bg-blue-50 p-2 rounded-lg border border-blue-200">
+    <div className="flex items-center gap-2 bg-blue-50 p-2 rounded border border-blue-200">
       <Building className="h-4 w-4 text-blue-600" />
       <div className="text-sm text-blue-700 font-medium">إدارة الأقسام:</div>
       <DropdownMenu>

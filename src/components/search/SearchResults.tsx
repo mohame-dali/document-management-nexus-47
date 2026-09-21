@@ -228,21 +228,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
+                          size="default"
                           onClick={() => handleOpenPreview(doc, 'incoming')}
-                          className="h-8 px-3 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
+                          className="h-11 px-3 text-sm font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200 flex items-center gap-1.5"
                         >
-                          <Eye className="h-3.5 w-3.5 ml-1" />
-                          معاينة
+                          <Eye className="h-4 w-4" />
+                          <span>معاينة</span>
                         </Button>
                         <Button
                           type="button"
-                          size="sm"
+                          size="default"
                           onClick={() => navigate(`/dashboard/incoming-documents/${doc._id}`)}
-                          className="h-8 px-3 text-xs font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+                          className="h-11 px-3 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200 flex items-center gap-1.5"
                         >
-                          <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                          فتح
+                          <ExternalLink className="h-4 w-4" />
+                          <span>فتح</span>
                         </Button>
                       </div>
                     </td>
@@ -288,21 +288,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
+                          size="default"
                           onClick={() => handleOpenPreview(doc, 'outgoing')}
-                          className="h-8 px-3 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
+                          className="h-11 px-3 text-sm font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200 flex items-center gap-1.5"
                         >
-                          <Eye className="h-3.5 w-3.5 ml-1" />
-                          معاينة
+                          <Eye className="h-4 w-4" />
+                          <span>معاينة</span>
                         </Button>
                         <Button
                           type="button"
-                          size="sm"
+                          size="default"
                           onClick={() => navigate(`/dashboard/outgoing-documents/${doc._id}`)}
-                          className="h-8 px-3 text-xs font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+                          className="h-11 px-3 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200 flex items-center gap-1.5"
                         >
-                          <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                          فتح
+                          <ExternalLink className="h-4 w-4" />
+                          <span>فتح</span>
                         </Button>
                       </div>
                     </td>

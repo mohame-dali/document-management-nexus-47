@@ -27,7 +27,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
 
   if (!folderData) {
     return (
-      <Card className={`border-dashed border-2 border-gray-300 hover:border-gray-400 transition-colors duration-300 ${className}`}>
+      <Card className={`border-dashed border-2 border-gray-300 hover:border-gray-400 transition-colors duration-200 ${className}`}>
         <CardContent className="p-6 text-center">
           <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-4">
             <Archive className="h-10 w-10 text-gray-400" />
@@ -53,7 +53,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-blue-100 rounded">
               <FolderIcon className="h-5 w-5 text-blue-600" />
             </div>
             <span className="font-bold text-gray-800">تصنيف المستند</span>
@@ -116,7 +116,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
         </div>
 
         {!canEditFolder && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-amber-50 p-3 rounded-lg border border-amber-200">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-amber-50 p-3 rounded border border-amber-200">
             <Eye className="h-4 w-4 text-amber-600" />
             <span>للعرض فقط - يمكن لمدير القسم تعديل التصنيف</span>
           </div>

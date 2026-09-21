@@ -34,7 +34,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
   return (
     <div className="space-y-2" dir="rtl">
       {documentArray.map((doc) => (
-        <div key={doc._id} className="p-3 border rounded-md hover:bg-gray-50 transition-colors">
+        <div key={doc._id} className="p-3 border rounded hover:bg-gray-50 transition-colors">
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <h4 className="font-medium text-sm truncate">{doc.subject}</h4>

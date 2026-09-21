@@ -52,7 +52,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
       <CardContent className="space-y-4">
         {/* File Information */}
         {scanResult.filePath && (
-          <div className="bg-gray-50 p-3 rounded-md">
+          <div className="bg-gray-50 p-3 rounded">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <FileText className="h-4 w-4 text-gray-500" />
@@ -79,7 +79,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
             <h4 className="font-medium text-sm">
               {t.ocrText || 'النص المستخرج'}:
             </h4>
-            <div className="bg-gray-50 p-3 rounded-md max-h-32 overflow-y-auto">
+            <div className="bg-gray-50 p-3 rounded max-h-32 overflow-y-auto">
               <p className="text-sm whitespace-pre-wrap text-gray-700">
                 {scanResult.ocrText.length > 300 
                   ? `${scanResult.ocrText.substring(0, 300)}...` 

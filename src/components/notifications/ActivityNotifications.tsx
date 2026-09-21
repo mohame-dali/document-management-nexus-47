@@ -140,7 +140,7 @@ const ActivityNotifications: React.FC = () => {
               {transformedNotifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`p-3 rounded-md border transition-colors ${
+                  className={`p-3 rounded border transition-colors ${
                     notification.isRead ? 'bg-gray-50 border-gray-200' : getNotificationColor(notification.type)
                   }`}
                 >

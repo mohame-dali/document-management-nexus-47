@@ -89,7 +89,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white border border-[#e2e8f0] rounded shadow-xl" dir="rtl">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
         <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] text-right">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 bg-[#2c5282]/10 text-[#2c5282] rounded shrink-0">

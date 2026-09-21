@@ -819,7 +819,7 @@ const SettingsPage = () => {
                     <Label htmlFor="pref-auto-open" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       معاينة الـ PDF تلقائياً
                     </Label>
-                    <p className="text-xs text-gray-500">فتح ملف الوثيقة الممسوحة عند النقر على السجل</p>
+                    <p className="text-sm text-gray-500">فتح ملف الوثيقة الممسوحة عند النقر على السجل</p>
                   </div>
                   <Switch
                     id="pref-auto-open"
@@ -1028,7 +1028,7 @@ const SettingsPage = () => {
       {/* ========================================================= */}
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
         <DialogContent
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xl"
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm"
           dir="rtl"
         >
           <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
@@ -1142,7 +1142,7 @@ const SettingsPage = () => {
       {/* ========================================================= */}
       <AlertDialog open={isTerminateSessionsOpen} onOpenChange={setIsTerminateSessionsOpen}>
         <AlertDialogContent
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xl"
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm"
           dir="rtl"
         >
           <AlertDialogHeader>

@@ -88,7 +88,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ documentPath }) => {
           </Alert>
         ) : null}
         
-        <div className="border rounded-lg overflow-hidden bg-gray-50" style={{ height: '600px' }}>
+        <div className="border rounded overflow-hidden bg-gray-50" style={{ height: '600px' }}>
           {!loadError ? (
             <iframe
               src={`${documentUrl}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}

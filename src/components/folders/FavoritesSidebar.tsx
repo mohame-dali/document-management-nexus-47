@@ -86,7 +86,7 @@ const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
               onDrop={handleDocumentDropToFavorites}
               className="mb-4"
             >
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-yellow-400 hover:bg-yellow-50 transition-colors">
+              <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center hover:border-yellow-400 hover:bg-yellow-50 transition-colors">
                 <Heart className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
                 <p className="text-sm text-gray-600 font-medium">إسقاط المستندات هنا</p>
                 <p className="text-xs text-gray-500">لإزالتها من المجلدات</p>
@@ -135,14 +135,14 @@ const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                     }}
                   >
                     <div
-                      className={`group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                      className={`group flex items-center gap-3 p-3 rounded cursor-pointer transition-all duration-200 ${
                         isSelected 
                           ? 'bg-yellow-50 border-yellow-200 shadow-sm' 
                           : 'hover:bg-gray-50 border border-transparent'
                       }`}
                       onClick={() => onFolderSelect?.(folder)}
                     >
-                      <div className="p-2 bg-yellow-100 rounded-lg">
+                      <div className="p-2 bg-yellow-100 rounded">
                         {folder.status === 'Fermé' ? (
                           <Archive className="h-4 w-4 text-yellow-600" />
                         ) : (

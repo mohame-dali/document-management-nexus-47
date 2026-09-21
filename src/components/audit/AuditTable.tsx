@@ -115,7 +115,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="rounded border border-gray-200 bg-white shadow-sm">
         <div className="p-12 text-center">
           <div className="relative mx-auto mb-6 h-10 w-10">
             <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
@@ -132,7 +132,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
 
   if (!auditLogs?.length) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="rounded border border-gray-200 bg-white shadow-sm">
         <div className="p-12 text-center">
           <div className="mx-auto mb-6 rounded-full bg-gray-100 p-4 w-fit">
             <Shield className="h-8 w-8 text-gray-400" />
@@ -147,11 +147,11 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded border border-gray-200 bg-white shadow-sm overflow-hidden">
       <ScrollArea className="h-[600px]">
         <Table>
           <TableHeader className="sticky top-0 z-10">
-            <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-150 border-b border-gray-200">
+            <TableRow className="bg-[#f8fafc] hover:bg-[#edf2f7] border-b border-[#e2e8f0]">
               <TableHead className="text-right font-bold text-gray-800 py-4 px-6">
                 <div className="flex items-center gap-2 justify-end">
                   <Clock className="h-4 w-4 text-gray-600" />
@@ -197,8 +197,8 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                   key={log._id} 
                   className={`
                     transition-all duration-200 ease-in-out
-                    hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50
-                    hover:shadow-sm hover:border-l-4 hover:border-l-blue-400
+                    hover:bg-[#f7fafc]
+                    hover:shadow-sm
                     ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}
                     border-b border-gray-100 group
                   `}
@@ -213,7 +213,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                           {format(new Date(log.createdAt), 'HH:mm:ss')}
                         </div>
                       </div>
-                      <div className="p-2 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 shadow-sm group-hover:shadow-md transition-all duration-200">
+                      <div className="p-2 rounded-full bg-[#ebf4ff] border border-blue-200 shadow-sm group-hover:shadow-sm transition-all duration-200">
                         <Clock className="h-4 w-4 text-blue-600" />
                       </div>
                     </div>
@@ -225,7 +225,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                       className={`
                         ${getActionColor(log.action)} 
                         flex items-center gap-2 w-fit font-medium px-3 py-1.5 text-xs
-                        shadow-sm transition-all duration-200 hover:shadow-md
+                        shadow-sm transition-all duration-200 hover:shadow-sm
                       `}
                     >
                       <ActionIcon className="h-3.5 w-3.5" />
@@ -239,7 +239,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                       className={`
                         ${getEntityColor(log.entityType)} 
                         flex items-center gap-2 w-fit font-medium px-3 py-1.5 text-xs
-                        shadow-sm transition-all duration-200 hover:shadow-md
+                        shadow-sm transition-all duration-200 hover:shadow-sm
                       `}
                     >
                       <EntityIcon className="h-3.5 w-3.5" />
@@ -248,7 +248,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                   </TableCell>
                   
                   <TableCell className="text-right py-5 px-6">
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-3 border border-gray-200 group-hover:from-blue-50 group-hover:to-indigo-50 group-hover:border-blue-200 transition-all duration-200">
+                    <div className="bg-[#f8fafc] rounded p-3 border border-[#e2e8f0] group-hover:bg-[#ebf4ff] group-hover:border-blue-200 transition-all duration-200">
                       <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
                         {log.userDetails.username}
                       </div>
@@ -260,21 +260,21 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                   
                   <TableCell className="text-right py-5 px-6">
                     {log.details && Object.keys(log.details).length > 0 ? (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-w-xs group-hover:bg-blue-50 group-hover:border-blue-200 transition-all duration-200">
+                      <div className="bg-gray-50 border border-gray-200 rounded p-3 max-w-xs group-hover:bg-blue-50 group-hover:border-blue-200 transition-all duration-200">
                         <pre className="text-xs text-gray-700 whitespace-pre-wrap break-words font-mono leading-relaxed">
                           {JSON.stringify(log.details, null, 2)}
                         </pre>
                       </div>
                     ) : (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                      <div className="bg-gray-50 border border-gray-200 rounded p-3 text-center">
                         <span className="text-gray-400 text-xs font-medium">لا توجد تفاصيل</span>
                       </div>
                     )}
                   </TableCell>
                   
                   <TableCell className="text-right py-5 px-6">
-                    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2.5 border border-gray-200 group-hover:from-purple-50 group-hover:to-purple-100 group-hover:border-purple-200 transition-all duration-200">
-                      <span className="text-xs text-gray-700 font-mono font-medium group-hover:text-purple-700 transition-colors">
+                    <div className="bg-[#f8fafc] rounded p-2.5 border border-[#e2e8f0] group-hover:bg-[#edf2f7] transition-all duration-200">
+                      <span className="text-xs text-gray-700 font-mono font-medium group-hover:text-[#2c5282] transition-colors">
                         {log.ipAddress || 'غير متوفر'}
                       </span>
                     </div>

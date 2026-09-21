@@ -14,7 +14,7 @@ interface PersonnelNodeProps {
 
 const PersonnelNode: React.FC<PersonnelNodeProps> = ({ data }) => {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg shadow-sm px-3 py-2 min-w-[180px] hover:border-[#2c5282] hover:shadow-md transition-all duration-200 cursor-pointer select-none">
+    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm px-3 py-2 min-w-[180px] hover:border-[#2c5282] hover:shadow-sm transition-all duration-200 cursor-pointer select-none">
       <Handle type="target" position={Position.Top} className="!bg-[#e2e8f0]" />
       <div className="flex items-center gap-2">
         <PersonnelAvatar
@@ -28,7 +28,7 @@ const PersonnelNode: React.FC<PersonnelNodeProps> = ({ data }) => {
             {data.prenom} {data.nom}
           </p>
           {data.poste && (
-            <p className="text-[10px] text-gray-500 truncate">{data.poste}</p>
+            <p className="text-xs text-gray-500 truncate">{data.poste}</p>
           )}
         </div>
       </div>

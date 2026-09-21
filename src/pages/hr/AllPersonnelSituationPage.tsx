@@ -12,6 +12,8 @@ import {
   RefreshCw,
   ChevronRight,
   ShieldCheck,
+  FileDown,
+  Loader2,
 } from 'lucide-react';
 import {
   getDailyAttendance,
@@ -22,6 +24,7 @@ import {
 import { getDepartments } from '@/services/departmentService';
 import { getLeaveReasons, LeaveReason } from '@/services/leaveReasonService';
 import { Department } from '@/types';
+import { useAttendanceExport } from '@/hooks/useAttendanceExport';
 
 // Composants de la page
 import AllPersonnelKPICards, { KPICounts } from '@/components/attendance/AllPersonnelKPICards';
@@ -47,6 +50,14 @@ export const AllPersonnelSituationPage: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Hook d'export PDF
+  const {
+    isExporting,
+    exportDailyReport,
+    exportMonthlyReport,
+    exportYearlyReport,
+  } = useAttendanceExport();
 
   // 1. Charger les départements
   const { data: departments = [] } = useQuery<Department[]>({
@@ -415,6 +426,80 @@ export const AllPersonnelSituationPage: React.FC = () => {
     else if (viewMode === 'year') refetchYear();
   };
 
+  const handleExport = async () => {
+    const currentDeptObj = departments.find((d) => d._id === selectedDepartment);
+    const departmentName = currentDeptObj ? currentDeptObj.name : undefined;
+
+    if (viewMode === 'day' || viewMode === 'week') {
+      const recordsToExport = filteredDayRecords;
+      const presents = recordsToExport
+        .filter((r) => r.attendance?.statut === 'present')
+        .map((r) => ({
+          personnel: r.personnel,
+          attendance: r.attendance || undefined,
+        }));
+      const absents = recordsToExport
+        .filter((r) => r.attendance?.statut === 'absent')
+        .map((r) => ({
+          personnel: r.personnel,
+          attendance: r.attendance || undefined,
+        }));
+      const nonSaisis = recordsToExport
+        .filter((r) => !r.attendance || r.attendance?.statut === 'unrecorded')
+        .map((r) => ({
+          personnel: r.personnel,
+        }));
+
+      await exportDailyReport(
+        {
+          date: selectedDate,
+          departmentId: selectedDepartment === 'all' ? undefined : selectedDepartment,
+          totalCount: recordsToExport.length,
+          presentsCount: presents.length,
+          absentsCount: absents.length,
+          nonSaisisCount: nonSaisis.length,
+          presents,
+          absents,
+          nonSaisis,
+        },
+        {
+          departmentName,
+        }
+      );
+    } else if (viewMode === 'month') {
+      const rawRecords = (monthReportData as { data?: { records?: MonthPersonnelRecord[] } })?.data?.records || [];
+      const recordsToExport = filteredMonthRecords.length > 0 ? filteredMonthRecords : rawRecords;
+
+      await exportMonthlyReport(
+        {
+          year: currentYear,
+          month: currentMonth,
+          departmentId: selectedDepartment === 'all' ? undefined : selectedDepartment,
+          totalPersonnel: recordsToExport.length,
+          records: recordsToExport,
+        },
+        {
+          departmentName,
+        }
+      );
+    } else if (viewMode === 'year') {
+      const rawRecords = (yearReportData as { data?: { records?: YearPersonnelRecord[] } })?.data?.records || [];
+      const recordsToExport = filteredYearRecords.length > 0 ? filteredYearRecords : rawRecords;
+
+      await exportYearlyReport(
+        {
+          year: currentYear,
+          departmentId: selectedDepartment === 'all' ? undefined : selectedDepartment,
+          totalPersonnel: recordsToExport.length,
+          records: recordsToExport,
+        },
+        {
+          departmentName,
+        }
+      );
+    }
+  };
+
   const handleKPIClick = (filterKey: string | null) => {
     if (viewMode === 'day') {
       setSelectedStatus(filterKey || 'all');
@@ -452,6 +537,20 @@ export const AllPersonnelSituationPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={isExporting}
+              className="h-9 px-3 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileDown className="h-3.5 w-3.5" />
+              )}
+              <span>{isExporting ? 'جاري التصدير...' : 'تصدير PDF'}</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"

@@ -328,7 +328,7 @@ const UsersPage: React.FC = () => {
 
       {/* Metric Summary Indicators (Calm AdminLTE Cards, no gradients) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex items-center justify-between">
+        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-xs sm:text-sm font-semibold text-gray-500 block">إجمالي المستخدمين</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.total}</span>
@@ -338,7 +338,7 @@ const UsersPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex items-center justify-between">
+        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-xs sm:text-sm font-semibold text-gray-500 block">الحسابات النشطة</span>
             <span className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 block">{metrics.active}</span>
@@ -348,7 +348,7 @@ const UsersPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex items-center justify-between">
+        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-xs sm:text-sm font-semibold text-gray-500 block">الحسابات المعطلة</span>
             <span className="text-xl sm:text-2xl font-bold text-red-600 mt-1 block">{metrics.inactive}</span>
@@ -358,7 +358,7 @@ const UsersPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex items-center justify-between">
+        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
             <span className="text-xs sm:text-sm font-semibold text-gray-500 block">المشرفون والمدراء</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.admins}</span>
@@ -371,7 +371,7 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* 2. Filters & Search Section */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-sm space-y-4">
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-base font-bold text-[#1a202c]">
             <Filter className="h-5 w-5 text-[#2c5282]" />
@@ -479,9 +479,9 @@ const UsersPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 w-16">الصورة</TableHead>
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] w-16">الصورة</TableHead>
                 <TableHead 
-                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[160px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                   onClick={() => handleSort('username')}
                 >
                   <div className="flex items-center gap-1.5">
@@ -492,7 +492,7 @@ const UsersPage: React.FC = () => {
                   </div>
                 </TableHead>
                 <TableHead 
-                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[130px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                   onClick={() => handleSort('role')}
                 >
                   <div className="flex items-center gap-1.5">
@@ -503,7 +503,7 @@ const UsersPage: React.FC = () => {
                   </div>
                 </TableHead>
                 <TableHead 
-                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[180px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                   onClick={() => handleSort('departments')}
                 >
                   <div className="flex items-center gap-1.5">
@@ -514,7 +514,7 @@ const UsersPage: React.FC = () => {
                   </div>
                 </TableHead>
                 <TableHead 
-                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                   onClick={() => handleSort('createdAt')}
                 >
                   <div className="flex items-center gap-1.5">
@@ -525,7 +525,7 @@ const UsersPage: React.FC = () => {
                   </div>
                 </TableHead>
                 <TableHead 
-                  className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[120px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[120px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                   onClick={() => handleSort('isActive')}
                 >
                   <div className="flex items-center gap-1.5">
@@ -535,7 +535,7 @@ const UsersPage: React.FC = () => {
                     {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                   </div>
                 </TableHead>
-                <TableHead className="text-center py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">الإجراءات</TableHead>
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px]">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -582,7 +582,7 @@ const UsersPage: React.FC = () => {
                     </TableCell>
 
                     {/* Username */}
-                    <TableCell className="text-right py-3 px-4 font-bold text-base text-[#1a202c]">
+                    <TableCell className="text-right py-3 px-4 font-bold text-sm text-[#1a202c]">
                       {user.username}
                     </TableCell>
 
@@ -782,7 +782,7 @@ const UsersPage: React.FC = () => {
       {/* Delete Confirmation Modal (Minimum 700px on desktop, 95% on mobile, padding >= 1.5rem) */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent 
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-xl" 
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-sm" 
           dir="rtl"
         >
           <AlertDialogHeader className="text-right pb-4 border-b border-[#e2e8f0]">

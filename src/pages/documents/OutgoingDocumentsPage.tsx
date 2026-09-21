@@ -743,11 +743,11 @@ const OutgoingDocumentsPage: React.FC = () => {
           ) : viewMode === 'table' ? (
             /* TABULAR VIEW (AdminLTE style, 8h/day professional ergonomics, line height >= 64px) */
             <div className="overflow-x-auto border border-[#e2e8f0] rounded">
-              <table className="w-full text-right border-collapse text-base">
+              <table className="w-full text-right border-collapse text-sm">
                 <thead>
-                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#1a202c]">
+                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#2d3748]">
                     <th 
-                      className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                       onClick={() => handleTableSort('serialNumber')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -758,7 +758,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                       </div>
                     </th>
                     <th 
-                      className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                       onClick={() => handleTableSort('subject')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -769,7 +769,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                       </div>
                     </th>
                     <th 
-                      className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                       onClick={() => handleTableSort('issueDate')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -779,10 +779,10 @@ const OutgoingDocumentsPage: React.FC = () => {
                         {sortField !== 'issueDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                       </div>
                     </th>
-                    <th className="py-4 px-4 font-semibold text-sm">المصدر (القسم)</th>
-                    <th className="py-4 px-4 font-semibold text-sm">الموجه إليهم</th>
+                    <th className="py-3 px-4 font-bold text-sm">المصدر (القسم)</th>
+                    <th className="py-3 px-4 font-bold text-sm">الموجه إليهم</th>
                     <th 
-                      className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                       onClick={() => handleTableSort('status')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -792,7 +792,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                       </div>
                     </th>
-                    <th className="py-4 px-4 font-semibold text-sm text-center whitespace-nowrap">الإجراءات</th>
+                    <th className="py-3 px-4 font-bold text-sm text-center whitespace-nowrap">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e2e8f0] bg-white">
@@ -803,7 +803,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         className="hover:bg-slate-50/80 transition-colors duration-200 min-h-[64px]"
                       >
                         {/* Serial Number & Year */}
-                        <td className="py-4 px-4 whitespace-nowrap">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-[#2c5282] flex-shrink-0" />
                             <div className="flex flex-col">
@@ -818,7 +818,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </td>
 
                         {/* Subject & Type */}
-                        <td className="py-4 px-4">
+                        <td className="py-3 px-4">
                           <div className="max-w-[340px] space-y-1.5">
                             <div 
                               onClick={() => handleView(doc._id)}
@@ -846,7 +846,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </td>
 
                         {/* Issue Date */}
-                        <td className="py-4 px-4 whitespace-nowrap text-sm text-[#4a5568]">
+                        <td className="py-3 px-4 whitespace-nowrap text-sm text-[#4a5568]">
                           <div className="flex items-center gap-1.5 font-medium">
                             <Clock className="h-4 w-4 text-[#718096]" />
                             <span>{formatArabicDate(doc.issueDate)}</span>
@@ -854,8 +854,8 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </td>
 
                         {/* Source */}
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-1.5 text-base font-medium text-[#2d3748]">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1.5 text-sm font-normal text-[#2d3748]">
                             <Building2 className="h-4 w-4 text-[#718096] flex-shrink-0" />
                             <span className="line-clamp-1" title={doc.source?.name || 'غير محدد'}>
                               {highlightMatch(doc.source?.name || 'غير محدد', searchQuery)}
@@ -864,7 +864,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </td>
 
                         {/* Assigned To / Recipients */}
-                        <td className="py-4 px-4">
+                        <td className="py-3 px-4">
                           {Array.isArray(doc.assignedTo) && doc.assignedTo.length > 0 ? (
                             <div className="flex flex-wrap gap-1 max-w-[240px]">
                               {doc.assignedTo.slice(0, 2).map((dest, idx) => (
@@ -887,7 +887,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </td>
 
                         {/* Folder / Classification */}
-                        <td className="py-4 px-4 whitespace-nowrap">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           {doc.folder ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                               <FolderOpen className="h-3.5 w-3.5 text-emerald-600" />
@@ -901,7 +901,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </td>
 
                         {/* Actions: Voir, Modifier, Archiver, Transférer, PDF + More */}
-                        <td className="py-4 px-4 whitespace-nowrap text-center">
+                        <td className="py-3 px-4 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             {/* 1. Voir (عرض) */}
                             <Button
@@ -1275,7 +1275,7 @@ const OutgoingDocumentsPage: React.FC = () => {
           if (!open) setDeleteDoc(null);
         }}
       >
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-xl" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm" dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
               تأكيد حذف الوثيقة الصادرة
@@ -1328,7 +1328,7 @@ const OutgoingDocumentsPage: React.FC = () => {
           if (!open) setTransferDoc(null);
         }}
       >
-        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-xl" dir="rtl">
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm" dir="rtl">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] flex items-center gap-3">
               <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">

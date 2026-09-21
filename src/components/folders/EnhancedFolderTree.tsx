@@ -623,7 +623,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-xl text-base" dir="rtl">
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base" dir="rtl">
           <DialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
             <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
               <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
@@ -683,7 +683,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-xl text-base" dir="rtl">
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base" dir="rtl">
           <DialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
             <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
               <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
@@ -743,7 +743,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Delete Alert Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-xl text-base" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base" dir="rtl">
           <AlertDialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 flex items-center gap-3">
               <div className="w-10 h-10 rounded bg-red-50 flex items-center justify-center text-red-600 shrink-0">

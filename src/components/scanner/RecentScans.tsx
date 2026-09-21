@@ -36,7 +36,7 @@ const RecentScans: React.FC<RecentScansProps> = ({
                 {recentScansData.map((scan, index) => (
                   <div 
                     key={index} 
-                    className="p-3 border rounded-md hover:bg-gray-50 cursor-pointer"
+                    className="p-3 border rounded hover:bg-gray-50 cursor-pointer"
                     onClick={() => onSelectScan(scan)}
                   >
                     <div className="flex items-center">

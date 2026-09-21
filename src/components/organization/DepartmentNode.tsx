@@ -16,21 +16,21 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
   const getBadge = () => {
     if (data.unitType === 'bureau_directeur') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-white bg-[#2c5282] rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold text-white bg-[#2c5282] rounded-full">
           Bureau Directeur
         </span>
       );
     }
     if (data.unitType === 'bureau_ordre') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-[#1a202c] bg-[#FFCB56] rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold text-[#1a202c] bg-[#FFCB56] rounded-full">
           Bureau d'Ordre
         </span>
       );
     }
     if (data.unitType === 'rh') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-white bg-[#38a169] rounded-full">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold text-white bg-[#38a169] rounded-full">
           Ressources Humaines
         </span>
       );
@@ -39,7 +39,7 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white border border-[#cbd5e1] rounded-lg shadow-sm px-4 py-3 min-w-[200px] text-center select-none">
+    <div className="bg-white border border-[#cbd5e1] rounded shadow-sm px-4 py-3 min-w-[200px] text-center select-none">
       <Handle type="target" position={Position.Top} className="!bg-[#cbd5e1]" />
       <div className="flex items-center justify-center gap-2 mb-1">
         <Building className="w-4 h-4 text-[#2c5282]" />

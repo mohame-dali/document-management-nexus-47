@@ -45,7 +45,7 @@ const FolderContextMenu: React.FC<FolderContextMenuProps> = ({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-      <ContextMenuContent className="w-64 bg-white border border-[#e2e8f0] rounded shadow-lg text-sm font-semibold p-1.5 space-y-0.5" dir="rtl">
+      <ContextMenuContent className="w-64 bg-white border border-[#e2e8f0] rounded shadow-sm text-sm font-semibold p-1.5 space-y-0.5" dir="rtl">
         <ContextMenuItem 
           onClick={() => onViewDetails(folder)}
           className="cursor-pointer hover:bg-gray-50 flex items-center gap-2.5 py-2 px-3 text-gray-800 rounded"

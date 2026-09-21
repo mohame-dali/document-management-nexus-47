@@ -69,7 +69,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           {selectedFiles.map((file, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-md text-xs text-slate-700"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs text-slate-700"
             >
               <FileIcon className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
               <span className="truncate max-w-[140px] font-medium" dir="ltr">
@@ -105,7 +105,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
           aria-label="إرفاق ملف"
-          className="h-11 w-11 shrink-0 text-slate-500 hover:text-[#2c5282] hover:bg-[#f7fafc] rounded-lg transition-colors"
+          className="h-11 w-11 shrink-0 text-slate-500 hover:text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors"
           title="إرفاق ملف"
         >
           <Paperclip className="h-5 w-5" />
@@ -120,7 +120,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none overflow-y-auto px-4 py-2.5 text-[15px] bg-white text-slate-900 border border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded-lg outline-none transition-all placeholder:text-slate-400 min-h-[42px] max-h-[120px]"
+          className="flex-1 resize-none overflow-y-auto px-4 py-2.5 text-[15px] bg-white text-slate-900 border border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded outline-none transition-all placeholder:text-slate-400 min-h-[42px] max-h-[120px]"
           dir="rtl"
         />
 
@@ -130,7 +130,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onClick={handleSend}
           disabled={disabled || (!content.trim() && selectedFiles.length === 0)}
           aria-label="إرسال الرسالة"
-          className="h-11 w-11 shrink-0 rounded-lg bg-[#2c5282] hover:bg-[#234269] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center shadow-xs"
+          className="h-11 w-11 shrink-0 rounded bg-[#2c5282] hover:bg-[#234269] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center shadow-xs"
           title="إرسال (Enter)"
         >
           <Send className="h-4 w-4" />

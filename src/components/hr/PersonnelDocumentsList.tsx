@@ -306,7 +306,7 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
           if (!open) setDeletingAssociation(null);
         }}
       >
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[540px] p-6 rounded bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[540px] p-6 rounded bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-red-600" />

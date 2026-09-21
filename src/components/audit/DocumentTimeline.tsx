@@ -129,7 +129,7 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
                       
                       {/* Content */}
                       <div className="flex-1 min-w-0 pb-6">
-                        <div className="bg-white border rounded-lg p-4 shadow-sm">
+                        <div className="bg-white border rounded p-4 shadow-sm">
                           <div className="flex items-center justify-between mb-2">
                             <Badge className={getActionColor(entry.action)}>
                               {getActionText(entry.action)}
@@ -149,7 +149,7 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
                           </div>
                           
                           {entry.details && Object.keys(entry.details).length > 0 && (
-                            <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                            <div className="mt-3 p-3 bg-gray-50 rounded">
                               <div className="text-xs text-gray-600 space-y-1">
                                 {Object.entries(entry.details).map(([key, value]) => (
                                   <div key={key} className="flex justify-between">

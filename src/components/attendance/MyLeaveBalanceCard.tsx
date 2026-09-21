@@ -128,7 +128,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
         </div>
         <div className="w-full bg-[#edf2f7] rounded h-2.5 overflow-hidden border border-[#e2e8f0]">
           <div
-            className="h-full bg-[#2c5282] transition-all duration-300"
+            className="h-full bg-[#2c5282] transition-all duration-200"
             style={{ width: `${percentUsed}%` }}
           />
         </div>

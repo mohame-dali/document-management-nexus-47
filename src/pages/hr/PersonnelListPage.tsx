@@ -184,7 +184,7 @@ export const PersonnelListPage: React.FC = () => {
       </div>
 
       {/* 2. Barre de filtres */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm space-y-4">
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-base font-bold text-gray-700">
             <Filter className="w-4 h-4 text-[#2c5282]" />
@@ -271,22 +271,22 @@ export const PersonnelListPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-4 px-4 text-base font-bold text-gray-700 min-w-[220px]">
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[220px]">
                   الاسم الكامل (Nom & Prénom)
                 </TableHead>
-                <TableHead className="text-right py-4 px-4 text-base font-bold text-gray-700 min-w-[130px]">
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px]">
                   رقم ب.ت.و (CIN)
                 </TableHead>
-                <TableHead className="text-right py-4 px-4 text-base font-bold text-gray-700 min-w-[180px]">
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px]">
                   الوظيفة (Poste)
                 </TableHead>
-                <TableHead className="text-right py-4 px-4 text-base font-bold text-gray-700 min-w-[180px]">
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px]">
                   القسم (Département)
                 </TableHead>
-                <TableHead className="text-right py-4 px-4 text-base font-bold text-gray-700 min-w-[130px]">
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px]">
                   الحالة (Statut)
                 </TableHead>
-                <TableHead className="text-center py-4 px-4 text-base font-bold text-gray-700 min-w-[160px]">
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px]">
                   الإجراءات
                 </TableHead>
               </TableRow>
@@ -294,7 +294,7 @@ export const PersonnelListPage: React.FC = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-base">
+                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <RefreshCw className="w-8 h-8 animate-spin text-[#2c5282]" />
                       <span>جاري تحميل بيانات الموظفين...</span>
@@ -303,7 +303,7 @@ export const PersonnelListPage: React.FC = () => {
                 </TableRow>
               ) : personnelList.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-base">
+                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Users className="w-10 h-10 text-gray-300" />
                       <p className="font-semibold text-gray-700">لا توجد بطاقات موظفين مطابقة</p>
@@ -333,7 +333,7 @@ export const PersonnelListPage: React.FC = () => {
                       style={{ minHeight: '64px' }}
                     >
                       {/* Nom complet */}
-                      <TableCell className="py-4 px-4 font-bold text-[#1a202c] text-base">
+                      <TableCell className="py-3 px-4 font-bold text-[#1a202c] text-sm">
                         <div className="flex items-center gap-3">
                           <PersonnelAvatar
                             photo={p.photo}
@@ -353,12 +353,12 @@ export const PersonnelListPage: React.FC = () => {
                       </TableCell>
 
                       {/* CIN */}
-                      <TableCell className="py-4 px-4 text-base font-mono text-gray-700">
+                      <TableCell className="py-3 px-4 text-sm font-mono text-gray-700">
                         {p.cin || '—'}
                       </TableCell>
 
                       {/* Poste */}
-                      <TableCell className="py-4 px-4 text-base text-gray-800">
+                      <TableCell className="py-3 px-4 text-sm text-gray-800">
                         {p.poste ? (
                           <span className="flex items-center gap-1.5">
                             <Briefcase className="w-4 h-4 text-gray-400 shrink-0" />
@@ -370,7 +370,7 @@ export const PersonnelListPage: React.FC = () => {
                       </TableCell>
 
                       {/* Département */}
-                      <TableCell className="py-4 px-4 text-base text-gray-700">
+                      <TableCell className="py-3 px-4 text-sm text-gray-700">
                         <span className="flex items-center gap-1.5">
                           <Building2 className="w-4 h-4 text-gray-400 shrink-0" />
                           <span>{deptName}</span>
@@ -378,12 +378,12 @@ export const PersonnelListPage: React.FC = () => {
                       </TableCell>
 
                       {/* Statut Badge */}
-                      <TableCell className="py-4 px-4">
+                      <TableCell className="py-3 px-4">
                         <PersonnelStatusBadge statut={p.statut} />
                       </TableCell>
 
                       {/* Actions */}
-                      <TableCell className="py-4 px-4 text-center">
+                      <TableCell className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           {/* Voir détail */}
                           <Button
@@ -464,7 +464,7 @@ export const PersonnelListPage: React.FC = () => {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="h-8 w-20 text-sm bg-white border-[#cbd5e1] rounded">
+                <SelectTrigger className="h-11 w-20 text-sm bg-white border-[#cbd5e1] rounded">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent dir="rtl">

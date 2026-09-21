@@ -347,7 +347,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
 
       {/* Add Dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto p-6 bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
+        <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto p-6 bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
           <DialogHeader className="text-right space-y-1 border-b border-[#e2e8f0] pb-3">
             <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-[#2c5282]" />
@@ -507,7 +507,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
           if (!open) setEditingAssoc(null);
         }}
       >
-        <DialogContent className="sm:max-w-[500px] p-6 bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
+        <DialogContent className="sm:max-w-[500px] p-6 bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
           <DialogHeader className="text-right space-y-1 border-b border-[#e2e8f0] pb-3">
             <DialogTitle className="text-lg font-bold text-[#1a202c]">
               تعديل بيانات الربط
@@ -580,7 +580,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
           if (!open) setDeletingAssoc(null);
         }}
       >
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[500px] p-6 rounded bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[500px] p-6 rounded bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-red-600" />

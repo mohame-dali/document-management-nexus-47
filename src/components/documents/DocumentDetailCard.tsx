@@ -113,7 +113,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
             </h3>
             <div className="space-y-3">
               {document.comments.map((comment: any) => (
-                <div key={comment._id} className="bg-gray-50 p-3 rounded-md">
+                <div key={comment._id} className="bg-gray-50 p-3 rounded">
                   <div className="flex items-center gap-2 mb-1">
                     <User className="h-3 w-3" />
                     <span className="text-xs font-medium">{comment.author.name}</span>

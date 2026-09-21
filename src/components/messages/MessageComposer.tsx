@@ -99,7 +99,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" dir="rtl">
-      <Card className="w-full max-w-2xl bg-white border border-[#e2e8f0] shadow-lg rounded overflow-hidden">
+      <Card className="w-full max-w-2xl bg-white border border-[#e2e8f0] shadow-sm rounded overflow-hidden">
         <div className="border-b border-[#e2e8f0] px-5 py-3 flex items-center justify-between bg-white">
           <CardTitle className="text-base font-bold text-slate-900">
             {t('messages.compose')}

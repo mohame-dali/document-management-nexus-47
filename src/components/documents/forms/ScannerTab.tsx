@@ -132,7 +132,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
           </Button>
         ) : (
           <div className="text-center space-y-2">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
               <p className="text-yellow-800 font-medium">{t.scannerNotConfigured || 'Scanner not configured'}</p>
               <p className="text-yellow-600 text-sm mt-1">
                 Please connect your scanner, install drivers, and configure it first.
@@ -153,7 +153,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
           <div className="w-full space-y-2">
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div 
-                className="bg-primary h-2.5 rounded-full transition-all duration-300" 
+                className="bg-primary h-2.5 rounded-full transition-all duration-200" 
                 style={{ width: `${Math.min(scanProgress, 100)}%` }}
               ></div>
             </div>

@@ -43,7 +43,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
   if (!document) {
     return (
       <div
-        className="fixed z-50 pointer-events-none bg-white border border-[#e2e8f0] rounded shadow-md overflow-hidden"
+        className="fixed z-50 pointer-events-none bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden"
         style={{
           left: previewPosition.x,
           top: previewPosition.y,
@@ -64,7 +64,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
 
   return (
     <div
-      className="fixed z-50 pointer-events-none bg-white border border-[#e2e8f0] rounded shadow-md overflow-hidden"
+      className="fixed z-50 pointer-events-none bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden"
       style={{
         left: previewPosition.x,
         top: previewPosition.y,

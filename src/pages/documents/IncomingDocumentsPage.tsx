@@ -439,7 +439,7 @@ const IncomingDocumentsPage: React.FC = () => {
               />
             </div>
             {yearInput.length > 0 && yearInput.length < 4 && (
-              <p className="text-xs text-[#718096]">
+              <p className="text-sm text-[#718096]">
                 يرجى إكمال إدخال السنة (4 أرقام)
               </p>
             )}
@@ -454,7 +454,7 @@ const IncomingDocumentsPage: React.FC = () => {
             </div>
             {/* Quick Year Shortcuts */}
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-xs text-[#718096]">سنوات سريعة:</span>
+              <span className="text-sm font-medium text-[#718096]">سنوات سريعة:</span>
               {[
                 new Date().getFullYear(),
                 new Date().getFullYear() - 1,
@@ -817,11 +817,11 @@ const IncomingDocumentsPage: React.FC = () => {
         ) : viewMode === 'table' ? (
           /* TABULAR VIEW (AdminLTE style, 8h/day professional ergonomics) */
           <div className="overflow-x-auto border border-[#e2e8f0] rounded">
-            <table className="w-full text-right border-collapse text-base">
+            <table className="w-full text-right border-collapse text-sm">
               <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#1a202c]">
+                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#2d3748]">
                   <th 
-                    className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                     onClick={() => handleTableSort('serialNumber')}
                   >
                     <div className="flex items-center gap-1.5">
@@ -832,7 +832,7 @@ const IncomingDocumentsPage: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                     onClick={() => handleTableSort('subject')}
                   >
                     <div className="flex items-center gap-1.5">
@@ -843,7 +843,7 @@ const IncomingDocumentsPage: React.FC = () => {
                     </div>
                   </th>
                   <th 
-                    className="py-4 px-4 font-semibold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                     onClick={() => handleTableSort('arrivalDate')}
                   >
                     <div className="flex items-center gap-1.5">
@@ -853,9 +853,9 @@ const IncomingDocumentsPage: React.FC = () => {
                       {sortField !== 'arrivalDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                     </div>
                   </th>
-                  <th className="py-4 px-4 font-semibold text-sm">المصدر / الجهة</th>
+                  <th className="py-3 px-4 font-bold text-sm">المصدر / الجهة</th>
                   <th 
-                    className="py-4 px-4 font-semibold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                    className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                     onClick={() => handleTableSort('status')}
                   >
                     <div className="flex items-center gap-1.5">
@@ -865,7 +865,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                     </div>
                   </th>
-                  <th className="py-4 px-4 font-semibold text-sm text-center">الإجراءات</th>
+                  <th className="py-3 px-4 font-bold text-sm text-center">الإجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e2e8f0] bg-white">
@@ -878,7 +878,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       className="hover:bg-slate-50/80 transition-colors duration-200 min-h-[64px]"
                     >
                       {/* Serial Number & Year */}
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full bg-[#2c5282] flex-shrink-0" />
                           <div className="flex flex-col">
@@ -893,7 +893,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       </td>
 
                       {/* Subject, Document Type, Activity */}
-                      <td className="py-4 px-4">
+                      <td className="py-3 px-4">
                         <div className="max-w-[340px] space-y-1.5">
                           <div 
                             onClick={() => handleView(doc._id)}
@@ -928,7 +928,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       </td>
 
                       {/* Arrival Date */}
-                      <td className="py-4 px-4 whitespace-nowrap text-sm text-[#4a5568]">
+                      <td className="py-3 px-4 whitespace-nowrap text-sm text-[#4a5568]">
                         <div className="flex items-center gap-1.5 font-medium">
                           <Clock className="h-4 w-4 text-[#718096]" />
                           <span>{formatArabicDate(doc.arrivalDate)}</span>
@@ -936,8 +936,8 @@ const IncomingDocumentsPage: React.FC = () => {
                       </td>
 
                       {/* Source */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-1.5 text-base font-medium text-[#2d3748]">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5 text-sm font-normal text-[#2d3748]">
                           <Building2 className="h-4 w-4 text-[#718096] flex-shrink-0" />
                           <span className="line-clamp-1" title={doc.source || 'غير محدد'}>
                             {highlightMatch(doc.source || 'غير محدد', searchQuery)}
@@ -946,7 +946,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       </td>
 
                       {/* Follow-up / Answer Status */}
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           {doc.answer ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 w-fit">
@@ -970,7 +970,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       </td>
 
                       {/* Actions: Voir, Traiter, Archiver, Transférer + Dropdown */}
-                      <td className="py-4 px-4 whitespace-nowrap text-center">
+                      <td className="py-3 px-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           {/* 1. Voir (عرض) */}
                           <Button
@@ -1044,7 +1044,7 @@ const IncomingDocumentsPage: React.FC = () => {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" dir="rtl" className="w-48 bg-white border border-[#e2e8f0] rounded shadow-md">
+                            <DropdownMenuContent align="end" dir="rtl" className="w-48 bg-white border border-[#e2e8f0] rounded shadow-sm">
                               {doc.scannedDocument && (
                                 <DropdownMenuItem 
                                   onClick={() => handleDownload(doc)}
@@ -1366,7 +1366,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
       {/* 8. Delete Confirmation Dialog */}
       <AlertDialog open={Boolean(deleteDoc)} onOpenChange={(open) => { if (!open) setDeleteDoc(null); }}>
-        <AlertDialogContent dir="rtl" className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xl">
+        <AlertDialogContent dir="rtl" className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm">
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">
               <Trash2 className="h-6 w-6" />

@@ -120,6 +120,7 @@ const Sidebar = () => {
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
       { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
+      { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
     ] : []),
 
     // AdminDepartment menu items (avec mon-profil)
@@ -134,6 +135,7 @@ const Sidebar = () => {
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/hr/my-profile', label: 'ملفي الشخصي', icon: User, color: 'text-amber-500' },
       { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
+      { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
     ] : []),
 
     // User menu items (avec mon-profil)

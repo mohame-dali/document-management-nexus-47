@@ -148,7 +148,7 @@ const MainNav = () => {
                   key={item.href}
                   to={item.href}
                   className={cn(
-                    "flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-accent",
+                    "flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent",
                     isActive(item.href) && "bg-accent text-accent-foreground font-medium"
                   )}
                 >

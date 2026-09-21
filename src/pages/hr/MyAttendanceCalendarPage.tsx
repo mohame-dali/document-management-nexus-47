@@ -19,7 +19,10 @@ import {
   RefreshCw,
   Info,
   CalendarDays,
+  FileDown,
+  Loader2,
 } from 'lucide-react';
+import { useAttendanceExport } from '@/hooks/useAttendanceExport';
 import { MyLeaveBalanceCard, LeaveBalanceData } from '@/components/attendance/MyLeaveBalanceCard';
 import { MyCalendarDayView } from '@/components/attendance/MyCalendarDayView';
 import { MyCalendarWeekView } from '@/components/attendance/MyCalendarWeekView';
@@ -34,6 +37,14 @@ export const MyAttendanceCalendarPage: React.FC = () => {
 
   // Mode de vue actif
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
+
+  // Hook d'export PDF
+  const {
+    isExporting,
+    exportDailyReport,
+    exportMonthlyReport,
+    exportYearlyReport,
+  } = useAttendanceExport();
 
   // Dates de travail
   const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -167,6 +178,160 @@ export const MyAttendanceCalendarPage: React.FC = () => {
     setViewMode('month');
   };
 
+  const handleExport = async () => {
+    if (!profilePersonnel) return;
+
+    const personnelInfo = {
+      _id: profilePersonnel._id,
+      nom: profilePersonnel.nom,
+      prenom: profilePersonnel.prenom,
+      cin: profilePersonnel.cin,
+      poste: profilePersonnel.poste,
+      activeDepartment: profilePersonnel.activeDepartment || undefined,
+    };
+
+    const deptName =
+      typeof profilePersonnel.activeDepartment === 'object' && profilePersonnel.activeDepartment !== null
+        ? profilePersonnel.activeDepartment.name
+        : undefined;
+
+    if (viewMode === 'day' || viewMode === 'week') {
+      const targetDate = selectedDate;
+      const att = dayAttendance;
+      const isPresent = att?.statut === 'present';
+      const isAbsent = att?.statut === 'absent';
+      const isUnrecorded = !att || att?.statut === 'unrecorded';
+
+      await exportDailyReport(
+        {
+          date: targetDate,
+          totalCount: 1,
+          presentsCount: isPresent ? 1 : 0,
+          absentsCount: isAbsent ? 1 : 0,
+          nonSaisisCount: isUnrecorded ? 1 : 0,
+          presents: isPresent
+            ? [
+                {
+                  personnel: personnelInfo,
+                  attendance: att
+                    ? {
+                        statut: 'present',
+                        motif: att.motif,
+                        heureArrivee: att.heureArrivee,
+                        detailsMotif: att.detailsMotif,
+                      }
+                    : undefined,
+                },
+              ]
+            : [],
+          absents: isAbsent
+            ? [
+                {
+                  personnel: personnelInfo,
+                  attendance: att
+                    ? {
+                        statut: 'absent',
+                        motif: att.motif,
+                        detailsMotif: att.detailsMotif,
+                      }
+                    : undefined,
+                },
+              ]
+            : [],
+          nonSaisis: isUnrecorded
+            ? [
+                {
+                  personnel: personnelInfo,
+                },
+              ]
+            : [],
+        },
+        {
+          title: `سجل حضور شخصي - ${profilePersonnel.nom} ${profilePersonnel.prenom}`,
+          departmentName: deptName,
+          fileName: `mon_presence_${targetDate}`,
+        }
+      );
+    } else if (viewMode === 'month') {
+      let presentsCount = 0;
+      let absentsCount = 0;
+      const motifCounts: Record<string, number> = {};
+
+      calendarAttendances.forEach((att) => {
+        if (att.statut === 'present') {
+          presentsCount++;
+        } else if (att.statut === 'absent') {
+          absentsCount++;
+          const code = att.motif || 'AUTRE';
+          motifCounts[code] = (motifCounts[code] || 0) + 1;
+        }
+      });
+
+      await exportMonthlyReport(
+        {
+          year: currentYear,
+          month: currentMonth,
+          totalPersonnel: 1,
+          records: [
+            {
+              personnel: personnelInfo,
+              joursPresents: presentsCount,
+              joursAbsents: absentsCount,
+              parMotif: motifCounts,
+            },
+          ],
+        },
+        {
+          title: `كشف حضور شهري شخصي - ${profilePersonnel.nom} ${profilePersonnel.prenom}`,
+          departmentName: deptName,
+          fileName: `mon_presence_mensuel_${currentYear}_${String(currentMonth).padStart(2, '0')}`,
+        }
+      );
+    } else if (viewMode === 'year') {
+      let presentsCount = 0;
+      let absentsCount = 0;
+      const motifCounts: Record<string, number> = {};
+
+      calendarAttendances.forEach((att) => {
+        if (att.statut === 'present') {
+          presentsCount++;
+        } else if (att.statut === 'absent') {
+          absentsCount++;
+          const code = att.motif || 'AUTRE';
+          motifCounts[code] = (motifCounts[code] || 0) + 1;
+        }
+      });
+
+      const soldeInit = balance?.totalDays ?? balance?.soldeAnnuel ?? 45;
+      const deduct = balance?.usedDays ?? balance?.joursUtilises ?? absentsCount;
+      const soldeRest = balance?.remainingDays ?? balance?.soldeRestant ?? (soldeInit - deduct);
+
+      await exportYearlyReport(
+        {
+          year: currentYear,
+          totalPersonnel: 1,
+          soldeAnnuelDefaut: soldeInit,
+          records: [
+            {
+              personnel: personnelInfo,
+              soldeInitial: soldeInit,
+              joursDeduits: deduct,
+              soldeRestant: soldeRest,
+              joursPresents: presentsCount,
+              joursAbsents: absentsCount,
+              parMotif: balance?.byMotif || motifCounts,
+            },
+          ],
+        },
+        {
+          title: `حصيلة الحضور السنوية الشخصية - ${profilePersonnel.nom} ${profilePersonnel.prenom}`,
+          departmentName: deptName,
+          fileName: `mon_bilan_presence_annuel_${currentYear}`,
+        }
+      );
+    }
+  };
+
   // Gestion des états sans profil
   if (isProfileLoading) {
     return (
@@ -246,6 +411,20 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={isExporting || !profilePersonnel}
+              className="h-9 px-3 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileDown className="h-3.5 w-3.5" />
+              )}
+              <span>{isExporting ? 'جاري التصدير...' : 'تصدير PDF'}</span>
+            </Button>
             <Button
               variant="outline"
               size="sm"

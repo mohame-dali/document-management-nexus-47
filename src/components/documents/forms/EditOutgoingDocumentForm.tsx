@@ -230,8 +230,8 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-border/50">
+      <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
           <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
             <div className="w-2 h-8 bg-primary rounded-full"></div>
             {t.title}
@@ -248,7 +248,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
                   <h3 className="text-lg font-semibold text-foreground">المعلومات الأساسية</h3>
                 </div>
                 
-                <div className="bg-muted/30 rounded-lg p-6 border border-border/50">
+                <div className="bg-muted/30 rounded p-6 border border-border/50">
                   <BasicInfoFields
                     form={form}
                     t={t}
@@ -264,12 +264,12 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
                   <h3 className="text-lg font-semibold text-foreground">مرفقات الوثيقة</h3>
-                  <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                  <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
                     {t.attachmentsDesc}
                   </span>
                 </div>
                 
-                <div className="bg-muted/20 rounded-lg p-6 border border-border/50">
+                <div className="bg-muted/20 rounded p-6 border border-border/50">
                   <DocumentAttachmentSection
                     t={t}
                     activeTab={activeTab}

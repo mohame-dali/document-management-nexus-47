@@ -600,9 +600,9 @@ const ViewIncomingDocument: React.FC = () => {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
+                  size="default"
                   onClick={() => setIsFolderDialogOpen(true)}
-                  className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
+                  className="h-11 px-3 text-sm font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
                 >
                   تغيير
                 </Button>
@@ -633,9 +633,9 @@ const ViewIncomingDocument: React.FC = () => {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
+                  size="default"
                   onClick={() => setIsResponsibleDialogOpen(true)}
-                  className="h-8 px-2.5 text-xs font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
+                  className="h-11 px-3 text-sm font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
                 >
                   تعيين
                 </Button>
@@ -780,12 +780,12 @@ const ViewIncomingDocument: React.FC = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
+                        size="default"
                         onClick={() => downloadDocument(answerDocument.scannedDocument!, `answer-${answerDocument.serialNumber}.pdf`)}
-                        className="h-8 px-2.5 text-xs font-semibold text-emerald-800 border-[#cbd5e1]"
+                        className="h-11 px-3 text-sm font-semibold text-emerald-800 border-[#cbd5e1] hover:bg-emerald-50 rounded flex items-center gap-1.5"
                       >
-                        <Download className="h-3.5 w-3.5 ml-1" />
-                        تحميل
+                        <Download className="h-4 w-4" />
+                        <span>تحميل</span>
                       </Button>
                     )}
                   </div>

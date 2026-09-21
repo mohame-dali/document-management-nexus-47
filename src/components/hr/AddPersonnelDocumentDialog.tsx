@@ -155,7 +155,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto p-6 bg-white text-right border border-[#e2e8f0] shadow-xl" dir="rtl">
+      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto p-6 bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
         <DialogHeader className="text-right space-y-1.5 border-b border-[#e2e8f0] pb-3">
           <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
             <FilePlus className="w-5 h-5 text-[#2c5282]" />

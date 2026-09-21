@@ -294,7 +294,7 @@ function App() {
 
                         {/* Trash route */}
                         <Route path="trash" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment']}>
                             <TrashPage />
                           </ProtectedRoute>
                         } />

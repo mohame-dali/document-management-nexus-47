@@ -109,7 +109,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
     <div className="space-y-4">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+        className={`border-2 border-dashed rounded p-8 text-center cursor-pointer transition-colors ${
           isDragActive
             ? 'border-primary bg-primary/5'
             : 'border-muted-foreground/25 hover:border-primary/50'
@@ -190,7 +190,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
                 
                 {/* OCR Text Preview */}
                 {ocrResults.has(file.name) && !processingFiles.has(file.name) && (
-                  <div className="mt-3 p-3 bg-muted rounded-md">
+                  <div className="mt-3 p-3 bg-muted rounded">
                     <p className="text-xs font-medium text-muted-foreground mb-1">
                       النص المستخرج:
                     </p>

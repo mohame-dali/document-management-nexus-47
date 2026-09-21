@@ -83,7 +83,7 @@ const AuditStats: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" dir="rtl">
       {stats.map((stat, index) => (
-        <Card key={index} className="hover:shadow-md transition-shadow">
+        <Card key={index} className="hover:shadow-sm transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>

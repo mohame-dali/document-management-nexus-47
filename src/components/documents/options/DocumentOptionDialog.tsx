@@ -106,7 +106,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xl"
+        className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm"
         dir="rtl"
       >
         <DialogHeader className="pb-4 border-b border-[#e2e8f0]">

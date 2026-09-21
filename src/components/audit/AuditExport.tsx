@@ -67,19 +67,19 @@ const AuditExport: React.FC<AuditExportProps> = ({ filters, totalRecords = 0 }) 
   const activeFiltersCount = getActiveFiltersCount();
 
   return (
-    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+    <Card className="bg-white border border-[#e2e8f0] shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-800">
+        <CardTitle className="flex items-center gap-2 text-[#2c5282]">
           <Download className="h-5 w-5" />
           تصدير سجل التدقيق
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Export Summary */}
-        <div className="bg-white rounded-lg p-4 border border-blue-200">
+        <div className="bg-[#f8fafc] rounded p-4 border border-[#e2e8f0]">
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-medium text-gray-800">ملخص التصدير</h4>
-            <Badge variant="outline" className="bg-blue-100 text-blue-800">
+            <Badge variant="outline" className="bg-[#ebf4ff] text-[#2c5282] border-blue-200">
               {totalRecords} سجل
             </Badge>
           </div>
@@ -134,7 +134,7 @@ const AuditExport: React.FC<AuditExportProps> = ({ filters, totalRecords = 0 }) 
         </div>
 
         {/* Export Description */}
-        <div className="bg-white rounded-lg p-3 border border-gray-200">
+        <div className="bg-white rounded p-3 border border-gray-200">
           <div className="flex items-start gap-2">
             <Clock className="h-4 w-4 text-blue-500 mt-0.5" />
             <div className="text-sm text-gray-600">
