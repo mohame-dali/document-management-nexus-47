@@ -10,13 +10,13 @@ const AuditTrailPage = () => {
 
   if (currentUser?.role !== 'Admin') {
     return (
-      <div className="container-responsive padding-responsive animate-fade-in-up" dir="rtl">
-        <Card className="enhanced-card">
-          <CardContent className="padding-responsive-lg text-center space-y-4">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6" dir="rtl">
+        <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+          <CardContent className="p-8 text-center space-y-4">
             <Lock className="h-12 w-12 mx-auto text-gray-400" />
             <div className="space-y-2">
-              <h2 className="text-responsive-lg font-medium text-gray-600">ليس لديك صلاحية</h2>
-              <p className="text-responsive-sm text-gray-500 leading-relaxed">
+              <h2 className="text-lg font-bold text-[#1a202c]">ليس لديك صلاحية</h2>
+              <p className="text-sm text-[#4a5568] leading-relaxed">
                 ليس لديك الصلاحية لعرض سجل التدقيق والمراجعة
               </p>
             </div>
@@ -27,20 +27,20 @@ const AuditTrailPage = () => {
   }
 
   return (
-    <div className="container-responsive padding-responsive-sm animate-fade-in-up" dir="rtl">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6" dir="rtl">
       <div className="space-y-4 sm:space-y-6">
         {/* Page Header */}
-        <div className="space-y-2">
-          <h1 className="text-responsive-xl font-bold text-[#1a202c]">
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
             سجل التدقيق والمراجعة
           </h1>
-          <p className="text-responsive-sm text-muted-foreground">
+          <p className="text-sm text-[#4a5568] mt-1">
             مراقبة جميع العمليات والأنشطة في النظام مع إمكانية التصدير والتحليل
           </p>
         </div>
 
         {/* Audit Trail Component */}
-        <div className="animate-scale-in">
+        <div>
           <AuditTrailViewer />
         </div>
       </div>

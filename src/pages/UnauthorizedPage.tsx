@@ -8,21 +8,28 @@ const UnauthorizedPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7fafc]" dir="rtl">
+      <div className="text-center p-8 bg-white border border-[#e2e8f0] rounded shadow-sm max-w-md w-full mx-4">
         <div className="flex justify-center mb-4">
-          <ShieldAlert className="h-16 w-16 text-red-500" />
+          <ShieldAlert className="h-16 w-16 text-[#e53e3e]" />
         </div>
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-gray-600 mb-6">
-          You don't have permission to access this page. Please contact your administrator if you believe this is an error.
+        <h1 className="text-2xl font-bold text-[#1a202c] mb-3">غير مصرح بالوصول</h1>
+        <p className="text-[#4a5568] text-sm leading-relaxed mb-6">
+          ليس لديك صلاحية للوصول إلى هذه الصفحة. يرجى التواصل مع مسؤول النظام إذا كنت تعتقد أن هذا خطأ.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button onClick={() => navigate('/dashboard')}>
-            Return to Dashboard
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button 
+            onClick={() => navigate('/dashboard')}
+            className="h-11 px-6 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium"
+          >
+            الصفحة الرئيسية
           </Button>
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Go Back
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(-1)}
+            className="h-11 px-6 border-[#e2e8f0] text-[#4a5568] hover:bg-[#f7fafc] rounded font-medium"
+          >
+            العودة
           </Button>
         </div>
       </div>

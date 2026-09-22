@@ -82,6 +82,53 @@ const personnelSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Groupe A — Identité étendue
+  nomPere: { type: String, default: '', trim: true },
+  nomMere: { type: String, default: '', trim: true },
+  nomGrandPere: { type: String, default: '', trim: true },
+  groupeSanguin: {
+    type: String,
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', ''],
+    default: ''
+  },
+
+  // Groupe B — Situation administrative
+  dateEmissionCin: { type: Date, default: null },
+  numeroUnite: { type: String, default: '', trim: true },
+  numeroArmee: { type: String, default: '', trim: true },
+  dateEngagement: { type: Date, default: null },
+  typeEngagement: { type: String, default: '', trim: true },
+  origineEngagement: { type: String, default: '', trim: true },
+  niveauEtude: { type: String, default: '', trim: true },
+  diplomeBase: { type: String, default: '', trim: true },
+  specialite: { type: String, default: '', trim: true },
+  arme: { type: String, default: '', trim: true },
+  posteActuel: { type: String, default: '', trim: true },
+
+  // Groupe C — Situation familiale
+  etatCivil: {
+    type: String,
+    enum: ['celibataire', 'marie', 'divorce', 'veuf', ''],
+    default: ''
+  },
+  nomConjoint: { type: String, default: '', trim: true },
+  dateMariage: { type: Date, default: null },
+  nombreEnfants: { type: Number, default: 0, min: 0 },
+  enfants: { type: Number, default: 0, min: 0 },
+
+  // Groupe D — Passeport
+  numeroPasseport: { type: String, default: '', trim: true },
+  dateValiditePasseport: { type: Date, default: null },
+
+  // Groupe E — 3 personnes à prévenir
+  personnesAPrevenir: [
+    {
+      nom: { type: String, default: '', trim: true },
+      lien: { type: String, default: '', trim: true },
+      telephone: { type: String, default: '', trim: true },
+      adresse: { type: String, default: '', trim: true }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now

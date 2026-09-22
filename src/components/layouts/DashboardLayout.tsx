@@ -52,7 +52,7 @@ const DashboardLayout = () => {
             
             {/* Development Debug Info - Responsive */}
             {process.env.NODE_ENV === 'development' && currentUser?.role === 'AdminDepartment' && (
-              <div className="container-responsive py-1 bg-yellow-50 border-b text-responsive-xs text-yellow-800 flex-shrink-0">
+              <div className="hidden container-responsive py-1 bg-yellow-50 border-b text-responsive-xs text-yellow-800 flex-shrink-0">
                 Debug: Active Department: {getActiveDepartmentName()} | 
                 Total Departments: {currentUser.departments?.length || 0}
               </div>

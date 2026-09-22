@@ -14,6 +14,34 @@ const getValidAssociationTypes = async () => {
   return ['Stage', 'Formation', 'Diplôme', 'Autre'];
 };
 
+// Helper pour vérifier si le département correspond au département RH
+const isRHDepartment = async (dept) => {
+  if (!dept) return false;
+  const deptId = (dept._id || dept).toString();
+  const settings = await OrganizationSettings.findOne();
+  if (!settings || !settings.rhDepartmentId) return false;
+  return settings.rhDepartmentId.toString() === deptId;
+};
+
+// Helper pour vérifier si l'utilisateur connecté a le droit de lier/gérer ce personnel
+async function canUserLinkPersonnel(req, personnelId) {
+  const user = req.user;
+  if (!user) return false;
+  if (['Admin', 'SuperAdmin'].includes(user.role)) return true;
+  if (user.role === 'AdminDepartment' || user.role === 'AdminTuningDesk') {
+    // Vérifier si RH
+    const isRH = await isRHDepartment(user.activeDepartment);
+    if (isRH) return true;
+    // Vérifier si le personnel ciblé est dans son département
+    const personnel = await Personnel.findById(personnelId);
+    if (!personnel) return false;
+    const personnelDept = (personnel.activeDepartment?._id || personnel.activeDepartment)?.toString();
+    const userDept = (user.activeDepartment?._id || user.activeDepartment)?.toString();
+    return Boolean(userDept && personnelDept && personnelDept === userDept);
+  }
+  return false;
+}
+
 // @desc    Créer une association entre un document et une fiche de personnel
 // @route   POST /api/hr/personnel/:personnelId/documents
 // @access  Private (Admin, SuperAdmin, AdminDepartment)
@@ -35,6 +63,15 @@ exports.associerDocument = async (req, res, next) => {
       return res.status(404).json({
         success: false,
         message: 'Fiche de personnel introuvable'
+      });
+    }
+
+    // 1b. Vérification des droits d'association (RH / Admin ou département correspondant)
+    const canLink = await canUserLinkPersonnel(req, personnelId);
+    if (!canLink) {
+      return res.status(403).json({
+        success: false,
+        message: 'غير مصرح بربط هذا الموظف'
       });
     }
 
@@ -275,6 +312,15 @@ exports.mettreAJourAssociation = async (req, res, next) => {
       });
     }
 
+    // Vérifier les permissions de modification
+    const canUpdate = await canUserLinkPersonnel(req, association.personnelId);
+    if (!canUpdate) {
+      return res.status(403).json({
+        success: false,
+        message: 'غير مصرح بربط هذا الموظف'
+      });
+    }
+
     if (typeAssociation !== undefined) {
       if (!typeAssociation || typeof typeAssociation !== 'string') {
         return res.status(400).json({
@@ -327,6 +373,15 @@ exports.supprimerAssociation = async (req, res, next) => {
       return res.status(404).json({
         success: false,
         message: 'Association introuvable'
+      });
+    }
+
+    // Vérifier les permissions de suppression
+    const canDelete = await canUserLinkPersonnel(req, association.personnelId);
+    if (!canDelete) {
+      return res.status(403).json({
+        success: false,
+        message: 'غير مصرح بربط هذا الموظف'
       });
     }
 

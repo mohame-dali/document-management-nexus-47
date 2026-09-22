@@ -151,14 +151,14 @@ const OrganizationChartPage: React.FC = () => {
   return (
     <div className="max-w-[1600px] mx-auto p-6 space-y-6" dir="rtl">
       {/* En-tête */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#e2e8f0] rounded-lg p-5 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#ebf4ff] text-[#2c5282] rounded-lg">
+          <div className="p-2.5 bg-[#2c5282]/10 text-[#2c5282] rounded">
             <Building2 className="w-6 h-6" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-[#1a202c]">الهيكل التنظيمي للإدارة</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-[#4a5568] mt-0.5">
               عرض تراتبي وتفاعلي للوحدات الإدارية والموظفين التابعين لها
             </p>
           </div>
@@ -167,7 +167,7 @@ const OrganizationChartPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="border-[#cbd5e1] text-gray-700 hover:bg-[#f7fafc] transition-colors"
+            className="h-10 px-4 border-[#cbd5e1] text-[#4a5568] hover:bg-[#f7fafc] rounded transition-colors"
             title="تحديث البيانات"
           >
             <RotateCcw className="w-4 h-4 ml-2" />
@@ -176,7 +176,7 @@ const OrganizationChartPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => navigate(-1)}
-            className="border-[#cbd5e1] text-gray-700 hover:bg-[#f7fafc] transition-colors"
+            className="h-10 px-4 border-[#cbd5e1] text-[#4a5568] hover:bg-[#f7fafc] rounded transition-colors"
           >
             <ArrowRight className="w-4 h-4 ml-2" />
             العودة
@@ -186,23 +186,23 @@ const OrganizationChartPage: React.FC = () => {
 
       {/* État de chargement */}
       {isLoading && (
-        <div className="min-h-[600px] flex flex-col items-center justify-center bg-[#f7fafc] border border-[#e2e8f0] rounded-lg shadow-sm">
+        <div className="min-h-[600px] flex flex-col items-center justify-center bg-[#f7fafc] border border-[#e2e8f0] rounded shadow-sm">
           <Loader2 className="w-10 h-10 text-[#2c5282] animate-spin mb-3" />
-          <p className="text-sm font-medium text-gray-600">جاري تحميل الهيكل التنظيمي...</p>
+          <p className="text-sm font-medium text-[#4a5568]">جاري تحميل الهيكل التنظيمي...</p>
         </div>
       )}
 
       {/* État d'erreur */}
       {isError && (
-        <div className="min-h-[600px] flex flex-col items-center justify-center bg-[#f7fafc] border border-[#feb2b2] rounded-lg shadow-sm p-6 text-center">
+        <div className="min-h-[600px] flex flex-col items-center justify-center bg-[#f7fafc] border border-[#feb2b2] rounded shadow-sm p-6 text-center">
           <div className="p-3 bg-[#feeeee] text-[#e53e3e] rounded-full mb-3">
             <AlertCircle className="w-8 h-8" />
           </div>
           <h3 className="text-base font-bold text-[#1a202c] mb-1">تعذر تحميل الهيكل التنظيمي</h3>
-          <p className="text-sm text-gray-500 max-w-md mb-4">
+          <p className="text-sm text-[#4a5568] max-w-md mb-4">
             {error instanceof Error ? error.message : 'حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
           </p>
-          <Button onClick={() => refetch()} className="bg-[#2c5282] hover:bg-[#2a4365] text-white">
+          <Button onClick={() => refetch()} className="h-10 px-4 bg-[#2c5282] hover:bg-[#2a4365] text-white rounded">
             <RotateCcw className="w-4 h-4 ml-2" />
             إعادة المحاولة
           </Button>
@@ -211,12 +211,12 @@ const OrganizationChartPage: React.FC = () => {
 
       {/* État vide */}
       {!isLoading && !isError && nodes.length <= 1 && (
-        <div className="min-h-[600px] flex flex-col items-center justify-center bg-[#f7fafc] border border-[#e2e8f0] rounded-lg shadow-sm p-6 text-center">
-          <div className="p-3 bg-[#ebf4ff] text-[#2c5282] rounded-full mb-3">
+        <div className="min-h-[600px] flex flex-col items-center justify-center bg-[#f7fafc] border border-[#e2e8f0] rounded shadow-sm p-6 text-center">
+          <div className="p-3 bg-[#2c5282]/10 text-[#2c5282] rounded-full mb-3">
             <Building2 className="w-8 h-8" />
           </div>
           <h3 className="text-base font-bold text-[#1a202c] mb-1">لا توجد أقسام مسجلة</h3>
-          <p className="text-sm text-gray-500 max-w-md">
+          <p className="text-sm text-[#4a5568] max-w-md">
             لم يتم العثور على أقسام نشطة في النظام لعرضها ضمن الهيكل التنظيمي.
           </p>
         </div>
@@ -224,7 +224,7 @@ const OrganizationChartPage: React.FC = () => {
 
       {/* Zone ReactFlow */}
       {!isLoading && !isError && nodes.length > 1 && (
-        <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded-lg shadow-sm overflow-hidden min-h-[600px] h-[700px] relative">
+        <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded shadow-sm overflow-hidden min-h-[600px] h-[700px] relative">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -247,36 +247,36 @@ const OrganizationChartPage: React.FC = () => {
                 return '#ffffff';
               }}
               maskColor="rgba(247, 250, 252, 0.7)"
-              className="!border !border-[#e2e8f0] !rounded-lg !overflow-hidden"
+              className="!border !border-[#e2e8f0] !rounded !overflow-hidden"
             />
           </ReactFlow>
         </div>
       )}
 
       {/* Légende */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs">
-        <div className="flex items-center gap-2 text-gray-700 font-semibold">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div className="flex items-center gap-2 text-[#1a202c] font-semibold">
           <span>دليل الرموز والوحدات الوظيفية :</span>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#2c5282]"></span>
-            <span className="text-gray-600">مكتب المدير (Bureau Directeur)</span>
+            <span className="text-[#4a5568]">مكتب المدير (Bureau Directeur)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#FFCB56] border border-[#d69e2e]"></span>
-            <span className="text-gray-600">مكتب الضبط (Bureau d'Ordre)</span>
+            <span className="text-[#4a5568]">مكتب الضبط (Bureau d'Ordre)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#38a169]"></span>
-            <span className="text-gray-600">الموارد البشرية (RH)</span>
+            <span className="text-[#4a5568]">الموارد البشرية (RH)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-white border border-[#cbd5e1]"></span>
-            <span className="text-gray-600">أقسام ومصالح أخرى</span>
+            <span className="text-[#4a5568]">أقسام ومصالح أخرى</span>
           </div>
         </div>
-        <div className="text-gray-400 text-xs">
+        <div className="text-[#718096] text-xs">
           * انقر على أي موظف للانتقال إلى ملفه الشخصي
         </div>
       </div>

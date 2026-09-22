@@ -7,6 +7,19 @@ const PersonnelDocument = require('../models/PersonnelDocument');
 const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
 const User = require('../models/User');
+const OrganizationSettings = require('../models/OrganizationSettings');
+
+// Helper pour vérifier si l'utilisateur est un chef de département non-RH
+const isNonRHAdminDepartment = async (user) => {
+  if (!user || user.role !== 'AdminDepartment') return false;
+  const settings = await OrganizationSettings.findOne();
+  const rhDeptId = settings?.rhDepartmentId?.toString();
+  const userDeptId = (user.activeDepartment?._id || user.activeDepartment)?.toString();
+  if (rhDeptId && userDeptId && rhDeptId === userDeptId) {
+    return false; // Chef de département RH
+  }
+  return true; // Chef d'un autre département (non-RH)
+};
 
 // @desc    Créer une nouvelle fiche de personnel
 // @route   POST /api/hr/personnel
@@ -114,8 +127,14 @@ exports.getPersonnelList = async (req, res, next) => {
       query.statut = req.query.statut;
     }
 
-    // Filtre par département principal
-    if (req.query.activeDepartment) {
+    // Filtre par département :
+    // - Si AdminDepartment non-RH : restreindre automatiquement au département actif de l'utilisateur
+    // - Si Admin, SuperAdmin ou RH : appliquer le filtre req.query.activeDepartment s'il est fourni
+    const isNonRH = await isNonRHAdminDepartment(req.user);
+    if (isNonRH) {
+      const userDeptId = req.user.activeDepartment?._id || req.user.activeDepartment;
+      query.activeDepartment = userDeptId || null;
+    } else if (req.query.activeDepartment) {
       query.activeDepartment = req.query.activeDepartment;
     }
 

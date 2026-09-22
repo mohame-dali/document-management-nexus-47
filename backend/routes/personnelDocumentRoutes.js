@@ -7,13 +7,13 @@ const {
   supprimerAssociation
 } = require('../controllers/personnelDocumentController');
 
-const { protect, checkRHAccess } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Toutes les routes nécessitent une authentification et les droits d'accès RH (Admin, SuperAdmin ou AdminDepartment du département RH)
+// Toutes les routes nécessitent une authentification et les droits d'accès autorisés (Admin, SuperAdmin, AdminDepartment, AdminTuningDesk)
 router.use(protect);
-router.use(checkRHAccess);
+router.use(authorize('Admin', 'SuperAdmin', 'AdminDepartment', 'AdminTuningDesk'));
 
 // Routes pour associer un document à une fiche de personnel et lister ses documents
 router.route('/personnel/:personnelId/documents')

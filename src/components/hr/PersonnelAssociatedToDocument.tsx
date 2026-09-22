@@ -68,7 +68,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  const canManage = currentUser && ['SuperAdmin', 'Admin', 'AdminDepartment'].includes(currentUser.role);
+  const canManage = currentUser && ['SuperAdmin', 'Admin', 'AdminDepartment', 'AdminTuningDesk'].includes(currentUser.role);
 
   // States
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -92,6 +92,8 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
     queryFn: () => getPersonnelDuDocument(documentType, documentId),
     enabled: !!documentId,
   });
+
+  const isForbidden = (error as any)?.response?.status === 403 || error?.message?.includes('403');
 
   // Fetch association types list
   const { data: typesList = ['Stage', 'Formation', 'Diplôme', 'Autre'] } = useQuery({
@@ -226,7 +228,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
           <Loader2 className="w-5 h-5 animate-spin text-[#2c5282]" />
           <span className="text-sm">جاري تحميل الموظفين المرتبطين...</span>
         </div>
-      ) : isError ? (
+      ) : isError && !isForbidden ? (
         <div className="p-3 rounded bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error instanceof Error ? error.message : 'فشل في تحميل الموظفين المرتبطين'}</span>

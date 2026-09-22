@@ -99,20 +99,20 @@ const NotFound = () => {
   const errorInfo = getErrorMessage();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100" dir="rtl">
-      <div className="text-center max-w-md p-8 bg-white rounded-lg shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-[#f7fafc]" dir="rtl">
+      <div className="text-center max-w-md w-full mx-4 p-6 bg-white border border-[#e2e8f0] rounded shadow-sm">
         <div className="flex justify-center mb-4">
           <AlertTriangle className="h-16 w-16 text-amber-500" />
         </div>
-        <h1 className="text-6xl font-bold text-gray-800 mb-4">404</h1>
-        <h2 className="text-xl text-gray-600 mb-4">
+        <h1 className="text-6xl font-bold text-[#1a202c] mb-4">404</h1>
+        <h2 className="text-xl font-bold text-[#2d3748] mb-3">
           {errorInfo.title}
         </h2>
-        <p className="text-gray-500 mb-6">
+        <p className="text-[#4a5568] text-sm mb-4 leading-relaxed">
           {errorInfo.description}
         </p>
-        <p className="text-sm text-gray-500 mb-6">
-          المسار <span className="font-mono bg-gray-100 p-1 rounded">{location.pathname}</span> غير موجود.
+        <p className="text-xs text-[#718096] mb-6">
+          المسار <span className="font-mono bg-[#edf2f7] px-1.5 py-0.5 rounded text-[#2d3748]">{location.pathname}</span> غير موجود.
           <br />
           {!location.pathname.startsWith('/dashboard') && !location.pathname.includes('/api/') && (
             <span className="block mt-2">
@@ -120,14 +120,14 @@ const NotFound = () => {
             </span>
           )}
         </p>
-        <div className="flex justify-center gap-4">
-          <Button asChild>
+        <div className="flex flex-col sm:flex-row justify-center gap-3">
+          <Button asChild className="h-11 px-6 bg-[#2c5282] hover:bg-[#2a4365] text-white rounded font-medium">
             <Link to={suggestCorrectRoute()}>
               <Home className="h-4 w-4 ml-2" />
               {errorInfo.suggestion}
             </Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="h-11 px-6 border-[#e2e8f0] text-[#4a5568] hover:bg-[#f7fafc] rounded font-medium">
             <Link to="/">العودة للصفحة الرئيسية</Link>
           </Button>
         </div>

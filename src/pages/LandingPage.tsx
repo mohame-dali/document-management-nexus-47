@@ -33,6 +33,7 @@ const LandingPage = () => {
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
             حل فعال لإدارة الوثائق
           </h1>
+          <div className="w-16 h-[2px] bg-[#FFCB56] mx-auto mb-4 rounded-full" />
           <p className="text-lg sm:text-xl font-semibold text-[#2c5282] mb-3">
             نظام متكامل لإدارة المراسلات الإدارية والموارد البشرية
           </p>

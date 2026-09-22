@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdvancedSearch, { SearchFilters } from '@/components/search/AdvancedSearch';
 import SearchResults from '@/components/search/SearchResults';
-import { Search, Building2, Layers } from 'lucide-react';
+import { Search, Building2 } from 'lucide-react';
 import { useInfiniteSearch } from '@/hooks/useInfiniteSearch';
 
 const AdvancedSearchPage: React.FC = () => {
@@ -37,7 +37,7 @@ const AdvancedSearchPage: React.FC = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
       {/* Institutional AdminLTE Page Header */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="bg-white border border-[#e2e8f0] rounded p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
             <Search className="h-6 w-6" />
@@ -46,7 +46,7 @@ const AdvancedSearchPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal flex items-center gap-2.5">
               البحث المتقدم في المراسلات
             </h1>
-            <p className="text-base text-[#4a5568] leading-relaxed mt-1">
+            <p className="text-sm sm:text-base text-[#4a5568] leading-normal mt-1">
               محرك استعلام إداري متقدم للبحث في نصوص وفهارس المراسلات الواردة والصادرة والنصوص المقروءة آلياً (OCR)
             </p>
           </div>
@@ -59,11 +59,6 @@ const AdvancedSearchPage: React.FC = () => {
               <span>{currentUser.activeDepartment.name}</span>
             </span>
           )}
-
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
-            <Layers className="h-4 w-4 text-[#78350f]" />
-            <span>نظام الأرشيف والفهرسة</span>
-          </span>
         </div>
       </div>
 

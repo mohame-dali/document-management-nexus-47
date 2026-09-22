@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { toast } from 'sonner';
 import { getMyProfile, getMyDocuments } from '@/services/hr/personnelApi';
 import { Personnel, PersonnelDocument } from '@/types/hr';
 import { Department } from '@/types';
@@ -20,11 +22,15 @@ import {
   RefreshCw,
   Info,
   FileText,
-  FileBadge
+  FileBadge,
+  Printer,
 } from 'lucide-react';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { generateCarteInstruction } from '@/services/carteInstructionService';
 
 export const MyProfilePage: React.FC = () => {
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   // 1. Récupération de la fiche Personnel de l'utilisateur connecté
   const {
     data: personnel,
@@ -36,6 +42,47 @@ export const MyProfilePage: React.FC = () => {
     queryFn: getMyProfile,
     retry: false,
   });
+
+  // Handler de génération de la carte d'instruction
+  const handleGenerateCarteInstruction = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/hr/my-profile/full-history', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        withCredentials: true,
+      });
+
+      const resData = response.data?.data;
+      if (!resData) {
+        throw new Error('Aucune donnée reçue');
+      }
+
+      const fullHistory = {
+        promotions: resData.promotions || [],
+        postes: resData.postes || [],
+        diplomes: resData.diplomes || [],
+        sanctions: resData.sanctions || [],
+      };
+
+      const stages = {
+        tunisie: resData.stagesTunisie || [],
+        etranger: resData.stagesEtranger || [],
+      };
+
+      await generateCarteInstruction(
+        resData.personnel || personnel,
+        fullHistory,
+        stages
+      );
+      toast.success('تم إنشاء وتحميل بطاقة الإرشادات بنجاح');
+    } catch (err) {
+      console.error('Erreur génération بطاقة إرشادات:', err);
+      toast.error('حدث خطأ أثناء إنشاء بطاقة الإرشادات');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   // 2. Récupération des documents associés à la fiche Personnel
   const {
@@ -141,7 +188,21 @@ export const MyProfilePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleGenerateCarteInstruction}
+            disabled={isGeneratingPdf}
+            className="h-11 px-4 text-xs font-bold border-[#2c5282] bg-blue-50/50 text-[#2c5282] hover:bg-blue-100/70 flex items-center gap-2 rounded shadow-sm transition-colors"
+          >
+            {isGeneratingPdf ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Printer className="h-4 w-4" />
+            )}
+            <span>بطاقة إرشادات</span>
+          </Button>
+
           <Link to="/dashboard/hr/my-attendance">
             <Button
               variant="outline"
@@ -152,6 +213,7 @@ export const MyProfilePage: React.FC = () => {
             </Button>
           </Link>
         </div>
+
       </div>
 
       {/* 2. Grille des informations (Personnelles & Professionnelles) */}

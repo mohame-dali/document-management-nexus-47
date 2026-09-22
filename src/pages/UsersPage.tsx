@@ -562,11 +562,11 @@ const UsersPage: React.FC = () => {
                 paginatedUsers.map((user) => (
                   <TableRow 
                     key={user._id} 
-                    className="min-h-[64px] h-16 hover:bg-slate-50/80 transition-colors duration-150 border-b border-[#e2e8f0]"
+                    className="hover:bg-[#f7fafc] transition-colors border-b border-[#e2e8f0]"
                   >
                     {/* Photo */}
-                    <TableCell className="text-right py-3 px-4">
-                      <Avatar className="h-11 w-11 rounded-full border border-[#cbd5e1] overflow-hidden bg-gray-50">
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm">
+                      <Avatar className="h-10 w-10 rounded-full border border-[#cbd5e1] overflow-hidden bg-gray-50">
                         {user.photo ? (
                           <AvatarImage 
                             src={getPhotoUrl(user.photo)}
@@ -574,7 +574,7 @@ const UsersPage: React.FC = () => {
                             className="object-cover"
                           />
                         ) : (
-                          <AvatarFallback className="text-sm font-bold bg-[#2c5282]/10 text-[#2c5282]">
+                          <AvatarFallback className="text-xs font-bold bg-[#2c5282]/10 text-[#2c5282]">
                             {user.username.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         )}
@@ -582,69 +582,69 @@ const UsersPage: React.FC = () => {
                     </TableCell>
 
                     {/* Username */}
-                    <TableCell className="text-right py-3 px-4 font-bold text-sm text-[#1a202c]">
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm font-bold text-[#1a202c]">
                       {user.username}
                     </TableCell>
 
                     {/* Role */}
-                    <TableCell className="text-right py-3 px-4">
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm">
                       {user.role === 'SuperAdmin' || user.role === 'Admin' ? (
                         /* Strict WCAG AA: gold background MUST have dark text #1a202c */
-                        <span className="inline-flex items-center px-3 py-1 rounded text-xs sm:text-sm font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
                           {user.role === 'SuperAdmin' ? 'مدير أعلى' : 'مدير'}
                         </span>
                       ) : user.role === 'AdminDepartment' ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded text-xs sm:text-sm font-medium bg-[#2c5282] text-white">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#2c5282] text-white">
                           مدير قسم
                         </span>
                       ) : user.role === 'AdminTuningDesk' ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded text-xs sm:text-sm font-semibold bg-purple-100 text-purple-900 border border-purple-200">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-900 border border-purple-200">
                           مدير المكتب
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded text-xs sm:text-sm font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
                           مستخدم
                         </span>
                       )}
                     </TableCell>
 
                     {/* Departments */}
-                    <TableCell className="text-right py-3 px-4">
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm">
                       {user.departments && user.departments.length > 0 ? (
                         <div className="flex flex-wrap gap-1.5 max-w-[220px]">
                           {user.departments.map(dept => (
                             <span 
                               key={dept._id} 
-                              className="inline-block px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded border border-gray-200"
+                              className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded border border-gray-200"
                             >
                               {dept.name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-sm italic">لا يوجد قسم</span>
+                        <span className="text-gray-400 text-xs italic">لا يوجد قسم</span>
                       )}
                     </TableCell>
 
                     {/* Created Date */}
-                    <TableCell className="text-right py-3 px-4 text-sm text-gray-600 font-medium">
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568]">
                       {formatArabicDate(user.createdAt)}
                     </TableCell>
 
                     {/* Status */}
-                    <TableCell className="text-right py-3 px-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                         user.isActive 
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
                           : 'bg-red-50 text-red-800 border border-red-200'
                       }`}>
-                        <span className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
                         <span>{user.isActive ? 'نشط' : 'معطل'}</span>
                       </span>
                     </TableCell>
 
                     {/* Actions */}
-                    <TableCell className="py-3 px-4">
+                    <TableCell className="py-3 px-4 align-middle text-sm">
                       <div className="flex items-center justify-center gap-1.5">
                         {/* Edit & Password options */}
                         {canEditUser(user) && (
@@ -654,7 +654,7 @@ const UsersPage: React.FC = () => {
                                 variant="outline" 
                                 size="icon"
                                 aria-label="خيارات التعديل"
-                                className="h-11 w-11 border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
+                                className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
                                 title="خيارات التعديل"
                               >
                                 <Edit className="h-4 w-4" />
@@ -663,7 +663,7 @@ const UsersPage: React.FC = () => {
                             <DropdownMenuContent align="end" className="w-48 text-right" dir="rtl">
                               <DropdownMenuItem 
                                 onClick={() => navigate(`/dashboard/users/edit/${user._id}`)}
-                                className="text-base py-2.5 cursor-pointer flex items-center gap-2"
+                                className="text-sm py-2 cursor-pointer flex items-center gap-2"
                               >
                                 <Edit className="h-4 w-4 text-[#2c5282]" />
                                 <span>تعديل المستخدم</span>
@@ -671,7 +671,7 @@ const UsersPage: React.FC = () => {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 onClick={() => handlePasswordChange(user)}
-                                className="text-base py-2.5 cursor-pointer flex items-center gap-2 text-amber-700"
+                                className="text-sm py-2 cursor-pointer flex items-center gap-2 text-amber-700"
                               >
                                 <Key className="h-4 w-4" />
                                 <span>تغيير كلمة المرور</span>
@@ -690,7 +690,7 @@ const UsersPage: React.FC = () => {
                             onClick={() => handleToggleActivation(user)}
                             disabled={toggleActivationMutation.isPending}
                             aria-label={user.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب'}
-                            className={`h-11 w-11 border-[#cbd5e1] rounded transition-colors ${
+                            className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] rounded transition-colors ${
                               user.isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
                             }`}
                             title={user.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب'}
@@ -710,7 +710,7 @@ const UsersPage: React.FC = () => {
                             onClick={() => handleDeleteClick(user._id)}
                             disabled={deleteMutation.isPending}
                             aria-label="حذف المستخدم نهائياً"
-                            className="h-11 w-11 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
+                            className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
                             title="حذف المستخدم نهائياً"
                           >
                             <Trash2 className="h-4 w-4" />

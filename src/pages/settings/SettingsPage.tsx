@@ -346,7 +346,7 @@ const SettingsPage = () => {
             {/* User Photo & Basic Role Card */}
             <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
               <CardHeader className="p-6 border-b border-[#e2e8f0]">
-                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
                   <Camera className="h-5 w-5 text-[#2c5282]" />
                   <span>الصورة الشخصية</span>
                 </CardTitle>
@@ -415,7 +415,7 @@ const SettingsPage = () => {
             <div className="lg:col-span-2 space-y-6">
               <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
                 <CardHeader className="p-6 border-b border-[#e2e8f0]">
-                  <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
+                  <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
                     <User className="h-5 w-5 text-[#2c5282]" />
                     <span>بيانات الحساب</span>
                   </CardTitle>
@@ -508,7 +508,7 @@ const SettingsPage = () => {
         <TabsContent value="security" className="space-y-6 mt-0">
           <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardHeader className="p-6 border-b border-[#e2e8f0]">
-              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
+              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
                 <Shield className="h-5 w-5 text-[#2c5282]" />
                 <span>سياسات الأمان والحماية</span>
               </CardTitle>
@@ -639,7 +639,7 @@ const SettingsPage = () => {
         <TabsContent value="notifications" className="space-y-6 mt-0">
           <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardHeader className="p-6 border-b border-[#e2e8f0]">
-              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
+              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
                 <Bell className="h-5 w-5 text-[#2c5282]" />
                 <span>قنوات وتفضيلات التنبيهات</span>
               </CardTitle>
@@ -751,7 +751,7 @@ const SettingsPage = () => {
         <TabsContent value="preferences" className="space-y-6 mt-0">
           <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardHeader className="p-6 border-b border-[#e2e8f0]">
-              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
+              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
                 <Sliders className="h-5 w-5 text-[#2c5282]" />
                 <span>تفضيلات العرض والمظهر</span>
               </CardTitle>
@@ -850,7 +850,7 @@ const SettingsPage = () => {
           <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardHeader className="p-6 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
                   <Database className="h-5 w-5 text-[#2c5282]" />
                   <span>النسخ الاحتياطي وأرشفة البيانات</span>
                 </CardTitle>
@@ -944,7 +944,7 @@ const SettingsPage = () => {
           <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardHeader className="p-6 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
                   <MessageCircle className="h-5 w-5 text-[#2c5282]" />
                   <span>سياسة حفظ وحذف المراسلات</span>
                 </CardTitle>

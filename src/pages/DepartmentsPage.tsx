@@ -467,11 +467,11 @@ const DepartmentsPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[200px]">اسم القسم</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[280px]">الوصف والاختصاصات</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[130px]">الحالة</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">تاريخ الإنشاء</TableHead>
-                <TableHead className="text-center py-4 px-4 text-sm font-bold text-gray-700 min-w-[160px]">الإجراءات</TableHead>
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[200px]">اسم القسم</TableHead>
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[280px]">الوصف والاختصاصات</TableHead>
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px]">الحالة</TableHead>
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px]">تاريخ الإنشاء</TableHead>
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px]">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -505,16 +505,16 @@ const DepartmentsPage: React.FC = () => {
                   return (
                     <TableRow 
                       key={department._id} 
-                      className="min-h-[64px] h-16 hover:bg-slate-50/80 transition-colors duration-150 border-b border-[#e2e8f0]"
+                      className="hover:bg-[#f7fafc] transition-colors border-b border-[#e2e8f0]"
                     >
                       {/* Name */}
-                      <TableCell className="text-right py-3 px-4">
+                      <TableCell className="text-right py-3 px-4 align-middle text-sm">
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
                             <Building className="h-4 w-4" />
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-bold text-base text-[#1a202c]">
+                            <span className="font-bold text-sm text-[#1a202c]">
                               {department.name}
                             </span>
                             {/* Badge doré pour Bureau Directeur ou Bureau d'Ordre ou Département RH */}
@@ -547,33 +547,33 @@ const DepartmentsPage: React.FC = () => {
                       </TableCell>
 
                       {/* Description */}
-                      <TableCell className="text-right py-3 px-4 text-base text-gray-600">
+                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568]">
                         {department.description ? (
                           <span className="line-clamp-2 max-w-md">{department.description}</span>
                         ) : (
-                          <span className="text-gray-400 italic text-sm">لا يوجد وصف مسجل</span>
+                          <span className="text-gray-400 italic text-xs">لا يوجد وصف مسجل</span>
                         )}
                       </TableCell>
 
                       {/* Status */}
-                      <TableCell className="text-right py-3 px-4">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${
+                      <TableCell className="text-right py-3 px-4 align-middle text-sm">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           isActive 
                             ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
                             : 'bg-red-50 text-red-800 border border-red-200'
                         }`}>
-                          <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
                           <span>{isActive ? 'نشط' : 'معطل'}</span>
                         </span>
                       </TableCell>
 
                       {/* Created At */}
-                      <TableCell className="text-right py-3 px-4 text-sm text-gray-600 font-medium">
+                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568]">
                         {department.createdAt ? formatArabicDate(department.createdAt) : 'غير مسجل'}
                       </TableCell>
 
                       {/* Actions: View, Edit, Deactivate/Activate, Delete, Bureau / RH assignment */}
-                      <TableCell className="py-3 px-4">
+                      <TableCell className="py-3 px-4 align-middle text-sm">
                         <div className="flex items-center justify-center gap-1.5">
                           {/* View Affiliated Users */}
                           <Button 
@@ -581,7 +581,7 @@ const DepartmentsPage: React.FC = () => {
                             size="icon"
                             onClick={() => setSelectedDepartmentForView(department)}
                             aria-label="عرض تفاصيل ومنسوبي القسم"
-                            className="h-11 w-11 border-[#cbd5e1] hover:bg-blue-50 hover:text-[#2c5282] text-gray-700 rounded transition-colors"
+                            className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-blue-50 hover:text-[#2c5282] text-gray-700 rounded transition-colors"
                             title="عرض تفاصيل ومنسوبي القسم"
                           >
                             <Eye className="h-4 w-4" />
@@ -595,7 +595,7 @@ const DepartmentsPage: React.FC = () => {
                                 size="icon"
                                 onClick={() => navigate(`/dashboard/departments/edit/${department._id}`)}
                                 aria-label="تعديل بيانات القسم"
-                                className="h-11 w-11 border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded transition-colors"
+                                className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded transition-colors"
                                 title="تعديل بيانات القسم"
                               >
                                 <Edit className="h-4 w-4" />
@@ -608,7 +608,7 @@ const DepartmentsPage: React.FC = () => {
                                 onClick={() => handleToggleStatus(department)}
                                 disabled={toggleStatusMutation.isPending}
                                 aria-label={isActive ? 'تعطيل القسم' : 'تنشيط القسم'}
-                                className={`h-11 w-11 border-[#cbd5e1] rounded transition-colors ${
+                                className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] rounded transition-colors ${
                                   isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
                                 }`}
                                 title={isActive ? 'تعطيل القسم' : 'تنشيط القسم'}
@@ -627,7 +627,7 @@ const DepartmentsPage: React.FC = () => {
                                 onClick={() => handleDeleteClick(department._id)}
                                 disabled={deleteMutation.isPending}
                                 aria-label="حذف القسم نهائياً"
-                                className="h-11 w-11 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded transition-colors"
+                                className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded transition-colors"
                                 title="حذف القسم نهائياً"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -641,7 +641,7 @@ const DepartmentsPage: React.FC = () => {
                                     size="icon"
                                     disabled={setBureauMutation.isPending || setRhMutation.isPending}
                                     aria-label="تخصيص الوحدة الوظيفية أو قسم الموارد البشرية"
-                                    className={`h-11 w-11 rounded transition-colors ${
+                                    className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] rounded transition-colors ${
                                       isMarked 
                                         ? 'bg-[#FFCB56]/20 border-[#e2be40] text-[#1a202c] hover:bg-[#FFCB56]/30' 
                                         : 'border-[#cbd5e1] hover:bg-gray-100 text-gray-700'

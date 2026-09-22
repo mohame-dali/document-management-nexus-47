@@ -25,6 +25,7 @@ import {
   CalendarDays,
   CalendarCheck,
   CalendarRange,
+  GraduationCap,
   ChevronDown,
   ChevronLeft,
   Trash2
@@ -420,6 +421,24 @@ const Sidebar = () => {
                                 location.pathname === '/dashboard/hr/all-personnel-situation' ? "text-white" : "text-gray-400"
                               )} />
                               <span className="truncate">وضعية الموظفين</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/stages')}
+                              title={!isOpen ? "التربصات" : undefined}
+                              className={cn(
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/stages'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <GraduationCap className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/stages' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">التربصات</span>
                             </button>
                           </div>
                         )}

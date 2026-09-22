@@ -49,6 +49,7 @@ import LeaveReasonsManagementPage from './pages/hr/LeaveReasonsManagementPage';
 import AttendancePage from './pages/hr/AttendancePage';
 import MyAttendanceCalendarPage from './pages/hr/MyAttendanceCalendarPage';
 import AllPersonnelSituationPage from './pages/hr/AllPersonnelSituationPage';
+import RHStagesPage from './pages/hr/RHStagesPage';
 import OrganizationChartPage from './pages/organization/OrganizationChartPage';
 import TrashPage from './pages/trash/TrashPage';
 import KeyboardShortcuts from './components/common/KeyboardShortcuts';
@@ -274,6 +275,11 @@ function App() {
                         <Route path="hr/all-personnel-situation" element={
                           <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
                             <AllPersonnelSituationPage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/stages" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                            <RHStagesPage />
                           </ProtectedRoute>
                         } />
 
