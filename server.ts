@@ -21,8 +21,10 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'nexus47-super-secret-key-ai-
 process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 
-// Connect to database (with fallback)
-connectDB();
+// Connect to database (with fallback to mockRouter if offline)
+connectDB().catch((err: any) => {
+  console.warn('Database initialization warning:', err.message);
+});
 
 const app = express();
 const httpServer = createServer(app);
