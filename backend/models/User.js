@@ -71,6 +71,9 @@ const userSchema = new mongoose.Schema({
   }
 });
 
+// Index
+userSchema.index({ isDeleted: 1 });
+
 // Check role-specific constraints before save
 userSchema.pre('save', function(next) {
   // Check if AdminTuningDesk or Director has departments assigned

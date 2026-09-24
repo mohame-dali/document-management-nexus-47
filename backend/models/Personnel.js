@@ -161,5 +161,6 @@ personnelSchema.index({ nom: 1, prenom: 1 });
 personnelSchema.index({ cin: 1 });
 personnelSchema.index({ statut: 1 });
 personnelSchema.index({ activeDepartment: 1 });
+personnelSchema.index({ isDeleted: 1 });
 
 module.exports = mongoose.model('Personnel', personnelSchema);

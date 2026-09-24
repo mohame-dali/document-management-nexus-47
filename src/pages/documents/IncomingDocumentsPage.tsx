@@ -75,6 +75,7 @@ import { getActivityUrgency } from '@/utils/activityUtils';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
 import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
+import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
@@ -111,6 +112,7 @@ const IncomingDocumentsPage: React.FC = () => {
   const [responseDoc, setResponseDoc] = useState<IncomingDocument | null>(null);
   const [responsibleDoc, setResponsibleDoc] = useState<IncomingDocument | null>(null);
   const [deleteDoc, setDeleteDoc] = useState<IncomingDocument | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<IncomingDocument | null>(null);
 
   // Year persistence hook
   const { selectedYear, setSelectedYear, isValidYear } = useYearPersistence('incomingDocumentsSelectedYear');
@@ -985,6 +987,19 @@ const IncomingDocumentsPage: React.FC = () => {
                             عرض
                           </Button>
 
+                          {/* معاينة (Aperçu) */}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPreviewDoc(doc)}
+                            title="معاينة الوثيقة"
+                            className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
+                          >
+                            <FileText className="h-3.5 w-3.5 ml-1" />
+                            معاينة
+                          </Button>
+
                           {/* 2. Traiter (معالجة / إضافة رد) */}
                           {canAssignOrRespond && (
                             <Button
@@ -1045,6 +1060,14 @@ const IncomingDocumentsPage: React.FC = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" dir="rtl" className="w-48 bg-white border border-[#e2e8f0] rounded shadow-sm">
+                              <DropdownMenuItem 
+                                onClick={() => setPreviewDoc(doc)}
+                                className="text-sm py-2 cursor-pointer"
+                              >
+                                <Eye className="ml-2 h-4 w-4 text-[#2c5282]" />
+                                معاينة الوثيقة
+                              </DropdownMenuItem>
+
                               {doc.scannedDocument && (
                                 <DropdownMenuItem 
                                   onClick={() => handleDownload(doc)}
@@ -1181,6 +1204,17 @@ const IncomingDocumentsPage: React.FC = () => {
                     >
                       <Eye className="h-3.5 w-3.5 ml-1" />
                       عرض
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPreviewDoc(doc)}
+                      className="flex-1 h-11 text-xs font-semibold text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 rounded"
+                    >
+                      <FileText className="h-3.5 w-3.5 ml-1" />
+                      معاينة
                     </Button>
 
                     {canAssignOrRespond && (
@@ -1410,6 +1444,14 @@ const IncomingDocumentsPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        open={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+        direction="incoming"
+      />
 
       <ScrollToTop />
     </div>
