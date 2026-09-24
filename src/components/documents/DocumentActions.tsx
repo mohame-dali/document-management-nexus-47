@@ -51,15 +51,16 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdmin = currentUser?.role === 'Admin';
-  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isDirector = currentUser?.role === 'Director';
   
-  // SuperAdmin, AdminTuningDesk and Admin can edit and delete documents
-  const canEdit = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canDelete = isSuperAdmin || isAdminTuningDesk || isAdmin;
+  // AdminTuningDesk and Admin can edit and delete documents (Director is read-only)
+  const canEdit = isAdminTuningDesk || isAdmin;
+  const canDelete = isAdminTuningDesk || isAdmin;
 
   // AdminDepartment can organize documents, others can only view
   const canOrganizeDocuments = isAdminDepartment;
   const canViewCategorization = isAdmin || 
+                               isDirector ||
                                isAdminTuningDesk || 
                                isAdminDepartment ||
                                currentUser?.role === 'User';

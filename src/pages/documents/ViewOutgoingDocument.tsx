@@ -87,14 +87,14 @@ const ViewOutgoingDocument: React.FC = () => {
   const [ocrSearchQuery, setOcrSearchQuery] = useState('');
 
   // User role permissions
-  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isDirector = currentUser?.role === 'Director';
   const isAdmin = currentUser?.role === 'Admin';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
-  const canEdit = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canDelete = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canOrganizeDocuments = isAdminDepartment || isSuperAdmin || isAdmin;
+  const canEdit = isAdminTuningDesk || isAdmin;
+  const canDelete = isAdminTuningDesk || isAdmin;
+  const canOrganizeDocuments = isAdminDepartment || isAdmin;
 
   // 1. Fetch main outgoing document
   const { 
@@ -405,6 +405,14 @@ const ViewOutgoingDocument: React.FC = () => {
               <FileOutput className="h-4 w-4" />
               صادر رقم: #{document.serialNumber} / {document.year}
             </span>
+
+            {/* Director Read-Only Badge */}
+            {isDirector && (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] shadow-xs">
+                <Building2 className="h-4 w-4 text-[#1a202c]" />
+                مدير الإدارة (اطلاع شامل)
+              </span>
+            )}
 
             {/* Document Type Badge (Institutional Gold with Dark Text) */}
             {document.typeDocument && (
@@ -1164,7 +1172,7 @@ const ViewOutgoingDocument: React.FC = () => {
             </Button>
           )}
 
-          {/* Action 6: Delete Document (Admin / SuperAdmin / AdminTuningDesk) */}
+          {/* Action 6: Delete Document (Admin / AdminTuningDesk) */}
           {canDelete && (
             <Button
               type="button"

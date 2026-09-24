@@ -553,6 +553,16 @@ const IncomingDocumentsPage: React.FC = () => {
               {totalCount} وثيقة واردة
             </span>
 
+            {isDirector && (
+              <span 
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] shadow-xs"
+                title="اطلاع شامل على كافة وثائق ومراسلات الإدارة"
+              >
+                <Building2 className="h-4 w-4 text-[#1a202c]" />
+                كافة الأقسام (مدير الإدارة)
+              </span>
+            )}
+
             <span 
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-semibold bg-slate-100 text-[#1a202c] border border-slate-300"
               title="السنة الحالية المفعلة"

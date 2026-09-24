@@ -34,7 +34,7 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
   const { data: timeline, isLoading } = useQuery({
     queryKey: ['documentTimeline', documentId],
     queryFn: () => getDocumentTimeline(documentId),
-    enabled: !!documentId && (currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin')
+    enabled: !!documentId && (currentUser?.role === 'Director' || currentUser?.role === 'Admin')
   });
 
   const getActionIcon = (action: string) => {
@@ -88,7 +88,7 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
     }
   };
 
-  if (currentUser?.role !== 'SuperAdmin' && currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'Director' && currentUser?.role !== 'Admin') {
     return null;
   }
 

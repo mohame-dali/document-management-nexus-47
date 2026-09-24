@@ -34,7 +34,7 @@ const DocumentAssignment: React.FC<DocumentAssignmentProps> = ({
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: getUsers,
-    enabled: currentUser?.role === 'SuperAdmin' || currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Admin'
+    enabled: currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Admin'
   });
 
   const assignDepartmentsMutation = useMutation({
@@ -93,7 +93,7 @@ const DocumentAssignment: React.FC<DocumentAssignmentProps> = ({
   };
 
   // Only AdminTuningDesk and Admin can assign documents
-  if (currentUser?.role !== 'SuperAdmin' && currentUser?.role !== 'AdminTuningDesk' && currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'AdminTuningDesk' && currentUser?.role !== 'Admin') {
     return null;
   }
 

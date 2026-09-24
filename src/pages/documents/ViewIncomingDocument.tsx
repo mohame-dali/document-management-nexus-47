@@ -72,14 +72,14 @@ const ViewIncomingDocument: React.FC = () => {
   const [isCopiedOcr, setIsCopiedOcr] = useState(false);
 
   // User permissions
-  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isDirector = currentUser?.role === 'Director';
   const isAdmin = currentUser?.role === 'Admin';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
-  const canEdit = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canOrganizeDocuments = isAdminDepartment || isSuperAdmin || isAdmin;
-  const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk || isSuperAdmin;
+  const canEdit = isAdminTuningDesk || isAdmin;
+  const canOrganizeDocuments = isAdminDepartment || isAdmin;
+  const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk;
 
   // 1. Fetch main incoming document
   const { 
@@ -279,6 +279,14 @@ const ViewIncomingDocument: React.FC = () => {
               <FileInput className="h-4 w-4" />
               وارد رقم: #{document.serialNumber} / {document.year}
             </span>
+
+            {/* Director Read-Only Badge */}
+            {isDirector && (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] shadow-xs">
+                <Building2 className="h-4 w-4 text-[#1a202c]" />
+                مدير الإدارة (اطلاع شامل)
+              </span>
+            )}
 
             {/* Answer Status Badge */}
             {document.answer ? (

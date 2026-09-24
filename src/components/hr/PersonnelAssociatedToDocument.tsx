@@ -68,7 +68,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  const canManage = currentUser && ['SuperAdmin', 'Admin', 'AdminDepartment', 'AdminTuningDesk'].includes(currentUser.role);
+  const canManage = currentUser && ['Admin', 'AdminDepartment', 'AdminTuningDesk'].includes(currentUser.role);
 
   // States
   const [isAddOpen, setIsAddOpen] = useState(false);
