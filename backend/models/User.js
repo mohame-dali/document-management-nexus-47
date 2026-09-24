@@ -76,9 +76,10 @@ userSchema.index({ isDeleted: 1 });
 
 // Check role-specific constraints before save
 userSchema.pre('save', function(next) {
-  // Check if AdminTuningDesk or Director has departments assigned
-  // Both roles are organization-wide / unattached to a single department
-  if ((this.role === 'AdminTuningDesk' || this.role === 'Director') && this.departments.length > 0) {
+  // Check if AdminTuningDesk has departments assigned
+  // AdminTuningDesk is organization-wide / unattached to a single department
+  // Note: Director is a real person and can belong to a department (Direction) and have a personnelId
+  if (this.role === 'AdminTuningDesk' && this.departments.length > 0) {
     throw new Error(`${this.role} cannot belong to any department`);
   }
   next();

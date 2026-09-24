@@ -142,6 +142,7 @@ const translations: Record<string, Record<string, string>> = {
     'folders.enterFolderName': 'أدخل اسم المجلد',
     'folders.enterFolderNameAndDepartment': 'يرجى إدخال اسم المجلد واختيار قسم',
     'folders.docs': 'مستند',
+    'roles.Director': 'المدير العام',
     'roles.Admin': 'مدير النظام',
     'roles.AdminDepartment': 'مدير القسم', 
     'roles.AdminTuningDesk': 'مكتب التنسيق',

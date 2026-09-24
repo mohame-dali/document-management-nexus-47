@@ -136,7 +136,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success('تم تسجيل الدخول بنجاح');
       
       // Role-based redirection with Setup check for Admins
-      if ((finalUser.role === 'Admin' || finalUser.role === 'SuperAdmin')) {
+      if (finalUser.role === 'Admin') {
         try {
           const settings = await getOrganizationSettings();
           const isComplete = Boolean(
@@ -286,8 +286,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const canAccessDepartment = (departmentId?: string): boolean => {
     if (!currentUser) return false;
     
-    // SuperAdmin, Admin and AdminTuningDesk have access to all departments
-    if (currentUser.role === 'SuperAdmin' || currentUser.role === 'Admin' || currentUser.role === 'AdminTuningDesk') {
+    // Director, Admin and AdminTuningDesk have access to all departments
+    if (currentUser.role === 'Director' || currentUser.role === 'Admin' || currentUser.role === 'AdminTuningDesk') {
       return true;
     }
     
@@ -302,17 +302,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const canManageUsers = (): boolean => {
     if (!currentUser) return false;
-    return ['SuperAdmin', 'Admin', 'AdminDepartment'].includes(currentUser.role);
+    return ['Admin', 'AdminDepartment'].includes(currentUser.role);
   };
 
   const canCreateUsers = (): boolean => {
     if (!currentUser) return false;
-    return ['SuperAdmin', 'Admin', 'AdminDepartment'].includes(currentUser.role);
+    return ['Admin', 'AdminDepartment'].includes(currentUser.role);
   };
 
   const canViewAllDocuments = (): boolean => {
     if (!currentUser) return false;
-    return ['SuperAdmin', 'Admin', 'AdminTuningDesk'].includes(currentUser.role);
+    return ['Director', 'Admin', 'AdminTuningDesk'].includes(currentUser.role);
   };
 
   return (

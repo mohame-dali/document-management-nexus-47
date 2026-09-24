@@ -74,7 +74,7 @@ router.put('/:id/password',
 );
 
 router.put('/:id/photo', 
-  authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'), 
+  authorize('Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'), 
   uploadUserPhoto.single('photo'),
   auditDocumentActivity('user_update'), 
   uploadPhoto

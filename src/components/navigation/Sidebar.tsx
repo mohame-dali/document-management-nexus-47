@@ -30,7 +30,9 @@ import {
   ChevronDown,
   ChevronLeft,
   Trash2,
-  Sliders
+  Sliders,
+  History,
+  Network
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
@@ -67,9 +69,9 @@ const Sidebar = () => {
     : currentUser?.activeDepartment;
 
   // Accès RH restreint selon LOT 8 :
-  // Visible pour Admin, SuperAdmin, et AdminDepartment UNIQUEMENT si son département actif est rhDepartmentId
+  // Visible pour Admin, Director, et AdminDepartment UNIQUEMENT si son département actif est rhDepartmentId
   const canAccessHR =
-    currentUser?.role === 'SuperAdmin' ||
+    currentUser?.role === 'Director' ||
     currentUser?.role === 'Admin' ||
     (currentUser?.role === 'AdminDepartment' &&
       Boolean(rhDepartmentId) &&
@@ -82,8 +84,8 @@ const Sidebar = () => {
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   const menuItems = [
-    // SuperAdmin menu items (same as Admin with full access, sans mon-profil)
-    ...(currentUser?.role === 'SuperAdmin' ? [
+    // Director menu items (read-only views across the system, sans mon-profil)
+    ...(currentUser?.role === 'Director' ? [
       { path: '/dashboard', label: t('sidebar.dashboard'), icon: LayoutDashboard, color: 'text-blue-600' },
       { path: '/dashboard/departments', label: t('sidebar.departments'), icon: Building2, color: 'text-purple-600' },
       { path: '/dashboard/users', label: t('sidebar.users'), icon: Users2, color: 'text-green-600' },
@@ -92,8 +94,8 @@ const Sidebar = () => {
       { path: '/dashboard/folders', label: t('sidebar.folders'), icon: FolderOpen, color: 'text-yellow-600' },
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
-      { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
-      { path: '/setup', label: 'تهيئة النظام', icon: Sliders, color: 'text-teal-500' },
+      { path: '/dashboard/organization-chart', label: 'الهيكل التنظيمي', icon: Network, color: 'text-emerald-600' },
+      { path: '/dashboard/audit-trail', label: 'سجل المراجعة', icon: History, color: 'text-amber-600' },
     ] : []),
 
     // Admin menu items (avec mon-profil)
@@ -158,7 +160,7 @@ const Sidebar = () => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'SuperAdmin':
+      case 'Director':
         return 'border-[#d69e2e]/40 bg-[#d69e2e]/15 text-[#fbd38d]';
       case 'Admin':
         return 'border-[#e53e3e]/40 bg-[#e53e3e]/15 text-[#feb2b2]';
