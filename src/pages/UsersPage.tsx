@@ -170,7 +170,7 @@ const UsersPage: React.FC = () => {
   };
 
   const canEditUser = (user: User) => {
-    if (currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') {
+    if (currentUser?.role === 'Admin') {
       return true;
     }
     
@@ -196,7 +196,7 @@ const UsersPage: React.FC = () => {
     const total = users.length;
     const active = users.filter(u => u.isActive).length;
     const inactive = total - active;
-    const admins = users.filter(u => u.role === 'Admin' || u.role === 'SuperAdmin').length;
+    const admins = users.filter(u => u.role === 'Admin' || u.role === 'Director').length;
     return { total, active, inactive, admins };
   }, [users]);
 
@@ -314,7 +314,7 @@ const UsersPage: React.FC = () => {
             <span>تحديث</span>
           </Button>
 
-          {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin' || currentUser?.role === 'AdminDepartment') && (
+          {(currentUser?.role === 'Admin' || currentUser?.role === 'AdminDepartment') && (
             <Button 
               onClick={() => navigate('/dashboard/users/create')} 
               className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-bold rounded shadow-none flex items-center gap-2"
@@ -419,7 +419,7 @@ const UsersPage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL" className="text-base py-2 font-medium">جميع الأدوار</SelectItem>
-                <SelectItem value="SuperAdmin" className="text-base py-2">مدير أعلى (SuperAdmin)</SelectItem>
+                <SelectItem value="Director" className="text-base py-2">مدير الإدارة (Director)</SelectItem>
                 <SelectItem value="Admin" className="text-base py-2">مدير (Admin)</SelectItem>
                 <SelectItem value="AdminDepartment" className="text-base py-2">مدير قسم (AdminDepartment)</SelectItem>
                 <SelectItem value="AdminTuningDesk" className="text-base py-2">مدير المكتب (AdminTuningDesk)</SelectItem>
@@ -588,10 +588,14 @@ const UsersPage: React.FC = () => {
 
                     {/* Role */}
                     <TableCell className="text-right py-3 px-4 align-middle text-sm">
-                      {user.role === 'SuperAdmin' || user.role === 'Admin' ? (
+                      {user.role === 'Director' ? (
                         /* Strict WCAG AA: gold background MUST have dark text #1a202c */
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
-                          {user.role === 'SuperAdmin' ? 'مدير أعلى' : 'مدير'}
+                          مدير الإدارة
+                        </span>
+                      ) : user.role === 'Admin' ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c] border border-[#e2be40]">
+                          مدير
                         </span>
                       ) : user.role === 'AdminDepartment' ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#2c5282] text-white">
@@ -682,7 +686,6 @@ const UsersPage: React.FC = () => {
                         
                         {/* Toggle active status */}
                         {(currentUser?.role === 'Admin' || 
-                          currentUser?.role === 'SuperAdmin' ||
                           (currentUser?.role === 'AdminDepartment' && canEditUser(user))) && (
                           <Button 
                             variant="outline" 
@@ -703,7 +706,7 @@ const UsersPage: React.FC = () => {
                         )}
                         
                         {/* Delete user */}
-                        {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && currentUser._id !== user._id && (
+                        {currentUser?.role === 'Admin' && currentUser._id !== user._id && (
                           <Button 
                             variant="outline" 
                             size="icon"

@@ -96,7 +96,7 @@ const EditUser: React.FC = () => {
   const canEditUser = () => {
     if (!currentUser || !user) return false;
     
-    if (currentUser.role === 'Admin' || currentUser.role === 'SuperAdmin') {
+    if (currentUser.role === 'Admin') {
       return true;
     }
     
@@ -273,9 +273,13 @@ const EditUser: React.FC = () => {
             <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
               <span className="text-sm font-semibold text-gray-500 block">الدور المسجل</span>
               <div>
-                {user.role === 'SuperAdmin' || user.role === 'Admin' ? (
+                {user.role === 'Director' ? (
                   <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold text-xs px-2.5 py-0.5">
-                    {user.role === 'SuperAdmin' ? 'مدير أعلى' : 'مدير'}
+                    مدير الإدارة
+                  </Badge>
+                ) : user.role === 'Admin' ? (
+                  <Badge className="bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold text-xs px-2.5 py-0.5">
+                    مدير
                   </Badge>
                 ) : user.role === 'AdminDepartment' ? (
                   <Badge className="bg-[#2c5282] text-white font-medium text-xs px-2.5 py-0.5">
