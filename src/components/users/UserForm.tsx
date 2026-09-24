@@ -32,7 +32,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface UserFormData {
   username: string;
   password?: string;
-  role: 'SuperAdmin' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
+  role: 'Director' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
   departments: string[];
   isActive?: boolean;
   personnelId?: string | null;
@@ -115,9 +115,9 @@ const UserForm: React.FC<UserFormProps> = ({
      activeDeptName.includes('الموارد البشرية'))
   );
 
-  // Seuls Admin, SuperAdmin et AdminDepartment du département RH peuvent CRÉER / gérer des fiches personnel
+  // Seuls Admin et AdminDepartment du département RH peuvent CRÉER / gérer des fiches personnel
   // Les AdminDepartment NON-RH (ex: QT, LABO) ne peuvent PAS créer de fiche, ils peuvent uniquement en sélectionner une existante
-  const isSuperOrAdmin = effectiveUserRole === 'SuperAdmin' || effectiveUserRole === 'Admin';
+  const isSuperOrAdmin = effectiveUserRole === 'Admin';
   const isAdminDeptRH = effectiveUserRole === 'AdminDepartment' && isRHDepartment;
   const canManagePersonnel = isSuperOrAdmin || isAdminDeptRH;
 
@@ -161,15 +161,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const availableRoles = () => {
     if (currentUserRole === 'Admin') {
       return [
-        { value: 'SuperAdmin', label: 'مدير أعلى', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
-        { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
-        { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
-        { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
-        { value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }
-      ];
-    } else if (currentUserRole === 'SuperAdmin') {
-      return [
-        { value: 'SuperAdmin', label: 'مدير أعلى', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
+        { value: 'Director', label: 'مدير الإدارة', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
         { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
         { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
         { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
@@ -182,7 +174,7 @@ const UserForm: React.FC<UserFormProps> = ({
   };
   
   const availableDepartments = () => {
-    if (currentUserRole === 'SuperAdmin' || currentUserRole === 'Admin') {
+    if (currentUserRole === 'Admin') {
       return departments;
     } else if (currentUserRole === 'AdminDepartment') {
       return departments.filter(dept => dept._id === currentUserDepartment);
@@ -195,9 +187,9 @@ const UserForm: React.FC<UserFormProps> = ({
   const selectedPersonnelId = form.watch('personnelId');
   const selectedPersonnel = personnels.find((p: Personnel) => p._id === selectedPersonnelId);
 
-  // LOT 7 : obligatoire pour AdminDepartment, AdminTuningDesk, User ; optionnel pour SuperAdmin
-  const isPersonnelRequired = ['AdminDepartment', 'AdminTuningDesk', 'User'].includes(selectedRole);
-  const isTechnicalSuperAdmin = selectedRole === 'SuperAdmin';
+  // Obligatoire pour Director, AdminDepartment, AdminTuningDesk, User
+  const isPersonnelRequired = ['Director', 'AdminDepartment', 'AdminTuningDesk', 'User'].includes(selectedRole);
+  const isTechnicalDirector = selectedRole === 'Director';
 
   // LOT B : Détection si la fiche Personnel sélectionnée appartient à une unité fonctionnelle
   const isSelectedPersonnelFunctional = selectedPersonnel?.activeDepartment
@@ -227,14 +219,14 @@ const UserForm: React.FC<UserFormProps> = ({
   };
   
   const handleSubmit = (data: UserFormData) => {
-    if (data.role === 'AdminTuningDesk' || data.role === 'SuperAdmin') {
+    if (data.role === 'AdminTuningDesk') {
       data.departments = [];
     } else if (currentUserRole === 'AdminDepartment' && data.role === 'User') {
       data.departments = [currentUserDepartment];
     }
 
-    // Validation du champ personnelId obligatoire pour AdminDepartment, AdminTuningDesk, User
-    const isRequired = ['AdminDepartment', 'AdminTuningDesk', 'User'].includes(data.role);
+    // Validation du champ personnelId obligatoire pour Director, AdminDepartment, AdminTuningDesk, User
+    const isRequired = ['Director', 'AdminDepartment', 'AdminTuningDesk', 'User'].includes(data.role);
     if (!isEditMode && isRequired && !data.personnelId) {
       form.setError('personnelId', {
         type: 'manual',
@@ -533,18 +525,26 @@ const UserForm: React.FC<UserFormProps> = ({
             
             {/* Display selected role as badge */}
             {selectedRole && (
-              <div className="flex items-center gap-3 p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
-                <span className="text-base font-medium text-gray-700">الدور الحالي المحدد:</span>
-                <Badge className={`${availableRoles().find(r => r.value === selectedRole)?.badgeClass || 'bg-gray-100 text-gray-800'} text-sm px-3 py-1`}>
-                  {availableRoles().find(r => r.value === selectedRole)?.label}
-                </Badge>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3 p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                  <span className="text-base font-medium text-gray-700">الدور الحالي المحدد:</span>
+                  <Badge className={`${availableRoles().find(r => r.value === selectedRole)?.badgeClass || 'bg-gray-100 text-gray-800'} text-sm px-3 py-1`}>
+                    {availableRoles().find(r => r.value === selectedRole)?.label}
+                  </Badge>
+                </div>
+                {selectedRole === 'Director' && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-900 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span>ملاحظة: يُسمح بمدير إدارة واحد فقط. يرجى التأكد من عدم وجود مدير إدارة آخر. (Un seul Directeur est autorisé. Vérifiez qu'aucun autre Directeur n'existe.)</span>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Departments Section */}
-        {selectedRole !== 'AdminTuningDesk' && selectedRole !== 'SuperAdmin' && availableDepartments().length > 0 && (
+        {selectedRole !== 'AdminTuningDesk' && availableDepartments().length > 0 && (
           <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardHeader className="pb-4 border-b border-[#e2e8f0]">
               <CardTitle className="flex items-center justify-between">

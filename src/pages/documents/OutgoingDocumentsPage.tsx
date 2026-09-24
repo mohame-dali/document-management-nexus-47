@@ -14,6 +14,7 @@ import {
   Users, 
   Loader2,
   Eye,
+  FileText,
   FolderOpen, 
   MoreHorizontal, 
   Download, 
@@ -82,6 +83,7 @@ import { useInfiniteDocuments } from '@/hooks/useInfiniteDocuments';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
+import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
@@ -117,6 +119,7 @@ const OutgoingDocumentsPage: React.FC = () => {
   const [folderDoc, setFolderDoc] = useState<OutgoingDocument | null>(null);
   const [deleteDoc, setDeleteDoc] = useState<OutgoingDocument | null>(null);
   const [transferDoc, setTransferDoc] = useState<OutgoingDocument | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<OutgoingDocument | null>(null);
 
   // Transfer Form State
   const [transferTargetDept, setTransferTargetDept] = useState<string>('');
@@ -127,16 +130,16 @@ const OutgoingDocumentsPage: React.FC = () => {
   const { selectedYear, handleYearChange, isValidYear } = useYearPersistence('outgoingDocumentsSelectedYear');
 
   // Role permissions
-  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isDirector = currentUser?.role === 'Director';
   const isAdmin = currentUser?.role === 'Admin';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
   const canAddDocuments = isAdmin || isAdminTuningDesk;
-  const canEdit = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canDelete = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canOrganizeDocuments = isAdminDepartment || isSuperAdmin || isAdmin;
-  const canViewCategorization = isAdmin || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
+  const canEdit = isAdmin || isAdminTuningDesk;
+  const canDelete = isAdmin || isAdminTuningDesk;
+  const canOrganizeDocuments = isAdminDepartment || isAdmin;
+  const canViewCategorization = isAdmin || isDirector || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
 
   // Fetch departments
   const { data: departments = [] } = useQuery<Department[]>({
@@ -916,6 +919,19 @@ const OutgoingDocumentsPage: React.FC = () => {
                               عرض
                             </Button>
 
+                            {/* معاينة (Aperçu) */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPreviewDoc(doc)}
+                              title="معاينة الوثيقة"
+                              className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
+                            >
+                              <FileText className="h-3.5 w-3.5 ml-1" />
+                              معاينة
+                            </Button>
+
                             {/* 2. Modifier (تعديل) */}
                             {canEdit && (
                               <Button
@@ -1094,6 +1110,18 @@ const OutgoingDocumentsPage: React.FC = () => {
                       >
                         <Eye className="h-3.5 w-3.5 ml-1" />
                         عرض
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviewDoc(doc)}
+                        className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100"
+                        title="معاينة الوثيقة"
+                      >
+                        <FileText className="h-3.5 w-3.5 ml-1" />
+                        معاينة
                       </Button>
 
                       {canEdit && (
@@ -1409,6 +1437,14 @@ const OutgoingDocumentsPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        open={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+        direction="outgoing"
+      />
 
       <ScrollToTop />
     </div>

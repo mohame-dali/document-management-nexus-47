@@ -22,7 +22,7 @@ router.use(checkAttendanceAccess);
 
 // Saisie et consultation collective quotidienne
 router.get('/daily', getDailyAttendance);
-router.post('/batch', saveBatchAttendance);
+router.post('/batch', authorize('Admin', 'AdminDepartment'), saveBatchAttendance);
 
 // Espace calendrier et solde individuel (Self-service / Consultation)
 router.get('/calendar/:personnelId', getPersonnelCalendar);

@@ -29,11 +29,12 @@ router.get('/my-documents', getMyDocuments);
 router.get('/personnel/en-attente', checkRHAccess, getPersonnelEnAttente);
 
 // Lier un compte utilisateur à une fiche de personnel (LOT 7bis)
-router.post('/personnel/:personnelId/link-user', checkRHAccess, linkUserToPersonnel);
+router.post('/personnel/:personnelId/link-user', authorize('Admin', 'AdminDepartment'), checkRHAccess, linkUserToPersonnel);
 
 // Téléversement de photo pour une fiche de personnel (réservé RH - placé avant /personnel/:id)
 router.put(
   '/personnel/:id/photo',
+  authorize('Admin', 'AdminDepartment'),
   checkRHAccess,
   uploadPersonnelPhoto.single('photo'),
   (err, req, res, next) => {
@@ -52,11 +53,11 @@ router.put(
 // Routes CRUD du personnel
 router.route('/personnel')
   .get(authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), getPersonnelList)
-  .post(checkRHAccess, createPersonnel);
+  .post(authorize('Admin', 'AdminDepartment'), checkRHAccess, createPersonnel);
 
 router.route('/personnel/:id')
   .get(checkRHAccess, getPersonnelById)
-  .put(checkRHAccess, updatePersonnel)
+  .put(authorize('Admin', 'AdminDepartment'), checkRHAccess, updatePersonnel)
   .delete(authorize('Admin'), deletePersonnel);
 
 // Restauration d'une fiche supprimée (soft delete)

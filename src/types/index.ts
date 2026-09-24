@@ -2,7 +2,7 @@
 export interface User {
   _id: string;
   username: string;
-  role: 'SuperAdmin' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
+  role: 'Director' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
   departments: Department[];
   activeDepartment: Department | null;
   photo: string;
@@ -123,6 +123,6 @@ export interface Message {
 
 export type PriorityType = 'low' | 'normal' | 'high' | 'urgent';
 export type FolderStatus = 'En cours' | 'Fermé';
-export type UserRole = 'SuperAdmin' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
+export type UserRole = 'Director' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
 
 export * from './hr';

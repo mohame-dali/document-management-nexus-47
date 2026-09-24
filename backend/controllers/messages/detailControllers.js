@@ -31,7 +31,7 @@ exports.getMessage = async (req, res, next) => {
       r => r.user && r.user._id.toString() === userId.toString()
     );
     
-    const hasAdminAccess = ['Admin', 'AdminTuningDesk', 'SuperAdmin'].includes(req.user.role);
+    const hasAdminAccess = ['Admin', 'AdminTuningDesk', 'Director'].includes(req.user.role);
     const hasAccess = isSender || isRecipient || hasAdminAccess;
     
     if (!hasAccess) {

@@ -44,8 +44,16 @@ exports.createUser = async (req, res, next) => {
         return next(new ErrorResponse('Rôle spécifié invalide', 400));
       }
 
-      // Director & AdminTuningDesk : no departments
-      if (req.body.role === 'Director' || req.body.role === 'AdminTuningDesk') {
+      // Director : only 1 allowed per system
+      if (req.body.role === 'Director') {
+        const existingDirector = await User.findOne({ role: 'Director', isDeleted: { $ne: true } });
+        if (existingDirector) {
+          return next(new ErrorResponse('Un seul Directeur est autorisé dans le système', 400));
+        }
+      }
+
+      // AdminTuningDesk : no departments
+      if (req.body.role === 'AdminTuningDesk') {
         req.body.departments = [];
         req.body.activeDepartment = null;
         console.log(`${req.body.role} role - clearing departments and activeDepartment`);
@@ -144,7 +152,15 @@ exports.updateUser = async (req, res, next) => {
         }
       }
 
-      if (targetRole === 'Director' || targetRole === 'AdminTuningDesk') {
+      // If changing role to Director, verify only 1 exists
+      if (req.body.role === 'Director' && user.role !== 'Director') {
+        const existingDirector = await User.findOne({ role: 'Director', isDeleted: { $ne: true } });
+        if (existingDirector) {
+          return next(new ErrorResponse('Un seul Directeur est autorisé dans le système', 400));
+        }
+      }
+
+      if (targetRole === 'AdminTuningDesk') {
         req.body.departments = [];
         req.body.activeDepartment = null;
       } else if (targetRole === 'AdminDepartment' && req.body.departments) {
@@ -263,6 +279,13 @@ exports.deleteUser = async (req, res, next) => {
       );
     }
     
+    // Prevent deleting the Director user
+    if (user.role === 'Director') {
+      return next(
+        new ErrorResponse('Impossible de supprimer le compte Directeur', 400)
+      );
+    }
+
     // Prevent deleting the last Admin user
     if (user.role === 'Admin') {
       const adminCount = await User.countDocuments({ role: 'Admin', isActive: true, isDeleted: { $ne: true } });

@@ -144,7 +144,7 @@ exports.deleteMessage = async (req, res, next) => {
     const isRecipient = message.recipients.some(
       r => r.user && r.user.toString() === userId.toString()
     );
-    const hasAdminAccess = ['Admin', 'AdminTuningDesk', 'SuperAdmin'].includes(req.user.role);
+    const hasAdminAccess = ['Admin', 'AdminTuningDesk'].includes(req.user.role);
     
     if (!isSender && !isRecipient && !hasAdminAccess) {
       return next(
@@ -212,7 +212,7 @@ exports.markAsRead = async (req, res, next) => {
       r => r.user && r.user.toString() === userId.toString()
     );
     
-    const hasAdminAccess = ['Admin', 'AdminTuningDesk', 'SuperAdmin'].includes(req.user.role);
+    const hasAdminAccess = ['Admin', 'AdminTuningDesk'].includes(req.user.role);
     
     if (recipient) {
       recipient.read = true;

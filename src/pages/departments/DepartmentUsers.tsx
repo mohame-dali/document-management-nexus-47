@@ -146,9 +146,13 @@ const DepartmentUsersPage: React.FC = () => {
 
                     {/* Role */}
                     <TableCell className="text-right py-3 px-4">
-                      {user.role === 'SuperAdmin' || user.role === 'Admin' ? (
+                      {user.role === 'Director' ? (
                         <span className="inline-flex items-center px-3 py-1 rounded text-xs sm:text-sm font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
-                          {user.role === 'SuperAdmin' ? 'مدير أعلى' : 'مدير'}
+                          مدير الإدارة
+                        </span>
+                      ) : user.role === 'Admin' ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded text-xs sm:text-sm font-bold bg-[#FFCB56] text-[#1a202c] border border-[#e2be40]">
+                          مدير
                         </span>
                       ) : user.role === 'AdminDepartment' ? (
                         <span className="inline-flex items-center px-3 py-1 rounded text-xs sm:text-sm font-medium bg-[#2c5282] text-white">

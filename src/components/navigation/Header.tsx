@@ -64,8 +64,9 @@ const Header = () => {
 
   const getRoleBadgeColor = () => {
     switch (currentUser.role) {
+      case 'Director':
+        return 'border-[#d69e2e]/40 bg-[#d69e2e]/15 text-[#b7791f]';
       case 'Admin':
-      case 'SuperAdmin':
         return 'bg-[#feeeee] text-[#9b2c2c] border-[#feb2b2]';
       case 'AdminTuningDesk':
         return 'bg-[#ebf4ff] text-[#2c5282] border-[#bee3f8]';

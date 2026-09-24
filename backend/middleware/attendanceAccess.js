@@ -19,10 +19,17 @@ const checkAttendanceAccess = async (req, res, next) => {
 
     const role = req.user.role;
 
-    // 1. Administrateurs système & Direction : accès global
-    if (role === 'Admin' || role === 'Director') {
+    // 1. Administrateur système : accès global complet
+    if (role === 'Admin') {
       req.userRestrictedToDepartment = null;
       req.isAdminRH = true;
+      return next();
+    }
+
+    // 1b. Direction : lecture globale de tous les départements (lecture seule, sans prérogatives de modification RH)
+    if (role === 'Director') {
+      req.userRestrictedToDepartment = null;
+      req.isAdminRH = false;
       return next();
     }
 

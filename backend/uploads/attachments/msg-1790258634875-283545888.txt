@@ -1,0 +1,6 @@
+step 1         git branch -M main
+step 2         git remote add origin https://github.com/mohame-dali/document-management-nexus-47.git
+
+step 3        git add .
+              git commit -m "Update main branch with local DMS code"
+              git push -u origin main --force

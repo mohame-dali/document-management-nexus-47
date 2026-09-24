@@ -84,9 +84,9 @@ function App() {
                       <Route path="/" element={<LandingPage />} />
                       <Route path="/login" element={<LoginPage />} />
                       
-                      {/* Setup Wizard route - Admin & SuperAdmin */}
+                      {/* Setup Wizard route - Admin only */}
                       <Route path="/setup" element={
-                        <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                        <ProtectedRoute allowedRoles={['Admin']}>
                           <SetupWizardPage />
                         </ProtectedRoute>
                       } />
@@ -105,26 +105,26 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        {/* Audit Trail route - Admin only */}
+                        {/* Audit Trail route - Admin & Director */}
                         <Route path="audit-trail" element={
-                          <ProtectedRoute allowedRoles={['Admin']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'Director']}>
                             <AuditTrailPage />
                           </ProtectedRoute>
                         } />
                         
                         {/* Department routes */}
                         <Route path="departments" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'Director']}>
                             <DepartmentsPage />
                           </ProtectedRoute>
                         } />
                         <Route path="departments/create" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                          <ProtectedRoute allowedRoles={['Admin']}>
                             <CreateDepartment />
                           </ProtectedRoute>
                         } />
                         <Route path="departments/edit/:id" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                          <ProtectedRoute allowedRoles={['Admin']}>
                             <EditDepartment />
                           </ProtectedRoute>
                         } />
@@ -252,47 +252,47 @@ function App() {
                           </ProtectedRoute>
                         } />
                         <Route path="hr/personnel" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
                             <PersonnelListPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/personnel/new" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment']}>
                             <PersonnelFormPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/personnel/:id" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
                             <PersonnelDetailPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/personnel/:id/edit" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment']}>
                             <PersonnelFormPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/leave-reasons" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
                             <LeaveReasonsManagementPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/attendance" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
                             <AttendancePage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/attendance-declarations" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
                             <AttendanceDeclarationsPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/all-personnel-situation" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
                             <AllPersonnelSituationPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/stages" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
                             <RHStagesPage />
                           </ProtectedRoute>
                         } />
@@ -314,7 +314,7 @@ function App() {
 
                         {/* Trash route */}
                         <Route path="trash" element={
-                          <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin', 'AdminTuningDesk', 'AdminDepartment']}>
                             <TrashPage />
                           </ProtectedRoute>
                         } />

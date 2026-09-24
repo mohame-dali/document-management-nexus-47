@@ -13,6 +13,13 @@ exports.createFolder = async (req, res, next) => {
         new ErrorResponse('يرجى إدخال اسم المجلد', 400)
       );
     }
+
+    // Director has read-only access and cannot create folders
+    if (req.user.role === 'Director') {
+      return next(
+        new ErrorResponse('غير مصرح للمدير بإنشاء المجلدات', 403)
+      );
+    }
     
     // Determine target department
     let targetDepartment = department;
