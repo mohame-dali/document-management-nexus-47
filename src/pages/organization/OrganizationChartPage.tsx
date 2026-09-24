@@ -11,19 +11,17 @@ import ReactFlow, {
   BackgroundVariant
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import dagre from 'dagre';
 import { ArrowRight, RotateCcw, AlertCircle, Loader2, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getOrganizationChart } from '@/services/organizationChartService';
 import AdministrationNode from '@/components/organization/AdministrationNode';
+import DirectorNode from '@/components/organization/DirectorNode';
 import DepartmentNode from '@/components/organization/DepartmentNode';
-import PersonnelNode from '@/components/organization/PersonnelNode';
 
-const NODE_DIMENSIONS: Record<string, { width: number; height: number }> = {
-  administration: { width: 240, height: 80 },
-  department: { width: 200, height: 100 },
-  personnel: { width: 180, height: 60 },
-};
+const NODE_WIDTH = 280;
+const NODE_HEIGHT = 110;
+const HORIZONTAL_GAP = 50;
+const LEVEL_Y_STEP = 190;
 
 const OrganizationChartPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,11 +33,18 @@ const OrganizationChartPage: React.FC = () => {
     retry: 1,
   });
 
+  const handlePersonnelClick = useCallback(
+    (personnelId: string) => {
+      navigate(`/dashboard/hr/personnel/${personnelId}`);
+    },
+    [navigate]
+  );
+
   const nodeTypes = useMemo(
     () => ({
       administration: AdministrationNode,
+      director: DirectorNode,
       department: DepartmentNode,
-      personnel: PersonnelNode,
     }),
     []
   );
@@ -52,101 +57,115 @@ const OrganizationChartPage: React.FC = () => {
     const rawNodes: Node[] = [];
     const rawEdges: Edge[] = [];
 
-    // Node Administration (Racine)
+    // Level 0: Administration
+    let currentY = 0;
     rawNodes.push({
       id: 'admin-root',
       type: 'administration',
-      data: { name: data.administration.name || 'Administration' },
-      position: { x: 0, y: 0 },
+      data: { name: data.administration.name || 'الإدارة' },
+      position: { x: -NODE_WIDTH / 2, y: currentY },
+      targetPosition: Position.Top,
+      sourcePosition: Position.Bottom,
     });
 
-    // Pour chaque département
-    const departments = data.administration.departments || [];
-    departments.forEach((dept) => {
-      const deptNodeId = `dept-${dept._id}`;
+    let previousNodeId = 'admin-root';
+
+    // Level 1: Director
+    if (data.director) {
+      currentY += LEVEL_Y_STEP;
       rawNodes.push({
-        id: deptNodeId,
-        type: 'department',
+        id: 'director-node',
+        type: 'director',
         data: {
-          name: dept.name,
-          description: dept.description,
-          isFunctional: dept.isFunctional,
-          unitType: dept.unitType,
-          personnelCount: dept.personnel?.length || 0,
+          ...data.director,
+          onDirectorClick: handlePersonnelClick,
         },
-        position: { x: 0, y: 0 },
+        position: { x: -NODE_WIDTH / 2, y: currentY },
+        targetPosition: Position.Top,
+        sourcePosition: Position.Bottom,
       });
 
       rawEdges.push({
-        id: `edge-admin-${dept._id}`,
+        id: 'edge-admin-director',
         source: 'admin-root',
-        target: deptNodeId,
+        target: 'director-node',
         type: 'smoothstep',
-        style: { stroke: '#cbd5e1', strokeWidth: 2 },
+        style: { stroke: '#2c5282', strokeWidth: 2.5 },
       });
 
-      // Pour chaque personnel du département
-      const deptPersonnel = dept.personnel || [];
-      deptPersonnel.forEach((p) => {
-        const pNodeId = `p-${p._id}`;
+      previousNodeId = 'director-node';
+    }
+
+    // Level 2: Regalien Departments
+    const regaliens = data.regalienDepartments || [];
+    if (regaliens.length > 0) {
+      currentY += LEVEL_Y_STEP;
+      const count = regaliens.length;
+      const totalWidth = count * NODE_WIDTH + (count - 1) * HORIZONTAL_GAP;
+      const startX = -totalWidth / 2;
+
+      regaliens.forEach((dept, index) => {
+        const nodeId = `dept-regalien-${dept._id}`;
+        const xPos = startX + index * (NODE_WIDTH + HORIZONTAL_GAP);
+
         rawNodes.push({
-          id: pNodeId,
-          type: 'personnel',
-          data: p,
-          position: { x: 0, y: 0 },
+          id: nodeId,
+          type: 'department',
+          data: {
+            ...dept,
+            onPersonnelClick: handlePersonnelClick,
+          },
+          position: { x: xPos, y: currentY },
+          targetPosition: Position.Top,
+          sourcePosition: Position.Bottom,
         });
 
         rawEdges.push({
-          id: `edge-${dept._id}-${p._id}`,
-          source: deptNodeId,
-          target: pNodeId,
+          id: `edge-${previousNodeId}-${nodeId}`,
+          source: previousNodeId,
+          target: nodeId,
           type: 'smoothstep',
-          style: { stroke: '#e2e8f0', strokeWidth: 1.5 },
+          style: { stroke: '#4a5568', strokeWidth: 2 },
         });
       });
-    });
+    }
 
-    // Disposition automatique avec Dagre
-    const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
-    dagreGraph.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 80 });
+    // Level 3: Operational Departments
+    const operationals = data.operationalDepartments || [];
+    if (operationals.length > 0) {
+      currentY += LEVEL_Y_STEP;
+      const count = operationals.length;
+      const totalWidth = count * NODE_WIDTH + (count - 1) * HORIZONTAL_GAP;
+      const startX = -totalWidth / 2;
 
-    rawNodes.forEach((node) => {
-      const dim = NODE_DIMENSIONS[node.type || 'department'] || { width: 180, height: 60 };
-      dagreGraph.setNode(node.id, { width: dim.width, height: dim.height });
-    });
+      operationals.forEach((dept, index) => {
+        const nodeId = `dept-op-${dept._id}`;
+        const xPos = startX + index * (NODE_WIDTH + HORIZONTAL_GAP);
 
-    rawEdges.forEach((edge) => {
-      dagreGraph.setEdge(edge.source, edge.target);
-    });
+        rawNodes.push({
+          id: nodeId,
+          type: 'department',
+          data: {
+            ...dept,
+            onPersonnelClick: handlePersonnelClick,
+          },
+          position: { x: xPos, y: currentY },
+          targetPosition: Position.Top,
+          sourcePosition: Position.Bottom,
+        });
 
-    dagre.layout(dagreGraph);
+        rawEdges.push({
+          id: `edge-${previousNodeId}-${nodeId}`,
+          source: previousNodeId,
+          target: nodeId,
+          type: 'smoothstep',
+          style: { stroke: '#a0aec0', strokeWidth: 1.5, strokeDasharray: '4 4' },
+        });
+      });
+    }
 
-    const layoutedNodes = rawNodes.map((node) => {
-      const pos = dagreGraph.node(node.id);
-      const dim = NODE_DIMENSIONS[node.type || 'department'] || { width: 180, height: 60 };
-      return {
-        ...node,
-        position: {
-          x: pos ? pos.x - dim.width / 2 : 0,
-          y: pos ? pos.y - dim.height / 2 : 0,
-        },
-        targetPosition: Position.Top,
-        sourcePosition: Position.Bottom,
-      };
-    });
-
-    return { nodes: layoutedNodes, edges: rawEdges };
-  }, [data]);
-
-  const onNodeClick = useCallback(
-    (_event: React.MouseEvent, node: Node) => {
-      if (node.type === 'personnel' && node.data?._id) {
-        navigate(`/dashboard/hr/personnel/${node.data._id}`);
-      }
-    },
-    [navigate]
-  );
+    return { nodes: rawNodes, edges: rawEdges };
+  }, [data, handlePersonnelClick]);
 
   return (
     <div className="max-w-[1600px] mx-auto p-6 space-y-6" dir="rtl">
@@ -159,7 +178,7 @@ const OrganizationChartPage: React.FC = () => {
           <div>
             <h1 className="text-xl font-bold text-[#1a202c]">الهيكل التنظيمي للإدارة</h1>
             <p className="text-sm text-[#4a5568] mt-0.5">
-              عرض تراتبي وتفاعلي للوحدات الإدارية والموظفين التابعين لها
+              هيكل تراتبي هرمي تفاعلي (الإدارة العامة ← المصالح السيادية ← المصالح والدوائر العملياتية)
             </p>
           </div>
         </div>
@@ -224,14 +243,13 @@ const OrganizationChartPage: React.FC = () => {
 
       {/* Zone ReactFlow */}
       {!isLoading && !isError && nodes.length > 1 && (
-        <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded shadow-sm overflow-hidden min-h-[600px] h-[700px] relative">
+        <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded shadow-sm overflow-hidden min-h-[650px] h-[720px] relative">
           <ReactFlow
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
-            onNodeClick={onNodeClick}
             fitView
-            fitViewOptions={{ padding: 0.2 }}
+            fitViewOptions={{ padding: 0.25 }}
             minZoom={0.2}
             maxZoom={1.5}
             proOptions={{ hideAttribution: true }}
@@ -243,7 +261,12 @@ const OrganizationChartPage: React.FC = () => {
               nodeStrokeColor="#cbd5e1"
               nodeColor={(node) => {
                 if (node.type === 'administration') return '#2c5282';
-                if (node.type === 'department') return '#e2e8f0';
+                if (node.type === 'director') return '#1a365d';
+                if (node.type === 'department') {
+                  if (node.data?.unitType === 'bureau_ordre') return '#FFCB56';
+                  if (node.data?.unitType === 'rh') return '#38a169';
+                  return '#e2e8f0';
+                }
                 return '#ffffff';
               }}
               maskColor="rgba(247, 250, 252, 0.7)"
@@ -256,28 +279,28 @@ const OrganizationChartPage: React.FC = () => {
       {/* Légende */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs">
         <div className="flex items-center gap-2 text-[#1a202c] font-semibold">
-          <span>دليل الرموز والوحدات الوظيفية :</span>
+          <span>دليل المستويات والوحدات الإدارية :</span>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#2c5282]"></span>
-            <span className="text-[#4a5568]">مكتب المدير (Bureau Directeur)</span>
+            <span className="w-3.5 h-3.5 rounded bg-[#2c5282] border border-[#1a365d]"></span>
+            <span className="text-[#4a5568]">المستوى 1 : إدارة المؤسسة / المدير</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#FFCB56] border border-[#d69e2e]"></span>
+            <span className="w-3.5 h-3.5 rounded bg-[#FFCB56] border border-[#d69e2e]"></span>
             <span className="text-[#4a5568]">مكتب الضبط (Bureau d'Ordre)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#38a169]"></span>
+            <span className="w-3.5 h-3.5 rounded bg-[#38a169]"></span>
             <span className="text-[#4a5568]">الموارد البشرية (RH)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-white border border-[#cbd5e1]"></span>
-            <span className="text-[#4a5568]">أقسام ومصالح أخرى</span>
+            <span className="w-3.5 h-3.5 rounded bg-white border border-[#cbd5e1]"></span>
+            <span className="text-[#4a5568]">المستوى 3 : الأقسام والمصالح العملياتية</span>
           </div>
         </div>
         <div className="text-[#718096] text-xs">
-          * انقر على أي موظف للانتقال إلى ملفه الشخصي
+          * انقر على زر "عرض الموظفين" لتوسيع القائمة المدمجة بكل قسم دون تشويش الهيكل
         </div>
       </div>
     </div>
