@@ -47,6 +47,13 @@ exports.deactivateUser = async (req, res, next) => {
       );
     }
     
+    // Prevent deactivating Director user
+    if (user.role === 'Director' && req.body.isActive === false) {
+      return next(
+        new ErrorResponse('Impossible de désactiver le compte Directeur', 400)
+      );
+    }
+
     // Prevent deactivating the last Admin user
     if (user.role === 'Admin') {
       const activeAdminCount = await User.countDocuments({ 
