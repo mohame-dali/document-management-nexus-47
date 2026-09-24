@@ -130,16 +130,16 @@ const OutgoingDocumentsPage: React.FC = () => {
   const { selectedYear, handleYearChange, isValidYear } = useYearPersistence('outgoingDocumentsSelectedYear');
 
   // Role permissions
-  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isDirector = currentUser?.role === 'Director';
   const isAdmin = currentUser?.role === 'Admin';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
   const canAddDocuments = isAdmin || isAdminTuningDesk;
-  const canEdit = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canDelete = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canOrganizeDocuments = isAdminDepartment || isSuperAdmin || isAdmin;
-  const canViewCategorization = isAdmin || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
+  const canEdit = isAdmin || isAdminTuningDesk;
+  const canDelete = isAdmin || isAdminTuningDesk;
+  const canOrganizeDocuments = isAdminDepartment || isAdmin;
+  const canViewCategorization = isAdmin || isDirector || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
 
   // Fetch departments
   const { data: departments = [] } = useQuery<Department[]>({

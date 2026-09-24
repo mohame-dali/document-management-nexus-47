@@ -148,16 +148,16 @@ const IncomingDocumentsPage: React.FC = () => {
   };
 
   // Role permissions
-  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isDirector = currentUser?.role === 'Director';
   const isAdmin = currentUser?.role === 'Admin';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
   const canAddDocuments = isAdmin || isAdminTuningDesk;
-  const canEdit = isSuperAdmin || isAdminTuningDesk || isAdmin;
-  const canDelete = isSuperAdmin || isAdminTuningDesk || isAdmin;
+  const canEdit = isAdmin || isAdminTuningDesk;
+  const canDelete = isAdmin || isAdminTuningDesk;
   const canOrganizeDocuments = isAdminDepartment;
-  const canViewCategorization = isAdmin || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
+  const canViewCategorization = isAdmin || isDirector || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
   const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk;
 
   // Fetch departments for AdminTuningDesk filtering and document assignment
