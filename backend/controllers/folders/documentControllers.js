@@ -17,7 +17,7 @@ exports.getFolderDocuments = async (req, res, next) => {
     }
     
     // Check if user has access to this folder
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
+    if (req.user.role !== 'Director' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
       
@@ -80,7 +80,7 @@ exports.assignDocumentToFolder = async (req, res, next) => {
         return next(new ErrorResponse('المجلد المستهدف غير موجود', 404));
       }
 
-      if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
+      if (req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
         const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
         const folderDeptId = targetFolder.department?._id ? targetFolder.department._id.toString() : targetFolder.department?.toString();
         

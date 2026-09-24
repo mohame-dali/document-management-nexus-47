@@ -311,7 +311,7 @@ exports.restoreItem = async (req, res, next) => {
 
 // @desc    Permanently delete an item from trash (Hard delete with file unlinking)
 // @route   DELETE /api/trash/:type/:id/permanent or DELETE /api/trash/:type/:id
-// @access  Private/Admin/SuperAdmin
+// @access  Private/Admin/Director
 exports.permanentDelete = async (req, res, next) => {
   try {
     const { type, id } = req.params;
@@ -444,7 +444,7 @@ exports.permanentDelete = async (req, res, next) => {
 
 // @desc    Empty trash (Permanently delete all or by type)
 // @route   DELETE /api/trash/empty
-// @access  Private/Admin/SuperAdmin
+// @access  Private/Admin/Director
 exports.emptyTrash = async (req, res, next) => {
   try {
     const { type = 'all' } = req.query;

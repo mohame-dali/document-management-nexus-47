@@ -27,7 +27,7 @@ const isRHDepartment = async (dept) => {
 async function canUserLinkPersonnel(req, personnelId) {
   const user = req.user;
   if (!user) return false;
-  if (['Admin', 'SuperAdmin'].includes(user.role)) return true;
+  if (user.role === 'Admin') return true;
   if (user.role === 'AdminDepartment' || user.role === 'AdminTuningDesk') {
     // Vérifier si RH
     const isRH = await isRHDepartment(user.activeDepartment);
@@ -44,7 +44,7 @@ async function canUserLinkPersonnel(req, personnelId) {
 
 // @desc    Créer une association entre un document et une fiche de personnel
 // @route   POST /api/hr/personnel/:personnelId/documents
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.associerDocument = async (req, res, next) => {
   try {
     const { personnelId } = req.params;
@@ -168,7 +168,7 @@ exports.associerDocument = async (req, res, next) => {
 
 // @desc    Lister toutes les associations pour une fiche de personnel donnée
 // @route   GET /api/hr/personnel/:personnelId/documents
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.listerDocumentsDuPersonnel = async (req, res, next) => {
   try {
     const { personnelId } = req.params;
@@ -245,7 +245,7 @@ exports.listerDocumentsDuPersonnel = async (req, res, next) => {
 
 // @desc    Lister le personnel associé à un document donné
 // @route   GET /api/hr/documents/:documentType/:documentId/personnel
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.listerPersonnelDuDocument = async (req, res, next) => {
   try {
     const { documentType, documentId } = req.params;
@@ -291,7 +291,7 @@ exports.listerPersonnelDuDocument = async (req, res, next) => {
 
 // @desc    Modifier une association existante (typeAssociation ou commentaire)
 // @route   PUT /api/hr/personnel-documents/:associationId
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.mettreAJourAssociation = async (req, res, next) => {
   try {
     const { associationId } = req.params;
@@ -356,7 +356,7 @@ exports.mettreAJourAssociation = async (req, res, next) => {
 
 // @desc    Supprimer une association
 // @route   DELETE /api/hr/personnel-documents/:associationId
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.supprimerAssociation = async (req, res, next) => {
   try {
     const { associationId } = req.params;

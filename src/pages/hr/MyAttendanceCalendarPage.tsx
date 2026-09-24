@@ -10,7 +10,15 @@ import {
   PersonnelBalanceResponse,
 } from '@/services/attendanceService';
 import { getLeaveReasons, LeaveReason } from '@/services/leaveReasonService';
+import {
+  getMyDeclarations,
+  deleteDeclaration,
+  AttendanceDeclaration,
+} from '@/services/attendanceDeclarationService';
+import { AttendanceDeclarationDialog } from '@/components/attendance/AttendanceDeclarationDialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import {
   CalendarCheck,
   Calendar,
@@ -21,6 +29,15 @@ import {
   CalendarDays,
   FileDown,
   Loader2,
+  FileCheck,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Trash2,
+  Building,
+  MapPin,
+  GraduationCap,
 } from 'lucide-react';
 import { useAttendanceExport } from '@/hooks/useAttendanceExport';
 import { MyLeaveBalanceCard, LeaveBalanceData } from '@/components/attendance/MyLeaveBalanceCard';
@@ -138,6 +155,44 @@ export const MyAttendanceCalendarPage: React.FC = () => {
   useEffect(() => {
     loadCalendarData();
   }, [loadCalendarData]);
+
+  // 5. Récupération des déclarations de l'agent connecté
+  const [isDeclarationDialogOpen, setIsDeclarationDialogOpen] = useState(false);
+  const [myDeclarations, setMyDeclarations] = useState<AttendanceDeclaration[]>([]);
+  const [isDeclarationsLoading, setIsDeclarationsLoading] = useState(false);
+
+  const loadMyDeclarations = useCallback(async () => {
+    try {
+      setIsDeclarationsLoading(true);
+      const res = await getMyDeclarations();
+      if (res && res.success && Array.isArray(res.data)) {
+        setMyDeclarations(res.data);
+      }
+    } catch (err) {
+      console.error('Erreur chargement des déclarations personnelles:', err);
+    } finally {
+      setIsDeclarationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMyDeclarations();
+  }, [loadMyDeclarations]);
+
+  const handleDeleteDeclaration = async (id: string) => {
+    try {
+      await deleteDeclaration(id);
+      toast.success('تم حذف التصريح بنجاح');
+      loadMyDeclarations();
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === 'object' && 'response' in err
+          ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+            'تعذر حذف التصريح')
+          : 'تعذر حذف التصريح';
+      toast.error(msg);
+    }
+  };
 
   // Trouver l'attendance du jour sélectionné
   const dayAttendance = useMemo(() => {
@@ -412,6 +467,13 @@ export const MyAttendanceCalendarPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <Button
+              onClick={() => setIsDeclarationDialogOpen(true)}
+              className="h-9 px-3.5 bg-[#2c5282] hover:bg-[#1a365d] text-white flex items-center gap-1.5 text-xs font-semibold rounded shadow-sm"
+            >
+              <FileCheck className="h-4 w-4 text-blue-200" />
+              <span>تصريح بالحضور / الغياب</span>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={handleExport}
@@ -561,6 +623,170 @@ export const MyAttendanceCalendarPage: React.FC = () => {
 
       {/* 5. Légende des Couleurs en Bas */}
       <MyAttendanceLegend leaveReasons={leaveReasons} />
+
+      {/* 6. Section بياناتي والتصاريح المقدمة */}
+      <div className="bg-white border border-[#e2e8f0] rounded-lg p-5 shadow-none space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#e2e8f0]">
+          <div>
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-[#2c5282]" />
+              تصاريحي السابقة والمعلقة (بياناتي)
+              {myDeclarations.filter((d) => d.validationStatus === 'en_attente').length > 0 && (
+                <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-xs px-2 py-0.5 font-bold">
+                  {myDeclarations.filter((d) => d.validationStatus === 'en_attente').length} في انتظار الموافقة
+                </Badge>
+              )}
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              متابعة حالة تصاريح الحضور أو الغياب أو المأموريات التي قدمتها للإدارة.
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => setIsDeclarationDialogOpen(true)}
+            className="h-9 px-3 bg-[#2c5282] hover:bg-[#1a365d] text-white text-xs font-semibold gap-1.5 rounded"
+          >
+            <FileCheck className="w-3.5 h-3.5" />
+            <span>تقديم تصريح جديد</span>
+          </Button>
+        </div>
+
+        {isDeclarationsLoading ? (
+          <div className="py-8 text-center text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2c5282]" />
+            <span className="text-xs mt-2 block">جاري تحميل التصاريح...</span>
+          </div>
+        ) : myDeclarations.length === 0 ? (
+          <div className="py-6 text-center text-gray-400 bg-gray-50/50 rounded border border-dashed border-gray-200">
+            <Clock className="w-6 h-6 mx-auto mb-1 text-gray-300" />
+            <p className="text-xs font-medium text-gray-600">لم تقدم أي تصريح مسبق حتى الآن</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              يمكنك استخدام زر "تصريح بالحضور / الغياب" لإشعار الإدارة بأي حضور أو مأمورية أو رخصة قادمة.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-xs">
+              <thead className="bg-gray-50 border-b border-[#e2e8f0] text-gray-600 font-bold">
+                <tr>
+                  <th className="py-2.5 px-3">التاريخ المعني</th>
+                  <th className="py-2.5 px-3">نوع التصريح / السبب</th>
+                  <th className="py-2.5 px-3">التفاصيل المقدمة</th>
+                  <th className="py-2.5 px-3">حالة المراجعة</th>
+                  <th className="py-2.5 px-3 text-center">إلغاء الطلب</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e2e8f0]">
+                {myDeclarations.map((decl) => {
+                  const formattedDate = new Date(decl.date).toLocaleDateString('fr-FR', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  });
+
+                  return (
+                    <tr key={decl._id} className="hover:bg-gray-50/60 transition-colors">
+                      <td className="py-2.5 px-3 whitespace-nowrap font-medium text-gray-800">
+                        {formattedDate}
+                      </td>
+                      <td className="py-2.5 px-3">
+                        {decl.statut === 'present' ? (
+                          <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                            حاضر {decl.heureArrivee ? `(${decl.heureArrivee})` : ''}
+                          </span>
+                        ) : (
+                          <span className="text-amber-800 font-semibold">
+                            {(() => {
+                              const lrId = typeof decl.leaveReasonId === 'object' && decl.leaveReasonId !== null ? (decl.leaveReasonId as LeaveReason)._id : decl.leaveReasonId;
+                              const found = leaveReasons.find((r) => r.code === decl.motif || r._id === lrId);
+                              return found?.labelAr || decl.motif || 'غياب مبرر';
+                            })()}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 max-w-xs text-gray-600">
+                        <div className="space-y-0.5 truncate">
+                          {decl.detailsMotif?.nomService && (
+                            <div>المصلحة: {decl.detailsMotif.nomService}</div>
+                          )}
+                          {decl.detailsMotif?.lieuMission && (
+                            <div>المكان: {decl.detailsMotif.lieuMission}</div>
+                          )}
+                          {decl.detailsMotif?.commentaire && (
+                            <div className="italic text-gray-400">"{decl.detailsMotif.commentaire}"</div>
+                          )}
+                          {decl.rejectionReason && (
+                            <div className="text-red-600 font-semibold">سبب الرفض: {decl.rejectionReason}</div>
+                          )}
+                          {decl.adminComment && (
+                            <div className="text-blue-600">ملاحظة الإدارة: {decl.adminComment}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        {decl.validationStatus === 'en_attente' && (
+                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border border-amber-300 font-medium px-2 py-0.5 gap-1">
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            قيد المراجعة
+                          </Badge>
+                        )}
+                        {decl.validationStatus === 'approuvee' && (
+                          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 font-medium px-2 py-0.5 gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            مقبول ومعتمد
+                          </Badge>
+                        )}
+                        {decl.validationStatus === 'rejetee' && (
+                          <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border border-red-300 font-medium px-2 py-0.5 gap-1">
+                            <XCircle className="w-3 h-3 text-red-600" />
+                            مرفوض
+                          </Badge>
+                        )}
+                        {decl.validationStatus === 'modifiee' && (
+                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border border-blue-300 font-medium px-2 py-0.5 gap-1">
+                            تم التعديل والاعتماد
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        {decl.validationStatus === 'en_attente' ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDeclaration(decl._id)}
+                            className="h-7 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 text-xs gap-1"
+                            title="إلغاء التصريح"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>إلغاء</span>
+                          </Button>
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Dialog تصريح الحضور والغياب */}
+      <AttendanceDeclarationDialog
+        open={isDeclarationDialogOpen}
+        onOpenChange={setIsDeclarationDialogOpen}
+        initialDate={selectedDate}
+        leaveReasons={leaveReasons}
+        onSuccess={() => {
+          loadBalance();
+          loadCalendarData();
+          loadMyDeclarations();
+        }}
+      />
     </div>
   );
 };

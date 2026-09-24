@@ -9,7 +9,7 @@ const {
   downloadTemplate
 } = require('../controllers/templates');
 
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 const { uploadTemplate } = require('../middleware/upload');
 
 const router = express.Router();
@@ -20,13 +20,13 @@ router.use(protect);
 router
   .route('/')
   .get(getTemplates)
-  .post(uploadTemplate.single('template'), createTemplate);
+  .post(authorize('Admin', 'AdminTuningDesk'), uploadTemplate.single('template'), createTemplate);
 
 router
   .route('/:id')
   .get(getTemplate)
-  .put(uploadTemplate.single('template'), updateTemplate)
-  .delete(deleteTemplate);
+  .put(authorize('Admin', 'AdminTuningDesk'), uploadTemplate.single('template'), updateTemplate)
+  .delete(authorize('Admin', 'AdminTuningDesk'), deleteTemplate);
 
 router.route('/:id/download').get(downloadTemplate);
 

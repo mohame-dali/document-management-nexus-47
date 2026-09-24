@@ -7,7 +7,7 @@ const ErrorResponse = require('../../utils/errorResponse');
 // @access  Private/Admin/AdminDepartment
 exports.getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id)
+    const user = await User.findOne({ _id: req.params.id, isDeleted: { $ne: true } })
       .populate('departments')
       .populate('activeDepartment')
       .populate('createdBy', 'username');

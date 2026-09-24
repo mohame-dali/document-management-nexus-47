@@ -62,13 +62,16 @@ import {
   Smartphone,
   Eye,
   EyeOff,
-  Check
+  Check,
+  Building2
 } from 'lucide-react';
+import { useSetupStatus } from '@/hooks/useSetupStatus';
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const { isSetupComplete, settings: orgSettings } = useSetupStatus();
 
   // Active tab state
   const [activeTab, setActiveTab] = useState('profile');
@@ -336,6 +339,16 @@ const SettingsPage = () => {
             <MessageCircle className="h-5 w-5" />
             <span>حفظ الرسائل</span>
           </TabsTrigger>
+
+          {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && (
+            <TabsTrigger
+              value="organization"
+              className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            >
+              <Building2 className="h-5 w-5" />
+              <span>هوية المؤسسة</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* ========================================================= */}
@@ -1021,6 +1034,119 @@ const SettingsPage = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ========================================================= */}
+        {/* TAB 6: Organization & Setup Wizard Settings               */}
+        {/* ========================================================= */}
+        {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && (
+          <TabsContent value="organization" className="space-y-6 mt-0">
+            <Card className="border-[#e2e8f0] rounded shadow-sm">
+              <CardHeader className="border-b border-[#e2e8f0] pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-[#ebf8ff] text-[#2c5282] rounded">
+                      <Building2 className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-[#1a202c]">
+                        هوية المؤسسة والأقسام السيادية
+                      </CardTitle>
+                      <CardDescription className="text-sm text-[#718096] mt-0.5">
+                        إدارة التسمية الرسمية، شعار المؤسسة، وتعيين الأقسام الوظيفية الرئيسية (RH، مكتب الضبط، الإدارة العامة)
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => navigate('/setup')}
+                    className="bg-[#2c5282] hover:bg-[#234269] text-white h-11 px-5 text-sm font-semibold rounded gap-2 self-start sm:self-auto"
+                  >
+                    <Sliders className="h-4 w-4" />
+                    تشغيل معالج الإعداد (Setup Wizard)
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  <div className="p-5 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-3">
+                    <span className="text-sm font-bold text-[#2c5282] block border-b border-gray-200 pb-2">
+                      الهوية والتسمية الرسمية
+                    </span>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">اسم الإدارة الحالي :</span>
+                        <strong className="text-gray-900 font-bold">
+                          {orgSettings?.nomAdministration || 'غير محدد'}
+                        </strong>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">حالة التكوين الإجمالي :</span>
+                        {isSetupComplete ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800">
+                            مكتمل وجاهز
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800">
+                            بحاجة إلى تهيئة
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-5 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-3">
+                    <span className="text-sm font-bold text-[#2c5282] block border-b border-gray-200 pb-2">
+                      الأقسام الوظيفية الرئيسية
+                    </span>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">قسم الموارد البشرية (RH) :</span>
+                        <strong className="text-gray-900 font-semibold">
+                          {typeof orgSettings?.rhDepartmentId === 'object' && orgSettings?.rhDepartmentId !== null
+                            ? (orgSettings.rhDepartmentId as { name?: string }).name || 'معرّف'
+                            : orgSettings?.rhDepartmentId ? 'معرّف' : 'غير معيّن'}
+                        </strong>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">مكتب الضبط (BO) :</span>
+                        <strong className="text-gray-900 font-semibold">
+                          {typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings?.bureauOrdreDepartmentId !== null
+                            ? (orgSettings.bureauOrdreDepartmentId as { name?: string }).name || 'معرّف'
+                            : orgSettings?.bureauOrdreDepartmentId ? 'معرّف' : 'غير معيّن'}
+                        </strong>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">الإدارة العامة (Direction) :</span>
+                        <strong className="text-gray-900 font-semibold">
+                          {typeof orgSettings?.bureauDirecteurDepartmentId === 'object' && orgSettings?.bureauDirecteurDepartmentId !== null
+                            ? (orgSettings.bureauDirecteurDepartmentId as { name?: string }).name || 'معرّف'
+                            : orgSettings?.bureauDirecteurDepartmentId ? 'معرّف' : 'غير معيّن'}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-[#2c5282]">إعادة تشغيل معالج الإعداد الموجه</h4>
+                    <p className="text-xs text-gray-600">
+                      يمكنك في أي وقت تحديث اسم المؤسسة أو إعادة توزيع الأقسام السيادية والوظائف الرئيسية من خلال المعالج الموجه المكون من 4 خطوات.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/setup')}
+                    className="h-10 px-5 text-sm font-semibold border-[#2c5282] text-[#2c5282] hover:bg-[#ebf8ff] rounded shrink-0"
+                  >
+                    تعديل عبر المعالج
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* ========================================================= */}

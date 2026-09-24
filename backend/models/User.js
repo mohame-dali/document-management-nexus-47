@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['SuperAdmin', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'],
+    enum: ['Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'],
     required: [true, 'Role is required']
   },
   departments: [
@@ -53,13 +53,29 @@ const userSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  // Soft delete
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   }
 });
 
 // Check role-specific constraints before save
 userSchema.pre('save', function(next) {
-  // Check if AdminTuningDesk or SuperAdmin has departments assigned
-  if ((this.role === 'AdminTuningDesk' || this.role === 'SuperAdmin') && this.departments.length > 0) {
+  // Check if AdminTuningDesk or Director has departments assigned
+  // Both roles are organization-wide / unattached to a single department
+  if ((this.role === 'AdminTuningDesk' || this.role === 'Director') && this.departments.length > 0) {
     throw new Error(`${this.role} cannot belong to any department`);
   }
   next();

@@ -109,8 +109,8 @@ exports.authorize = (...roles) => {
 // Check if user has access to the department
 exports.checkDepartmentAccess = (checkActiveDepartment = true) => {
   return async (req, res, next) => {
-    // SuperAdmin, Admin and AdminTuningDesk have access to all departments
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'Admin' || req.user.role === 'AdminTuningDesk') {
+    // Director, Admin and AdminTuningDesk have access to all departments
+    if (['Director', 'Admin', 'AdminTuningDesk'].includes(req.user.role)) {
       console.log(`${req.user.role} has full access to all departments`);
       return next();
     }
@@ -179,13 +179,8 @@ exports.checkRHAccess = async (req, res, next) => {
 
     const { role } = req.user;
 
-    // b. Si role === 'Admin' → next() (accès autorisé)
-    if (role === 'Admin') {
-      return next();
-    }
-
-    // c. Si role === 'SuperAdmin' → next() (accès autorisé, conserve son comportement actuel)
-    if (role === 'SuperAdmin') {
+    // b. Si role === 'Admin' ou 'Director' → next() (accès autorisé en lecture ; écriture protégée par authorize() sur les routes)
+    if (['Admin', 'Director'].includes(role)) {
       return next();
     }
 

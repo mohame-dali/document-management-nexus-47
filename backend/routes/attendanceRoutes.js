@@ -35,6 +35,6 @@ router.get('/report/yearly', getYearlyReport);
 
 // Configuration annuelle des présences et solde
 router.get('/settings', getSettings);
-router.put('/settings', authorize('Admin', 'SuperAdmin', 'AdminDepartment'), updateSettings);
+router.put('/settings', authorize('Admin', 'AdminDepartment'), updateSettings);
 
 module.exports = router;

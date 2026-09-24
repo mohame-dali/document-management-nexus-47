@@ -47,11 +47,13 @@ import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
 import MyProfilePage from './pages/hr/MyProfilePage';
 import LeaveReasonsManagementPage from './pages/hr/LeaveReasonsManagementPage';
 import AttendancePage from './pages/hr/AttendancePage';
+import AttendanceDeclarationsPage from './pages/hr/AttendanceDeclarationsPage';
 import MyAttendanceCalendarPage from './pages/hr/MyAttendanceCalendarPage';
 import AllPersonnelSituationPage from './pages/hr/AllPersonnelSituationPage';
 import RHStagesPage from './pages/hr/RHStagesPage';
 import OrganizationChartPage from './pages/organization/OrganizationChartPage';
 import TrashPage from './pages/trash/TrashPage';
+import SetupWizardPage from './pages/setup/SetupWizardPage';
 import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
 const queryClient = new QueryClient({
@@ -81,6 +83,13 @@ function App() {
                       {/* Landing page as default */}
                       <Route path="/" element={<LandingPage />} />
                       <Route path="/login" element={<LoginPage />} />
+                      
+                      {/* Setup Wizard route - Admin & SuperAdmin */}
+                      <Route path="/setup" element={
+                        <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
+                          <SetupWizardPage />
+                        </ProtectedRoute>
+                      } />
                       
                       <Route path="/dashboard" element={
                         <ProtectedRoute>
@@ -270,6 +279,11 @@ function App() {
                         <Route path="hr/attendance" element={
                           <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
                             <AttendancePage />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="hr/attendance-declarations" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'SuperAdmin', 'AdminDepartment']}>
+                            <AttendanceDeclarationsPage />
                           </ProtectedRoute>
                         } />
                         <Route path="hr/all-personnel-situation" element={

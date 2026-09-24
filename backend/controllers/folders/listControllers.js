@@ -40,8 +40,8 @@ exports.getFolders = async (req, res, next) => {
   try {
     let query = { isDeleted: false };
     
-    // SuperAdmin, AdminTuningDesk and Admin can see all departments' folders
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'AdminTuningDesk' || req.user.role === 'Admin') {
+    // Director, AdminTuningDesk and Admin can see all departments' folders
+    if (req.user.role === 'Director' || req.user.role === 'AdminTuningDesk' || req.user.role === 'Admin') {
       if (req.query.department) {
         query.department = req.query.department;
       }
@@ -99,7 +99,7 @@ exports.getRootFolders = async (req, res, next) => {
     }
     
     // Verify department access
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
+    if (req.user.role !== 'Director' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       if (activeDeptId !== departmentId.toString()) {
         return next(new ErrorResponse('غير مصرح لك بالوصول إلى هذا القسم', 403));
@@ -138,7 +138,7 @@ exports.getSubFolders = async (req, res, next) => {
     }
     
     // Verify folder access
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
+    if (req.user.role !== 'Director' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       if (parentFolder.department.toString() !== activeDeptId) {
         return next(new ErrorResponse('غير مصرح لك بالوصول إلى هذا المجلد', 403));
@@ -175,7 +175,7 @@ exports.getFolderHierarchy = async (req, res, next) => {
       return next(new ErrorResponse('يرجى تحديد القسم الإداري', 400));
     }
 
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
+    if (req.user.role !== 'Director' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       if (activeDeptId !== departmentId.toString()) {
         return next(new ErrorResponse('غير مصرح لك بالوصول إلى هذا القسم', 403));

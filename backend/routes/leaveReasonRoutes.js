@@ -14,7 +14,7 @@ const { protect, checkRHAccess } = require('../middleware/auth');
 router.use(protect);
 
 // Lecture : ouverte aux utilisateurs connectés (chefs de département, RH, admins)
-// Création : restreinte à l'Admin RH (Admin / SuperAdmin / AdminDepartment RH)
+// Création : restreinte à l'Admin RH (Admin / AdminDepartment RH)
 router.route('/')
   .get(getLeaveReasons)
   .post(checkRHAccess, createLeaveReason);

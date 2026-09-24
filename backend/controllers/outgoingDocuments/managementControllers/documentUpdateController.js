@@ -109,8 +109,8 @@ exports.updateOutgoingDocument = async (req, res, next) => {
       return;
     }
     
-    // Only SuperAdmin, AdminTuningDesk and Admin can fully update documents
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
+    // Only AdminTuningDesk and Admin can fully update documents
+    if (req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
       return next(
         new ErrorResponse(`Not authorized to update this document`, 403)
       );

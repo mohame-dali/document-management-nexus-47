@@ -40,7 +40,7 @@ exports.getPromotionsByPersonnel = async (req, res, next) => {
 
 // @desc    Créer une promotion pour un personnel
 // @route   POST /api/hr/personnel/:personnelId/promotions
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createPromotion = async (req, res, next) => {
   try {
     const { personnelId } = req.params;
@@ -100,7 +100,7 @@ exports.createPromotion = async (req, res, next) => {
 
 // @desc    Mettre à jour une promotion
 // @route   PUT /api/hr/promotions/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updatePromotion = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -142,7 +142,7 @@ exports.updatePromotion = async (req, res, next) => {
 
 // @desc    Supprimer une promotion
 // @route   DELETE /api/hr/promotions/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.deletePromotion = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -206,7 +206,7 @@ exports.getPostesByPersonnel = async (req, res, next) => {
 
 // @desc    Créer un poste/affectation pour un personnel
 // @route   POST /api/hr/personnel/:personnelId/postes
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createPoste = async (req, res, next) => {
   try {
     const { personnelId } = req.params;
@@ -266,7 +266,7 @@ exports.createPoste = async (req, res, next) => {
 
 // @desc    Mettre à jour un poste
 // @route   PUT /api/hr/postes/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updatePoste = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -308,7 +308,7 @@ exports.updatePoste = async (req, res, next) => {
 
 // @desc    Supprimer un poste
 // @route   DELETE /api/hr/postes/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.deletePoste = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -372,7 +372,7 @@ exports.getDiplomesByPersonnel = async (req, res, next) => {
 
 // @desc    Créer un diplôme pour un personnel
 // @route   POST /api/hr/personnel/:personnelId/diplomes
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createDiplome = async (req, res, next) => {
   try {
     const { personnelId } = req.params;
@@ -434,7 +434,7 @@ exports.createDiplome = async (req, res, next) => {
 
 // @desc    Mettre à jour un diplôme
 // @route   PUT /api/hr/diplomes/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updateDiplome = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -476,7 +476,7 @@ exports.updateDiplome = async (req, res, next) => {
 
 // @desc    Supprimer un diplôme
 // @route   DELETE /api/hr/diplomes/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.deleteDiplome = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -540,7 +540,7 @@ exports.getSanctionsByPersonnel = async (req, res, next) => {
 
 // @desc    Créer une sanction pour un personnel
 // @route   POST /api/hr/personnel/:personnelId/sanctions
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createSanction = async (req, res, next) => {
   try {
     const { personnelId } = req.params;
@@ -600,7 +600,7 @@ exports.createSanction = async (req, res, next) => {
 
 // @desc    Mettre à jour une sanction
 // @route   PUT /api/hr/sanctions/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updateSanction = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -645,7 +645,7 @@ exports.updateSanction = async (req, res, next) => {
 
 // @desc    Supprimer une sanction
 // @route   DELETE /api/hr/sanctions/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.deleteSanction = async (req, res, next) => {
   try {
     const { id } = req.params;

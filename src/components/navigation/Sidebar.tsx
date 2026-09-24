@@ -26,9 +26,11 @@ import {
   CalendarCheck,
   CalendarRange,
   GraduationCap,
+  ClipboardList,
   ChevronDown,
   ChevronLeft,
-  Trash2
+  Trash2,
+  Sliders
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
@@ -91,6 +93,7 @@ const Sidebar = () => {
       { path: '/dashboard/advanced-search', label: t('sidebar.advancedSearch'), icon: Search, color: 'text-cyan-600' },
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
+      { path: '/setup', label: 'تهيئة النظام', icon: Sliders, color: 'text-teal-500' },
     ] : []),
 
     // Admin menu items (avec mon-profil)
@@ -107,6 +110,7 @@ const Sidebar = () => {
       { path: '/dashboard/hr/my-attendance', label: 'حضوري', icon: CalendarCheck, color: 'text-emerald-500' },
       { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
       { path: '/dashboard/settings', label: 'الإعدادات', icon: Settings, color: 'text-gray-600' },
+      { path: '/setup', label: 'تهيئة النظام', icon: Sliders, color: 'text-teal-500' },
     ] : []),
 
     // AdminTuningDesk menu items (avec mon-profil)
@@ -403,6 +407,24 @@ const Sidebar = () => {
                                 location.pathname === '/dashboard/hr/attendance' ? "text-white" : "text-gray-400"
                               )} />
                               <span className="truncate">تسجيل الحضور</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => navigate('/dashboard/hr/attendance-declarations')}
+                              title={!isOpen ? "الإعلانات المعلقة" : undefined}
+                              className={cn(
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                location.pathname === '/dashboard/hr/attendance-declarations'
+                                  ? "bg-[#2c5282] text-white font-bold"
+                                  : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                              )}
+                            >
+                              <ClipboardList className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                                location.pathname === '/dashboard/hr/attendance-declarations' ? "text-white" : "text-gray-400"
+                              )} />
+                              <span className="truncate">الإعلانات المعلقة</span>
                             </button>
 
                             <button

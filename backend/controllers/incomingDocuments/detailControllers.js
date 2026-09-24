@@ -49,8 +49,8 @@ exports.getIncomingDocument = async (req, res, next) => {
     console.log('User active department:', req.user.activeDepartment?._id);
     console.log('Document assigned to:', document.assignedTo?.map(a => a.id));
     
-    // SuperAdmin, Admin and AdminTuningDesk have access to all documents
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'Admin' || req.user.role === 'AdminTuningDesk') {
+    // Director, Admin and AdminTuningDesk have access to all documents
+    if (req.user.role === 'Director' || req.user.role === 'Admin' || req.user.role === 'AdminTuningDesk') {
       console.log(`${req.user.role} has full access to all documents`);
       return res.status(200).json({
         success: true,

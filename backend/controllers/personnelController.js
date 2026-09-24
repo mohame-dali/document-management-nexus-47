@@ -23,7 +23,7 @@ const isNonRHAdminDepartment = async (user) => {
 
 // @desc    Créer une nouvelle fiche de personnel
 // @route   POST /api/hr/personnel
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createPersonnel = async (req, res, next) => {
   try {
     const {
@@ -103,14 +103,35 @@ exports.createPersonnel = async (req, res, next) => {
 
 // @desc    Obtenir la liste du personnel avec pagination et filtres
 // @route   GET /api/hr/personnel
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.getPersonnelList = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 10));
     const skip = (page - 1) * limit;
 
-    const query = {};
+    const query = { isDeleted: { $ne: true } };
+
+    // Filtrer par département si l'utilisateur est AdminDept non-RH
+    if (req.user && req.user.role === 'AdminDepartment') {
+      // Vérifier si RH
+      const settings = await OrganizationSettings.findOne();
+      const rhDeptId = settings?.rhDepartmentId?.toString();
+      const userDeptId = (req.user.activeDepartment?._id || req.user.activeDepartment)?.toString();
+
+      const isRH = Boolean(rhDeptId && userDeptId && userDeptId === rhDeptId);
+
+      if (!isRH) {
+        // AdminDept non-RH : filtrer par SON département
+        query.activeDepartment = req.user.activeDepartment?._id || req.user.activeDepartment;
+      } else if (req.query.activeDepartment) {
+        // Si RH avec filtre spécifique
+        query.activeDepartment = req.query.activeDepartment;
+      }
+    } else if (req.query.activeDepartment) {
+      // Admin et Director : pas de filtre par défaut → voit tout, sauf si req.query.activeDepartment
+      query.activeDepartment = req.query.activeDepartment;
+    }
 
     // Filtre de recherche textuelle (nom, prenom, cin)
     if (req.query.search) {
@@ -127,24 +148,13 @@ exports.getPersonnelList = async (req, res, next) => {
       query.statut = req.query.statut;
     }
 
-    // Filtre par département :
-    // - Si AdminDepartment non-RH : restreindre automatiquement au département actif de l'utilisateur
-    // - Si Admin, SuperAdmin ou RH : appliquer le filtre req.query.activeDepartment s'il est fourni
-    const isNonRH = await isNonRHAdminDepartment(req.user);
-    if (isNonRH) {
-      const userDeptId = req.user.activeDepartment?._id || req.user.activeDepartment;
-      query.activeDepartment = userDeptId || null;
-    } else if (req.query.activeDepartment) {
-      query.activeDepartment = req.query.activeDepartment;
-    }
-
     const total = await Personnel.countDocuments(query);
     const pages = Math.ceil(total / limit) || 1;
 
     // Pas de populate sur userId ici pour préserver les performances
     const personnelList = await Personnel.find(query)
-      .populate('activeDepartment', 'name description')
-      .populate('departments', 'name')
+      .populate('activeDepartment', 'name code description')
+      .populate('departments', 'name code')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -164,9 +174,12 @@ exports.getPersonnelList = async (req, res, next) => {
   }
 };
 
+// Alias pour compatibilité
+exports.getPersonnel = exports.getPersonnelList;
+
 // @desc    Obtenir une fiche de personnel par son ID
 // @route   GET /api/hr/personnel/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.getPersonnelById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -178,7 +191,7 @@ exports.getPersonnelById = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(id)
+    const personnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } })
       .populate('activeDepartment', 'name description')
       .populate('departments', 'name')
       .populate('userId', 'username email role isActive');
@@ -201,7 +214,7 @@ exports.getPersonnelById = async (req, res, next) => {
 
 // @desc    Mettre à jour une fiche de personnel (sauf statut et userId)
 // @route   PUT /api/hr/personnel/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updatePersonnel = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -213,7 +226,7 @@ exports.updatePersonnel = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(id);
+    const personnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } });
 
     if (!personnel) {
       return res.status(404).json({
@@ -282,9 +295,9 @@ exports.updatePersonnel = async (req, res, next) => {
   }
 };
 
-// @desc    Supprimer une fiche de personnel (uniquement si non liée à un compte utilisateur)
+// @desc    Supprimer une fiche de personnel (Soft delete - uniquement si non liée à un compte utilisateur)
 // @route   DELETE /api/hr/personnel/:id
-// @access  Private (Admin, SuperAdmin uniquement)
+// @access  Private (Admin, Director uniquement)
 exports.deletePersonnel = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -296,7 +309,7 @@ exports.deletePersonnel = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(id);
+    const personnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } });
 
     if (!personnel) {
       return res.status(404).json({
@@ -313,7 +326,10 @@ exports.deletePersonnel = async (req, res, next) => {
       });
     }
 
-    await Personnel.findByIdAndDelete(id);
+    personnel.isDeleted = true;
+    personnel.deletedAt = new Date();
+    personnel.deletedBy = req.user ? (req.user._id || req.user.id) : null;
+    await personnel.save();
 
     res.status(200).json({
       success: true,
@@ -325,14 +341,53 @@ exports.deletePersonnel = async (req, res, next) => {
   }
 };
 
+// @desc    Restaurer une fiche de personnel supprimée
+// @route   PUT /api/hr/personnel/:id/restore
+// @access  Private (Admin, Director uniquement)
+exports.restorePersonnel = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Identifiant de personnel invalide'
+      });
+    }
+
+    const personnel = await Personnel.findOne({ _id: id, isDeleted: true });
+
+    if (!personnel) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fiche de personnel supprimée introuvable'
+      });
+    }
+
+    personnel.isDeleted = false;
+    personnel.deletedAt = null;
+    personnel.deletedBy = null;
+    await personnel.save();
+
+    res.status(200).json({
+      success: true,
+      data: personnel,
+      message: 'Fiche de personnel restaurée avec succès'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Lister les fiches de personnel en attente de compte utilisateur
 // @route   GET /api/hr/personnel/en-attente
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.getPersonnelEnAttente = async (req, res, next) => {
   try {
     const personnelEnAttente = await Personnel.find({
       statut: 'en_attente',
-      userId: null
+      userId: null,
+      isDeleted: { $ne: true }
     })
       .populate('activeDepartment', 'name description')
       .populate('departments', 'name')
@@ -468,7 +523,7 @@ exports.getMyDocuments = async (req, res, next) => {
 
 // @desc    Lier un compte utilisateur à une fiche de personnel
 // @route   POST /api/hr/personnel/:personnelId/link-user
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.linkUserToPersonnel = async (req, res, next) => {
   try {
     const { personnelId } = req.params;
@@ -490,7 +545,7 @@ exports.linkUserToPersonnel = async (req, res, next) => {
     }
 
     // b. Récupérer la fiche Personnel → si introuvable → 404
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -550,7 +605,7 @@ exports.linkUserToPersonnel = async (req, res, next) => {
 
 // @desc    Téléverser la photo d'un personnel
 // @route   PUT /api/hr/personnel/:id/photo
-// @access  Private (Admin, SuperAdmin, AdminDepartment RH)
+// @access  Private (Admin, Director, AdminDepartment RH)
 exports.uploadPersonnelPhotoFile = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -569,7 +624,7 @@ exports.uploadPersonnelPhotoFile = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(id);
+    const personnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } });
 
     if (!personnel) {
       if (req.file) {

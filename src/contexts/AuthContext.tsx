@@ -12,6 +12,7 @@ import {
   type User 
 } from '../services/authService';
 import { clearAllAuthData } from '../services/auth/authStorage';
+import { getOrganizationSettings } from '../services/organizationSettingsService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -134,7 +135,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       toast.success('تم تسجيل الدخول بنجاح');
       
-      // Role-based redirection
+      // Role-based redirection with Setup check for Admins
+      if ((finalUser.role === 'Admin' || finalUser.role === 'SuperAdmin')) {
+        try {
+          const settings = await getOrganizationSettings();
+          const isComplete = Boolean(
+            settings?.nomAdministration?.trim() &&
+            settings?.rhDepartmentId &&
+            settings?.bureauOrdreDepartmentId &&
+            settings?.bureauDirecteurDepartmentId
+          );
+          if (!isComplete) {
+            navigate('/setup');
+            return;
+          }
+        } catch {
+          // If checking fails, proceed to default dashboard
+        }
+      }
+
       if (finalUser.role === 'AdminDepartment' && finalUser.departments.length > 0) {
         navigate('/dashboard/admin-department');
       } else {

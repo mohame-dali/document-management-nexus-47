@@ -64,7 +64,8 @@ import {
   User,
   CheckCircle2,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 export const RHStagesPage: React.FC = () => {
@@ -221,11 +222,16 @@ export const RHStagesPage: React.FC = () => {
                 <span>/</span>
                 <span className="text-[#2c5282] font-bold">التربصات والتكوين</span>
               </div>
-              <h1 className="text-2xl font-bold text-[#1a202c]">
-                سجل التربصات والتكوين المستمر
-              </h1>
-              <p className="text-sm text-gray-600 mt-0.5">
-                إدارة ومتابعة التربصات والدورات التكوينية المنجزة داخل تونس وبالخارج
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-2xl font-bold text-[#1a202c]">
+                  جميع التربصات
+                </h1>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
+                  عرض شامل
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#718096] mt-1">
+                عرض وإدارة تربصات جميع الموظفين (بتونس وبالخارج)
               </p>
             </div>
           </div>
@@ -252,6 +258,19 @@ export const RHStagesPage: React.FC = () => {
               <span>إضافة تربص جديد</span>
             </Button>
           )}
+        </div>
+      </div>
+
+      {/* Bandeau info */}
+      <div className="bg-[#ebf4ff] border border-[#bee3f8] rounded p-4 flex items-start gap-3">
+        <Info className="h-5 w-5 text-[#2c5282] flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-[#2c5282]">
+          <p className="font-semibold mb-1">عرض شامل لجميع التربصات</p>
+          <p className="text-xs leading-relaxed">
+            هذه الصفحة تعرض تربصات جميع الموظفين لإتاحة نظرة شاملة 
+            وإحصائيات. لإضافة تربص لموظف معين أو الاطلاع على مساره 
+            الكامل، افتح ملفه الشخصي وانتقل إلى تبويب &quot;تربصات هذا الموظف&quot;.
+          </p>
         </div>
       </div>
 

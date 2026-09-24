@@ -54,7 +54,7 @@ exports.searchIncomingDocuments = async (req, res, next) => {
       }
     }
     
-    // Filter by department for AdminDepartment and User roles (not for SuperAdmin, AdminTuningDesk, Admin)
+    // Filter by department for AdminDepartment and User roles (not for Director, AdminTuningDesk, Admin)
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
       if (!req.user.activeDepartment) {
         return next(new ErrorResponse('No active department selected', 403));

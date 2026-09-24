@@ -19,36 +19,36 @@ router.get('/', getTrash);
 // Empty trash
 router.delete(
   '/empty',
-  authorize('SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment'),
+  authorize('Admin', 'AdminTuningDesk', 'AdminDepartment'),
   emptyTrash
 );
 
 // Restore item (supports both /:type/:id/restore and /restore/:type/:id)
 router.put(
   '/:type/:id/restore',
-  authorize('SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment'),
+  authorize('Admin', 'AdminTuningDesk', 'AdminDepartment'),
   restoreItem
 );
 router.put(
   '/restore/:type/:id',
-  authorize('SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment'),
+  authorize('Admin', 'AdminTuningDesk', 'AdminDepartment'),
   restoreItem
 );
 
 // Permanent delete (supports /:type/:id/permanent, /permanent/:type/:id, and /:type/:id)
 router.delete(
   '/:type/:id/permanent',
-  authorize('SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment'),
+  authorize('Admin', 'AdminTuningDesk', 'AdminDepartment'),
   permanentDelete
 );
 router.delete(
   '/permanent/:type/:id',
-  authorize('SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment'),
+  authorize('Admin', 'AdminTuningDesk', 'AdminDepartment'),
   permanentDelete
 );
 router.delete(
   '/:type/:id',
-  authorize('SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment'),
+  authorize('Admin', 'AdminTuningDesk', 'AdminDepartment'),
   permanentDelete
 );
 

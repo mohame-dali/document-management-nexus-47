@@ -15,7 +15,7 @@ const { auditDocumentActivity } = require('../middleware/auditMiddleware');
 
 // All routes require authentication and admin roles
 router.use(protect);
-router.use(authorize('SuperAdmin', 'Admin'));
+router.use(authorize('Admin'));
 
 router.route('/stats').get(getBackupStats);
 router.route('/policy')

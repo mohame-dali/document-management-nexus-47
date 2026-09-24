@@ -3,7 +3,7 @@ const OrganizationSettings = require('../models/OrganizationSettings');
 /**
  * Middleware de contrôle d'accès pour le module Suivi de Présence
  * 
- * - Admin / SuperAdmin : Accès complet (tous départements, configuration, rapports)
+ * - Admin / Director : Accès complet (tous départements, configuration, rapports - Director lecture seule)
  * - AdminDepartment (du département RH) : Accès complet (Admin RH)
  * - AdminDepartment (autre département) : Accès restreint à son département actif (req.userRestrictedToDepartment)
  * - User (agent) : Accès autorisé en lecture seule à son propre calendrier et solde
@@ -19,8 +19,8 @@ const checkAttendanceAccess = async (req, res, next) => {
 
     const role = req.user.role;
 
-    // 1. Administrateurs système : accès total
-    if (role === 'Admin' || role === 'SuperAdmin') {
+    // 1. Administrateurs système & Direction : accès global
+    if (role === 'Admin' || role === 'Director') {
       req.userRestrictedToDepartment = null;
       req.isAdminRH = true;
       return next();
@@ -49,9 +49,11 @@ const checkAttendanceAccess = async (req, res, next) => {
       return next();
     }
 
-    // 3. Utilisateur / Agent standard (User) : autorisé pour son propre calendrier et solde
+    // 3. Consultation et déclaration Self-service (calendrier, solde individuel et déclarations) :
+    // Tout utilisateur authentifié (User, AdminTuningDesk, AdminDepartment, etc.) peut consulter et gérer ses propres données
     const path = req.path || req.baseUrl;
-    if (role === 'User' && (path.includes('/calendar') || path.includes('/balance'))) {
+    const isSelfServicePath = path.includes('/calendar') || path.includes('/balance') || path.includes('/declarations');
+    if (isSelfServicePath) {
       req.userRestrictedToDepartment = null;
       req.isAgent = true;
       return next();

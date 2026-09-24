@@ -5,6 +5,7 @@ const {
   getPersonnelById,
   updatePersonnel,
   deletePersonnel,
+  restorePersonnel,
   getPersonnelEnAttente,
   getMyProfile,
   getMyDocuments,
@@ -50,12 +51,15 @@ router.put(
 
 // Routes CRUD du personnel
 router.route('/personnel')
-  .get(authorize('Admin', 'SuperAdmin', 'AdminDepartment', 'AdminTuningDesk'), getPersonnelList)
+  .get(authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), getPersonnelList)
   .post(checkRHAccess, createPersonnel);
 
 router.route('/personnel/:id')
   .get(checkRHAccess, getPersonnelById)
   .put(checkRHAccess, updatePersonnel)
-  .delete(authorize('Admin', 'SuperAdmin'), deletePersonnel);
+  .delete(authorize('Admin'), deletePersonnel);
+
+// Restauration d'une fiche supprimée (soft delete)
+router.put('/personnel/:id/restore', authorize('Admin'), restorePersonnel);
 
 module.exports = router;

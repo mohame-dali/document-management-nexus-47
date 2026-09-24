@@ -73,7 +73,7 @@ exports.getEcoleById = async (req, res, next) => {
 
 // @desc    Créer une nouvelle école de formation
 // @route   POST /api/hr/references/ecoles
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createEcole = async (req, res, next) => {
   try {
     const {
@@ -131,7 +131,7 @@ exports.createEcole = async (req, res, next) => {
 
 // @desc    Mettre à jour une école de formation
 // @route   PUT /api/hr/references/ecoles/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updateEcole = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -185,7 +185,7 @@ exports.updateEcole = async (req, res, next) => {
 
 // @desc    Supprimer (soft delete) une école de formation
 // @route   DELETE /api/hr/references/ecoles/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.deleteEcole = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -287,7 +287,7 @@ exports.getTypeFormationById = async (req, res, next) => {
 
 // @desc    Créer un nouveau type de formation
 // @route   POST /api/hr/references/types-formation
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createTypeFormation = async (req, res, next) => {
   try {
     const {
@@ -339,7 +339,7 @@ exports.createTypeFormation = async (req, res, next) => {
 
 // @desc    Mettre à jour un type de formation
 // @route   PUT /api/hr/references/types-formation/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updateTypeFormation = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -396,7 +396,7 @@ exports.updateTypeFormation = async (req, res, next) => {
 
 // @desc    Supprimer (soft delete) un type de formation
 // @route   DELETE /api/hr/references/types-formation/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.deleteTypeFormation = async (req, res, next) => {
   try {
     const { id } = req.params;

@@ -155,7 +155,6 @@ RHStageSchema.index({ sessionFormationId: 1 });
 RHStageSchema.index({ sourceDocumentId: 1 });
 RHStageSchema.index({ statut: 1 });
 RHStageSchema.index({ pays: 1 });
-RHStageSchema.index({ isDeleted: 1 });
 
 // Méthode virtuelle pour calculer la durée en jours
 RHStageSchema.virtual('duree').get(function() {

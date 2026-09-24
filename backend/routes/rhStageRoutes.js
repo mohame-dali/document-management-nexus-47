@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, checkRHAccess } = require('../middleware/auth');
 const ctrl = require('../controllers/rh/rhStageController');
 
 // Statistiques (avant /:id pour éviter conflit de route)
@@ -13,17 +13,17 @@ router.get('/:id', protect, ctrl.getStageById);
 // Création / modification / suppression (réservé aux rôles RH / Admin)
 router.post('/', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  checkRHAccess, 
   ctrl.createStage
 );
 router.put('/:id', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  checkRHAccess, 
   ctrl.updateStage
 );
 router.delete('/:id', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  checkRHAccess, 
   ctrl.deleteStage
 );
 

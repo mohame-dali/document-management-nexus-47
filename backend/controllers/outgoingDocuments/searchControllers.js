@@ -49,8 +49,8 @@ exports.searchOutgoingDocuments = async (req, res, next) => {
       }
     }
     
-    // Filter by department if not SuperAdmin, AdminTuningDesk or Admin
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
+    // Filter by department if not Director, AdminTuningDesk or Admin
+    if (req.user.role !== 'Director' && req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
       if (!req.user.activeDepartment) {
         return next(new ErrorResponse('No active department selected', 403));
       }

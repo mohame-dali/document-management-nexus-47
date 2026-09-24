@@ -313,7 +313,11 @@ const EditUser: React.FC = () => {
         isSubmitting={updateMutation.isPending} 
         departments={departments || []}
         currentUserRole={currentUser?.role || ''}
-        currentUserDepartment={currentUser?.activeDepartment?._id || ''}
+        currentUserDepartment={
+          typeof currentUser?.activeDepartment === 'object' && currentUser?.activeDepartment
+            ? currentUser.activeDepartment._id
+            : (currentUser?.activeDepartment as string) || ''
+        }
       />
     </div>
   );

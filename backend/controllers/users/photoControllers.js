@@ -9,7 +9,7 @@ const path = require('path');
 // @access  Private/Admin/AdminDepartment
 exports.uploadPhoto = async (req, res, next) => {
   try {
-    let user = await User.findById(req.params.id);
+    let user = await User.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
     
     if (!user) {
       return next(

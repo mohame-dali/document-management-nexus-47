@@ -15,7 +15,7 @@ exports.deactivateUser = async (req, res, next) => {
       );
     }
     
-    let user = await User.findById(req.params.id).populate('departments');
+    let user = await User.findOne({ _id: req.params.id, isDeleted: { $ne: true } }).populate('departments');
     
     if (!user) {
       return next(
@@ -23,10 +23,10 @@ exports.deactivateUser = async (req, res, next) => {
       );
     }
     
-    // Enhanced authorization for SuperAdmin, Admin and AdminDepartment
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'Admin') {
-      console.log(`${req.user.role} user - can deactivate any user`);
-      // SuperAdmin and Admin can deactivate any user
+    // Enhanced authorization for Admin and AdminDepartment
+    if (req.user.role === 'Admin') {
+      console.log(`Admin user - can deactivate any user`);
+      // Admin can deactivate any user
     } else if (req.user.role === 'AdminDepartment') {
       // Verify the user belongs to the AdminDepartment's active department
       if (!req.user.activeDepartment) {
@@ -96,7 +96,7 @@ exports.resetPassword = async (req, res, next) => {
       );
     }
     
-    const user = await User.findById(req.params.id).populate('departments');
+    const user = await User.findOne({ _id: req.params.id, isDeleted: { $ne: true } }).populate('departments');
     
     if (!user) {
       return next(
@@ -104,10 +104,10 @@ exports.resetPassword = async (req, res, next) => {
       );
     }
     
-    // Enhanced authorization for SuperAdmin, Admin and AdminDepartment
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'Admin') {
-      console.log(`${req.user.role} user - can reset password for any user`);
-      // SuperAdmin and Admin can reset password for any user
+    // Enhanced authorization for Admin and AdminDepartment
+    if (req.user.role === 'Admin') {
+      console.log(`Admin user - can reset password for any user`);
+      // Admin can reset password for any user
     } else if (req.user.role === 'AdminDepartment') {
       // Verify the user belongs to the AdminDepartment's active department
       if (!req.user.activeDepartment) {

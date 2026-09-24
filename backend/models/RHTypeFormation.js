@@ -51,7 +51,6 @@ const RHTypeFormationSchema = new mongoose.Schema({
 });
 
 // Index
-RHTypeFormationSchema.index({ code: 1 }, { unique: true });
 RHTypeFormationSchema.index({ isActive: 1 });
 RHTypeFormationSchema.index({ categorie: 1 });
 

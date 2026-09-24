@@ -37,7 +37,7 @@ exports.updateFolder = async (req, res, next) => {
     }
     
     // Check if folder belongs to the active department
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+    if (req.user.role !== 'Admin') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
       
@@ -114,7 +114,7 @@ exports.moveFolder = async (req, res, next) => {
       return next(new ErrorResponse(`المجلد غير موجود برمز ${req.params.id}`, 404));
     }
     
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+    if (req.user.role !== 'Admin') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
       

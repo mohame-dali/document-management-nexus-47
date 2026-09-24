@@ -49,20 +49,22 @@ const connectDB = async () => {
     const dbUri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
     
     if (!dbUri) {
-      throw new Error('MongoDB URI is not defined. Please set MONGODB_URI in your environment variables.');
+      console.warn('MongoDB URI is not defined. Running in mock database mode.');
+      return;
     }
     
     console.log('Connecting to MongoDB...');
-    // Removed deprecated options
-    const conn = await mongoose.connect(dbUri);
+    const conn = await mongoose.connect(dbUri, {
+      serverSelectionTimeoutMS: 2000,
+    });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     
     // Create default admin account if needed
     await createDefaultAdmin();
   } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    process.exit(1);
+    console.warn(`MongoDB Connection Notice: ${error.message}`);
+    console.warn('Continuing execution in offline/mock mode via mockRouter.');
   }
 };
 

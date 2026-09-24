@@ -76,7 +76,6 @@ const leaveReasonSchema = new mongoose.Schema({
   timestamps: true
 });
 
-leaveReasonSchema.index({ code: 1 }, { unique: true });
 leaveReasonSchema.index({ category: 1, order: 1 });
 leaveReasonSchema.index({ isActive: 1 });
 

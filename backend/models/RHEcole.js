@@ -64,7 +64,6 @@ const RHEcoleSchema = new mongoose.Schema({
 });
 
 // Index
-RHEcoleSchema.index({ nom: 1 }, { unique: true });
 RHEcoleSchema.index({ isActive: 1 });
 RHEcoleSchema.index({ pays: 1, ville: 1 });
 

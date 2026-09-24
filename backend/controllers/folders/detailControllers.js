@@ -20,7 +20,7 @@ exports.getFolder = async (req, res, next) => {
     }
     
     // Check if user has access to this folder
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
+    if (req.user.role !== 'Director' && req.user.role !== 'Admin' && req.user.role !== 'AdminTuningDesk') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
       

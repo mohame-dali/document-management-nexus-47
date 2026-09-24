@@ -11,20 +11,20 @@ const ctrl = require('../controllers/rh/rhReferenceController');
 router.get('/ecoles', protect, ctrl.getEcoles);
 router.get('/ecoles/:id', protect, ctrl.getEcoleById);
 
-// Écriture : Admin, SuperAdmin, AdminDepartment
+// Écriture : Admin, AdminDepartment
 router.post('/ecoles', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  authorize('Admin', 'AdminDepartment'), 
   ctrl.createEcole
 );
 router.put('/ecoles/:id', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  authorize('Admin', 'AdminDepartment'), 
   ctrl.updateEcole
 );
 router.delete('/ecoles/:id', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  authorize('Admin', 'AdminDepartment'), 
   ctrl.deleteEcole
 );
 
@@ -36,17 +36,17 @@ router.get('/types-formation', protect, ctrl.getTypesFormation);
 router.get('/types-formation/:id', protect, ctrl.getTypeFormationById);
 router.post('/types-formation', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  authorize('Admin', 'AdminDepartment'), 
   ctrl.createTypeFormation
 );
 router.put('/types-formation/:id', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  authorize('Admin', 'AdminDepartment'), 
   ctrl.updateTypeFormation
 );
 router.delete('/types-formation/:id', 
   protect, 
-  authorize('Admin', 'SuperAdmin', 'AdminDepartment'), 
+  authorize('Admin', 'AdminDepartment'), 
   ctrl.deleteTypeFormation
 );
 

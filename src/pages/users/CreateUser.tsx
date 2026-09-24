@@ -53,6 +53,7 @@ const CreateUser: React.FC = () => {
     onSuccess: (result) => {
       // Invalider les caches requis
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['personnels-for-user-form'] });
       queryClient.invalidateQueries({ queryKey: ['personnel-en-attente'] });
       queryClient.invalidateQueries({ queryKey: ['hr', 'personnel'] });
 
@@ -237,7 +238,11 @@ const CreateUser: React.FC = () => {
         isSubmitting={createMutation.isPending} 
         departments={departments || []}
         currentUserRole={currentUser?.role || ''}
-        currentUserDepartment={currentUser?.activeDepartment?._id || ''}
+        currentUserDepartment={
+          typeof currentUser?.activeDepartment === 'object' && currentUser?.activeDepartment
+            ? currentUser.activeDepartment._id
+            : (currentUser?.activeDepartment as string) || ''
+        }
       />
     </div>
   );

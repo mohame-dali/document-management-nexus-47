@@ -91,6 +91,13 @@ try {
   app.use('/api/organization-settings', require('./backend/routes/organizationSettingsRoutes'));
   app.use('/api/hr', require('./backend/routes/personnelRoutes'));
   app.use('/api/hr', require('./backend/routes/personnelDocumentRoutes'));
+  app.use('/api/hr/stages', require('./backend/routes/rhStageRoutes'));
+  app.use('/api/hr/references', require('./backend/routes/rhReferenceRoutes'));
+  app.use('/api/hr', require('./backend/routes/rhStagePersonnelRoutes'));
+  app.use('/api/hr', require('./backend/routes/rhPersonnelHistoryRoutes'));
+  app.use('/api/attendance', require('./backend/routes/attendanceRoutes'));
+  app.use('/api/attendance', require('./backend/routes/attendanceDeclarationRoutes'));
+  app.use('/api/hr/leave-reasons', require('./backend/routes/leaveReasonRoutes'));
 } catch (err: any) {
   console.warn('Notice loading backend routes:', err.message);
 }
@@ -113,7 +120,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   next(err);
 });
 
-const PORT = 3000;
+const portArgIndex = process.argv.indexOf('--port');
+const portFromArgs = portArgIndex !== -1 ? parseInt(process.argv[portArgIndex + 1], 10) : undefined;
+const PORT = Number(portFromArgs || 3000);
 
 async function start() {
   if (process.env.NODE_ENV !== 'production') {
@@ -125,7 +134,7 @@ async function start() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*all', (req, res) => {
+    app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

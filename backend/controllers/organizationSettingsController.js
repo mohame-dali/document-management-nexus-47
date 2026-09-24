@@ -32,7 +32,7 @@ exports.getOrganizationSettings = async (req, res, next) => {
 
 // @desc    Mettre à jour les paramètres de l'organisation
 // @route   PUT /api/organization-settings
-// @access  Private (Admin, SuperAdmin)
+// @access  Private (Admin, Director)
 exports.updateOrganizationSettings = async (req, res, next) => {
   try {
     const { nomAdministration, logoAdministration, typesAssociationPersonnel } = req.body;
@@ -83,7 +83,7 @@ exports.updateOrganizationSettings = async (req, res, next) => {
 
 // @desc    Définir le département RH
 // @route   PUT /api/organization-settings/rh-department
-// @access  Private (Admin, SuperAdmin)
+// @access  Private (Admin, Director)
 exports.setRhDepartment = async (req, res, next) => {
   try {
     const { rhDepartmentId } = req.body;
@@ -168,7 +168,7 @@ exports.getTypesAssociation = async (req, res, next) => {
 
 // @desc    Définir les départements transversaux (Bureau Directeur et Bureau d'Ordre)
 // @route   PUT /api/organization-settings/bureau-departments
-// @access  Private (Admin, SuperAdmin)
+// @access  Private (Admin, Director)
 exports.setBureauDepartments = async (req, res, next) => {
   try {
     const { bureauDirecteurDepartmentId, bureauOrdreDepartmentId } = req.body;

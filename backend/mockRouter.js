@@ -551,4 +551,324 @@ router.get('/backup/policy', (req, res) => {
   res.json({ success: true, data: { autoBackup: false } });
 });
 
+let mockDeclarations = [
+  {
+    _id: 'decl_1',
+    personnelId: {
+      _id: '65f000000000000000000050',
+      nom: 'بن علي',
+      prenom: 'كريم',
+      matricule: 'EMP-001',
+      activeDepartment: { _id: '65f000000000000000000020', name: 'Ressources Humaines' }
+    },
+    userId: { _id: '65f000000000000000000001', username: 'admin' },
+    departmentId: { _id: '65f000000000000000000020', name: 'Ressources Humaines', code: 'RH' },
+    date: new Date(Date.now() + 86400000).toISOString(),
+    statut: 'absent',
+    motif: 'service',
+    leaveReasonId: { _id: 'lr_service', nom: 'مهمة عمل / مصلحة', code: 'service', impacteSolde: false },
+    detailsMotif: {
+      nomService: 'وزارة المالية',
+      commentaire: 'إيداع الكشوفات الدورية'
+    },
+    heureArrivee: '',
+    validationStatus: 'en_attente',
+    createdAt: new Date().toISOString()
+  }
+];
+
+let mockLeaveReasons = [
+  { _id: 'lr_conge', nom: 'عطلة سنوية', code: 'conge_annuel', categorie: 'conge', impacteSolde: true, isActive: true },
+  { _id: 'lr_service', nom: 'مصلحة إدارية', code: 'service', categorie: 'service', impacteSolde: false, requiresServiceName: true, isActive: true },
+  { _id: 'lr_mission', nom: 'مأمورية عمل', code: 'mission', categorie: 'mission', impacteSolde: false, requiresLieu: true, requiresObjet: true, isActive: true },
+  { _id: 'lr_maladie', nom: 'إجازة مرضية', code: 'maladie', categorie: 'maladie', impacteSolde: false, isActive: true },
+  { _id: 'lr_formation', nom: 'تكوين / تدريب', code: 'formation', categorie: 'formation', impacteSolde: false, requiresFormationDetails: true, isActive: true }
+];
+
+router.get('/hr/leave-reasons', (req, res) => {
+  res.json({ success: true, count: mockLeaveReasons.length, data: mockLeaveReasons });
+});
+
+router.post('/attendance/declarations', (req, res) => {
+  const user = getAuthUser(req) || mockDb.users[0];
+  const newDecl = {
+    _id: 'decl_' + Date.now(),
+    personnelId: {
+      _id: '65f000000000000000000050',
+      nom: user.username,
+      prenom: '',
+      matricule: 'EMP-' + Math.floor(100 + Math.random() * 900),
+      activeDepartment: mockDb.departments[1]
+    },
+    userId: user,
+    departmentId: mockDb.departments[1],
+    date: req.body.date,
+    statut: req.body.statut,
+    motif: req.body.motif || '',
+    leaveReasonId: mockLeaveReasons.find(r => r._id === req.body.leaveReasonId || r.code === req.body.motif) || null,
+    detailsMotif: req.body.detailsMotif || {},
+    heureArrivee: req.body.heureArrivee || '',
+    validationStatus: 'en_attente',
+    createdAt: new Date().toISOString()
+  };
+  mockDeclarations.unshift(newDecl);
+  res.status(201).json({ success: true, data: newDecl });
+});
+
+router.get('/attendance/declarations/me', (req, res) => {
+  res.json({ success: true, count: mockDeclarations.length, data: mockDeclarations });
+});
+
+router.get('/attendance/declarations', (req, res) => {
+  let list = [...mockDeclarations];
+  if (req.query.validationStatus && req.query.validationStatus !== 'all') {
+    list = list.filter(d => d.validationStatus === req.query.validationStatus);
+  }
+  res.json({ success: true, count: list.length, data: list });
+});
+
+router.put('/attendance/declarations/:id/approve', (req, res) => {
+  const decl = mockDeclarations.find(d => d._id === req.params.id);
+  if (!decl) return res.status(404).json({ success: false, message: 'Déclaration introuvable' });
+  decl.validationStatus = 'approuvee';
+  decl.validatedBy = { username: 'Admin' };
+  decl.validatedAt = new Date().toISOString();
+  if (req.body.adminComment) decl.adminComment = req.body.adminComment;
+  res.json({ success: true, message: 'Déclaration approuvée', data: decl });
+});
+
+router.put('/attendance/declarations/:id/reject', (req, res) => {
+  const decl = mockDeclarations.find(d => d._id === req.params.id);
+  if (!decl) return res.status(404).json({ success: false, message: 'Déclaration introuvable' });
+  decl.validationStatus = 'rejetee';
+  decl.validatedBy = { username: 'Admin' };
+  decl.validatedAt = new Date().toISOString();
+  decl.rejectionReason = req.body.reason || req.body.rejectionReason || '';
+  if (req.body.adminComment) decl.adminComment = req.body.adminComment;
+  res.json({ success: true, message: 'Déclaration rejetée', data: decl });
+});
+
+router.put('/attendance/declarations/:id', (req, res) => {
+  const decl = mockDeclarations.find(d => d._id === req.params.id);
+  if (!decl) return res.status(404).json({ success: false, message: 'Déclaration introuvable' });
+  Object.assign(decl, req.body, { validationStatus: 'modifiee' });
+  res.json({ success: true, message: 'Déclaration modifiée', data: decl });
+});
+
+router.delete('/attendance/declarations/:id', (req, res) => {
+  mockDeclarations = mockDeclarations.filter(d => d._id !== req.params.id);
+  res.json({ success: true, message: 'Déclaration supprimée' });
+});
+
+// ============================================================
+// MOCK RH DATA & ROUTES (Fallback when Mongo is offline)
+// ============================================================
+
+let mockEcoles = [
+  { _id: 'ecole_1', nom: 'École Nationale d\'Administration', nomAr: 'المدرسة الوطنية للإدارة', pays: 'Tunisie', ville: 'Tunis', type: 'Public', isActive: true },
+  { _id: 'ecole_2', nom: 'Institut des Hautes Études Commerciales', nomAr: 'معهد الدراسات التجارية العليا', pays: 'Tunisie', ville: 'Carthage', type: 'Public', isActive: true },
+  { _id: 'ecole_3', nom: 'École Polytechnique de Paris', nomAr: 'المدرسة متعددة التقنيات بباريس', pays: 'France', ville: 'Paris', type: 'Public', isActive: true },
+];
+
+let mockTypesFormation = [
+  { _id: 'type_1', code: 'GEST_ADMIN', nom: 'Gestion administrative moderne', nomAr: 'التصرف الإداري الحديث', categorie: 'continue', isActive: true },
+  { _id: 'type_2', code: 'NUM_ARCHIV', nom: 'Numérisation et archivage électronique', nomAr: 'الرقمنة والأرشفة الإلكترونية', categorie: 'technique', isActive: true },
+  { _id: 'type_3', code: 'CYBER_SEC', nom: 'Sécurité informatique et protection des données', nomAr: 'أمن المعلومات وحماية المعطيات', categorie: 'technique', isActive: true },
+];
+
+let mockStages = [
+  {
+    _id: 'stage_1',
+    personnelId: {
+      _id: '65f000000000000000000050',
+      nom: 'بن علي',
+      prenom: 'كريم',
+      matricule: 'EMP-001',
+      poste: 'Chef de division',
+      activeDepartment: { _id: '65f000000000000000000020', name: 'Ressources Humaines' }
+    },
+    localisation: 'tunisie',
+    pays: 'Tunisie',
+    lieuStage: 'Tunis',
+    sujetStage: 'Cycle supérieur en gouvernance numérique',
+    ecoleId: mockEcoles[0],
+    typeFormationId: mockTypesFormation[0],
+    dateDebut: '2024-01-15',
+    dateFin: '2024-03-15',
+    statut: 'acheve',
+    resultat: 'admis',
+    mention: 'Très bien',
+    observations: 'Participation exemplaire',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+let mockPromotions = [];
+let mockPostes = [];
+let mockDiplomes = [];
+let mockSanctions = [];
+
+// Référentiels
+router.get('/hr/references/ecoles', (req, res) => {
+  res.json({ success: true, count: mockEcoles.length, data: mockEcoles });
+});
+
+router.post('/hr/references/ecoles', (req, res) => {
+  const newEcole = { _id: 'ecole_' + Date.now(), isActive: true, ...req.body };
+  mockEcoles.push(newEcole);
+  res.status(201).json({ success: true, data: newEcole });
+});
+
+router.get('/hr/references/types-formation', (req, res) => {
+  res.json({ success: true, count: mockTypesFormation.length, data: mockTypesFormation });
+});
+
+router.post('/hr/references/types-formation', (req, res) => {
+  const newType = { _id: 'type_' + Date.now(), isActive: true, ...req.body };
+  mockTypesFormation.push(newType);
+  res.status(201).json({ success: true, data: newType });
+});
+
+// Stages
+router.get('/hr/stages/stats', (req, res) => {
+  const tunisie = mockStages.filter(s => s.localisation === 'tunisie').length;
+  const etranger = mockStages.filter(s => s.localisation === 'etranger').length;
+  res.json({
+    success: true,
+    data: {
+      total: mockStages.length,
+      parLocalisation: { tunisie, etranger },
+      parStatut: { acheve: mockStages.filter(s => s.statut === 'acheve').length },
+      parResultat: { admis: mockStages.filter(s => s.resultat === 'admis').length }
+    }
+  });
+});
+
+router.get('/hr/stages', (req, res) => {
+  let list = [...mockStages];
+  if (req.query.personnelId) {
+    list = list.filter(s => (s.personnelId?._id || s.personnelId) === req.query.personnelId);
+  }
+  if (req.query.localisation) {
+    list = list.filter(s => s.localisation === req.query.localisation);
+  }
+  if (req.query.statut) {
+    list = list.filter(s => s.statut === req.query.statut);
+  }
+  res.json({
+    success: true,
+    count: list.length,
+    pagination: { total: list.length, page: 1, pages: 1, limit: 10 },
+    data: list
+  });
+});
+
+router.get('/hr/stages/:id', (req, res) => {
+  const item = mockStages.find(s => s._id === req.params.id);
+  if (!item) return res.status(404).json({ success: false, message: 'Stage introuvable' });
+  res.json({ success: true, data: item });
+});
+
+router.post('/hr/stages', (req, res) => {
+  const newStage = {
+    _id: 'stage_' + Date.now(),
+    ...req.body,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  mockStages.push(newStage);
+  res.status(201).json({ success: true, data: newStage });
+});
+
+router.put('/hr/stages/:id', (req, res) => {
+  const item = mockStages.find(s => s._id === req.params.id);
+  if (!item) return res.status(404).json({ success: false, message: 'Stage introuvable' });
+  Object.assign(item, req.body, { updatedAt: new Date().toISOString() });
+  res.json({ success: true, data: item });
+});
+
+router.delete('/hr/stages/:id', (req, res) => {
+  mockStages = mockStages.filter(s => s._id !== req.params.id);
+  res.json({ success: true, message: 'Stage supprimé' });
+});
+
+router.get('/hr/personnel/:personnelId/stages', (req, res) => {
+  const list = mockStages.filter(s => (s.personnelId?._id || s.personnelId) === req.params.personnelId);
+  res.json({
+    success: true,
+    count: list.length,
+    data: {
+      tunisie: list.filter(s => s.localisation === 'tunisie'),
+      etranger: list.filter(s => s.localisation === 'etranger')
+    }
+  });
+});
+
+// Personnel History (Promotions, Postes, Diplomes, Sanctions)
+router.get('/hr/personnel/:personnelId/promotions', (req, res) => {
+  const list = mockPromotions.filter(p => p.personnelId === req.params.personnelId);
+  res.json({ success: true, count: list.length, data: list });
+});
+router.post('/hr/personnel/:personnelId/promotions', (req, res) => {
+  const item = { _id: 'promo_' + Date.now(), personnelId: req.params.personnelId, ...req.body, createdAt: new Date().toISOString() };
+  mockPromotions.push(item);
+  res.status(201).json({ success: true, data: item });
+});
+
+router.get('/hr/personnel/:personnelId/postes', (req, res) => {
+  const list = mockPostes.filter(p => p.personnelId === req.params.personnelId);
+  res.json({ success: true, count: list.length, data: list });
+});
+router.post('/hr/personnel/:personnelId/postes', (req, res) => {
+  const item = { _id: 'poste_' + Date.now(), personnelId: req.params.personnelId, ...req.body, createdAt: new Date().toISOString() };
+  mockPostes.push(item);
+  res.status(201).json({ success: true, data: item });
+});
+
+router.get('/hr/personnel/:personnelId/diplomes', (req, res) => {
+  const list = mockDiplomes.filter(d => d.personnelId === req.params.personnelId);
+  res.json({ success: true, count: list.length, data: list });
+});
+router.post('/hr/personnel/:personnelId/diplomes', (req, res) => {
+  const item = { _id: 'diplome_' + Date.now(), personnelId: req.params.personnelId, ...req.body, createdAt: new Date().toISOString() };
+  mockDiplomes.push(item);
+  res.status(201).json({ success: true, data: item });
+});
+
+router.get('/hr/personnel/:personnelId/sanctions', (req, res) => {
+  const list = mockSanctions.filter(s => s.personnelId === req.params.personnelId);
+  res.json({ success: true, count: list.length, data: list });
+});
+router.post('/hr/personnel/:personnelId/sanctions', (req, res) => {
+  const item = { _id: 'sanction_' + Date.now(), personnelId: req.params.personnelId, ...req.body, createdAt: new Date().toISOString() };
+  mockSanctions.push(item);
+  res.status(201).json({ success: true, data: item });
+});
+
+router.get('/hr/personnel/:personnelId/full-history', (req, res) => {
+  const pid = req.params.personnelId;
+  res.json({
+    success: true,
+    data: {
+      promotions: mockPromotions.filter(p => p.personnelId === pid),
+      postes: mockPostes.filter(p => p.personnelId === pid),
+      diplomes: mockDiplomes.filter(d => d.personnelId === pid),
+      sanctions: mockSanctions.filter(s => s.personnelId === pid)
+    }
+  });
+});
+
+router.get('/hr/my-profile/full-history', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      promotions: [],
+      postes: [],
+      diplomes: [],
+      sanctions: []
+    }
+  });
+});
+
 module.exports = router;

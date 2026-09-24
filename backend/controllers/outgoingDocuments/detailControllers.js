@@ -44,8 +44,8 @@ exports.getOutgoingDocument = async (req, res, next) => {
     console.log('Found outgoing document:', document._id);
     console.log('Document scanned document path:', document.scannedDocument);
     
-    // SuperAdmin, AdminTuningDesk and Admin have access to all documents
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'AdminTuningDesk' || req.user.role === 'Admin') {
+    // Director, AdminTuningDesk and Admin have access to all documents
+    if (req.user.role === 'Director' || req.user.role === 'AdminTuningDesk' || req.user.role === 'Admin') {
       console.log(`${req.user.role} has full access to all documents`);
       return res.status(200).json({
         success: true,

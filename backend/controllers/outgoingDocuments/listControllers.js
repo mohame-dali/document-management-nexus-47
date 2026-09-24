@@ -9,8 +9,8 @@ exports.getOutgoingDocuments = async (req, res, next) => {
   try {
     let query = { isDeleted: false };
     
-    // If not AdminTuningDesk, Admin, or SuperAdmin, filter by department
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
+    // If not AdminTuningDesk, Admin, or Director, filter by department
+    if (req.user.role !== 'Director' && req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
       if (!req.user.activeDepartment) {
         return next(new ErrorResponse('No active department selected', 403));
       }
@@ -18,8 +18,8 @@ exports.getOutgoingDocuments = async (req, res, next) => {
       query['source.id'] = req.user.activeDepartment._id;
     }
     
-    // For AdminTuningDesk and SuperAdmin, allow filtering by department if specified
-    if ((req.user.role === 'AdminTuningDesk' || req.user.role === 'SuperAdmin') && req.query.department) {
+    // For AdminTuningDesk, Director and Admin, allow filtering by department if specified
+    if ((req.user.role === 'AdminTuningDesk' || req.user.role === 'Director' || req.user.role === 'Admin') && req.query.department) {
       query['source.id'] = req.query.department;
     }
     

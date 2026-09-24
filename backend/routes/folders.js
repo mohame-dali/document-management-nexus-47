@@ -31,14 +31,14 @@ router.get('/department/:departmentId/root', getRootFolders);
 // Document assignment / moving routes
 router.put(
   '/assign-document',
-  authorize('AdminDepartment', 'Admin', 'SuperAdmin'),
+  authorize('AdminDepartment', 'Admin'),
   auditDocumentActivity('document_folder_assigned'),
   assignDocumentToFolder
 );
 
 router.put(
   '/batch-move-documents',
-  authorize('AdminDepartment', 'Admin', 'SuperAdmin'),
+  authorize('AdminDepartment', 'Admin'),
   auditDocumentActivity('documents_batch_moved'),
   batchMoveDocuments
 );
@@ -47,7 +47,7 @@ router.put(
 router.route('/')
   .get(getFolders)
   .post(
-    authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
+    authorize('AdminDepartment', 'Admin'), 
     checkDepartmentAccess(),
     auditDocumentActivity('folder_create'),
     createFolder
@@ -57,13 +57,13 @@ router.route('/')
 router.route('/:id')
   .get(getFolder)
   .put(
-    authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
+    authorize('AdminDepartment', 'Admin'), 
     checkDepartmentAccess(),
     auditDocumentActivity('folder_update'),
     updateFolder
   )
   .delete(
-    authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
+    authorize('AdminDepartment', 'Admin'), 
     checkDepartmentAccess(),
     auditDocumentActivity('folder_delete'),
     deleteFolder
@@ -74,14 +74,14 @@ router.get('/:id/subfolders', getSubFolders);
 router.get('/:id/documents', getFolderDocuments);
 
 router.put('/:id/status', 
-  authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
+  authorize('AdminDepartment', 'Admin'), 
   checkDepartmentAccess(),
   auditDocumentActivity('folder_update'),
   updateFolderStatus
 );
 
 router.put('/:id/move',
-  authorize('AdminDepartment', 'Admin', 'SuperAdmin'), 
+  authorize('AdminDepartment', 'Admin'), 
   checkDepartmentAccess(),
   auditDocumentActivity('folder_move'),
   moveFolder

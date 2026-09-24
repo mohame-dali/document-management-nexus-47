@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -21,11 +21,13 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCw, ArrowRight, User, Shield, Building, Check, AlertCircle, UserCheck, UserPlus, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Department, User as UserType } from '@/types';
-import { getPersonnelEnAttente, getOrganizationSettings } from '@/services/hr/personnelApi';
+import { getPersonnelList, getOrganizationSettings } from '@/services/hr/personnelApi';
 import { Personnel } from '@/types/hr';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface UserFormData {
   username: string;
@@ -58,6 +60,7 @@ const UserForm: React.FC<UserFormProps> = ({
   isResettingPassword
 }) => {
   const isEditMode = !!user;
+  const navigate = useNavigate();
   
   const form = useForm<UserFormData>({
     defaultValues: {
@@ -70,13 +73,7 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   });
 
-  // LOT 7: Récupération des fiches Personnel en attente d'association
-  const { data: personnelEnAttente = [], isLoading: loadingPersonnel } = useQuery({
-    queryKey: ['personnel-en-attente'],
-    queryFn: getPersonnelEnAttente,
-    enabled: !isEditMode,
-    staleTime: 1000 * 30,
-  });
+  const { currentUser } = useAuth();
 
   // LOT B: Charger OrganizationSettings via React Query
   const { data: orgSettings } = useQuery({
@@ -84,6 +81,62 @@ const UserForm: React.FC<UserFormProps> = ({
     queryFn: getOrganizationSettings,
     staleTime: 60000,
   });
+
+  // Déterminer le rôle effectif et le département actif de l'utilisateur connecté
+  const effectiveUserRole = currentUser?.role || currentUserRole;
+  const effectiveDeptId = String(
+    currentUserDepartment ||
+    (typeof currentUser?.activeDepartment === 'object' && currentUser?.activeDepartment
+      ? currentUser.activeDepartment._id
+      : (currentUser?.activeDepartment as string) || '')
+  );
+
+  // Recherche des informations du département actif (nom / code)
+  const activeDept = departments.find(d => String(d._id) === effectiveDeptId) ||
+    (typeof currentUser?.activeDepartment === 'object' ? currentUser?.activeDepartment : null);
+  const activeDeptName = (activeDept?.name || '').trim().toLowerCase();
+  const activeDeptCode = ((activeDept as any)?.code || '').trim().toUpperCase();
+
+  // ID du département RH configuré dans OrganizationSettings
+  const rhDeptId = typeof orgSettings?.rhDepartmentId === 'object' && orgSettings?.rhDepartmentId
+    ? String(orgSettings.rhDepartmentId._id || '')
+    : String(orgSettings?.rhDepartmentId || '');
+
+  // Déterminer si l'utilisateur connecté appartient au département RH :
+  // 1. Concordance explicite avec l'ID du département RH configuré
+  // 2. Ou détection sémantique par nom ou code (ex: 'RH', 'Ressources Humaines', 'الموارد البشرية')
+  const isRHDepartment = Boolean(
+    (rhDeptId && effectiveDeptId && effectiveDeptId === rhDeptId) ||
+    (activeDeptCode === 'RH' ||
+     activeDeptName === 'rh' ||
+     activeDeptName === 'ressources humaines' ||
+     activeDeptName === 'الموارد البشرية' ||
+     activeDeptName.includes('ressources humaines') ||
+     activeDeptName.includes('الموارد البشرية'))
+  );
+
+  // Seuls Admin, SuperAdmin et AdminDepartment du département RH peuvent CRÉER / gérer des fiches personnel
+  // Les AdminDepartment NON-RH (ex: QT, LABO) ne peuvent PAS créer de fiche, ils peuvent uniquement en sélectionner une existante
+  const isSuperOrAdmin = effectiveUserRole === 'SuperAdmin' || effectiveUserRole === 'Admin';
+  const isAdminDeptRH = effectiveUserRole === 'AdminDepartment' && isRHDepartment;
+  const canManagePersonnel = isSuperOrAdmin || isAdminDeptRH;
+
+  // Récupération de la liste des personnels (filtrée par département pour AdminDepartment non-RH)
+  const { data: personnelData, isLoading: isLoadingPersonnel } = useQuery({
+    queryKey: ['personnels-for-user-form', currentUserDepartment, canManagePersonnel],
+    queryFn: async () => {
+      const params: Record<string, unknown> = { limit: 100 };
+      if (!canManagePersonnel && currentUserDepartment) {
+        params.activeDepartment = currentUserDepartment;
+      }
+      const res = await getPersonnelList(params as Parameters<typeof getPersonnelList>[0]);
+      return res?.data || [];
+    },
+    enabled: !isEditMode,
+    staleTime: 1000 * 30,
+  });
+
+  const personnels: Personnel[] = Array.isArray(personnelData) ? personnelData : [];
 
   // LOT B: Fonction pour détecter si un département est fonctionnel (Bureau Directeur ou Bureau d'Ordre)
   const isFunctionalDepartment = (departmentId?: string | { _id: string; name?: string } | null) => {
@@ -140,7 +193,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const selectedRole = form.watch('role');
   const selectedDepartments = form.watch('departments') || [];
   const selectedPersonnelId = form.watch('personnelId');
-  const selectedPersonnel = personnelEnAttente.find((p: Personnel) => p._id === selectedPersonnelId);
+  const selectedPersonnel = personnels.find((p: Personnel) => p._id === selectedPersonnelId);
 
   // LOT 7 : obligatoire pour AdminDepartment, AdminTuningDesk, User ; optionnel pour SuperAdmin
   const isPersonnelRequired = ['AdminDepartment', 'AdminTuningDesk', 'User'].includes(selectedRole);
@@ -157,7 +210,7 @@ const UserForm: React.FC<UserFormProps> = ({
     form.clearErrors('personnelId');
     
     if (personnelId) {
-      const found = personnelEnAttente.find((p: Personnel) => p._id === personnelId);
+      const found = personnels.find((p: Personnel) => p._id === personnelId);
       if (found?.activeDepartment) {
         const deptId = typeof found.activeDepartment === 'object' && found.activeDepartment
           ? (found.activeDepartment as Department)._id
@@ -267,113 +320,91 @@ const UserForm: React.FC<UserFormProps> = ({
           </CardContent>
         </Card>
 
-        {/* Fiche Personnel Associée Section (LOT 7) */}
+        {/* Section Fiche Personnel associée */}
         {!isEditMode && (
           <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
             <CardHeader className="pb-4 border-b border-[#e2e8f0]">
               <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-lg sm:text-xl font-bold text-[#1a202c]">
-                  <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
-                    <UserCheck className="h-5 w-5" />
-                  </div>
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-[#2c5282]" />
                   <span>بطاقة الموظف المرتبطة (Fiche Personnel associée)</span>
                 </div>
-                {isPersonnelRequired ? (
-                  <Badge className="bg-red-50 text-red-700 border border-red-200 text-xs px-2.5 py-0.5">
-                    إلزامي لهذا الدور *
-                  </Badge>
-                ) : isTechnicalSuperAdmin ? (
-                  <Badge className="bg-gray-100 text-gray-700 border border-gray-300 text-xs px-2.5 py-0.5">
-                    حساب تقني (اختياري)
-                  </Badge>
-                ) : (
-                  <Badge className="bg-gray-100 text-gray-700 border border-gray-300 text-xs px-2.5 py-0.5">
-                    اختياري
+                {!canManagePersonnel && (
+                  <Badge variant="outline" className="bg-[#f7fafc] text-[#718096] border-[#cbd5e1]">
+                    اختيار من قائمة الموظفين
                   </Badge>
                 )}
               </CardTitle>
             </CardHeader>
+            
             <CardContent className="pt-6 space-y-4">
-              <p className="text-sm text-gray-600">
-                اختر ملف الموظف في طور الانتظار لربطه بهذا الحساب وتعبئة القسم الإداري تلقائياً.
-              </p>
-
-              {loadingPersonnel ? (
-                <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-600 flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4 animate-spin text-[#2c5282]" />
-                  <span>جاري تحميل بطاقات الموظفين في الانتظار...</span>
-                </div>
-              ) : personnelEnAttente.length === 0 ? (
-                <div className="p-4 bg-amber-50 border border-[#FFCB56] rounded text-[#1a202c] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-sm text-[#1a202c]">
-                    <AlertCircle className="w-5 h-5 text-amber-700 shrink-0" />
-                    <span>Aucune fiche Personnel en attente. Créez d'abord une fiche via le module RH.</span>
-                  </div>
-                  <p className="text-xs text-gray-700">
-                    لا توجد أي بطاقة موظف بانتظار تفعيل حساب مستخدم حالياً. يرجى إنشاء ملف موظف جديد أولاً عبر وحدة الموارد البشرية.
-                  </p>
-                  <div className="pt-1">
-                    <Link
-                      to="/dashboard/hr/personnel/new"
-                      className="inline-flex items-center gap-1.5 h-11 px-5 bg-[#2c5282] hover:bg-[#1a365d] text-white text-sm font-bold rounded transition-colors"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      <span>إنشاء بطاقة موظف جديدة (Créer une fiche Personnel)</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
+              {/* Info : différencier RH vs AdminDepartment */}
+              {canManagePersonnel ? (
+                <p className="text-sm text-[#4a5568] mb-4">
+                  اختر ملف موظف من القائمة أدناه أو أنشئ ملفًا جديدًا
+                </p>
               ) : (
-                <FormField
-                  control={form.control}
-                  name="personnelId"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-base font-bold text-[#1a202c] flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <span>اختيار ملف الموظف</span>
-                          {isPersonnelRequired && <span className="text-red-500 font-bold">*</span>}
-                        </span>
-                        <span className="text-xs font-normal text-gray-500">
-                          {personnelEnAttente.length} بطاقة متاحة للربط
-                        </span>
-                      </FormLabel>
-                      <FormControl>
-                        <select
-                          value={field.value || ''}
-                          onChange={(e) => handlePersonnelChange(e.target.value)}
-                          className="w-full h-11 px-4 text-base bg-white border border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-[#1a202c]"
-                        >
-                          <option value="">
-                            {isPersonnelRequired 
-                              ? '-- اختر بطاقة الموظف من القائمة (إلزامي) --' 
-                              : '-- بدون ربط بملف موظف (اختياري) --'}
-                          </option>
-                          {personnelEnAttente.map((p: Personnel) => {
-                            const label = `${p.nom} ${p.prenom}${p.cin ? ` — ${p.cin}` : ''}${p.poste ? ` — ${p.poste}` : ''}`;
-                            return (
-                              <option key={p._id} value={p._id}>
-                                {label}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <p className="text-sm text-[#4a5568] mb-4">
+                  اختر ملف موظف موجود في قسمك لربطه بهذا الحساب
+                </p>
               )}
+              
+              {/* Sélecteur de personnel (filtré) */}
+              <FormField
+                control={form.control}
+                name="personnelId"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-base font-bold text-[#1a202c] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <span>اختيار ملف الموظف</span>
+                        {isPersonnelRequired && <span className="text-red-500 font-bold">*</span>}
+                      </span>
+                      <span className="text-xs font-normal text-gray-500">
+                        {personnels.length} بطاقة متاحة
+                      </span>
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value || ''}
+                        onValueChange={(val) => handlePersonnelChange(val)}
+                      >
+                        <SelectTrigger className="h-11 bg-white border-[#cbd5e1] text-right">
+                          <SelectValue placeholder="اختر موظفًا" />
+                        </SelectTrigger>
+                        <SelectContent dir="rtl">
+                          {isLoadingPersonnel ? (
+                            <div className="p-3 text-center text-sm text-[#718096]">
+                              جاري تحميل القائمة...
+                            </div>
+                          ) : personnels.length === 0 ? (
+                            <div className="p-3 text-center text-sm text-[#718096]">
+                              لا يوجد موظفون في قسمك
+                            </div>
+                          ) : (
+                            personnels.map((p) => (
+                              <SelectItem key={p._id} value={p._id}>
+                                {p.nom} {p.prenom} — {p.cin || 'بدون رقم ب.ت.و'}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Selected Personnel Details Banner */}
               {selectedPersonnel && (
-                <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-3">
+                <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-3 mt-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#e2e8f0] pb-2">
                     <span className="text-xs font-bold text-gray-600">
                       تفاصيل البطاقة المختارة:
                     </span>
-                    <span className="text-xs font-bold px-2.5 py-1 rounded bg-[#FFCB56] text-[#1a202c] border border-[#e2be40]">
-                      بطاقة في الانتظار (En attente)
+                    <span className="text-xs font-bold px-2.5 py-1 rounded bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
+                      بطاقة محددة للربط
                     </span>
                   </div>
                   
@@ -402,7 +433,7 @@ const UserForm: React.FC<UserFormProps> = ({
                     )}
                     {selectedPersonnel.activeDepartment && (
                       <div className="sm:col-span-2 md:col-span-3 pt-1">
-                        <span className="text-xs text-gray-500 block">القسم الإداري الأصلي:</span>
+                        <span className="text-xs text-gray-500 block">القسم الإداري:</span>
                         <span className="inline-flex items-center gap-1 font-semibold text-[#2c5282] bg-blue-50 px-2.5 py-1 rounded border border-blue-200 text-xs mt-0.5">
                           <Building className="w-3.5 h-3.5" />
                           {typeof selectedPersonnel.activeDepartment === 'object' 
@@ -422,6 +453,33 @@ const UserForm: React.FC<UserFormProps> = ({
                     )}
                   </div>
                 </div>
+              )}
+              
+              {/* Bouton CRÉER — Visible uniquement pour RH/Admin */}
+              {canManagePersonnel && (
+                <div className="mt-4 pt-4 border-t border-[#e2e8f0]">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/dashboard/hr/personnel/new')}
+                    className="h-11 w-full gap-2 border-[#2c5282] text-[#2c5282] 
+                               hover:bg-[#ebf4ff]"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>إنشاء بطاقة موظف جديدة</span>
+                  </Button>
+                </div>
+              )}
+              
+              {/* Message pour AdminDepartment sans personnel */}
+              {!canManagePersonnel && personnels.length === 0 && !isLoadingPersonnel && (
+                <Alert className="mt-4 bg-amber-50 border-amber-200">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-sm text-amber-900">
+                    لا يوجد موظفون في قسمك. يرجى التواصل مع إدارة الموارد البشرية 
+                    لإنشاء بطاقات الموظفين.
+                  </AlertDescription>
+                </Alert>
               )}
             </CardContent>
           </Card>

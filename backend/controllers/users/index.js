@@ -17,6 +17,7 @@ module.exports = {
   createUser: managementControllers.createUser,
   updateUser: managementControllers.updateUser,
   deleteUser: managementControllers.deleteUser,
+  restoreUser: managementControllers.restoreUser,
   
   // Account controllers
   deactivateUser: accountControllers.deactivateUser,

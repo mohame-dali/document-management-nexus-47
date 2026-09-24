@@ -28,6 +28,6 @@ router.route('/:id')
   .delete(authorize('Admin'), deleteDepartment);
 
 // Get users of a department
-router.get('/:id/users', authorize('SuperAdmin', 'Admin', 'AdminDepartment'), getDepartmentUsers);
+router.get('/:id/users', authorize('Director', 'Admin', 'AdminDepartment'), getDepartmentUsers);
 
 module.exports = router;

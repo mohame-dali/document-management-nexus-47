@@ -59,7 +59,7 @@ exports.updateUserPassword = async (req, res, next) => {
       if (!hasAccess) {
         return next(new ErrorResponse('Not authorized to update this user password', 403));
       }
-    } else if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+    } else if (req.user.role !== 'Admin') {
       return next(new ErrorResponse('Not authorized to update user passwords', 403));
     }
 

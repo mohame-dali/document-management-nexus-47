@@ -16,9 +16,10 @@ exports.getUsers = async (req, res, next) => {
       // For messaging routes, allow all authenticated users to see active users for messaging
       console.log(`Messaging route: ${req.user.role} (${req.user.username}) requesting users for messaging`);
       
-      // Get all active users for messaging purposes - exclude the current user
+      // Get all active users for messaging purposes - exclude current user and deleted users
       query = User.find({ 
         isActive: true,
+        isDeleted: { $ne: true },
         _id: { $ne: req.user.id }
       });
     }
@@ -30,23 +31,24 @@ exports.getUsers = async (req, res, next) => {
       }
       
       // Get users that belong to the AdminDepartment's active department
-      // Include both active and inactive users for management purposes
+      // Include both active and inactive users for management purposes, excluding deleted users
       query = User.find({ 
         departments: req.user.activeDepartment._id,
         role: { $in: ['User'] }, // AdminDepartment can only manage User role
-        _id: { $ne: req.user.id } // Exclude the current AdminDepartment user
+        _id: { $ne: req.user.id }, // Exclude the current AdminDepartment user
+        isDeleted: { $ne: true }
       });
       
       console.log(`AdminDepartment ${req.user.username} requesting users for department: ${req.user.activeDepartment.name}`);
     } 
-    // If SuperAdmin or Admin, get all users (both active and inactive)
-    else if (req.user.role === 'SuperAdmin' || req.user.role === 'Admin') {
-      query = User.find(); // Remove isActive filter to show all users
+    // If Director or Admin, get all non-deleted users (both active and inactive)
+    else if (req.user.role === 'Director' || req.user.role === 'Admin') {
+      query = User.find({ isDeleted: { $ne: true } });
       console.log(`${req.user.role} ${req.user.username} requesting all users`);
     }
-    // If AdminTuningDesk, they can see all users except Admin (both active and inactive)
+    // If AdminTuningDesk, they can see all users except Admin (both active and inactive, not deleted)
     else if (req.user.role === 'AdminTuningDesk') {
-      query = User.find({ role: { $ne: 'Admin' } }); // Remove isActive filter
+      query = User.find({ role: { $ne: 'Admin' }, isDeleted: { $ne: true } });
       console.log(`AdminTuningDesk ${req.user.username} requesting users (excluding Admin)`);
     }
     else {

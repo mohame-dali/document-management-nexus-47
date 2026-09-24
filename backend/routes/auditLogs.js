@@ -13,10 +13,10 @@ const router = express.Router();
 // Protect all routes
 router.use(protect);
 
-// Admin-only routes for viewing and exporting
-router.get('/', authorize('Admin'), getAuditLogs);
-router.get('/export', authorize('Admin'), exportAuditLogs);
-router.get('/document/:id/timeline', authorize('Admin'), getDocumentTimeline);
+// Admin and Director routes for viewing and exporting
+router.get('/', authorize('Admin', 'Director'), getAuditLogs);
+router.get('/export', authorize('Admin', 'Director'), exportAuditLogs);
+router.get('/document/:id/timeline', authorize('Admin', 'Director'), getDocumentTimeline);
 
 // All authenticated users can create audit logs (internal logging)
 router.post('/', createAuditLog);

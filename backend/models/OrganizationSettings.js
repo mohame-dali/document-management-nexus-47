@@ -15,6 +15,10 @@ const organizationSettingsSchema = new mongoose.Schema({
     ref: 'Department',
     default: null
   },
+  // @deprecated — The Director is now identified via 
+  // User.role === 'Director'. This field is kept for 
+  // backward compatibility and will be removed in a 
+  // future version.
   bureauDirecteurDepartmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Department',

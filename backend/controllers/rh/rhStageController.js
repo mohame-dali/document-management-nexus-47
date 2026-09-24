@@ -115,7 +115,7 @@ exports.getStageById = async (req, res, next) => {
 
 // @desc    Créer un stage (Cas A : via document source, ou Cas B : historique manuel)
 // @route   POST /api/hr/stages
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.createStage = async (req, res, next) => {
   try {
     const {
@@ -198,7 +198,7 @@ exports.createStage = async (req, res, next) => {
 
 // @desc    Mettre à jour un stage existant
 // @route   PUT /api/hr/stages/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.updateStage = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -252,7 +252,7 @@ exports.updateStage = async (req, res, next) => {
 
 // @desc    Supprimer un stage (Soft delete)
 // @route   DELETE /api/hr/stages/:id
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 exports.deleteStage = async (req, res, next) => {
   try {
     const { id } = req.params;

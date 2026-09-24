@@ -16,12 +16,12 @@ router.use(protect);
 
 // Routes spécifiques
 router.get('/types-association', getTypesAssociation);
-router.put('/rh-department', authorize('Admin', 'SuperAdmin'), setRhDepartment);
-router.put('/bureau-departments', authorize('Admin', 'SuperAdmin'), setBureauDepartments);
+router.put('/rh-department', authorize('Admin'), setRhDepartment);
+router.put('/bureau-departments', authorize('Admin'), setBureauDepartments);
 
 // Route principale du singleton
 router.route('/')
   .get(getOrganizationSettings)
-  .put(authorize('Admin', 'SuperAdmin'), updateOrganizationSettings);
+  .put(authorize('Admin'), updateOrganizationSettings);
 
 module.exports = router;

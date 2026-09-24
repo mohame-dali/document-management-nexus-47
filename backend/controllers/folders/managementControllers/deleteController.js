@@ -17,7 +17,7 @@ exports.deleteFolder = async (req, res, next) => {
     }
     
     // Check if user has access to this folder
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+    if (req.user.role !== 'Admin') {
       const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
       const folderDeptId = folder.department?._id ? folder.department._id.toString() : folder.department?.toString();
       

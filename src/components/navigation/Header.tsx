@@ -19,12 +19,14 @@ import {
 import { MessageSquare, User, Menu, LogOut, FileText, Shield, Users, Settings, Network, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import { useSetupStatus } from '@/hooks/useSetupStatus';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
   const { toggle } = useSidebar();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { nomAdmin } = useSetupStatus();
 
   // Charger la fiche Personnel liée via React Query
   const { data: myProfile } = useQuery({
@@ -98,7 +100,7 @@ const Header = () => {
           </div>
           <div>
             <h1 className="text-lg font-bold text-[#2c5282] leading-tight">
-              نظام إدارة المستندات
+              {nomAdmin || 'نظام إدارة المستندات'}
             </h1>
             <p className="text-xs text-[#718096]">
               {currentUser.role === 'AdminDepartment' && currentUser.activeDepartment

@@ -23,8 +23,8 @@ exports.updateIncomingDocument = async (req, res, next) => {
       );
     }
     
-    // Only SuperAdmin, AdminTuningDesk and Admin can update documents (AdminDepartment is handled separately for specific fields)
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
+    // Only AdminTuningDesk and Admin can update documents (AdminDepartment is handled separately for specific fields)
+    if (req.user.role !== 'AdminTuningDesk' && req.user.role !== 'Admin') {
       return next(
         new ErrorResponse(`Not authorized to update this document`, 403)
       );

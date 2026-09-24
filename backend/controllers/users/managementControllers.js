@@ -37,25 +37,36 @@ exports.createUser = async (req, res, next) => {
       req.body.role = 'User';
     }
     
-    // SuperAdmin and Admin role validations
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'Admin') {
-      // Prevent creation of SuperAdmin users except by Admin
-      if (req.body.role === 'SuperAdmin' && req.user.role !== 'Admin') {
-        return next(
-          new ErrorResponse('Only Admin can create other SuperAdmin users', 403)
-        );
+    // Admin role validations
+    if (req.user.role === 'Admin') {
+      const validRoles = ['Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'];
+      if (!validRoles.includes(req.body.role)) {
+        return next(new ErrorResponse('Rôle spécifié invalide', 400));
       }
-      // Prevent creation of Admin users except by SuperAdmin or Admin
-      if (req.body.role === 'Admin' && req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
-        return next(
-          new ErrorResponse('Only SuperAdmin and Admin can create other Admin users', 403)
-        );
-      }
-      
-      // Handle AdminTuningDesk and SuperAdmin roles - should not have departments
-      if (req.body.role === 'AdminTuningDesk' || req.body.role === 'SuperAdmin') {
+
+      // Director & AdminTuningDesk : no departments
+      if (req.body.role === 'Director' || req.body.role === 'AdminTuningDesk') {
         req.body.departments = [];
-        console.log(`${req.body.role} role - clearing departments`);
+        req.body.activeDepartment = null;
+        console.log(`${req.body.role} role - clearing departments and activeDepartment`);
+      }
+
+      // AdminDepartment : at least one department required
+      if (req.body.role === 'AdminDepartment') {
+        if (!req.body.departments || req.body.departments.length === 0) {
+          return next(new ErrorResponse('Chef de département : au moins un département requis', 400));
+        }
+        // activeDepartment must be within departments[]
+        if (req.body.activeDepartment) {
+          const activeId = req.body.activeDepartment.toString();
+          const deptIds = req.body.departments.map(d => d.toString());
+          if (!deptIds.includes(activeId)) {
+            return next(new ErrorResponse('activeDepartment doit être dans les départements assignés', 400));
+          }
+        } else {
+          // Default to first department
+          req.body.activeDepartment = req.body.departments[0];
+        }
       }
     }
     
@@ -109,7 +120,7 @@ exports.updateUser = async (req, res, next) => {
   try {
     console.log(`User update request from ${req.user.role} user: ${req.user.username} for user ID: ${req.params.id}`);
     
-    let user = await User.findById(req.params.id).populate('departments');
+    let user = await User.findOne({ _id: req.params.id, isDeleted: { $ne: true } }).populate('departments');
     
     if (!user) {
       return next(
@@ -119,10 +130,37 @@ exports.updateUser = async (req, res, next) => {
     
     console.log(`Found user to update: ${user.username} with role: ${user.role}`);
     
-    // Enhanced authorization for SuperAdmin and Admin - can edit any user
-    if (req.user.role === 'SuperAdmin' || req.user.role === 'Admin') {
-      console.log(`${req.user.role} user - can edit any user`);
-      // SuperAdmin and Admin can edit any user without restrictions
+    // Enhanced authorization for Admin - can edit any user
+    if (req.user.role === 'Admin') {
+      console.log(`Admin user - can edit any user`);
+      // Admin can edit any user without restrictions
+
+      // Validate role and department constraints if role or departments are updated
+      const targetRole = req.body.role || user.role;
+      if (req.body.role) {
+        const validRoles = ['Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'];
+        if (!validRoles.includes(req.body.role)) {
+          return next(new ErrorResponse('Rôle spécifié invalide', 400));
+        }
+      }
+
+      if (targetRole === 'Director' || targetRole === 'AdminTuningDesk') {
+        req.body.departments = [];
+        req.body.activeDepartment = null;
+      } else if (targetRole === 'AdminDepartment' && req.body.departments) {
+        if (!Array.isArray(req.body.departments) || req.body.departments.length === 0) {
+          return next(new ErrorResponse('Chef de département : au moins un département requis', 400));
+        }
+        if (req.body.activeDepartment) {
+          const activeId = req.body.activeDepartment.toString();
+          const deptIds = req.body.departments.map(d => d.toString());
+          if (!deptIds.includes(activeId)) {
+            return next(new ErrorResponse('activeDepartment doit être dans les départements assignés', 400));
+          }
+        } else {
+          req.body.activeDepartment = req.body.departments[0];
+        }
+      }
     } else if (req.user.role === 'AdminDepartment') {
       // Verify the user belongs to the AdminDepartment's active department
       if (!req.user.activeDepartment) {
@@ -174,8 +212,11 @@ exports.updateUser = async (req, res, next) => {
     // IMPORTANT: Remove password from update data - password should be updated separately
     const updateData = { ...req.body };
     delete updateData.password;
+    delete updateData.isDeleted;
+    delete updateData.deletedAt;
+    delete updateData.deletedBy;
     
-    console.log('Update data (password removed):', updateData);
+    console.log('Update data (password and soft delete protected):', updateData);
     
     // Update user
     user = await User.findByIdAndUpdate(
@@ -202,12 +243,12 @@ exports.updateUser = async (req, res, next) => {
   }
 };
 
-// @desc    Delete user
+// @desc    Delete user (Soft delete)
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
 exports.deleteUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
     
     if (!user) {
       return next(
@@ -215,16 +256,16 @@ exports.deleteUser = async (req, res, next) => {
       );
     }
     
-    // Only SuperAdmin and Admin can permanently delete users
-    if (req.user.role !== 'SuperAdmin' && req.user.role !== 'Admin') {
+    // Only Admin can delete users
+    if (req.user.role !== 'Admin') {
       return next(
-        new ErrorResponse('Not authorized to delete users. Only SuperAdmin and Admin can permanently delete users.', 403)
+        new ErrorResponse('Not authorized to delete users. Only Admin can delete users.', 403)
       );
     }
     
     // Prevent deleting the last Admin user
     if (user.role === 'Admin') {
-      const adminCount = await User.countDocuments({ role: 'Admin', isActive: true });
+      const adminCount = await User.countDocuments({ role: 'Admin', isActive: true, isDeleted: { $ne: true } });
       if (adminCount <= 1) {
         return next(
           new ErrorResponse('Cannot delete the last Admin user', 400)
@@ -232,16 +273,63 @@ exports.deleteUser = async (req, res, next) => {
       }
     }
     
-    await user.deleteOne();
+    user.isDeleted = true;
+    user.deletedAt = new Date();
+    user.deletedBy = req.user ? (req.user.id || req.user._id) : null;
+    await user.save();
     
-    console.log(`User deleted successfully: ${user.username}`);
+    console.log(`User soft deleted successfully: ${user.username}`);
     
     res.status(200).json({
       success: true,
-      data: {}
+      data: {},
+      message: 'Utilisateur supprimé avec succès'
     });
   } catch (err) {
     console.error('Error deleting user:', err);
+    next(err);
+  }
+};
+
+// @desc    Restore user (Soft delete undo)
+// @route   PUT /api/users/:id/restore
+// @access  Private/Admin
+exports.restoreUser = async (req, res, next) => {
+  try {
+    // Only Admin can restore users
+    if (req.user.role !== 'Admin') {
+      return next(
+        new ErrorResponse('Not authorized to restore users. Only Admin can restore users.', 403)
+      );
+    }
+
+    const user = await User.findOne({ _id: req.params.id, isDeleted: true });
+    
+    if (!user) {
+      return next(
+        new ErrorResponse(`Deleted user not found with id of ${req.params.id}`, 404)
+      );
+    }
+
+    user.isDeleted = false;
+    user.deletedAt = null;
+    user.deletedBy = null;
+    await user.save();
+
+    const populatedUser = await User.findById(user._id)
+      .populate('departments')
+      .populate('activeDepartment')
+      .populate('createdBy', 'username');
+
+    console.log(`User restored successfully: ${user.username}`);
+
+    res.status(200).json({
+      success: true,
+      data: populatedUser,
+      message: 'Utilisateur restauré avec succès'
+    });
+  } catch (err) {
+    console.error('Error restoring user:', err);
     next(err);
   }
 };

@@ -4,6 +4,7 @@ const PresenceSettings = require('../models/PresenceSettings');
 const LeaveReason = require('../models/LeaveReason');
 const Personnel = require('../models/Personnel');
 const Department = require('../models/Department');
+const OrganizationSettings = require('../models/OrganizationSettings');
 const { logAuditAction } = require('../utils/auditLogger');
 
 // 4 Motifs par défaut qui impactent le solde annuel de 45 jours
@@ -40,27 +41,29 @@ const getUTCDayRange = (dateInput) => {
 
 /**
  * Détermine si l'utilisateur peut voir/gérer tous les départements :
- * - Admin ou SuperAdmin
- * - AdminDepartment du département RH (via req.isAdminRH, nom/code 'RH', ou username 'RHadmin')
+ * - Admin ou Director
+ * - AdminDepartment du département RH (via req.isAdminRH ou validation dynamique OrganizationSettings.rhDepartmentId)
  */
-const canUserSeeAllDepartments = (req) => {
+const canUserSeeAllDepartments = async (req) => {
   if (!req.user) return false;
   const role = req.user.role;
-  if (role === 'Admin' || role === 'SuperAdmin') {
+  if (role === 'Admin' || role === 'Director') {
     return true;
   }
   if (role === 'AdminDepartment') {
-    if (req.isAdminRH) return true;
-    const deptName = req.user.activeDepartment?.name || '';
-    const deptCode = req.user.activeDepartment?.code || '';
-    if (
-      deptName === 'RH' ||
-      deptCode === 'RH' ||
-      deptName.toUpperCase().includes('RH') ||
-      deptName === 'الموارد البشرية' ||
-      req.user.username === 'RHadmin'
-    ) {
-      return true;
+    if (req.isAdminRH === true) return true;
+    try {
+      const settings = await OrganizationSettings.findOne();
+      const rhDeptId = settings?.rhDepartmentId?.toString();
+      const userDept = req.user.activeDepartment;
+      const userDeptId = (userDept?._id || userDept)?.toString();
+      const isRH = Boolean(rhDeptId && userDeptId && userDeptId === rhDeptId);
+
+      if (isRH) {
+        return true;
+      }
+    } catch (e) {
+      // Ignorer erreur de lecture settings
     }
   }
   return false;
@@ -68,7 +71,7 @@ const canUserSeeAllDepartments = (req) => {
 
 // @desc    Obtenir la feuille de présence quotidienne (collectif)
 // @route   GET /api/attendance/daily
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 const getDailyAttendance = async (req, res, next) => {
   try {
     const { date, departmentId } = req.query;
@@ -83,9 +86,9 @@ const getDailyAttendance = async (req, res, next) => {
     const { start, end } = getUTCDayRange(targetDate);
 
     // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
     // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = canUserSeeAllDepartments(req);
+    const canSeeAll = await canUserSeeAllDepartments(req);
     let effectiveDepartmentId = null;
 
     if (!canSeeAll) {
@@ -139,7 +142,7 @@ const getDailyAttendance = async (req, res, next) => {
 
 // @desc    Enregistrer ou mettre à jour un lot de présences (saisie collective)
 // @route   POST /api/attendance/batch
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 const saveBatchAttendance = async (req, res, next) => {
   try {
     const { date, entries } = req.body;
@@ -207,7 +210,7 @@ const saveBatchAttendance = async (req, res, next) => {
     personnels.forEach(p => personnelMap.set(p._id.toString(), p));
 
     // Vérification de sécurité stricte : un Chef de département hors RH ne peut modifier que son département
-    if (!canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
+    if (!await canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
       const restrictedDeptStr = req.userRestrictedToDepartment.toString();
       for (const entry of entries) {
         const agent = personnelMap.get(entry.personnelId.toString());
@@ -320,14 +323,19 @@ const getPersonnelCalendar = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Personnel introuvable' });
     }
 
-    // Contrôle des droits d'accès
-    if (req.user.role === 'User') {
-      const isOwnPersonnel = (req.user.personnelId && req.user.personnelId.toString() === personnelId) ||
-                             (personnel.userId && personnel.userId.toString() === req.user._id.toString());
-      if (!isOwnPersonnel) {
-        return res.status(403).json({ success: false, message: 'Accès refusé au calendrier d\'un autre agent' });
-      }
-    } else if (!canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
+    // Contrôle des droits d'accès :
+    // 1. Si l'utilisateur consulte son propre dossier (self-service), l'accès est toujours autorisé quel que soit son rôle
+    const isOwnPersonnel = Boolean(
+      (req.user.personnelId && req.user.personnelId.toString() === personnelId) ||
+      (personnel.userId && personnel.userId.toString() === req.user._id.toString())
+    );
+
+    if (isOwnPersonnel) {
+      // Accès accordé pour son propre dossier
+    } else if (req.user.role === 'User' || req.user.role === 'AdminTuningDesk') {
+      // Un simple agent ou AdminTuningDesk ne peut pas consulter le calendrier d'un tiers
+      return res.status(403).json({ success: false, message: 'Accès refusé au calendrier d\'un autre agent' });
+    } else if (!await canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
       const agentDept = personnel.activeDepartment ? personnel.activeDepartment.toString() : '';
       if (agentDept !== req.userRestrictedToDepartment.toString()) {
         return res.status(403).json({ success: false, message: 'Accès refusé aux agents hors de votre département' });
@@ -383,14 +391,19 @@ const getPersonnelBalance = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Personnel introuvable' });
     }
 
-    // Contrôle des droits
-    if (req.user.role === 'User') {
-      const isOwnPersonnel = (req.user.personnelId && req.user.personnelId.toString() === personnelId) ||
-                             (personnel.userId && personnel.userId.toString() === req.user._id.toString());
-      if (!isOwnPersonnel) {
-        return res.status(403).json({ success: false, message: 'Accès refusé au solde d\'un autre agent' });
-      }
-    } else if (!canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
+    // Contrôle des droits d'accès :
+    // 1. Si l'utilisateur consulte son propre solde (self-service), l'accès est toujours autorisé quel que soit son rôle
+    const isOwnPersonnel = Boolean(
+      (req.user.personnelId && req.user.personnelId.toString() === personnelId) ||
+      (personnel.userId && personnel.userId.toString() === req.user._id.toString())
+    );
+
+    if (isOwnPersonnel) {
+      // Accès accordé pour son propre dossier
+    } else if (req.user.role === 'User' || req.user.role === 'AdminTuningDesk') {
+      // Un simple agent ou AdminTuningDesk ne peut pas consulter le solde d'un tiers
+      return res.status(403).json({ success: false, message: 'Accès refusé au solde d\'un autre agent' });
+    } else if (!await canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
       const agentDept = personnel.activeDepartment ? personnel.activeDepartment.toString() : '';
       if (agentDept !== req.userRestrictedToDepartment.toString()) {
         return res.status(403).json({ success: false, message: 'Accès refusé' });
@@ -469,7 +482,7 @@ const getPersonnelBalance = async (req, res, next) => {
 
 // @desc    Obtenir les données du rapport journalier (présents, absents, non-saisis)
 // @route   GET /api/attendance/report/daily
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 const getDailyReport = async (req, res, next) => {
   try {
     const { date, departmentId } = req.query;
@@ -484,9 +497,9 @@ const getDailyReport = async (req, res, next) => {
     const { start, end } = getUTCDayRange(targetDate);
 
     // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
     // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = canUserSeeAllDepartments(req);
+    const canSeeAll = await canUserSeeAllDepartments(req);
     let effectiveDepartmentId = null;
 
     if (!canSeeAll) {
@@ -553,7 +566,7 @@ const getDailyReport = async (req, res, next) => {
 
 // @desc    Obtenir les données du rapport mensuel (récapitulatif par agent)
 // @route   GET /api/attendance/report/monthly
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 const getMonthlyReport = async (req, res, next) => {
   try {
     const { year, month, departmentId } = req.query;
@@ -569,9 +582,9 @@ const getMonthlyReport = async (req, res, next) => {
     const end = new Date(Date.UTC(targetYear, targetMonth, 0, 23, 59, 59, 999));
 
     // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
     // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = canUserSeeAllDepartments(req);
+    const canSeeAll = await canUserSeeAllDepartments(req);
     let effectiveDepartmentId = null;
 
     if (!canSeeAll) {
@@ -651,7 +664,7 @@ const getMonthlyReport = async (req, res, next) => {
 
 // @desc    Obtenir les données du rapport annuel (solde, consommations, motifs)
 // @route   GET /api/attendance/report/yearly
-// @access  Private (Admin, SuperAdmin, AdminDepartment)
+// @access  Private (Admin, Director, AdminDepartment)
 const getYearlyReport = async (req, res, next) => {
   try {
     const { year, departmentId } = req.query;
@@ -665,9 +678,9 @@ const getYearlyReport = async (req, res, next) => {
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
 
     // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, SuperAdmin : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
+    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
     // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = canUserSeeAllDepartments(req);
+    const canSeeAll = await canUserSeeAllDepartments(req);
     let effectiveDepartmentId = null;
 
     if (!canSeeAll) {
@@ -787,11 +800,11 @@ const getSettings = async (req, res, next) => {
 
 // @desc    Mettre à jour la configuration des présences
 // @route   PUT /api/attendance/settings
-// @access  Private (Admin, SuperAdmin, AdminRH)
+// @access  Private (Admin, AdminRH)
 const updateSettings = async (req, res, next) => {
   try {
-    // Seul Admin, SuperAdmin ou AdminDepartment rattaché au RH peut modifier
-    if (!req.isAdminRH && req.user.role !== 'Admin' && req.user.role !== 'SuperAdmin') {
+    // Seul Admin ou AdminDepartment rattaché au RH peut modifier
+    if (!req.isAdminRH && req.user.role !== 'Admin') {
       return res.status(403).json({
         success: false,
         message: 'Seul l\'Administrateur RH peut modifier les paramètres de présence'
