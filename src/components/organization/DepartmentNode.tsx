@@ -21,40 +21,41 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
   const getBorderColor = () => {
     switch (data.unitType) {
       case 'bureau_ordre':
-        return 'border-[#FFCB56]';
+        return 'border-amber-300';
       case 'rh':
-        return 'border-[#38a169]';
+        return 'border-emerald-400';
       case 'service':
       default:
-        return 'border-[#cbd5e1]';
+        return 'border-blue-200';
     }
   };
 
-  const getBadge = () => {
-    if (data.unitType === 'bureau_ordre') {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-bold text-[#1a202c] bg-[#FFCB56] rounded-full">
-          مكتب الضبط
-        </span>
-      );
+  const getBadgeStyle = (unitType: string) => {
+    switch (unitType) {
+      case 'bureau_ordre':
+        return {
+          label: 'مكتب الضبط',
+          className: 'bg-amber-100 text-amber-900 border border-amber-300',
+        };
+      case 'rh':
+        return {
+          label: 'الموارد البشرية',
+          className: 'bg-emerald-100 text-emerald-900 border border-emerald-300',
+        };
+      case 'service':
+      default:
+        return {
+          label: 'مصلحة',
+          className: 'bg-blue-100 text-blue-900 border border-blue-300',
+        };
     }
-    if (data.unitType === 'rh') {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-bold text-white bg-[#38a169] rounded-full">
-          الموارد البشرية
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium text-[#4a5568] bg-[#edf2f7] rounded-full">
-        مصلحة / قسم
-      </span>
-    );
   };
+
+  const badgeInfo = getBadgeStyle(data.unitType);
 
   return (
     <div
-      className={`bg-white border-2 ${getBorderColor()} rounded-lg shadow-sm p-4 w-[280px] text-right select-none transition-all duration-200`}
+      className={`bg-white border-2 ${getBorderColor()} rounded-lg shadow-sm hover:shadow-md hover:scale-[1.02] p-4 w-[280px] text-right select-none transition-all duration-200`}
       dir="rtl"
     >
       <Handle type="target" position={Position.Top} className="!bg-[#cbd5e1] !w-2.5 !h-2.5" />
@@ -64,7 +65,11 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
         <h4 className="font-bold text-sm text-[#1a202c] leading-tight break-words flex-1">
           {data.name}
         </h4>
-        <div className="shrink-0">{getBadge()}</div>
+        <div className="shrink-0">
+          <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-full ${badgeInfo.className}`}>
+            {badgeInfo.label}
+          </span>
+        </div>
       </div>
 
       {/* Staff count toggle */}

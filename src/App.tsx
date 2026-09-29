@@ -54,6 +54,7 @@ import RHStagesPage from './pages/hr/RHStagesPage';
 import OrganizationChartPage from './pages/organization/OrganizationChartPage';
 import TrashPage from './pages/trash/TrashPage';
 import SetupWizardPage from './pages/setup/SetupWizardPage';
+import InstallationGuidePage from './pages/guide/InstallationGuidePage';
 import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
 const queryClient = new QueryClient({
@@ -304,6 +305,13 @@ function App() {
 
                         {/* Organization Chart route */}
                         <Route path="organization-chart" element={<OrganizationChartPage />} />
+
+                        {/* Installation Guide route - Admin & Director */}
+                        <Route path="guide" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'Director']}>
+                            <InstallationGuidePage />
+                          </ProtectedRoute>
+                        } />
 
                         {/* Document view alias routes */}
                         <Route path="documents/incoming/:id" element={

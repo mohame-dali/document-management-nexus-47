@@ -32,7 +32,8 @@ import {
   Trash2,
   Sliders,
   History,
-  Network
+  Network,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
@@ -96,6 +97,7 @@ const Sidebar = () => {
       { path: '/dashboard/messages', label: t('sidebar.messages'), icon: MessageCircle, color: 'text-indigo-600' },
       { path: '/dashboard/organization-chart', label: 'الهيكل التنظيمي', icon: Network, color: 'text-emerald-600' },
       { path: '/dashboard/audit-trail', label: 'سجل المراجعة', icon: History, color: 'text-amber-600' },
+      { path: '/dashboard/guide', label: 'دليل الإعداد', icon: BookOpen, color: 'text-teal-600' },
     ] : []),
 
     // Admin menu items (avec mon-profil)
@@ -113,6 +115,7 @@ const Sidebar = () => {
       { path: '/dashboard/trash', label: 'سلة المحذوفات', icon: Trash2, color: 'text-red-500' },
       { path: '/dashboard/settings', label: 'الإعدادات', icon: Settings, color: 'text-gray-600' },
       { path: '/setup', label: 'تهيئة النظام', icon: Sliders, color: 'text-teal-500' },
+      { path: '/dashboard/guide', label: 'دليل الإعداد', icon: BookOpen, color: 'text-teal-600' },
     ] : []),
 
     // AdminTuningDesk menu items (avec mon-profil)

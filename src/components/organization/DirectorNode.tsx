@@ -1,6 +1,6 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { Award, Briefcase } from 'lucide-react';
+import { Crown, Briefcase } from 'lucide-react';
 import PersonnelAvatar from '../hr/PersonnelAvatar';
 
 interface DirectorNodeProps {
@@ -33,10 +33,10 @@ const DirectorNode: React.FC<DirectorNodeProps> = ({ data }) => {
 
       {/* Header Badge */}
       <div className="flex items-center justify-between gap-2 mb-3 border-b border-[#e2e8f0] pb-2">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-bold text-white bg-[#2c5282] rounded-full">
-          <Award className="w-3.5 h-3.5 text-[#FFCB56]" />
-          مدير الإدارة (Directeur)
-        </span>
+        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
+          <Crown className="h-3 w-3" />
+          مدير الإدارة
+        </div>
         <span className="text-[11px] text-[#718096] font-medium">المستوى الأول</span>
       </div>
 

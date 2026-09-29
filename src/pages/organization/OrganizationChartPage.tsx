@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import ReactFlow, {
@@ -11,7 +11,7 @@ import ReactFlow, {
   BackgroundVariant
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { ArrowRight, RotateCcw, AlertCircle, Loader2, Building2 } from 'lucide-react';
+import { ArrowRight, RotateCcw, AlertCircle, Loader2, Building2, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getOrganizationChart } from '@/services/organizationChartService';
 import AdministrationNode from '@/components/organization/AdministrationNode';
@@ -25,6 +25,7 @@ const LEVEL_Y_STEP = 190;
 
 const OrganizationChartPage: React.FC = () => {
   const navigate = useNavigate();
+  const [showLegend, setShowLegend] = useState(true);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['organization-chart'],
@@ -276,32 +277,50 @@ const OrganizationChartPage: React.FC = () => {
         </div>
       )}
 
-      {/* Légende */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex flex-wrap items-center justify-between gap-4 text-xs">
-        <div className="flex items-center gap-2 text-[#1a202c] font-semibold">
-          <span>دليل المستويات والوحدات الإدارية :</span>
+      {/* Légende repliable */}
+      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm text-xs transition-all overflow-hidden">
+        <div 
+          onClick={() => setShowLegend(!showLegend)}
+          className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-[#f7fafc] select-none transition-colors border-b border-transparent"
+        >
+          <div className="flex items-center gap-2 text-[#1a202c] font-bold">
+            <Info className="w-4 h-4 text-[#2c5282]" />
+            <span>دليل المستويات والوحدات الإدارية</span>
+          </div>
+          <button
+            type="button"
+            className="flex items-center gap-1 text-[#718096] hover:text-[#2c5282] text-xs font-medium"
+          >
+            <span>{showLegend ? 'إخفاء' : 'عرض الدليل'}</span>
+            {showLegend ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded bg-[#2c5282] border border-[#1a365d]"></span>
-            <span className="text-[#4a5568]">المستوى 1 : إدارة المؤسسة / المدير</span>
+
+        {showLegend && (
+          <div className="p-4 pt-2 border-t border-[#edf2f7] flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-5">
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-[#FFD758] border border-[#e2be40]"></span>
+                <span className="text-[#4a5568]">المستوى 1 : المدير (مدير الإدارة)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-amber-100 border border-amber-300"></span>
+                <span className="text-[#4a5568]">مكتب الضبط (Bureau d'Ordre)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-emerald-100 border border-emerald-400"></span>
+                <span className="text-[#4a5568]">الموارد البشرية (RH)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-blue-100 border border-blue-300"></span>
+                <span className="text-[#4a5568]">المستوى 3 : الأقسام والمصالح العملياتية</span>
+              </div>
+            </div>
+            <div className="text-[#718096] text-[11px]">
+              * انقر على زر "عرض" لتوسيع قائمة موظفي أي قسم، أو انقر على موظف/مدير لفتح ملفه
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded bg-[#FFCB56] border border-[#d69e2e]"></span>
-            <span className="text-[#4a5568]">مكتب الضبط (Bureau d'Ordre)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded bg-[#38a169]"></span>
-            <span className="text-[#4a5568]">الموارد البشرية (RH)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded bg-white border border-[#cbd5e1]"></span>
-            <span className="text-[#4a5568]">المستوى 3 : الأقسام والمصالح العملياتية</span>
-          </div>
-        </div>
-        <div className="text-[#718096] text-xs">
-          * انقر على زر "عرض الموظفين" لتوسيع القائمة المدمجة بكل قسم دون تشويش الهيكل
-        </div>
+        )}
       </div>
     </div>
   );
