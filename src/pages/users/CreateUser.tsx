@@ -110,6 +110,14 @@ const CreateUser: React.FC = () => {
   const handleSubmit = (data: UserFormData) => {
     createMutation.mutate(data);
   };
+
+  if (currentUser?.role !== 'Admin') {
+    return (
+      <div className="p-8 text-center text-red-600 font-semibold" dir="rtl">
+        Accès refusé — Seul l'administrateur système peut créer des comptes
+      </div>
+    );
+  }
   
   if (departmentsLoading) {
     return (

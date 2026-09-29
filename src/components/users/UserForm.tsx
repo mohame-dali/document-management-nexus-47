@@ -159,18 +159,16 @@ const UserForm: React.FC<UserFormProps> = ({
   };
   
   const availableRoles = () => {
-    if (currentUserRole === 'Admin') {
-      return [
-        { value: 'Director', label: 'مدير الإدارة', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
-        { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
-        { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
-        { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
-        { value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }
-      ];
-    } else if (currentUserRole === 'AdminDepartment') {
-      return [{ value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }];
+    if (currentUserRole !== 'Admin') {
+      return []; // Non-Admin: no roles available
     }
-    return [{ value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }];
+    return [
+      { value: 'Director', label: 'مدير الإدارة', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
+      { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
+      { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
+      { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
+      { value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }
+    ];
   };
   
   const availableDepartments = () => {

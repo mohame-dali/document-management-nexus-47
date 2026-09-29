@@ -170,17 +170,7 @@ const UsersPage: React.FC = () => {
   };
 
   const canEditUser = (user: User) => {
-    if (currentUser?.role === 'Admin') {
-      return true;
-    }
-    
-    if (currentUser?.role === 'AdminDepartment') {
-      const currentUserDeptId = currentUser.activeDepartment?._id;
-      const userDeptIds = user.departments?.map(dept => dept._id) || [];
-      return Boolean(currentUserDeptId && userDeptIds.includes(currentUserDeptId));
-    }
-    
-    return false;
+    return currentUser?.role === 'Admin';
   };
 
   const getPhotoUrl = (photoPath: string) => {
@@ -314,7 +304,7 @@ const UsersPage: React.FC = () => {
             <span>تحديث</span>
           </Button>
 
-          {(currentUser?.role === 'Admin' || currentUser?.role === 'AdminDepartment') && (
+          {currentUser?.role === 'Admin' && (
             <Button 
               onClick={() => navigate('/dashboard/users/create')} 
               className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-bold rounded shadow-none flex items-center gap-2"
@@ -685,8 +675,7 @@ const UsersPage: React.FC = () => {
                         )}
                         
                         {/* Toggle active status */}
-                        {(currentUser?.role === 'Admin' || 
-                          (currentUser?.role === 'AdminDepartment' && canEditUser(user))) && (
+                        {currentUser?.role === 'Admin' && (
                           <Button 
                             variant="outline" 
                             size="icon"

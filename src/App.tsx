@@ -141,12 +141,12 @@ function App() {
                           </ProtectedRoute>
                         } />
                         <Route path="users/create" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin']}>
                             <CreateUser />
                           </ProtectedRoute>
                         } />
                         <Route path="users/edit/:id" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin']}>
                             <EditUser />
                           </ProtectedRoute>
                         } />
