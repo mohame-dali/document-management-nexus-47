@@ -7,7 +7,9 @@ import { AlertCircle, Loader2, FileDown, Inbox } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { getDepartments } from '@/services/departmentService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { getScannerStatus, scanTemporaryDocument } from '@/services/scannerService';
+import { getDistributableDepartments } from '@/utils/departmentDistributionFilter';
 import FormSectionHeader from '@/components/documents/forms/FormSectionHeader';
 import IncomingDocumentForm from '@/components/documents/forms/IncomingDocumentForm';
 
@@ -84,6 +86,16 @@ const CreateIncomingDocument = () => {
     queryFn: getDepartments
   });
 
+  // Query for organization settings (to exclude BO and Direction from distribution list)
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings
+  });
+
+  const distributableDepartments = React.useMemo(() => {
+    return getDistributableDepartments(departments, orgSettings);
+  }, [departments, orgSettings]);
+
   // Query for scanner status
   const { data: scannerStatus, isLoading: loadingScannerStatus } = useQuery({
     queryKey: ['scannerStatus'],
@@ -152,7 +164,7 @@ const CreateIncomingDocument = () => {
           <div className="p-6">
             <IncomingDocumentForm 
               t={translations}
-              departments={departments || []}
+              departments={distributableDepartments}
               currentDepartmentId={currentUser?.activeDepartment?._id}
               scanData={scanData}
               scannerStatus={scannerStatus}
