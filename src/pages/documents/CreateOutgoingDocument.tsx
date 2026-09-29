@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +7,9 @@ import { AlertCircle, Loader2, FileUp, Send } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { getDepartments } from '@/services/departmentService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { getScannerStatus, scanTemporaryDocument } from '@/services/scannerService';
+import { getDistributableDepartments } from '@/utils/departmentDistributionFilter';
 import FormSectionHeader from '@/components/documents/forms/FormSectionHeader';
 import OutgoingDocumentForm from '@/components/documents/forms/OutgoingDocumentForm';
 
@@ -67,6 +69,16 @@ const CreateOutgoingDocument = () => {
     queryKey: ['departments'],
     queryFn: getDepartments
   });
+
+  // Query for organization settings (to exclude BO and Direction from department list)
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings
+  });
+
+  const distributableDepartments = useMemo(() => {
+    return getDistributableDepartments(departments, orgSettings);
+  }, [departments, orgSettings]);
 
   // Query for scanner status
   const { data: scannerStatus, isLoading: loadingScannerStatus } = useQuery({
@@ -136,7 +148,7 @@ const CreateOutgoingDocument = () => {
           <div className="p-6">
             <OutgoingDocumentForm 
               t={translations}
-              departments={departments || []}
+              departments={distributableDepartments}
               currentDepartmentId={currentUser?.activeDepartment?._id}
               scanData={scanData}
               scannerStatus={scannerStatus}
