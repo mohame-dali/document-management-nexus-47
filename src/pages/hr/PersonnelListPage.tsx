@@ -50,8 +50,11 @@ import {
   X,
   Filter,
   RefreshCw,
+  Key,
+  CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { InlineCreateUserModal } from '@/components/hr/InlineCreateUserModal';
 
 export const PersonnelListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -68,6 +71,10 @@ export const PersonnelListPage: React.FC = () => {
   // Modal de suppression
   const [personnelToDelete, setPersonnelToDelete] = useState<Personnel | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Modal de création rapide d'utilisateur pour une fiche Personnel
+  const [selectedPersonnelForUser, setSelectedPersonnelForUser] = useState<Personnel | null>(null);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
   // Récupération des paramètres de l'organisation pour vérifier le département RH
   const { data: orgSettings } = useQuery({
@@ -430,6 +437,33 @@ export const PersonnelListPage: React.FC = () => {
                             <Edit className="w-4 h-4" />
                           </Button>
 
+                          {/* Statut Compte Utilisateur / Création de compte (Admin uniquement) */}
+                          {p.userId ? (
+                            <span 
+                              title="حساب مستخدم مرتبط ومفعّل"
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-xs font-semibold"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>حساب مرتبط</span>
+                            </span>
+                          ) : (
+                            currentUser?.role === 'Admin' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPersonnelForUser(p);
+                                  setShowCreateUserModal(true);
+                                }}
+                                title="إنشاء حساب مستخدم سريع للبطاقة مع بيانات الدخول (PDF)"
+                                aria-label="إنشاء حساب مستخدم"
+                                className="h-11 w-11 p-0 text-[#2c5282] hover:bg-blue-50 border border-blue-200 rounded"
+                              >
+                                <Key className="w-4 h-4 text-[#2c5282]" />
+                              </Button>
+                            )
+                          )}
+
                           {/* Supprimer (si Admin ou Responsable RH et statut !== actif) */}
                           {canDeletePersonnel && (
                             <Button
@@ -561,6 +595,18 @@ export const PersonnelListPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de création rapide d'utilisateur pour la fiche Personnel */}
+      <InlineCreateUserModal
+        isOpen={showCreateUserModal}
+        onClose={() => {
+          setShowCreateUserModal(false);
+          setSelectedPersonnelForUser(null);
+        }}
+        personnel={selectedPersonnelForUser}
+        departments={departments}
+        orgSettings={orgSettings || null}
+      />
     </div>
   );
 };
