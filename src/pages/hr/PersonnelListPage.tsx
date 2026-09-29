@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { getPersonnelList, deletePersonnel } from '@/services/hr/personnelApi';
+import { getPersonnelList, deletePersonnel, getOrganizationSettings } from '@/services/hr/personnelApi';
 import { getDepartments } from '@/services/departmentService';
 import { Personnel, PersonnelFilters } from '@/types/hr';
 import { Department } from '@/types';
@@ -69,9 +69,30 @@ export const PersonnelListPage: React.FC = () => {
   const [personnelToDelete, setPersonnelToDelete] = useState<Personnel | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Droits utilisateurs
-  const canAddPersonnel = ['Admin', 'SuperAdmin', 'AdminDepartment'].includes(currentUser?.role || '');
-  const canDeletePersonnel = ['Admin', 'SuperAdmin'].includes(currentUser?.role || '');
+  // Récupération des paramètres de l'organisation pour vérifier le département RH
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+  });
+
+  const rhDeptRaw = orgSettings?.rhDepartmentId;
+  const rhDepartmentId = (typeof rhDeptRaw === 'object' && rhDeptRaw !== null)
+    ? rhDeptRaw._id?.toString()
+    : rhDeptRaw?.toString();
+
+  const userDeptRaw = currentUser?.activeDepartment;
+  const userDeptId = (typeof userDeptRaw === 'object' && userDeptRaw !== null)
+    ? userDeptRaw._id?.toString()
+    : userDeptRaw?.toString();
+
+  const isRHManager = 
+    currentUser?.role === 'AdminDepartment' && 
+    Boolean(rhDepartmentId) && 
+    userDeptId === rhDepartmentId;
+
+  // Droits utilisateurs (Admin ou Responsable RH)
+  const canAddPersonnel = currentUser?.role === 'Admin' || isRHManager;
+  const canDeletePersonnel = currentUser?.role === 'Admin' || isRHManager;
 
   // Requête API pour les départements
   const { data: departments = [] } = useQuery<Department[]>({
@@ -409,7 +430,7 @@ export const PersonnelListPage: React.FC = () => {
                             <Edit className="w-4 h-4" />
                           </Button>
 
-                          {/* Supprimer (si Admin/SuperAdmin et statut !== actif) */}
+                          {/* Supprimer (si Admin ou Responsable RH et statut !== actif) */}
                           {canDeletePersonnel && (
                             <Button
                               variant="ghost"

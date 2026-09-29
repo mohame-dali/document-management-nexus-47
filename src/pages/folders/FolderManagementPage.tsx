@@ -6,7 +6,7 @@ import FolderManagement from '@/components/folders/FolderManagement';
 const FolderManagementPage: React.FC = () => {
   const { currentUser } = useAuth();
 
-  const canViewFolders = currentUser?.role === 'SuperAdmin' || 
+  const canViewFolders = currentUser?.role === 'Director' || 
                         currentUser?.role === 'Admin' || 
                         currentUser?.role === 'AdminTuningDesk' || 
                         currentUser?.role === 'AdminDepartment' ||
@@ -28,8 +28,8 @@ const FolderManagementPage: React.FC = () => {
     );
   }
 
-  // SuperAdmin, AdminTuningDesk and regular Users can view but not modify folders structure
-  const readOnly = currentUser?.role === 'SuperAdmin' || currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'User';
+  // Director, AdminTuningDesk and regular Users can view but not modify folders structure
+  const readOnly = currentUser?.role === 'Director' || currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'User';
 
   return (
     <div className="p-5 sm:p-6 lg:p-8 bg-[#f7fafc] min-h-[calc(100vh-4rem)] space-y-6 max-w-[1600px] mx-auto" dir="rtl">
@@ -52,7 +52,7 @@ const FolderManagementPage: React.FC = () => {
           <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded text-sm font-semibold bg-white border border-[#cbd5e1] text-gray-700 shadow-xs">
             <Building2 className="h-4 w-4 text-[#2c5282]" />
             <span>
-              {currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'SuperAdmin'
+              {currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Director'
                 ? 'جميع الأقسام'
                 : currentUser?.activeDepartment?.name || 'القسم النشط'}
             </span>

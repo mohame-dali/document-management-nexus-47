@@ -204,7 +204,7 @@ const Sidebar = () => {
         isOpen ? "p-4 sm:p-5" : "p-3"
       )}>
         <div>
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex flex-row-reverse items-center gap-3 mb-3">
             <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm">
               <FileText className="h-5 w-5" />
             </div>
@@ -219,7 +219,7 @@ const Sidebar = () => {
           </div>
           
           {currentUser && (
-            <div className="flex items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
+            <div className="flex flex-row-reverse items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
               <ContextMenu>
                 <ContextMenuTrigger>
                   <Avatar 
@@ -288,7 +288,7 @@ const Sidebar = () => {
                   <button
                     type="button"
                     className={cn(
-                      "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-right",
+                      "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center group text-right",
                       isOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
                       active 
                         ? "bg-[#2c5282] text-white shadow-sm font-medium" 
@@ -323,7 +323,7 @@ const Sidebar = () => {
                           )}
                           title="الموارد البشرية"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex flex-row-reverse items-center gap-3 min-w-0">
                             <UserCheck className={cn(
                               "h-4 w-4 flex-shrink-0 transition-colors duration-200",
                               isHrPersonnelActive ? "text-white" : "text-gray-400 group-hover:text-gray-200"
@@ -344,7 +344,7 @@ const Sidebar = () => {
                               onClick={() => navigate('/dashboard/hr/personnel')}
                               title={!isOpen ? "الموظفون" : undefined}
                               className={cn(
-                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/personnel'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -363,7 +363,7 @@ const Sidebar = () => {
                                 onClick={() => navigate('/dashboard/hr/personnel/new')}
                                 title={!isOpen ? "إضافة موظف" : undefined}
                                 className={cn(
-                                  "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                  "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center gap-2 text-right px-2.5",
                                   location.pathname === '/dashboard/hr/personnel/new'
                                     ? "bg-[#2c5282] text-white font-bold"
                                     : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -382,7 +382,7 @@ const Sidebar = () => {
                               onClick={() => navigate('/dashboard/hr/leave-reasons')}
                               title={!isOpen ? "أنواع الغياب" : undefined}
                               className={cn(
-                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/leave-reasons'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -400,7 +400,7 @@ const Sidebar = () => {
                               onClick={() => navigate('/dashboard/hr/attendance')}
                               title={!isOpen ? "تسجيل الحضور" : undefined}
                               className={cn(
-                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/attendance'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -418,7 +418,7 @@ const Sidebar = () => {
                               onClick={() => navigate('/dashboard/hr/attendance-declarations')}
                               title={!isOpen ? "الإعلانات المعلقة" : undefined}
                               className={cn(
-                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/attendance-declarations'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -436,7 +436,7 @@ const Sidebar = () => {
                               onClick={() => navigate('/dashboard/hr/all-personnel-situation')}
                               title={!isOpen ? "وضعية الموظفين" : undefined}
                               className={cn(
-                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/all-personnel-situation'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
@@ -454,7 +454,7 @@ const Sidebar = () => {
                               onClick={() => navigate('/dashboard/hr/stages')}
                               title={!isOpen ? "التربصات" : undefined}
                               className={cn(
-                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center gap-2 text-right px-2.5",
+                                "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row-reverse items-center gap-2 text-right px-2.5",
                                 location.pathname === '/dashboard/hr/stages'
                                   ? "bg-[#2c5282] text-white font-bold"
                                   : "text-slate-300 hover:text-white hover:bg-[#2d3748]"

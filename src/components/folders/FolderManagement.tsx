@@ -29,8 +29,8 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
   const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'tree' | 'categorization'>('tree');
   
-  // AdminTuningDesk sees all departments, others see their active department
-  const targetDepartmentId = currentUser?.role === 'AdminTuningDesk' 
+  // AdminTuningDesk and Director see all departments, others see their active department
+  const targetDepartmentId = (currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Director')
     ? undefined 
     : currentUser?.activeDepartment?._id;
 
@@ -40,10 +40,10 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
     enabled: !!currentUser,
   });
 
-  // Role permissions
-  const canManageFolders = currentUser?.role === 'AdminDepartment' && !readOnly;
+  // Role permissions: only AdminDepartment and Admin can manage folders when not in readOnly
+  const canManageFolders = (currentUser?.role === 'AdminDepartment' || currentUser?.role === 'Admin') && !readOnly;
   
-  const canViewFolders = currentUser?.role === 'SuperAdmin' ||
+  const canViewFolders = currentUser?.role === 'Director' ||
                         currentUser?.role === 'Admin' || 
                         currentUser?.role === 'AdminTuningDesk' || 
                         currentUser?.role === 'AdminDepartment' ||
@@ -67,6 +67,11 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
         return {
           text: 'إدارة كاملة للقسم',
           className: 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
+        };
+      case 'Director':
+        return {
+          text: 'مدير الإدارة (اطلاع شامل)',
+          className: 'bg-[#FFD758] text-[#1a202c] border border-[#FFCB56]'
         };
       case 'AdminTuningDesk':
         return {
@@ -126,7 +131,7 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded bg-[#f8fafc] border border-[#e2e8f0] text-sm font-semibold text-gray-700 shadow-xs">
             <Building2 className="h-4 w-4 text-[#2c5282]" />
             <span>
-              {currentUser?.role === 'AdminTuningDesk'
+              {currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Director'
                 ? 'جميع الأقسام الإدارية'
                 : currentUser?.activeDepartment?.name || 'القسم الإداري'}
             </span>

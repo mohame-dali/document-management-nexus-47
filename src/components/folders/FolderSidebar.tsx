@@ -26,7 +26,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const departmentId = currentUser?.activeDepartment?._id;
-  const canViewFolders = ['SuperAdmin', 'Admin', 'AdminTuningDesk', 'AdminDepartment', 'User'].includes(currentUser?.role || '');
+  const canViewFolders = ['Director', 'Admin', 'AdminTuningDesk', 'AdminDepartment', 'User'].includes(currentUser?.role || '');
 
   const { data: folders, isLoading } = useQuery({
     queryKey: ['folders', departmentId],
