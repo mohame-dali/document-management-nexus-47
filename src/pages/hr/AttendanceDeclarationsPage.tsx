@@ -53,14 +53,7 @@ import {
   GraduationCap,
   Sparkles,
 } from 'lucide-react';
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const err = error as { response?: { data?: { message?: string } } };
-    return err.response?.data?.message || fallback;
-  }
-  return fallback;
-};
+import { getErrorMessage } from '@/utils/errorMessages';
 
 export const AttendanceDeclarationsPage: React.FC = () => {
   const { user } = useAuth();

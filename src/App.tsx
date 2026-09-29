@@ -36,6 +36,7 @@ import AdminDepartmentDashboard from './pages/department/AdminDepartmentDashboar
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import DocumentOptionsPage from './pages/documents/DocumentOptionsPage';
 import NotFound from './pages/NotFound';
+import ForbiddenPage from './pages/ForbiddenPage';
 import TemplatesPage from './pages/templates/TemplatesPage';
 import AuditTrailPage from './pages/audit/AuditTrailPage';
 import SettingsPage from './pages/settings/SettingsPage';
@@ -334,6 +335,7 @@ function App() {
                       </Route>
                       
                       {/* Catch all other routes and show 404 */}
+                      <Route path="/403" element={<ForbiddenPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>

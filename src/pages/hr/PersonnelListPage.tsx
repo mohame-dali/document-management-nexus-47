@@ -7,6 +7,7 @@ import { getDepartments } from '@/services/departmentService';
 import { Personnel, PersonnelFilters } from '@/types/hr';
 import { Department } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/errorMessages';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
 import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import {
@@ -146,8 +147,7 @@ export const PersonnelListPage: React.FC = () => {
       setPersonnelToDelete(null);
     },
     onError: (error: unknown) => {
-      const msg = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
-      toast.error(msg || 'تعذر حذف ملف الموظف');
+      toast.error(getErrorMessage(error, 'تعذر حذف ملف الموظف'));
     },
   });
 

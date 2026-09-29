@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { createOutgoingDocument } from '@/services/documentService';
 import { getNextSerialNumber, validateSerialNumber } from '@/services/serialNumberService';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 export const useOutgoingDocumentForm = (t: any, currentDepartmentId?: string, scanData?: any) => {
   const navigate = useNavigate();
@@ -301,7 +302,7 @@ export const useOutgoingDocumentForm = (t: any, currentDepartmentId?: string, sc
       navigate('/dashboard/outgoing-documents');
     } catch (error) {
       console.error('Error creating document:', error);
-      toast.error(t.createError);
+      toast.error(getErrorMessage(error, t.createError));
     }
   };
 

@@ -31,7 +31,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check role-based access
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentUser.role)) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return <Navigate to="/403" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
