@@ -43,7 +43,7 @@ const Header = () => {
     queryKey: ['unreadMessages'],
     queryFn: getUnreadCount,
     enabled: !!currentUser,
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+    refetchInterval: 60000, // Refetch every 60 seconds
     staleTime: 0, // Always consider data stale to ensure fresh counts
   });
 

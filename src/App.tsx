@@ -60,6 +60,11 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: (failureCount, error: any) => {
+        // Ne pas retry sur 429 — évite les cascades
+        if (error?.response?.status === 429) return false;
+        return failureCount < 2;
+      },
     },
   },
 });

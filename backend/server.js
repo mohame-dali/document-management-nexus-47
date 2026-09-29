@@ -117,13 +117,19 @@ const rateLimit = require('express-rate-limit');
 
 // Limiteur global pour toutes les APIs
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,        // Fenêtre de 15 minutes
+  windowMs: 1 * 60 * 1000,        // Fenêtre de 1 minute
   max: 500,                         // 500 requêtes max par IP
   standardHeaders: true,            // Retourne les headers RateLimit-*
   legacyHeaders: false,
+  skip: (req) => {
+    // Ne pas compter les GET authentifiés (polling)
+    // Cela n'affecte PAS les POST/PUT/DELETE ni les non-authentifiés
+    const isAuth = !!(req.user || (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) || (req.cookies && req.cookies.token));
+    return req.method === 'GET' && isAuth;
+  },
   message: {
     success: false,
-    message: 'Trop de requêtes. Réessayez dans 15 minutes.'
+    message: 'Trop de requêtes. Réessayez dans une minute.'
   }
 });
 

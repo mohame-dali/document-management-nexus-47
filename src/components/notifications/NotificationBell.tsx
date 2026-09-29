@@ -12,7 +12,7 @@ const NotificationBell: React.FC = () => {
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ['activityNotificationCount'],
     queryFn: getNotificationCount,
-    refetchInterval: 10000, // Refetch every 10 seconds for more responsive updates
+    refetchInterval: 60000, // Refetch every 60 seconds
     staleTime: 0,
   });
 

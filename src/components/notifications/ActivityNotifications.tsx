@@ -22,7 +22,7 @@ const ActivityNotifications: React.FC = () => {
   const { data: notifications = [], isLoading, refetch } = useQuery({
     queryKey: ['activityNotifications'],
     queryFn: getActivityNotifications,
-    refetchInterval: 10000, // Refetch every 10 seconds for more responsive updates
+    refetchInterval: 60000, // Refetch every 60 seconds
     staleTime: 0,
   });
 
