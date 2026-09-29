@@ -90,7 +90,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
       </Card>
 
       {/* Dynamic 4th Card based on role */}
-      {(currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin') ? (
+      {(currentUser?.role === 'Director' || currentUser?.role === 'Admin') ? (
         <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm hover:shadow transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs font-semibold text-[#4a5568]">الأقسام</CardTitle>

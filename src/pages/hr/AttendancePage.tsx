@@ -122,7 +122,7 @@ export const AttendancePage: React.FC = () => {
   // Déterminer si l'utilisateur peut voir tous les départements
   const canSeeAllDepartments =
     userRole === 'Admin' ||
-    userRole === 'SuperAdmin' ||
+    userRole === 'Director' ||
     (userRole === 'AdminDepartment' && (userDepartmentName === 'RH' || isRHDepartment));
 
   // Vérifier si l'utilisateur est restreint à un département

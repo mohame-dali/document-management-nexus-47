@@ -100,7 +100,7 @@ export const getPhotoUrl = (photoPath?: string): string => {
   return cleanPath;
 };
 
-// Supprimer une fiche de personnel (Admin / SuperAdmin uniquement, statut !== actif)
+// Supprimer une fiche de personnel (Admin uniquement, statut !== actif)
 export const deletePersonnel = async (id: string): Promise<{ success: boolean; message?: string }> => {
   try {
     const response = await api.delete(`/personnel/${id}`);

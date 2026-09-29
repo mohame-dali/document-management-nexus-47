@@ -355,7 +355,7 @@ const DepartmentsPage: React.FC = () => {
             <span>تحديث</span>
           </Button>
 
-          {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && (
+          {currentUser?.role === 'Admin' && (
             <Button 
               onClick={() => navigate('/dashboard/departments/create')} 
               className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-bold rounded shadow-none flex items-center gap-2"
@@ -588,7 +588,7 @@ const DepartmentsPage: React.FC = () => {
                           </Button>
 
                           {/* Edit Department */}
-                          {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && (
+                          {currentUser?.role === 'Admin' && (
                             <>
                               <Button 
                                 variant="outline" 
@@ -863,9 +863,9 @@ const DepartmentsPage: React.FC = () => {
                           {user.username}
                         </TableCell>
                         <TableCell className="py-2.5 px-3">
-                          {user.role === 'SuperAdmin' || user.role === 'Admin' ? (
+                          {user.role === 'Director' || user.role === 'Admin' ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
-                              {user.role === 'SuperAdmin' ? 'مدير أعلى' : 'مدير'}
+                              {user.role === 'Director' ? 'مدير الإدارة' : 'مدير'}
                             </span>
                           ) : user.role === 'AdminDepartment' ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#2c5282] text-white">
@@ -904,7 +904,7 @@ const DepartmentsPage: React.FC = () => {
             >
               إغلاق النافذة
             </Button>
-            {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && selectedDepartmentForView && (
+            {currentUser?.role === 'Admin' && selectedDepartmentForView && (
               <Button
                 type="button"
                 onClick={() => {

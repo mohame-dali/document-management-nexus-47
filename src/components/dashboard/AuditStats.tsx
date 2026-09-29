@@ -22,7 +22,7 @@ const AuditStats: React.FC = () => {
       startDate: new Date(new Date().setHours(0, 0, 0, 0)),
       endDate: new Date()
     }),
-    enabled: currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin'
+    enabled: currentUser?.role === 'Director' || currentUser?.role === 'Admin'
   });
 
   const { data: weekLogs } = useQuery({
@@ -35,10 +35,10 @@ const AuditStats: React.FC = () => {
         endDate: new Date()
       });
     },
-    enabled: currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin'
+    enabled: currentUser?.role === 'Director' || currentUser?.role === 'Admin'
   });
 
-  if (currentUser?.role !== 'SuperAdmin' && currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'Director' && currentUser?.role !== 'Admin') {
     return null;
   }
 

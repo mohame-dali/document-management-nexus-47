@@ -28,7 +28,7 @@ const AuditSummary: React.FC = () => {
   const { data: recentLogs, isLoading } = useQuery({
     queryKey: ['auditLogs', 'recent'],
     queryFn: () => getAuditLogs({ limit: 10 }),
-    enabled: currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin'
+    enabled: currentUser?.role === 'Director' || currentUser?.role === 'Admin'
   });
 
   const getActionIcon = (action: string) => {
@@ -60,7 +60,7 @@ const AuditSummary: React.FC = () => {
     }
   };
 
-  if (currentUser?.role !== 'SuperAdmin' && currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'Director' && currentUser?.role !== 'Admin') {
     return null;
   }
 

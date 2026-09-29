@@ -81,7 +81,7 @@ const ActivityNotifications: React.FC = () => {
     return <Mail className="h-4 w-4 text-[#2c5282] shrink-0" />;
   };
 
-  if (!currentUser || (currentUser.role !== 'SuperAdmin' && currentUser.role !== 'Admin' && currentUser.role !== 'AdminTuningDesk' && currentUser.role !== 'AdminDepartment')) {
+  if (!currentUser || (currentUser.role !== 'Director' && currentUser.role !== 'Admin' && currentUser.role !== 'AdminTuningDesk' && currentUser.role !== 'AdminDepartment')) {
     return null;
   }
 

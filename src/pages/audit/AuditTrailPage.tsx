@@ -8,7 +8,7 @@ import AuditTrailViewer from '@/components/audit/AuditTrailViewer';
 const AuditTrailPage = () => {
   const { currentUser } = useAuth();
 
-  if (currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'Admin' && currentUser?.role !== 'Director') {
     return (
       <div className="max-w-7xl mx-auto p-4 sm:p-6" dir="rtl">
         <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">

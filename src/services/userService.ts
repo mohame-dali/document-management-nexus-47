@@ -82,7 +82,7 @@ export const getMessagingUsers = async (): Promise<User[]> => {
     const users = response.data.data || response.data;
     
     // Filter to include only active users of all valid roles across all departments
-    const validRoles = ['SuperAdmin', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'];
+    const validRoles = ['Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'];
     const filteredUsers = users.filter((user: User) => 
       user.isActive && validRoles.includes(user.role)
     );
