@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Check, CheckCheck, Download, FileText, Image as ImageIcon, Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { Message } from '@/types';
-import { downloadAttachment, deleteMessage } from '@/services/messageService';
+import { deleteMessage } from '@/services/messageService';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/utils/errorMessages';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import AttachmentsList from '@/components/messages/AttachmentsList';
 
 export interface MessageBubbleProps {
   message: Message | any;
@@ -15,7 +17,6 @@ export interface MessageBubbleProps {
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
-  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const formatTime = (dateStr?: string | Date): string => {
@@ -25,26 +26,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     } catch {
       return '';
-    }
-  };
-
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} بايت`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ك.ب`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} م.ب`;
-  };
-
-  const handleDownloadAttachment = async (e: React.MouseEvent, attachment: any, idx: number) => {
-    e.stopPropagation();
-    try {
-      setDownloadingIdx(idx);
-      await downloadAttachment(attachment, false);
-    } catch (error) {
-      console.error('Erreur téléchargement pièce jointe:', error);
-      toast.error(getErrorMessage(error, 'تعذر تحميل الملف المرفق'));
-    } finally {
-      setDownloadingIdx(null);
     }
   };
 
@@ -75,98 +56,70 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
     ? message.recipients.every((r: any) => r.read)
     : false;
 
-  const hasAttachments = Array.isArray(message.attachments) && message.attachments.length > 0;
+  const sender = typeof message.sender === 'object' ? message.sender : null;
+  const senderPhoto = sender?.photo || sender?.avatar;
+  const senderInitial = (sender?.prenom?.[0] || sender?.nom?.[0] || sender?.username?.[0] || '؟').toUpperCase();
 
   return (
-    <div className={`flex w-full my-1 animate-fade-in ${isOwn ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex items-end gap-2 my-1 animate-fade-in ${isOwnMessage ? 'justify-start' : 'justify-end'}`}>
+      {/* Avatar (pour les messages reçus seulement, aligné en bas comme Messenger) */}
+      {!isOwnMessage && (
+        <Avatar className="w-8 h-8 shrink-0 ring-1 ring-slate-200">
+          <AvatarImage src={senderPhoto} alt={sender?.nom || 'المستلم'} />
+          <AvatarFallback className="bg-slate-200 text-slate-700 text-xs font-semibold">
+            {senderInitial}
+          </AvatarFallback>
+        </Avatar>
+      )}
+
+      {/* Bulle style Messenger */}
       <div
-        className={`group relative max-w-[70%] px-4 py-2.5 shadow-sm transition-all duration-200 ${
-          isOwn
-            ? 'bg-[#2c5282] text-white rounded-tr-none'
-            : 'bg-white text-[#1a202c] border border-[#e2e8f0] rounded-tl-none'
+        className={`group relative max-w-[70%] px-3.5 py-2 shadow-2xs transition-all duration-200 ${
+          isOwnMessage
+            ? 'bg-[#2c5282] text-white rounded-2xl rounded-tr-sm'
+            : 'bg-slate-100 text-[#1a202c] rounded-2xl rounded-tl-sm'
         }`}
       >
-        {/* Delete Button (visible only on own messages upon hover) */}
+        {/* Delete button (hover, w-6 h-6 rond rouge) */}
         {isOwnMessage && (
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-300 hover:text-red-100 hover:bg-white/10 rounded p-1 z-10"
-            title="حذف الرسالة"
+            className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md transition-opacity z-10 hover:bg-red-600"
+            title="حذف"
           >
             {isDeleting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-3 h-3 animate-spin" />
             ) : (
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-3 h-3" />
             )}
           </button>
         )}
 
-        {/* Message Content */}
-        <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words select-text">
-          {message.content}
-        </p>
+        {/* Contenu texte */}
+        {message.content && (
+          <p className="text-sm leading-relaxed break-words whitespace-pre-wrap select-text">
+            {message.content}
+          </p>
+        )}
 
-        {/* Attachments (if any) */}
-        {hasAttachments && (
-          <div className="mt-2.5 pt-2 border-t border-white/20 space-y-1.5">
-            {message.attachments.map((att: any, idx: number) => {
-              const displayName = att.originalName || att.filename || `مرفق ${idx + 1}`;
-              const ext = displayName?.split('.').pop()?.toLowerCase() || '';
-              const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-              const isDownloading = downloadingIdx === idx;
-
-              return (
-                <div
-                  key={idx}
-                  onClick={(e) => handleDownloadAttachment(e, att, idx)}
-                  className={`flex items-center justify-between gap-2 p-2 rounded cursor-pointer transition-colors text-xs ${
-                    isOwn
-                      ? 'bg-white/10 hover:bg-white/20 text-white'
-                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-[#e2e8f0]'
-                  }`}
-                  title="تحميل المرفق"
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    {isImage ? (
-                      <ImageIcon className="h-4 w-4 shrink-0 opacity-80" />
-                    ) : (
-                      <FileText className="h-4 w-4 shrink-0 opacity-80" />
-                    )}
-                    <span className="truncate max-w-[160px] font-medium" dir="ltr">
-                      {displayName}
-                    </span>
-                    {att.size ? (
-                      <span className="text-[11px] opacity-75 shrink-0">
-                        ({formatFileSize(att.size)})
-                      </span>
-                    ) : null}
-                  </div>
-                  {isDownloading ? (
-                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin opacity-80" />
-                  ) : (
-                    <Download className="h-3.5 w-3.5 shrink-0 opacity-80" />
-                  )}
-                </div>
-              );
-            })}
+        {/* Pièces jointes (AttachmentsList) */}
+        {message.attachments?.length > 0 && (
+          <div className="mt-1.5">
+            <AttachmentsList attachments={message.attachments} />
           </div>
         )}
 
-        {/* Bubble Meta (Time + Status) */}
+        {/* Footer : heure + read receipt (✓ / ✓✓) */}
         <div
-          className={`flex items-center justify-end gap-1.5 mt-1 text-[11px] select-none ${
-            isOwn ? 'text-white/80' : 'text-slate-400'
+          className={`flex items-center justify-end gap-1 mt-0.5 select-none ${
+            isOwnMessage ? 'text-white/70' : 'text-slate-400'
           }`}
         >
-          <span>{formatTime(message.createdAt)}</span>
-          {isOwn && (
-            <span title={isRead ? 'تمت القراءة' : 'تم الإرسال'}>
-              {isRead ? (
-                <CheckCheck className="h-3.5 w-3.5 text-[#FFCB56]" />
-              ) : (
-                <Check className="h-3.5 w-3.5 text-white/70" />
-              )}
+          <span className="text-[10px]">{formatTime(message.createdAt)}</span>
+          {isOwnMessage && (
+            <span className="text-[10px] tracking-tighter" title={isRead ? 'تمت القراءة' : 'تم الإرسال'}>
+              {isRead ? '✓✓' : '✓'}
             </span>
           )}
         </div>

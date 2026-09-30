@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { Download, FileText, Image as ImageIcon, File, ExternalLink, Paperclip, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Image, File, ExternalLink, Paperclip, Loader2 } from 'lucide-react';
 import { Message } from '@/types';
 import { downloadAttachment } from '@/services/messageService';
 import { toast } from 'sonner';
@@ -13,16 +13,16 @@ interface AttachmentsListProps {
 const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
   const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
 
+  if (!attachments || attachments.length === 0) {
+    return null;
+  }
+
   const getFileIcon = (filename?: string) => {
     const extension = filename?.split('.').pop()?.toLowerCase();
-    
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(extension || '')) {
-      return <Image className="h-4 w-4 text-[#2c5282]" />;
-    } else if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
+    if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
       return <FileText className="h-4 w-4 text-[#2c5282]" />;
-    } else {
-      return <File className="h-4 w-4 text-slate-500" />;
     }
+    return <File className="h-4 w-4 text-slate-500" />;
   };
 
   const formatFileSize = (bytes?: number): string => {
@@ -44,144 +44,128 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
     }
   };
 
-  if (!attachments || attachments.length === 0) {
-    return null;
-  }
+  const isAttachmentImage = (att: any) => {
+    const name = att.originalName || att.filename || '';
+    const ext = name.split('.').pop()?.toLowerCase() || '';
+    return att.mimetype?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+  };
+
+  const imageAttachments = attachments.filter(isAttachmentImage);
+  const otherAttachments = attachments.filter(att => !isAttachmentImage(att));
+
+  const apiBaseUrl = import.meta.env.VITE_API_URL || '';
+
+  const getDiskName = (att: any) => {
+    return (att.path?.split(/[\/\\]/).pop()) || att.filename || '';
+  };
 
   return (
-    <div className="mt-4 pt-4 border-t border-[#e2e8f0]" dir="rtl">
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-2.5">
-        <Paperclip className="h-3.5 w-3.5 text-[#2c5282]" />
-        <span>المرفقات ({attachments.length})</span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {attachments.map((attachment, index) => {
-          if (!attachment) return null;
-          const isCurrentDownloading = downloadingIndex === index;
-          
-          // Identifier le nom réel sur disque vs le nom lisible
-          const diskName = (attachment.path?.split(/[\/\\]/).pop()) || attachment.filename || '';
-          const displayName = attachment.originalName || attachment.filename || 'ملف مرفق';
-          
-          const ext = displayName?.split('.').pop()?.toLowerCase() || diskName?.split('.').pop()?.toLowerCase() || '';
-          const isImage = attachment.mimetype?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
-
-          if (isImage) {
-            const apiBaseUrl = import.meta.env.VITE_API_URL || '';
+    <div className="space-y-2 mt-1" dir="rtl">
+      {/* 1. Images multiples (grid 2 colonnes style Messenger) */}
+      {imageAttachments.length > 1 && (
+        <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden max-w-[240px]">
+          {imageAttachments.map((img, idx) => {
+            const diskName = getDiskName(img);
             const imgSrc = `${apiBaseUrl}/api/messages/attachments/${diskName}`;
+            const displayName = img.originalName || img.filename || 'صورة';
+            return (
+              <div key={idx} className="relative group overflow-hidden bg-slate-200">
+                <img
+                  src={imgSrc}
+                  alt={displayName}
+                  className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => downloadAttachment(img, true)}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 2. Image seule (arrondie, max-w-[220px]) */}
+      {imageAttachments.length === 1 && (
+        <div className="rounded-xl overflow-hidden max-w-[220px] max-h-[220px] bg-slate-200 shadow-xs">
+          {(() => {
+            const img = imageAttachments[0];
+            const diskName = getDiskName(img);
+            const imgSrc = `${apiBaseUrl}/api/messages/attachments/${diskName}`;
+            const displayName = img.originalName || img.filename || 'صورة';
+            return (
+              <img
+                src={imgSrc}
+                alt={displayName}
+                className="w-full h-auto max-h-[220px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={() => downloadAttachment(img, true)}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            );
+          })()}
+        </div>
+      )}
+
+      {/* 3. Documents (PDF, Word, etc.) */}
+      {otherAttachments.length > 0 && (
+        <div className="space-y-1.5 pt-1">
+          {otherAttachments.map((att, idx) => {
+            const globalIndex = attachments.indexOf(att);
+            const isCurrentDownloading = downloadingIndex === globalIndex;
+            const displayName = att.originalName || att.filename || 'ملف مرفق';
 
             return (
               <div
-                key={index}
-                className="relative group/img rounded border border-[#e2e8f0] bg-[#f8fafc] p-2 flex flex-col items-center gap-1.5 overflow-hidden transition-colors hover:border-[#cbd5e1] hover:bg-white"
+                key={idx}
+                className="flex items-center justify-between p-2 bg-white/90 border border-slate-200/80 rounded-lg text-xs shadow-2xs gap-2"
               >
-                <div className="relative w-full h-36 flex items-center justify-center bg-slate-100 rounded overflow-hidden">
-                  <img
-                    src={imgSrc}
-                    alt={displayName}
-                    className="max-h-full max-w-full object-contain transition-transform duration-200 group-hover/img:scale-105"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleDownload(attachment, index, true)}
-                    disabled={isCurrentDownloading}
-                    className="absolute inset-0 bg-black/45 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center rounded gap-2 text-white"
-                    title="تكبير / عرض الصورة"
-                  >
-                    {isCurrentDownloading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        <ExternalLink className="w-4 h-4" />
-                        <span className="text-xs font-medium">عرض الصورة</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="w-full flex items-center justify-between text-xs pt-1 border-t border-slate-100">
-                  <div className="min-w-0 flex-1 pl-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="p-1 bg-slate-100 rounded shrink-0">
+                    {getFileIcon(displayName)}
+                  </div>
+                  <div className="min-w-0 flex-1 text-right">
                     <p className="font-medium text-slate-800 truncate" title={displayName}>
                       {displayName}
                     </p>
-                    {attachment.size ? (
+                    {att.size ? (
                       <p className="text-[10px] text-slate-400">
-                        {formatFileSize(attachment.size)}
+                        {formatFileSize(att.size)}
                       </p>
                     ) : null}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(attachment, index, false)}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(att, globalIndex, true)}
                     disabled={isCurrentDownloading}
-                    className="h-6 px-2 text-[10px] rounded border-[#FFCB56] text-[#78350f] bg-[#FFD758]/15 hover:bg-[#FFD758]/30 flex items-center gap-1"
+                    className="p-1 text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
+                    title="عرض"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(att, globalIndex, false)}
+                    disabled={isCurrentDownloading}
+                    className="p-1 text-[#2c5282] hover:bg-slate-100 rounded"
                     title="تحميل"
                   >
-                    <Download className="h-3 w-3" />
-                    <span>تحميل</span>
-                  </Button>
+                    {isCurrentDownloading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                 </div>
               </div>
             );
-          }
-
-          return (
-            <div 
-              key={index} 
-              className="flex items-center justify-between p-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs transition-colors duration-200 hover:border-[#cbd5e1] hover:bg-white"
-            >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <div className="p-1.5 bg-slate-100 rounded flex-shrink-0">
-                  {getFileIcon(displayName)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-slate-800 truncate" title={displayName}>
-                    {displayName}
-                  </p>
-                  {attachment.size ? (
-                    <p className="text-[10px] text-slate-400">
-                      {formatFileSize(attachment.size)}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1 flex-shrink-0 mr-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDownload(attachment, index, true)}
-                  disabled={isCurrentDownloading}
-                  className="h-7 w-7 p-0 text-slate-600 hover:text-[#2c5282] hover:bg-blue-50 rounded"
-                  title="عرض المرفق في نافذة جديدة"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(attachment, index, false)}
-                  disabled={isCurrentDownloading}
-                  className="h-7 px-2 text-[11px] rounded border-[#FFCB56] text-[#78350f] bg-[#FFD758]/15 hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
-                  title="تحميل المرفق"
-                >
-                  {isCurrentDownloading ? (
-                    <Loader2 className="h-3 w-3 animate-spin text-[#78350f]" />
-                  ) : (
-                    <Download className="h-3 w-3" />
-                  )}
-                  <span>{isCurrentDownloading ? 'جاري التحميل...' : 'تحميل'}</span>
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 };
