@@ -78,7 +78,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
   const hasAttachments = Array.isArray(message.attachments) && message.attachments.length > 0;
 
   return (
-    <div className={`flex w-full my-1 ${isOwn ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex w-full my-1 animate-fade-in ${isOwn ? 'justify-start' : 'justify-end'}`}>
       <div
         className={`group relative max-w-[70%] px-4 py-2.5 shadow-sm transition-all duration-200 ${
           isOwn
