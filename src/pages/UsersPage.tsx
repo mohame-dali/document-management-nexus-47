@@ -62,6 +62,7 @@ import { toast } from 'sonner';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import ChangePasswordDialog from '@/components/users/ChangePasswordDialog';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -267,10 +268,9 @@ const UsersPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[450px] w-full" dir="rtl">
-        <div className="flex flex-col items-center gap-4 p-8 bg-white border border-[#e2e8f0] rounded">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2c5282]"></div>
-          <p className="text-base text-gray-600 font-medium">جاري تحميل بيانات المستخدمين...</p>
+      <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8" dir="rtl">
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          <TableSkeleton columns={7} rows={8} />
         </div>
       </div>
     );
