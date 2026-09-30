@@ -100,6 +100,8 @@ try {
   app.use('/api/attendance', require('./backend/routes/attendanceRoutes'));
   app.use('/api/attendance', require('./backend/routes/attendanceDeclarationRoutes'));
   app.use('/api/hr/leave-reasons', require('./backend/routes/leaveReasonRoutes'));
+  app.use('/api/trash', require('./backend/routes/trashRoutes'));
+  app.use('/api/organization-chart', require('./backend/routes/organizationChartRoutes'));
 } catch (err: any) {
   console.warn('Notice loading backend routes:', err.message);
 }

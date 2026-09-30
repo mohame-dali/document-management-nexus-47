@@ -18,6 +18,24 @@ const { upload } = require('../middleware/upload');
 
 const router = express.Router();
 
+// Memory cache for uploads/attachments file list to prevent synchronous disk scan on every request
+let fileCache = null;
+let fileCacheTime = 0;
+const CACHE_TTL = 60 * 1000; // 1 minute
+
+function getFilesList(uploadDir) {
+  const now = Date.now();
+  if (!fileCache || (now - fileCacheTime) > CACHE_TTL) {
+    if (fs.existsSync(uploadDir)) {
+      fileCache = fs.readdirSync(uploadDir);
+    } else {
+      fileCache = [];
+    }
+    fileCacheTime = now;
+  }
+  return fileCache;
+}
+
 // Protect all routes with authentication
 router.use(protect);
 
@@ -45,7 +63,7 @@ router.get('/attachments/:filename', (req, res) => {
 
     // Cas 2 : fallback — chercher par suffixe (ancien message avec originalName)
     if (fs.existsSync(UPLOAD_DIR)) {
-      const files = fs.readdirSync(UPLOAD_DIR);
+      const files = getFilesList(UPLOAD_DIR);
       const matching = files.find(f => 
         f === safeName ||                    // exact
         f.endsWith(`-${safeName}`) ||        // msg-xxx-logo.webp

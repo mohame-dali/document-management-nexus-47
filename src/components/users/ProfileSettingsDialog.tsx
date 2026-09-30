@@ -28,7 +28,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
   open,
   onOpenChange
 }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshCurrentUser } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -58,13 +58,16 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
 
   const uploadPhotoMutation = useMutation({
     mutationFn: (photoFile: File) => uploadUserPhoto(currentUser!._id, photoFile),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('تم تحديث الصورة الشخصية بنجاح');
       setSelectedPhoto(null);
       setPhotoPreview(null);
+      // Invalidate relevant query keys
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      // Refresh the page to update the sidebar photo
-      window.location.reload();
+      // Refresh current user in AuthContext so Sidebar updates immediately
+      await refreshCurrentUser();
     },
     onError: (error: unknown) => {
       console.error('Error uploading photo:', error);

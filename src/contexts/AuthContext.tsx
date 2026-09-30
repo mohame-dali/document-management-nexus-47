@@ -27,6 +27,7 @@ interface AuthContextType {
   canManageUsers: () => boolean;
   canCreateUsers: () => boolean;
   canViewAllDocuments: () => boolean;
+  refreshCurrentUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -315,6 +316,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return ['Director', 'Admin', 'AdminTuningDesk'].includes(currentUser.role);
   };
 
+  const refreshCurrentUser = async (): Promise<User | null> => {
+    try {
+      const freshUser = await fetchCurrentUser();
+      if (freshUser) {
+        setCurrentUser(freshUser);
+        localStorage.setItem('user', JSON.stringify(freshUser));
+      }
+      return freshUser;
+    } catch (err) {
+      console.error('Failed to refresh current user:', err);
+      return null;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -327,7 +342,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         canAccessDepartment,
         canManageUsers,
         canCreateUsers,
-        canViewAllDocuments
+        canViewAllDocuments,
+        refreshCurrentUser
       }}
     >
       {children}
