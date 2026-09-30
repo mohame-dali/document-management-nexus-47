@@ -56,6 +56,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { InlineCreateUserModal } from '@/components/hr/InlineCreateUserModal';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 export const PersonnelListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -322,11 +323,8 @@ export const PersonnelListPage: React.FC = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <RefreshCw className="w-8 h-8 animate-spin text-[#2c5282]" />
-                      <span>جاري تحميل بيانات الموظفين...</span>
-                    </div>
+                  <TableCell colSpan={6} className="p-0">
+                    <TableSkeleton columns={6} rows={8} />
                   </TableCell>
                 </TableRow>
               ) : personnelList.length === 0 ? (
