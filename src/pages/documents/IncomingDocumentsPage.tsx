@@ -79,6 +79,7 @@ import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 const IncomingDocumentsPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -486,10 +487,10 @@ const IncomingDocumentsPage: React.FC = () => {
   // Loading view
   if (isLoading && isValidYear) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4" dir="rtl">
-        <Loader2 className="h-10 w-10 text-[#2c5282] animate-spin" />
-        <h2 className="text-xl font-bold text-[#1a202c]">جاري تحميل الوثائق الواردة...</h2>
-        <p className="text-base text-[#4a5568]">يتم استرجاع سجلات المراسلات الواردة لسنة {selectedYear}</p>
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          <TableSkeleton columns={6} rows={8} />
+        </div>
       </div>
     );
   }
