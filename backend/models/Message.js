@@ -23,12 +23,14 @@ const messageSchema = new mongoose.Schema({
   }],
   subject: { 
     type: String, 
-    required: true, 
-    trim: true 
+    required: false, 
+    trim: true,
+    default: 'بدون عنوان'
   },
   content: { 
     type: String, 
-    required: true 
+    required: false,
+    default: ''
   },
   priority: {
     type: String,
