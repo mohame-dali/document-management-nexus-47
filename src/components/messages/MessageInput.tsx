@@ -1,12 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, File as FileIcon } from 'lucide-react';
+import { Send, Paperclip, X, File as FileIcon, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export interface MessageInputProps {
   onSend: (content: string, files: File[]) => void;
   disabled?: boolean;
   placeholder?: string;
 }
+
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+];
+
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+
+const MAX_SIZE_MB = 10;
+const MAX_FILES = 3;
 
 export const MessageInput: React.FC<MessageInputProps> = ({
   onSend,
@@ -51,9 +70,39 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // Check max files
+    if (selectedFiles.length + files.length > MAX_FILES) {
+      toast.error(`الحد الأقصى ${MAX_FILES} ملفات لكل رسالة`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // Check size + type
+    const validFiles = files.filter((f) => {
+      if (f.size > MAX_SIZE_MB * 1024 * 1024) {
+        toast.error(`الملف "${f.name}" يتجاوز ${MAX_SIZE_MB} ميغا`);
+        return false;
+      }
+      const ext = '.' + (f.name.split('.').pop()?.toLowerCase() || '');
+      const isAllowedMime = ALLOWED_TYPES.includes(f.type);
+      const isAllowedExt = ALLOWED_EXTENSIONS.includes(ext);
+
+      if (!isAllowedMime && !isAllowedExt) {
+        toast.error(`نوع الملف "${f.name}" غير مدعوم`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...validFiles]);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -66,25 +115,35 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       {/* File Previews if attached */}
       {selectedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2 pb-2 border-b border-slate-100">
-          {selectedFiles.map((file, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs text-slate-700"
-            >
-              <FileIcon className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
-              <span className="truncate max-w-[140px] font-medium" dir="ltr">
-                {file.name}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleRemoveFile(idx)}
-                className="text-slate-400 hover:text-red-500 transition-colors p-0.5"
-                title="إزالة الملف"
+          {selectedFiles.map((file, idx) => {
+            const isImg = file.type.startsWith('image/');
+            return (
+              <div
+                key={idx}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs text-slate-700"
               >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+                {isImg ? (
+                  <ImageIcon className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
+                ) : (
+                  <FileIcon className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
+                )}
+                <span className="truncate max-w-[140px] font-medium" dir="ltr">
+                  {file.name}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  ({(file.size / 1024).toFixed(0)} ك.ب)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(idx)}
+                  className="text-slate-400 hover:text-red-500 transition-colors p-0.5"
+                  title="إزالة الملف"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -96,6 +155,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           ref={fileInputRef}
           onChange={handleFileChange}
           multiple
+          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
           className="hidden"
         />
         <Button
@@ -103,10 +163,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           variant="ghost"
           size="icon"
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
+          disabled={disabled || selectedFiles.length >= MAX_FILES}
           aria-label="إرفاق ملف"
           className="h-11 w-11 shrink-0 text-slate-500 hover:text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors"
-          title="إرفاق ملف"
+          title={`إرفاق ملف (${selectedFiles.length}/${MAX_FILES})`}
         >
           <Paperclip className="h-5 w-5" />
         </Button>
@@ -135,6 +195,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         >
           <Send className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Upload info caption */}
+      <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-400 px-1">
+        <span>الحد الأقصى: 3 ملفات، 10 ميغا لكل ملف (صور، مستندات، جداول)</span>
+        {selectedFiles.length > 0 && (
+          <span className="font-medium text-[#2c5282]">
+            {selectedFiles.length}/{MAX_FILES} ملفات محددة
+          </span>
+        )}
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Check, CheckCheck, Download, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Check, CheckCheck, Download, FileText, Image as ImageIcon, Loader2, Trash2 } from 'lucide-react';
 import { Message } from '@/types';
-import { downloadAttachment } from '@/services/messageService';
+import { downloadAttachment, deleteMessage } from '@/services/messageService';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/utils/errorMessages';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface MessageBubbleProps {
   message: Message | any;
@@ -11,7 +13,10 @@ export interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
+  const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
   const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const formatTime = (dateStr?: string | Date): string => {
     if (!dateStr) return '';
@@ -43,6 +48,29 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
+    setIsDeleting(true);
+    try {
+      await deleteMessage(message._id);
+      toast.success('✅ تم حذف الرسالة');
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      queryClient.invalidateQueries({ queryKey: ['conversation'] });
+    } catch (error) {
+      toast.error('❌ خطأ في الحذف', { description: getErrorMessage(error) });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const currentUserId = currentUser?._id || (currentUser as any)?.id;
+  const isSender = typeof message.sender === 'object'
+    ? (message.sender?._id?.toString() === currentUserId?.toString())
+    : (message.sender?.toString() === currentUserId?.toString());
+
+  const isOwnMessage = isOwn || isSender;
+
   const isRead = Array.isArray(message.recipients) && message.recipients.length > 0
     ? message.recipients.every((r: any) => r.read)
     : false;
@@ -52,12 +80,28 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
   return (
     <div className={`flex w-full my-1 ${isOwn ? 'justify-start' : 'justify-end'}`}>
       <div
-        className={`max-w-[70%] px-4 py-2.5 shadow-sm transition-all duration-200 ${
+        className={`group relative max-w-[70%] px-4 py-2.5 shadow-sm transition-all duration-200 ${
           isOwn
             ? 'bg-[#2c5282] text-white rounded-tr-none'
             : 'bg-white text-[#1a202c] border border-[#e2e8f0] rounded-tl-none'
         }`}
       >
+        {/* Delete Button (visible only on own messages upon hover) */}
+        {isOwnMessage && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-300 hover:text-red-100 hover:bg-white/10 rounded p-1 z-10"
+            title="حذف الرسالة"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+          </button>
+        )}
+
         {/* Message Content */}
         <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words select-text">
           {message.content}
