@@ -38,8 +38,9 @@ const messageSchema = new mongoose.Schema({
     default: 'normal'
   },
   attachments: [{
-    filename: String,
-    path: String,
+    filename: String,        // nom réel sur disque (msg-xxx.ext)
+    originalName: String,    // nom original lisible (logo.webp)
+    path: String,            // chemin complet
     size: Number,
     mimetype: String
   }],

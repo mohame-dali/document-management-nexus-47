@@ -111,7 +111,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
         {hasAttachments && (
           <div className="mt-2.5 pt-2 border-t border-white/20 space-y-1.5">
             {message.attachments.map((att: any, idx: number) => {
-              const ext = att.filename?.split('.').pop()?.toLowerCase() || '';
+              const displayName = att.originalName || att.filename || `مرفق ${idx + 1}`;
+              const ext = displayName?.split('.').pop()?.toLowerCase() || '';
               const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
               const isDownloading = downloadingIdx === idx;
 
@@ -133,7 +134,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
                       <FileText className="h-4 w-4 shrink-0 opacity-80" />
                     )}
                     <span className="truncate max-w-[160px] font-medium" dir="ltr">
-                      {att.filename || `مرفق ${idx + 1}`}
+                      {displayName}
                     </span>
                     {att.size ? (
                       <span className="text-[11px] opacity-75 shrink-0">

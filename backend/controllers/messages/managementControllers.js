@@ -81,7 +81,8 @@ exports.sendMessage = async (req, res, next) => {
     let attachments = [];
     if (req.files && req.files.length > 0) {
       attachments = req.files.map(file => ({
-        filename: file.originalname,
+        filename: file.filename,               // ✅ nom réel sur disque (msg-xxx.ext)
+        originalName: file.originalname,       // ✅ nom lisible (logo.webp)
         path: file.path.replace(/\\/g, '/'),
         size: file.size,
         mimetype: file.mimetype

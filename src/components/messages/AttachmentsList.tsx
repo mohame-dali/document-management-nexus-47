@@ -59,12 +59,17 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
         {attachments.map((attachment, index) => {
           if (!attachment) return null;
           const isCurrentDownloading = downloadingIndex === index;
-          const ext = attachment.filename?.split('.').pop()?.toLowerCase() || '';
+          
+          // Identifier le nom réel sur disque vs le nom lisible
+          const diskName = (attachment.path?.split(/[\/\\]/).pop()) || attachment.filename || '';
+          const displayName = attachment.originalName || attachment.filename || 'ملف مرفق';
+          
+          const ext = displayName?.split('.').pop()?.toLowerCase() || diskName?.split('.').pop()?.toLowerCase() || '';
           const isImage = attachment.mimetype?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
 
           if (isImage) {
             const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-            const imgSrc = `${apiBaseUrl}/api/messages/attachments/${attachment.filename}`;
+            const imgSrc = `${apiBaseUrl}/api/messages/attachments/${diskName}`;
 
             return (
               <div
@@ -74,7 +79,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                 <div className="relative w-full h-36 flex items-center justify-center bg-slate-100 rounded overflow-hidden">
                   <img
                     src={imgSrc}
-                    alt={attachment.filename || 'صورة مرفقة'}
+                    alt={displayName}
                     className="max-h-full max-w-full object-contain transition-transform duration-200 group-hover/img:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
@@ -100,8 +105,8 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
 
                 <div className="w-full flex items-center justify-between text-xs pt-1 border-t border-slate-100">
                   <div className="min-w-0 flex-1 pl-2">
-                    <p className="font-medium text-slate-800 truncate" title={attachment.filename}>
-                      {attachment.filename || 'صورة'}
+                    <p className="font-medium text-slate-800 truncate" title={displayName}>
+                      {displayName}
                     </p>
                     {attachment.size ? (
                       <p className="text-[10px] text-slate-400">
@@ -132,11 +137,11 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <div className="p-1.5 bg-slate-100 rounded flex-shrink-0">
-                  {getFileIcon(attachment.filename)}
+                  {getFileIcon(displayName)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-slate-800 truncate" title={attachment.filename}>
-                    {attachment.filename || 'ملف مرفق'}
+                  <p className="font-medium text-slate-800 truncate" title={displayName}>
+                    {displayName}
                   </p>
                   {attachment.size ? (
                     <p className="text-[10px] text-slate-400">
