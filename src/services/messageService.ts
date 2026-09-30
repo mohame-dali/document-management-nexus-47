@@ -158,3 +158,48 @@ export const getConversation = async (userId: string): Promise<Message[]> => {
     throw error;
   }
 };
+
+export const downloadAttachment = async (attachment: any, openInNewTab = false): Promise<void> => {
+  try {
+    let filename = '';
+    if (attachment.filename) {
+      filename = attachment.filename;
+    } else if (attachment.path) {
+      filename = attachment.path.split(/[\/\\]/).pop() || '';
+    } else if (attachment.url) {
+      filename = attachment.url.split(/[\/\\]/).pop() || '';
+    }
+
+    if (!filename) {
+      throw new Error('Nom de fichier manquant');
+    }
+
+    // Fetch the file with auth headers and arraybuffer/blob responseType
+    const response = await api.get(`/messages/attachments/${filename}`, {
+      responseType: 'blob',
+    });
+
+    const blob = new Blob([response.data], {
+      type: response.headers['content-type'] || 'application/octet-stream',
+    });
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    if (openInNewTab) {
+      window.open(blobUrl, '_blank');
+      // Revoke after delay to allow browser to open it
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } else {
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+    }
+  } catch (error) {
+    console.error('Error downloading attachment:', error);
+    throw error;
+  }
+};
+

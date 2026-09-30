@@ -1,6 +1,9 @@
-import React from 'react';
-import { Check, CheckCheck, Paperclip, Download, FileText, Image as ImageIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, CheckCheck, Download, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Message } from '@/types';
+import { downloadAttachment } from '@/services/messageService';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 export interface MessageBubbleProps {
   message: Message | any;
@@ -8,6 +11,8 @@ export interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
+  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
+
   const formatTime = (dateStr?: string | Date): string => {
     if (!dateStr) return '';
     try {
@@ -25,28 +30,17 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
     return `${(bytes / (1024 * 1024)).toFixed(1)} م.ب`;
   };
 
-  const handleDownloadAttachment = (e: React.MouseEvent, attachment: any) => {
+  const handleDownloadAttachment = async (e: React.MouseEvent, attachment: any, idx: number) => {
     e.stopPropagation();
-    let url = '';
-    if (attachment.url && attachment.url.startsWith('http')) {
-      url = attachment.url;
-    } else if (attachment.path) {
-      const filename = attachment.path.split(/[\/\\]/).pop();
-      const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-      url = `${apiBaseUrl}/api/messages/attachments/${filename}`;
-    } else if (attachment.filename) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-      url = `${apiBaseUrl}/api/messages/attachments/${attachment.filename}`;
+    try {
+      setDownloadingIdx(idx);
+      await downloadAttachment(attachment, false);
+    } catch (error) {
+      console.error('Erreur téléchargement pièce jointe:', error);
+      toast.error(getErrorMessage(error, 'تعذر تحميل الملف المرفق'));
+    } finally {
+      setDownloadingIdx(null);
     }
-
-    if (!url) return;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = attachment.filename || 'attachment';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const isRead = Array.isArray(message.recipients) && message.recipients.length > 0
@@ -75,11 +69,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
             {message.attachments.map((att: any, idx: number) => {
               const ext = att.filename?.split('.').pop()?.toLowerCase() || '';
               const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+              const isDownloading = downloadingIdx === idx;
 
               return (
                 <div
                   key={idx}
-                  onClick={(e) => handleDownloadAttachment(e, att)}
+                  onClick={(e) => handleDownloadAttachment(e, att, idx)}
                   className={`flex items-center justify-between gap-2 p-2 rounded cursor-pointer transition-colors text-xs ${
                     isOwn
                       ? 'bg-white/10 hover:bg-white/20 text-white'
@@ -102,7 +97,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
                       </span>
                     ) : null}
                   </div>
-                  <Download className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                  {isDownloading ? (
+                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin opacity-80" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                  )}
                 </div>
               );
             })}

@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Image, File, ExternalLink, Paperclip } from 'lucide-react';
+import { Download, FileText, Image, File, ExternalLink, Paperclip, Loader2 } from 'lucide-react';
 import { Message } from '@/types';
+import { downloadAttachment } from '@/services/messageService';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 interface AttachmentsListProps {
   attachments: Message['attachments'];
 }
 
 const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
+  const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
+
   const getFileIcon = (filename?: string) => {
     const extension = filename?.split('.').pop()?.toLowerCase();
     
@@ -27,42 +32,15 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} م.ب`;
   };
 
-  const getAttachmentUrl = (attachment: any): string => {
-    if (attachment.url && attachment.url.startsWith('http')) {
-      return attachment.url;
-    }
-    
-    if (attachment.path) {
-      const filename = attachment.path.split(/[\/\\]/).pop();
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      return `${apiBaseUrl}/api/messages/attachments/${filename}`;
-    }
-    
-    if (attachment.filename) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      return `${apiBaseUrl}/api/messages/attachments/${attachment.filename}`;
-    }
-    
-    return '';
-  };
-
-  const handleDownload = (attachment: any) => {
-    const url = getAttachmentUrl(attachment);
-    if (!url) return;
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = attachment.filename || 'attachment';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleOpen = (attachment: any) => {
-    const url = getAttachmentUrl(attachment);
-    if (url) {
-      window.open(url, '_blank');
+  const handleDownload = async (attachment: any, index: number, openInNewTab = false) => {
+    try {
+      setDownloadingIndex(index);
+      await downloadAttachment(attachment, openInNewTab);
+    } catch (error) {
+      console.error('Erreur téléchargement pièce jointe:', error);
+      toast.error(getErrorMessage(error, 'تعذر تحميل الملف المرفق'));
+    } finally {
+      setDownloadingIndex(null);
     }
   };
 
@@ -80,7 +58,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {attachments.map((attachment, index) => {
           if (!attachment) return null;
-          const url = getAttachmentUrl(attachment);
+          const isCurrentDownloading = downloadingIndex === index;
 
           return (
             <div 
@@ -107,23 +85,27 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleOpen(attachment)}
-                  disabled={!url}
+                  onClick={() => handleDownload(attachment, index, true)}
+                  disabled={isCurrentDownloading}
                   className="h-7 w-7 p-0 text-slate-600 hover:text-[#2c5282] hover:bg-blue-50 rounded"
-                  title="عرض المرفق"
+                  title="عرض المرفق في نافذة جديدة"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDownload(attachment)}
-                  disabled={!url}
+                  onClick={() => handleDownload(attachment, index, false)}
+                  disabled={isCurrentDownloading}
                   className="h-7 px-2 text-[11px] rounded border-[#FFCB56] text-[#78350f] bg-[#FFD758]/15 hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
-                  title="تحميل"
+                  title="تحميل المرفق"
                 >
-                  <Download className="h-3 w-3" />
-                  <span>تحميل</span>
+                  {isCurrentDownloading ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-[#78350f]" />
+                  ) : (
+                    <Download className="h-3 w-3" />
+                  )}
+                  <span>{isCurrentDownloading ? 'جاري التحميل...' : 'تحميل'}</span>
                 </Button>
               </div>
             </div>
