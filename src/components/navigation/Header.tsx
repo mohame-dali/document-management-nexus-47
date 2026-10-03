@@ -20,6 +20,7 @@ import { MessageSquare, User, Menu, LogOut, FileText, Shield, Users, Settings, N
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useSetupStatus } from '@/hooks/useSetupStatus';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -114,6 +115,9 @@ const Header = () => {
 
       {/* Actions & Profil à GAUCHE */}
       <div className="flex items-center gap-3 sm:gap-4">
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Activity Notifications Bell */}
         <NotificationBell />
 

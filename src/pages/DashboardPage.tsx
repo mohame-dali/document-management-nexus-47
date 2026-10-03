@@ -11,9 +11,11 @@ import StatsCards from '@/components/dashboard/StatsCards';
 import UserStatistics from '@/components/dashboard/UserStatistics';
 import AvailableFeatures from '@/components/dashboard/AvailableFeatures';
 import AuditSummary from '@/components/dashboard/AuditSummary';
+import { useDirection } from '@/i18n/useDirection';
 
 const DashboardPage = () => {
   const { currentUser } = useAuth();
+  const { dir } = useDirection();
   const currentYear = new Date().getFullYear().toString();
 
   // Fetch real data
@@ -83,7 +85,7 @@ const DashboardPage = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="min-h-screen bg-[#f7fafc]" dir="rtl">
+    <div className="min-h-screen bg-[#f7fafc]" dir={dir}>
       <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
         {/* Dashboard Header */}
         <DashboardHeader currentUser={currentUser} currentYear={currentYear} />

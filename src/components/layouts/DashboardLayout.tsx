@@ -9,10 +9,12 @@ import NotificationSystem from '../notifications/NotificationSystem';
 import ResponsibleNotificationOverlay from '../notifications/ResponsibleNotificationOverlay';
 import { Department } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDirection } from '@/i18n/useDirection';
 
 const DashboardLayout = () => {
   const { currentUser } = useAuth();
   const isMobile = useIsMobile();
+  const { dir } = useDirection();
 
   const getActiveDepartmentName = (): string => {
     if (!currentUser?.activeDepartment) return 'None';
@@ -32,7 +34,7 @@ const DashboardLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background" dir="rtl">
+      <div className="min-h-screen bg-background" dir={dir}>
         <div className="flex h-screen overflow-hidden">
           {/* Sidebar - Responsive behavior handled in SidebarProvider */}
           <Sidebar />

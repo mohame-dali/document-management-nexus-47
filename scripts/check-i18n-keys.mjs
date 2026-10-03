@@ -1,0 +1,11 @@
+import { readFileSync } from 'fs';
+const ar = JSON.parse(readFileSync('src/i18n/locales/ar.json', 'utf8'));
+const fr = JSON.parse(readFileSync('src/i18n/locales/fr.json', 'utf8'));
+const missing = Object.keys(ar).filter((k) => !(k in fr));
+const extra = Object.keys(fr).filter((k) => !(k in ar));
+const empty = Object.keys(fr).filter((k) => !String(fr[k]).trim());
+console.log(`ar: ${Object.keys(ar).length} | fr: ${Object.keys(fr).length}`);
+console.log('Manquantes dans fr:', missing);
+console.log('En trop dans fr:', extra);
+console.log('Vides dans fr:', empty);
+process.exit(missing.length || extra.length || empty.length ? 1 : 0);

@@ -12,6 +12,7 @@ import * as z from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 
 const formSchema = z.object({
   username: z.string().min(1, 'اسم المستخدم مطلوب'),
@@ -98,7 +99,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f7fafc] font-cairo" dir="rtl">
+    <div className="relative min-h-screen flex flex-col bg-[#f7fafc] font-cairo">
+      <div className="absolute top-4 end-4 z-50">
+        <LanguageSwitcher />
+      </div>
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link to="/" className="inline-flex items-center text-xs font-medium text-[#2c5282] hover:text-[#234269] transition-colors duration-200">
           <ArrowLeft className="h-4 w-4 ml-1.5" />
