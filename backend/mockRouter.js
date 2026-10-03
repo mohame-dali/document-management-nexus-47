@@ -153,6 +153,22 @@ router.delete('/departments/:id', requireAuth, (req, res) => {
 });
 
 // USERS
+router.get('/users/online', (req, res) => {
+  const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+  const onlineUsers = (mockDb.users || []).filter(u => {
+    return u.lastSeen && new Date(u.lastSeen) >= twoMinutesAgo && u.isActive !== false;
+  });
+  res.json({ success: true, data: onlineUsers.map(u => String(u._id)) });
+});
+
+router.post('/users/heartbeat', requireAuth, (req, res) => {
+  const user = mockDb.users.find(u => u._id === req.user._id);
+  if (user) {
+    user.lastSeen = new Date().toISOString();
+  }
+  res.json({ success: true });
+});
+
 router.get('/users', (req, res) => {
   const safeUsers = mockDb.users.map(u => mockDb.getSafeUser(u));
   res.json({ success: true, count: safeUsers.length, data: safeUsers });

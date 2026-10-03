@@ -5,6 +5,8 @@ import MessageInput from '@/components/messages/MessageInput';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getDateGroup } from '@/utils/relativeTime';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 
 export interface ConversationData {
   interlocutorId: string;
@@ -36,6 +38,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { isUserOnline } = useOnlineUsers();
 
   // Auto-scroll to bottom on conversation load or new message
   useEffect(() => {
@@ -100,7 +103,9 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
                 {interlocutorInitial}
               </AvatarFallback>
             </Avatar>
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+            {isUserOnline(conversation.interlocutorId) && (
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+            )}
           </div>
 
           {/* Interlocutor Info */}
@@ -108,9 +113,12 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
             <h3 className="text-sm font-bold text-[#1a202c] leading-tight">
               {conversation.interlocutorName}
             </h3>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-600 mt-0.5 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>متصل الآن</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <OnlineIndicator 
+                isOnline={isUserOnline(conversation.interlocutorId)} 
+                size="sm"
+                showLabel={true}
+              />
               {conversation.interlocutorDepartment && (
                 <span className="text-[11px] text-slate-400 font-normal mr-1">
                   • {conversation.interlocutorDepartment}

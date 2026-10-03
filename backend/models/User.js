@@ -55,6 +55,11 @@ const userSchema = new mongoose.Schema({
     ref: 'User'
   },
   // Soft delete
+  lastSeen: {
+    type: Date,
+    default: null,
+    index: true
+  },
   isDeleted: {
     type: Boolean,
     default: false,
