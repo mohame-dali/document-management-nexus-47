@@ -1,6 +1,14 @@
-import React from 'react';
-import { Check, CheckCheck, Paperclip, Download, FileText, Image as ImageIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { Message } from '@/types';
+import { deleteMessage } from '@/services/messageService';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessages';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import AttachmentsList from '@/components/messages/AttachmentsList';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 export interface MessageBubbleProps {
   message: Message | any;
@@ -8,6 +16,11 @@ export interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
+  const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const formatTime = (dateStr?: string | Date): string => {
     if (!dateStr) return '';
     try {
@@ -18,111 +31,97 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
     }
   };
 
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} بايت`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ك.ب`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} م.ب`;
-  };
-
-  const handleDownloadAttachment = (e: React.MouseEvent, attachment: any) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    let url = '';
-    if (attachment.url && attachment.url.startsWith('http')) {
-      url = attachment.url;
-    } else if (attachment.path) {
-      const filename = attachment.path.split(/[\/\\]/).pop();
-      const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-      url = `${apiBaseUrl}/api/messages/attachments/${filename}`;
-    } else if (attachment.filename) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-      url = `${apiBaseUrl}/api/messages/attachments/${attachment.filename}`;
+    if (!confirm(t('messages.confirmDeleteSingle'))) return;
+    setIsDeleting(true);
+    try {
+      await deleteMessage(message._id);
+      toast.success(`✅ ${t('messages.messageDeleted')}`);
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      queryClient.invalidateQueries({ queryKey: ['conversation'] });
+    } catch (error) {
+      toast.error(`❌ ${t('messages.deleteError')}`, { description: getErrorMessage(error) });
+    } finally {
+      setIsDeleting(false);
     }
-
-    if (!url) return;
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = attachment.filename || 'attachment';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
+
+  const currentUserId = currentUser?._id || (currentUser as any)?.id;
+  const isSender = typeof message.sender === 'object'
+    ? (message.sender?._id?.toString() === currentUserId?.toString())
+    : (message.sender?.toString() === currentUserId?.toString());
+
+  const isOwnMessage = isOwn || isSender;
 
   const isRead = Array.isArray(message.recipients) && message.recipients.length > 0
     ? message.recipients.every((r: any) => r.read)
     : false;
 
-  const hasAttachments = Array.isArray(message.attachments) && message.attachments.length > 0;
+  const sender = typeof message.sender === 'object' ? message.sender : null;
+  const senderPhoto = sender?.photo || sender?.avatar;
+  const senderInitial = (sender?.prenom?.[0] || sender?.nom?.[0] || sender?.username?.[0] || '?').toUpperCase();
 
   return (
-    <div className={`flex w-full my-1 ${isOwn ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex items-end gap-2 my-1 animate-fade-in ${isOwnMessage ? 'justify-start' : 'justify-end'}`}>
+      {/* Avatar (pour les messages reçus seulement, aligné en bas comme Messenger) */}
+      {!isOwnMessage && (
+        <Avatar className="w-8 h-8 shrink-0 ring-1 ring-slate-200">
+          <AvatarImage src={senderPhoto} alt={sender?.nom || t('messages.recipientFallback')} />
+          <AvatarFallback className="bg-slate-200 text-slate-700 text-xs font-semibold">
+            {senderInitial}
+          </AvatarFallback>
+        </Avatar>
+      )}
+
+      {/* Bulle style Messenger */}
       <div
-        className={`max-w-[70%] px-4 py-2.5 shadow-sm transition-all duration-200 ${
-          isOwn
-            ? 'bg-[#2c5282] text-white rounded-tr-none'
-            : 'bg-white text-[#1a202c] border border-[#e2e8f0] rounded-tl-none'
+        className={`group relative max-w-[70%] px-3.5 py-2 shadow-2xs transition-all duration-200 ${
+          isOwnMessage
+            ? 'bg-[#2c5282] text-white rounded-2xl rounded-tr-sm'
+            : 'bg-slate-100 text-[#1a202c] rounded-2xl rounded-tl-sm'
         }`}
       >
-        {/* Message Content */}
-        <p className="text-[15px] leading-relaxed whitespace-pre-wrap break-words select-text">
-          {message.content}
-        </p>
+        {/* Delete button (hover, w-6 h-6 rond rouge) */}
+        {isOwnMessage && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="absolute -top-2 -end-2 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md transition-opacity z-10 hover:bg-red-600"
+            title={t('messages.delete')}
+          >
+            {isDeleting ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Trash2 className="w-3 h-3" />
+            )}
+          </button>
+        )}
 
-        {/* Attachments (if any) */}
-        {hasAttachments && (
-          <div className="mt-2.5 pt-2 border-t border-white/20 space-y-1.5">
-            {message.attachments.map((att: any, idx: number) => {
-              const ext = att.filename?.split('.').pop()?.toLowerCase() || '';
-              const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+        {/* Contenu texte */}
+        {message.content && (
+          <p className="text-sm leading-relaxed break-words whitespace-pre-wrap select-text">
+            {message.content}
+          </p>
+        )}
 
-              return (
-                <div
-                  key={idx}
-                  onClick={(e) => handleDownloadAttachment(e, att)}
-                  className={`flex items-center justify-between gap-2 p-2 rounded cursor-pointer transition-colors text-xs ${
-                    isOwn
-                      ? 'bg-white/10 hover:bg-white/20 text-white'
-                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-[#e2e8f0]'
-                  }`}
-                  title="تحميل المرفق"
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    {isImage ? (
-                      <ImageIcon className="h-4 w-4 shrink-0 opacity-80" />
-                    ) : (
-                      <FileText className="h-4 w-4 shrink-0 opacity-80" />
-                    )}
-                    <span className="truncate max-w-[160px] font-medium" dir="ltr">
-                      {att.filename || `مرفق ${idx + 1}`}
-                    </span>
-                    {att.size ? (
-                      <span className="text-[11px] opacity-75 shrink-0">
-                        ({formatFileSize(att.size)})
-                      </span>
-                    ) : null}
-                  </div>
-                  <Download className="h-3.5 w-3.5 shrink-0 opacity-80" />
-                </div>
-              );
-            })}
+        {/* Pièces jointes (AttachmentsList) */}
+        {message.attachments?.length > 0 && (
+          <div className="mt-1.5">
+            <AttachmentsList attachments={message.attachments} />
           </div>
         )}
 
-        {/* Bubble Meta (Time + Status) */}
+        {/* Footer : heure + read receipt (✓ / ✓✓) */}
         <div
-          className={`flex items-center justify-end gap-1.5 mt-1 text-[11px] select-none ${
-            isOwn ? 'text-white/80' : 'text-slate-400'
+          className={`flex items-center justify-end gap-1 mt-0.5 select-none ${
+            isOwnMessage ? 'text-white/70' : 'text-slate-400'
           }`}
         >
-          <span>{formatTime(message.createdAt)}</span>
-          {isOwn && (
-            <span title={isRead ? 'تمت القراءة' : 'تم الإرسال'}>
-              {isRead ? (
-                <CheckCheck className="h-3.5 w-3.5 text-[#FFCB56]" />
-              ) : (
-                <Check className="h-3.5 w-3.5 text-white/70" />
-              )}
+          <span className="text-[10px]">{formatTime(message.createdAt)}</span>
+          {isOwnMessage && (
+            <span className="text-[10px] tracking-tighter" title={isRead ? t('messages.readStatus') : t('messages.sentStatus')}>
+              {isRead ? '✓✓' : '✓'}
             </span>
           )}
         </div>

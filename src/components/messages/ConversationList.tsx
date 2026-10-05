@@ -3,6 +3,7 @@ import { Search, MessageSquare, Shield, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import { ConversationData } from '@/components/messages/ConversationThread';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 export interface ConversationListProps {
   conversations: ConversationData[];
@@ -17,6 +18,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onSelect,
   loading = false,
 }) => {
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const formatConversationTime = (dateStr?: Date | string): string => {
@@ -25,10 +27,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       const d = new Date(dateStr);
       const now = new Date();
       const isToday = d.toDateString() === now.toDateString();
+      const locale = language === 'fr' ? 'fr-FR' : 'ar-TN';
       if (isToday) {
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
       }
-      return d.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
+      return d.toLocaleDateString(locale, { month: 'numeric', day: 'numeric' });
     } catch {
       return '';
     }
@@ -46,16 +49,16 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   });
 
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden select-none" dir="rtl">
+    <div className="h-full flex flex-col bg-white overflow-hidden select-none">
       {/* Search Header */}
       <div className="p-3 border-b border-[#e2e8f0] bg-white">
         <div className="relative">
-          <Search className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+          <Search className="absolute start-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="بحث في المحادثات أو الأسماء..."
+            placeholder={t('messages.searchConversationsOrNames')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-9 text-xs text-right pr-9 pl-3 border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-[#f7fafc]"
+            className="h-9 text-xs text-start ps-9 pe-3 border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-[#f7fafc]"
           />
         </div>
       </div>
@@ -65,16 +68,16 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         {loading ? (
           <div className="p-8 text-center text-slate-400 text-xs">
             <div className="animate-spin inline-block w-5 h-5 border-2 border-[#2c5282] border-t-transparent rounded-full mb-2" />
-            <p>جارٍ تحميل المحادثات...</p>
+            <p>{t('messages.loadingConversations')}</p>
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="p-8 text-center text-slate-500 text-xs flex flex-col items-center justify-center h-48">
             <MessageSquare className="h-8 w-8 text-slate-300 mb-2" />
             <p className="font-medium text-slate-700 mb-1">
-              {searchTerm ? 'لا توجد نتائج بحث مطابقة' : 'لا توجد محادثات حتى الآن'}
+              {searchTerm ? t('messages.noMatchingResults') : t('messages.noConversationsYet')}
             </p>
             <p className="text-slate-400">
-              {searchTerm ? 'جرب البحث بكلمات أخرى' : 'انقر على "رسالة جديدة" لبدء محادثة'}
+              {searchTerm ? t('messages.tryOtherSearch') : t('messages.clickNewMessageToStart')}
             </p>
           </div>
         ) : (
@@ -86,10 +89,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               <div
                 key={conv.interlocutorId}
                 onClick={() => onSelect(conv.interlocutorId)}
-                className={`min-h-[72px] p-3 flex items-start gap-3 cursor-pointer transition-colors duration-150 border-r-4 ${
+                className={`min-h-[72px] p-3 flex items-start gap-3 cursor-pointer transition-colors duration-150 border-s-4 ${
                   isSelected
-                    ? 'bg-[#ebf4ff] border-r-[#2c5282]'
-                    : 'border-r-transparent hover:bg-[#f7fafc]'
+                    ? 'bg-[#ebf4ff] border-s-[#2c5282]'
+                    : 'border-s-transparent hover:bg-[#f7fafc]'
                 }`}
               >
                 {/* Avatar */}
@@ -101,7 +104,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     className="w-10 h-10 ring-1 ring-slate-200"
                   />
                   {hasUnread && (
-                    <span className="absolute -top-1 -left-1 w-3 h-3 bg-[#FFCB56] border-2 border-white rounded-full" />
+                    <span className="absolute -top-1 -end-1 w-3 h-3 bg-[#FFCB56] border-2 border-white rounded-full" />
                   )}
                 </div>
 
@@ -133,7 +136,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                         hasUnread ? 'text-slate-900 font-medium' : 'text-slate-500'
                       }`}
                     >
-                      {conv.lastMessage || 'مرفق أو مستند'}
+                      {conv.lastMessage || t('messages.attachmentOrDoc')}
                     </p>
 
                     {hasUnread && (

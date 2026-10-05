@@ -83,7 +83,7 @@ const DashboardPage = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="min-h-screen bg-[#f7fafc]" dir="rtl">
+    <div className="min-h-screen bg-[#f7fafc]">
       <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
         {/* Dashboard Header */}
         <DashboardHeader currentUser={currentUser} currentYear={currentYear} />

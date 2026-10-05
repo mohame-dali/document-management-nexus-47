@@ -6,11 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { getDepartments } from '@/services/departmentService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { assignResponsible } from '@/services/documentService';
 import { getUsers } from '@/services/userService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { IncomingDocument, Department, User } from '@/types';
+import { getDistributableDepartments } from '@/utils/departmentDistributionFilter';
 
 interface DocumentAssignmentProps {
   document: IncomingDocument;
@@ -31,10 +33,19 @@ const DocumentAssignment: React.FC<DocumentAssignmentProps> = ({
     queryFn: getDepartments,
   });
 
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+  });
+
+  const distributableDepartments = React.useMemo(() => {
+    return getDistributableDepartments(departments, orgSettings);
+  }, [departments, orgSettings]);
+
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: getUsers,
-    enabled: currentUser?.role === 'SuperAdmin' || currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Admin'
+    enabled: currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Admin'
   });
 
   const assignDepartmentsMutation = useMutation({
@@ -93,7 +104,7 @@ const DocumentAssignment: React.FC<DocumentAssignmentProps> = ({
   };
 
   // Only AdminTuningDesk and Admin can assign documents
-  if (currentUser?.role !== 'SuperAdmin' && currentUser?.role !== 'AdminTuningDesk' && currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'AdminTuningDesk' && currentUser?.role !== 'Admin') {
     return null;
   }
 
@@ -131,7 +142,7 @@ const DocumentAssignment: React.FC<DocumentAssignmentProps> = ({
               <SelectValue placeholder="Select departments..." />
             </SelectTrigger>
             <SelectContent>
-              {departments?.map((dept: Department) => (
+              {distributableDepartments?.map((dept: Department) => (
                 <SelectItem key={dept._id} value={dept._id}>
                   {dept.name}
                 </SelectItem>

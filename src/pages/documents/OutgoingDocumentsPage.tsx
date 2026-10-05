@@ -87,6 +87,7 @@ import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 const OutgoingDocumentsPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -405,6 +406,19 @@ const OutgoingDocumentsPage: React.FC = () => {
       ) : part
     );
   };
+
+  // Loading view — Afficher un skeleton pendant le chargement initial
+  if (isLoading && isValidYear) {
+    return (
+      <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8" dir="rtl">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xs">
+            <TableSkeleton columns={7} rows={8} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8" dir="rtl">

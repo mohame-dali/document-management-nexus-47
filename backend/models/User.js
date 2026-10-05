@@ -55,6 +55,11 @@ const userSchema = new mongoose.Schema({
     ref: 'User'
   },
   // Soft delete
+  lastSeen: {
+    type: Date,
+    default: null,
+    index: true
+  },
   isDeleted: {
     type: Boolean,
     default: false,
@@ -70,9 +75,6 @@ const userSchema = new mongoose.Schema({
     default: null
   }
 });
-
-// Index
-userSchema.index({ isDeleted: 1 });
 
 // Check role-specific constraints before save
 userSchema.pre('save', function(next) {

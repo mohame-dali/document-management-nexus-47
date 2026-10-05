@@ -13,7 +13,7 @@ dotenv.config();
 
 const require = createRequire(import.meta.url);
 const connectDB = require('./backend/config/db');
-const mockRouter = require('./backend/mockRouter');
+// Mock router removed — MongoDB local only
 const errorHandler = require('./backend/middleware/error');
 
 // Set default JWT variables if not provided
@@ -21,8 +21,10 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'nexus47-super-secret-key-ai-
 process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 
-// Connect to database (with fallback)
-connectDB();
+// Connect to database (with fallback to mockRouter if offline)
+connectDB().catch((err: any) => {
+  console.warn('Database initialization warning:', err.message);
+});
 
 const app = express();
 const httpServer = createServer(app);
@@ -62,10 +64,14 @@ app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads
 app.use('/courrier', express.static(path.join(backendDir, 'courrier')));
 app.use('/uploads/templates', express.static(path.join(backendDir, 'uploads/templates')));
 
-// Check if MongoDB is connected; if not, route to mockRouter
+// Check if MongoDB is connected; if not, return 503 Service Unavailable
 app.use('/api', (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
-    return mockRouter(req, res, next);
+    return res.status(503).json({
+      success: false,
+      message: 'قاعدة البيانات غير متوفرة. يرجى تشغيل MongoDB.',
+      error: 'DATABASE_UNAVAILABLE'
+    });
   }
   next();
 });
@@ -98,12 +104,14 @@ try {
   app.use('/api/attendance', require('./backend/routes/attendanceRoutes'));
   app.use('/api/attendance', require('./backend/routes/attendanceDeclarationRoutes'));
   app.use('/api/hr/leave-reasons', require('./backend/routes/leaveReasonRoutes'));
+  app.use('/api/trash', require('./backend/routes/trashRoutes'));
+  app.use('/api/organization-chart', require('./backend/routes/organizationChartRoutes'));
 } catch (err: any) {
   console.warn('Notice loading backend routes:', err.message);
 }
 
 // Fallback to mockRouter for any unhandled /api endpoints
-app.use('/api', mockRouter);
+// app.use('/api', mockRouter);  // Mock disabled
 
 // Error handler middleware
 app.use(errorHandler);

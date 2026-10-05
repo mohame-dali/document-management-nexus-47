@@ -1,135 +1,173 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Download, FileText, Image as ImageIcon, File, ExternalLink, Paperclip, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Image, File, ExternalLink, Paperclip } from 'lucide-react';
 import { Message } from '@/types';
+import { downloadAttachment } from '@/services/messageService';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessages';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface AttachmentsListProps {
   attachments: Message['attachments'];
 }
 
 const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
-  const getFileIcon = (filename?: string) => {
-    const extension = filename?.split('.').pop()?.toLowerCase();
-    
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(extension || '')) {
-      return <Image className="h-4 w-4 text-[#2c5282]" />;
-    } else if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
-      return <FileText className="h-4 w-4 text-[#2c5282]" />;
-    } else {
-      return <File className="h-4 w-4 text-slate-500" />;
-    }
-  };
-
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} بايت`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ك.ب`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} م.ب`;
-  };
-
-  const getAttachmentUrl = (attachment: any): string => {
-    if (attachment.url && attachment.url.startsWith('http')) {
-      return attachment.url;
-    }
-    
-    if (attachment.path) {
-      const filename = attachment.path.split(/[\/\\]/).pop();
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      return `${apiBaseUrl}/api/messages/attachments/${filename}`;
-    }
-    
-    if (attachment.filename) {
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      return `${apiBaseUrl}/api/messages/attachments/${attachment.filename}`;
-    }
-    
-    return '';
-  };
-
-  const handleDownload = (attachment: any) => {
-    const url = getAttachmentUrl(attachment);
-    if (!url) return;
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = attachment.filename || 'attachment';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleOpen = (attachment: any) => {
-    const url = getAttachmentUrl(attachment);
-    if (url) {
-      window.open(url, '_blank');
-    }
-  };
+  const { t } = useLanguage();
+  const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
 
   if (!attachments || attachments.length === 0) {
     return null;
   }
 
+  const getFileIcon = (filename?: string) => {
+    const extension = filename?.split('.').pop()?.toLowerCase();
+    if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
+      return <FileText className="h-4 w-4 text-[#2c5282]" />;
+    }
+    return <File className="h-4 w-4 text-slate-500" />;
+  };
+
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} ${t('common.bytes')}`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ${t('common.kb')}`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} ${t('common.mb')}`;
+  };
+
+  const handleDownload = async (attachment: any, index: number, openInNewTab = false) => {
+    try {
+      setDownloadingIndex(index);
+      await downloadAttachment(attachment, openInNewTab);
+    } catch (error) {
+      console.error('Erreur téléchargement pièce jointe:', error);
+      toast.error(getErrorMessage(error, t('messages.attachmentLoadError')));
+    } finally {
+      setDownloadingIndex(null);
+    }
+  };
+
+  const isAttachmentImage = (att: any) => {
+    const name = att.originalName || att.filename || '';
+    const ext = name.split('.').pop()?.toLowerCase() || '';
+    return att.mimetype?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+  };
+
+  const imageAttachments = attachments.filter(isAttachmentImage);
+  const otherAttachments = attachments.filter(att => !isAttachmentImage(att));
+
+  const apiBaseUrl = import.meta.env.VITE_API_URL || '';
+
+  const getDiskName = (att: any) => {
+    return (att.path?.split(/[\/\\]/).pop()) || att.filename || '';
+  };
+
   return (
-    <div className="mt-4 pt-4 border-t border-[#e2e8f0]" dir="rtl">
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-2.5">
-        <Paperclip className="h-3.5 w-3.5 text-[#2c5282]" />
-        <span>المرفقات ({attachments.length})</span>
-      </div>
+    <div className="space-y-2 mt-1">
+      {/* 1. Images multiples (grid 2 colonnes style Messenger) */}
+      {imageAttachments.length > 1 && (
+        <div className="grid grid-cols-2 gap-1 rounded-xl overflow-hidden max-w-[240px]">
+          {imageAttachments.map((img, idx) => {
+            const diskName = getDiskName(img);
+            const imgSrc = `${apiBaseUrl}/api/messages/attachments/${diskName}`;
+            const displayName = img.originalName || img.filename || t('messages.imageAttachment');
+            return (
+              <div key={idx} className="relative group overflow-hidden bg-slate-200">
+                <img
+                  src={imgSrc}
+                  alt={displayName}
+                  className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => downloadAttachment(img, true)}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {attachments.map((attachment, index) => {
-          if (!attachment) return null;
-          const url = getAttachmentUrl(attachment);
+      {/* 2. Image seule (arrondie, max-w-[220px]) */}
+      {imageAttachments.length === 1 && (
+        <div className="rounded-xl overflow-hidden max-w-[220px] max-h-[220px] bg-slate-200 shadow-xs">
+          {(() => {
+            const img = imageAttachments[0];
+            const diskName = getDiskName(img);
+            const imgSrc = `${apiBaseUrl}/api/messages/attachments/${diskName}`;
+            const displayName = img.originalName || img.filename || t('messages.imageAttachment');
+            return (
+              <img
+                src={imgSrc}
+                alt={displayName}
+                className="w-full h-auto max-h-[220px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={() => downloadAttachment(img, true)}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            );
+          })()}
+        </div>
+      )}
 
-          return (
-            <div 
-              key={index} 
-              className="flex items-center justify-between p-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs transition-colors duration-200 hover:border-[#cbd5e1] hover:bg-white"
-            >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <div className="p-1.5 bg-slate-100 rounded flex-shrink-0">
-                  {getFileIcon(attachment.filename)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-slate-800 truncate" title={attachment.filename}>
-                    {attachment.filename || 'ملف مرفق'}
-                  </p>
-                  {attachment.size ? (
-                    <p className="text-[10px] text-slate-400">
-                      {formatFileSize(attachment.size)}
+      {/* 3. Documents (PDF, Word, etc.) */}
+      {otherAttachments.length > 0 && (
+        <div className="space-y-1.5 pt-1">
+          {otherAttachments.map((att, idx) => {
+            const globalIndex = attachments.indexOf(att);
+            const isCurrentDownloading = downloadingIndex === globalIndex;
+            const displayName = att.originalName || att.filename || t('messages.fileAttachment');
+
+            return (
+              <div
+                key={idx}
+                className="flex items-center justify-between p-2 bg-white/90 border border-slate-200/80 rounded-lg text-xs shadow-2xs gap-2"
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="p-1 bg-slate-100 rounded shrink-0">
+                    {getFileIcon(displayName)}
+                  </div>
+                  <div className="min-w-0 flex-1 text-start">
+                    <p className="font-medium text-slate-800 truncate" title={displayName}>
+                      {displayName}
                     </p>
-                  ) : null}
+                    {att.size ? (
+                      <p className="text-[10px] text-slate-400">
+                        {formatFileSize(att.size)}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(att, globalIndex, true)}
+                    disabled={isCurrentDownloading}
+                    className="p-1 text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
+                    title={t('common.view')}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(att, globalIndex, false)}
+                    disabled={isCurrentDownloading}
+                    className="p-1 text-[#2c5282] hover:bg-slate-100 rounded"
+                    title={t('common.download')}
+                  >
+                    {isCurrentDownloading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                 </div>
               </div>
-
-              <div className="flex items-center gap-1 flex-shrink-0 mr-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleOpen(attachment)}
-                  disabled={!url}
-                  className="h-7 w-7 p-0 text-slate-600 hover:text-[#2c5282] hover:bg-blue-50 rounded"
-                  title="عرض المرفق"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(attachment)}
-                  disabled={!url}
-                  className="h-7 px-2 text-[11px] rounded border-[#FFCB56] text-[#78350f] bg-[#FFD758]/15 hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1 font-medium"
-                  title="تحميل"
-                >
-                  <Download className="h-3 w-3" />
-                  <span>تحميل</span>
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

@@ -23,12 +23,14 @@ const messageSchema = new mongoose.Schema({
   }],
   subject: { 
     type: String, 
-    required: true, 
-    trim: true 
+    required: false, 
+    trim: true,
+    default: 'بدون عنوان'
   },
   content: { 
     type: String, 
-    required: true 
+    required: false,
+    default: ''
   },
   priority: {
     type: String,
@@ -36,8 +38,9 @@ const messageSchema = new mongoose.Schema({
     default: 'normal'
   },
   attachments: [{
-    filename: String,
-    path: String,
+    filename: String,        // nom réel sur disque (msg-xxx.ext)
+    originalName: String,    // nom original lisible (logo.webp)
+    path: String,            // chemin complet
     size: Number,
     mimetype: String
   }],

@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import { generateCarteInstruction } from '@/services/carteInstructionService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
+import { getDepartmentLabel } from '@/utils/departmentLabels';
 
 export const MyProfilePage: React.FC = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -95,6 +97,13 @@ export const MyProfilePage: React.FC = () => {
     retry: false,
   });
 
+  // 3. Récupération des paramètres d'organisation (pour mapper BO, Direction, RH en arabe)
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organizationSettings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 300000,
+  });
+
   // État de chargement
   if (isProfileLoading) {
     return (
@@ -147,6 +156,11 @@ export const MyProfilePage: React.FC = () => {
       ? (personnel.activeDepartment as Department)
       : null;
 
+  const departmentDisplayName = getDepartmentLabel(
+    departmentObj || personnel.activeDepartment,
+    orgSettings
+  );
+
   return (
     <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right" dir="rtl">
       {/* 1. En-tête : Nom + Prénom + badge de statut (lecture seule) */}
@@ -179,9 +193,9 @@ export const MyProfilePage: React.FC = () => {
                   الوظيفة: <strong className="text-gray-900">{personnel.poste}</strong>
                 </span>
               )}
-              {departmentObj && (
+              {departmentDisplayName && departmentDisplayName !== '—' && (
                 <span>
-                  القسم: <strong className="text-gray-900">{departmentObj.name}</strong>
+                  القسم: <strong className="text-gray-900">{departmentDisplayName}</strong>
                 </span>
               )}
             </div>
@@ -303,7 +317,7 @@ export const MyProfilePage: React.FC = () => {
               <span className="text-sm font-semibold text-gray-500 block">القسم الرئيسي</span>
               <span className="text-gray-800 flex items-center gap-1.5 mt-0.5">
                 <Building2 className="w-4 h-4 text-gray-400 shrink-0" />
-                <span>{departmentObj ? departmentObj.name : '—'}</span>
+                <span>{departmentDisplayName}</span>
               </span>
             </div>
 

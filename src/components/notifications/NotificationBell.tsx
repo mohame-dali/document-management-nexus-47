@@ -12,7 +12,7 @@ const NotificationBell: React.FC = () => {
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ['activityNotificationCount'],
     queryFn: getNotificationCount,
-    refetchInterval: 10000, // Refetch every 10 seconds for more responsive updates
+    refetchInterval: 60000, // Refetch every 60 seconds
     staleTime: 0,
   });
 
@@ -29,11 +29,12 @@ const NotificationBell: React.FC = () => {
           >
             <Bell className="h-5 w-5" />
             {notificationCount > 0 && (
-              <div className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white px-1 leading-none">
-                <span>
+              <span className="absolute -top-0.5 -end-0.5 flex h-[18px] min-w-[18px]">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white px-1 leading-none">
                   {notificationCount > 9 ? '9+' : notificationCount}
                 </span>
-              </div>
+              </span>
             )}
           </Button>
         </div>

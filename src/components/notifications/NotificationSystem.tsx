@@ -18,14 +18,14 @@ const NotificationSystem: React.FC = () => {
   const { data: notifications = [] } = useQuery({
     queryKey: ['activityNotifications'],
     queryFn: getActivityNotifications,
-    refetchInterval: 5000, // Check every 5 seconds
+    refetchInterval: 60000, // Check every 60 seconds
   });
 
   // Fetch unread message count
   const { data: messageCount } = useQuery({
     queryKey: ['unreadMessageCount'],
     queryFn: getUnreadCount,
-    refetchInterval: 5000,
+    refetchInterval: 60000,
   });
 
   // Check for new notifications and show instant pop-ups

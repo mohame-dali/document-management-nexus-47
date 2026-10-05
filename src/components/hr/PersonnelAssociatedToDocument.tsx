@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageProvider';
 import { DocumentType, DocumentPersonnelAssociation, Personnel } from '@/types/hr';
 import { 
   getPersonnelDuDocument, 
@@ -66,9 +67,10 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
   documentId,
 }) => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
 
-  const canManage = currentUser && ['SuperAdmin', 'Admin', 'AdminDepartment', 'AdminTuningDesk'].includes(currentUser.role);
+  const canManage = currentUser && ['Admin', 'AdminDepartment', 'AdminTuningDesk'].includes(currentUser.role);
 
   // States
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -121,8 +123,8 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
   // Add Mutation
   const addMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedPersonnel?._id) throw new Error('يرجى اختيار موظف للربط');
-      if (!typeAssociation.trim()) throw new Error('يرجى تحديد طبيعة الوثيقة / نوع الربط');
+      if (!selectedPersonnel?._id) throw new Error(t('documents.personnel.validation.selectPersonnel'));
+      if (!typeAssociation.trim()) throw new Error(t('documents.personnel.validation.selectType'));
       return await associerDocument(selectedPersonnel._id, {
         documentType,
         documentId,
@@ -131,7 +133,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
       });
     },
     onSuccess: () => {
-      toast.success('تم ربط الموظف بالوثيقة بنجاح');
+      toast.success(t('documents.personnel.toast.addSuccess'));
       queryClient.invalidateQueries({ queryKey: ['hr', 'documentPersonnel', documentType, documentId] });
       queryClient.invalidateQueries({ queryKey: ['hr', 'personnelDocuments'] });
       setIsAddOpen(false);
@@ -141,7 +143,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
       setCommentaire('');
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'فشل في ربط الموظف');
+      toast.error(err.message || t('documents.personnel.toast.addError'));
     },
   });
 
@@ -151,13 +153,13 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
       return await deleteAssociation(associationId);
     },
     onSuccess: () => {
-      toast.success('تم إلغاء ربط الموظف بنجاح');
+      toast.success(t('documents.personnel.toast.deleteSuccess'));
       queryClient.invalidateQueries({ queryKey: ['hr', 'documentPersonnel', documentType, documentId] });
       queryClient.invalidateQueries({ queryKey: ['hr', 'personnelDocuments'] });
       setDeletingAssoc(null);
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'فشل في إلغاء ربط الموظف');
+      toast.error(err.message || t('documents.personnel.toast.deleteError'));
     },
   });
 
@@ -171,18 +173,18 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
       });
     },
     onSuccess: () => {
-      toast.success('تم تعديل بيانات الربط بنجاح');
+      toast.success(t('documents.personnel.toast.editSuccess'));
       queryClient.invalidateQueries({ queryKey: ['hr', 'documentPersonnel', documentType, documentId] });
       queryClient.invalidateQueries({ queryKey: ['hr', 'personnelDocuments'] });
       setEditingAssoc(null);
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'فشل في تعديل بيانات الربط');
+      toast.error(err.message || t('documents.personnel.toast.editError'));
     },
   });
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-4" dir="rtl">
+    <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e2e8f0] pb-4">
         <div className="flex items-center gap-3">
@@ -192,14 +194,14 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-[#1a202c]">
-                الموظفون المرتبطون بهذه الوثيقة
+                {t('documents.personnel.title')}
               </h3>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1]">
                 {associations.length}
               </span>
             </div>
             <p className="text-xs text-gray-500">
-              ملفات الموارد البشرية ذات الصلة بهذه المراسلة (شواهد، تكوينات، قرارات)
+              {t('documents.personnel.subtitle')}
             </p>
           </div>
         </div>
@@ -217,7 +219,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
             className="h-11 px-4 bg-[#2c5282] hover:bg-[#1a365d] text-white font-bold text-xs rounded flex items-center gap-1.5 shadow-none"
           >
             <UserPlus className="w-4 h-4" />
-            <span>ربط موظف</span>
+            <span>{t('documents.personnel.addBtn')}</span>
           </Button>
         )}
       </div>
@@ -226,21 +228,21 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
       {isLoading ? (
         <div className="py-6 text-center text-gray-500 flex items-center justify-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin text-[#2c5282]" />
-          <span className="text-sm">جاري تحميل الموظفين المرتبطين...</span>
+          <span className="text-sm">{t('documents.personnel.loading')}</span>
         </div>
       ) : isError && !isForbidden ? (
         <div className="p-3 rounded bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error instanceof Error ? error.message : 'فشل في تحميل الموظفين المرتبطين'}</span>
+          <span>{error instanceof Error ? error.message : t('documents.personnel.loadError')}</span>
         </div>
       ) : associations.length === 0 ? (
         <div className="bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded p-6 text-center space-y-2">
           <Users className="w-8 h-8 text-gray-400 mx-auto" />
           <p className="text-sm font-semibold text-gray-700">
-            لم يتم ربط أي موظف بهذه الوثيقة بعد
+            {t('documents.personnel.empty.title')}
           </p>
           <p className="text-xs text-gray-500 max-w-md mx-auto">
-            يمكن ربط هذه المراسلة بملف موظف لتسجيل شهادة تدريب، دورة تكوينية، أو قرار إداري في سجله الوظيفي.
+            {t('documents.personnel.empty.description')}
           </p>
           {canManage && (
             <Button
@@ -250,8 +252,8 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
               onClick={() => setIsAddOpen(true)}
               className="mt-2 h-11 px-4 border-[#2c5282] text-[#2c5282] hover:bg-[#ebf4ff] font-bold text-xs rounded"
             >
-              <UserPlus className="w-3.5 h-3.5 ml-1" />
-              <span>ربط موظف الآن</span>
+              <UserPlus className="w-3.5 h-3.5 me-1" />
+              <span>{t('documents.personnel.empty.action')}</span>
             </Button>
           )}
         </div>
@@ -259,7 +261,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {associations.map((assoc) => {
             const p = assoc.personnel;
-            const personnelName = p ? `${p.nom || ''} ${p.prenom || ''}`.trim() : 'موظف غير معرف';
+            const personnelName = p ? `${p.nom || ''} ${p.prenom || ''}`.trim() : t('documents.personnel.unknownPersonnel');
 
             return (
               <div
@@ -306,7 +308,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-2 mt-1 text-[11px] text-gray-500">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-gray-400" />
-                    <span>تاريخ الربط: {formatArabicDate(assoc.dateAssociation)}</span>
+                    <span>{t('documents.personnel.associationDate', { date: formatArabicDate(assoc.dateAssociation) })}</span>
                   </span>
 
                   {canManage && (
@@ -320,9 +322,9 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                           setTypeAssociation(assoc.typeAssociation);
                           setCommentaire(assoc.commentaire || '');
                         }}
-                        aria-label="تعديل الربط"
+                        aria-label={t('documents.personnel.editAria')}
                         className="h-11 w-11 text-gray-500 hover:text-[#2c5282] rounded"
-                        title="تعديل الربط"
+                        title={t('documents.personnel.editAria')}
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </Button>
@@ -332,9 +334,9 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeletingAssoc(assoc)}
-                        aria-label="إلغاء الربط"
+                        aria-label={t('documents.personnel.deleteAria')}
                         className="h-11 w-11 text-gray-400 hover:text-red-600 rounded"
-                        title="إلغاء الربط"
+                        title={t('documents.personnel.deleteAria')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -349,14 +351,14 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
 
       {/* Add Dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto p-6 bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
-          <DialogHeader className="text-right space-y-1 border-b border-[#e2e8f0] pb-3">
+        <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto p-6 bg-white text-start border border-[#e2e8f0] shadow-sm">
+          <DialogHeader className="text-start space-y-1 border-b border-[#e2e8f0] pb-3">
             <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
               <UserPlus className="w-5 h-5 text-[#2c5282]" />
-              <span>ربط موظف بالوثيقة الحالية</span>
+              <span>{t('documents.personnel.dialog.addTitle')}</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500">
-              اختر الموظف وحدد طبيعة المراسلة لإدراجها تلقائياً في ملفه الإداري
+              {t('documents.personnel.dialog.addDescription')}
             </DialogDescription>
           </DialogHeader>
 
@@ -370,7 +372,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
             {/* Candidate Selection */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-700 block">
-                1. اختيار الموظف <span className="text-red-500">*</span>
+                {t('documents.personnel.dialog.step1')} <span className="text-red-500">*</span>
               </Label>
 
               {selectedPersonnel ? (
@@ -381,7 +383,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                       <span>{selectedPersonnel.nom} {selectedPersonnel.prenom}</span>
                     </div>
                     <div className="text-xs text-gray-600 mt-0.5">
-                      {selectedPersonnel.poste || 'بدون منصب'} {selectedPersonnel.cin ? `• CIN: ${selectedPersonnel.cin}` : ''}
+                      {selectedPersonnel.poste || t('documents.personnel.noPoste')} {selectedPersonnel.cin ? `• CIN: ${selectedPersonnel.cin}` : ''}
                     </div>
                   </div>
 
@@ -392,31 +394,31 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                     onClick={() => setSelectedPersonnel(null)}
                     className="border-[#cbd5e1] text-red-600 hover:bg-red-50 h-11 px-3 text-xs"
                   >
-                    <X className="w-3.5 h-3.5 ml-1" />
-                    تغيير
+                    <X className="w-3.5 h-3.5 me-1" />
+                    {t('documents.personnel.dialog.changeCandidate')}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-2 border border-[#e2e8f0] rounded p-3 bg-[#f8fafc]">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-gray-400 absolute right-3 top-3.5" />
+                    <Search className="w-4 h-4 text-gray-400 absolute start-3 top-3.5" />
                     <Input
                       type="text"
                       value={personnelSearch}
                       onChange={(e) => setPersonnelSearch(e.target.value)}
-                      placeholder="ابحث بالاسم أو بطاقة الهوية CIN..."
-                      className="pr-9 h-11 bg-white border-[#cbd5e1] text-sm"
+                      placeholder={t('documents.personnel.dialog.searchPlaceholder')}
+                      className="ps-9 h-11 bg-white border-[#cbd5e1] text-sm"
                     />
                   </div>
 
                   <div className="max-h-44 overflow-y-auto space-y-1 pt-1">
                     {loadingCandidates ? (
                       <div className="py-4 text-center text-xs text-gray-500">
-                        جاري تحميل قائمة الموظفين...
+                        {t('documents.personnel.dialog.loadingCandidates')}
                       </div>
                     ) : eligibleCandidates.length === 0 ? (
                       <div className="py-4 text-center text-xs text-gray-500">
-                        لا يوجد موظف مطابق للبحث أو أن جميعهم مرتبطون بالوثيقة
+                        {t('documents.personnel.dialog.noCandidatesFound')}
                       </div>
                     ) : (
                       eligibleCandidates.map((p) => (
@@ -424,18 +426,18 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                           type="button"
                           key={p._id}
                           onClick={() => setSelectedPersonnel(p)}
-                          className="w-full text-right p-2 rounded bg-white hover:bg-[#ebf4ff] border border-[#e2e8f0] hover:border-[#2c5282] transition-colors flex items-center justify-between gap-2 group min-h-[48px]"
+                          className="w-full text-start p-2 rounded bg-white hover:bg-[#ebf4ff] border border-[#e2e8f0] hover:border-[#2c5282] transition-colors flex items-center justify-between gap-2 group min-h-[48px]"
                         >
                           <div>
                             <div className="text-sm font-bold text-gray-900 group-hover:text-[#2c5282]">
                               {p.nom} {p.prenom}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {p.poste || 'بدون منصب'} {p.cin ? `(${p.cin})` : ''}
+                              {p.poste || t('documents.personnel.noPoste')} {p.cin ? `(${p.cin})` : ''}
                             </div>
                           </div>
                           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-700 group-hover:bg-[#2c5282] group-hover:text-white">
-                            تحديد
+                            {t('documents.personnel.dialog.selectCandidate')}
                           </span>
                         </button>
                       ))
@@ -446,9 +448,9 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
             </div>
 
             {/* Association Type */}
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-start">
               <Label htmlFor="doc-type-association" className="text-sm font-semibold text-gray-700">
-                2. طبيعة الوثيقة / نوع الربط <span className="text-red-500">*</span>
+                {t('documents.personnel.dialog.step2')} <span className="text-red-500">*</span>
               </Label>
               <select
                 id="doc-type-association"
@@ -457,25 +459,25 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 className="w-full h-11 px-3 bg-white border border-[#cbd5e1] rounded text-base text-[#1a202c] focus:outline-none focus:border-[#2c5282]"
                 required
               >
-                <option value="">-- اختر طبيعة الوثيقة --</option>
-                {typesList.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                <option value="">{t('documents.personnel.dialog.selectTypePlaceholder')}</option>
+                {typesList.map((tVal) => (
+                  <option key={tVal} value={tVal}>
+                    {tVal}
                   </option>
                 ))}
               </select>
             </div>
 
             {/* Comment */}
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-start">
               <Label htmlFor="doc-commentaire" className="text-sm font-semibold text-gray-700">
-                3. ملاحظات إضافية (اختياري)
+                {t('documents.personnel.dialog.step3')}
               </Label>
               <Textarea
                 id="doc-commentaire"
                 value={commentaire}
                 onChange={(e) => setCommentaire(e.target.value)}
-                placeholder="تفاصيل تكميلية عن هذه الوثيقة..."
+                placeholder={t('documents.personnel.dialog.commentPlaceholder')}
                 rows={2}
                 className="border-[#cbd5e1] text-sm"
               />
@@ -487,7 +489,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 disabled={addMutation.isPending || !selectedPersonnel || !typeAssociation}
                 className="h-11 px-5 bg-[#2c5282] hover:bg-[#1a365d] text-white font-bold text-sm rounded shadow-none"
               >
-                {addMutation.isPending ? 'جاري الربط...' : 'تأكيد ربط الموظف'}
+                {addMutation.isPending ? t('documents.personnel.dialog.submittingAdd') : t('documents.personnel.dialog.confirmAdd')}
               </Button>
               <Button
                 type="button"
@@ -495,7 +497,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 onClick={() => setIsAddOpen(false)}
                 className="h-11 px-4 border-[#cbd5e1] text-gray-700 hover:bg-gray-50 text-sm rounded"
               >
-                إلغاء
+                {t('documents.personnel.dialog.cancel')}
               </Button>
             </DialogFooter>
           </form>
@@ -509,10 +511,10 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
           if (!open) setEditingAssoc(null);
         }}
       >
-        <DialogContent className="sm:max-w-[500px] p-6 bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
-          <DialogHeader className="text-right space-y-1 border-b border-[#e2e8f0] pb-3">
+        <DialogContent className="sm:max-w-[500px] p-6 bg-white text-start border border-[#e2e8f0] shadow-sm">
+          <DialogHeader className="text-start space-y-1 border-b border-[#e2e8f0] pb-3">
             <DialogTitle className="text-lg font-bold text-[#1a202c]">
-              تعديل بيانات الربط
+              {t('documents.personnel.dialog.editTitle')}
             </DialogTitle>
           </DialogHeader>
 
@@ -523,9 +525,9 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
             }}
             className="space-y-4 pt-2"
           >
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-start">
               <Label className="text-sm font-semibold text-gray-700">
-                طبيعة الوثيقة / نوع الربط <span className="text-red-500">*</span>
+                {t('documents.personnel.dialog.editTypeLabel')} <span className="text-red-500">*</span>
               </Label>
               <select
                 value={typeAssociation}
@@ -533,18 +535,18 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 className="w-full h-11 px-3 bg-white border border-[#cbd5e1] rounded text-base text-[#1a202c]"
                 required
               >
-                <option value="">-- اختر طبيعة الوثيقة --</option>
-                {typesList.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                <option value="">{t('documents.personnel.dialog.selectTypePlaceholder')}</option>
+                {typesList.map((tVal) => (
+                  <option key={tVal} value={tVal}>
+                    {tVal}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="space-y-1.5 text-right">
+            <div className="space-y-1.5 text-start">
               <Label className="text-sm font-semibold text-gray-700">
-                ملاحظات أو تفاصيل إضافية
+                {t('documents.personnel.dialog.editCommentLabel')}
               </Label>
               <Textarea
                 value={commentaire}
@@ -560,7 +562,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 disabled={editMutation.isPending}
                 className="h-11 px-5 bg-[#2c5282] hover:bg-[#1a365d] text-white font-bold text-sm rounded shadow-none"
               >
-                {editMutation.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+                {editMutation.isPending ? t('documents.personnel.dialog.submittingEdit') : t('documents.personnel.dialog.confirmEdit')}
               </Button>
               <Button
                 type="button"
@@ -568,7 +570,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 onClick={() => setEditingAssoc(null)}
                 className="h-11 px-4 border-[#cbd5e1] text-gray-700 text-sm rounded"
               >
-                إلغاء
+                {t('documents.personnel.dialog.cancel')}
               </Button>
             </DialogFooter>
           </form>
@@ -582,14 +584,14 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
           if (!open) setDeletingAssoc(null);
         }}
       >
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[500px] p-6 rounded bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
-          <AlertDialogHeader className="text-right">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[500px] p-6 rounded bg-white text-start border border-[#e2e8f0] shadow-sm">
+          <AlertDialogHeader className="text-start">
             <AlertDialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-red-600" />
-              <span>تأكيد فك ارتباط الموظف بهذه الوثيقة</span>
+              <span>{t('documents.personnel.dialog.deleteConfirmTitle')}</span>
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-gray-600 pt-2">
-              هل أنت متأكد من رغبتك في إزالة هذا الموظف من سجل الوثيقة؟ لن يتم حذف أي بيانات أو وثائق من المنظومة.
+              {t('documents.personnel.dialog.deleteConfirmDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2 sm:justify-start pt-3 border-t border-[#e2e8f0]">
@@ -600,13 +602,13 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
               disabled={deleteMutation.isPending}
               className="bg-red-600 hover:bg-red-700 text-white font-bold text-base px-5 h-11 rounded"
             >
-              {deleteMutation.isPending ? 'جاري الإلغاء...' : 'نعم، إزالة الارتباط'}
+              {deleteMutation.isPending ? t('documents.personnel.dialog.deletingAction') : t('documents.personnel.dialog.confirmDelete')}
             </AlertDialogAction>
             <AlertDialogCancel
               disabled={deleteMutation.isPending}
               className="border-[#cbd5e1] text-gray-700 hover:bg-gray-50 text-base px-5 h-11 rounded"
             >
-              تراجع
+              {t('documents.personnel.dialog.back')}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>

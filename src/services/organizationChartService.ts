@@ -4,24 +4,33 @@ export interface ChartPersonnel {
   _id: string;
   nom: string;
   prenom: string;
-  poste: string;
-  photo: string;
+  poste?: string;
+  photo?: string;
+  cin?: string;
 }
 
 export interface ChartDepartment {
   _id: string;
   name: string;
-  description: string;
-  isFunctional: boolean;
-  unitType: 'bureau_directeur' | 'bureau_ordre' | 'rh' | null;
+  unitType: 'bureau_ordre' | 'rh' | 'service';
+  totalPersonnel: number;
   personnel: ChartPersonnel[];
 }
 
+export interface Director {
+  _id: string;
+  nom: string;
+  prenom: string;
+  poste?: string;
+  photo?: string;
+  cin?: string;
+}
+
 export interface OrganizationChartData {
-  administration: {
-    name: string;
-    departments: ChartDepartment[];
-  };
+  administration: { name: string };
+  director: Director | null;
+  regalienDepartments: ChartDepartment[];
+  operationalDepartments: ChartDepartment[];
 }
 
 export const getOrganizationChart = async (): Promise<OrganizationChartData> => {

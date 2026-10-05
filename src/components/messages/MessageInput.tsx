@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, File as FileIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useRef } from 'react';
+import { Plus, Smile, Send, ThumbsUp, X, File as FileIcon, Image as ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 export interface MessageInputProps {
   onSend: (content: string, files: File[]) => void;
@@ -8,24 +9,33 @@ export interface MessageInputProps {
   placeholder?: string;
 }
 
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+];
+
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+
+const MAX_SIZE_MB = 10;
+const MAX_FILES = 3;
+
 export const MessageInput: React.FC<MessageInputProps> = ({
   onSend,
   disabled = false,
-  placeholder = 'اكتب رسالة...',
+  placeholder = 'Aa',
 }) => {
+  const { t } = useLanguage();
   const [content, setContent] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Auto-resize textarea up to max 5 lines (approx 120px)
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = `${Math.min(Math.max(scrollHeight, 42), 120)}px`;
-    }
-  }, [content]);
 
   const handleSend = () => {
     const trimmed = content.trim();
@@ -37,23 +47,46 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    if (textareaRef.current) {
-      textareaRef.current.style.height = '42px';
-      textareaRef.current.focus();
-    }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  const handleThumbsUp = () => {
+    if (disabled) return;
+    onSend('👍', []);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    if (selectedFiles.length + files.length > MAX_FILES) {
+      toast.error(t('messages.maxFilesError', { max: MAX_FILES }));
+      return;
+    }
+
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      // 10 MB limit
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        toast.error(t('messages.fileTooLargeError', { name: file.name, maxSize: MAX_SIZE_MB }));
+        continue;
+      }
+
+      // Format validation
+      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+      const isValidExt = ALLOWED_EXTENSIONS.includes(ext);
+      const isValidMime = ALLOWED_TYPES.includes(file.type) || file.type.startsWith('image/');
+
+      if (!isValidExt && !isValidMime) {
+        toast.error(t('messages.unsupportedFileFormat', { name: file.name }));
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...validFiles].slice(0, MAX_FILES));
     }
   };
 
@@ -61,81 +94,124 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const hasContentToSend = content.trim().length > 0 || selectedFiles.length > 0;
+
   return (
-    <div className="border-t border-[#e2e8f0] bg-white p-3 sm:p-4">
-      {/* File Previews if attached */}
+    <div className="border-t border-slate-200 bg-white px-4 py-3">
+      {/* File input caché */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        multiple
+        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+        className="hidden"
+      />
+
+      {/* Preview des fichiers sélectionnés */}
       {selectedFiles.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2 pb-2 border-b border-slate-100">
-          {selectedFiles.map((file, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs text-slate-700"
-            >
-              <FileIcon className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
-              <span className="truncate max-w-[140px] font-medium" dir="ltr">
-                {file.name}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleRemoveFile(idx)}
-                className="text-slate-400 hover:text-red-500 transition-colors p-0.5"
-                title="إزالة الملف"
+        <div className="flex flex-wrap gap-2 mb-2 p-2 bg-slate-50 border border-slate-200/80 rounded-lg">
+          {selectedFiles.map((file, idx) => {
+            const isImg = file.type.startsWith('image/');
+            return (
+              <div
+                key={idx}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-slate-200 rounded-full text-xs text-slate-700 shadow-2xs"
               >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+                {isImg ? (
+                  <ImageIcon className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
+                ) : (
+                  <FileIcon className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
+                )}
+                <span className="truncate max-w-[130px] font-medium" dir="ltr">
+                  {file.name}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  ({(file.size / 1024).toFixed(0)} {t('common.kb')})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(idx)}
+                  className="text-slate-400 hover:text-red-500 transition-colors p-0.5 rounded-full"
+                  title={t('common.remove')}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Input Row */}
-      <div className="flex items-end gap-2">
-        {/* Attachment Button */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          multiple
-          className="hidden"
-        />
-        <Button
+      {/* Barre principale Messenger */}
+      <div className="flex items-center gap-2">
+        {/* Bouton + (Pièce jointe) */}
+        <button
           type="button"
-          variant="ghost"
-          size="icon"
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
-          aria-label="إرفاق ملف"
-          className="h-11 w-11 shrink-0 text-slate-500 hover:text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors"
-          title="إرفاق ملف"
+          disabled={disabled || selectedFiles.length >= MAX_FILES}
+          className="p-2 text-[#2c5282] hover:bg-slate-100 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          title={t('messages.attachFileCount', { current: selectedFiles.length, max: MAX_FILES })}
         >
-          <Paperclip className="h-5 w-5" />
-        </Button>
+          <Plus className="w-5 h-5" />
+        </button>
 
-        {/* Text Area */}
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled}
-          rows={1}
-          className="flex-1 resize-none overflow-y-auto px-4 py-2.5 text-[15px] bg-white text-slate-900 border border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded outline-none transition-all placeholder:text-slate-400 min-h-[42px] max-h-[120px]"
-          dir="rtl"
-        />
+        {/* Input capsule Messenger */}
+        <div className="flex-1 flex items-center bg-slate-100 rounded-full px-4 py-2 focus-within:ring-2 focus-within:ring-[#2c5282]/30 focus-within:bg-white border border-transparent focus-within:border-[#2c5282]/40 transition-all">
+          <input
+            type="text"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            disabled={disabled}
+            className="flex-1 bg-transparent border-none outline-none text-sm text-[#1a202c] placeholder:text-slate-400"
+          />
+          <button
+            type="button"
+            onClick={() => setContent((prev) => prev + ' 😊')}
+            className="me-2 text-[#2c5282] hover:opacity-80 transition-opacity p-0.5"
+            title={t('messages.addEmoji')}
+          >
+            <Smile className="w-5 h-5" />
+          </button>
+        </div>
 
-        {/* Send Button */}
-        <Button
-          type="button"
-          onClick={handleSend}
-          disabled={disabled || (!content.trim() && selectedFiles.length === 0)}
-          aria-label="إرسال الرسالة"
-          className="h-11 w-11 shrink-0 rounded bg-[#2c5282] hover:bg-[#234269] text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center shadow-xs"
-          title="إرسال (Enter)"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+        {/* Bouton Envoyer OU ThumbsUp */}
+        {hasContentToSend ? (
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={disabled}
+            className="p-2 text-[#2c5282] hover:bg-slate-100 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            title={t('messages.send')}
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleThumbsUp}
+            disabled={disabled}
+            className="p-2 text-[#2c5282] hover:bg-slate-100 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            title={t('messages.like')}
+          >
+            <ThumbsUp className="w-5 h-5" />
+          </button>
+        )}
       </div>
+
+      {/* Mention quota */}
+      <p className="text-[10px] text-slate-400 text-center mt-1 select-none">
+        {t('messages.attachmentsHint')}
+      </p>
     </div>
   );
 };

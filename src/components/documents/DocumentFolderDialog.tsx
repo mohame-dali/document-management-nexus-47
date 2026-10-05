@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import DocumentFolderAssignment from '@/components/folders/DocumentFolderAssignment';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageProvider';
 import { Badge } from '@/components/ui/badge';
 import { FolderOpen, Lock, Eye, Users, FileText, Calendar } from 'lucide-react';
 
@@ -23,6 +24,7 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
   readOnly = false
 }) => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   
   const handleAssignmentUpdate = () => {
     onOpenChange(false);
@@ -43,37 +45,37 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
     switch (currentUser?.role) {
       case 'AdminDepartment':
         return {
-          title: 'تنظيم المستند في مجلد',
-          subtitle: 'يمكنك تنظيم المستند في المجلدات أو نقله بين المجلدات',
+          title: t('folders.dialog.roles.adminDepartment.title'),
+          subtitle: t('folders.dialog.roles.adminDepartment.subtitle'),
           icon: FolderOpen,
-          badge: { text: 'إدارة كاملة', variant: 'default' as const, icon: Users },
+          badge: { text: t('folders.dialog.roles.adminDepartment.badge'), variant: 'default' as const, icon: Users },
           iconBg: 'bg-[#2c5282] text-white',
           accentColor: 'border-[#2c5282]'
         };
       case 'AdminTuningDesk':
         return {
-          title: 'عرض تصنيف المستند',
-          subtitle: 'يمكنك عرض تصنيف المستند في المجلدات فقط',
+          title: t('folders.dialog.roles.adminTuningDesk.title'),
+          subtitle: t('folders.dialog.roles.adminTuningDesk.subtitle'),
           icon: Eye,
-          badge: { text: 'مراقبة التصنيف', variant: 'secondary' as const, icon: Eye },
+          badge: { text: t('folders.dialog.roles.adminTuningDesk.badge'), variant: 'secondary' as const, icon: Eye },
           iconBg: 'bg-[#d97706] text-white',
           accentColor: 'border-amber-500'
         };
       case 'User':
         return {
-          title: 'عرض تصنيف المستند',
-          subtitle: 'يمكنك عرض تصنيف المستند في قسمك',
+          title: t('folders.dialog.roles.user.title'),
+          subtitle: t('folders.dialog.roles.user.subtitle'),
           icon: Eye,
-          badge: { text: 'للعرض فقط', variant: 'secondary' as const, icon: Lock },
+          badge: { text: t('folders.dialog.roles.user.badge'), variant: 'secondary' as const, icon: Lock },
           iconBg: 'bg-[#4a5568] text-white',
           accentColor: 'border-gray-500'
         };
       default:
         return {
-          title: 'إدارة تصنيف المستند',
-          subtitle: 'إدارة شاملة لتصنيف المستند',
+          title: t('folders.dialog.roles.default.title'),
+          subtitle: t('folders.dialog.roles.default.subtitle'),
           icon: FolderOpen,
-          badge: { text: 'إدارة شاملة', variant: 'default' as const, icon: Users },
+          badge: { text: t('folders.dialog.roles.default.badge'), variant: 'default' as const, icon: Users },
           iconBg: 'bg-[#2c5282] text-white',
           accentColor: 'border-[#2c5282]'
         };
@@ -84,8 +86,8 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[960px] md:max-w-[1000px] max-h-[90vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
-        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] space-y-3 text-right">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[960px] md:max-w-[1000px] max-h-[90vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] space-y-3 text-start">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
@@ -117,13 +119,13 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base font-semibold text-gray-700">موضوع المستند:</span>
+                <span className="text-base font-semibold text-gray-700">{t('folders.dialog.documentSubject')}</span>
                 <span className={`px-2.5 py-0.5 rounded text-sm font-semibold border ${
                   documentType === 'incoming'
                     ? 'bg-blue-50 text-[#2c5282] border-blue-200'
                     : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 }`}>
-                  {documentType === 'incoming' ? 'وارد' : 'صادر'}
+                  {documentType === 'incoming' ? t('folders.dialog.incoming') : t('folders.dialog.outgoing')}
                 </span>
               </div>
               <p className="text-base text-[#1a202c] font-medium leading-relaxed">
@@ -151,11 +153,11 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
           <div className="flex items-center justify-between text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-500" />
-              <span>آخر تحديث: اليوم</span>
+              <span>{t('folders.dialog.lastUpdate')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
-              <span className="font-medium text-emerald-700">متصل بالخادم</span>
+              <span className="font-medium text-emerald-700">{t('folders.dialog.serverConnected')}</span>
             </div>
           </div>
         </div>

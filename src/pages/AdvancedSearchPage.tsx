@@ -4,9 +4,11 @@ import AdvancedSearch, { SearchFilters } from '@/components/search/AdvancedSearc
 import SearchResults from '@/components/search/SearchResults';
 import { Search, Building2 } from 'lucide-react';
 import { useInfiniteSearch } from '@/hooks/useInfiniteSearch';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 const AdvancedSearchPage: React.FC = () => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
   const [searchPerformed, setSearchPerformed] = useState(false);
 
@@ -35,7 +37,7 @@ const AdvancedSearchPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Institutional AdminLTE Page Header */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3.5">
@@ -44,10 +46,10 @@ const AdvancedSearchPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal flex items-center gap-2.5">
-              البحث المتقدم في المراسلات
+              {t('search.pageTitle')}
             </h1>
             <p className="text-sm sm:text-base text-[#4a5568] leading-normal mt-1">
-              محرك استعلام إداري متقدم للبحث في نصوص وفهارس المراسلات الواردة والصادرة والنصوص المقروءة آلياً (OCR)
+              {t('search.pageSubtitle')}
             </p>
           </div>
         </div>

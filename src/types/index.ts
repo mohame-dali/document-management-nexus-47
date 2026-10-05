@@ -107,6 +107,7 @@ export interface Message {
   priority?: 'normal' | 'high' | 'urgent';
   attachments?: Array<{
     filename?: string;
+    originalName?: string;
     path?: string;
     size?: number;
     mimetype?: string;

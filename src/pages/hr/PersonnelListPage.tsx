@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { getPersonnelList, deletePersonnel } from '@/services/hr/personnelApi';
+import { getPersonnelList, deletePersonnel, getOrganizationSettings } from '@/services/hr/personnelApi';
 import { getDepartments } from '@/services/departmentService';
 import { Personnel, PersonnelFilters } from '@/types/hr';
 import { Department } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/utils/errorMessages';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
 import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import {
@@ -50,8 +51,12 @@ import {
   X,
   Filter,
   RefreshCw,
+  Key,
+  CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { InlineCreateUserModal } from '@/components/hr/InlineCreateUserModal';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 export const PersonnelListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -69,9 +74,34 @@ export const PersonnelListPage: React.FC = () => {
   const [personnelToDelete, setPersonnelToDelete] = useState<Personnel | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Droits utilisateurs
-  const canAddPersonnel = ['Admin', 'SuperAdmin', 'AdminDepartment'].includes(currentUser?.role || '');
-  const canDeletePersonnel = ['Admin', 'SuperAdmin'].includes(currentUser?.role || '');
+  // Modal de création rapide d'utilisateur pour une fiche Personnel
+  const [selectedPersonnelForUser, setSelectedPersonnelForUser] = useState<Personnel | null>(null);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+
+  // Récupération des paramètres de l'organisation pour vérifier le département RH
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+  });
+
+  const rhDeptRaw = orgSettings?.rhDepartmentId;
+  const rhDepartmentId = (typeof rhDeptRaw === 'object' && rhDeptRaw !== null)
+    ? rhDeptRaw._id?.toString()
+    : rhDeptRaw?.toString();
+
+  const userDeptRaw = currentUser?.activeDepartment;
+  const userDeptId = (typeof userDeptRaw === 'object' && userDeptRaw !== null)
+    ? userDeptRaw._id?.toString()
+    : userDeptRaw?.toString();
+
+  const isRHManager = 
+    currentUser?.role === 'AdminDepartment' && 
+    Boolean(rhDepartmentId) && 
+    userDeptId === rhDepartmentId;
+
+  // Droits utilisateurs (Admin ou Responsable RH)
+  const canAddPersonnel = currentUser?.role === 'Admin' || isRHManager;
+  const canDeletePersonnel = currentUser?.role === 'Admin' || isRHManager;
 
   // Requête API pour les départements
   const { data: departments = [] } = useQuery<Department[]>({
@@ -118,8 +148,7 @@ export const PersonnelListPage: React.FC = () => {
       setPersonnelToDelete(null);
     },
     onError: (error: unknown) => {
-      const msg = axios.isAxiosError(error) ? error.response?.data?.message : undefined;
-      toast.error(msg || 'تعذر حذف ملف الموظف');
+      toast.error(getErrorMessage(error, 'تعذر حذف ملف الموظف'));
     },
   });
 
@@ -294,11 +323,8 @@ export const PersonnelListPage: React.FC = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <RefreshCw className="w-8 h-8 animate-spin text-[#2c5282]" />
-                      <span>جاري تحميل بيانات الموظفين...</span>
-                    </div>
+                  <TableCell colSpan={6} className="p-0">
+                    <TableSkeleton columns={6} rows={8} />
                   </TableCell>
                 </TableRow>
               ) : personnelList.length === 0 ? (
@@ -409,7 +435,34 @@ export const PersonnelListPage: React.FC = () => {
                             <Edit className="w-4 h-4" />
                           </Button>
 
-                          {/* Supprimer (si Admin/SuperAdmin et statut !== actif) */}
+                          {/* Statut Compte Utilisateur / Création de compte (Admin uniquement) */}
+                          {p.userId ? (
+                            <span 
+                              title="حساب مستخدم مرتبط ومفعّل"
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-xs font-semibold"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>حساب مرتبط</span>
+                            </span>
+                          ) : (
+                            currentUser?.role === 'Admin' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPersonnelForUser(p);
+                                  setShowCreateUserModal(true);
+                                }}
+                                title="إنشاء حساب مستخدم سريع للبطاقة مع بيانات الدخول (PDF)"
+                                aria-label="إنشاء حساب مستخدم"
+                                className="h-11 w-11 p-0 text-[#2c5282] hover:bg-blue-50 border border-blue-200 rounded"
+                              >
+                                <Key className="w-4 h-4 text-[#2c5282]" />
+                              </Button>
+                            )
+                          )}
+
+                          {/* Supprimer (si Admin ou Responsable RH et statut !== actif) */}
                           {canDeletePersonnel && (
                             <Button
                               variant="ghost"
@@ -540,6 +593,18 @@ export const PersonnelListPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de création rapide d'utilisateur pour la fiche Personnel */}
+      <InlineCreateUserModal
+        isOpen={showCreateUserModal}
+        onClose={() => {
+          setShowCreateUserModal(false);
+          setSelectedPersonnelForUser(null);
+        }}
+        personnel={selectedPersonnelForUser}
+        departments={departments}
+        orgSettings={orgSettings || null}
+      />
     </div>
   );
 };

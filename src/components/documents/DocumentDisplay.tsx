@@ -50,8 +50,8 @@ const DocumentDisplay: React.FC = () => {
   const filterDocumentsByPermissions = (documents: any[], type: 'incoming' | 'outgoing') => {
     if (!currentUser) return [];
     
-    // SuperAdmin, Admin and AdminTuningDesk see all documents
-    if (currentUser.role === 'SuperAdmin' || currentUser.role === 'Admin' || currentUser.role === 'AdminTuningDesk') {
+    // Director, Admin and AdminTuningDesk see all documents
+    if (currentUser.role === 'Director' || currentUser.role === 'Admin' || currentUser.role === 'AdminTuningDesk') {
       return documents;
     }
     

@@ -22,7 +22,7 @@ const AuditTrailViewer: React.FC = () => {
   const { data: auditResponse, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['auditLogs', filters],
     queryFn: () => getAuditLogs(filters),
-    enabled: currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin',
+    enabled: currentUser?.role === 'Director' || currentUser?.role === 'Admin',
     staleTime: 30000, // 30 seconds
   });
 
@@ -57,7 +57,7 @@ const AuditTrailViewer: React.FC = () => {
     }
   };
 
-  if (currentUser?.role !== 'SuperAdmin' && currentUser?.role !== 'Admin') {
+  if (currentUser?.role !== 'Director' && currentUser?.role !== 'Admin') {
     return (
       <Card>
         <CardContent className="p-8 text-center">

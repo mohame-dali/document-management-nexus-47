@@ -12,12 +12,31 @@ exports.sendMessage = async (req, res, next) => {
   try {
     const { recipientIds, subject, content, priority = 'normal' } = req.body;
     
-    // Validate required fields
-    if (!recipientIds || !subject || !content) {
+    // Validation adaptée (chat + email)
+    // - recipientIds : obligatoire
+    // - content OU fichiers : au moins l'un des deux
+    // - subject : optionnel (auto-généré si absent)
+    const hasContent = content && typeof content === 'string' && content.trim().length > 0;
+    const hasFiles = req.files && req.files.length > 0;
+
+    if (!recipientIds || (!hasContent && !hasFiles)) {
       return next(
-        new ErrorResponse('يرجى تحديد المستلمين والموضوع ونص الرسالة', 400)
+        new ErrorResponse('يرجى تحديد المستلمين ونص الرسالة أو مرفق', 400)
       );
     }
+
+    // Auto-générer subject si absent
+    let finalSubject = subject;
+    if (!finalSubject || (typeof finalSubject === 'string' && !finalSubject.trim())) {
+      finalSubject = hasContent
+        ? content.trim().substring(0, 60) + (content.trim().length > 60 ? '...' : '')
+        : 'مرفق';
+    } else if (typeof finalSubject === 'string') {
+      finalSubject = finalSubject.trim();
+    }
+
+    // Normaliser content
+    const finalContent = hasContent ? content.trim() : '';
     
     // Parse and validate recipient IDs
     let ids = [];
@@ -62,7 +81,8 @@ exports.sendMessage = async (req, res, next) => {
     let attachments = [];
     if (req.files && req.files.length > 0) {
       attachments = req.files.map(file => ({
-        filename: file.originalname,
+        filename: file.filename,               // ✅ nom réel sur disque (msg-xxx.ext)
+        originalName: file.originalname,       // ✅ nom lisible (logo.webp)
         path: file.path.replace(/\\/g, '/'),
         size: file.size,
         mimetype: file.mimetype
@@ -83,8 +103,8 @@ exports.sendMessage = async (req, res, next) => {
     const message = await Message.create({
       sender: req.user._id,
       recipients: recipientsData,
-      subject: subject.trim(),
-      content: content.trim(),
+      subject: finalSubject,
+      content: finalContent,
       priority: validPriority,
       attachments,
       messageType: recipientsData.length === 1 ? 'one-to-one' : 'one-to-many',

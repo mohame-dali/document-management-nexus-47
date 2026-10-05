@@ -1,0 +1,23 @@
+1/chaque admin department peut creer  leur users:   User role AdminDepartment is not authorized to access this route corrgie ca pour que seulement admin de systeme peu cree des comptes utlisateures   ***ok**
+
+2/les icons dans sidebar doit etre corrgie de RTL   /******ok**** 
+
+
+
+
+4/lors de creation des comptes users , adminb cest pas de selection les departments , parceque admin RH lors ajout ds peronnels a deja selctionne a quel department aprtient ce peronnel, donc fonction de admin cest de creer des comptes user pour les peronnels pour quil pusse connecter vers leur department 
+
+5/Bureau dordre lors de creation de documents entrants les listes de distbution il appratitre au  BO WHY ??           **************OK*****
+
+
+
+
+7/ directeur should be able to view folder , classement 
+
+
+
+
+
+fr language :
+
+header , pages

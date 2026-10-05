@@ -84,7 +84,7 @@ export const PersonnelDetailPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
 
-  const canManageStages = ['Admin', 'SuperAdmin', 'AdminDepartment'].includes(
+  const canManageStages = ['Admin', 'AdminDepartment'].includes(
     currentUser?.role || ''
   );
 

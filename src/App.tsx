@@ -36,6 +36,7 @@ import AdminDepartmentDashboard from './pages/department/AdminDepartmentDashboar
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import DocumentOptionsPage from './pages/documents/DocumentOptionsPage';
 import NotFound from './pages/NotFound';
+import ForbiddenPage from './pages/ForbiddenPage';
 import TemplatesPage from './pages/templates/TemplatesPage';
 import AuditTrailPage from './pages/audit/AuditTrailPage';
 import SettingsPage from './pages/settings/SettingsPage';
@@ -54,12 +55,18 @@ import RHStagesPage from './pages/hr/RHStagesPage';
 import OrganizationChartPage from './pages/organization/OrganizationChartPage';
 import TrashPage from './pages/trash/TrashPage';
 import SetupWizardPage from './pages/setup/SetupWizardPage';
+import InstallationGuidePage from './pages/guide/InstallationGuidePage';
 import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: (failureCount, error: any) => {
+        // Ne pas retry sur 429 — évite les cascades
+        if (error?.response?.status === 429) return false;
+        return failureCount < 2;
+      },
     },
   },
 });
@@ -136,12 +143,12 @@ function App() {
                           </ProtectedRoute>
                         } />
                         <Route path="users/create" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin']}>
                             <CreateUser />
                           </ProtectedRoute>
                         } />
                         <Route path="users/edit/:id" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment']}>
+                          <ProtectedRoute allowedRoles={['Admin']}>
                             <EditUser />
                           </ProtectedRoute>
                         } />
@@ -300,6 +307,13 @@ function App() {
                         {/* Organization Chart route */}
                         <Route path="organization-chart" element={<OrganizationChartPage />} />
 
+                        {/* Installation Guide route - Admin & Director */}
+                        <Route path="guide" element={
+                          <ProtectedRoute allowedRoles={['Admin', 'Director']}>
+                            <InstallationGuidePage />
+                          </ProtectedRoute>
+                        } />
+
                         {/* Document view alias routes */}
                         <Route path="documents/incoming/:id" element={
                           <ProtectedRoute>
@@ -321,6 +335,7 @@ function App() {
                       </Route>
                       
                       {/* Catch all other routes and show 404 */}
+                      <Route path="/403" element={<ForbiddenPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>

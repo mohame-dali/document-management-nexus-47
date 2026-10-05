@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { assignResponsible } from '@/services/documentService';
 import { getUsers } from '@/services/userService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageProvider';
 import { showResponsibleAssignmentNotification } from '@/components/notifications/ResponsibleAssignmentNotification';
 import { IncomingDocument, User } from '@/types';
 import { UserPlus, Users, CheckCircle2, User as UserIcon, Shield } from 'lucide-react';
@@ -27,6 +28,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
   document
 }) => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState<string>('');
 
@@ -55,22 +57,22 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
         showResponsibleAssignmentNotification({
           documentId: document._id,
           documentSubject: document.subject,
-          assignedBy: currentUser?.username || 'النظام'
+          assignedBy: currentUser?.username || t('documents.assignResponsible.defaultAssigner')
         });
       }
       
-      toast.success('تم تعيين المسؤول بنجاح');
+      toast.success(t('documents.assignResponsible.success'));
       onOpenChange(false);
       setSelectedUser('');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في تعيين المسؤول');
+      toast.error(error.response?.data?.message || t('documents.assignResponsible.error'));
     }
   });
 
   const handleAssignResponsible = () => {
     if (!selectedUser) {
-      toast.error('يرجى اختيار مستخدم');
+      toast.error(t('documents.assignResponsible.selectUserPrompt'));
       return;
     }
 
@@ -89,18 +91,18 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
-        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] text-right">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] text-start">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 bg-[#2c5282]/10 text-[#2c5282] rounded shrink-0">
               <UserPlus className="h-6 w-6" />
             </div>
             <div>
               <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
-                تعيين مسؤول عن الوثيقة
+                {t('documents.assignResponsible.title')}
               </DialogTitle>
               <p className="text-base text-gray-600 mt-1">
-                اختر المستخدم المناسب لتولي مسؤولية هذه الوثيقة
+                {t('documents.assignResponsible.subtitle')}
               </p>
             </div>
           </div>
@@ -111,15 +113,15 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
           <div className="bg-white border border-[#e2e8f0] rounded p-5">
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#e2e8f0]">
               <UserIcon className="h-4 w-4 text-[#2c5282]" />
-              <h3 className="font-bold text-base text-[#1a202c]">معلومات الوثيقة</h3>
+              <h3 className="font-bold text-base text-[#1a202c]">{t('documents.assignResponsible.docInfo')}</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
               <div>
-                <p className="text-sm text-gray-500 font-medium">الرقم التسلسلي</p>
+                <p className="text-sm text-gray-500 font-medium">{t('documents.assignResponsible.serialNumber')}</p>
                 <p className="font-bold text-[#2c5282] mt-0.5">#{document.serialNumber}/{document.year}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 font-medium">الموضوع</p>
+                <p className="text-sm text-gray-500 font-medium">{t('documents.assignResponsible.subject')}</p>
                 <p className="font-bold text-[#1a202c] line-clamp-2 mt-0.5">{document.subject}</p>
               </div>
             </div>
@@ -129,27 +131,27 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
           <div className="space-y-3">
             <Label className="text-base font-bold text-[#1a202c] flex items-center gap-2">
               <Users className="h-5 w-5 text-[#2c5282]" />
-              المستخدم المسؤول
+              {t('documents.assignResponsible.responsibleUser')}
             </Label>
             
             <div className="bg-white border border-[#e2e8f0] rounded p-5">
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger className="w-full h-12 text-base border-[#cbd5e1] rounded focus:border-[#2c5282] bg-white">
-                  <SelectValue placeholder="اختر مستخدم..." />
+                  <SelectValue placeholder={t('documents.assignResponsible.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-[#e2e8f0]">
                   {isLoading ? (
                     <SelectItem value="loading" disabled>
                       <div className="flex items-center gap-2 py-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#2c5282]"></div>
-                        <span>جاري التحميل...</span>
+                        <span>{t('documents.assignResponsible.loadingUsers')}</span>
                       </div>
                     </SelectItem>
                   ) : departmentUsers.length === 0 ? (
                     <SelectItem value="none" disabled>
                       <div className="flex items-center gap-2 text-gray-500 py-2">
                         <Users className="h-4 w-4" />
-                        <span>لا يوجد مستخدمون في القسم</span>
+                        <span>{t('documents.assignResponsible.noUsersInDepartment')}</span>
                       </div>
                     </SelectItem>
                   ) : (
@@ -159,11 +161,11 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
                           <div className="flex items-center justify-center w-8 h-8 bg-[#2c5282]/10 text-[#2c5282] rounded">
                             <UserIcon className="h-4 w-4" />
                           </div>
-                          <div className="flex-1 text-right">
+                          <div className="flex-1 text-start">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-[#1a202c]">{user.username}</span>
                               <Badge variant="outline" className="text-xs px-2 py-0.5 border-[#cbd5e1]">
-                                <Shield className="h-3 w-3 ml-1" />
+                                <Shield className="h-3 w-3 me-1" />
                                 {user.role}
                               </Badge>
                             </div>
@@ -179,7 +181,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
                 <div className="mt-4 p-3.5 bg-emerald-50 border border-emerald-200 rounded">
                   <div className="flex items-center gap-2 text-emerald-800">
                     <CheckCircle2 className="h-5 w-5" />
-                    <span className="text-base font-bold">تم اختيار المستخدم بنجاح</span>
+                    <span className="text-base font-bold">{t('documents.assignResponsible.userSelectedSuccess')}</span>
                   </div>
                 </div>
               )}
@@ -190,10 +192,10 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
           <div className="bg-white border border-[#e2e8f0] rounded p-4 text-base">
             <div className="flex items-center gap-2 text-gray-700 font-medium">
               <Shield className="h-4 w-4 text-[#2c5282]" />
-              <span>القسم النشط: <strong className="text-[#1a202c]">{currentUser?.activeDepartment?.name}</strong></span>
+              <span>{t('documents.assignResponsible.activeDepartment', { department: currentUser?.activeDepartment?.name })}</span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              يتم حصر وتعيين المسؤولين من ضمن أعضاء هذا القسم فقط
+              {t('documents.assignResponsible.departmentConstraintNotice')}
             </p>
           </div>
         </div>
@@ -207,12 +209,12 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
             {assignResponsibleMutation.isPending ? (
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                <span>جاري التعيين...</span>
+                <span>{t('documents.assignResponsible.submitting')}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <UserPlus className="h-5 w-5" />
-                <span>تعيين المسؤول</span>
+                <span>{t('documents.assignResponsible.confirm')}</span>
               </div>
             )}
           </Button>
@@ -222,7 +224,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
             disabled={assignResponsibleMutation.isPending}
             className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700"
           >
-            إلغاء
+            {t('documents.assignResponsible.cancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

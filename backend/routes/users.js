@@ -11,6 +11,7 @@ const {
   resetPassword,
   uploadPhoto
 } = require('../controllers/users');
+const { getOnlineUsers, heartbeat } = require('../controllers/users/onlineControllers');
 const { updateUserPassword } = require('../controllers/auth/passwordController');
 const { protect, authorize, checkDepartmentAccess } = require('../middleware/auth');
 const { uploadUserPhoto } = require('../middleware/upload');
@@ -20,6 +21,10 @@ const router = express.Router();
 
 // Protect all routes
 router.use(protect);
+
+// Online presence routes
+router.get('/online', getOnlineUsers);
+router.post('/heartbeat', heartbeat);
 
 // IMPORTANT: Place specific routes BEFORE parameterized routes
 // Messaging route - accessible to ALL authenticated users for cross-role messaging

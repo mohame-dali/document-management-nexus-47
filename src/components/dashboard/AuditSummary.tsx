@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,22 +12,23 @@ import {
   Folder,
   ArrowRight,
   Activity,
-  Zap,
   TrendingUp
 } from 'lucide-react';
 import { getAuditLogs } from '@/services/auditService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatArabicDateTime } from '@/utils/arabicDateFormatter';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 const AuditSummary: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
 
   const { data: recentLogs, isLoading } = useQuery({
     queryKey: ['auditLogs', 'recent'],
     queryFn: () => getAuditLogs({ limit: 10 }),
-    enabled: currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin'
+    enabled: currentUser?.role === 'Director' || currentUser?.role === 'Admin'
   });
 
   const getActionIcon = (action: string) => {
@@ -47,25 +47,46 @@ const AuditSummary: React.FC = () => {
 
   const getActionText = (action: string) => {
     switch (action) {
-      case 'document_create': return 'إنشاء مستند';
-      case 'document_update': return 'تحديث مستند';
-      case 'document_delete': return 'حذف مستند';
-      case 'folder_create': return 'إنشاء مجلد';
-      case 'folder_update': return 'تحديث مجلد';
-      case 'folder_delete': return 'حذف مجلد';
-      case 'user_create': return 'إنشاء مستخدم';
-      case 'user_update': return 'تحديث مستخدم';
-      case 'user_delete': return 'حذف مستخدم';
+      case 'document_create': return t('dashboard.audit.action.documentCreate');
+      case 'document_update': return t('dashboard.audit.action.documentUpdate');
+      case 'document_delete': return t('dashboard.audit.action.documentDelete');
+      case 'folder_create': return t('dashboard.audit.action.folderCreate');
+      case 'folder_update': return t('dashboard.audit.action.folderUpdate');
+      case 'folder_delete': return t('dashboard.audit.action.folderDelete');
+      case 'user_create': return t('dashboard.audit.action.userCreate');
+      case 'user_update': return t('dashboard.audit.action.userUpdate');
+      case 'user_delete': return t('dashboard.audit.action.userDelete');
       default: return action.replace(/_/g, ' ');
     }
   };
 
-  if (currentUser?.role !== 'SuperAdmin' && currentUser?.role !== 'Admin') {
+  const getRoleDisplayName = (role?: string) => {
+    if (!role) return '';
+    const roleKey = `roles.${role}`;
+    const translated = t(roleKey);
+    return translated !== roleKey ? translated : role;
+  };
+
+  const formatDateTime = (dateStr: string | Date) => {
+    if (language === 'fr') {
+      const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+      if (isNaN(date.getTime())) return 'Date invalide';
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${day}/${month}/${year} à ${hours}:${minutes}`;
+    }
+    return formatArabicDateTime(dateStr);
+  };
+
+  if (currentUser?.role !== 'Director' && currentUser?.role !== 'Admin') {
     return null;
   }
 
   return (
-    <Card className="col-span-full bg-white border border-[#e2e8f0] shadow-sm rounded overflow-hidden" dir="rtl">
+    <Card className="col-span-full bg-white border border-[#e2e8f0] shadow-sm rounded overflow-hidden">
       <CardHeader className="bg-[#f7fafc] border-b border-[#e2e8f0] px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -74,11 +95,11 @@ const AuditSummary: React.FC = () => {
             </div>
             <div>
               <CardTitle className="text-base sm:text-lg font-bold text-[#1a202c]">
-                آخر أنشطة النظام
+                {t('dashboard.audit.title')}
               </CardTitle>
               <div className="flex items-center gap-1.5 text-xs text-[#718096] mt-0.5">
                 <TrendingUp className="h-3.5 w-3.5 text-[#38a169]" />
-                <span>مراقبة العمليات الحديثة في النظام</span>
+                <span>{t('dashboard.audit.subtitle')}</span>
               </div>
             </div>
           </div>
@@ -88,8 +109,8 @@ const AuditSummary: React.FC = () => {
             size="sm"
           >
             <span className="flex items-center gap-1.5">
-              عرض الكل
-              <ArrowRight className="h-3.5 w-3.5" />
+              {t('dashboard.audit.viewAll')}
+              <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
             </span>
           </Button>
         </div>
@@ -98,7 +119,7 @@ const AuditSummary: React.FC = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10">
             <div className="w-8 h-8 border-2 border-[#bee3f8] border-t-[#2c5282] rounded-full animate-spin"></div>
-            <p className="mt-3 text-xs text-[#718096]">جاري التحميل...</p>
+            <p className="mt-3 text-xs text-[#718096]">{t('common.loading')}</p>
           </div>
         ) : (
           <ScrollArea className="h-[340px]">
@@ -126,13 +147,13 @@ const AuditSummary: React.FC = () => {
                             <span className="font-medium text-[#2d3748]">{log.userDetails.username}</span>
                           </div>
                           <span className="text-[#cbd5e1]">•</span>
-                          <span className="text-[11px] text-[#718096]">{log.userDetails.role}</span>
+                          <span className="text-[11px] text-[#718096]">{getRoleDisplayName(log.userDetails.role)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-[#718096] bg-[#f7fafc] px-2.5 py-1.5 rounded border border-[#e2e8f0] flex-shrink-0">
                         <Clock className="h-3 w-3 text-[#a0aec0]" />
                         <span className="text-[11px]">
-                          {formatArabicDateTime(log.createdAt)}
+                          {formatDateTime(log.createdAt)}
                         </span>
                       </div>
                     </div>
@@ -145,8 +166,12 @@ const AuditSummary: React.FC = () => {
                     <Shield className="h-8 w-8 text-[#a0aec0]" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#4a5568]">لا توجد أنشطة حديثة</h3>
-                    <p className="text-xs text-[#a0aec0]">لم يتم تسجيل أي أنشطة في النظام حتى الآن</p>
+                    <h3 className="text-sm font-medium text-[#4a5568]">
+                      {t('dashboard.audit.noRecentActivities')}
+                    </h3>
+                    <p className="text-xs text-[#a0aec0]">
+                      {t('dashboard.audit.noActivitiesDescription')}
+                    </p>
                   </div>
                 </div>
               )}

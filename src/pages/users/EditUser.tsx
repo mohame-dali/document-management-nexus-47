@@ -93,20 +93,17 @@ const EditUser: React.FC = () => {
     updateMutation.mutate(data);
   };
 
+  if (currentUser?.role !== 'Admin') {
+    return (
+      <div className="p-8 text-center text-red-600 font-semibold" dir="rtl">
+        Accès refusé — Seul l'administrateur système peut modifier des comptes
+      </div>
+    );
+  }
+
   const canEditUser = () => {
     if (!currentUser || !user) return false;
-    
-    if (currentUser.role === 'Admin') {
-      return true;
-    }
-    
-    if (currentUser.role === 'AdminDepartment') {
-      const currentUserDeptId = currentUser.activeDepartment?._id;
-      const userDeptIds = user.departments?.map((dept: Department) => dept._id) || [];
-      return currentUserDeptId && userDeptIds.includes(currentUserDeptId);
-    }
-    
-    return false;
+    return currentUser.role === 'Admin';
   };
 
   const getPhotoUrl = (photoPath: string) => {

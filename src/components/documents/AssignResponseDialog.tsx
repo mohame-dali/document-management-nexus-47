@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { getOutgoingDocumentsList, addAnswer } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageProvider';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 import { Search, FileOutput, Calendar, Filter, CheckCircle2, ArrowRight } from 'lucide-react';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
@@ -26,6 +27,8 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
   document
 }) => {
   const { currentUser } = useAuth();
+  const { t, language } = useLanguage();
+  const listSeparator = language === 'ar' ? '، ' : ', ';
   const queryClient = useQueryClient();
   const [selectedOutgoingDoc, setSelectedOutgoingDoc] = useState<string>('');
   const [searchYear, setSearchYear] = useState<string>(new Date().getFullYear().toString());
@@ -47,19 +50,19 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incomingDocument'] });
       queryClient.invalidateQueries({ queryKey: ['incomingDocuments'] });
-      toast.success('Response assigned successfully');
+      toast.success(t('documents.assignResponse.toast.success'));
       onOpenChange(false);
       setSelectedOutgoingDoc('');
       setSerialNumberSearch('');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to assign response');
+      toast.error(error.response?.data?.message || t('documents.assignResponse.toast.error'));
     }
   });
 
   const handleAssignResponse = () => {
     if (!selectedOutgoingDoc) {
-      toast.error('Please select an outgoing document');
+      toast.error(t('documents.assignResponse.toast.selectPrompt'));
       return;
     }
 
@@ -103,18 +106,18 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
-        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] text-right">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <DialogHeader className="p-6 border-b border-[#e2e8f0] bg-[#f8fafc] text-start">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-12 h-12 bg-[#2c5282]/10 text-[#2c5282] rounded shrink-0">
               <FileOutput className="h-6 w-6" />
             </div>
             <div>
               <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
-                إضافة رد على الوثيقة
+                {t('documents.assignResponse.title')}
               </DialogTitle>
               <p className="text-base text-gray-600 mt-1">
-                اختر الوثيقة الصادرة المناسبة كرد على هذه الوثيقة
+                {t('documents.assignResponse.subtitle')}
               </p>
             </div>
           </div>
@@ -125,19 +128,19 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
           <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#e2e8f0]">
               <Filter className="h-5 w-5 text-[#2c5282]" />
-              <h3 className="font-bold text-base text-[#1a202c]">فلترة وبحث الوثائق الصادرة</h3>
+              <h3 className="font-bold text-base text-[#1a202c]">{t('documents.assignResponse.searchSection.title')}</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-base font-semibold text-gray-700">
                   <Calendar className="h-4 w-4 text-[#2c5282]" />
-                  السنة
+                  {t('documents.assignResponse.searchSection.yearLabel')}
                 </Label>
                 <div className="relative">
                   <Input
                     type="text"
-                    placeholder="أدخل السنة (مثال: 2025)"
+                    placeholder={t('documents.assignResponse.searchSection.yearPlaceholder')}
                     value={searchYear}
                     onChange={(e) => handleYearChange(e.target.value)}
                     className="h-12 text-center text-lg font-mono bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
@@ -146,7 +149,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                   {searchYear && searchYear.length > 0 && searchYear.length < 4 && (
                     <div className="absolute -bottom-6 right-0 left-0">
                       <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded text-center border border-amber-200">
-                        يجب أن تكون السنة مكونة من 4 أرقام
+                        {t('documents.assignResponse.searchSection.yearWarning')}
                       </p>
                     </div>
                   )}
@@ -156,13 +159,13 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-base font-semibold text-gray-700">
                   <Search className="h-4 w-4 text-[#2c5282]" />
-                  البحث بالرقم التسلسلي
+                  {t('documents.assignResponse.searchSection.serialLabel')}
                 </Label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Input
                       type="number"
-                      placeholder="رقم تسلسلي..."
+                      placeholder={t('documents.assignResponse.searchSection.serialPlaceholder')}
                       value={serialNumberSearch}
                       onChange={(e) => setSerialNumberSearch(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSerialSearch()}
@@ -173,7 +176,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                     variant="outline" 
                     onClick={handleSerialSearch}
                     disabled={!serialNumberSearch.trim()}
-                    aria-label="بحث بالرقم التسلسلي"
+                    aria-label={t('documents.assignResponse.searchSection.searchButtonAria')}
                     className="h-12 px-5 border-[#cbd5e1] hover:bg-gray-100 rounded text-gray-700"
                   >
                     <Search className="h-5 w-5" />
@@ -184,7 +187,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                       onClick={handleClearSearch}
                       className="h-12 px-4 border-[#cbd5e1] text-red-600 hover:bg-red-50 rounded"
                     >
-                      مسح
+                      {t('documents.assignResponse.searchSection.clear')}
                     </Button>
                   )}
                 </div>
@@ -196,16 +199,16 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
           <div className="flex items-center justify-between p-4 bg-white border border-[#e2e8f0] rounded">
             <div className="flex items-center gap-3">
               <Badge variant="secondary" className="px-3 py-1 text-sm font-semibold rounded bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1]">
-                السنة: {searchYear || 'غير محدد'}
+                {t('documents.assignResponse.resultsSummary.year', { year: searchYear || t('documents.assignResponse.resultsSummary.unspecified') })}
               </Badge>
               <Badge variant="outline" className="px-3 py-1 text-sm font-semibold rounded bg-white text-gray-700 border-[#cbd5e1]">
-                النتائج: {filteredOutgoingDocs.length} وثيقة
+                {t('documents.assignResponse.resultsSummary.count', { count: filteredOutgoingDocs.length })}
               </Badge>
             </div>
             {selectedOutgoingDoc && (
               <div className="flex items-center gap-2 text-base font-bold text-emerald-700">
                 <CheckCircle2 className="h-5 w-5" />
-                <span>تم اختيار الوثيقة</span>
+                <span>{t('documents.assignResponse.resultsSummary.selected')}</span>
               </div>
             )}
           </div>
@@ -214,7 +217,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
           <div className="space-y-3">
             <Label className="text-base font-bold text-[#1a202c] flex items-center gap-2">
               <FileOutput className="h-5 w-5 text-[#2c5282]" />
-              الوثيقة الصادرة كـ رد
+              {t('documents.assignResponse.selection.label')}
             </Label>
             
             <div className="bg-white border border-[#e2e8f0] rounded p-4 max-h-80 overflow-y-auto">
@@ -222,38 +225,38 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                 <div className="p-8 text-center bg-blue-50/50 rounded border border-blue-100">
                   <Calendar className="h-12 w-12 text-[#2c5282] mx-auto mb-3 opacity-60" />
                   <h3 className="text-base font-bold text-[#2c5282] mb-1">
-                    ابدأ بإدخال السنة
+                    {t('documents.assignResponse.emptyState.enterYearTitle')}
                   </h3>
                   <p className="text-base text-gray-600">
-                    يرجى إدخال السنة للبحث عن الوثائق المتاحة
+                    {t('documents.assignResponse.emptyState.enterYearDesc')}
                   </p>
                 </div>
               ) : searchYear.length < 4 ? (
                 <div className="p-8 text-center bg-amber-50 rounded border border-amber-200">
                   <Calendar className="h-12 w-12 text-amber-600 mx-auto mb-3" />
                   <h3 className="text-base font-bold text-[#1a202c] mb-1">
-                    أكمل إدخال السنة
+                    {t('documents.assignResponse.emptyState.completeYearTitle')}
                   </h3>
                   <p className="text-base text-gray-700">
-                    يرجى إكمال إدخال السنة (4 أرقام) للبحث
+                    {t('documents.assignResponse.emptyState.completeYearDesc')}
                   </p>
                 </div>
               ) : isLoading ? (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-3"></div>
-                  <p className="text-base font-bold text-[#1a202c]">جاري البحث...</p>
-                  <p className="text-sm text-gray-500 mt-1">يتم تحميل الوثائق المتاحة</p>
+                  <p className="text-base font-bold text-[#1a202c]">{t('documents.assignResponse.loading.searching')}</p>
+                  <p className="text-sm text-gray-500 mt-1">{t('documents.assignResponse.loading.loadingDocs')}</p>
                 </div>
               ) : filteredOutgoingDocs.length === 0 ? (
                 <div className="p-8 text-center bg-gray-50 rounded border border-gray-200">
                   <FileOutput className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                   <h3 className="text-base font-bold text-gray-800 mb-1">
-                    لا توجد وثائق متطابقة
+                    {t('documents.assignResponse.emptyState.noMatchesTitle')}
                   </h3>
                   <p className="text-base text-gray-600">
                     {serialNumberSearch ? 
-                      `لم يتم العثور على وثائق تطابق الرقم التسلسلي "${serialNumberSearch}" في عام ${searchYear}` :
-                      `لا توجد وثائق صادرة متاحة في عام ${searchYear}`
+                      t('documents.assignResponse.emptyState.noMatchesSerial', { serial: serialNumberSearch, year: searchYear }) :
+                      t('documents.assignResponse.emptyState.noDocsYear', { year: searchYear })
                     }
                   </p>
                 </div>
@@ -284,8 +287,8 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                           </h4>
                           {doc.assignedTo && doc.assignedTo.length > 0 && (
                             <div className="flex items-center gap-1.5 text-sm text-gray-600 mt-1">
-                              <ArrowRight className="h-4 w-4 text-gray-400" />
-                              <span>موجه إلى: {doc.assignedTo.join(', ')}</span>
+                              <ArrowRight className="h-4 w-4 text-gray-400 rtl:rotate-180 ltr:rotate-0" />
+                              <span>{t('documents.assignResponse.item.assignedTo', { departments: doc.assignedTo.join(listSeparator) })}</span>
                             </div>
                           )}
                         </div>
@@ -318,12 +321,12 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
             {assignResponseMutation.isPending ? (
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                <span>جاري التعيين...</span>
+                <span>{t('documents.assignResponse.button.submitting')}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5" />
-                <span>تعيين الرد</span>
+                <span>{t('documents.assignResponse.button.confirm')}</span>
               </div>
             )}
           </Button>
@@ -333,7 +336,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
             disabled={assignResponseMutation.isPending}
             className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700"
           >
-            إلغاء
+            {t('documents.assignResponse.button.cancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -340,7 +340,7 @@ const SettingsPage = () => {
             <span>حفظ الرسائل</span>
           </TabsTrigger>
 
-          {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && (
+          {(currentUser?.role === 'Admin' || currentUser?.role === 'Director') && (
             <TabsTrigger
               value="organization"
               className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
@@ -1038,7 +1038,7 @@ const SettingsPage = () => {
         {/* ========================================================= */}
         {/* TAB 6: Organization & Setup Wizard Settings               */}
         {/* ========================================================= */}
-        {(currentUser?.role === 'Admin' || currentUser?.role === 'SuperAdmin') && (
+        {(currentUser?.role === 'Admin' || currentUser?.role === 'Director') && (
           <TabsContent value="organization" className="space-y-6 mt-0">
             <Card className="border-[#e2e8f0] rounded shadow-sm">
               <CardHeader className="border-b border-[#e2e8f0] pb-4">

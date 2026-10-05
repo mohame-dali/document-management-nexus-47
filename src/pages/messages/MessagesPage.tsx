@@ -116,7 +116,7 @@ const MessagesPage: React.FC = () => {
 
       const interlocutorName = interlocutor.nom && interlocutor.prenom
         ? `${interlocutor.prenom} ${interlocutor.nom}`
-        : (interlocutor.username || 'مستخدم');
+        : (interlocutor.username || t('header.user'));
 
       const interlocutorRole = interlocutor.role;
       const interlocutorPhoto = interlocutor.photo;
@@ -194,16 +194,16 @@ const MessagesPage: React.FC = () => {
     mutationFn: markAllAsRead,
     onSuccess: () => {
       toast({
-        title: "تم التحديث",
-        description: "تم تحديد كافة الرسائل كمقروءة"
+        title: t('messages.updated'),
+        description: t('messages.allMarkedAsRead')
       });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       refetch();
     },
     onError: () => {
       toast({
-        title: "خطأ",
-        description: "تعذر تحديث حالة القراءة",
+        title: t('common.error'),
+        description: t('messages.cannotUpdateReadStatus'),
         variant: "destructive"
       });
     }
@@ -270,7 +270,7 @@ const MessagesPage: React.FC = () => {
       const lastSubject = lastMsg?.subject;
       const subject = lastSubject
         ? (lastSubject.startsWith('Re: ') ? lastSubject : `Re: ${lastSubject}`)
-        : 'محادثة فورية';
+        : t('messages.instantChat');
 
       await sendMessage(
         [selectedConversation.interlocutorId],
@@ -285,8 +285,8 @@ const MessagesPage: React.FC = () => {
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       toast({
-        title: "خطأ",
-        description: errorObj?.response?.data?.message || errorObj?.message || "تعذر إرسال الرسالة",
+        title: t('common.error'),
+        description: errorObj?.response?.data?.message || errorObj?.message || t('messages.sendError'),
         variant: "destructive",
       });
     } finally {
@@ -295,7 +295,7 @@ const MessagesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 text-right" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 text-start">
       {/* Top Header Bar */}
       <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-4 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -316,7 +316,7 @@ const MessagesPage: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                منظومة المراسلات الإدارية الرسمية والتنسيق بين الأقسام
+                {t('messages.pageSubtitle')}
               </p>
             </div>
           </div>
@@ -337,12 +337,12 @@ const MessagesPage: React.FC = () => {
                 size="sm"
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
-                aria-label="تحديد الكل كمقروء"
+                aria-label={t('messages.markAllAsRead')}
                 className="h-11 px-2.5 text-xs rounded border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1.5 font-medium"
-                title="تحديد الكل كمقروء"
+                title={t('messages.markAllAsRead')}
               >
                 <MailCheck className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">تحديد الكل كمقروء</span>
+                <span className="hidden sm:inline">{t('messages.markAllAsRead')}</span>
               </Button>
             )}
 
@@ -374,7 +374,7 @@ const MessagesPage: React.FC = () => {
             }`}
           >
             <Inbox className="h-3.5 w-3.5" />
-            <span>المحادثات والوارد</span>
+            <span>{t('messages.conversationsAndInbox')}</span>
             {messageStats.unreadCount > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#FFCB56] text-[#78350f]">
                 {messageStats.unreadCount}
@@ -395,7 +395,7 @@ const MessagesPage: React.FC = () => {
             }`}
           >
             <Send className="h-3.5 w-3.5" />
-            <span>المرسلة (Envoyés)</span>
+            <span>{t('messages.sentTab')}</span>
           </button>
 
           <button
@@ -411,7 +411,7 @@ const MessagesPage: React.FC = () => {
             }`}
           >
             <Users className="h-3.5 w-3.5" />
-            <span>دليل جهات الاتصال</span>
+            <span>{t('messages.contactsDirectory')}</span>
           </button>
         </div>
       </div>
@@ -439,7 +439,7 @@ const MessagesPage: React.FC = () => {
         <div className="flex h-[calc(100vh-250px)] min-h-[550px] border border-[#e2e8f0] rounded-lg overflow-hidden bg-white shadow-xs">
           {/* Left Column: Conversations List (35%) */}
           <div
-            className={`w-full md:w-[35%] border-l border-[#e2e8f0] flex flex-col ${
+            className={`w-full md:w-[35%] border-e border-[#e2e8f0] flex flex-col ${
               mobileShowThread ? 'hidden md:flex' : 'flex'
             }`}
           >

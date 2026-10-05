@@ -58,9 +58,9 @@ router.route('/personnel')
 router.route('/personnel/:id')
   .get(checkRHAccess, getPersonnelById)
   .put(authorize('Admin', 'AdminDepartment'), checkRHAccess, updatePersonnel)
-  .delete(authorize('Admin'), deletePersonnel);
+  .delete(authorize('Admin', 'AdminDepartment'), checkRHAccess, deletePersonnel);
 
 // Restauration d'une fiche supprimée (soft delete)
-router.put('/personnel/:id/restore', authorize('Admin'), restorePersonnel);
+router.put('/personnel/:id/restore', authorize('Admin', 'AdminDepartment'), checkRHAccess, restorePersonnel);
 
 module.exports = router;

@@ -73,7 +73,7 @@ export const RHStagesPage: React.FC = () => {
   const { currentUser } = useAuth();
 
   // Droits utilisateurs
-  const canManageStages = ['Admin', 'SuperAdmin', 'AdminDepartment'].includes(currentUser?.role || '');
+  const canManageStages = ['Admin', 'AdminDepartment'].includes(currentUser?.role || '');
 
   // États des filtres et pagination
   const [searchTerm, setSearchTerm] = useState('');

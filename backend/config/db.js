@@ -13,7 +13,7 @@ const DEFAULT_ADMIN = {
 };
 
 // Default MongoDB URI if not provided in environment variables
-const DEFAULT_MONGODB_URI = 'mongodb://localhost:27017/document-management';
+const DEFAULT_MONGODB_URI = 'mongodb://127.0.0.1:27017/document-management';
 
 // Function to create default admin if none exists
 const createDefaultAdmin = async () => {
@@ -55,7 +55,8 @@ const connectDB = async () => {
     
     console.log('Connecting to MongoDB...');
     const conn = await mongoose.connect(dbUri, {
-      serverSelectionTimeoutMS: 2000,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
@@ -63,8 +64,11 @@ const connectDB = async () => {
     // Create default admin account if needed
     await createDefaultAdmin();
   } catch (error) {
-    console.warn(`MongoDB Connection Notice: ${error.message}`);
-    console.warn('Continuing execution in offline/mock mode via mockRouter.');
+    console.error(`❌ MongoDB Connection Error: ${error.message}`);
+    console.error('⚠️  Backend will NOT work without MongoDB.');
+    console.error('⚠️  Please ensure MongoDB is running on 127.0.0.1:27017');
+    // ⚠️ NE PAS quitter pour permettre le debug
+    // process.exit(1);  // Décommenter en production
   }
 };
 

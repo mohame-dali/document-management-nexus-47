@@ -158,3 +158,59 @@ export const getConversation = async (userId: string): Promise<Message[]> => {
     throw error;
   }
 };
+
+export const downloadAttachment = async (attachment: any, openInNewTab = false): Promise<void> => {
+  try {
+    let filename = '';
+    // Priorité 1 : extraire depuis path (nom réel Multer, présent partout sur anciens et nouveaux messages)
+    if (attachment.path) {
+      const fromPath = attachment.path.split(/[\/\\]/).pop() || '';
+      if (fromPath) {
+        filename = fromPath;
+      }
+    }
+    // Priorité 2 : fallback sur filename (nom réel Multer ou nom enregistré)
+    if (!filename && attachment.filename) {
+      filename = attachment.filename;
+    }
+    // Priorité 3 : fallback sur originalName (nom lisible)
+    if (!filename && attachment.originalName) {
+      filename = attachment.originalName;
+    }
+
+    if (!filename) {
+      throw new Error('Nom de fichier manquant');
+    }
+
+    // Fetch the file with auth headers and arraybuffer/blob responseType
+    const response = await api.get(`/messages/attachments/${filename}`, {
+      responseType: 'blob',
+    });
+
+    const blob = new Blob([response.data], {
+      type: response.headers['content-type'] || 'application/octet-stream',
+    });
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    // Nom de fichier à sauvegarder pour l'utilisateur (préférer originalName s'il existe)
+    const downloadDisplayName = attachment.originalName || filename;
+
+    if (openInNewTab) {
+      window.open(blobUrl, '_blank');
+      // Revoke after delay to allow browser to open it
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60000);
+    } else {
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = downloadDisplayName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+    }
+  } catch (error) {
+    console.error('Error downloading attachment:', error);
+    throw error;
+  }
+};
+

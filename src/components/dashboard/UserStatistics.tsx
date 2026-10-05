@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,6 +9,7 @@ import {
   Shield
 } from 'lucide-react';
 import { User } from '@/types';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface UserStatisticsProps {
   currentUser: User;
@@ -25,6 +25,8 @@ interface UserStatisticsProps {
 }
 
 const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) => {
+  const { t } = useLanguage();
+
   if (!['Admin', 'AdminDepartment'].includes(currentUser?.role || '')) {
     return null;
   }
@@ -36,7 +38,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           <div className="p-2 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282]">
             <Users className="h-5 w-5" />
           </div>
-          <h2 className="text-base sm:text-lg font-bold text-[#1a202c]">إحصائيات المستخدمين</h2>
+          <h2 className="text-base sm:text-lg font-bold text-[#1a202c]">
+            {t('dashboard.userStats.title')}
+          </h2>
         </div>
       </div>
       <div className="p-5">
@@ -44,7 +48,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           {/* Active Users */}
           <Card className="bg-white rounded border border-[#bbf0d0] shadow-xs">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#22543d]">المستخدمون النشطون</CardTitle>
+              <CardTitle className="text-xs font-medium text-[#22543d]">
+                {t('dashboard.stats.activeUsers')}
+              </CardTitle>
               <UserCheck className="h-4 w-4 text-[#38a169]" />
             </CardHeader>
             <CardContent className="p-4 pt-1">
@@ -59,7 +65,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           {/* Inactive Users */}
           <Card className="bg-white rounded border border-[#fed7d7] shadow-xs">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#742a2a]">المستخدمون غير النشطون</CardTitle>
+              <CardTitle className="text-xs font-medium text-[#742a2a]">
+                {t('dashboard.userStats.inactiveUsers')}
+              </CardTitle>
               <UserX className="h-4 w-4 text-[#e53e3e]" />
             </CardHeader>
             <CardContent className="p-4 pt-1">
@@ -74,7 +82,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           {/* Admin Users */}
           <Card className="bg-white rounded border border-[#bee3f8] shadow-xs">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#2c5282]">المدراء</CardTitle>
+              <CardTitle className="text-xs font-medium text-[#2c5282]">
+                {t('dashboard.userStats.admins')}
+              </CardTitle>
               <Crown className="h-4 w-4 text-[#2c5282]" />
             </CardHeader>
             <CardContent className="p-4 pt-1">
@@ -89,7 +99,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           {/* Department Admins */}
           <Card className="bg-white rounded border border-[#e2e8f0] shadow-xs">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#4a5568]">مدراء الأقسام</CardTitle>
+              <CardTitle className="text-xs font-medium text-[#4a5568]">
+                {t('dashboard.userStats.departmentAdmins')}
+              </CardTitle>
               <Shield className="h-4 w-4 text-[#4a5568]" />
             </CardHeader>
             <CardContent className="p-4 pt-1">
@@ -107,7 +119,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           <div className="flex items-center justify-between p-3 bg-[#f7fafc] rounded border border-[#e2e8f0]">
             <div className="flex items-center gap-2.5">
               <div className="w-2.5 h-2.5 bg-[#d69e2e] rounded-full"></div>
-              <span className="text-xs font-medium text-[#4a5568]">مدراء المكاتب</span>
+              <span className="text-xs font-medium text-[#4a5568]">
+                {t('dashboard.userStats.tuningDeskAdmins')}
+              </span>
             </div>
             <span className="text-base font-bold text-[#1a202c]">{stats.adminTuningUsers}</span>
           </div>
@@ -115,7 +129,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           <div className="flex items-center justify-between p-3 bg-[#f7fafc] rounded border border-[#e2e8f0]">
             <div className="flex items-center gap-2.5">
               <div className="w-2.5 h-2.5 bg-[#2c5282] rounded-full"></div>
-              <span className="text-xs font-medium text-[#4a5568]">المستخدمون العاديون</span>
+              <span className="text-xs font-medium text-[#4a5568]">
+                {t('dashboard.userStats.regularUsers')}
+              </span>
             </div>
             <span className="text-base font-bold text-[#1a202c]">{stats.regularUsers}</span>
           </div>
@@ -123,7 +139,9 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           <div className="flex items-center justify-between p-3 bg-[#f7fafc] rounded border border-[#e2e8f0]">
             <div className="flex items-center gap-2.5">
               <div className="w-2.5 h-2.5 bg-[#38a169] rounded-full"></div>
-              <span className="text-xs font-medium text-[#4a5568]">إجمالي النشطين</span>
+              <span className="text-xs font-medium text-[#4a5568]">
+                {t('dashboard.userStats.totalActive')}
+              </span>
             </div>
             <span className="text-base font-bold text-[#1a202c]">{stats.activeUsers}</span>
           </div>

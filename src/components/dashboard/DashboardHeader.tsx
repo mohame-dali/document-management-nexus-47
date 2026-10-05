@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageProvider';
@@ -13,43 +12,48 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isMobile = useIsMobile();
   const currentDate = new Date();
+
+  const formattedDate = language === 'fr'
+    ? currentDate.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : formatArabicDate(currentDate);
 
   const getWelcomeMessage = () => {
     const role = currentUser?.role;
     switch (role) {
       case 'Admin':
-        return 'مرحباً بك في لوحة تحكم الإدارة. لديك وصول كامل للنظام.';
+        return t('dashboard.header.welcomeAdmin');
       case 'AdminTuningDesk':
-        return 'مرحباً بك في مركز رقمنة الوثائق. إدارة رقمنة الوثائق عبر جميع الأقسام.';
+        return t('dashboard.header.welcomeBureauOrdre');
       case 'AdminDepartment':
-        return `مرحباً بك في لوحة تحكم ${currentUser?.activeDepartment?.name || 'القسم'}. إدارة وثائق ومستخدمي قسمك.`;
+        return t('dashboard.header.welcomeDepartmentHead', {
+          name: currentUser?.activeDepartment?.name || t('dashboard.header.defaultDepartment'),
+        });
       case 'User':
-        return `مرحباً بك! يمكنك عرض الوثائق المخصصة لـ${currentUser?.activeDepartment?.name || 'قسمك'}.`;
+        return t('dashboard.header.welcomeUser', {
+          name: currentUser?.activeDepartment?.name || t('dashboard.header.yourDepartment'),
+        });
       default:
-        return 'مرحباً بك في نظام إدارة الوثائق.';
+        return t('dashboard.header.welcomeDefault');
     }
   };
 
-  const getRoleDisplayName = (role: string) => {
-    switch (role) {
-      case 'Admin':
-        return 'مدير النظام';
-      case 'AdminTuningDesk':
-        return 'مدير مكتب الضبط';
-      case 'AdminDepartment':
-        return 'مدير القسم';
-      case 'User':
-        return 'مستخدم';
-      default:
-        return role;
-    }
+  const getRoleDisplayName = (role?: string) => {
+    if (!role) return '';
+    const roleKey = `roles.${role}`;
+    const translated = t(roleKey);
+    return translated !== roleKey ? translated : role;
   };
 
   return (
-    <div className="bg-white rounded border border-[#e2e8f0] p-5 sm:p-6 shadow-sm" dir="rtl">
+    <div className="bg-white rounded border border-[#e2e8f0] p-5 sm:p-6 shadow-sm">
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
         <div className="flex-1 space-y-2">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -65,7 +69,7 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
               </p>
               {!isMobile && (
                 <p className="text-xs text-[#718096] mt-1">
-                  اليوم: {formatArabicDate(currentDate)}
+                  {t('dashboard.header.today')}: {formattedDate}
                 </p>
               )}
             </div>
@@ -77,7 +81,7 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
             variant="outline" 
             className="text-xs px-3 py-1.5 bg-[#ebf4ff] border-[#bee3f8] text-[#2c5282] rounded w-full sm:w-auto justify-center sm:justify-start font-medium"
           >
-            <Building2 className="h-3.5 w-3.5 ml-1.5" />
+            <Building2 className="h-3.5 w-3.5 me-1.5" />
             {getRoleDisplayName(currentUser?.role)}
           </Badge>
           
@@ -85,7 +89,7 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
             variant="secondary" 
             className="text-xs px-3 py-1.5 bg-[#edf2f7] text-[#1a202c] border border-[#e2e8f0] rounded w-full sm:w-auto justify-center sm:justify-start font-medium"
           >
-            <Calendar className="h-3.5 w-3.5 ml-1.5" />
+            <Calendar className="h-3.5 w-3.5 me-1.5" />
             {currentYear}
           </Badge>
           
@@ -94,7 +98,7 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
               variant="outline" 
               className="text-xs px-2 py-1 w-full justify-center border-[#e2e8f0] text-[#718096] rounded"
             >
-              {formatArabicDate(currentDate)}
+              {formattedDate}
             </Badge>
           )}
         </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,6 +10,7 @@ import {
   Building2
 } from 'lucide-react';
 import { User } from '@/types';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface StatsCardsProps {
   currentUser: User;
@@ -27,12 +27,14 @@ interface StatsCardsProps {
 }
 
 const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsProps) => {
+  const { t } = useLanguage();
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
       {/* Total Documents */}
       <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm hover:shadow transition-shadow duration-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-semibold text-[#4a5568]">إجمالي الوثائق</CardTitle>
+          <CardTitle className="text-xs font-semibold text-[#4a5568]">{t('dashboard.stats.totalDocuments')}</CardTitle>
           <div className="p-2 bg-[#ebf4ff] rounded text-[#2c5282] border border-[#bee3f8]/50">
             <FileText className="h-4 w-4" />
           </div>
@@ -44,7 +46,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
             <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalDocuments}</div>
           )}
           <p className="text-xs text-[#718096] mt-1">
-            للعام {currentYear}
+            {t('dashboard.stats.forYear', { year: currentYear })}
           </p>
         </CardContent>
       </Card>
@@ -52,7 +54,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
       {/* Incoming Documents */}
       <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm hover:shadow transition-shadow duration-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-semibold text-[#4a5568]">الوثائق الواردة</CardTitle>
+          <CardTitle className="text-xs font-semibold text-[#4a5568]">{t('dashboard.stats.incomingDocuments')}</CardTitle>
           <div className="p-2 bg-[#ebf8f1] rounded text-[#38a169] border border-[#bbf0d0]/50">
             <TrendingUp className="h-4 w-4" />
           </div>
@@ -64,7 +66,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
             <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalIncoming}</div>
           )}
           <p className="text-xs text-[#718096] mt-1">
-            مستند وارد
+            {t('dashboard.stats.incomingDocUnit')}
           </p>
         </CardContent>
       </Card>
@@ -72,7 +74,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
       {/* Outgoing Documents */}
       <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm hover:shadow transition-shadow duration-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xs font-semibold text-[#4a5568]">الوثائق الصادرة</CardTitle>
+          <CardTitle className="text-xs font-semibold text-[#4a5568]">{t('dashboard.stats.outgoingDocuments')}</CardTitle>
           <div className="p-2 bg-[#fef9e7] rounded text-[#d69e2e] border border-[#fbd38d]/50">
             <CheckCircle className="h-4 w-4" />
           </div>
@@ -84,16 +86,16 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
             <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalOutgoing}</div>
           )}
           <p className="text-xs text-[#718096] mt-1">
-            مستند صادر
+            {t('dashboard.stats.outgoingDocUnit')}
           </p>
         </CardContent>
       </Card>
 
       {/* Dynamic 4th Card based on role */}
-      {(currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin') ? (
+      {(currentUser?.role === 'Director' || currentUser?.role === 'Admin') ? (
         <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm hover:shadow transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-[#4a5568]">الأقسام</CardTitle>
+            <CardTitle className="text-xs font-semibold text-[#4a5568]">{t('dashboard.stats.departments')}</CardTitle>
             <div className="p-2 bg-[#edf2f7] rounded text-[#4a5568] border border-[#e2e8f0]">
               <Building2 className="h-4 w-4" />
             </div>
@@ -105,14 +107,14 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
               <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalDepartments}</div>
             )}
             <p className="text-xs text-[#718096] mt-1">
-              قسم نشط
+              {t('dashboard.stats.activeDepartmentUnit')}
             </p>
           </CardContent>
         </Card>
       ) : ['Admin', 'AdminDepartment'].includes(currentUser?.role || '') ? (
         <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm hover:shadow transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-[#4a5568]">المستخدمون النشطون</CardTitle>
+            <CardTitle className="text-xs font-semibold text-[#4a5568]">{t('dashboard.stats.activeUsers')}</CardTitle>
             <div className="p-2 bg-[#ebf8f1] rounded text-[#38a169] border border-[#bbf0d0]/50">
               <Users className="h-4 w-4" />
             </div>
@@ -124,14 +126,14 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
               <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.activeUsers}</div>
             )}
             <p className="text-xs text-[#718096] mt-1">
-              مستخدم نشط
+              {t('dashboard.stats.activeUserUnit')}
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm hover:shadow transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold text-[#4a5568]">المجلدات</CardTitle>
+            <CardTitle className="text-xs font-semibold text-[#4a5568]">{t('dashboard.stats.folders')}</CardTitle>
             <div className="p-2 bg-[#ebf4ff] rounded text-[#2c5282] border border-[#bee3f8]/50">
               <FolderOpen className="h-4 w-4" />
             </div>
@@ -143,7 +145,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
               <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalFolders}</div>
             )}
             <p className="text-xs text-[#718096] mt-1">
-              مجلد منظم
+              {t('dashboard.stats.organizedFolderUnit')}
             </p>
           </CardContent>
         </Card>

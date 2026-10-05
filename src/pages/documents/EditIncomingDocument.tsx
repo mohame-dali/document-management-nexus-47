@@ -1,9 +1,12 @@
 
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getIncomingDocument } from '@/services/documentService';
 import { getDepartments } from '@/services/departmentService';
-import { scanTemporaryDocument } from '@/services/scannerService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
+import { getScannerStatus, scanTemporaryDocument } from '@/services/scannerService';
+import { getDistributableDepartments } from '@/utils/departmentDistributionFilter';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
 import EditIncomingDocumentForm from '@/components/documents/forms/EditIncomingDocumentForm';
@@ -22,6 +25,15 @@ const EditIncomingDocument = () => {
     queryKey: ['departments'],
     queryFn: getDepartments,
   });
+
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+  });
+
+  const distributableDepartments = React.useMemo(() => {
+    return getDistributableDepartments(departments, orgSettings);
+  }, [departments, orgSettings]);
 
   const { data: scannerStatus, isLoading: loadingScannerStatus } = useQuery({
     queryKey: ['scannerStatus'],
@@ -82,7 +94,7 @@ const EditIncomingDocument = () => {
 
       <EditIncomingDocumentForm 
         document={document} 
-        departments={departments}
+        departments={distributableDepartments}
         scannerStatus={scannerStatus}
         loadingScannerStatus={loadingScannerStatus}
         scanTemporaryDocumentMutation={scanTemporaryDocumentMutation}
