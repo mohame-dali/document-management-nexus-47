@@ -1,5 +1,6 @@
 
 const mongoose = require('mongoose');
+mongoose.set('bufferCommands', false);
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
@@ -55,8 +56,8 @@ const connectDB = async () => {
     
     console.log('Connecting to MongoDB...');
     const conn = await mongoose.connect(dbUri, {
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 3000,
+      socketTimeoutMS: 5000,
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);

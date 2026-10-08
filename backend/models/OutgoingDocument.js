@@ -58,12 +58,125 @@ const outgoingDocumentSchema = new mongoose.Schema({
     ref: 'User',
     default: null
   },
+  isIndexed: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  indexError: {
+    type: String,
+    default: null
+  },
+  lastIndexAttempt: {
+    type: Date,
+    default: null
+  },
+  indexAttempts: {
+    type: Number,
+    default: 0
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
 // Ensure unique combination of serialNumber and year
 outgoingDocumentSchema.index({ serialNumber: 1, year: 1 }, { unique: true });
 outgoingDocumentSchema.index({ "source.id": 1 });
+
+// ═══════════════════════════════════════════════════════════════
+// HOOKS RAG — Auto-indexation vectorielle (non-bloquant)
+// ═══════════════════════════════════════════════════════════════
+
+outgoingDocumentSchema.post('save', function (doc) {
+  setImmediate(async () => {
+    try {
+      const { indexDocument } = require('../services/semanticIndexer');
+      const result = await indexDocument(doc, 'outgoing');
+      if (result && result.success) {
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          { $set: { isIndexed: true, indexError: null, lastIndexAttempt: new Date() } }
+        );
+        console.log(`[RAG Auto-Index] ✅ Outgoing #${doc._id} indexé`);
+      } else {
+        const errorMsg = (result && (result.error || result.reason)) || 'Unknown indexing error';
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          {
+            $set: { isIndexed: false, indexError: String(errorMsg), lastIndexAttempt: new Date() },
+            $inc: { indexAttempts: 1 }
+          }
+        );
+        console.error(`[RAG Auto-Index] ⚠️ Outgoing #${doc._id} échec :`, errorMsg);
+      }
+    } catch (err) {
+      try {
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          {
+            $set: { isIndexed: false, indexError: err.message, lastIndexAttempt: new Date() },
+            $inc: { indexAttempts: 1 }
+          }
+        );
+      } catch (innerErr) {
+        // ignore
+      }
+      console.error(`[RAG Auto-Index] ⚠️ Outgoing #${doc._id} :`, err.message);
+    }
+  });
+});
+
+outgoingDocumentSchema.post('findOneAndUpdate', function (doc) {
+  if (!doc) return;
+  setImmediate(async () => {
+    try {
+      const { indexDocument } = require('../services/semanticIndexer');
+      const result = await indexDocument(doc, 'outgoing');
+      if (result && result.success) {
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          { $set: { isIndexed: true, indexError: null, lastIndexAttempt: new Date() } }
+        );
+        console.log(`[RAG Auto-Index] ✅ Outgoing #${doc._id} réindexé`);
+      } else {
+        const errorMsg = (result && (result.error || result.reason)) || 'Unknown indexing error';
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          {
+            $set: { isIndexed: false, indexError: String(errorMsg), lastIndexAttempt: new Date() },
+            $inc: { indexAttempts: 1 }
+          }
+        );
+        console.error(`[RAG Auto-Index] ⚠️ Outgoing #${doc._id} réindexation échec :`, errorMsg);
+      }
+    } catch (err) {
+      try {
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          {
+            $set: { isIndexed: false, indexError: err.message, lastIndexAttempt: new Date() },
+            $inc: { indexAttempts: 1 }
+          }
+        );
+      } catch (innerErr) {
+        // ignore
+      }
+      console.error(`[RAG Auto-Index] ⚠️ Outgoing #${doc._id} :`, err.message);
+    }
+  });
+});
+
+outgoingDocumentSchema.post('findOneAndDelete', function (doc) {
+  if (!doc) return;
+  setImmediate(async () => {
+    try {
+      const { removeFromIndex } = require('../services/semanticIndexer');
+      await removeFromIndex(doc._id, 'outgoing');
+      console.log(`[RAG Auto-Index] 🗑️ Outgoing #${doc._id} retiré`);
+    } catch (err) {
+      console.error(`[RAG Auto-Index] ⚠️ Delete :`, err.message);
+    }
+  });
+});
 
 const OutgoingDocument = mongoose.model("OutgoingDocument", outgoingDocumentSchema);
 

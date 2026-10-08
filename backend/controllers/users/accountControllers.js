@@ -23,7 +23,7 @@ exports.deactivateUser = async (req, res, next) => {
       );
     }
     
-    // Enhanced authorization for Admin and AdminDepartment
+    // Enhanced authorization for Admin only
     if (req.user.role === 'Admin') {
       console.log(`Admin user - can deactivate any user`);
       // Admin can deactivate any user

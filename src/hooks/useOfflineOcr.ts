@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ocrService } from '@/services/offlineOcrService';
+import { extractOcrFromServer } from '@/services/documentOcrService';
 
 interface UseOfflineOcrResult {
   extractText: (file: File) => Promise<string>;
@@ -70,16 +71,14 @@ export const useOfflineOcr = (): UseOfflineOcrResult => {
         setProgress(prev => Math.min(prev + 8, 85));
       }, 800);
 
-      let result;
+      let ocrText = '';
       
       try {
-        if (file.type === 'application/pdf') {
-          result = await ocrService.extractFromPdf(file);
-        } else if (file.type.startsWith('image/')) {
-          result = await ocrService.extractFromImage(file);
-        } else {
-          throw new Error('Unsupported file type.');
-        }
+        ocrText = await extractOcrFromServer(file, (percent) => {
+          if (!isUnmountedRef.current) {
+            setProgress(Math.min(percent, 95));
+          }
+        });
       } catch (ocrError) {
         console.error('OCR processing error:', ocrError);
         throw new Error(`OCR processing failed: ${ocrError instanceof Error ? ocrError.message : 'Unknown error'}`);
@@ -94,7 +93,7 @@ export const useOfflineOcr = (): UseOfflineOcrResult => {
         setProgress(100);
       }
       
-      return result.text || '';
+      return ocrText || '';
     } catch (err) {
       console.error('Text extraction error:', err);
       const errorMessage = err instanceof Error ? err.message : 'OCR processing failed';

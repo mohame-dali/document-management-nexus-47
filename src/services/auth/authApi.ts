@@ -3,7 +3,7 @@ import { User } from '@/types';
 import { LoginCredentials } from './authTypes';
 
 // Set the API URL based on environment or use a fallback that works for local development
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Configure axios to include credentials in requests
 axios.defaults.withCredentials = true;

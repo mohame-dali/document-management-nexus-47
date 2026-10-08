@@ -61,8 +61,9 @@ const io = new Server(httpServer, {
 // Socket.io connection handler
 require('./sockets/index')(io);
 
-// Body parser
-app.use(express.json());
+// Body parser - Augmenter la limite pour supporter les images base64 (vision IA)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Cookie parser
 app.use(cookieParser());
@@ -190,6 +191,9 @@ const rhReferenceRoutes = require('./routes/rhReferenceRoutes');
 const rhStageRoutes = require('./routes/rhStageRoutes');
 const rhStagePersonnelRoutes = require('./routes/rhStagePersonnelRoutes');
 const rhPersonnelHistoryRoutes = require('./routes/rhPersonnelHistoryRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const { startIndexRetryScheduler } = require('./services/indexRetryScheduler');
 
 // Mount routers
 app.use('/api/auth', auth);
@@ -220,6 +224,11 @@ app.use('/api/hr/references', rhReferenceRoutes);
 app.use('/api/hr/stages', rhStageRoutes);
 app.use('/api/hr', rhStagePersonnelRoutes);
 app.use('/api/hr', rhPersonnelHistoryRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Démarrer le cron de rattrapage d'indexation vectorielle RAG (toutes les heures)
+startIndexRetryScheduler();
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {

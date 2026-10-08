@@ -55,7 +55,7 @@ const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
       console.log('Using enhanced Tesseract for Arabic OCR processing');
       const extractedText = await extractTextWithEnhancedTesseract(normalizedPath, languages, availableLanguages);
       if (extractedText && extractedText.trim().length > 0) {
-        return extractedText;
+        return cleanArabicOcrText(extractedText);
       }
     } catch (err) {
       console.log('Enhanced Tesseract not available or failed, falling back to pdf-parse');
@@ -70,7 +70,7 @@ const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
     // Apply Arabic text cleanup even to pdf-parse results
     const cleanedText = enhancedArabicTextCleanup(data.text);
     
-    return cleanedText;
+    return cleanArabicOcrText(cleanedText);
   } catch (error) {
     console.error('OCR Processing Error:', error);
     if (error instanceof ErrorResponse) {
@@ -273,6 +273,7 @@ const extractTextWithEnhancedTesseract = async (filePath, languages = 'ara+fra+e
     if (extractedText) {
       console.log('Raw extracted text before cleanup:', extractedText.substring(0, 200));
       extractedText = enhancedArabicTextCleanup(extractedText);
+      extractedText = cleanArabicOcrText(extractedText);
       console.log('Text after cleanup:', extractedText.substring(0, 200));
     }
     
@@ -536,7 +537,151 @@ const checkLanguageSupport = async () => {
   }
 };
 
+/**
+ * NORMALISATION ARABE — Convertit les formes de présentation en 
+ * caractères Unicode standards + corrige les ligatures.
+ * Résout les problèmes classiques d'OCR arabe.
+ */
+function normalizeArabicText(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let normalized = text;
+
+  // 1. Convertir les "Arabic Presentation Forms" (U+FB50-FDFF, U+FE70-FEFF)
+  //    vers les caractères Unicode standards (U+0600-U+06FF)
+  const presentationFormsMap = {
+    // Formes isolées
+    'ﺀ': 'ء', 'ﺁ': 'آ', 'ﺂ': 'آ', 'ﺃ': 'أ', 'ﺄ': 'أ', 'ﺅ': 'ؤ', 'ﺆ': 'ؤ',
+    'ﺇ': 'إ', 'ﺈ': 'إ', 'ﺉ': 'ئ', 'ﺊ': 'ئ', 'ﺋ': 'ئ', 'ﺌ': 'ئ', 'ﺍ': 'ا',
+    'ﺎ': 'ا', 'ﺏ': 'ب', 'ﺐ': 'ب', 'ﺑ': 'ب', 'ﺒ': 'ب', 'ﺓ': 'ة', 'ﺔ': 'ة',
+    'ﺕ': 'ت', 'ﺖ': 'ت', 'ﺗ': 'ت', 'ﺘ': 'ت', 'ﺙ': 'ث', 'ﺚ': 'ث', 'ﺛ': 'ث',
+    'ﺜ': 'ث', 'ﺝ': 'ج', 'ﺞ': 'ج', 'ﺟ': 'ج', 'ﺠ': 'ج', 'ﺡ': 'ح', 'ﺢ': 'ح',
+    'ﺣ': 'ح', 'ﺤ': 'ح', 'ﺥ': 'خ', 'ﺦ': 'خ', 'ﺧ': 'خ', 'ﺨ': 'خ', 'ﺩ': 'د',
+    'ﺪ': 'د', 'ﺫ': 'ذ', 'ﺬ': 'ذ', 'ﺭ': 'ر', 'ﺮ': 'ر', 'ﺯ': 'ز', 'ﺰ': 'ز',
+    'ﺱ': 'س', 'ﺲ': 'س', 'ﺳ': 'س', 'ﺴ': 'س', 'ﺵ': 'ش', 'ﺶ': 'ش', 'ﺷ': 'ش',
+    'ﺸ': 'ش', 'ﺹ': 'ص', 'ﺺ': 'ص', 'ﺻ': 'ص', 'ﺼ': 'ص', 'ﺽ': 'ض', 'ﺾ': 'ض',
+    'ﺿ': 'ض', 'ﻀ': 'ض', 'ﻁ': 'ط', 'ﻂ': 'ط', 'ﻃ': 'ط', 'ﻄ': 'ط', 'ﻅ': 'ظ',
+    'ﻆ': 'ظ', 'ﻇ': 'ظ', 'ﻈ': 'ظ', 'ﻉ': 'ع', 'ﻊ': 'ع', 'ﻋ': 'ع', 'ﻌ': 'ع',
+    'ﻍ': 'غ', 'ﻎ': 'غ', 'ﻏ': 'غ', 'ﻐ': 'غ', 'ﻑ': 'ف', 'ﻒ': 'ف', 'ﻓ': 'ف',
+    'ﻔ': 'ف', 'ﻕ': 'ق', 'ﻖ': 'ق', 'ﻗ': 'ق', 'ﻘ': 'ق', 'ﻙ': 'ك', 'ﻚ': 'ك',
+    'ﻛ': 'ك', 'ﻜ': 'ك', 'ﻝ': 'ل', 'ﻞ': 'ل', 'ﻟ': 'ل', 'ﻠ': 'ل', 'ﻡ': 'م',
+    'ﻢ': 'م', 'ﻣ': 'م', 'ﻤ': 'م', 'ﻥ': 'ن', 'ﻦ': 'ن', 'ﻧ': 'ن', 'ﻨ': 'ن',
+    'ﻩ': 'ه', 'ﻪ': 'ه', 'ﻫ': 'ه', 'ﻬ': 'ه', 'ﻭ': 'و', 'ﻮ': 'و', 'ﻯ': 'ى',
+    'ﻰ': 'ى', 'ﻱ': 'ي', 'ﻲ': 'ي', 'ﻳ': 'ي', 'ﻴ': 'ي', 'ﻵ': 'لا', 'ﻶ': 'لا',
+    'ﻷ': 'لأ', 'ﻸ': 'لأ', 'ﻹ': 'لإ', 'ﻺ': 'لإ', 'ﻻ': 'لا', 'ﻼ': 'لا',
+  };
+
+  // Appliquer la conversion
+  normalized = normalized.replace(/[\uFB50-\uFDFF\uFE70-\uFEFF]/g, (char) => {
+    return presentationFormsMap[char] || char;
+  });
+
+  // 2. Corriger les Lam-Alef cassés (problème le plus fréquent)
+  //    "األ" → "الأ" (Alef + Alef-hamza + Lam → Alef + Lam + Alef-hamza)
+  normalized = normalized.replace(/األ/g, 'الأ');
+  normalized = normalized.replace(/اإل/g, 'الإ');
+  normalized = normalized.replace(/اآل/g, 'الآ');
+  
+  // Corriger "خالل" → "خلال" (خ + ا + ل + ل → خ + ل + ا + ل)
+  normalized = normalized.replace(/خالل/g, 'خلال');
+  
+  // Corriger "واليات" → "ولايات"
+  normalized = normalized.replace(/واليات/g, 'ولايات');
+  normalized = normalized.replace(/والية/g, 'ولاية');
+
+  // 3. Corriger "اإل" mal encodé (dans "اإلفالت" → "الإفلات")
+  normalized = normalized.replace(/اإلفالت/g, 'الإفلات');
+  normalized = normalized.replace(/اإلذاعة/g, 'الإذاعة');
+
+  // 4. Corriger "ألكن" → "لكن"
+  normalized = normalized.replace(/\bألكن\b/g, 'لكن');
+
+  // 5. Corriger "األ" général
+  normalized = normalized.replace(/األ/g, 'الأ');
+
+  // 6. Corriger "الثالثاء" → "الثلاثاء"
+  normalized = normalized.replace(/الثالثاء/g, 'الثلاثاء');
+
+  // 7. Corriger "الجوالن" → "الجولان"
+  normalized = normalized.replace(/الجوالن/g, 'الجولان');
+
+  return normalized;
+}
+
+/**
+ * NETTOYAGE FINAL — Supprime le bruit résiduel
+ */
+function cleanOcrNoise(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  let cleaned = text;
+
+  // 1. Supprimer les timestamps répétés en début de page
+  cleaned = cleaned.replace(/^\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}(,\s*\d{1,2}:\d{2})?\s*$/gm, '');
+  cleaned = cleaned.replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4},\s*\d{1,2}:\d{2}/g, '');
+  cleaned = cleaned.replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}\b/g, '');
+
+  // 2. Supprimer les URLs
+  cleaned = cleaned.replace(/https?:\/\/[^\s]+/gi, '');
+  cleaned = cleaned.replace(/www\.[^\s]+/gi, '');
+
+  // 3. Supprimer les ponctuations dupliquées (،،،، ou ......)
+  cleaned = cleaned.replace(/([،,.\u060C]){2,}/g, '$1');
+  cleaned = cleaned.replace(/([،,.\u060C\s]){5,}/g, ' ');
+
+  // 4. Supprimer les numéros isolés répétés (10،10،10،10)
+  cleaned = cleaned.replace(/\b(\d+)(,\s*\d+){3,}\b/g, '');
+
+  // 5. Supprimer les séries de symboles parasites
+  cleaned = cleaned.replace(/[^\w\s\u0600-\u06FF،.:!?'"()\-]{3,}/g, '');
+
+  // 6. Supprimer les caractères de remplacement
+  cleaned = cleaned.replace(/[\uFFFD\u25A1\u25A0]/g, '');
+
+  // 7. Normaliser les espaces multiples
+  cleaned = cleaned.replace(/[ \t]+/g, ' ');
+
+  // 8. Normaliser les sauts de ligne (max 2)
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+
+  // 9. Trim chaque ligne
+  cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
+
+  // 10. Trim global
+  cleaned = cleaned.trim();
+
+  return cleaned;
+}
+
+/**
+ * FONCTION PRINCIPALE DE NETTOYAGE OCR ARABE
+ * Combine normalisation + nettoyage bruit
+ */
+function cleanArabicOcrText(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  const originalLength = text.length;
+
+  // 1. Normaliser l'arabe (ligatures, présentation forms)
+  let cleaned = normalizeArabicText(text);
+
+  // 2. Nettoyer le bruit (timestamps, URLs, ponctuation)
+  cleaned = cleanOcrNoise(cleaned);
+
+  // Sécurité : si le nettoyage a trop supprimé (< 20% du texte original)
+  if (originalLength > 100 && cleaned.length < originalLength * 0.2) {
+    console.warn('[OCR Clean] Nettoyage trop agressif, retour du texte original');
+    return text;
+  }
+
+  console.log(`[OCR Arabic Clean] ${originalLength} → ${cleaned.length} chars`);
+  return cleaned;
+}
+
 module.exports = {
   extractTextFromPDF,
-  checkLanguageSupport
+  checkLanguageSupport,
+  normalizeArabicText,
+  cleanOcrNoise,
+  cleanArabicOcrText
 };
