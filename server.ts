@@ -127,9 +127,14 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   next(err);
 });
 
+const portArg = process.argv.find((arg) => arg.startsWith('--port='));
 const portArgIndex = process.argv.indexOf('--port');
-const portFromArgs = portArgIndex !== -1 ? parseInt(process.argv[portArgIndex + 1], 10) : undefined;
-const PORT = Number(portFromArgs || 3000);
+const portFromArgs = portArg
+  ? parseInt(portArg.split('=')[1], 10)
+  : portArgIndex !== -1
+  ? parseInt(process.argv[portArgIndex + 1], 10)
+  : undefined;
+const PORT = Number(process.env.PORT || portFromArgs || 3000);
 
 async function start() {
   if (process.env.NODE_ENV !== 'production') {
