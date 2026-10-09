@@ -22,11 +22,19 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import { 
   backupService, 
   BackupStats, 
-  BackupPolicy 
+  BackupPolicy,
+  BackupHistoryItem,
+  getBackupHistory,
+  restoreBackup,
+  reloadBackupScheduler,
+  deleteBackup
 } from '@/services/backupService';
+import { RestoreBackupDialog } from '@/components/backup/RestoreBackupDialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   Download, 
   Upload, 
@@ -44,7 +52,12 @@ import {
   Database,
   ChevronLeft,
   Shield,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  RotateCcw,
+  XCircle,
+  Loader2,
+  Filter
 } from 'lucide-react';
 
 const BackupSettingsPage: React.FC = () => {
@@ -68,10 +81,98 @@ const BackupSettingsPage: React.FC = () => {
   const [currentBackupId, setCurrentBackupId] = useState<string | null>(null);
   const [lastBackupInfo, setLastBackupInfo] = useState<string | null>(null);
 
+  // States for backup history and restore
+  const [backupHistory, setBackupHistory] = useState<BackupHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [selectedBackup, setSelectedBackup] = useState<any>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<'all' | 'manual' | 'automatic'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'failed'>('all');
+
   useEffect(() => {
     loadData();
     loadSavedPath();
+    loadBackupHistory();
   }, []);
+
+  const loadBackupHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const history = await getBackupHistory();
+      const list = Array.isArray(history) ? history : (history?.data || []);
+      setBackupHistory(list);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const getErrorMessage = (error: any) =>
+    error?.response?.data?.message || error?.message || 'خطأ غير معروف';
+
+  const handleReloadScheduler = async () => {
+    try {
+      await reloadBackupScheduler();
+      sonnerToast.success('✅ تم إعادة تحميل الجدول الزمني');
+    } catch (error) {
+      sonnerToast.error('❌ خطأ', { description: getErrorMessage(error) });
+    }
+  };
+
+  const handleRestoreClick = (backup: any) => {
+    setSelectedBackup(backup);
+    setRestoreDialogOpen(true);
+  };
+
+  const handleRestoreConfirm = async () => {
+    if (!selectedBackup?._id) return;
+    setIsRestoring(true);
+    try {
+      await restoreBackup(selectedBackup._id);
+      sonnerToast.success('✅ تمت الاستعادة بنجاح');
+      setRestoreDialogOpen(false);
+      setSelectedBackup(null);
+      loadBackupHistory();
+      loadData();
+    } catch (error) {
+      sonnerToast.error('❌ فشل الاستعادة', { description: getErrorMessage(error) });
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
+  const handleDeleteClick = async (backup: any) => {
+    sonnerToast.info('حذف النسخ الاحتياطية الفردية غير مدعوم على الخادم حالياً');
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (!bytes) return '—';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+  };
+
+  const getStatusBadge = (status: string) => {
+    if (status === 'completed') 
+      return <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1"><CheckCircle className="w-3 h-3 ml-1" />مكتمل</Badge>;
+    if (status === 'failed') 
+      return <Badge className="bg-red-100 text-red-800 border border-red-300 gap-1"><XCircle className="w-3 h-3 ml-1" />فشل</Badge>;
+    return <Badge className="bg-amber-100 text-amber-800 border border-amber-300 gap-1"><Clock className="w-3 h-3 ml-1" />جاري</Badge>;
+  };
+
+  const getTypeBadge = (type: string) => {
+    if (type === 'automatic') 
+      return <Badge variant="outline" className="text-xs">تلقائي</Badge>;
+    return <Badge variant="outline" className="text-xs">يدوي</Badge>;
+  };
+
+  const filteredHistory = backupHistory.filter((item) => {
+    if (typeFilter !== 'all' && item.type !== typeFilter) return false;
+    if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+    return true;
+  });
 
   const loadData = async () => {
     try {
@@ -168,6 +269,7 @@ const BackupSettingsPage: React.FC = () => {
               description: fullMessage,
             });
             loadData();
+            loadBackupHistory();
           } else if (status.status === 'failed') {
             setIsBackingUp(false);
             setCurrentBackupId(null);
@@ -652,6 +754,175 @@ const BackupSettingsPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* 5. Backup History Section */}
+      <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
+        <CardHeader className="p-6 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-3">
+              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282]">
+                <HardDrive className="h-5 w-5 text-[#2c5282]" />
+              </div>
+              <span>سجل النسخ الاحتياطية</span>
+            </CardTitle>
+            <CardDescription className="text-base text-[#718096] mt-1">
+              {filteredHistory.length} من أصل {backupHistory.length} نسخة محفوظة
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReloadScheduler}
+              className="h-10 px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
+              title="إعادة تحميل المجدول الزمني للنسخ التلقائي"
+            >
+              <RefreshCw className="w-4 h-4 ml-1.5" />
+              إعادة تحميل الجدول
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadBackupHistory}
+              disabled={historyLoading}
+              className="h-10 px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
+            >
+              <RefreshCw className={`w-4 h-4 ml-1.5 ${historyLoading ? 'animate-spin' : ''}`} />
+              تحديث السجل
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-6 space-y-6">
+          {/* Filters */}
+          <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-[#1a202c]">
+              <Filter className="w-4 h-4 text-[#2c5282]" />
+              <span>تصفية السجل:</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                <Label htmlFor="type-filter" className="text-sm text-[#4a5568] whitespace-nowrap">النوع:</Label>
+                <Select value={typeFilter} onValueChange={(val: any) => setTypeFilter(val)}>
+                  <SelectTrigger id="type-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="manual">يدوي</SelectItem>
+                    <SelectItem value="automatic">تلقائي</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                <Label htmlFor="status-filter" className="text-sm text-[#4a5568] whitespace-nowrap">الحالة:</Label>
+                <Select value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)}>
+                  <SelectTrigger id="status-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">الكل</SelectItem>
+                    <SelectItem value="completed">مكتمل</SelectItem>
+                    <SelectItem value="in_progress">جاري</SelectItem>
+                    <SelectItem value="failed">فشل</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Table */}
+          {historyLoading ? (
+            <div className="text-center py-10 text-slate-500 flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-[#2c5282]" />
+              <span>جاري تحميل سجل النسخ الاحتياطية...</span>
+            </div>
+          ) : filteredHistory.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 bg-[#f7fafc] border border-dashed border-[#e2e8f0] rounded">
+              <HardDrive className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p className="font-semibold text-slate-700">لا توجد نسخ احتياطية مطابقة</p>
+              <p className="text-sm text-slate-500 mt-1">قم بإنشاء نسخة احتياطية جديدة أو تغيير معايير التصفية</p>
+            </div>
+          ) : (
+            <div className="border border-[#e2e8f0] rounded overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-[#f8fafc]">
+                    <TableHead className="text-right font-bold text-[#1a202c]">التاريخ والوقت</TableHead>
+                    <TableHead className="text-right font-bold text-[#1a202c]">اسم الملف</TableHead>
+                    <TableHead className="text-right font-bold text-[#1a202c]">النوع</TableHead>
+                    <TableHead className="text-right font-bold text-[#1a202c]">الحالة</TableHead>
+                    <TableHead className="text-right font-bold text-[#1a202c]">الحجم</TableHead>
+                    <TableHead className="text-right font-bold text-[#1a202c]">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredHistory.map((backup) => (
+                    <TableRow key={backup._id} className="hover:bg-[#f7fafc]">
+                      <TableCell className="text-sm whitespace-nowrap">
+                        {new Date(backup.createdAt).toLocaleString('ar-TN')}
+                      </TableCell>
+                      <TableCell className="text-sm max-w-[240px] truncate font-mono text-slate-700" title={backup.fileName}>
+                        {backup.fileName}
+                      </TableCell>
+                      <TableCell>{getTypeBadge(backup.type)}</TableCell>
+                      <TableCell>{getStatusBadge(backup.status)}</TableCell>
+                      <TableCell className="text-sm font-medium">{formatFileSize(backup.fileSize)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {backup.status === 'completed' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded"
+                              title="استعادة هذه النسخة"
+                              onClick={() => handleRestoreClick(backup)}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={true}
+                            className="h-8 w-8 p-0 text-gray-400 opacity-40 cursor-not-allowed rounded"
+                            title="التحميل غير مدعوم على الخادم حالياً"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={true}
+                            className="h-8 w-8 p-0 text-gray-400 opacity-40 cursor-not-allowed rounded"
+                            title="الحذف غير مدعوم على الخادم حالياً"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Restore Confirmation Dialog */}
+      <RestoreBackupDialog
+        open={restoreDialogOpen}
+        onClose={() => { setRestoreDialogOpen(false); setSelectedBackup(null); }}
+        onConfirm={handleRestoreConfirm}
+        backupInfo={selectedBackup ? {
+          fileName: selectedBackup.fileName,
+          createdAt: selectedBackup.createdAt,
+          fileSize: selectedBackup.fileSize,
+        } : undefined}
+        isLoading={isRestoring}
+      />
     </div>
   );
 };
