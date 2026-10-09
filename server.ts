@@ -74,6 +74,19 @@ app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads
 app.use('/courrier', express.static(path.join(backendDir, 'courrier')));
 app.use('/uploads/templates', express.static(path.join(backendDir, 'uploads/templates')));
 
+// Swagger API Documentation
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const swaggerSpec = require('./backend/config/swagger');
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api-docs.json', (_req: express.Request, res: express.Response) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+} catch (err: any) {
+  console.warn('Swagger docs initialization notice:', err.message);
+}
+
 // If MongoDB is connected, use real backend routes; otherwise fallback seamlessly to mockRouter
 app.use('/api', (req, res, next) => {
   if (mongoose.connection.readyState === 1) {

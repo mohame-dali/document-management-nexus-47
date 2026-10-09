@@ -193,7 +193,16 @@ const rhStagePersonnelRoutes = require('./routes/rhStagePersonnelRoutes');
 const rhPersonnelHistoryRoutes = require('./routes/rhPersonnelHistoryRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const { startIndexRetryScheduler } = require('./services/indexRetryScheduler');
+
+// Mount Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 // Mount routers
 app.use('/api/auth', auth);
