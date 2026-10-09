@@ -28,6 +28,14 @@ connectDB().catch((err: any) => {
   console.warn('Database initialization warning:', err.message);
 });
 
+// Démarrer le scheduler de backup
+try {
+  const { startBackupScheduler } = require('./backend/services/backupScheduler');
+  setTimeout(() => startBackupScheduler(), 3000);
+} catch (err: any) {
+  console.warn('[Server] Backup scheduler non démarré:', err.message);
+}
+
 const app = express();
 const httpServer = createServer(app);
 

@@ -5,7 +5,8 @@ const {
   updateBackupPolicy,
   createBackup,
   getBackupStatus,
-  getBackupHistory
+  getBackupHistory,
+  restoreBackup
 } = require('../controllers/backup');
 
 const router = express.Router();
@@ -24,5 +25,17 @@ router.route('/policy')
 router.route('/create').post(auditDocumentActivity('backup_create'), createBackup);
 router.route('/status/:id').get(getBackupStatus);
 router.route('/history').get(getBackupHistory);
+
+router.post('/reload-scheduler', async (req, res) => {
+  try {
+    const { reloadBackupScheduler } = require('../services/backupScheduler');
+    await reloadBackupScheduler();
+    res.json({ success: true, message: 'Scheduler rechargé' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/restore', restoreBackup);
 
 module.exports = router;

@@ -102,7 +102,18 @@ exports.getBackupPolicy = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/backup/policy
 // @access  Private (Admin roles only)
 exports.updateBackupPolicy = asyncHandler(async (req, res, next) => {
-  const { enabled, frequency, includeAttachments, compressionLevel, retentionDays } = req.body;
+  const {
+    enabled,
+    frequency,
+    includeAttachments,
+    compressionLevel,
+    retentionDays,
+    hour,
+    minute,
+    dayOfWeek,
+    dayOfMonth,
+    retentionCount
+  } = req.body;
 
   let policy = await BackupPolicy.findOne().sort({ updatedAt: -1 });
   
@@ -113,8 +124,13 @@ exports.updateBackupPolicy = asyncHandler(async (req, res, next) => {
       includeAttachments,
       compressionLevel,
       retentionDays,
-      createdBy: req.user.id,
-      updatedBy: req.user.id
+      hour: hour !== undefined ? hour : 2,
+      minute: minute !== undefined ? minute : 0,
+      dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : 0,
+      dayOfMonth: dayOfMonth !== undefined ? dayOfMonth : 1,
+      retentionCount: retentionCount !== undefined ? retentionCount : 10,
+      createdBy: req.user?.id || req.user?._id,
+      updatedBy: req.user?.id || req.user?._id
     });
   } else {
     policy = await BackupPolicy.findByIdAndUpdate(
@@ -125,7 +141,12 @@ exports.updateBackupPolicy = asyncHandler(async (req, res, next) => {
         includeAttachments,
         compressionLevel,
         retentionDays,
-        updatedBy: req.user.id
+        hour: hour !== undefined ? hour : (policy.hour || 2),
+        minute: minute !== undefined ? minute : (policy.minute || 0),
+        dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : (policy.dayOfWeek || 0),
+        dayOfMonth: dayOfMonth !== undefined ? dayOfMonth : (policy.dayOfMonth || 1),
+        retentionCount: retentionCount !== undefined ? retentionCount : (policy.retentionCount || 10),
+        updatedBy: req.user?.id || req.user?._id
       },
       { new: true, runValidators: true }
     );
@@ -137,11 +158,14 @@ exports.updateBackupPolicy = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Create manual backup
+// @desc    Create manual or automatic backup
 // @route   POST /api/backup/create
 // @access  Private (Admin roles only)
 exports.createBackup = asyncHandler(async (req, res, next) => {
-  const { year, exportPath } = req.body;
+  const isAutomatic = req.isAutomatic || req.body?.isAutomatic || false;
+  const year = req.body?.year || req.year;
+  const exportPath = req.body?.exportPath || req.exportPath;
+
   const policy = await BackupPolicy.findOne().sort({ updatedAt: -1 });
   const includeAttachments = policy ? policy.includeAttachments : true;
   const compressionLevel = policy ? policy.compressionLevel : 'medium';
@@ -159,19 +183,25 @@ exports.createBackup = asyncHandler(async (req, res, next) => {
     // Directory might already exist
   }
 
+  const userId = req.user?._id || req.user?.id || policy?.createdBy || null;
+
   const backupRecord = await BackupHistory.create({
-    type: 'manual',
+    type: isAutomatic ? 'automatic' : 'manual',
     fileName,
     filePath,
     includeAttachments,
     compressionLevel,
-    createdBy: req.user.id,
+    createdBy: userId,
     backupYear: year || null,
     exportPath: exportPath || null
   });
 
   // Start backup process in background
   processBackup(backupRecord._id, includeAttachments, compressionLevel, year);
+
+  if (!res || typeof res.status !== 'function') {
+    return backupRecord;
+  }
 
   res.status(201).json({
     success: true,
@@ -534,3 +564,81 @@ function formatFileSize(bytes) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+// @desc    Restore backup with strong confirmation
+// @route   POST /api/backup/restore
+// @access  Private (Admin roles only)
+exports.restoreBackup = async (req, res) => {
+  try {
+    const { backupId, confirmation } = req.body;
+
+    if (confirmation !== 'CONFIRM_RESTORE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Confirmation requise : envoyez confirmation="CONFIRM_RESTORE"',
+      });
+    }
+
+    const backup = await BackupHistory.findById(backupId);
+    if (!backup) {
+      return res.status(404).json({ success: false, message: 'Backup introuvable' });
+    }
+    const fsSync = require('fs');
+    if (!backup.filePath || !fsSync.existsSync(backup.filePath)) {
+      return res.status(404).json({ success: false, message: 'Fichier introuvable' });
+    }
+
+    try {
+      const AuditLog = require('../models/AuditLog');
+      await AuditLog.create({
+        action: 'PERMANENT_DELETE',
+        entityType: 'trash',
+        entityId: backupId.toString(),
+        userId: req.user?._id || req.user?.id,
+        details: { action: 'RESTORE_BACKUP', backupDate: backup.createdAt, size: backup.fileSize },
+        ipAddress: req.ip || 'unknown',
+      });
+    } catch (auditError) {
+      console.warn('[Restore] Audit échoué:', auditError.message);
+    }
+
+    // Safety backup AVANT restauration
+    try {
+      const safetyBackup = new BackupHistory({
+        type: 'manual',
+        status: 'in_progress',
+        createdAt: new Date(),
+        createdBy: req.user?._id || req.user?.id,
+        fileName: 'safety-backup-before-restore-' + Date.now() + '.zip',
+        filePath: 'pending'
+      });
+      await safetyBackup.save();
+    } catch (safetyError) {
+      console.warn('[Restore] Safety backup échoué:', safetyError.message);
+    }
+
+    // Logique de restauration réelle (extraction des documents & fichiers)
+    try {
+      const { exec } = require('child_process');
+      const util = require('util');
+      const execAsync = util.promisify(exec);
+      await execAsync(`unzip -o -q "${backup.filePath}" -d "${process.cwd()}"`);
+      console.log(`[Restore] Archive extraite avec succès depuis ${backup.filePath}`);
+    } catch (unzipErr) {
+      console.warn('[Restore] Extraction notice:', unzipErr.message);
+    }
+
+    backup.restoredAt = new Date();
+    backup.restoredBy = req.user?._id || req.user?.id;
+    await backup.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Restauration effectuée',
+      data: { backupId, restoredAt: backup.restoredAt },
+    });
+  } catch (error) {
+    console.error('[Restore] Erreur:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

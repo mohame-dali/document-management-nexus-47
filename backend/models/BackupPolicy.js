@@ -25,6 +25,36 @@ const BackupPolicySchema = new mongoose.Schema({
     min: 1,
     max: 365
   },
+  hour: {
+    type: Number,
+    default: 2,
+    min: 0,
+    max: 23
+  },
+  minute: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 59
+  },
+  dayOfWeek: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 6
+  },
+  dayOfMonth: {
+    type: Number,
+    default: 1,
+    min: 1,
+    max: 28
+  },
+  retentionCount: {
+    type: Number,
+    default: 10,
+    min: 1,
+    max: 100
+  },
   lastBackupDate: {
     type: Date,
     default: null
@@ -36,12 +66,12 @@ const BackupPolicySchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: true
+    required: false
   },
   updatedBy: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: true
+    required: false
   }
 }, {
   timestamps: true
