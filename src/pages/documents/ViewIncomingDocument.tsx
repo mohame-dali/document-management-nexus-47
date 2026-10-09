@@ -52,6 +52,7 @@ import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDia
 import PDFViewer from '@/components/documents/PDFViewer';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import PersonnelAssociatedToDocument from '@/components/hr/PersonnelAssociatedToDocument';
+import DocumentAIAssistant from '@/components/ai/DocumentAIAssistant';
 import { useLanguage } from '@/contexts/LanguageProvider';
 
 const ViewIncomingDocument: React.FC = () => {
@@ -546,6 +547,15 @@ const ViewIncomingDocument: React.FC = () => {
                 {document.ocrText}
               </div>
             </div>
+          )}
+
+          {/* Section: Assistant IA (Résumé automatique + Traduction AR ↔ FR) */}
+          {document.ocrText && (
+            <DocumentAIAssistant
+              ocrText={document.ocrText}
+              documentId={document._id}
+              documentTitle={document.subject}
+            />
           )}
 
           {/* Section: Linked Answer / Outgoing Document */}

@@ -887,4 +887,82 @@ router.get('/hr/my-profile/full-history', (req, res) => {
   });
 });
 
+// AI Mock Routes (fallback when offline)
+router.get('/ai/health', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      ok: true,
+      url: 'http://localhost:11434',
+      chatModel: 'qwen2.5:7b',
+      chatInstalled: true,
+      installedModels: ['qwen2.5:7b', 'nomic-embed-text']
+    }
+  });
+});
+
+router.post('/ai/extract-from-ocr', (req, res) => {
+  const ocrText = req.body?.ocrText || '';
+  res.json({
+    success: true,
+    data: {
+      subject: ocrText.slice(0, 80) || 'موضوع المراسلة الإدارية',
+      source: 'الإدارة المركزية',
+      correspondenceNumber: 'CORR-' + Math.floor(1000 + Math.random() * 9000),
+      correspondenceDate: new Date().toISOString().split('T')[0],
+      typeDocument: 'note',
+      confidence: 0.92
+    }
+  });
+});
+
+router.post('/ai/summarize', (req, res) => {
+  const ocrText = req.body?.ocrText || '';
+  if (!ocrText || ocrText.trim().length < 50) {
+    return res.status(400).json({
+      success: false,
+      code: 'OCR_TOO_SHORT',
+      message: 'Texte OCR insuffisant pour résumé (min 50 caractères)'
+    });
+  }
+
+  res.json({
+    success: true,
+    data: {
+      summary: 'مراسلة إدارية رسمية تتعلق بمتابعة الإجراءات التنظيمية والمهام الموكلة للمصالح المعنية، مع التأكيد على احترام الآجال المحددة والتنسيق بين مختلف الأقسام.',
+      keyPoints: [
+        'متابعة الإجراءات الإدارية المعتمدة وفق الضوابط المعمول بها.',
+        'دعوة الأقسام المعنية للتنسيق والالتزام بالآجال.',
+        'إحالة الملفات المستعجلة إلى مصالح الرقابة والمتابعة.'
+      ],
+      language: 'ar',
+      urgency: 'normal'
+    }
+  });
+});
+
+router.post('/ai/translate', (req, res) => {
+  const text = req.body?.text || '';
+  const targetLang = req.body?.targetLang || 'fr';
+  if (!text || text.trim().length < 5) {
+    return res.status(400).json({
+      success: false,
+      code: 'TEXT_TOO_SHORT',
+      message: 'Texte trop court pour traduction'
+    });
+  }
+
+  const isTargetFr = targetLang === 'fr';
+  res.json({
+    success: true,
+    data: {
+      translatedText: isTargetFr
+        ? "Document administratif officiel concernant la coordination entre les départements et le suivi des dossiers conformément aux règlements en vigueur."
+        : "وثيقة إدارية رسمية تتعلق بالتنسيق بين مختلف المصالح ومتابعة الملفات الإدارية وفقاً للتنظيمات الجاري بها العمل.",
+      sourceLang: isTargetFr ? 'ar' : 'fr',
+      targetLang
+    }
+  });
+});
+
 module.exports = router;
