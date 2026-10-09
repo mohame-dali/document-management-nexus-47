@@ -12,15 +12,20 @@ exports.searchIncomingDocuments = async (req, res, next) => {
     // Build the query object
     let query = {};
     
-    // Text search in multiple fields including OCR
+    // Text search in multiple fields (with optional OCR toggle)
+    const { includeOcr } = req.query;
+    const shouldIncludeOcr = includeOcr === undefined || includeOcr === 'true' || includeOcr === true;
     if (q) {
-      query.$or = [
+      const orConditions = [
         { subject: { $regex: q, $options: 'i' } },
         { source: { $regex: q, $options: 'i' } },
-        { ocrText: { $regex: q, $options: 'i' } },
         { description: { $regex: q, $options: 'i' } },
         { activity: { $regex: q, $options: 'i' } }
       ];
+      if (shouldIncludeOcr) {
+        orConditions.push({ ocrText: { $regex: q, $options: 'i' } });
+      }
+      query.$or = orConditions;
     }
     
     // Filter by source if provided
@@ -28,9 +33,29 @@ exports.searchIncomingDocuments = async (req, res, next) => {
       query.source = { $regex: source, $options: 'i' };
     }
     
-    // Filter by year if provided
-    if (year) {
-      query.year = parseInt(year);
+    // Filter by year if provided (support single year or array of years)
+    const years = req.query['years[]'] || req.query.years || year;
+    if (years) {
+      if (Array.isArray(years)) {
+        const parsedYears = years.map(y => parseInt(y)).filter(y => !isNaN(y));
+        if (parsedYears.length === 1) {
+          query.year = parsedYears[0];
+        } else if (parsedYears.length > 1) {
+          query.year = { $in: parsedYears };
+        }
+      } else if (typeof years === 'string' && years.includes(',')) {
+        const parsedYears = years.split(',').map(y => parseInt(y.trim())).filter(y => !isNaN(y));
+        if (parsedYears.length === 1) {
+          query.year = parsedYears[0];
+        } else if (parsedYears.length > 1) {
+          query.year = { $in: parsedYears };
+        }
+      } else {
+        const parsedYear = parseInt(years);
+        if (!isNaN(parsedYear)) {
+          query.year = parsedYear;
+        }
+      }
     }
     
     // Filter by serial number if provided

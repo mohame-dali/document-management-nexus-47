@@ -22,6 +22,18 @@ router.use(protect);
 // Search route - MUST come before /:id route
 router.get('/search', searchOutgoingDocuments);
 
+// Available years route - MUST come before /:id route
+router.get('/years/available', async (req, res) => {
+  try {
+    const OutgoingDocument = require('../models/OutgoingDocument');
+    const years = await OutgoingDocument.distinct('year', { isDeleted: { $ne: true } });
+    const sorted = years.filter(y => y != null && !isNaN(y)).sort((a, b) => b - a);
+    res.json({ success: true, data: sorted });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // AdminTuningDesk can create documents
 router.route('/')
   .get(auditDocumentActivity('document_view'), getOutgoingDocuments)

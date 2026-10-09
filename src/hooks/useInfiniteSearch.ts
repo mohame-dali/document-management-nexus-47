@@ -7,6 +7,8 @@ interface SearchFilters {
   keyword?: string;
   documentType?: 'all' | 'incoming' | 'outgoing';
   year?: string;
+  years?: number[];
+  includeOcr?: boolean;
   dateFrom?: string;
   dateTo?: string;
   serialNumber?: string;
@@ -75,6 +77,8 @@ export const useInfiniteSearch = ({
     filters?.keyword,
     filters?.documentType,
     filters?.year,
+    filters?.years ? filters.years.join(',') : '',
+    filters?.includeOcr,
     filters?.dateFrom,
     filters?.dateTo,
     filters?.serialNumber,
