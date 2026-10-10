@@ -494,3 +494,37 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* HubLayout — Animations */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-in {
+  animation: fadeSlideIn 200ms ease-out;
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2s ease-in-out infinite;
+}
+
+/* Badge de notification plus discret */
+.badge-notification {
+  box-shadow: 0 0 0 2px rgba(255, 215, 88, 0.3);
+}

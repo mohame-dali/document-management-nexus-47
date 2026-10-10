@@ -1,58 +1,37 @@
 import React from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LucideIcon } from 'lucide-react';
+import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
+import { LucideIcon, ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/i18n/useDirection';
 
 export interface HubTab {
-  /** Chemin relatif (ex: 'incoming') ou absolu (ex: '/dashboard/mail/incoming') */
   to: string;
-  /** Clé i18n ou label directement */
   label: string;
-  /** Icône lucide-react */
   icon: LucideIcon;
-  /** Compteur optionnel (badge) */
+  /** NOUVEAU : couleur de l'icône */
+  color?: string;
+  /** Badge compteur */
   badge?: number;
-  /** Rôles autorisés (optionnel) */
   allowedRoles?: string[];
 }
 
 export interface HubLayoutProps {
-  /** Titre du hub (ex: "البريد والمستندات") */
   title: string;
-  /** Description courte */
   description?: string;
-  /** Icône du hub */
   icon?: LucideIcon;
-  /** Onglets du hub */
   tabs: HubTab[];
-  /** Rôle de l'utilisateur courant (pour filtrer les onglets) */
   currentUserRole?: string;
+  /** NOUVEAU : breadcrumb path (ex: [{label: 'الرئيسية', to: '/dashboard'}, {label: 'البريد'}]) */
+  breadcrumb?: Array<{ label: string; to?: string }>;
 }
 
-/**
- * HubLayout — Layout avec onglets horizontaux style Gmail.
- * 
- * Utilisation :
- *   <Route path="mail" element={
- *     <HubLayout
- *       title="البريد والمستندات"
- *       tabs={[
- *         { to: 'incoming', label: 'الواردة', icon: FileInput },
- *         { to: 'outgoing', label: 'الصادرة', icon: FileOutput },
- *       ]}
- *     />
- *   }>
- *     <Route path="incoming" element={<IncomingDocumentsPage />} />
- *     <Route path="outgoing" element={<OutgoingDocumentsPage />} />
- *   </Route>
- */
 export const HubLayout: React.FC<HubLayoutProps> = ({
   title,
   description,
   icon: HubIcon,
   tabs,
   currentUserRole,
+  breadcrumb,
 }) => {
   const { isRTL } = useDirection();
   const location = useLocation();
@@ -68,23 +47,46 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
 
   // Détecter si un onglet est actif
   const isTabActive = (tabTo: string): boolean => {
-    // Si chemin absolu
     if (tabTo.startsWith('/dashboard') || tabTo.startsWith('/')) {
       return location.pathname === tabTo || 
              location.pathname.startsWith(tabTo + '/');
     }
-    // Chemin relatif → préfixer avec le chemin actuel du hub
     const currentBase = location.pathname.split('/').slice(0, -1).join('/');
     const fullPath = `${currentBase}/${tabTo}`;
     return location.pathname === fullPath || 
            location.pathname.startsWith(fullPath + '/');
   };
 
+  // Chevron selon RTL
+  const Chevron = isRTL ? ChevronLeft : ChevronRight;
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc]" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* En-tête du hub */}
       <div className="bg-white border-b border-[#e2e8f0]">
         <div className="px-5 sm:px-6 lg:px-8 pt-5 pb-0 max-w-[1600px] mx-auto">
+          {/* Breadcrumb */}
+          {breadcrumb && breadcrumb.length > 0 && (
+            <nav className="flex items-center gap-1.5 text-xs text-[#718096] mb-3" aria-label="Breadcrumb">
+              <Link to="/dashboard" className="flex items-center gap-1 hover:text-[#2c5282] transition-colors">
+                <Home className="w-3.5 h-3.5" />
+                <span>الرئيسية</span>
+              </Link>
+              {breadcrumb.map((item, idx) => (
+                <React.Fragment key={idx}>
+                  <Chevron className="w-3 h-3 text-slate-400" />
+                  {item.to ? (
+                    <Link to={item.to} className="hover:text-[#2c5282] transition-colors">
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <span className="text-[#1a202c] font-medium">{item.label}</span>
+                  )}
+                </React.Fragment>
+              ))}
+            </nav>
+          )}
+
           {/* Titre */}
           <div className="flex items-center gap-3 mb-4">
             {HubIcon && (
@@ -104,7 +106,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
             </div>
           </div>
 
-          {/* Onglets horizontaux (style Gmail) */}
+          {/* Onglets horizontaux (style Gmail) avec icônes colorées */}
           <nav
             className="flex items-center gap-1 overflow-x-auto no-scrollbar -mb-px"
             role="tablist"
@@ -119,7 +121,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
                   to={tab.to}
                   className={`
                     relative flex items-center gap-2 px-4 py-3 text-sm font-medium
-                    whitespace-nowrap transition-colors
+                    whitespace-nowrap transition-all duration-200
                     border-b-[3px] -mb-px
                     ${
                       isActive
@@ -129,10 +131,14 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
                   `}
                   role="tab"
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon
+                    className={`w-4 h-4 shrink-0 transition-colors ${
+                      isActive ? tab.color || 'text-[#2c5282]' : 'text-slate-400'
+                    }`}
+                  />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold">
+                    <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold animate-pulse-subtle">
                       {tab.badge > 99 ? '99+' : tab.badge}
                     </Badge>
                   )}
@@ -143,8 +149,11 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
         </div>
       </div>
 
-      {/* Contenu de l'onglet actif */}
-      <div className="p-5 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
+      {/* Contenu de l'onglet actif — avec animation fade+slide */}
+      <div
+        key={location.pathname}
+        className="p-5 sm:p-6 lg:p-8 max-w-[1600px] mx-auto animate-fade-slide-in"
+      >
         <Outlet />
       </div>
     </div>

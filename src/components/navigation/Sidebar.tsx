@@ -46,6 +46,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import ProfileSettingsDialog from '@/components/users/ProfileSettingsDialog';
+import { useHubBadges } from '@/hooks/useHubBadges';
 
 const Sidebar = () => {
   const { currentUser } = useAuth();
@@ -55,6 +56,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [profileDialogOpen, setProfileDialogOpen] = React.useState(false);
+  const { unreadMessages } = useHubBadges();
 
   // Récupérer les paramètres de l'organisation pour rhDepartmentId (LOT 8)
   const { data: orgSettings } = useQuery({
@@ -163,6 +165,7 @@ const Sidebar = () => {
       label: t('sidebar.messages'),
       icon: MessageCircle,
       isActive: () => location.pathname.startsWith('/dashboard/messages'),
+      badge: unreadMessages,
     },
 
     // 8. 🗑️ سلة المحذوفات (direct) — rôles autorisés
@@ -299,12 +302,13 @@ const Sidebar = () => {
           <nav className="flex-1 p-3 space-y-1">
             {directMenuItems.map((item) => {
               const active = item.isActive();
+              const hasBadge = Boolean(item.badge && item.badge > 0);
               return (
                 <button
                   key={item.id}
                   type="button"
                   className={cn(
-                    "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-start",
+                    "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-start relative",
                     isRTL ? "flex-row-reverse" : "flex-row",
                     isOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
                     active 
@@ -318,10 +322,21 @@ const Sidebar = () => {
                     "h-4 w-4 flex-shrink-0 transition-colors duration-200",
                     active ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                   )} />
-                  {isOpen && (
-                    <span className="truncate">
-                      {item.label}
-                    </span>
+                  {isOpen ? (
+                    <>
+                      <span className="truncate flex-1">
+                        {item.label}
+                      </span>
+                      {hasBadge && (
+                        <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold animate-pulse-subtle">
+                          {(item.badge ?? 0) > 99 ? '99+' : item.badge}
+                        </Badge>
+                      )}
+                    </>
+                  ) : (
+                    hasBadge && (
+                      <span className="absolute top-1 end-1 w-2.5 h-2.5 bg-[#FFD758] rounded-full border border-[#1a202c]" />
+                    )
                   )}
                 </button>
               );
