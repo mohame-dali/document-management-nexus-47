@@ -484,3 +484,13 @@
     @apply text-black bg-white;
   }
 }
+
+/* HubLayout — Hide scrollbar for tabs */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
