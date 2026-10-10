@@ -1,10 +1,8 @@
 /**
  * Redirections rétrocompatibles vers l'architecture Gmail (5 hubs).
  * 
- * ÉTAT : DÉSACTIVÉ (ENABLE_REDIRECTS = false)
- * Les anciennes routes continuent de fonctionner normalement.
- * 
- * ACTIVATION : Basculer ENABLE_REDIRECTS à true en Phase 4.
+ * ÉTAT : ACTIVÉ (ENABLE_REDIRECTS = true)
+ * Les anciennes routes redirigent vers les hubs correspondants.
  * 
  * STRUCTURE CIBLE (5 hubs) :
  *   Hub 1 : 📁 البريد والمستندات    → /dashboard/mail
@@ -21,7 +19,7 @@
  * ROLLBACK : ENABLE_REDIRECTS = false → retour à l'ancien système.
  */
 
-export const ENABLE_REDIRECTS = false;
+export const ENABLE_REDIRECTS = true;
 
 export interface RouteRedirect {
   from: string;
