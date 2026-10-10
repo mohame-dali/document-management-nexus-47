@@ -642,3 +642,111 @@ exports.restoreBackup = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Télécharger un fichier de backup
+// @route   GET /api/backup/download/:id
+// @access  Private (Admin)
+exports.downloadBackup = async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const backup = await BackupHistory.findById(req.params.id);
+
+    if (!backup) {
+      return res.status(404).json({
+        success: false,
+        message: 'Backup introuvable',
+      });
+    }
+
+    if (backup.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Ce backup n\'est pas terminé',
+      });
+    }
+
+    if (!backup.filePath || !fs.existsSync(backup.filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fichier de backup introuvable sur le disque',
+      });
+    }
+
+    const fileName = backup.fileName || path.basename(backup.filePath);
+    res.download(backup.filePath, fileName);
+  } catch (error) {
+    console.error('[Backup Download] Erreur:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// @desc    Supprimer un backup
+// @route   DELETE /api/backup/:id
+// @access  Private (Admin)
+exports.deleteBackup = async (req, res) => {
+  try {
+    const fs = require('fs');
+    const backup = await BackupHistory.findById(req.params.id);
+
+    if (!backup) {
+      return res.status(404).json({
+        success: false,
+        message: 'Backup introuvable',
+      });
+    }
+
+    if (backup.status === 'in_progress') {
+      return res.status(400).json({
+        success: false,
+        message: 'Impossible de supprimer un backup en cours',
+      });
+    }
+
+    // Supprimer le fichier physique
+    if (backup.filePath && fs.existsSync(backup.filePath)) {
+      try {
+        fs.unlinkSync(backup.filePath);
+        console.log(`[Backup Delete] Fichier supprimé: ${backup.filePath}`);
+      } catch (fileErr) {
+        console.warn('[Backup Delete] Erreur fichier:', fileErr.message);
+      }
+    }
+
+    // Supprimer l'entrée DB
+    await BackupHistory.findByIdAndDelete(req.params.id);
+
+    // Audit log (non bloquant)
+    try {
+      const AuditLog = require('../models/AuditLog');
+      await AuditLog.create({
+        action: 'PERMANENT_DELETE',
+        entityType: 'trash',
+        entityId: req.params.id,
+        userId: req.user._id,
+        details: {
+          action: 'DELETE_BACKUP',
+          fileName: backup.fileName,
+          fileSize: backup.fileSize,
+        },
+        ipAddress: req.ip,
+      });
+    } catch (auditErr) {
+      console.warn('[Backup Delete] Audit échoué:', auditErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Backup supprimé définitivement',
+    });
+  } catch (error) {
+    console.error('[Backup Delete] Erreur:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

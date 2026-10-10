@@ -31,6 +31,7 @@ import {
   getBackupHistory,
   restoreBackup,
   reloadBackupScheduler,
+  downloadBackup,
   deleteBackup
 } from '@/services/backupService';
 import { RestoreBackupDialog } from '@/components/backup/RestoreBackupDialog';
@@ -143,8 +144,29 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
+  const handleDownloadClick = async (backup: any) => {
+    try {
+      await downloadBackup(backup._id, backup.fileName);
+      sonnerToast.success('✅ بدأ التحميل');
+    } catch (error) {
+      sonnerToast.error('❌ فشل التحميل', {
+        description: getErrorMessage(error),
+      });
+    }
+  };
+
   const handleDeleteClick = async (backup: any) => {
-    sonnerToast.info('حذف النسخ الاحتياطية الفردية غير مدعوم على الخادم حالياً');
+    if (!window.confirm(`حذف النسخة "${backup.fileName}" نهائياً؟`)) return;
+
+    try {
+      await deleteBackup(backup._id);
+      sonnerToast.success('✅ تم الحذف');
+      loadBackupHistory();
+    } catch (error) {
+      sonnerToast.error('❌ فشل الحذف', {
+        description: getErrorMessage(error),
+      });
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -885,18 +907,18 @@ const BackupSettingsPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            disabled={true}
-                            className="h-8 w-8 p-0 text-gray-400 opacity-40 cursor-not-allowed rounded"
-                            title="التحميل غير مدعوم على الخادم حالياً"
+                            className="h-8 w-8 p-0 text-[#2c5282] hover:bg-blue-50 rounded"
+                            title="تحميل النسخة الاحتياطية"
+                            onClick={() => handleDownloadClick(backup)}
                           >
                             <Download className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            disabled={true}
-                            className="h-8 w-8 p-0 text-gray-400 opacity-40 cursor-not-allowed rounded"
-                            title="الحذف غير مدعوم على الخادم حالياً"
+                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 rounded"
+                            title="حذف النسخة نهائياً"
+                            onClick={() => handleDeleteClick(backup)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

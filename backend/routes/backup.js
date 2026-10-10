@@ -6,7 +6,9 @@ const {
   createBackup,
   getBackupStatus,
   getBackupHistory,
-  restoreBackup
+  restoreBackup,
+  downloadBackup,
+  deleteBackup
 } = require('../controllers/backup');
 
 const router = express.Router();
@@ -37,5 +39,11 @@ router.post('/reload-scheduler', async (req, res) => {
 });
 
 router.post('/restore', restoreBackup);
+
+// Télécharger un backup
+router.get('/download/:id', downloadBackup);
+
+// Supprimer un backup
+router.delete('/:id', deleteBackup);
 
 module.exports = router;
