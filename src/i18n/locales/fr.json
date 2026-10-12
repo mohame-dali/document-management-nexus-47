@@ -742,5 +742,9 @@
   "ai.assistant.dragTooltip": "Glisser pour déplacer la fenêtre",
   "ai.assistant.send": "Envoyer",
   "ai.assistant.close": "Fermer",
-  "ai.assistant.noResults": "Aucun document trouvé"
+  "ai.assistant.noResults": "Aucun document trouvé",
+  "sidebar.mailAndDocuments": "Courrier & Documents",
+  "sidebar.tools": "Outils",
+  "sidebar.profileAndAttendance": "Profil & Présence",
+  "sidebar.administration": "Administration"
 }

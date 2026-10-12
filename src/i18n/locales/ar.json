@@ -742,5 +742,9 @@
   "ai.assistant.dragTooltip": "اسحب لتحريك النافذة",
   "ai.assistant.send": "إرسال",
   "ai.assistant.close": "إغلاق",
-  "ai.assistant.noResults": "لم أجد أي وثيقة مطابقة"
+  "ai.assistant.noResults": "لم أجد أي وثيقة مطابقة",
+  "sidebar.mailAndDocuments": "البريد والمستندات",
+  "sidebar.tools": "الأدوات",
+  "sidebar.profileAndAttendance": "الملف والحضور",
+  "sidebar.administration": "الإدارة"
 }

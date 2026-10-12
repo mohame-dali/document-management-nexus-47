@@ -356,10 +356,138 @@ function cosineSimilarity(vecA, vecB) {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+/**
+ * Résume automatiquement le texte OCR d'un courrier administratif
+ * @param {string} ocrText - Texte extrait par OCR
+ * @param {object} options - Options (maxLength)
+ */
+async function summarizeDocument(ocrText, options = {}) {
+  if (!ocrText || ocrText.trim().length < 50) {
+    const err = new Error('Texte OCR trop court pour résumé (min 50 caractères)');
+    err.code = 'OCR_TOO_SHORT';
+    throw err;
+  }
+
+  const maxLength = options.maxLength || 200;
+  const truncatedText = ocrText.slice(0, 6000);
+
+  const systemPrompt = `Tu es un assistant administratif tunisien.
+Tu résumes des courriers officiels (arabe et français) de manière claire et concise.
+Tu réponds UNIQUEMENT en JSON valide, sans commentaire, sans markdown.`;
+
+  const userPrompt = `Analyse ce courrier et produis un résumé structuré.
+
+Texte OCR :
+"""
+${truncatedText}
+"""
+
+Réponds au format JSON strict :
+{
+  "summary": "Résumé en 2-3 phrases (max ${maxLength} caractères)",
+  "keyPoints": ["Point 1", "Point 2", "Point 3"],
+  "language": "ar",
+  "urgency": "normal"
+}`;
+
+  const response = await chat(userPrompt, systemPrompt, {
+    format: 'json',
+    temperature: 0.2,
+    maxTokens: 800,
+  });
+
+  const parsed = parseRobustJson(response);
+  if (!parsed || !parsed.summary) {
+    console.error('[Ollama] Impossible de parser le résumé JSON:', response?.substring?.(0, 300));
+    if (response && response.trim().length > 10) {
+      return {
+        summary: response.trim().substring(0, maxLength * 2),
+        keyPoints: [],
+        language: 'mixed',
+        urgency: 'normal',
+      };
+    }
+    const err = new Error('AI_INVALID_JSON');
+    err.code = 'AI_INVALID_JSON';
+    throw err;
+  }
+
+  return {
+    summary: parsed.summary,
+    keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
+    language: parsed.language || 'mixed',
+    urgency: parsed.urgency || 'normal',
+  };
+}
+
+/**
+ * Traduit un texte administratif entre l'arabe et le français
+ * @param {string} text - Texte à traduire
+ * @param {string} targetLang - Langue cible ('ar' ou 'fr')
+ * @param {object} options - Options
+ */
+async function translateText(text, targetLang = 'fr', options = {}) {
+  if (!text || text.trim().length < 5) {
+    const err = new Error('Texte trop court pour traduction (min 5 caractères)');
+    err.code = 'TEXT_TOO_SHORT';
+    throw err;
+  }
+
+  const truncatedText = text.slice(0, 6000);
+  const targetLanguageName = targetLang === 'ar' ? 'arabe' : 'français';
+
+  const systemPrompt = `Tu es un traducteur assermenté spécialisé dans les courriers et correspondances administratifs tunisiens.
+Traduis fidèlement le texte fourni vers le ${targetLanguageName}.
+Tu réponds UNIQUEMENT en JSON valide, sans commentaire, sans balise markdown.`;
+
+  const userPrompt = `Traduis ce texte administratif vers le ${targetLanguageName}.
+
+Texte source :
+"""
+${truncatedText}
+"""
+
+Réponds au format JSON strict :
+{
+  "translatedText": "Texte fidèlement traduit en ${targetLanguageName}",
+  "sourceLang": "${targetLang === 'ar' ? 'fr' : 'ar'}",
+  "targetLang": "${targetLang}"
+}`;
+
+  const response = await chat(userPrompt, systemPrompt, {
+    format: 'json',
+    temperature: 0.1,
+    maxTokens: 2000,
+  });
+
+  const parsed = parseRobustJson(response);
+  if (!parsed || !parsed.translatedText) {
+    console.error('[Ollama] Impossible de parser la traduction JSON:', response?.substring?.(0, 300));
+    if (response && response.trim().length > 5) {
+      return {
+        translatedText: response.trim(),
+        sourceLang: targetLang === 'ar' ? 'fr' : 'ar',
+        targetLang,
+      };
+    }
+    const err = new Error('AI_INVALID_JSON');
+    err.code = 'AI_INVALID_JSON';
+    throw err;
+  }
+
+  return {
+    translatedText: parsed.translatedText,
+    sourceLang: parsed.sourceLang || (targetLang === 'ar' ? 'fr' : 'ar'),
+    targetLang,
+  };
+}
+
 module.exports = {
   chat,
   checkOllamaHealth,
   extractDocumentInfo,
+  summarizeDocument,
+  translateText,
   parseRobustJson,
   getEmbedding,
   cosineSimilarity,

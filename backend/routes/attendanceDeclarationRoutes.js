@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, checkRHAccess } = require('../middleware/auth');
 const ctrl = require('../controllers/attendanceDeclarationController');
 
 const readAdminRoles = ['Director', 'Admin', 'AdminDepartment'];
 const writeAdminRoles = ['Admin', 'AdminDepartment'];
 
+router.get('/declarations/pending/count', protect, checkRHAccess, ctrl.getPendingCount);
 router.post('/declarations', protect, ctrl.declareAttendance);
 router.get('/declarations/me', protect, ctrl.getMyDeclarations);
 router.get('/declarations', protect, authorize(...readAdminRoles), ctrl.getAllDeclarations);

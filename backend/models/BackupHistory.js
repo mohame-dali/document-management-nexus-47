@@ -57,7 +57,16 @@ const BackupHistorySchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: true
+    required: false
+  },
+  restoredAt: {
+    type: Date,
+    default: null
+  },
+  restoredBy: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    default: null
   },
   backupYear: {
     type: Number,

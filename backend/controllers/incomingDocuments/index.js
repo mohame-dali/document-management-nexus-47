@@ -8,6 +8,7 @@ const searchControllers = require('./searchControllers');
 module.exports = {
   // List controllers
   getIncomingDocuments: listControllers.getIncomingDocuments,
+  getPendingCount: listControllers.getPendingCount,
   
   // Detail controllers 
   getIncomingDocument: detailControllers.getIncomingDocument,

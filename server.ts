@@ -28,6 +28,14 @@ connectDB().catch((err: any) => {
   console.warn('Database initialization warning:', err.message);
 });
 
+// Démarrer le scheduler de backup
+try {
+  const { startBackupScheduler } = require('./backend/services/backupScheduler');
+  setTimeout(() => startBackupScheduler(), 3000);
+} catch (err: any) {
+  console.warn('[Server] Backup scheduler non démarré:', err.message);
+}
+
 const app = express();
 const httpServer = createServer(app);
 
@@ -65,6 +73,19 @@ app.use('/uploads/usersphoto', express.static(path.join(backendDir, 'uploads/use
 app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads/personnelphoto')));
 app.use('/courrier', express.static(path.join(backendDir, 'courrier')));
 app.use('/uploads/templates', express.static(path.join(backendDir, 'uploads/templates')));
+
+// Swagger API Documentation
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const swaggerSpec = require('./backend/config/swagger');
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api-docs.json', (_req: express.Request, res: express.Response) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+} catch (err: any) {
+  console.warn('Swagger docs initialization notice:', err.message);
+}
 
 // If MongoDB is connected, use real backend routes; otherwise fallback seamlessly to mockRouter
 app.use('/api', (req, res, next) => {
@@ -127,9 +148,14 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   next(err);
 });
 
+const portArg = process.argv.find((arg) => arg.startsWith('--port='));
 const portArgIndex = process.argv.indexOf('--port');
-const portFromArgs = portArgIndex !== -1 ? parseInt(process.argv[portArgIndex + 1], 10) : undefined;
-const PORT = Number(portFromArgs || 3000);
+const portFromArgs = portArg
+  ? parseInt(portArg.split('=')[1], 10)
+  : portArgIndex !== -1
+  ? parseInt(process.argv[portArgIndex + 1], 10)
+  : undefined;
+const PORT = Number(process.env.PORT || portFromArgs || 3000);
 
 async function start() {
   if (process.env.NODE_ENV !== 'production') {

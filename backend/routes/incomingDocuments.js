@@ -9,7 +9,8 @@ const {
   assignToFolder,
   assignResponsible,
   addAnswer,
-  searchIncomingDocuments
+  searchIncomingDocuments,
+  getPendingCount
 } = require('../controllers/incomingDocuments');
 
 const { protect, authorize, checkDepartmentAccess } = require('../middleware/auth');
@@ -23,6 +24,21 @@ router.use(protect);
 
 // Search route - MUST come before /:id route
 router.get('/search', searchIncomingDocuments);
+
+// Available years route - MUST come before /:id route
+router.get('/years/available', async (req, res) => {
+  try {
+    const IncomingDocument = require('../models/IncomingDocument');
+    const years = await IncomingDocument.distinct('year', { isDeleted: { $ne: true } });
+    const sorted = years.filter(y => y != null && !isNaN(y)).sort((a, b) => b - a);
+    res.json({ success: true, data: sorted });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Pending count route - MUST come before /:id route
+router.get('/pending/count', protect, getPendingCount);
 
 // Routes accessible to all authenticated users
 router.route('/')

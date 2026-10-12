@@ -4,6 +4,8 @@ const { protect, authorize } = require('../middleware/auth');
 const aiRateLimiter = require('../middleware/aiRateLimiter');
 const { health, extractFromOcr } = require('../controllers/ai/extractionController');
 const { chatSearch } = require('../controllers/ai/chatController');
+const { summarize } = require('../controllers/ai/summaryController');
+const { translate } = require('../controllers/ai/translationController');
 
 // GET /api/ai/health — Vérification du service IA
 router.get('/health', protect, health);
@@ -15,6 +17,24 @@ router.post(
   authorize('Admin', 'AdminTuningDesk', 'AdminDepartment'),
   aiRateLimiter,
   extractFromOcr
+);
+
+// POST /api/ai/summarize — Résumé automatique d'un document
+router.post(
+  '/summarize',
+  protect,
+  authorize('Admin', 'Director', 'AdminTuningDesk', 'AdminDepartment'),
+  aiRateLimiter,
+  summarize
+);
+
+// POST /api/ai/translate — Traduction bilingue AR ↔ FR
+router.post(
+  '/translate',
+  protect,
+  authorize('Admin', 'Director', 'AdminTuningDesk', 'AdminDepartment'),
+  aiRateLimiter,
+  translate
 );
 
 // POST /api/ai/chat — Recherche sémantique + résumé IA

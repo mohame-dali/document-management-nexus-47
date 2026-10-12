@@ -22,10 +22,42 @@ api.interceptors.request.use((config) => {
 });
 
 // Advanced Search API calls
+export const getAvailableYears = async (type: 'all' | 'incoming' | 'outgoing' = 'all'): Promise<number[]> => {
+  try {
+    const promises: Promise<any>[] = [];
+    if (type === 'all' || type === 'incoming') {
+      promises.push(
+        api.get(`${API_URL}/incoming-documents/years/available`)
+          .then(res => res.data?.data || [])
+          .catch(() => [])
+      );
+    }
+    if (type === 'all' || type === 'outgoing') {
+      promises.push(
+        api.get(`${API_URL}/outgoing-documents/years/available`)
+          .then(res => res.data?.data || [])
+          .catch(() => [])
+      );
+    }
+    const results = await Promise.all(promises);
+    const set = new Set<number>();
+    results.flat().forEach((y: any) => {
+      const num = parseInt(y, 10);
+      if (!isNaN(num)) set.add(num);
+    });
+    return Array.from(set).sort((a, b) => b - a);
+  } catch (error) {
+    console.error('Error fetching available years:', error);
+    return [];
+  }
+};
+
 export const advancedSearchDocuments = async (filters: {
   keyword?: string;
   documentType?: 'all' | 'incoming' | 'outgoing';
   year?: string;
+  years?: number[];
+  includeOcr?: boolean;
   dateFrom?: string;
   dateTo?: string;
   serialNumber?: string;
@@ -45,7 +77,14 @@ export const advancedSearchDocuments = async (filters: {
     // Build search parameters
     const params = new URLSearchParams();
     if (filters.keyword) params.append('q', filters.keyword);
-    if (filters.year) params.append('year', filters.year);
+    if (filters.years && filters.years.length > 0) {
+      filters.years.forEach(y => params.append('years[]', y.toString()));
+    } else if (filters.year) {
+      params.append('year', filters.year);
+    }
+    if (filters.includeOcr !== undefined) {
+      params.append('includeOcr', filters.includeOcr.toString());
+    }
     if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
     if (filters.dateTo) params.append('dateTo', filters.dateTo);
     if (filters.serialNumber) params.append('serialNumber', filters.serialNumber);

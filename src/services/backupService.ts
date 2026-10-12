@@ -90,6 +90,57 @@ class BackupService {
     const response = await api.get(`/backup/history?page=${page}&limit=${limit}`);
     return response.data;
   }
+
+  async restoreBackup(backupId: string): Promise<any> {
+    const response = await api.post('/backup/restore', {
+      backupId,
+      confirmation: 'CONFIRM_RESTORE',
+    });
+    return response.data;
+  }
+
+  async reloadBackupScheduler(): Promise<any> {
+    const response = await api.post('/backup/reload-scheduler');
+    return response.data;
+  }
 }
 
 export const backupService = new BackupService();
+
+export const getBackupHistory = async (page: number = 1, limit: number = 50): Promise<any> => {
+  const response = await api.get(`/backup/history?page=${page}&limit=${limit}`);
+  return response.data?.data || response.data || [];
+};
+
+export const restoreBackup = async (backupId: string): Promise<any> => {
+  const response = await api.post('/backup/restore', {
+    backupId,
+    confirmation: 'CONFIRM_RESTORE',
+  });
+  return response.data;
+};
+
+export const reloadBackupScheduler = async (): Promise<any> => {
+  const response = await api.post('/backup/reload-scheduler');
+  return response.data;
+};
+
+export const deleteBackup = async (backupId: string): Promise<any> => {
+  const response = await api.delete(`/backup/${backupId}`);
+  return response.data;
+};
+
+export const downloadBackup = async (backupId: string, fileName?: string): Promise<void> => {
+  const response = await api.get(`/backup/download/${backupId}`, {
+    responseType: 'blob',
+  });
+  const blob = new Blob([response.data]);
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName || 'backup.zip';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};

@@ -20,17 +20,20 @@ const AuditLogSchema = new mongoose.Schema({
       'user_update',
       'user_delete',
       'user_login',
-      'user_logout'
+      'user_logout',
+      'PERMANENT_DELETE',
+      'EMPTY_TRASH'
     ]
   },
   entityType: {
     type: String,
     required: true,
-    enum: ['document', 'folder', 'user']
+    enum: ['document', 'folder', 'user', 'trash', 'personnel', 'incoming', 'outgoing', 'message']
   },
   entityId: {
     type: String,
-    required: true
+    required: false,
+    default: 'none'
   },
   userId: {
     type: mongoose.Schema.ObjectId,

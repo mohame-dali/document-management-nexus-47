@@ -5,6 +5,25 @@ const Personnel = require('../models/Personnel');
 const LeaveReason = require('../models/LeaveReason');
 const OrganizationSettings = require('../models/OrganizationSettings');
 
+// Whitelist des motifs valides pour le modèle Attendance
+// Doit rester synchronisée avec l'enum de backend/models/Attendance.js
+const VALID_ATTENDANCE_MOTIFS = [
+  'conge_annuel',
+  'absence_injustifiee',
+  'recuperation',
+  'conge_exceptionnel',
+  'conge_maladie',
+  'conge_maternite',
+  'conge_paternite',
+  'formation',
+  'mission',
+  'service',
+  'detachement_externe',
+  'disponibilite',
+  'greve',
+  'sans_solde'
+];
+
 /**
  * Normalise une date au début de journée UTC (00:00:00.000)
  */
@@ -306,6 +325,19 @@ exports.approveDeclaration = async (req, res) => {
 
     const { start } = getUTCDayRange(declaration.date);
 
+    // Sécuriser la valeur de motif pour respecter l'enum strict du modèle Attendance
+    let safeMotif = null;
+    if (!isPresent) {
+      if (declaration.motif && VALID_ATTENDANCE_MOTIFS.includes(declaration.motif)) {
+        safeMotif = declaration.motif;
+      } else if (leaveReasonId) {
+        const lr = await LeaveReason.findById(leaveReasonId).lean();
+        if (lr && VALID_ATTENDANCE_MOTIFS.includes(lr.code)) {
+          safeMotif = lr.code;
+        }
+      }
+    }
+
     // Mettre à jour ou insérer dans Attendance (upsert)
     const attendanceRecord = await Attendance.findOneAndUpdate(
       {
@@ -316,7 +348,7 @@ exports.approveDeclaration = async (req, res) => {
         $set: {
           departmentId: declaration.departmentId,
           statut: declaration.statut,
-          motif: isPresent ? null : (declaration.motif || null),
+          motif: safeMotif,
           leaveReasonId: isPresent ? null : leaveReasonId,
           impacteSolde: isPresent ? false : impacteSolde,
           detailsMotif: {
@@ -529,5 +561,20 @@ exports.deleteDeclaration = async (req, res) => {
       success: false,
       message: error.message || 'Erreur lors de la suppression de la déclaration'
     });
+  }
+};
+
+// @desc    Compter les déclarations en attente
+// @route   GET /api/attendance/declarations/pending/count
+// @access  Private (RH)
+exports.getPendingCount = async (req, res) => {
+  try {
+    const count = await AttendanceDeclaration.countDocuments({
+      validationStatus: 'en_attente',
+    });
+    res.json({ success: true, data: { count } });
+  } catch (error) {
+    console.error('[PendingCount] Erreur:', error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -69,3 +69,27 @@ exports.getIncomingDocuments = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Compter les courriers entrants non traités
+// @route   GET /api/incoming-documents/pending/count
+// @access  Private
+exports.getPendingCount = async (req, res) => {
+  try {
+    const IncomingDocument = require('../../models/IncomingDocument');
+    const query = {
+      isDeleted: { $ne: true },
+      answer: null,
+    };
+    // Restriction par département si nécessaire
+    if (req.userRestrictedToDepartment) {
+      query['assignedTo.departmentId'] = req.userRestrictedToDepartment;
+    } else if (req.user && (req.user.role === 'AdminDepartment' || req.user.role === 'User') && req.user.activeDepartment) {
+      query['assignedTo.id'] = req.user.activeDepartment._id || req.user.activeDepartment;
+    }
+    const count = await IncomingDocument.countDocuments(query);
+    res.json({ success: true, data: { count } });
+  } catch (error) {
+    console.error('[IncomingPendingCount] Erreur:', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

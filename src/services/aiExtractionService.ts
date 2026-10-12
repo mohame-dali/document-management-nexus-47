@@ -70,3 +70,8 @@ export const getAIErrorCode = (error: any): AIError => {
 
   return { code: 'UNKNOWN', message: message || '' };
 };
+
+// Re-exports pour commodité
+export { summarizeDocument, type DocumentSummary } from './aiSummaryService';
+export { translateDocumentText, type TranslationResult } from './aiTranslationService';
+

@@ -65,6 +65,7 @@ import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import PDFViewer from '@/components/documents/PDFViewer';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import PersonnelAssociatedToDocument from '@/components/hr/PersonnelAssociatedToDocument';
+import DocumentAIAssistant from '@/components/ai/DocumentAIAssistant';
 
 const ViewOutgoingDocument: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -770,6 +771,15 @@ const ViewOutgoingDocument: React.FC = () => {
                 <span>الحروف: {document.ocrText.length} حرف</span>
               </div>
             </div>
+          )}
+
+          {/* Section: Assistant IA (Résumé automatique + Traduction AR ↔ FR) */}
+          {document.ocrText && (
+            <DocumentAIAssistant
+              ocrText={document.ocrText}
+              documentId={document._id}
+              documentTitle={document.subject}
+            />
           )}
 
         </div>
