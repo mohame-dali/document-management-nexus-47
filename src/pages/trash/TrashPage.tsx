@@ -59,6 +59,8 @@ const TrashPage: React.FC = () => {
   } = useQuery({
     queryKey: ['trash', filterType],
     queryFn: () => getTrashData(filterType),
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   const items = trashData?.items || [];

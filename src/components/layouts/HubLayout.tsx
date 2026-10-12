@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { LucideIcon, ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/i18n/useDirection';
+import { AutoRefreshIndicator } from '@/components/common/AutoRefreshIndicator';
 
 export interface HubTab {
   to: string;

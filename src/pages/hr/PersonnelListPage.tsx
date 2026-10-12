@@ -127,7 +127,8 @@ export const PersonnelListPage: React.FC = () => {
   } = useQuery({
     queryKey: ['personnel', queryParams],
     queryFn: () => getPersonnelList(queryParams),
-    keepPreviousData: true,
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   const personnelList = responseData?.data || [];

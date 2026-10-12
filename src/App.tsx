@@ -69,12 +69,33 @@ import KeyboardShortcuts from './components/common/KeyboardShortcuts';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      // Réduit de 5min à 30sec — données plus fraîches
+      staleTime: 30 * 1000,
+
+      // Cache 5 minutes après dernier usage
+      gcTime: 5 * 60 * 1000,
+
+      // Refetch au retour sur l'onglet navigateur
+      refetchOnWindowFocus: true,
+
+      // Refetch quand la connexion réseau revient
+      refetchOnReconnect: true,
+
+      // Refetch au montage du composant
+      refetchOnMount: 'always',
+
+      // Conserver la logique retry existante avec 429 et 401
       retry: (failureCount, error: any) => {
-        // Ne pas retry sur 429 — évite les cascades
         if (error?.response?.status === 429) return false;
+        if (error?.response?.status === 401) return false;
         return failureCount < 2;
       },
+
+      // Backoff exponentiel entre retries
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 0,
     },
   },
 });

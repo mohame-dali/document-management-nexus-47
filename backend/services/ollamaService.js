@@ -1,138 +1,211 @@
-const axios = require('axios');
+const path = require('path');
+const fs = require('fs');
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const OLLAMA_TIMEOUT = 60000;
+// ═══════════════════════════════════════════════════════════════
+// Configuration Modèles GGUF (node-llama-cpp)
+// ═══════════════════════════════════════════════════════════════
+const CHAT_MODEL_PATH = process.env.LLAMA_CHAT_MODEL_PATH
+  || path.join(__dirname, '../../models/qwen2.5-7b-instruct-q4_k_m.gguf');
 
-// Modèles disponibles
+const EMBEDDING_MODEL_PATH = process.env.LLAMA_EMBEDDING_MODEL_PATH
+  || path.join(__dirname, '../../models/nomic-embed-text-v1.5.Q8_0.gguf');
+
+const LLAMA_THREADS = parseInt(process.env.LLAMA_THREADS || '4', 10);
+const LLAMA_GPU_LAYERS = parseInt(process.env.LLAMA_GPU_LAYERS || '0', 10);
+
+// Noms pour compatibilité
 const MODELS = {
-  // Modèle principal : rapide, sans thinking, JSON fiable
-  main: process.env.OLLAMA_CHAT_MODEL || 'qwen2.5:7b',
-  // Modèle fallback : raisonnement (thinking)
-  fallback: process.env.OLLAMA_FALLBACK_MODEL || 'qwen3.5:latest',
-  // Modèle embeddings (pour RAG futur)
-  embedding: process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text',
+  main: path.basename(CHAT_MODEL_PATH),
+  chat: path.basename(CHAT_MODEL_PATH),
+  fallback: path.basename(CHAT_MODEL_PATH),
+  embedding: path.basename(EMBEDDING_MODEL_PATH),
 };
 
-// Alias pour compatibilité
-const CHAT_MODEL = MODELS.main;
+// ═══════════════════════════════════════════════════════════════
+// Singleton Models & Contexts (node-llama-cpp)
+// ═══════════════════════════════════════════════════════════════
+let llamaModule = null;
+let llamaInstance = null;
+let chatModel = null;
+let chatContext = null;
+let embeddingModel = null;
+let embeddingContext = null;
+let initPromise = null;
+
+async function getLlamaModule() {
+  if (!llamaModule) {
+    // node-llama-cpp v3 est un package ESM avec top-level await
+    llamaModule = await import('node-llama-cpp');
+  }
+  return llamaModule;
+}
 
 /**
- * Chat avec Ollama (support thinking + fallback automatique)
- * @param {string} prompt - Le prompt utilisateur
+ * Initialise le moteur node-llama-cpp et charge les deux modèles GGUF
+ */
+async function initModels() {
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    try {
+      if (!fs.existsSync(CHAT_MODEL_PATH)) {
+        const err = new Error(`Chat model file not found: ${CHAT_MODEL_PATH}`);
+        err.code = 'AI_SERVICE_DOWN';
+        throw err;
+      }
+      if (!fs.existsSync(EMBEDDING_MODEL_PATH)) {
+        const err = new Error(`Embedding model file not found: ${EMBEDDING_MODEL_PATH}`);
+        err.code = 'AI_SERVICE_DOWN';
+        throw err;
+      }
+
+      const { getLlama } = await getLlamaModule();
+
+      llamaInstance = await getLlama({
+        gpu: LLAMA_GPU_LAYERS > 0 ? 'auto' : false,
+      });
+
+      console.log(`[AI] Chargement modèle chat : ${CHAT_MODEL_PATH} (threads: ${LLAMA_THREADS}, gpu: ${LLAMA_GPU_LAYERS})`);
+      chatModel = await llamaInstance.loadModel({
+        modelPath: CHAT_MODEL_PATH,
+        gpuLayers: LLAMA_GPU_LAYERS,
+      });
+
+      chatContext = await chatModel.createContext({
+        contextSize: 2048,
+        threads: LLAMA_THREADS,
+      });
+
+      console.log(`[AI] Chargement modèle embedding : ${EMBEDDING_MODEL_PATH}`);
+      embeddingModel = await llamaInstance.loadModel({
+        modelPath: EMBEDDING_MODEL_PATH,
+        gpuLayers: LLAMA_GPU_LAYERS,
+      });
+
+      embeddingContext = await embeddingModel.createEmbeddingContext({
+        threads: LLAMA_THREADS,
+      });
+
+      console.log('[AI] Modèles GGUF prêts via node-llama-cpp');
+      return true;
+    } catch (err) {
+      console.error('[AI] Échec initialisation node-llama-cpp :', err.message);
+      // Réinitialiser la promesse pour permettre une ré-initialisation ultérieure
+      initPromise = null;
+      if (err.code !== 'AI_SERVICE_DOWN') {
+        err.code = 'AI_SERVICE_DOWN';
+      }
+      throw err;
+    }
+  })();
+
+  return initPromise;
+}
+
+/**
+ * Chat avec le modèle GGUF local via node-llama-cpp
+ * @param {string} prompt - Prompt utilisateur
  * @param {string} systemPrompt - Prompt système optionnel
- * @param {object} options - Options (format, temperature, maxTokens, model, useFallback)
+ * @param {object} options - Options (temperature, maxTokens, timeoutMs)
+ * @returns {Promise<string>} - Réponse texte
  */
 async function chat(prompt, systemPrompt = '', options = {}) {
-  const messages = [];
-  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-  messages.push({ role: 'user', content: prompt });
+  await initModels();
+  const { LlamaChatSession } = await getLlamaModule();
 
-  // Modèle à utiliser
-  const model = options.model || MODELS.main;
+  const contextSequence = chatContext.getSequence();
+  const session = new LlamaChatSession({
+    contextSequence,
+    systemPrompt: systemPrompt || undefined,
+  });
+
+  const timeoutMs = options.timeoutMs || 60000;
 
   try {
-    const response = await axios.post(
-      `${OLLAMA_URL}/api/chat`,
-      {
-        model,
-        messages,
-        stream: false,
-        format: options.format || undefined,
-        think: false, // Désactiver thinking pour avoir content
-        options: {
-          temperature: options.temperature ?? 0.2,
-          num_predict: options.maxTokens ?? 2000,
-        },
-      },
-      { timeout: OLLAMA_TIMEOUT }
-    );
+    const promptPromise = session.prompt(prompt, {
+      temperature: options.temperature ?? 0.2,
+      maxTokens: options.maxTokens ?? 1024,
+    });
 
-    const data = response.data || {};
-    const msg = data.message || {};
+    const timeoutPromise = new Promise((_, reject) => {
+      const timer = setTimeout(() => {
+        const err = new Error('AI_TIMEOUT');
+        err.code = 'AI_TIMEOUT';
+        reject(err);
+      }, timeoutMs);
+      if (timer.unref) timer.unref();
+    });
 
-    // Extraction robuste : content OU thinking
-    let content = msg.content || '';
-    if (!content && msg.thinking) {
-      console.log('[Ollama] Content vide, extraction depuis thinking');
-      content = msg.thinking;
-    }
-    if (!content) {
-      content = data.response || '';
-    }
-
-    console.log('[Ollama Debug] Full response:', 
-      JSON.stringify(response.data).substring(0, 1000));
-    console.log('[Ollama Debug] Content preview:', content.substring(0, 500));
-
-    // Si contenu vide ET fallback autorisé → essayer qwen2.5 / fallback
-    if (!content && model === MODELS.main && options.useFallback !== false) {
-      console.log('[Ollama] Réponse vide, tentative avec fallback', MODELS.fallback);
-      return await chat(prompt, systemPrompt, {
-        ...options,
-        model: MODELS.fallback,
-        useFallback: false, // Éviter boucle infinie
-      });
-    }
-
-    console.log(`[Ollama] Model: ${model}, Content length: ${content.length}`);
-    return content;
-  } catch (error) {
-    // Si erreur ET fallback autorisé ET pas déjà en fallback
-    if (model === MODELS.main && options.useFallback !== false) {
-      console.log(`[Ollama] Erreur avec ${model}, fallback vers ${MODELS.fallback}`);
-      try {
-        return await chat(prompt, systemPrompt, {
-          ...options,
-          model: MODELS.fallback,
-          useFallback: false,
-        });
-      } catch (fallbackError) {
-        console.error('[Ollama] Fallback aussi échoué:', fallbackError.message);
-      }
-    }
-
-    // Gestion des erreurs
-    if (error.code === 'ECONNREFUSED') {
-      const err = new Error('AI_SERVICE_DOWN');
-      err.code = 'AI_SERVICE_DOWN';
+    const response = await Promise.race([promptPromise, timeoutPromise]);
+    const cleanContent = typeof response === 'string' ? response : (response?.response || '');
+    return cleanContent;
+  } catch (err) {
+    if (err.code === 'AI_TIMEOUT') {
       throw err;
     }
-    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-      const err = new Error('AI_TIMEOUT');
-      err.code = 'AI_TIMEOUT';
-      throw err;
+    const error = new Error('AI_SERVICE_DOWN');
+    error.code = 'AI_SERVICE_DOWN';
+    error.original = err.message;
+    throw error;
+  } finally {
+    try {
+      contextSequence.dispose();
+    } catch (_) {
+      // Ignorer l'erreur de libération de séquence
     }
-    const err = new Error('AI_ERROR');
-    err.code = 'AI_ERROR';
-    err.original = error.message;
-    throw err;
   }
 }
 
 /**
- * Vérifie Ollama + modèle installé
+ * Vérifie l'état de fonctionnement du service IA et la présence des modèles
+ * Conserve le nom 'checkOllamaHealth' pour une compatibilité absolue avec les appelants
  */
 async function checkOllamaHealth() {
-  try {
-    const response = await axios.get(`${OLLAMA_URL}/api/tags`, { timeout: 5000 });
-    const models = response.data?.models || [];
-    const hasChat = models.some(m => m.name?.includes(CHAT_MODEL.split(':')[0]));
+  const chatExists = fs.existsSync(CHAT_MODEL_PATH);
+  const embExists = fs.existsSync(EMBEDDING_MODEL_PATH);
+
+  if (!chatExists || !embExists) {
     return {
-      ok: hasChat,
-      url: OLLAMA_URL,
-      chatModel: CHAT_MODEL,
-      chatInstalled: hasChat,
-      installedModels: models.map(m => m.name),
+      ok: false,
+      engine: 'node-llama-cpp',
+      url: 'embedded (node-llama-cpp)',
+      chatModel: path.basename(CHAT_MODEL_PATH),
+      chatInstalled: chatExists,
+      embeddingInstalled: embExists,
+      installedModels: [
+        ...(chatExists ? [path.basename(CHAT_MODEL_PATH)] : []),
+        ...(embExists ? [path.basename(EMBEDDING_MODEL_PATH)] : [])
+      ],
+      error: 'MODELS_NOT_DOWNLOADED',
+    };
+  }
+
+  try {
+    await initModels();
+    return {
+      ok: true,
+      engine: 'node-llama-cpp',
+      url: 'embedded (node-llama-cpp)',
+      chatModel: path.basename(CHAT_MODEL_PATH),
+      chatInstalled: true,
+      embeddingInstalled: true,
+      installedModels: [path.basename(CHAT_MODEL_PATH), path.basename(EMBEDDING_MODEL_PATH)],
     };
   } catch (error) {
     return {
       ok: false,
-      url: OLLAMA_URL,
-      error: error.code === 'ECONNREFUSED' ? 'OLLAMA_NOT_RUNNING' : 'OLLAMA_UNREACHABLE',
+      engine: 'node-llama-cpp',
+      url: 'embedded (node-llama-cpp)',
+      error: error.code || error.message || 'AI_SERVICE_DOWN',
     };
   }
 }
 
+/**
+ * Parser JSON robuste avec nettoyage thinking, markdown et trailing commas
+ * @param {string} rawText 
+ * @returns {object|null}
+ */
 function parseRobustJson(rawText) {
   if (!rawText || typeof rawText !== 'string') return null;
 
@@ -186,6 +259,10 @@ function parseRobustJson(rawText) {
   return null;
 }
 
+/**
+ * Extrait les informations structurées d'un texte OCR
+ * @param {string} ocrText 
+ */
 async function extractDocumentInfo(ocrText) {
   if (!ocrText || ocrText.trim().length < 20) {
     const err = new Error('OCR_TOO_SHORT');
@@ -234,18 +311,14 @@ Réponds MAINTENANT avec UNIQUEMENT le JSON :`;
   const parsed = parseRobustJson(response);
 
   if (!parsed) {
-    console.error('[Ollama] Impossible de parser la réponse:', response.substring(0, 500));
+    console.error('[AI] Impossible de parser la réponse JSON:', response?.substring(0, 500));
     const err = new Error('AI_INVALID_JSON');
     err.code = 'AI_INVALID_JSON';
     throw err;
   }
 
-  // Log pour diagnostic
-  console.log('[AI] Parsed result:', JSON.stringify(parsed));
-
   // Si subject vide ET pas null → tenter extraction basique
   if (!parsed.subject && truncatedText) {
-    // Fallback : prendre la première ligne non vide comme objet
     const firstMeaningfulLine = truncatedText
       .split('\n')
       .map(l => l.trim())
@@ -253,7 +326,6 @@ Réponds MAINTENANT avec UNIQUEMENT le JSON :`;
     
     if (firstMeaningfulLine) {
       parsed.subject = firstMeaningfulLine.substring(0, 150);
-      console.log('[AI] Subject fallback:', parsed.subject);
     }
   }
 
@@ -268,9 +340,9 @@ Réponds MAINTENANT avec UNIQUEMENT le JSON :`;
 }
 
 /**
- * Convertit un texte en vecteur d'embedding via Ollama
+ * Convertit un texte en vecteur d'embedding via node-llama-cpp
  * @param {string} text - Texte à convertir
- * @returns {Promise<number[]>} - Vecteur de ~768 dimensions
+ * @returns {Promise<number[]>} - Vecteur d'embedding
  */
 async function getEmbedding(text) {
   if (!text || text.trim().length === 0) {
@@ -279,50 +351,25 @@ async function getEmbedding(text) {
     throw err;
   }
 
-  // Tronquer si trop long (limite nomic-embed-text ~4000 chars)
+  await initModels();
   const truncated = text.trim().slice(0, 4000);
 
   try {
-    const response = await axios.post(
-      `${OLLAMA_URL}/api/embeddings`,
-      {
-        model: MODELS.embedding,
-        prompt: truncated,
-      },
-      { timeout: 30000 }
-    );
-
-    if (!response.data || !response.data.embedding) {
+    const embedding = await embeddingContext.getEmbeddingFor(truncated);
+    if (!embedding || !embedding.vector) {
       const err = new Error('EMBEDDING_INVALID');
       err.code = 'EMBEDDING_INVALID';
       throw err;
     }
 
-    return response.data.embedding;
+    return Array.from(embedding.vector);
   } catch (error) {
-    // Log complet pour diagnostic
-    console.error(`[Ollama] Erreur embedding:`, {
-      code: error.code,
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      textLength: truncated.length,
-      model: MODELS.embedding,
-    });
-
-    if (error.code === 'ECONNREFUSED') {
-      const err = new Error('AI_SERVICE_DOWN');
-      err.code = 'AI_SERVICE_DOWN';
-      throw err;
-    }
     if (error.code === 'EMPTY_TEXT' || error.code === 'EMBEDDING_INVALID') {
       throw error;
     }
     const err = new Error('EMBEDDING_ERROR');
     err.code = 'EMBEDDING_ERROR';
     err.original = error.message;
-    err.statusCode = error.response?.status;
-    err.ollamaError = error.response?.data?.error;
     throw err;
   }
 }
@@ -398,7 +445,7 @@ Réponds au format JSON strict :
 
   const parsed = parseRobustJson(response);
   if (!parsed || !parsed.summary) {
-    console.error('[Ollama] Impossible de parser le résumé JSON:', response?.substring?.(0, 300));
+    console.error('[AI] Impossible de parser le résumé JSON:', response?.substring(0, 300));
     if (response && response.trim().length > 10) {
       return {
         summary: response.trim().substring(0, maxLength * 2),
@@ -462,7 +509,7 @@ Réponds au format JSON strict :
 
   const parsed = parseRobustJson(response);
   if (!parsed || !parsed.translatedText) {
-    console.error('[Ollama] Impossible de parser la traduction JSON:', response?.substring?.(0, 300));
+    console.error('[AI] Impossible de parser la traduction JSON:', response?.substring(0, 300));
     if (response && response.trim().length > 5) {
       return {
         translatedText: response.trim(),

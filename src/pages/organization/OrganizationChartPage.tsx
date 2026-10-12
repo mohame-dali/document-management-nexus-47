@@ -30,7 +30,9 @@ const OrganizationChartPage: React.FC = () => {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['organization-chart'],
     queryFn: getOrganizationChart,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 30, // 30 seconds
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
     retry: 1,
   });
 

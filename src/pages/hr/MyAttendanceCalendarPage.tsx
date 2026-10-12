@@ -81,6 +81,8 @@ export const MyAttendanceCalendarPage: React.FC = () => {
     queryKey: ['hr', 'my-profile'],
     queryFn: getMyProfile,
     retry: false,
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   const personnelId = useMemo(() => {

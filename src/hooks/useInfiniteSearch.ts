@@ -105,6 +105,7 @@ export const useInfiniteSearch = ({
     },
     staleTime: 1000 * 30, // 30 seconds
     refetchOnWindowFocus: true,
+    refetchInterval: false, // Recherche manuelle uniquement
   });
 
   // Set up intersection observer for infinite scrolling

@@ -108,7 +108,8 @@ export const RHStagesPage: React.FC = () => {
   } = useQuery({
     queryKey: ['rh-stages', queryParams],
     queryFn: () => getStages(queryParams),
-    keepPreviousData: true,
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   // Récupération des statistiques
@@ -116,6 +117,8 @@ export const RHStagesPage: React.FC = () => {
     queryKey: ['rh-stage-stats', anneeFilter],
     queryFn: () => getStagesStats(anneeFilter !== 'ALL' ? { annee: anneeFilter } : undefined),
     staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   const stagesList = responseData?.data || [];

@@ -47,6 +47,8 @@ const DocumentOptionsPage: React.FC = () => {
   const { data: options = [], isLoading, error, refetch } = useQuery({
     queryKey: ['documentOptions'],
     queryFn: () => getDocumentOptions(),
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   const createMutation = useMutation({

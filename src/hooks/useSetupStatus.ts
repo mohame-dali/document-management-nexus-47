@@ -5,7 +5,8 @@ export const useSetupStatus = () => {
   const { data: settings, isLoading, refetch } = useQuery({
     queryKey: ['organization-settings'],
     queryFn: getOrganizationSettings,
-    staleTime: 1000 * 60 * 5, // 5 min
+    staleTime: Infinity,
+    refetchInterval: false,
   });
 
   const getDeptId = (field: unknown): string | null => {

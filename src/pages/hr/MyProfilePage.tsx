@@ -43,6 +43,8 @@ export const MyProfilePage: React.FC = () => {
     queryKey: ['hr', 'my-profile'],
     queryFn: getMyProfile,
     retry: false,
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   // Handler de génération de la carte d'instruction
@@ -95,6 +97,8 @@ export const MyProfilePage: React.FC = () => {
     queryFn: getMyDocuments,
     enabled: Boolean(personnel),
     retry: false,
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   // 3. Récupération des paramètres d'organisation (pour mapper BO, Direction, RH en arabe)

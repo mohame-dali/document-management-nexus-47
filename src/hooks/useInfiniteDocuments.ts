@@ -89,6 +89,8 @@ export const useInfiniteDocuments = ({
     },
     staleTime: 1000 * 30, // 30 seconds
     refetchOnWindowFocus: true,
+    refetchInterval: 60 * 1000, // 1 minute
+    refetchIntervalInBackground: false,
   });
 
   // Set up intersection observer for infinite scrolling
