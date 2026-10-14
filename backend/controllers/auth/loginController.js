@@ -10,12 +10,21 @@ exports.login = async (req, res, next) => {
   try {
     console.log('Login request received with body:', JSON.stringify(req.body));
     
-    const { username, password } = req.body;
+    const username = req.body?.username;
+    const password = req.body?.password;
 
-    // Validate email & password
-    if (!username || !password) {
+    // Strict type validation to prevent NoSQL injection
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ success: false, message: 'Invalid credentials format' });
+    }
+
+    if (!username.trim() || !password) {
       console.log('Missing username or password');
       return next(new ErrorResponse('Please provide username and password', 400));
+    }
+
+    if (username.length > 100 || password.length > 200) {
+      return res.status(400).json({ success: false, message: 'Invalid credentials format' });
     }
 
     console.log(`Login attempt for username: ${username}`);

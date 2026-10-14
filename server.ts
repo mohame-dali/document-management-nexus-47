@@ -18,8 +18,12 @@ const connectDB = require('./backend/config/db');
 const mockRouter = require('./backend/mockRouter');
 const errorHandler = require('./backend/middleware/error');
 
-// Set default JWT variables if not provided
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'nexus47-super-secret-key-ai-studio';
+// Check JWT_SECRET
+if (!process.env.JWT_SECRET) {
+  console.error('🔴 FATAL: JWT_SECRET absent du .env');
+  console.error('   Générer : node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+  process.exit(1);
+}
 process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 
@@ -58,6 +62,18 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
+// Sanitize NoSQL operator injection in req.body, req.params (compatible with Express 5)
+const mongoSanitize = require('express-mongo-sanitize');
+app.use((req, _res, next) => {
+  if (req.body) {
+    mongoSanitize.sanitize(req.body, { replaceWith: '_', allowDots: false });
+  }
+  if (req.params) {
+    mongoSanitize.sanitize(req.params, { replaceWith: '_', allowDots: false });
+  }
+  next();
+});
+
 // Enable CORS
 app.use(cors({
   origin: true,
@@ -66,13 +82,23 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
-// Static files for uploads & documents
+// Static & Protected document files
 const backendDir = path.join(process.cwd(), 'backend');
-app.use('/uploads', express.static(path.join(backendDir, 'uploads')));
+const { protect } = require('./backend/middleware/auth');
+const fileController = require('./backend/controllers/fileController');
+
+// Protected document endpoint
+app.get('/api/files/:type/:id/:filename', protect, fileController.serveProtectedFile);
+
+// Protect /courrier against unauthenticated access
+app.use('/courrier', protect, fileController.serveCourrierStatic);
+
+// Public profile photos (avatars)
 app.use('/uploads/usersphoto', express.static(path.join(backendDir, 'uploads/usersphoto')));
 app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads/personnelphoto')));
-app.use('/courrier', express.static(path.join(backendDir, 'courrier')));
-app.use('/uploads/templates', express.static(path.join(backendDir, 'uploads/templates')));
+
+// Protect sensitive uploads and templates
+app.use('/uploads', protect, express.static(path.join(backendDir, 'uploads')));
 
 // Swagger API Documentation
 try {

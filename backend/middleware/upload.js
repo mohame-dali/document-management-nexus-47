@@ -128,13 +128,25 @@ const templateFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-// Handle scanned document paths
+// Handle scanned document paths with strict Path Traversal protection
 exports.handleScannedDocument = (req, res, next) => {
-  // If a scanned document path is provided in the request body, use it
-  if (req.body.scannedDocumentPath) {
+  if (req.body && req.body.scannedDocumentPath) {
+    const rawPath = String(req.body.scannedDocumentPath);
+    const UPLOAD_ROOT = path.resolve(process.env.UPLOAD_DIR || uploadDir);
+    const requestedPath = path.isAbsolute(rawPath) ? path.resolve(rawPath) : path.resolve(process.cwd(), rawPath);
+
+    // Ensure path stays within allowed uploads root
+    if (!requestedPath.startsWith(UPLOAD_ROOT + path.sep)) {
+      return res.status(400).json({ success: false, message: 'Invalid file path' });
+    }
+
+    if (!fs.existsSync(requestedPath) || !fs.statSync(requestedPath).isFile()) {
+      return res.status(400).json({ success: false, message: 'File not found' });
+    }
+
     req.file = {
-      path: req.body.scannedDocumentPath,
-      filename: path.basename(req.body.scannedDocumentPath)
+      path: requestedPath,
+      filename: path.basename(requestedPath)
     };
   }
   next();

@@ -17,6 +17,16 @@ const mockAdminUser = {
 
 // Auth endpoints
 router.post('/auth/login', (req, res) => {
+  const username = req.body?.username;
+  const password = req.body?.password;
+
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ success: false, message: 'Invalid credentials format' });
+  }
+  if (username.length > 100 || password.length > 200) {
+    return res.status(400).json({ success: false, message: 'Invalid credentials format' });
+  }
+
   const token = 'mock-jwt-token-dev-session';
   res.json({
     success: true,

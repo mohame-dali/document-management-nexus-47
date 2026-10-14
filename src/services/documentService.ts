@@ -461,7 +461,16 @@ export const getDocumentUrl = (documentPath: string): string => {
   cleanPath = cleanPath.replace(/^\/+/, '');
   
   const baseUrl = API_URL.replace('/api', '');
-  return `${baseUrl}/${cleanPath}`;
+  const url = `${baseUrl}/${cleanPath}`;
+
+  // Append token for protected iframe and file access
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token && !url.includes('token=')) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(token)}`;
+  }
+
+  return url;
 };
 
 // Document download helper - Updated to use fixed URL construction

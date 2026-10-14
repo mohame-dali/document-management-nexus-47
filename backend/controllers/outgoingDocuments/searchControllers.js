@@ -1,6 +1,7 @@
 
 const OutgoingDocument = require('../../models/OutgoingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
+const { escapeRegex, sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // @desc    Search outgoing documents
 // @route   GET /api/outgoing-documents/search
@@ -15,15 +16,16 @@ exports.searchOutgoingDocuments = async (req, res, next) => {
     // Text search in multiple fields (with optional OCR toggle)
     const { includeOcr } = req.query;
     const shouldIncludeOcr = includeOcr === undefined || includeOcr === 'true' || includeOcr === true;
-    if (q) {
+    const safeQ = sanitizeSearchQuery(q);
+    if (safeQ) {
       const orConditions = [
-        { subject: { $regex: q, $options: 'i' } },
-        { 'source.name': { $regex: q, $options: 'i' } },
-        { assignedTo: { $regex: q, $options: 'i' } },
-        { pourInfo: { $regex: q, $options: 'i' } }
+        { subject: { $regex: safeQ, $options: 'i' } },
+        { 'source.name': { $regex: safeQ, $options: 'i' } },
+        { assignedTo: { $regex: safeQ, $options: 'i' } },
+        { pourInfo: { $regex: safeQ, $options: 'i' } }
       ];
       if (shouldIncludeOcr) {
-        orConditions.push({ ocrText: { $regex: q, $options: 'i' } });
+        orConditions.push({ ocrText: { $regex: safeQ, $options: 'i' } });
       }
       query.$or = orConditions;
     }

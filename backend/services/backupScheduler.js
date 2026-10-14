@@ -3,6 +3,28 @@ const BackupPolicy = require('../models/BackupPolicy');
 const BackupHistory = require('../models/BackupHistory');
 const fs = require('fs');
 
+const { exec } = require('child_process');
+const path = require('path');
+
+async function dumpMongoDB() {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const dumpDir = path.join(process.env.BACKUP_DIR || path.join(process.cwd(), 'backups'), `mongo-${timestamp}`);
+  fs.mkdirSync(dumpDir, { recursive: true });
+
+  return new Promise((resolve, reject) => {
+    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/document-management';
+    const cmd = `mongodump --uri="${uri}" --out="${dumpDir}"`;
+    exec(cmd, { timeout: 300000 }, (err) => {
+      if (err) {
+        console.warn('[Backup] ⚠️ mongodump notice (binaire non présent ou indisponible):', err.message);
+        return resolve({ dir: dumpDir, success: false, error: err.message });
+      }
+      console.log('[Backup] ✅ MongoDB dump OK:', dumpDir);
+      resolve({ dir: dumpDir, success: true });
+    });
+  });
+}
+
 let scheduledTask = null;
 
 async function startBackupScheduler() {
@@ -31,6 +53,9 @@ async function startBackupScheduler() {
     scheduledTask = cron.schedule(cronExpression, async () => {
       console.log('[Backup Scheduler] Exécution automatique...');
       try {
+        console.log('[Backup Scheduler] Lancement du dump MongoDB...');
+        await dumpMongoDB();
+
         const backupController = require('../controllers/backup');
         await backupController.createBackup({
           user: { _id: policy.createdBy, id: policy.createdBy, role: 'Admin' },
@@ -96,4 +121,5 @@ module.exports = {
   startBackupScheduler,
   reloadBackupScheduler,
   applyRetentionPolicy,
+  dumpMongoDB,
 };

@@ -19,6 +19,10 @@ exports.protect = async (req, res, next) => {
   else if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
   }
+  // Check for token in query parameter for iframe previews and file downloads
+  else if (req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   // Make sure token exists
   if (!token) {
