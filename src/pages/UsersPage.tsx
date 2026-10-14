@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUsers, deleteUser, deactivateUser } from '@/services/userService';
 import { getDepartments } from '@/services/departmentService';
@@ -65,6 +66,7 @@ import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 const UsersPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
@@ -114,7 +116,7 @@ const UsersPage: React.FC = () => {
     mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('تم حذف حساب المستخدم بنجاح');
+      toast.success(t('users.delete.success'));
       setShowDeleteDialog(false);
       setUserToDelete(null);
     },
@@ -122,7 +124,7 @@ const UsersPage: React.FC = () => {
       console.error('Error deleting user:', error);
       const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
         ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
-        : 'فشل في حذف المستخدم';
+        : t('users.delete.error');
       toast.error(errorMsg);
     }
   });
@@ -132,13 +134,13 @@ const UsersPage: React.FC = () => {
       deactivateUser(id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('تم تحديث حالة المستخدم بنجاح');
+      toast.success(t('users.status.updateSuccess'));
     },
     onError: (error: unknown) => {
       console.error('Error updating user status:', error);
       const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
         ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
-        : 'فشل في تحديث حالة المستخدم';
+        : t('users.status.updateError');
       toast.error(errorMsg);
     }
   });
@@ -163,7 +165,7 @@ const UsersPage: React.FC = () => {
 
   const handleManualRefresh = () => {
     refetch();
-    toast.success('تم تحديث قائمة المستخدمين');
+    toast.success(t('users.refresh.success'));
   };
 
   const handlePasswordChange = (user: User) => {
@@ -286,9 +288,9 @@ const UsersPage: React.FC = () => {
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">إدارة المستخدمين</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{t('users.page.title')}</h1>
               <p className="text-base text-gray-600 mt-0.5">
-                عرض وإدارة حسابات المستخدمين وصلاحياتهم وأقسامهم في المنظومة
+                {t('users.page.subtitle')}
               </p>
             </div>
           </div>
@@ -301,7 +303,7 @@ const UsersPage: React.FC = () => {
             className="h-11 px-4 bg-white border-[#cbd5e1] hover:border-[#FFCB56] hover:bg-amber-50/40 text-base font-medium rounded text-[#1a202c] flex items-center gap-2 transition-colors"
           >
             <RefreshCw className="h-4 w-4 text-[#2c5282]" />
-            <span>تحديث</span>
+            <span>{t('common.refresh')}</span>
           </Button>
 
           {currentUser?.role === 'Admin' && (
@@ -310,7 +312,7 @@ const UsersPage: React.FC = () => {
               className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-bold rounded shadow-none flex items-center gap-2"
             >
               <Plus className="h-5 w-5" />
-              <span>إضافة مستخدم جديد</span>
+              <span>{t('users.create.title')}</span>
             </Button>
           )}
         </div>
@@ -320,7 +322,7 @@ const UsersPage: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">إجمالي المستخدمين</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.total')}</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.total}</span>
           </div>
           <div className="w-10 h-10 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
@@ -330,7 +332,7 @@ const UsersPage: React.FC = () => {
 
         <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">الحسابات النشطة</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.active')}</span>
             <span className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 block">{metrics.active}</span>
           </div>
           <div className="w-10 h-10 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
@@ -340,7 +342,7 @@ const UsersPage: React.FC = () => {
 
         <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">الحسابات المعطلة</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.inactive')}</span>
             <span className="text-xl sm:text-2xl font-bold text-red-600 mt-1 block">{metrics.inactive}</span>
           </div>
           <div className="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
@@ -350,7 +352,7 @@ const UsersPage: React.FC = () => {
 
         <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">المشرفون والمدراء</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.admins')}</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.admins}</span>
           </div>
           {/* Gold indicator with dark text/icon */}
@@ -365,7 +367,7 @@ const UsersPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-base font-bold text-[#1a202c]">
             <Filter className="h-5 w-5 text-[#2c5282]" />
-            <span>تصفية وبحث المستخدمين</span>
+            <span>{t('users.filters.title')}</span>
           </div>
           {hasActiveFilters && (
             <Button
@@ -375,7 +377,7 @@ const UsersPage: React.FC = () => {
               className="h-11 px-3 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
             >
               <X className="h-4 w-4" />
-              <span>إعادة ضبط التصفية</span>
+              <span>{t('users.filters.reset')}</span>
             </Button>
           )}
         </div>
@@ -385,7 +387,7 @@ const UsersPage: React.FC = () => {
           <div className="relative">
             <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             <Input 
-              placeholder="بحث باسم المستخدم..."
+              placeholder={t('users.filters.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -405,15 +407,15 @@ const UsersPage: React.FC = () => {
               }}
             >
               <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
-                <SelectValue placeholder="تصفية حسب الدور" />
+                <SelectValue placeholder={t('users.filters.byRole')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL" className="text-base py-2 font-medium">جميع الأدوار</SelectItem>
-                <SelectItem value="Director" className="text-base py-2">مدير الإدارة (Director)</SelectItem>
-                <SelectItem value="Admin" className="text-base py-2">مدير (Admin)</SelectItem>
-                <SelectItem value="AdminDepartment" className="text-base py-2">مدير قسم (AdminDepartment)</SelectItem>
-                <SelectItem value="AdminTuningDesk" className="text-base py-2">مدير المكتب (AdminTuningDesk)</SelectItem>
-                <SelectItem value="User" className="text-base py-2">مستخدم عادي (User)</SelectItem>
+                <SelectItem value="ALL" className="text-base py-2 font-medium">{t('users.filters.allRoles')}</SelectItem>
+                <SelectItem value="Director" className="text-base py-2">{t('users.role.director')}</SelectItem>
+                <SelectItem value="Admin" className="text-base py-2">{t('users.role.admin')}</SelectItem>
+                <SelectItem value="AdminDepartment" className="text-base py-2">{t('users.role.adminDepartment')}</SelectItem>
+                <SelectItem value="AdminTuningDesk" className="text-base py-2">{t('users.role.adminTuningDesk')}</SelectItem>
+                <SelectItem value="User" className="text-base py-2">{t('users.role.user')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -428,10 +430,10 @@ const UsersPage: React.FC = () => {
               }}
             >
               <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
-                <SelectValue placeholder="تصفية حسب القسم" />
+                <SelectValue placeholder={t('users.filters.byDepartment')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL" className="text-base py-2 font-medium">جميع الأقسام</SelectItem>
+                <SelectItem value="ALL" className="text-base py-2 font-medium">{t('users.filters.allDepartments')}</SelectItem>
                 {departments.map(dept => (
                   <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
                     {dept.name}
@@ -451,12 +453,12 @@ const UsersPage: React.FC = () => {
               }}
             >
               <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
-                <SelectValue placeholder="تصفية حسب الحالة" />
+                <SelectValue placeholder={t('users.filters.byStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL" className="text-base py-2 font-medium">جميع الحالات</SelectItem>
-                <SelectItem value="ACTIVE" className="text-base py-2">حسابات نشطة فقط</SelectItem>
-                <SelectItem value="INACTIVE" className="text-base py-2">حسابات معطلة فقط</SelectItem>
+                <SelectItem value="ALL" className="text-base py-2 font-medium">{t('users.filters.allStatuses')}</SelectItem>
+                <SelectItem value="ACTIVE" className="text-base py-2">{t('users.filters.activeOnly')}</SelectItem>
+                <SelectItem value="INACTIVE" className="text-base py-2">{t('users.filters.inactiveOnly')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -469,13 +471,13 @@ const UsersPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] w-16">الصورة</TableHead>
+                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] w-16">{t('users.table.photo')}</TableHead>
                 <TableHead 
                   className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                   onClick={() => handleSort('username')}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span>اسم المستخدم</span>
+                    <span>{t('users.table.username')}</span>
                     {sortField === 'username' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'username' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'username' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
@@ -486,7 +488,7 @@ const UsersPage: React.FC = () => {
                   onClick={() => handleSort('role')}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span>الدور</span>
+                    <span>{t('users.table.role')}</span>
                     {sortField === 'role' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'role' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'role' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
@@ -497,7 +499,7 @@ const UsersPage: React.FC = () => {
                   onClick={() => handleSort('departments')}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span>القسم / الأقسام</span>
+                    <span>{t('users.table.departments')}</span>
                     {sortField === 'departments' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'departments' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'departments' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
@@ -508,7 +510,7 @@ const UsersPage: React.FC = () => {
                   onClick={() => handleSort('createdAt')}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span>تاريخ الإنشاء</span>
+                    <span>{t('users.table.createdAt')}</span>
                     {sortField === 'createdAt' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'createdAt' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'createdAt' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
@@ -519,13 +521,13 @@ const UsersPage: React.FC = () => {
                   onClick={() => handleSort('isActive')}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span>الحالة</span>
+                    <span>{t('users.table.status')}</span>
                     {sortField === 'isActive' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'isActive' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                   </div>
                 </TableHead>
-                <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px]">الإجراءات</TableHead>
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px]">{t('users.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -534,7 +536,7 @@ const UsersPage: React.FC = () => {
                   <TableCell colSpan={7} className="h-40 text-center text-base text-gray-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Users className="h-8 w-8 text-gray-400" />
-                      <span>لا توجد نتائج مطابقة لمعايير البحث والتصفية المحددة.</span>
+                      <span>{t('users.filters.noResults')}</span>
                       {hasActiveFilters && (
                         <Button 
                           variant="outline" 
@@ -542,7 +544,7 @@ const UsersPage: React.FC = () => {
                           onClick={resetFilters}
                           className="mt-2 h-11 border-[#cbd5e1] text-sm"
                         >
-                          إعادة ضبط التصفية
+                          {t('users.filters.reset')}
                         </Button>
                       )}
                     </div>
@@ -581,23 +583,23 @@ const UsersPage: React.FC = () => {
                       {user.role === 'Director' ? (
                         /* Strict WCAG AA: gold background MUST have dark text #1a202c */
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
-                          مدير الإدارة
+                          {t('users.badge.director')}
                         </span>
                       ) : user.role === 'Admin' ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c] border border-[#e2be40]">
-                          مدير
+                          {t('users.badge.admin')}
                         </span>
                       ) : user.role === 'AdminDepartment' ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#2c5282] text-white">
-                          مدير قسم
+                          {t('users.badge.adminDepartment')}
                         </span>
                       ) : user.role === 'AdminTuningDesk' ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-900 border border-purple-200">
-                          مدير المكتب
+                          {t('users.badge.adminTuningDesk')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                          مستخدم
+                          {t('users.badge.user')}
                         </span>
                       )}
                     </TableCell>
@@ -616,7 +618,7 @@ const UsersPage: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-xs italic">لا يوجد قسم</span>
+                        <span className="text-gray-400 text-xs italic">{t('users.noDepartment')}</span>
                       )}
                     </TableCell>
 
@@ -633,7 +635,7 @@ const UsersPage: React.FC = () => {
                           : 'bg-red-50 text-red-800 border border-red-200'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
-                        <span>{user.isActive ? 'نشط' : 'معطل'}</span>
+                        <span>{user.isActive ? t('users.status.active') : t('users.status.inactive')}</span>
                       </span>
                     </TableCell>
 
@@ -647,9 +649,9 @@ const UsersPage: React.FC = () => {
                               <Button 
                                 variant="outline" 
                                 size="icon"
-                                aria-label="خيارات التعديل"
+                                aria-label={t('users.menu.editOptions')}
                                 className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
-                                title="خيارات التعديل"
+                                title={t('users.menu.editOptions')}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -660,7 +662,7 @@ const UsersPage: React.FC = () => {
                                 className="text-sm py-2 cursor-pointer flex items-center gap-2"
                               >
                                 <Edit className="h-4 w-4 text-[#2c5282]" />
-                                <span>تعديل المستخدم</span>
+                                <span>{t('users.menu.edit')}</span>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
@@ -668,7 +670,7 @@ const UsersPage: React.FC = () => {
                                 className="text-sm py-2 cursor-pointer flex items-center gap-2 text-amber-700"
                               >
                                 <Key className="h-4 w-4" />
-                                <span>تغيير كلمة المرور</span>
+                                <span>{t('users.menu.changePassword')}</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -681,11 +683,11 @@ const UsersPage: React.FC = () => {
                             size="icon"
                             onClick={() => handleToggleActivation(user)}
                             disabled={toggleActivationMutation.isPending}
-                            aria-label={user.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب'}
+                            aria-label={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
                             className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] rounded transition-colors ${
                               user.isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
                             }`}
-                            title={user.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب'}
+                            title={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
                           >
                             {user.isActive ? 
                               <ToggleRight className="h-5 w-5" /> : 
@@ -701,9 +703,9 @@ const UsersPage: React.FC = () => {
                             size="icon"
                             onClick={() => handleDeleteClick(user._id)}
                             disabled={deleteMutation.isPending}
-                            aria-label="حذف المستخدم نهائياً"
+                            aria-label={t('users.delete.userLabel')}
                             className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
-                            title="حذف المستخدم نهائياً"
+                            title={t('users.delete.userLabel')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -721,9 +723,11 @@ const UsersPage: React.FC = () => {
         {filteredUsers.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[#e2e8f0] bg-[#f8fafc]">
             <div className="text-base text-gray-600 font-medium">
-              عرض <strong className="text-[#1a202c]">{((currentPage - 1) * itemsPerPage) + 1}</strong> إلى{' '}
-              <strong className="text-[#1a202c]">{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</strong>{' '}
-              من أصل <strong className="text-[#1a202c]">{filteredUsers.length}</strong> مستخدم
+              {t('users.paginationInfo', {
+                from: ((currentPage - 1) * itemsPerPage) + 1,
+                to: Math.min(currentPage * itemsPerPage, filteredUsers.length),
+                total: filteredUsers.length
+              })}
             </div>
 
             {totalPages > 1 && (
@@ -736,7 +740,7 @@ const UsersPage: React.FC = () => {
                   className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
-                  <span>السابق</span>
+                  <span>{t('common.previous')}</span>
                 </Button>
 
                 <div className="flex items-center gap-1 px-2">
@@ -762,7 +766,7 @@ const UsersPage: React.FC = () => {
                   disabled={currentPage === totalPages}
                   className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
-                  <span>التالي</span>
+                  <span>{t('common.next')}</span>
                   <ChevronLeft className="h-4 w-4 mr-1" />
                 </Button>
               </div>
@@ -782,10 +786,10 @@ const UsersPage: React.FC = () => {
               <div className="w-11 h-11 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
                 <Trash2 className="h-6 w-6" />
               </div>
-              <span>تأكيد حذف حساب المستخدم</span>
+              <span>{t('users.delete.confirmTitle')}</span>
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-gray-700 text-right mt-3 leading-relaxed">
-              هل أنت متأكد من رغبتك في حذف هذا الحساب نهائياً من المنظومة؟ هذا الإجراء غير قابل للتراجع وسيؤدي إلى إلغاء صلاحيات المستخدم بالكامل.
+              {t('users.delete.confirmDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 border-t border-[#e2e8f0] flex-row-reverse justify-start gap-3">
@@ -797,16 +801,16 @@ const UsersPage: React.FC = () => {
               {deleteMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>جاري الحذف...</span>
+                  <span>{t('users.delete.deleting')}</span>
                 </>
               ) : (
-                'نعم، تأكيد الحذف'
+                t('users.delete.confirmButton')
               )}
             </AlertDialogAction>
             <AlertDialogCancel 
               className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 mt-0"
             >
-              إلغاء
+              {t('common.cancel')}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
