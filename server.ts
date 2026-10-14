@@ -155,7 +155,7 @@ const portFromArgs = portArg
   : portArgIndex !== -1
   ? parseInt(process.argv[portArgIndex + 1], 10)
   : undefined;
-const PORT = Number(process.env.PORT || portFromArgs || 3000);
+const PORT = Number(portFromArgs || (process.env.PORT && process.env.PORT !== '8080' ? process.env.PORT : 3000));
 
 async function start() {
   if (process.env.NODE_ENV !== 'production') {
@@ -167,7 +167,7 @@ async function start() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('(.*)', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
