@@ -38,22 +38,22 @@ async function retryFailedIndexes(options = {}) {
   try {
     console.log('\n[RAG Retry] 🔄 Démarrage du rattrapage d\'indexation...');
 
-    // 1. Vérification préalable de la disponibilité d'Ollama
+    // 1. Vérification préalable de la disponibilité du service IA local
     try {
-      const isOllamaUp = await checkOllamaHealth();
-      if (!isOllamaUp) {
-        console.warn('[RAG Retry] ⚠️ Ollama est indisponible. Rattrapage différé.');
+      const health = await checkOllamaHealth();
+      if (!health || !health.ok) {
+        console.warn('[RAG Retry] ⚠️ Service IA local indisponible. Rattrapage différé.');
         return {
           status: 'service_down',
-          message: 'Ollama is currently unreachable. Retry aborted.',
+          message: 'Local AI engine is currently unreachable. Retry aborted.',
           stats,
         };
       }
     } catch (healthErr) {
-      console.warn('[RAG Retry] ⚠️ Erreur lors du check Ollama :', healthErr.message);
+      console.warn('[RAG Retry] ⚠️ Erreur lors du check de santé IA :', healthErr.message);
       return {
         status: 'service_down',
-        message: 'Ollama health check failed.',
+        message: 'Local AI engine health check failed.',
         stats,
       };
     }

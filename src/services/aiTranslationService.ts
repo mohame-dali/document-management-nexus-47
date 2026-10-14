@@ -8,8 +8,8 @@ export interface TranslationResult {
 }
 
 /**
- * Traduit un texte administratif entre l'arabe et le français via Ollama.
- * Timeout: 65s.
+ * Traduit un texte administratif entre l'arabe et le français via le moteur IA local.
+ * Timeout: 180s (CPU).
  */
 export const translateDocumentText = async (
   text: string,
@@ -20,7 +20,7 @@ export const translateDocumentText = async (
     '/ai/translate',
     { text, targetLang },
     {
-      timeout: 65000,
+      timeout: 180000,
       signal,
     }
   );
@@ -33,7 +33,7 @@ export const translateDocumentText = async (
 export const getTranslationErrorMessage = (error: any): string => {
   const code = error?.response?.data?.code;
   if (code === 'AI_SERVICE_DOWN') {
-    return 'خدمة الذكاء الاصطناعي (Ollama) غير مشغلة حالياً. يرجى التحقق من تشغيل الخدمة.';
+    return 'خدمة الذكاء الاصطناعي المحلي غير مشغلة حالياً. يرجى التحقق من تشغيل الخدمة.';
   }
   if (code === 'AI_TIMEOUT' || error?.code === 'ECONNABORTED') {
     return 'استغرقت عملية الترجمة وقتاً أطول من المتوقع. يرجى إعادة المحاولة.';

@@ -114,7 +114,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
       switch (code) {
         case 'AI_SERVICE_DOWN':
           toast.error('❌ خدمة الذكاء الاصطناعي غير متاحة', {
-            description: 'يرجى التحقق من تشغيل Ollama على الخادم.',
+            description: 'يرجى التحقق من تشغيل خدمة الذكاء الاصطناعي على الخادم.',
             duration: 8000,
           });
           break;

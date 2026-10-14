@@ -24,7 +24,7 @@ export interface AIError {
 }
 
 /**
- * Vérifie que le service IA (Ollama) est opérationnel
+ * Vérifie que le service IA local est opérationnel
  */
 export const checkAIHealth = async (): Promise<AIHealth> => {
   const response = await api.get('/ai/health');
@@ -33,7 +33,7 @@ export const checkAIHealth = async (): Promise<AIHealth> => {
 
 /**
  * Extrait les informations d'un texte OCR via le LLM local.
- * Timeout : 65 secondes (backend = 60s).
+ * Timeout : 90 secondes (backend = 120s).
  * Support AbortController pour annulation.
  */
 export const extractFromOcr = async (
@@ -44,7 +44,7 @@ export const extractFromOcr = async (
     '/ai/extract-from-ocr',
     { ocrText },
     {
-      timeout: 65000,
+      timeout: 90000,
       signal,
     }
   );

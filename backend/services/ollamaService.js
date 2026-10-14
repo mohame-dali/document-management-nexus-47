@@ -119,7 +119,7 @@ async function chat(prompt, systemPrompt = '', options = {}) {
     systemPrompt: systemPrompt || undefined,
   });
 
-  const timeoutMs = options.timeoutMs || 60000;
+  const timeoutMs = options.timeoutMs || 120000;
 
   try {
     const promptPromise = session.prompt(prompt, {
@@ -441,6 +441,7 @@ Réponds au format JSON strict :
     format: 'json',
     temperature: 0.2,
     maxTokens: 800,
+    timeoutMs: options.timeoutMs || 120000,
   });
 
   const parsed = parseRobustJson(response);
@@ -505,6 +506,7 @@ Réponds au format JSON strict :
     format: 'json',
     temperature: 0.1,
     maxTokens: 2000,
+    timeoutMs: options.timeoutMs || 180000,
   });
 
   const parsed = parseRobustJson(response);
