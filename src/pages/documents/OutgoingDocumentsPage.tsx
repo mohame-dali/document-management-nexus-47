@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -90,6 +91,7 @@ import { usePdfExport } from '@/hooks/usePdfExport';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 const OutgoingDocumentsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -124,7 +126,7 @@ const OutgoingDocumentsPage: React.FC = () => {
 
   // Transfer Form State
   const [transferTargetDept, setTransferTargetDept] = useState<string>('');
-  const [transferNotes, setTransferNotes] = useState<string>('للإجراء والمتابعة');
+  const [transferNotes, setTransferNotes] = useState<string>(t('outgoing.transfer.defaultNotes'));
   const [isTransferSubmitting, setIsTransferSubmitting] = useState<boolean>(false);
 
   // Year persistence hook
@@ -190,13 +192,13 @@ const OutgoingDocumentsPage: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: (docId: string) => deleteOutgoingDocument(docId),
     onSuccess: () => {
-      toast.success('تم حذف الوثيقة الصادرة بنجاح');
+      toast.success(t('outgoing.toasts.deleteSuccess'));
       queryClient.invalidateQueries({ queryKey: ['outgoingDocuments'] });
       setDeleteDoc(null);
     },
     onError: (err: unknown) => {
       console.error('Error deleting outgoing document:', err);
-      toast.error('حدث خطأ أثناء محاولة حذف الوثيقة');
+      toast.error(t('outgoing.toasts.deleteError'));
     },
   });
 
@@ -322,38 +324,38 @@ const OutgoingDocumentsPage: React.FC = () => {
 
   const handleExportPdf = async () => {
     if (sortedDocuments.length === 0) {
-      toast.info('لا توجد وثائق لتصديرها في القائمة الحالية');
+      toast.info(t('outgoing.toasts.noDocsToExport'));
       return;
     }
 
     const rows = sortedDocuments.map((doc: OutgoingDocument) => {
       const recipientText = Array.isArray(doc.recipients) && doc.recipients.length > 0
-        ? doc.recipients.join('، ')
-        : (doc.recipient || 'غير محدد');
+        ? doc.recipients.join(', ')
+        : (doc.recipient || t('outgoing.source.unspecified'));
 
       return {
         serialNumber: doc.serialNumber || '',
         issueDate: formatArabicDate(doc.issueDate),
         subject: doc.subject || '',
         recipient: recipientText,
-        typeDocument: doc.typeDocument || 'عام',
+        typeDocument: doc.typeDocument || t('outgoing.type.general'),
       };
     });
 
     await exportPdf({
-      title: 'قائمة الوثائق والمراسلات الصادرة',
-      subtitle: `سنة ${selectedYear} - العدد الإجمالي: ${rows.length} وثيقة`,
+      title: t('outgoing.exportPdf.title'),
+      subtitle: t('outgoing.exportPdf.subtitle', { year: selectedYear, count: rows.length }),
       columns: [
-        { header: 'الرقم التسلسلي', dataKey: 'serialNumber', align: 'center', width: 28 },
-        { header: 'تاريخ الإرسال', dataKey: 'issueDate', align: 'center', width: 32 },
-        { header: 'الموضوع', dataKey: 'subject', align: 'right' },
-        { header: 'المرسل إليه', dataKey: 'recipient', align: 'right', width: 44 },
-        { header: 'نوع الوثيقة', dataKey: 'typeDocument', align: 'center', width: 28 },
+        { header: t('outgoing.exportPdf.colSerial'), dataKey: 'serialNumber', align: 'center', width: 28 },
+        { header: t('outgoing.exportPdf.colIssueDate'), dataKey: 'issueDate', align: 'center', width: 32 },
+        { header: t('outgoing.exportPdf.colSubject'), dataKey: 'subject', align: 'right' },
+        { header: t('outgoing.exportPdf.colRecipient'), dataKey: 'recipient', align: 'right', width: 44 },
+        { header: t('outgoing.exportPdf.colType'), dataKey: 'typeDocument', align: 'center', width: 28 },
       ],
       rows,
-      fileName: `الوثائق_الصادرة_${selectedYear}`,
+      fileName: t('outgoing.exportPdf.fileName', { year: selectedYear }),
       orientation: 'landscape',
-      footerText: 'نظام إدارة المراسلات والوثائق الإدارية',
+      footerText: t('outgoing.exportPdf.footer'),
     });
   };
 
@@ -363,20 +365,20 @@ const OutgoingDocumentsPage: React.FC = () => {
     if (doc.scannedDocument) {
       try {
         setDownloadingDocId(doc._id);
-        toast.info('جاري بدء تحميل الوثيقة...');
+        toast.info(t('outgoing.toasts.downloadStarting'));
         await downloadDocument(
           doc.scannedDocument, 
           `outgoing-doc-${doc.serialNumber}-${doc.year}.pdf`
         );
-        toast.success('تم تحميل الوثيقة بنجاح');
+        toast.success(t('outgoing.toasts.downloadSuccess'));
       } catch (err) {
         console.error('Download error:', err);
-        toast.error('تعذر تحميل الوثيقة الرقمية');
+        toast.error(t('outgoing.toasts.downloadError'));
       } finally {
         setDownloadingDocId(null);
       }
     } else {
-      toast.error('لا يوجد ملف PDF ممسوح ضوئياً لهذه الوثيقة');
+      toast.error(t('outgoing.toasts.noScannedDoc'));
     }
   };
 
@@ -386,9 +388,9 @@ const OutgoingDocumentsPage: React.FC = () => {
     setIsTransferSubmitting(true);
     setTimeout(() => {
       setIsTransferSubmitting(false);
-      toast.success(`تم تسجيل تحويل وتوجيه الوثيقة الصادرة #${transferDoc.serialNumber} بنجاح`);
+      toast.success(t('outgoing.toasts.transferSuccess', { serialNumber: transferDoc.serialNumber }));
       setTransferDoc(null);
-      setTransferNotes('للإجراء والمتابعة');
+      setTransferNotes(t('outgoing.transfer.defaultNotes'));
       setTransferTargetDept('');
     }, 400);
   };
@@ -426,9 +428,9 @@ const OutgoingDocumentsPage: React.FC = () => {
         
         {/* Fil d'Ariane (Breadcrumbs) */}
         <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
-          <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">الرئيسية</Link>
+          <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">{t('common.home')}</Link>
           <ChevronLeft className="w-4 h-4 text-gray-400" />
-          <span className="text-[#1a202c] font-medium">الوثائق والمراسلات الصادرة</span>
+          <span className="text-[#1a202c] font-medium">{t('outgoing.page.title')}</span>
         </nav>
 
         {/* 1. Header Section */}
@@ -440,10 +442,10 @@ const OutgoingDocumentsPage: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c] leading-tight">
-                  الوثائق الصادرة
+                  {t('outgoing.page.headerTitle')}
                 </h1>
                 <p className="text-base text-[#4a5568] mt-1.5 leading-relaxed">
-                  إدارة، متابعة وتوزيع المراسلات والوثائق الصادرة الرسمية لمكتب الضبط
+                  {t('outgoing.page.headerSubtitle')}
                 </p>
               </div>
             </div>
@@ -454,7 +456,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 variant="outline"
                 onClick={handleExportPdf}
                 disabled={isExporting || sortedDocuments.length === 0}
-                title="تصدير القائمة الحالية كملف PDF"
+                title={t('outgoing.actions.exportPdfTooltip')}
                 className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200 shadow-xs flex items-center gap-2"
               >
                 {isExporting ? (
@@ -462,7 +464,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 ) : (
                   <Download className="h-4 w-4 ml-1" />
                 )}
-                <span>تصدير PDF</span>
+                <span>{t('outgoing.actions.exportPdf')}</span>
               </Button>
 
               <Button
@@ -470,11 +472,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                 variant="outline"
                 onClick={() => refetch()}
                 disabled={isFetching}
-                title="تحديث البيانات"
+                title={t('outgoing.actions.refreshTooltip')}
                 className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200"
               >
                 <RotateCcw className={`h-4 w-4 ml-2 ${isFetching ? 'animate-spin' : ''}`} />
-                تحديث
+                {t('common.refresh')}
               </Button>
 
               {canAddDocuments && (
@@ -484,7 +486,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200 shadow-xs"
                 >
                   <PlusCircle className="h-5 w-5 ml-2" />
-                  إضافة وثيقة صادرة
+                  {t('outgoing.actions.create')}
                 </Button>
               )}
             </div>
@@ -498,13 +500,13 @@ const OutgoingDocumentsPage: React.FC = () => {
             {/* Search Input */}
             <div className="lg:col-span-4 relative">
               <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
-                البحث السريع
+                {t('outgoing.filters.searchLabel')}
               </label>
               <div className="relative">
                 <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#718096]" />
                 <Input
                   type="text"
-                  placeholder="ابحث برقم التسلسل، الموضوع، المصدر، أو الوجهة..."
+                  placeholder={t('outgoing.filters.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -518,7 +520,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                     onClick={() => setSearchQuery('')}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#718096] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
                   >
-                    مسح
+                    {t('outgoing.filters.clear')}
                   </button>
                 )}
               </div>
@@ -527,7 +529,7 @@ const OutgoingDocumentsPage: React.FC = () => {
             {/* Year Selector */}
             <div className="lg:col-span-2">
               <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
-                سنة التسجيل
+                {t('outgoing.filters.yearLabel')}
               </label>
               <div className="relative">
                 <Calendar className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#718096]" />
@@ -549,7 +551,7 @@ const OutgoingDocumentsPage: React.FC = () => {
             {currentUser?.role === 'AdminTuningDesk' && (
               <div className="lg:col-span-3">
                 <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
-                  القسم المصدر
+                  {t('outgoing.filters.departmentLabel')}
                 </label>
                 <Select
                   value={selectedDepartment}
@@ -559,10 +561,10 @@ const OutgoingDocumentsPage: React.FC = () => {
                   }}
                 >
                   <SelectTrigger className="h-11 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white">
-                    <SelectValue placeholder="كافة الأقسام" />
+                    <SelectValue placeholder={t('outgoing.filters.allDepartments')} />
                   </SelectTrigger>
                   <SelectContent className="rounded border-[#cbd5e1] text-base">
-                    <SelectItem value="all">كافة الأقسام</SelectItem>
+                    <SelectItem value="all">{t('outgoing.filters.allDepartments')}</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept._id} value={dept._id}>
                         {dept.name}
@@ -576,7 +578,7 @@ const OutgoingDocumentsPage: React.FC = () => {
             {/* Document Type Filter */}
             <div className={currentUser?.role === 'AdminTuningDesk' ? "lg:col-span-3" : "lg:col-span-3"}>
               <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
-                نوع الوثيقة
+                {t('outgoing.filters.typeLabel')}
               </label>
               <Select
                 value={selectedType}
@@ -586,10 +588,10 @@ const OutgoingDocumentsPage: React.FC = () => {
                 }}
               >
                 <SelectTrigger className="h-11 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white">
-                  <SelectValue placeholder="كافة الأنواع" />
+                  <SelectValue placeholder={t('outgoing.filters.allTypesPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent className="rounded border-[#cbd5e1] text-base">
-                  <SelectItem value="all_types">كافة أنواع الوثائق</SelectItem>
+                  <SelectItem value="all_types">{t('outgoing.filters.allTypes')}</SelectItem>
                   {typeOptions.map((opt: { _id?: string; value?: string; name: string; label?: string }) => (
                     <SelectItem key={opt._id || opt.value || opt.name} value={opt.value || opt.name}>
                       {opt.label || opt.name}
@@ -602,7 +604,7 @@ const OutgoingDocumentsPage: React.FC = () => {
             {/* Classification/Folder Filter */}
             <div className={currentUser?.role === 'AdminTuningDesk' ? "lg:col-span-4" : "lg:col-span-3"}>
               <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
-                حالة التصنيف بالأرشيف
+                {t('outgoing.filters.folderFilterLabel')}
               </label>
               <Select
                 value={folderFilter}
@@ -612,12 +614,12 @@ const OutgoingDocumentsPage: React.FC = () => {
                 }}
               >
                 <SelectTrigger className="h-11 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white">
-                  <SelectValue placeholder="حالة المجلد" />
+                  <SelectValue placeholder={t('outgoing.filters.folderPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent className="rounded border-[#cbd5e1] text-base">
-                  <SelectItem value="all">الكل (مصنفة وغير مصنفة)</SelectItem>
-                  <SelectItem value="categorized">مصنفة في مجلد</SelectItem>
-                  <SelectItem value="uncategorized">غير مصنفة بعد</SelectItem>
+                  <SelectItem value="all">{t('outgoing.filters.folderAll')}</SelectItem>
+                  <SelectItem value="categorized">{t('outgoing.filters.folderCategorized')}</SelectItem>
+                  <SelectItem value="uncategorized">{t('outgoing.filters.folderUncategorized')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -625,7 +627,7 @@ const OutgoingDocumentsPage: React.FC = () => {
             {/* Sort Order */}
             <div className={currentUser?.role === 'AdminTuningDesk' ? "lg:col-span-4" : "lg:col-span-3"}>
               <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
-                ترتيب العرض
+                {t('outgoing.filters.sortLabel')}
               </label>
               <Select
                 value={sortBy}
@@ -638,10 +640,10 @@ const OutgoingDocumentsPage: React.FC = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded border-[#cbd5e1] text-base">
-                  <SelectItem value="newest-issue">الأحدث تاريخ إصدار</SelectItem>
-                  <SelectItem value="oldest-issue">الأقدم تاريخ إصدار</SelectItem>
-                  <SelectItem value="serial-desc">رقم التسلسل (تنازلي)</SelectItem>
-                  <SelectItem value="serial-asc">رقم التسلسل (تصاعدي)</SelectItem>
+                  <SelectItem value="newest-issue">{t('outgoing.sort.newestIssue')}</SelectItem>
+                  <SelectItem value="oldest-issue">{t('outgoing.sort.oldestIssue')}</SelectItem>
+                  <SelectItem value="serial-desc">{t('outgoing.sort.serialDesc')}</SelectItem>
+                  <SelectItem value="serial-asc">{t('outgoing.sort.serialAsc')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -656,7 +658,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   className="h-11 px-4 text-base font-semibold text-[#c53030] hover:bg-red-50 hover:text-[#9b2c2c] rounded transition-colors duration-200 w-full sm:w-auto"
                 >
                   <RotateCcw className="h-4 w-4 ml-1.5" />
-                  إعادة ضبط المرشحات
+                  {t('outgoing.filters.reset')}
                 </Button>
               </div>
             )}
@@ -668,19 +670,19 @@ const OutgoingDocumentsPage: React.FC = () => {
               {/* Year badge */}
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
                 <Calendar className="h-4 w-4" />
-                سنة: {selectedYear}
+                {t('outgoing.stats.yearBadge', { year: selectedYear })}
               </span>
 
               {/* Total count badge with institutional amber accent */}
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-sm font-bold bg-[#FFD758]/20 text-[#1a202c] border border-[#FFCB56]">
                 <FileOutput className="h-4 w-4 text-[#1a202c]" />
-                إجمالي النتائج: {totalFiltered} من {totalCount} وثيقة
+                {t('outgoing.stats.resultsCount', { filtered: totalFiltered, total: totalCount })}
               </span>
 
               {isFetching && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 text-[#4a5568] border border-slate-300">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
-                  جاري المزامنة...
+                  {t('outgoing.stats.syncing')}
                 </span>
               )}
             </div>
@@ -690,30 +692,30 @@ const OutgoingDocumentsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setViewMode('table')}
-                aria-label="عرض كجدول بيانات"
+                aria-label={t('outgoing.view.tableLabel')}
                 className={`h-11 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
                   viewMode === 'table'
                     ? 'bg-[#2c5282] text-white'
                     : 'text-[#4a5568] hover:bg-gray-50'
                 }`}
-                title="عرض كجدول بيانات"
+                title={t('outgoing.view.tableLabel')}
               >
                 <LayoutList className="h-4 w-4" />
-                <span className="hidden sm:inline">جدول</span>
+                <span className="hidden sm:inline">{t('outgoing.view.table')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                aria-label="عرض كبطاقات"
+                aria-label={t('outgoing.view.gridLabel')}
                 className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
                   viewMode === 'grid'
                     ? 'bg-[#2c5282] text-white'
                     : 'text-[#4a5568] hover:bg-gray-50'
                 }`}
-                title="عرض كبطاقات"
+                title={t('outgoing.view.gridLabel')}
               >
                 <LayoutGrid className="h-4 w-4" />
-                <span className="hidden sm:inline">بطاقات</span>
+                <span className="hidden sm:inline">{t('outgoing.view.grid')}</span>
               </button>
             </div>
           </div>
@@ -728,9 +730,9 @@ const OutgoingDocumentsPage: React.FC = () => {
               <div className="w-12 h-12 rounded bg-amber-50 border border-[#FFD758] flex items-center justify-center mx-auto text-[#1a202c]">
                 <Calendar className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-[#1a202c]">يرجى إدخال سنة صحيحة</h3>
+              <h3 className="text-xl font-bold text-[#1a202c]">{t('outgoing.yearValidation.title')}</h3>
               <p className="text-base text-[#4a5568] max-w-md mx-auto">
-                أدخل سنة كاملة مكونة من 4 أرقام (مثال: 2026) لعرض الوثائق الصادرة الخاصة بها.
+                {t('outgoing.yearValidation.description')}
               </p>
             </div>
           ) : totalFiltered === 0 ? (
@@ -740,11 +742,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                 <FileOutput className="h-7 w-7 text-[#2c5282]" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-[#1a202c]">لا توجد وثائق صادرة مطابقة</h3>
+                <h3 className="text-xl font-bold text-[#1a202c]">{t('outgoing.empty.title')}</h3>
                 <p className="text-base text-[#4a5568] max-w-md mx-auto mt-1 leading-relaxed">
                   {hasActiveFilters
-                    ? 'لم يتم العثور على وثائق تطابق معايير الفرز أو البحث المحددة. يمكنك تعديل أو إعادة ضبط الفلاتر للاطلاع على باقي المراسلات.'
-                    : `لم يتم تسجيل أي وثائق صادرة لسنة ${selectedYear} حتى الآن.`}
+                    ? t('outgoing.empty.filtered')
+                    : t('outgoing.empty.noDocsYear', { year: selectedYear })}
                 </p>
               </div>
               {hasActiveFilters && (
@@ -753,7 +755,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   onClick={handleFilterReset}
                   className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
                 >
-                  عرض كافة وثائق سنة {selectedYear}
+                  {t('outgoing.empty.showAll', { year: selectedYear })}
                 </Button>
               )}
             </div>
@@ -768,7 +770,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                       onClick={() => handleTableSort('serialNumber')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>رقم التسلسل</span>
+                        <span>{t('outgoing.table.serialNumber')}</span>
                         {sortField === 'serialNumber' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                         {sortField === 'serialNumber' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                         {sortField !== 'serialNumber' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
@@ -779,7 +781,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                       onClick={() => handleTableSort('subject')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>الموضوع والنوع</span>
+                        <span>{t('outgoing.table.subjectAndType')}</span>
                         {sortField === 'subject' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                         {sortField === 'subject' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                         {sortField !== 'subject' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
@@ -790,26 +792,26 @@ const OutgoingDocumentsPage: React.FC = () => {
                       onClick={() => handleTableSort('issueDate')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>تاريخ الإصدار</span>
+                        <span>{t('outgoing.table.issueDate')}</span>
                         {sortField === 'issueDate' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                         {sortField === 'issueDate' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                         {sortField !== 'issueDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                       </div>
                     </th>
-                    <th className="py-3 px-4 font-bold text-sm">المصدر (القسم)</th>
-                    <th className="py-3 px-4 font-bold text-sm">الموجه إليهم</th>
+                    <th className="py-3 px-4 font-bold text-sm">{t('outgoing.table.source')}</th>
+                    <th className="py-3 px-4 font-bold text-sm">{t('outgoing.table.recipients')}</th>
                     <th 
                       className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
                       onClick={() => handleTableSort('status')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>التصنيف والأرشيف</span>
+                        <span>{t('outgoing.table.classification')}</span>
                         {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                         {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                         {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
                       </div>
                     </th>
-                    <th className="py-3 px-4 font-bold text-sm text-center whitespace-nowrap">الإجراءات</th>
+                    <th className="py-3 px-4 font-bold text-sm text-center whitespace-nowrap">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e2e8f0] bg-white">
@@ -855,7 +857,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               {doc.scannedDocument && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
                                   <FileOutput className="h-3 w-3" />
-                                  ملف مرفق
+                                  {t('outgoing.table.attachedFile')}
                                 </span>
                               )}
                             </div>
@@ -874,8 +876,8 @@ const OutgoingDocumentsPage: React.FC = () => {
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-1.5 text-sm font-normal text-[#2d3748]">
                             <Building2 className="h-4 w-4 text-[#718096] flex-shrink-0" />
-                            <span className="line-clamp-1" title={doc.source?.name || 'غير محدد'}>
-                              {highlightMatch(doc.source?.name || 'غير محدد', searchQuery)}
+                            <span className="line-clamp-1" title={doc.source?.name || t('outgoing.source.unspecified')}>
+                              {highlightMatch(doc.source?.name || t('outgoing.source.unspecified'), searchQuery)}
                             </span>
                           </div>
                         </td>
@@ -894,12 +896,12 @@ const OutgoingDocumentsPage: React.FC = () => {
                               ))}
                               {doc.assignedTo.length > 2 && (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-[#4a5568] border border-slate-200">
-                                  +{doc.assignedTo.length - 2} أخرى
+                                  {t('outgoing.table.otherRecipients', { count: doc.assignedTo.length - 2 })}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-[#a0aec0]">غير محدد</span>
+                            <span className="text-xs text-[#a0aec0]">{t('outgoing.source.unspecified')}</span>
                           )}
                         </td>
 
@@ -908,11 +910,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                           {doc.folder ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                               <FolderOpen className="h-3.5 w-3.5 text-emerald-600" />
-                              {typeof doc.folder === 'object' ? doc.folder.name : 'مصنفة في مجلد'}
+                              {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorizedInFolder')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#718096] bg-slate-100 border border-slate-200">
-                              غير مصنفة
+                              {t('outgoing.status.uncategorized')}
                             </span>
                           )}
                         </td>
@@ -926,11 +928,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleView(doc._id)}
-                              title="عرض تفاصيل الوثيقة"
+                              title={t('outgoing.actions.viewTooltip')}
                               className="h-11 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
                             >
                               <Eye className="h-3.5 w-3.5 ml-1" />
-                              عرض
+                              {t('common.view')}
                             </Button>
 
                             {/* معاينة (Aperçu) */}
@@ -939,11 +941,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => setPreviewDoc(doc)}
-                              title="معاينة الوثيقة"
+                              title={t('outgoing.actions.previewTooltip')}
                               className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
                             >
                               <FileText className="h-3.5 w-3.5 ml-1" />
-                              معاينة
+                              {t('outgoing.actions.preview')}
                             </Button>
 
                             {/* 2. Modifier (تعديل) */}
@@ -953,11 +955,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleEdit(doc._id)}
-                                title="تعديل بيانات الوثيقة"
+                                title={t('outgoing.actions.editTooltip')}
                                 className="h-11 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
                               >
                                 <Edit className="h-3.5 w-3.5 ml-1" />
-                                تعديل
+                                {t('common.edit')}
                               </Button>
                             )}
 
@@ -968,11 +970,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setFolderDoc(doc)}
-                                title={canOrganizeDocuments ? 'أرشفة وتنظيم في مجلد' : 'عرض المجلد والأرشفة'}
+                                title={canOrganizeDocuments ? t('outgoing.actions.archiveTooltip') : t('outgoing.actions.viewArchiveTooltip')}
                                 className="h-11 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
                               >
                                 <FolderOpen className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
-                                أرشفة
+                                {t('outgoing.actions.archive')}
                               </Button>
                             )}
 
@@ -982,11 +984,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => setTransferDoc(doc)}
-                              title="تحويل وتوجيه المراسلة"
+                              title={t('outgoing.actions.transferTooltip')}
                               className="h-11 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
                             >
                               <Share2 className="h-3.5 w-3.5 ml-1" />
-                              تحويل
+                              {t('outgoing.actions.transfer')}
                             </Button>
 
                             {/* 5. Télécharger PDF */}
@@ -997,8 +999,8 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => handleDownload(doc)}
                                 disabled={downloadingDocId === doc._id}
-                                title="تحميل ملف PDF"
-                                aria-label="تحميل ملف PDF"
+                                title={t('outgoing.actions.downloadPdfTooltip')}
+                                aria-label={t('outgoing.actions.downloadPdfAria')}
                                 className="h-11 px-2 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-white hover:bg-blue-50 transition-colors duration-200"
                               >
                                 {downloadingDocId === doc._id ? (
@@ -1017,7 +1019,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    aria-label="المزيد من الإجراءات"
+                                    aria-label={t('outgoing.actions.moreActions')}
                                     className="h-11 w-11 p-0 rounded hover:bg-slate-100 text-[#718096]"
                                   >
                                     <MoreHorizontal className="h-4 w-4" />
@@ -1029,7 +1031,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                     className="text-[#e53e3e] focus:text-[#c53030] focus:bg-red-50 text-sm font-semibold cursor-pointer"
                                   >
                                     <Trash2 className="h-4 w-4 ml-2" />
-                                    حذف الوثيقة
+                                    {t('outgoing.actions.deleteDocument')}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -1063,11 +1065,11 @@ const OutgoingDocumentsPage: React.FC = () => {
                         {doc.folder ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                             <FolderOpen className="h-3 w-3" />
-                            {typeof doc.folder === 'object' ? doc.folder.name : 'مؤرشفة'}
+                            {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorized')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#718096] border border-slate-200">
-                            غير مصنفة
+                            {t('outgoing.status.uncategorized')}
                           </span>
                         )}
                       </div>
@@ -1085,12 +1087,12 @@ const OutgoingDocumentsPage: React.FC = () => {
                       <div className="space-y-2 text-sm text-[#4a5568] mb-4">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-[#718096] flex-shrink-0" />
-                          <span>تاريخ الإصدار: {formatArabicDate(doc.issueDate)}</span>
+                          <span>{t('outgoing.cards.issueDate', { date: formatArabicDate(doc.issueDate) })}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-[#718096] flex-shrink-0" />
-                          <span className="truncate">المصدر: {doc.source?.name || 'غير محدد'}</span>
+                          <span className="truncate">{t('outgoing.cards.source', { source: doc.source?.name || t('outgoing.source.unspecified') })}</span>
                         </div>
 
                         {Array.isArray(doc.assignedTo) && doc.assignedTo.length > 0 && (
@@ -1123,7 +1125,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         className="h-11 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100"
                       >
                         <Eye className="h-3.5 w-3.5 ml-1" />
-                        عرض
+                        {t('common.view')}
                       </Button>
 
                       <Button
@@ -1132,10 +1134,10 @@ const OutgoingDocumentsPage: React.FC = () => {
                         size="sm"
                         onClick={() => setPreviewDoc(doc)}
                         className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100"
-                        title="معاينة الوثيقة"
+                        title={t('outgoing.actions.previewTooltip')}
                       >
                         <FileText className="h-3.5 w-3.5 ml-1" />
-                        معاينة
+                        {t('outgoing.actions.preview')}
                       </Button>
 
                       {canEdit && (
@@ -1147,7 +1149,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                           className="h-11 px-2 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100"
                         >
                           <Edit className="h-3.5 w-3.5 ml-1" />
-                          تعديل
+                          {t('common.edit')}
                         </Button>
                       )}
 
@@ -1160,7 +1162,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                           className="h-11 px-2 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56]"
                         >
                           <FolderOpen className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
-                          أرشفة
+                          {t('outgoing.actions.archive')}
                         </Button>
                       )}
 
@@ -1172,7 +1174,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         className="h-11 px-2 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
                       >
                         <Share2 className="h-3.5 w-3.5 ml-1" />
-                        تحويل
+                        {t('outgoing.actions.transfer')}
                       </Button>
 
                       {doc.scannedDocument && (
@@ -1183,8 +1185,8 @@ const OutgoingDocumentsPage: React.FC = () => {
                           onClick={() => handleDownload(doc)}
                           disabled={downloadingDocId === doc._id}
                           className="h-11 px-2 text-xs rounded text-[#2c5282] border-blue-200"
-                          title="تحميل PDF"
-                          aria-label="تحميل PDF"
+                          title={t('outgoing.actions.downloadPdfTooltip')}
+                          aria-label={t('outgoing.actions.downloadPdfAria')}
                         >
                           {downloadingDocId === doc._id ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
@@ -1206,26 +1208,18 @@ const OutgoingDocumentsPage: React.FC = () => {
               
               {/* Counter Display */}
               <div className="text-sm font-medium text-[#4a5568]">
-                عرض{' '}
-                <span className="font-bold text-[#1a202c]">
-                  {startIndex + 1}
-                </span>{' '}
-                إلى{' '}
-                <span className="font-bold text-[#1a202c]">
-                  {endIndex}
-                </span>{' '}
-                من أصل{' '}
-                <span className="font-bold text-[#1a202c]">
-                  {totalFiltered}
-                </span>{' '}
-                وثيقة صادرة
+                {t('outgoing.pagination.info', {
+                  from: startIndex + 1,
+                  to: endIndex,
+                  total: totalFiltered
+                })}
               </div>
 
               {/* Page Controls */}
               <div className="flex items-center gap-2">
                 {/* Page Size Selector */}
                 <div className="flex items-center gap-1.5 ml-3">
-                  <span className="text-xs font-semibold text-[#718096]">العناصر:</span>
+                  <span className="text-xs font-semibold text-[#718096]">{t('outgoing.pagination.itemsLabel')}</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -1250,7 +1244,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   className="h-11 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
-                  السابق
+                  {t('common.previous')}
                 </Button>
 
                 {/* Page Numbers */}
@@ -1288,7 +1282,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   disabled={clampedPage >= totalPages}
                   className="h-11 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
                 >
-                  التالي
+                  {t('common.next')}
                   <ChevronLeft className="h-4 w-4 mr-1" />
                 </Button>
               </div>
@@ -1320,17 +1314,16 @@ const OutgoingDocumentsPage: React.FC = () => {
         <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm" dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
-              تأكيد حذف الوثيقة الصادرة
+              {t('outgoing.delete.title')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-[#4a5568] mt-3 leading-relaxed">
-              هل أنت متأكد من رغبتك في حذف الوثيقة الصادرة رقم{' '}
-              <span className="font-bold text-[#1a202c]">
-                #{deleteDoc?.serialNumber}
-              </span>{' '}
-              بشأن &quot;{deleteDoc?.subject}&quot;؟
+              {t('outgoing.delete.description', {
+                serialNumber: deleteDoc?.serialNumber,
+                subject: deleteDoc?.subject
+              })}
               <br />
               <span className="text-sm text-[#c53030] block mt-2 font-medium">
-                تنبيه: هذا الإجراء نهائي ولا يمكن التراجع عنه.
+                {t('outgoing.delete.warning')}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1347,17 +1340,17 @@ const OutgoingDocumentsPage: React.FC = () => {
               {deleteMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>جاري الحذف...</span>
+                  <span>{t('outgoing.delete.deleting')}</span>
                 </>
               ) : (
-                'تأكيد الحذف'
+                t('outgoing.delete.confirmButton')
               )}
             </AlertDialogAction>
             <AlertDialogCancel 
               className="rounded font-medium text-base h-11 px-6 border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100"
               disabled={deleteMutation.isPending}
             >
-              إلغاء
+              {t('common.cancel')}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1376,10 +1369,10 @@ const OutgoingDocumentsPage: React.FC = () => {
               <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
                 <Share2 className="h-5 w-5 text-[#2c5282]" />
               </div>
-              <span>تحويل وتوجيه الوثيقة الصادرة</span>
+              <span>{t('outgoing.transfer.title')}</span>
             </DialogTitle>
             <DialogDescription className="text-base text-[#4a5568] mt-1.5 leading-relaxed">
-              تسجيل مسار الإرسال والتوجيه الإداري للمراسلة الصادرة رقم <strong className="text-[#1a202c]">#{transferDoc?.serialNumber}</strong>
+              {t('outgoing.transfer.description', { serialNumber: transferDoc?.serialNumber })}
             </DialogDescription>
           </DialogHeader>
 
@@ -1388,22 +1381,22 @@ const OutgoingDocumentsPage: React.FC = () => {
               {/* Document mini-summary */}
               <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-1.5 text-base">
                 <div className="font-bold text-[#1a202c]">
-                  الموضوع: {transferDoc.subject}
+                  {t('outgoing.transfer.subjectLabel', { subject: transferDoc.subject })}
                 </div>
                 <div className="text-sm text-[#718096] flex items-center gap-4">
-                  <span>تاريخ الإصدار: {formatArabicDate(transferDoc.issueDate)}</span>
-                  <span>المصدر: {transferDoc.source?.name || 'غير محدد'}</span>
+                  <span>{t('outgoing.transfer.issueDateLabel', { date: formatArabicDate(transferDoc.issueDate) })}</span>
+                  <span>{t('outgoing.transfer.sourceLabel', { source: transferDoc.source?.name || t('outgoing.source.unspecified') })}</span>
                 </div>
               </div>
 
               {/* Destination department */}
               <div className="space-y-2">
                 <Label className="text-base font-bold text-[#1a202c]">
-                  الجهة أو القسم المستهدف للتحويل <span className="text-red-600">*</span>
+                  {t('outgoing.transfer.targetDeptLabel')} <span className="text-red-600">*</span>
                 </Label>
                 <Select value={transferTargetDept} onValueChange={setTransferTargetDept}>
                   <SelectTrigger className="h-11 text-base border-[#cbd5e1] rounded bg-white">
-                    <SelectValue placeholder="اختر القسم أو المصلحة..." />
+                    <SelectValue placeholder={t('outgoing.transfer.targetDeptPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent className="rounded border-[#cbd5e1] text-base" dir="rtl">
                     {departments.map((dept) => (
@@ -1418,12 +1411,12 @@ const OutgoingDocumentsPage: React.FC = () => {
               {/* Instructions / Orientation note */}
               <div className="space-y-2">
                 <Label className="text-base font-bold text-[#1a202c]">
-                  تعليمات وملاحظات التوجيه
+                  {t('outgoing.transfer.notesLabel')}
                 </Label>
                 <Textarea
                   value={transferNotes}
                   onChange={(e) => setTransferNotes(e.target.value)}
-                  placeholder="مثال: للإجراء والمتابعة، للتنفيذ، للإطلاع والإفادة..."
+                  placeholder={t('outgoing.transfer.notesPlaceholder')}
                   className="text-base border-[#cbd5e1] rounded min-h-[100px] p-3 focus:border-[#2c5282]"
                 />
               </div>
@@ -1437,7 +1430,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               disabled={isTransferSubmitting}
               className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white rounded font-semibold text-base transition-colors duration-200 shadow-none"
             >
-              {isTransferSubmitting ? 'جاري التسجيل...' : 'تأكيد التحويل والتوجيه'}
+              {isTransferSubmitting ? t('outgoing.transfer.submitting') : t('outgoing.transfer.confirmButton')}
             </Button>
             <Button
               type="button"
@@ -1446,7 +1439,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               className="h-11 px-6 rounded font-medium text-base border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100"
               disabled={isTransferSubmitting}
             >
-              إلغاء
+              {t('common.cancel')}
             </Button>
           </DialogFooter>
         </DialogContent>
