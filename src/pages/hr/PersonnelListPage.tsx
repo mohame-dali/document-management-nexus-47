@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
@@ -59,6 +60,7 @@ import { InlineCreateUserModal } from '@/components/hr/InlineCreateUserModal';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 
 export const PersonnelListPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
@@ -144,12 +146,12 @@ export const PersonnelListPage: React.FC = () => {
     mutationFn: (id: string) => deletePersonnel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['personnel'] });
-      toast.success('تم حذف ملف الموظف بنجاح');
+      toast.success(t('personnel.toasts.deleteSuccess'));
       setShowDeleteDialog(false);
       setPersonnelToDelete(null);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'تعذر حذف ملف الموظف'));
+      toast.error(getErrorMessage(error, t('personnel.toasts.deleteError')));
     },
   });
 
@@ -180,10 +182,10 @@ export const PersonnelListPage: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#1a202c]">
-                إدارة الموارد البشرية
+                {t('personnel.page.title')}
               </h1>
               <p className="text-base text-gray-600 mt-1">
-                سجل بطاقات الموظفين والمستخدمين وتدبير الوثائق الإدارية المرتبطة بهم
+                {t('personnel.page.subtitle')}
               </p>
             </div>
           </div>
@@ -198,7 +200,7 @@ export const PersonnelListPage: React.FC = () => {
             className="h-11 px-4 text-sm font-medium text-gray-700 border-[#cbd5e1] rounded hover:bg-gray-50 flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>تحديث</span>
+            <span>{t('common.refresh')}</span>
           </Button>
 
           {canAddPersonnel && (
@@ -207,7 +209,7 @@ export const PersonnelListPage: React.FC = () => {
               className="h-11 px-5 text-base font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 shadow-sm"
             >
               <Plus className="w-5 h-5" />
-              <span>إضافة موظف</span>
+              <span>{t('personnel.actions.create')}</span>
             </Button>
           )}
         </div>
@@ -218,7 +220,7 @@ export const PersonnelListPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-base font-bold text-gray-700">
             <Filter className="w-4 h-4 text-[#2c5282]" />
-            <span>البحث والتصفية</span>
+            <span>{t('personnel.filters.title')}</span>
           </div>
 
           {hasActiveFilters && (
@@ -229,7 +231,7 @@ export const PersonnelListPage: React.FC = () => {
               className="h-11 px-3 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
             >
               <X className="w-4 h-4" />
-              <span>إعادة ضبط التصفية</span>
+              <span>{t('personnel.filters.reset')}</span>
             </Button>
           )}
         </div>
@@ -244,7 +246,7 @@ export const PersonnelListPage: React.FC = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="البحث بالاسم، اللقب، أو رقم ب.ت.و (CIN)..."
+              placeholder={t('personnel.filters.searchPlaceholder')}
               className="h-11 text-base pr-10 pl-3 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
             />
           </div>
@@ -259,13 +261,13 @@ export const PersonnelListPage: React.FC = () => {
               }}
             >
               <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
-                <SelectValue placeholder="تصفية حسب الحالة" />
+                <SelectValue placeholder={t('personnel.filters.statusPlaceholder')} />
               </SelectTrigger>
               <SelectContent dir="rtl">
-                <SelectItem value="ALL" className="text-base py-2 font-medium">جميع الحالات</SelectItem>
-                <SelectItem value="en_attente" className="text-base py-2">في الانتظار (En attente)</SelectItem>
-                <SelectItem value="actif" className="text-base py-2">نشط (Actif)</SelectItem>
-                <SelectItem value="inactif" className="text-base py-2">غير نشط (Inactif)</SelectItem>
+                <SelectItem value="ALL" className="text-base py-2 font-medium">{t('personnel.filters.allStatuses')}</SelectItem>
+                <SelectItem value="en_attente" className="text-base py-2">{t('personnel.filters.statusPending')}</SelectItem>
+                <SelectItem value="actif" className="text-base py-2">{t('personnel.filters.statusActive')}</SelectItem>
+                <SelectItem value="inactif" className="text-base py-2">{t('personnel.filters.statusInactive')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -280,10 +282,10 @@ export const PersonnelListPage: React.FC = () => {
               }}
             >
               <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
-                <SelectValue placeholder="تصفية حسب القسم" />
+                <SelectValue placeholder={t('personnel.filters.departmentPlaceholder')} />
               </SelectTrigger>
               <SelectContent dir="rtl">
-                <SelectItem value="ALL" className="text-base py-2 font-medium">جميع الأقسام</SelectItem>
+                <SelectItem value="ALL" className="text-base py-2 font-medium">{t('personnel.filters.allDepartments')}</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
                     {dept.name}
@@ -302,22 +304,22 @@ export const PersonnelListPage: React.FC = () => {
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[220px]">
-                  الاسم الكامل (Nom & Prénom)
+                  {t('personnel.table.fullName')}
                 </TableHead>
                 <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px]">
-                  رقم ب.ت.و (CIN)
+                  {t('personnel.table.cin')}
                 </TableHead>
                 <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px]">
-                  الوظيفة (Poste)
+                  {t('personnel.table.position')}
                 </TableHead>
                 <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px]">
-                  القسم (Département)
+                  {t('personnel.table.department')}
                 </TableHead>
                 <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px]">
-                  الحالة (Statut)
+                  {t('personnel.table.status')}
                 </TableHead>
                 <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px]">
-                  الإجراءات
+                  {t('common.actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -333,11 +335,11 @@ export const PersonnelListPage: React.FC = () => {
                   <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Users className="w-10 h-10 text-gray-300" />
-                      <p className="font-semibold text-gray-700">لا توجد بطاقات موظفين مطابقة</p>
+                      <p className="font-semibold text-gray-700">{t('personnel.empty.title')}</p>
                       <p className="text-sm text-gray-500">
                         {hasActiveFilters
-                          ? 'جرب تعديل معايير البحث والتصفية أعلاه'
-                          : 'يمكنك البدء بإضافة موظف جديد'}
+                          ? t('personnel.empty.filtered')
+                          : t('personnel.empty.start')}
                       </p>
                     </div>
                   </TableCell>
@@ -347,7 +349,7 @@ export const PersonnelListPage: React.FC = () => {
                   const deptName = p.activeDepartment
                     ? typeof p.activeDepartment === 'object'
                       ? (p.activeDepartment as Department).name
-                      : 'قسم محدد'
+                      : t('personnel.table.specificDept')
                     : '—';
 
                   const canDeleteRow =
@@ -417,8 +419,8 @@ export const PersonnelListPage: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => navigate(`/dashboard/hr/personnel/${p._id}`)}
-                            title="عرض التفاصيل"
-                            aria-label="عرض التفاصيل"
+                            title={t('personnel.actions.viewTooltip')}
+                            aria-label={t('personnel.actions.viewTooltip')}
                             className="h-11 w-11 p-0 text-gray-600 hover:text-[#2c5282] hover:bg-[#ebf4ff] rounded"
                           >
                             <Eye className="w-4 h-4" />
@@ -429,8 +431,8 @@ export const PersonnelListPage: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => navigate(`/dashboard/hr/personnel/${p._id}/edit`)}
-                            title="تعديل البطاقة"
-                            aria-label="تعديل البطاقة"
+                            title={t('personnel.actions.editTooltip')}
+                            aria-label={t('personnel.actions.editTooltip')}
                             className="h-11 w-11 p-0 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded"
                           >
                             <Edit className="w-4 h-4" />
@@ -439,11 +441,11 @@ export const PersonnelListPage: React.FC = () => {
                           {/* Statut Compte Utilisateur / Création de compte (Admin uniquement) */}
                           {p.userId ? (
                             <span 
-                              title="حساب مستخدم مرتبط ومفعّل"
+                              title={t('personnel.account.linkedActive')}
                               className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-xs font-semibold"
                             >
                               <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span>حساب مرتبط</span>
+                              <span>{t('personnel.account.linkedBadge')}</span>
                             </span>
                           ) : (
                             currentUser?.role === 'Admin' && (
@@ -454,8 +456,8 @@ export const PersonnelListPage: React.FC = () => {
                                   setSelectedPersonnelForUser(p);
                                   setShowCreateUserModal(true);
                                 }}
-                                title="إنشاء حساب مستخدم سريع للبطاقة مع بيانات الدخول (PDF)"
-                                aria-label="إنشاء حساب مستخدم"
+                                title={t('personnel.account.createAccountTooltip')}
+                                aria-label={t('personnel.account.createAccountAria')}
                                 className="h-11 w-11 p-0 text-[#2c5282] hover:bg-blue-50 border border-blue-200 rounded"
                               >
                                 <Key className="w-4 h-4 text-[#2c5282]" />
@@ -475,13 +477,13 @@ export const PersonnelListPage: React.FC = () => {
                               }}
                               title={
                                 p.statut === 'actif'
-                                  ? 'لا يمكن حذف موظف في حالة نشط'
-                                  : 'حذف بطاقة الموظف'
+                                  ? t('personnel.actions.cannotDeleteActive')
+                                  : t('personnel.actions.deleteTooltip')
                               }
                               aria-label={
                                 p.statut === 'actif'
-                                  ? 'لا يمكن حذف موظف في حالة نشط'
-                                  : 'حذف بطاقة الموظف'
+                                  ? t('personnel.actions.cannotDeleteActive')
+                                  : t('personnel.actions.deleteTooltip')
                               }
                               className={`h-11 w-11 p-0 rounded ${
                                 p.statut === 'actif'
@@ -506,11 +508,11 @@ export const PersonnelListPage: React.FC = () => {
         <div className="bg-[#f8fafc] border-t border-[#e2e8f0] px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-sm text-gray-600">
             <span>
-              إجمالي النتائج: <strong className="text-[#1a202c]">{pagination.total}</strong> موظف
+              {t('personnel.pagination.totalResultsPrefix')} <strong className="text-[#1a202c]">{pagination.total}</strong> {t('personnel.pagination.employeeCount')}
             </span>
             <span>•</span>
             <div className="flex items-center gap-2">
-              <span>عرض:</span>
+              <span>{t('personnel.pagination.perPage')}</span>
               <Select
                 value={String(limit)}
                 onValueChange={(val) => {
@@ -532,7 +534,7 @@ export const PersonnelListPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600 ml-2">
-              الصفحة {pagination.page} من {pagination.pages || 1}
+              {t('personnel.pagination.pageInfo', { current: pagination.page, total: pagination.pages || 1 })}
             </span>
 
             <Button
@@ -543,7 +545,7 @@ export const PersonnelListPage: React.FC = () => {
               className="h-11 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
             >
               <ChevronRight className="w-4 h-4" />
-              <span>السابق</span>
+              <span>{t('common.previous')}</span>
             </Button>
 
             <Button
@@ -553,7 +555,7 @@ export const PersonnelListPage: React.FC = () => {
               onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
               className="h-11 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
             >
-              <span>التالي</span>
+              <span>{t('common.next')}</span>
               <ChevronLeft className="w-4 h-4" />
             </Button>
           </div>
@@ -565,16 +567,15 @@ export const PersonnelListPage: React.FC = () => {
         <AlertDialogContent dir="rtl" className="text-right">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold text-red-600">
-              تأكيد حذف بطاقة الموظف
+              {t('personnel.delete.title')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-gray-700 mt-2">
-              هل أنت متأكد من رغبتك في حذف بطاقة الموظف{' '}
-              <strong className="text-[#1a202c]">
-                {personnelToDelete?.nom} {personnelToDelete?.prenom}
-              </strong>
-              {personnelToDelete?.cin ? ` (CIN: ${personnelToDelete.cin})` : ''}؟
+              {t('personnel.delete.description', {
+                name: `${personnelToDelete?.nom || ''} ${personnelToDelete?.prenom || ''}`.trim(),
+                cin: personnelToDelete?.cin ? ` (CIN: ${personnelToDelete.cin})` : ''
+              })}
               <br />
-              هذا الإجراء نهائي ولا يمكن التراجع عنه.
+              {t('personnel.delete.warning')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex gap-3 justify-end mt-4">
@@ -582,14 +583,14 @@ export const PersonnelListPage: React.FC = () => {
               disabled={deleteMutation.isPending}
               className="h-11 px-4 rounded text-gray-700"
             >
-              إلغاء
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={deleteMutation.isPending}
               className="h-11 px-5 rounded bg-red-600 hover:bg-red-700 text-white font-bold"
             >
-              {deleteMutation.isPending ? 'جاري الحذف...' : 'تأكيد الحذف'}
+              {deleteMutation.isPending ? t('personnel.delete.deleting') : t('personnel.delete.confirmButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
