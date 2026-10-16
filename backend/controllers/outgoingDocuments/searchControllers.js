@@ -61,8 +61,11 @@ exports.searchOutgoingDocuments = async (req, res, next) => {
     }
     
     // Filter by subject if provided
-    if (subject) {
-      query.subject = { $regex: subject, $options: 'i' };
+    if (subject && typeof subject === 'string') {
+      const safeSubject = escapeRegex(subject.trim().slice(0, 200));
+      if (safeSubject) {
+        query.subject = { $regex: safeSubject, $options: 'i' };
+      }
     }
     
     // Date range filter

@@ -666,15 +666,27 @@ exports.downloadBackup = async (req, res) => {
       });
     }
 
-    if (!backup.filePath || !fs.existsSync(backup.filePath)) {
+    // Path Traversal Protection
+    const allowedBackupDir = path.resolve(process.env.BACKUP_PATH || path.join(process.cwd(), 'backups'));
+    const resolvedPath = path.resolve(backup.filePath);
+
+    if (!resolvedPath.startsWith(allowedBackupDir + path.sep) && !resolvedPath.startsWith(path.resolve(process.cwd(), 'backups') + path.sep)) {
+      console.warn(`[Security] Tentative de Path Traversal bloquée sur downloadBackup: ${backup.filePath}`);
+      return res.status(403).json({
+        success: false,
+        message: 'Accès non autorisé au fichier de sauvegarde',
+      });
+    }
+
+    if (!fs.existsSync(resolvedPath)) {
       return res.status(404).json({
         success: false,
         message: 'Fichier de backup introuvable sur le disque',
       });
     }
 
-    const fileName = backup.fileName || path.basename(backup.filePath);
-    res.download(backup.filePath, fileName);
+    const fileName = backup.fileName || path.basename(resolvedPath);
+    res.download(resolvedPath, fileName);
   } catch (error) {
     console.error('[Backup Download] Erreur:', error.message);
     res.status(500).json({
@@ -706,13 +718,26 @@ exports.deleteBackup = async (req, res) => {
       });
     }
 
-    // Supprimer le fichier physique
-    if (backup.filePath && fs.existsSync(backup.filePath)) {
-      try {
-        fs.unlinkSync(backup.filePath);
-        console.log(`[Backup Delete] Fichier supprimé: ${backup.filePath}`);
-      } catch (fileErr) {
-        console.warn('[Backup Delete] Erreur fichier:', fileErr.message);
+    // Supprimer le fichier physique avec protection Path Traversal
+    if (backup.filePath) {
+      const allowedBackupDir = path.resolve(process.env.BACKUP_PATH || path.join(process.cwd(), 'backups'));
+      const resolvedPath = path.resolve(backup.filePath);
+
+      if (!resolvedPath.startsWith(allowedBackupDir + path.sep) && !resolvedPath.startsWith(path.resolve(process.cwd(), 'backups') + path.sep)) {
+        console.warn(`[Security] Tentative de Path Traversal bloquée sur deleteBackup: ${backup.filePath}`);
+        return res.status(403).json({
+          success: false,
+          message: 'Accès non autorisé au fichier de sauvegarde',
+        });
+      }
+
+      if (fs.existsSync(resolvedPath)) {
+        try {
+          fs.unlinkSync(resolvedPath);
+          console.log(`[Backup Delete] Fichier supprimé: ${resolvedPath}`);
+        } catch (fileErr) {
+          console.warn('[Backup Delete] Erreur fichier:', fileErr.message);
+        }
       }
     }
 

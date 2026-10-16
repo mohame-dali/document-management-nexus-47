@@ -8,10 +8,10 @@ const { sendTokenResponse } = require('./utils');
 // @access  Public
 exports.login = async (req, res, next) => {
   try {
-    console.log('Login request received with body:', JSON.stringify(req.body));
-    
     const username = req.body?.username;
     const password = req.body?.password;
+
+    console.log(`[Auth] Tentative de connexion reçue pour: ${typeof username === 'string' ? username.slice(0, 50) : '[format invalide]'}`);
 
     // Strict type validation to prevent NoSQL injection
     if (typeof username !== 'string' || typeof password !== 'string') {
@@ -47,10 +47,9 @@ exports.login = async (req, res, next) => {
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
-    console.log(`Password match for ${username}: ${isMatch}`);
 
     if (!isMatch) {
-      console.log(`Invalid password for ${username}`);
+      console.log(`[Auth] Identifiants incorrects pour: ${username}`);
       return next(new ErrorResponse('Invalid credentials', 401));
     }
 

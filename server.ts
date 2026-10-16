@@ -20,8 +20,9 @@ const errorHandler = require('./backend/middleware/error');
 
 // Check JWT_SECRET
 if (!process.env.JWT_SECRET) {
-  console.warn('⚠️ AVERTISSEMENT: JWT_SECRET absent du .env — utilisation d\'une clé par défaut pour le développement.');
-  process.env.JWT_SECRET = 'dms_dev_jwt_secret_key_64_bytes_secure_random_fallback_token_2026';
+  console.error('🔴 FATAL: JWT_SECRET absent du .env');
+  console.error('   Générer : node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+  process.exit(1);
 }
 process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';

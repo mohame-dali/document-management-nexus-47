@@ -98,32 +98,42 @@ const templateStorage = multer.diskStorage({
   }
 });
 
-// File filter for photos
+// File filter for photos (stricte validation extension + MIME type)
 const photoFilter = (req, file, cb) => {
-  // Accept images only
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-    req.fileValidationError = 'Only image files are allowed!';
-    return cb(new Error('Only image files are allowed!'), false);
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const extMatch = file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+  
+  if (!extMatch || !allowedMimeTypes.includes(file.mimetype)) {
+    req.fileValidationError = 'Only valid image files (JPG, PNG, GIF, WEBP) are allowed!';
+    return cb(new Error('Only valid image files (JPG, PNG, GIF, WEBP) are allowed!'), false);
   }
   cb(null, true);
 };
 
-// File filter for documents
+// File filter for documents (stricte validation PDF extension + MIME type)
 const documentFilter = (req, file, cb) => {
-  // Accept only PDF files
-  if (!file.originalname.match(/\.(pdf|PDF)$/)) {
+  const allowedMimeTypes = ['application/pdf'];
+  const extMatch = file.originalname.match(/\.pdf$/i);
+  
+  if (!extMatch || (!allowedMimeTypes.includes(file.mimetype) && file.mimetype !== 'application/x-pdf')) {
     req.fileValidationError = 'Only PDF files are allowed!';
     return cb(new Error('Only PDF files are allowed!'), false);
   }
   cb(null, true);
 };
 
-// File filter for templates (Word documents)
+// File filter for templates (Word documents extension + MIME type)
 const templateFilter = (req, file, cb) => {
-  // Accept only Word documents
-  if (!file.originalname.match(/\.(doc|docx|DOC|DOCX)$/)) {
-    req.fileValidationError = 'Only Word documents are allowed!';
-    return cb(new Error('Only Word documents are allowed!'), false);
+  const allowedMimeTypes = [
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/octet-stream'
+  ];
+  const extMatch = file.originalname.match(/\.(doc|docx)$/i);
+  
+  if (!extMatch || !allowedMimeTypes.includes(file.mimetype)) {
+    req.fileValidationError = 'Only Word documents (.doc, .docx) are allowed!';
+    return cb(new Error('Only Word documents (.doc, .docx) are allowed!'), false);
   }
   cb(null, true);
 };

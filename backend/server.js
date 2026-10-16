@@ -11,6 +11,13 @@ const cookieParser = require('cookie-parser');
 // Load env vars
 dotenv.config();
 
+// Check JWT_SECRET
+if (!process.env.JWT_SECRET) {
+  console.error('🔴 FATAL: JWT_SECRET absent du .env');
+  console.error('   Générer : node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+  process.exit(1);
+}
+
 // Set default JWT cookie expiration if not provided
 if (!process.env.JWT_COOKIE_EXPIRE) {
   process.env.JWT_COOKIE_EXPIRE = 30; // Default to 30 days
