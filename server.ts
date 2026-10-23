@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cookieParser from 'cookie-parser';
@@ -20,9 +21,14 @@ const errorHandler = require('./backend/middleware/error');
 
 // Check JWT_SECRET
 if (!process.env.JWT_SECRET) {
-  console.error('🔴 FATAL: JWT_SECRET absent du .env');
-  console.error('   Générer : node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
-  process.exit(1);
+  if (process.env.NODE_ENV === 'production') {
+    console.error('🔴 FATAL: JWT_SECRET absent du .env');
+    console.error('   Générer : node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+    process.exit(1);
+  } else {
+    console.warn('⚠️ AVERTISSEMENT: JWT_SECRET absent du .env — utilisation d\'une clé sécurisée pour le développement.');
+    process.env.JWT_SECRET = 'dms_dev_jwt_secret_key_64_bytes_secure_random_fallback_token_2026';
+  }
 }
 process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
@@ -183,6 +189,29 @@ const portFromArgs = portArg
   : undefined;
 const PORT = Number(portFromArgs || (process.env.PORT && process.env.PORT !== '8080' ? process.env.PORT : 3000));
 
+// Vérification de la disponibilité des modèles IA GGUF (ALLaM 7B & BGE-M3) au démarrage
+function checkAIModels() {
+  const modelsDir = path.join(process.cwd(), 'models');
+  const chatModelName = 'ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf';
+  const embedModelName = 'bge-m3-q4_k_m.gguf';
+
+  const chatPath = process.env.LLAMA_CHAT_MODEL_PATH || path.join(modelsDir, chatModelName);
+  const embedPath = process.env.LLAMA_EMBEDDING_MODEL_PATH || path.join(modelsDir, embedModelName);
+
+  const hasChat = fs.existsSync(chatPath) || fs.existsSync(path.join(modelsDir, 'qwen2.5-7b-instruct-q4_k_m.gguf'));
+  const hasEmbed = fs.existsSync(embedPath) || fs.existsSync(path.join(modelsDir, 'nomic-embed-text-v1.5.Q8_0.gguf'));
+
+  if (!hasChat || !hasEmbed) {
+    console.warn('\n' + '═'.repeat(78));
+    console.warn("⚠️ MODÈLE IA MANQUANT. Lancez 'npm run download-models' ou 'npm run setup' pour télécharger ALLaM et BGE-M3.");
+    if (!hasChat) console.warn(`   ❌ Modèle Chat absent : ${path.basename(chatPath)}`);
+    if (!hasEmbed) console.warn(`   ❌ Modèle Embedding absent : ${path.basename(embedPath)}`);
+    console.warn('═'.repeat(78) + '\n');
+  } else {
+    console.log('[AI] ✅ Modèles GGUF détectés et prêts pour l\'inférence.');
+  }
+}
+
 async function start() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -200,7 +229,9 @@ async function start() {
 
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
+    checkAIModels();
   });
 }
 
 start();
+

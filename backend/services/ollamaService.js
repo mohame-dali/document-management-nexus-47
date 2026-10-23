@@ -5,10 +5,14 @@ const fs = require('fs');
 // Configuration Modèles GGUF (node-llama-cpp)
 // ═══════════════════════════════════════════════════════════════
 const CHAT_MODEL_PATH = process.env.LLAMA_CHAT_MODEL_PATH
-  || path.join(__dirname, '../../models/qwen2.5-7b-instruct-q4_k_m.gguf');
+  || (fs.existsSync(path.join(__dirname, '../../models/ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf'))
+    ? path.join(__dirname, '../../models/ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf')
+    : path.join(__dirname, '../../models/qwen2.5-7b-instruct-q4_k_m.gguf'));
 
 const EMBEDDING_MODEL_PATH = process.env.LLAMA_EMBEDDING_MODEL_PATH
-  || path.join(__dirname, '../../models/nomic-embed-text-v1.5.Q8_0.gguf');
+  || (fs.existsSync(path.join(__dirname, '../../models/bge-m3-q4_k_m.gguf'))
+    ? path.join(__dirname, '../../models/bge-m3-q4_k_m.gguf')
+    : path.join(__dirname, '../../models/nomic-embed-text-v1.5.Q8_0.gguf'));
 
 const LLAMA_THREADS = parseInt(process.env.LLAMA_THREADS || '4', 10);
 const LLAMA_GPU_LAYERS = parseInt(process.env.LLAMA_GPU_LAYERS || '0', 10);
