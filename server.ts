@@ -68,7 +68,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-// Sanitize NoSQL operator injection in req.body, req.params (compatible with Express 5)
+// Sanitize NoSQL operator injection in req.body, req.params, req.query (compatible with Express 5)
 const mongoSanitize = require('express-mongo-sanitize');
 app.use((req, _res, next) => {
   if (req.body) {
@@ -76,6 +76,9 @@ app.use((req, _res, next) => {
   }
   if (req.params) {
     mongoSanitize.sanitize(req.params, { replaceWith: '_', allowDots: false });
+  }
+  if (req.query) {
+    mongoSanitize.sanitize(req.query, { replaceWith: '_', allowDots: false });
   }
   next();
 });

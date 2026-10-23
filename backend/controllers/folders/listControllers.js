@@ -2,6 +2,7 @@ const Folder = require('../../models/Folder');
 const IncomingDocument = require('../../models/IncomingDocument');
 const OutgoingDocument = require('../../models/OutgoingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
+const { sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // Helper to attach document counts to an array of folders
 const attachDocumentCounts = async (folders) => {
@@ -66,7 +67,10 @@ exports.getFolders = async (req, res, next) => {
 
     // Search by name if requested
     if (req.query.search) {
-      query.name = new RegExp(req.query.search.trim(), 'i');
+      const safeSearch = sanitizeSearchQuery(req.query.search);
+      if (safeSearch) {
+        query.name = new RegExp(safeSearch, 'i');
+      }
     }
     
     const folders = await Folder.find(query)

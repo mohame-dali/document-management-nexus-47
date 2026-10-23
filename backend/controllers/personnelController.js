@@ -8,6 +8,7 @@ const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
 const User = require('../models/User');
 const OrganizationSettings = require('../models/OrganizationSettings');
+const { sanitizeSearchQuery } = require('../utils/regexUtils');
 
 // Helper pour vérifier si l'utilisateur est un chef de département non-RH
 const isNonRHAdminDepartment = async (user) => {
@@ -197,12 +198,15 @@ exports.getPersonnelList = async (req, res, next) => {
 
     // Filtre de recherche textuelle (nom, prenom, cin)
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search.trim(), 'i');
-      query.$or = [
-        { nom: searchRegex },
-        { prenom: searchRegex },
-        { cin: searchRegex }
-      ];
+      const safeSearch = sanitizeSearchQuery(req.query.search);
+      if (safeSearch) {
+        const searchRegex = new RegExp(safeSearch, 'i');
+        query.$or = [
+          { nom: searchRegex },
+          { prenom: searchRegex },
+          { cin: searchRegex }
+        ];
+      }
     }
 
     // Filtre par statut

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const RHStage = require('../../models/RHStage');
+const { sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // ============================================================
 // STAGES RH (RHStage)
@@ -37,11 +38,14 @@ exports.getAllStages = async (req, res, next) => {
     }
 
     if (req.query.search) {
-      const regex = new RegExp(req.query.search.trim(), 'i');
-      filter.$or = [
-        { sujetStage: regex },
-        { lieuStage: regex }
-      ];
+      const safeSearch = sanitizeSearchQuery(req.query.search);
+      if (safeSearch) {
+        const regex = new RegExp(safeSearch, 'i');
+        filter.$or = [
+          { sujetStage: regex },
+          { lieuStage: regex }
+        ];
+      }
     }
 
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);

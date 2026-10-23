@@ -80,6 +80,21 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Cookie parser
 app.use(cookieParser());
 
+// Sanitize NoSQL operator injection in req.body, req.params, req.query
+const mongoSanitize = require('express-mongo-sanitize');
+app.use((req, _res, next) => {
+  if (req.body) {
+    mongoSanitize.sanitize(req.body, { replaceWith: '_', allowDots: false });
+  }
+  if (req.params) {
+    mongoSanitize.sanitize(req.params, { replaceWith: '_', allowDots: false });
+  }
+  if (req.query) {
+    mongoSanitize.sanitize(req.query, { replaceWith: '_', allowDots: false });
+  }
+  next();
+});
+
 // Enable CORS
 app.use(cors({
   origin: (origin, callback) => {

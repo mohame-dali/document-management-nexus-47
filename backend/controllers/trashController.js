@@ -5,6 +5,7 @@ const Message = require('../models/Message');
 const Personnel = require('../models/Personnel');
 const AuditLog = require('../models/AuditLog');
 const ErrorResponse = require('../utils/errorResponse');
+const { sanitizeSearchQuery } = require('../utils/regexUtils');
 const fs = require('fs');
 const path = require('path');
 
@@ -120,27 +121,30 @@ exports.getTrash = async (req, res, next) => {
 
     // Search filter
     if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      incomingQuery.$or = [
-        { subject: searchRegex },
-        { source: searchRegex },
-        { documentId: searchRegex }
-      ];
-      outgoingQuery.$or = [
-        { subject: searchRegex },
-        { destination: searchRegex },
-        { documentId: searchRegex }
-      ];
-      folderQuery.name = searchRegex;
-      messageQuery.$or = [
-        { subject: searchRegex },
-        { content: searchRegex }
-      ];
-      personnelQuery.$or = [
-        { nom: searchRegex },
-        { prenom: searchRegex },
-        { cin: searchRegex }
-      ];
+      const safeSearch = sanitizeSearchQuery(search);
+      if (safeSearch) {
+        const searchRegex = new RegExp(safeSearch, 'i');
+        incomingQuery.$or = [
+          { subject: searchRegex },
+          { source: searchRegex },
+          { documentId: searchRegex }
+        ];
+        outgoingQuery.$or = [
+          { subject: searchRegex },
+          { destination: searchRegex },
+          { documentId: searchRegex }
+        ];
+        folderQuery.name = searchRegex;
+        messageQuery.$or = [
+          { subject: searchRegex },
+          { content: searchRegex }
+        ];
+        personnelQuery.$or = [
+          { nom: searchRegex },
+          { prenom: searchRegex },
+          { cin: searchRegex }
+        ];
+      }
     }
 
     // Get counts

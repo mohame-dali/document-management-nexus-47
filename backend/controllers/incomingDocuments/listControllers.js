@@ -1,6 +1,7 @@
 
 const IncomingDocument = require('../../models/IncomingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
+const { sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // @desc    Get all incoming documents with pagination
 // @route   GET /api/incoming-documents
@@ -33,7 +34,10 @@ exports.getIncomingDocuments = async (req, res, next) => {
 
     // Filter by source if provided
     if (req.query.source && req.query.source.trim() !== '') {
-      query.source = { $regex: req.query.source, $options: 'i' };
+      const safeSource = sanitizeSearchQuery(req.query.source);
+      if (safeSource) {
+        query.source = { $regex: safeSource, $options: 'i' };
+      }
     }
 
     // Pagination parameters
