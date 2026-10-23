@@ -274,6 +274,14 @@ async function processBackup(backupId, includeAttachments, compressionLevel, yea
     const backup = await BackupHistory.findById(backupId);
     if (!backup) return;
 
+    // Trigger MongoDB dump (mongodump) if available
+    try {
+      const { dumpMongoDB } = require('../services/backupScheduler');
+      await dumpMongoDB();
+    } catch (dumpErr) {
+      console.warn('[Backup] MongoDB dump notice in processBackup:', dumpErr.message);
+    }
+
     // Filter documents by year if specified
     let incomingQuery = {};
     let outgoingQuery = {};

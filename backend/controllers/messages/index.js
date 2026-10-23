@@ -10,6 +10,8 @@ module.exports = {
   getMessages: listControllers.getMessages,
   getInboxMessages: listControllers.getInboxMessages,
   getSentMessages: listControllers.getSentMessages,
+  searchMessages: listControllers.searchMessages,
+  getConversation: listControllers.getConversation,
   
   // Detail controllers
   getMessage: detailControllers.getMessage,

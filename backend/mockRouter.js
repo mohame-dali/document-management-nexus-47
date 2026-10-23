@@ -79,6 +79,13 @@ router.get('/scan/devices', (req, res) => {
 router.use((req, res) => {
   if (req.method === 'GET') {
     const path = req.path;
+    if (path.includes('/search') || path.includes('/conversation')) {
+      return res.json({
+        success: true,
+        count: 0,
+        data: [],
+      });
+    }
     if (path.match(/\/[a-f0-9]{24}$/) || (path.match(/\/[^/]+$/) && !path.endsWith('s'))) {
       return res.json({
         success: true,

@@ -6,6 +6,8 @@ const {
   getMessages, 
   getInboxMessages,
   getSentMessages,
+  searchMessages,
+  getConversation,
   getMessage, 
   sendMessage, 
   deleteMessage, 
@@ -41,6 +43,8 @@ router.use(protect);
 
 // Collection & utility routes (Must be declared BEFORE /:id parameter)
 router.get('/', getMessages);
+router.get('/search', searchMessages);
+router.get('/conversation/:userId', getConversation);
 router.get('/unread/count', getUnreadCount);
 router.get('/inbox', getInboxMessages);
 router.get('/sent', getSentMessages);
