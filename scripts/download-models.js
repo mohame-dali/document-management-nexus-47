@@ -108,7 +108,7 @@ export const MODELS = [
     title: 'Modèle Vectoriel RAG (BGE-M3 Multilingual Q4_K_M)',
     filename: 'bge-m3-q4_k_m.gguf',
     url: 'https://huggingface.co/stefancosma/bge-m3-Q4_K_M-GGUF/resolve/main/bge-m3-q4_k_m.gguf',
-    minSizeBytes: ONE_GB, // > 1 Go
+    minSizeBytes: 300 * 1024 * 1024, // 300 Mo (taille réelle ~417 Mo)
     envKey: 'LLAMA_EMBEDDING_MODEL_PATH',
   },
 ];
