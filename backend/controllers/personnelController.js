@@ -41,7 +41,35 @@ exports.createPersonnel = async (req, res, next) => {
       departments,
       dateEmbauche,
       notes,
-      photo
+      photo,
+      // Groupe A — Identité étendue
+      nomPere,
+      nomMere,
+      nomGrandPere,
+      groupeSanguin,
+      // Groupe B — Situation administrative
+      dateEmissionCin,
+      numeroUnite,
+      numeroArmee,
+      dateEngagement,
+      typeEngagement,
+      origineEngagement,
+      niveauEtude,
+      diplomeBase,
+      specialite,
+      arme,
+      posteActuel,
+      // Groupe C — Situation familiale
+      etatCivil,
+      nomConjoint,
+      dateMariage,
+      nombreEnfants,
+      enfants,
+      // Groupe D — Passeport
+      numeroPasseport,
+      dateValiditePasseport,
+      // Groupe E — 3 personnes à prévenir
+      personnesAPrevenir
     } = req.body;
 
     if (!nom || !prenom) {
@@ -75,7 +103,7 @@ exports.createPersonnel = async (req, res, next) => {
       dateNaissance: dateNaissance || null,
       lieuNaissance: lieuNaissance ? lieuNaissance.trim() : '',
       sexe: sexe || undefined,
-      cin: cin ? cin.trim() : '',
+      cin: cin && cin.trim() ? cin.trim() : undefined,
       adresse: adresse ? adresse.trim() : '',
       telephone: telephone ? telephone.trim() : '',
       emailPersonnel: emailPersonnel ? emailPersonnel.trim().toLowerCase() : '',
@@ -87,6 +115,34 @@ exports.createPersonnel = async (req, res, next) => {
       userId: null,
       notes: notes ? notes.trim() : '',
       photo: photo ? photo.trim() : '',
+      // Groupe A — Identité étendue
+      nomPere: nomPere ? nomPere.trim() : '',
+      nomMere: nomMere ? nomMere.trim() : '',
+      nomGrandPere: nomGrandPere ? nomGrandPere.trim() : '',
+      groupeSanguin: groupeSanguin || '',
+      // Groupe B — Situation administrative
+      dateEmissionCin: dateEmissionCin || null,
+      numeroUnite: numeroUnite ? numeroUnite.trim() : '',
+      numeroArmee: numeroArmee ? numeroArmee.trim() : '',
+      dateEngagement: dateEngagement || null,
+      typeEngagement: typeEngagement ? typeEngagement.trim() : '',
+      origineEngagement: origineEngagement ? origineEngagement.trim() : '',
+      niveauEtude: niveauEtude ? niveauEtude.trim() : '',
+      diplomeBase: diplomeBase ? diplomeBase.trim() : '',
+      specialite: specialite ? specialite.trim() : '',
+      arme: arme ? arme.trim() : '',
+      posteActuel: posteActuel ? posteActuel.trim() : '',
+      // Groupe C — Situation familiale
+      etatCivil: etatCivil || '',
+      nomConjoint: nomConjoint ? nomConjoint.trim() : '',
+      dateMariage: dateMariage || null,
+      nombreEnfants: nombreEnfants !== undefined ? Number(nombreEnfants) : 0,
+      enfants: enfants !== undefined ? Number(enfants) : (nombreEnfants !== undefined ? Number(nombreEnfants) : 0),
+      // Groupe D — Passeport
+      numeroPasseport: numeroPasseport ? numeroPasseport.trim() : '',
+      dateValiditePasseport: dateValiditePasseport || null,
+      // Groupe E — 3 personnes à prévenir
+      personnesAPrevenir: Array.isArray(personnesAPrevenir) ? personnesAPrevenir : [],
       createdBy: req.user ? (req.user._id || req.user.id) : null
     };
 
@@ -97,6 +153,12 @@ exports.createPersonnel = async (req, res, next) => {
       data: personnel
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un agent avec ce CIN existe déjà.'
+      });
+    }
     next(error);
   }
 };
@@ -251,12 +313,42 @@ exports.updatePersonnel = async (req, res, next) => {
       'departments',
       'dateEmbauche',
       'notes',
-      'photo'
+      'photo',
+      // Groupe A — Identité étendue
+      'nomPere',
+      'nomMere',
+      'nomGrandPere',
+      'groupeSanguin',
+      // Groupe B — Situation administrative
+      'dateEmissionCin',
+      'numeroUnite',
+      'numeroArmee',
+      'dateEngagement',
+      'typeEngagement',
+      'origineEngagement',
+      'niveauEtude',
+      'diplomeBase',
+      'specialite',
+      'arme',
+      'posteActuel',
+      // Groupe C — Situation familiale
+      'etatCivil',
+      'nomConjoint',
+      'dateMariage',
+      'nombreEnfants',
+      'enfants',
+      // Groupe D — Passeport
+      'numeroPasseport',
+      'dateValiditePasseport',
+      // Groupe E — 3 personnes à prévenir
+      'personnesAPrevenir'
     ];
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        if (field === 'nom' || field === 'prenom') {
+        if (field === 'cin') {
+          personnel.cin = req.body.cin && req.body.cin.trim() ? req.body.cin.trim() : undefined;
+        } else if (field === 'nom' || field === 'prenom') {
           if (req.body[field] && req.body[field].trim()) {
             personnel[field] = req.body[field].trim();
           }
@@ -291,6 +383,12 @@ exports.updatePersonnel = async (req, res, next) => {
       data: updatedPersonnel
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un agent avec ce CIN existe déjà.'
+      });
+    }
     next(error);
   }
 };

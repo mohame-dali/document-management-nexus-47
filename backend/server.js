@@ -163,16 +163,22 @@ const loginLimiter = rateLimit({
 app.use('/api', globalLimiter);
 app.use('/api/auth/login', loginLimiter);
 
-// Set static folders for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Protected file routes with authentication & RBAC
+const { protect } = require('./middleware/auth');
+const fileController = require('./controllers/fileController');
+
+// Route sécurisée pour les documents (RBAC + Path Traversal check)
+app.get('/api/files/:type/:id/:filename', protect, fileController.serveProtectedFile);
+
+// Protect /courrier against unauthenticated access
+app.use('/courrier', protect, fileController.serveCourrierStatic);
+
+// Public profile photos (avatars)
 app.use('/uploads/usersphoto', express.static(path.join(__dirname, 'uploads/usersphoto')));
 app.use('/uploads/personnelphoto', express.static(path.join(__dirname, 'uploads/personnelphoto')));
 
-// Add static serving for courrier documents
-app.use('/courrier', express.static(path.join(__dirname, 'courrier')));
-
-// Add static serving for templates
-app.use('/uploads/templates', express.static(path.join(__dirname, 'uploads/templates')));
+// Protect sensitive uploads and templates
+app.use('/uploads', protect, express.static(path.join(__dirname, 'uploads')));
 
 // Route files
 const auth = require('./routes/auth');
@@ -208,6 +214,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const { startIndexRetryScheduler } = require('./services/indexRetryScheduler');
+const { startBackupScheduler } = require('./services/backupScheduler');
 
 // Mount Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -248,8 +255,9 @@ app.use('/api/hr', rhPersonnelHistoryRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Démarrer le cron de rattrapage d'indexation vectorielle RAG (toutes les heures)
+// Démarrer les crons d'arrière-plan (rattrapage RAG et politique de sauvegarde)
 startIndexRetryScheduler();
+startBackupScheduler();
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {
