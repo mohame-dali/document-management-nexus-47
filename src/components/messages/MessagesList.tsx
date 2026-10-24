@@ -70,9 +70,9 @@ const MessagesList: React.FC<MessagesListProps> = ({
     }
     
     if (Array.isArray(message.recipients)) {
-      const recipient = message.recipients.find((r: any) => {
-        if (typeof r === 'object' && r.user) {
-          const uId = typeof r.user === 'object' ? r.user._id : r.user;
+      const recipient = message.recipients.find((r: { user?: string | { _id?: string }; read?: boolean }) => {
+        if (typeof r === 'object' && r !== null && r.user) {
+          const uId = typeof r.user === 'object' ? (r.user as { _id?: string })._id : r.user;
           return uId?.toString() === currentUser._id?.toString();
         }
         return false;

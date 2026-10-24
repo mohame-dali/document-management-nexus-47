@@ -9,12 +9,12 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
 
-interface SerialInfoFieldsProps {
-  form: UseFormReturn<any>;
-  t: any;
+interface SerialInfoFieldsProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
+  t: Record<string, string>;
   onSerialNumberChange?: (value: string) => void;
 }
 

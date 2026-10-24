@@ -22,13 +22,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { ControllerRenderProps } from 'react-hook-form';
+import { ControllerRenderProps, FieldValues } from 'react-hook-form';
 import { Department } from '@/types';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface MultiDepartmentSelectFieldProps {
-  field: ControllerRenderProps<any, any>;
+interface MultiDepartmentSelectFieldProps<TFieldValues extends FieldValues = FieldValues> {
+  field: ControllerRenderProps<TFieldValues>;
   label: string;
   description?: string;
   departments: Department[];

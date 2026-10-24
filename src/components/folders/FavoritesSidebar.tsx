@@ -19,9 +19,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import DragDropWrapper from '@/components/common/DragDropWrapper';
 import { handleDocumentDrop } from '@/services/dragDropService';
+import { Folder as FolderType } from '@/types';
+
+interface DroppedDocumentItem {
+  type: string;
+  data: {
+    id: string;
+    type: 'incoming' | 'outgoing';
+    title?: string;
+  };
+}
 
 interface FavoritesSidebarProps {
-  onFolderSelect?: (folder: any) => void;
+  onFolderSelect?: (folder: FolderType | null) => void;
   selectedFolderId?: string;
 }
 
@@ -49,7 +59,7 @@ const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
     }
   });
 
-  const handleDocumentDropToFavorites = async (item: any) => {
+  const handleDocumentDropToFavorites = async (item: DroppedDocumentItem) => {
     if (item.type === 'document') {
       // Remove document from current folder (set to null)
       const result = await handleDocumentDrop(

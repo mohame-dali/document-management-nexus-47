@@ -49,10 +49,11 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
       onMessageSent();
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMsg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast({
         title: "خطأ",
-        description: error.response?.data?.message || t('messages.sendError'),
+        description: errorMsg || t('messages.sendError'),
         variant: "destructive"
       });
     }
@@ -149,7 +150,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                 </Label>
                 <select
                   value={priority}
-                  onChange={(e) => setPriority(e.target.value as any)}
+                  onChange={(e) => setPriority(e.target.value as 'normal' | 'high' | 'urgent')}
                   className="w-full h-8 text-xs text-right border border-[#cbd5e1] rounded px-2 bg-white text-slate-700 focus:border-[#2c5282]"
                 >
                   <option value="normal">عادية</option>

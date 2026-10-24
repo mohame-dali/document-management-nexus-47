@@ -4,11 +4,18 @@ import { FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export interface ScanItem {
+  filePath?: string;
+  timestamp?: string | number | Date;
+  createdAt?: string | number | Date;
+  [key: string]: unknown;
+}
+
 interface RecentScansProps {
-  t: any;
-  recentScansData: any[];
+  t: Record<string, string>;
+  recentScansData: ScanItem[];
   isRecentScansLoading: boolean;
-  onSelectScan: (scan: any) => void;
+  onSelectScan: (scan: ScanItem) => void;
 }
 
 const RecentScans: React.FC<RecentScansProps> = ({

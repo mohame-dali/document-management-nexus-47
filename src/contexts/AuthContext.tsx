@@ -160,7 +160,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         navigate('/dashboard');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       
       // Clear any auth data on login failure
@@ -168,14 +168,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setCurrentUser(null);
       
       let errorMessage = 'فشل في تسجيل الدخول';
+      const err = error as { message?: string; code?: string; response?: { data?: { error?: string } }; request?: unknown };
       
-      if (error.message === 'Network Error') {
+      if (err.message === 'Network Error') {
         errorMessage = 'لا يمكن الاتصال بالخادم. يرجى التحقق من تشغيل الخادم الخلفي.';
-      } else if (error.code === 'ERR_NETWORK') {
+      } else if (err.code === 'ERR_NETWORK') {
         errorMessage = 'خطأ في الشبكة. يرجى التحقق من تشغيل خادم النظام.';
-      } else if (error.response) {
-        errorMessage = error.response.data?.error || 'فشل في المصادقة';
-      } else if (error.request) {
+      } else if (err.response) {
+        errorMessage = err.response.data?.error || 'فشل في المصادقة';
+      } else if (err.request) {
         errorMessage = 'لا يوجد رد من الخادم. يرجى التحقق من الاتصال.';
       }
       

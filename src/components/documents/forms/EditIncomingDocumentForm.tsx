@@ -14,14 +14,24 @@ import SerialInfoFields from './incoming/SerialInfoFields';
 import CorrespondenceFields from './incoming/CorrespondenceFields';
 import DocumentDetailsFields from './incoming/DocumentDetailsFields';
 import AttachmentSection from './incoming/AttachmentSection';
-import { IncomingDocument } from '@/types';
+import { IncomingDocument, Department } from '@/types';
+
+interface ScanMutationRunner {
+  mutate: (
+    options: unknown,
+    callbacks?: {
+      onSuccess?: (response: { data?: Record<string, unknown> }) => void;
+      onError?: (error: unknown) => void;
+    }
+  ) => void;
+}
 
 interface EditIncomingDocumentFormProps {
   document: IncomingDocument;
-  departments?: any[];
-  scannerStatus?: any;
+  departments?: Department[];
+  scannerStatus?: Record<string, unknown> | null;
   loadingScannerStatus?: boolean;
-  scanTemporaryDocumentMutation?: any;
+  scanTemporaryDocumentMutation?: ScanMutationRunner;
 }
 
 const formSchema = z.object({
@@ -47,12 +57,18 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
   loadingScannerStatus = false,
   scanTemporaryDocumentMutation
 }) => {
+interface ScanResultData {
+  ocrText?: string;
+  filePath?: string;
+  [key: string]: unknown;
+}
+
   const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<ScanResultData | null>(null);
   const [scanSettings, setScanSettings] = useState({
     resolution: '600',
     format: 'pdf'
@@ -114,7 +130,7 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
     }, 500);
     
     scanTemporaryDocumentMutation.mutate(scanOptions, {
-      onSuccess: (response: any) => {
+      onSuccess: (response: { data?: ScanResultData }) => {
         setScanning(false);
         setScanProgress(100);
         setScanResult(response.data);

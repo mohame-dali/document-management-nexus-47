@@ -6,7 +6,7 @@ import ScannerTab from '@/components/documents/forms/ScannerTab';
 import DocumentTypeTabSelector from '@/components/documents/forms/DocumentTypeTabSelector';
 
 interface AttachmentSectionProps {
-  t: any;
+  t: Record<string, string>;
   activeTab: string;
   onTabChange: (value: string) => void;
   onFileSelect: (files: File[]) => void;
@@ -18,8 +18,8 @@ interface AttachmentSectionProps {
   handleScanSettingChange: (key: string, value: string) => void;
   scanning: boolean;
   scanProgress: number;
-  scanResult: any;
-  scannerStatus: any;
+  scanResult: Record<string, unknown> | null;
+  scannerStatus: Record<string, unknown> | null;
   loadingScannerStatus: boolean;
   handleStartScan: () => void;
   onRemoveScan?: () => void;

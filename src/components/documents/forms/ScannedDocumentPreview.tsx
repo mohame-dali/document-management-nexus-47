@@ -4,9 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Eye, X } from 'lucide-react';
 
+interface ScanPreviewData {
+  filePath?: string;
+  serialNumber?: string;
+  documentType?: string;
+  ocrText?: string;
+  [key: string]: unknown;
+}
+
 interface ScannedDocumentPreviewProps {
-  t: any;
-  scanResult: any;
+  t: Record<string, string>;
+  scanResult: ScanPreviewData | null;
   onRemove?: () => void;
   API_URL?: string;
 }

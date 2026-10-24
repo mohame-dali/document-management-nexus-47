@@ -154,8 +154,9 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
       onSuccess();
       onOpenChange(false);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'حدث خطأ أثناء حفظ نوع الغياب';
+    } catch (err: unknown) {
+      const errObj = err as { response?: { data?: { message?: string } }; message?: string };
+      const msg = errObj.response?.data?.message || errObj.message || 'حدث خطأ أثناء حفظ نوع الغياب';
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -206,7 +207,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 </Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(val: any) => setFormData({ ...formData, category: val })}
+                  onValueChange={(val: LeaveReasonFormData['category']) => setFormData({ ...formData, category: val })}
                 >
                   <SelectTrigger id="category" className="bg-white border-[#e2e8f0] rounded text-right">
                     <SelectValue placeholder="اختر التصنيف" />

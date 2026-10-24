@@ -123,7 +123,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
       };
 
       // 2. Call POST /api/users
-      const newUser = await createUser(userPayload as any);
+      const newUser = await createUser(userPayload as Partial<User & { password?: string }>);
 
       // 3. Call POST /api/hr/personnel/:id/link-user
       if (newUser?._id) {
@@ -166,9 +166,10 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
 
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Erreur création utilisateur:', error);
-      const msg = error?.response?.data?.message || error?.message || 'فشل في إنشاء حساب المستخدم';
+      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
+      const msg = errObj?.response?.data?.message || errObj?.message || 'فشل في إنشاء حساب المستخدم';
       toast.error(msg);
     },
   });
@@ -291,7 +292,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
             </Label>
             <Select
               value={role}
-              onValueChange={(val: any) => setRole(val)}
+              onValueChange={(val) => setRole(val as typeof role)}
             >
               <SelectTrigger id="quick-role" className="h-10 bg-white border-[#cbd5e1] text-right">
                 <SelectValue placeholder="اختر الدور" />

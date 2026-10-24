@@ -34,7 +34,9 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} ${t('common.mb')}`;
   };
 
-  const handleDownload = async (attachment: any, index: number, openInNewTab = false) => {
+  type AttachmentItem = NonNullable<Message['attachments']>[number];
+
+  const handleDownload = async (attachment: AttachmentItem, index: number, openInNewTab = false) => {
     try {
       setDownloadingIndex(index);
       await downloadAttachment(attachment, openInNewTab);
@@ -46,7 +48,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
     }
   };
 
-  const isAttachmentImage = (att: any) => {
+  const isAttachmentImage = (att: AttachmentItem) => {
     const name = att.originalName || att.filename || '';
     const ext = name.split('.').pop()?.toLowerCase() || '';
     return att.mimetype?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
@@ -57,7 +59,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
 
   const apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
-  const getDiskName = (att: any) => {
+  const getDiskName = (att: AttachmentItem) => {
     return (att.path?.split(/[/\\]/).pop()) || att.filename || '';
   };
 

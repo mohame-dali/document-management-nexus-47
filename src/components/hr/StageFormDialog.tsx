@@ -548,7 +548,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-sm font-bold text-gray-800">حالة التربص</Label>
-                <Select value={statut} onValueChange={(val: any) => setStatut(val)}>
+                <Select value={statut} onValueChange={(val) => setStatut(val as typeof statut)}>
                   <SelectTrigger className="h-11 text-right bg-white border-[#cbd5e1]">
                     <SelectValue />
                   </SelectTrigger>
@@ -564,7 +564,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
 
               <div className="space-y-1.5">
                 <Label className="text-sm font-bold text-gray-800">النتيجة</Label>
-                <Select value={resultat || 'EMPTY'} onValueChange={(val) => setResultat(val === 'EMPTY' ? '' : (val as any))}>
+                <Select value={resultat || 'EMPTY'} onValueChange={(val) => setResultat(val === 'EMPTY' ? '' : (val as typeof resultat))}>
                   <SelectTrigger className="h-11 text-right bg-white border-[#cbd5e1]">
                     <SelectValue />
                   </SelectTrigger>

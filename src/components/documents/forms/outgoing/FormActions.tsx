@@ -3,11 +3,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues, SubmitHandler } from 'react-hook-form';
 
-interface FormActionsProps {
-  form: UseFormReturn<any>;
-  onSubmit: (data: any) => Promise<void>;
+interface FormActionsProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
+  onSubmit: SubmitHandler<TFieldValues>;
   cancelText: string;
   submitText: string;
   cancelRoute: string;

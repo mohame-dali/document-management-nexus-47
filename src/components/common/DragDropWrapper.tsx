@@ -5,13 +5,13 @@ import { useDrag, useDrop, DropTargetMonitor } from 'react-dnd';
 export interface DragItem {
   type: string;
   id: string;
-  data: any;
+  data: unknown;
 }
 
 interface DragDropWrapperProps {
   children: React.ReactNode;
   dragType?: string;
-  dragData?: any;
+  dragData?: unknown;
   dropTypes?: string[];
   onDrop?: (item: DragItem) => void;
   className?: string;

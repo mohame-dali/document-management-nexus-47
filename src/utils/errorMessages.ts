@@ -58,14 +58,25 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
  *   3. HTTP status code message
  *   4. Fallback generic message
  */
-export function getErrorMessage(error: any, fallbackMessage?: string): string {
+export function getErrorMessage(error: unknown, fallbackMessage?: string): string {
   if (!error) return fallbackMessage || 'حدث خطأ غير متوقع';
+
+  const err = error as {
+    response?: {
+      status?: number;
+      data?: {
+        message?: string;
+        error?: string;
+      };
+    };
+    message?: string;
+  };
 
   // 1. Backend message (from response data)
   const backendMsg =
-    error?.response?.data?.message ||
-    error?.response?.data?.error ||
-    error?.message;
+    err?.response?.data?.message ||
+    err?.response?.data?.error ||
+    err?.message;
 
   if (backendMsg && typeof backendMsg === 'string') {
     // Try exact translation

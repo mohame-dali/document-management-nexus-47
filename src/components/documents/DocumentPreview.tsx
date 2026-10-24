@@ -32,8 +32,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
     return new Date(dateString).toLocaleDateString('ar-SA');
   };
 
-  const isIncomingDocument = (doc: any): doc is IncomingDocument => {
-    return 'arrivalDate' in doc;
+  const isIncomingDocument = (doc: unknown): doc is IncomingDocument => {
+    return typeof doc === 'object' && doc !== null && 'arrivalDate' in doc;
   };
 
   if (!hoveredDoc) return null;

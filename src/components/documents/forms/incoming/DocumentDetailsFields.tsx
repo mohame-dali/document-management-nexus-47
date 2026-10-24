@@ -9,15 +9,16 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 import MultiDepartmentSelectField from '@/components/documents/forms/MultiDepartmentSelectField';
 import DocumentOptionSelect from '@/components/ui/document-option-select';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
+import { Department } from '@/types';
 
-interface DocumentDetailsFieldsProps {
-  form: UseFormReturn<any>;
-  t: any;
-  departments: any[];
+interface DocumentDetailsFieldsProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
+  t: Record<string, string>;
+  departments: Department[];
 }
 
 const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({

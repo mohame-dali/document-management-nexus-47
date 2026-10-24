@@ -4,8 +4,32 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { FileText, Calendar, User, Building, MessageSquare } from "lucide-react";
 import { formatArabicDate, formatArabicDateTime } from "@/utils/arabicDateFormatter";
 
+interface DocumentComment {
+  _id: string;
+  author: {
+    name: string;
+  };
+  createdAt: string | Date;
+  content: string;
+}
+
+interface DocumentDetailData {
+  subject: string;
+  serialNumber?: string;
+  status: string;
+  arrivalDate?: string | Date;
+  issueDate?: string | Date;
+  dateActivity?: string | Date;
+  source?: string | { name?: string };
+  description?: string;
+  comments?: DocumentComment[];
+  createdBy?: { name?: string };
+  updatedAt?: string | Date;
+  createdAt?: string | Date;
+}
+
 interface DocumentDetailCardProps {
-  document: any;
+  document: DocumentDetailData;
   type: 'incoming' | 'outgoing';
 }
 
@@ -112,7 +136,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
               التعليقات ({document.comments.length})
             </h3>
             <div className="space-y-3">
-              {document.comments.map((comment: any) => (
+              {document.comments.map((comment: DocumentComment) => (
                 <div key={comment._id} className="bg-gray-50 p-3 rounded">
                   <div className="flex items-center gap-2 mb-1">
                     <User className="h-3 w-3" />

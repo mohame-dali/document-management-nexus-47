@@ -14,7 +14,7 @@ interface ScanSettings {
 }
 
 interface ScanSettingsProps {
-  t: any;
+  t: Record<string, string>;
   scanSettings: ScanSettings;
   onSettingChange: (key: string, value: string) => void;
   onScanDocument: (temporary: boolean) => void;

@@ -39,15 +39,19 @@ const DocumentDisplay: React.FC = () => {
     queryFn: () => getOutgoingDocumentsList({ year: selectedYear }),
   });
 
+  type DocumentItem = IncomingDocument | OutgoingDocument;
+
   // Filter documents by year and user permissions
-  const filterDocumentsByYear = (documents: any[], year: string) => {
+  const filterDocumentsByYear = <T extends DocumentItem>(documents: T[], year: string): T[] => {
     return documents?.filter(doc => {
-      const docYear = new Date(doc.arrivalDate || doc.issueDate).getFullYear().toString();
+      const dateVal = 'arrivalDate' in doc ? doc.arrivalDate : (doc as OutgoingDocument).issueDate;
+      if (!dateVal) return false;
+      const docYear = new Date(dateVal).getFullYear().toString();
       return docYear === year;
     }) || [];
   };
 
-  const filterDocumentsByPermissions = (documents: any[], type: 'incoming' | 'outgoing') => {
+  const filterDocumentsByPermissions = <T extends DocumentItem>(documents: T[], type: 'incoming' | 'outgoing'): T[] => {
     if (!currentUser) return [];
     
     // Director, Admin and AdminTuningDesk see all documents
@@ -61,20 +65,21 @@ const DocumentDisplay: React.FC = () => {
       if (!activeDepartmentId) return [];
       
       if (type === 'incoming') {
-        return documents.filter(doc => {
+        return (documents as IncomingDocument[]).filter(doc => {
           if (Array.isArray(doc.assignedTo)) {
-            return doc.assignedTo.some((dept: any) => dept._id === activeDepartmentId);
+            return doc.assignedTo.some((dept: { _id?: string }) => dept?._id === activeDepartmentId);
           }
           return false;
-        });
+        }) as unknown as T[];
       } else {
-        return documents.filter(doc => 
-          (typeof doc.source?.id === 'string' ? doc.source.id : doc.source?.id?._id) === activeDepartmentId
-        );
+        return (documents as OutgoingDocument[]).filter(doc => {
+          const sourceObj = doc.source as { id?: string | { _id?: string } } | undefined;
+          const sourceId = typeof sourceObj?.id === 'string' ? sourceObj.id : sourceObj?.id?._id;
+          return sourceId === activeDepartmentId;
+        }) as unknown as T[];
       }
     }
-    
-    return [];
+    return documents;
   };
 
   const filteredIncomingDocs = filterDocumentsByPermissions(
@@ -166,7 +171,7 @@ const DocumentDisplay: React.FC = () => {
     }
   };
 
-  const renderDocuments = (documents: any[], type: 'incoming' | 'outgoing') => {
+  const renderDocuments = (documents: DocumentItem[], type: 'incoming' | 'outgoing') => {
     if (viewMode === 'list') {
       return <DocumentDataGrid documents={documents} type={type} />;
     }

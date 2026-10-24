@@ -300,11 +300,12 @@ export const FloatingAIChat: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[AI Chat] Erreur:', err);
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
         t('ai.errorMessage');
 
       const errorAssistantMessage: ChatMessage = {

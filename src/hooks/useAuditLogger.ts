@@ -9,7 +9,7 @@ export const useAuditLogger = () => {
     action: string,
     entityType: 'document' | 'folder' | 'user',
     entityId: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ) => {
     if (!currentUser) return;
 

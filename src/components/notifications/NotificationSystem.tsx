@@ -7,6 +7,7 @@ import { getActivityNotifications, markNotificationAsRead } from '@/services/act
 import { getUnreadCount } from '@/services/messageService';
 import { formatArabicDateTime } from '@/utils/arabicDateFormatter';
 import { useAuth } from '@/contexts/AuthContext';
+import { ActivityNotification } from '@/types';
 
 const NotificationSystem: React.FC = () => {
   const { currentUser } = useAuth();
@@ -37,7 +38,7 @@ const NotificationSystem: React.FC = () => {
     }
   }, [queryClient]);
 
-  const showInstantNotification = useCallback((notification: any) => {
+  const showInstantNotification = useCallback((notification: ActivityNotification) => {
     const getIcon = () => {
       switch (notification.notificationType) {
         case 'document_assigned':

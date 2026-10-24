@@ -129,8 +129,9 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       setFormDescription('');
       setParentFolderId(null);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في إنشاء المجلد');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في إنشاء المجلد');
     },
   });
 
@@ -145,8 +146,9 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       setFormName('');
       setFormDescription('');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في تحديث المجلد');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في تحديث المجلد');
     },
   });
 
@@ -161,10 +163,11 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
         onFolderSelect(null);
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       setIsDeleteDialogOpen(false);
       setFolderToDelete(null);
-      toast.error(error.response?.data?.message || 'فشل في حذف المجلد');
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في حذف المجلد');
     },
   });
 
@@ -175,8 +178,9 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       toast.success('تم تحديث حالة المجلد بنجاح');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في تغيير حالة المجلد');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في تغيير حالة المجلد');
     },
   });
 

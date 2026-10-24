@@ -157,6 +157,8 @@ export const getConversation = async (userId: string): Promise<Message[]> => {
     console.error('Error fetching conversation:', error);
     throw error;
   }
+};
+
 export interface MessageAttachmentItem {
   path?: string;
   filename?: string;

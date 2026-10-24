@@ -6,12 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export interface ScannerDevice {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
 interface ScannerSetupProps {
-  t: any;
+  t: Record<string, string>;
   selectedScanner: string;
   onSelectScanner: (deviceId: string) => void;
   onRefreshScanners: () => void;
-  scannersData: any[];
+  scannersData: ScannerDevice[];
   isScannersLoading: boolean;
 }
 

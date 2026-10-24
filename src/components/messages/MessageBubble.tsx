@@ -11,7 +11,7 @@ import AttachmentsList from '@/components/messages/AttachmentsList';
 import { useLanguage } from '@/contexts/LanguageProvider';
 
 export interface MessageBubbleProps {
-  message: Message | any;
+  message: Message;
   isOwn: boolean;
 }
 
@@ -47,7 +47,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
     }
   };
 
-  const currentUserId = currentUser?._id || (currentUser as any)?.id;
+  const currentUserId = currentUser?._id || (currentUser as { id?: string })?.id;
   const isSender = typeof message.sender === 'object'
     ? (message.sender?._id?.toString() === currentUserId?.toString())
     : (message.sender?.toString() === currentUserId?.toString());
@@ -55,7 +55,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
   const isOwnMessage = isOwn || isSender;
 
   const isRead = Array.isArray(message.recipients) && message.recipients.length > 0
-    ? message.recipients.every((r: any) => r.read)
+    ? message.recipients.every((r: { read?: boolean }) => r.read)
     : false;
 
   const sender = typeof message.sender === 'object' ? message.sender : null;

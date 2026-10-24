@@ -65,8 +65,9 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
       onOpenChange(false);
       setSelectedUser('');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || t('documents.assignResponsible.error'));
+    onError: (error: unknown) => {
+      const errorMsg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(errorMsg || t('documents.assignResponsible.error'));
     }
   });
 

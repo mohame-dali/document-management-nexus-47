@@ -85,9 +85,9 @@ const queryClient = new QueryClient({
       refetchOnMount: 'always',
 
       // Conserver la logique retry existante avec 429 et 401
-      retry: (failureCount, error: any) => {
-        if (error?.response?.status === 429) return false;
-        if (error?.response?.status === 401) return false;
+      retry: (failureCount, error: unknown) => {
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 429 || status === 401) return false;
         return failureCount < 2;
       },
 
