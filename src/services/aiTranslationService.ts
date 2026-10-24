@@ -27,15 +27,26 @@ export const translateDocumentText = async (
   return response.data.data;
 };
 
+interface TranslationErrorLike {
+  code?: string;
+  response?: {
+    data?: {
+      code?: string;
+      message?: string;
+    };
+  };
+}
+
 /**
  * Extrait un message d'erreur lisible pour la traduction
  */
-export const getTranslationErrorMessage = (error: any): string => {
-  const code = error?.response?.data?.code;
+export const getTranslationErrorMessage = (error: unknown): string => {
+  const err = error as TranslationErrorLike;
+  const code = err?.response?.data?.code;
   if (code === 'AI_SERVICE_DOWN') {
     return 'خدمة الذكاء الاصطناعي المحلي غير مشغلة حالياً. يرجى التحقق من تشغيل الخدمة.';
   }
-  if (code === 'AI_TIMEOUT' || error?.code === 'ECONNABORTED') {
+  if (code === 'AI_TIMEOUT' || err?.code === 'ECONNABORTED') {
     return 'استغرقت عملية الترجمة وقتاً أطول من المتوقع. يرجى إعادة المحاولة.';
   }
   if (code === 'TEXT_TOO_SHORT') {

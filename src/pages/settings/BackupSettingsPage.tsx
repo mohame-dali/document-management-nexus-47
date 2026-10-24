@@ -86,7 +86,7 @@ const BackupSettingsPage: React.FC = () => {
   const [backupHistory, setBackupHistory] = useState<BackupHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
-  const [selectedBackup, setSelectedBackup] = useState<any>(null);
+  const [selectedBackup, setSelectedBackup] = useState<BackupHistoryItem | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | 'manual' | 'automatic'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'failed'>('all');
@@ -103,8 +103,8 @@ const BackupSettingsPage: React.FC = () => {
     setHistoryLoading(true);
     try {
       const history = await getBackupHistory();
-      const list = Array.isArray(history) ? history : (history?.data || []);
-      setBackupHistory(list);
+      const list = Array.isArray(history) ? history : ((history as { data?: BackupHistoryItem[] })?.data || []);
+      setBackupHistory(list as BackupHistoryItem[]);
     } catch (error) {
       console.error(error);
     } finally {
@@ -112,8 +112,10 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const getErrorMessage = (error: any) =>
-    error?.response?.data?.message || error?.message || 'خطأ غير معروف';
+  const getErrorMessage = (error: unknown) => {
+    const err = error as { response?: { data?: { message?: string } }; message?: string };
+    return err?.response?.data?.message || err?.message || 'خطأ غير معروف';
+  };
 
   const handleReloadScheduler = async () => {
     try {
@@ -124,7 +126,7 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const handleRestoreClick = (backup: any) => {
+  const handleRestoreClick = (backup: BackupHistoryItem) => {
     setSelectedBackup(backup);
     setRestoreDialogOpen(true);
   };
@@ -146,7 +148,7 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const handleDownloadClick = async (backup: any) => {
+  const handleDownloadClick = async (backup: BackupHistoryItem) => {
     try {
       await downloadBackup(backup._id, backup.fileName);
       sonnerToast.success('✅ بدأ التحميل');
@@ -157,7 +159,7 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = async (backup: any) => {
+  const handleDeleteClick = async (backup: BackupHistoryItem) => {
     if (!window.confirm(`حذف النسخة "${backup.fileName}" نهائياً؟`)) return;
 
     try {
@@ -827,7 +829,7 @@ const BackupSettingsPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <Label htmlFor="type-filter" className="text-sm text-[#4a5568] whitespace-nowrap">النوع:</Label>
-                <Select value={typeFilter} onValueChange={(val: any) => setTypeFilter(val)}>
+                <Select value={typeFilter} onValueChange={(val: 'all' | 'manual' | 'automatic') => setTypeFilter(val)}>
                   <SelectTrigger id="type-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>
@@ -841,7 +843,7 @@ const BackupSettingsPage: React.FC = () => {
 
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <Label htmlFor="status-filter" className="text-sm text-[#4a5568] whitespace-nowrap">الحالة:</Label>
-                <Select value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)}>
+                <Select value={statusFilter} onValueChange={(val: 'all' | 'completed' | 'in_progress' | 'failed') => setStatusFilter(val)}>
                   <SelectTrigger id="status-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>

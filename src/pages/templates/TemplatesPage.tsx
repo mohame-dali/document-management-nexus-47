@@ -34,8 +34,9 @@ const TemplatesPage = () => {
       setDeleteDialogOpen(false);
       setTemplateToDelete(null);
     },
-    onError: (error: any) => {
-      toast.error('فشل في حذف النموذج: ' + (error.response?.data?.message || error.message));
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error('فشل في حذف النموذج: ' + (err.response?.data?.message || err.message || 'خطأ غير معروف'));
     },
   });
 
@@ -43,8 +44,9 @@ const TemplatesPage = () => {
     try {
       await downloadTemplate(template._id, template.fileName);
       toast.success('تم تحميل النموذج بنجاح');
-    } catch (error: any) {
-      toast.error('فشل في تحميل النموذج: ' + (error.response?.data?.message || error.message));
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error('فشل في تحميل النموذج: ' + (err.response?.data?.message || err.message || 'خطأ غير معروف'));
     }
   };
 

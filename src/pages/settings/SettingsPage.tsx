@@ -149,9 +149,8 @@ const SettingsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     },
     onError: (err: unknown) => {
-      const errorMsg = err && typeof err === 'object' && 'response' in err && (err as any).response?.data?.error 
-        ? (err as any).response.data.error 
-        : 'فشل في تحديث الصورة الشخصية';
+      const errResp = err as { response?: { data?: { error?: string } } };
+      const errorMsg = errResp?.response?.data?.error || 'فشل في تحديث الصورة الشخصية';
       toast.error(errorMsg);
     }
   });
@@ -167,9 +166,8 @@ const SettingsPage = () => {
       setIsPasswordModalOpen(false);
     },
     onError: (err: unknown) => {
-      const errorMsg = err && typeof err === 'object' && 'response' in err && (err as any).response?.data?.error 
-        ? (err as any).response.data.error 
-        : 'فشل في تغيير كلمة المرور';
+      const errResp = err as { response?: { data?: { error?: string } } };
+      const errorMsg = errResp?.response?.data?.error || 'فشل في تغيير كلمة المرور';
       toast.error(errorMsg);
     }
   });

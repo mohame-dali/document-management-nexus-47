@@ -157,9 +157,16 @@ export const getConversation = async (userId: string): Promise<Message[]> => {
     console.error('Error fetching conversation:', error);
     throw error;
   }
-};
+export interface MessageAttachmentItem {
+  path?: string;
+  filename?: string;
+  originalName?: string;
+  mimetype?: string;
+  size?: number;
+  [key: string]: unknown;
+}
 
-export const downloadAttachment = async (attachment: any, openInNewTab = false): Promise<void> => {
+export const downloadAttachment = async (attachment: MessageAttachmentItem, openInNewTab = false): Promise<void> => {
   try {
     let filename = '';
     // Priorité 1 : extraire depuis path (nom réel Multer, présent partout sur anciens et nouveaux messages)

@@ -60,7 +60,7 @@ const ScanDocumentPage: React.FC = () => {
   });
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<Record<string, unknown> | null>(null);
 
   // Get scanner status
   const { data: statusData, isLoading: isStatusLoading, refetch: refetchStatus } = useQuery({
@@ -114,7 +114,7 @@ const ScanDocumentPage: React.FC = () => {
 
   // Scan document mutation
   const scanDocumentMutation = useMutation({
-    mutationFn: (options: any) => {
+    mutationFn: (options: Record<string, unknown>) => {
       return options.temporary 
         ? scanTemporaryDocument(options) 
         : scanDocument(options);
@@ -199,11 +199,11 @@ const ScanDocumentPage: React.FC = () => {
   };
 
   // Handle select scan from recent scans
-  const handleSelectScan = (scan: any) => {
+  const handleSelectScan = (scan: Record<string, unknown>) => {
     setScanResult(scan);
     setScanSettings({
       ...scanSettings,
-      documentType: scan.documentType || 'incoming'
+      documentType: (scan.documentType as string) || 'incoming'
     });
   };
 
@@ -298,11 +298,11 @@ const ScanDocumentPage: React.FC = () => {
             t={translations}
             recentScansData={recentScansData || []}
             isRecentScansLoading={isRecentScansLoading}
-            onSelectScan={(scan: any) => {
+            onSelectScan={(scan: Record<string, unknown>) => {
               setScanResult(scan);
               setScanSettings({
                 ...scanSettings,
-                documentType: scan.documentType || 'incoming'
+                documentType: (scan.documentType as string) || 'incoming'
               });
             }}
           />

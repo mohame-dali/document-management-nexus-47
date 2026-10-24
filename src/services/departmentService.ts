@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { Department } from '@/types';
+import { Department, User } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -59,7 +59,7 @@ export const deleteDepartment = async (id: string): Promise<void> => {
 };
 
 // Get users of a department - Admin and AdminDepartment
-export const getDepartmentUsers = async (id: string): Promise<any[]> => {
+export const getDepartmentUsers = async (id: string): Promise<User[]> => {
   try {
     const response = await axios.get(`${API_URL}/departments/${id}/users`);
     return response.data.data || response.data;

@@ -23,10 +23,10 @@ export interface TrashItem {
   content?: string;
   sender?: { _id: string; username: string; photo?: string };
   recipients?: Array<{ user?: { _id: string; username: string; photo?: string } }>;
-  attachments?: any[];
+  attachments?: Array<{ filename?: string; path?: string; originalName?: string; [k: string]: unknown }>;
   name?: string;
   itemType?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TrashDataResponse {
@@ -37,10 +37,10 @@ export interface TrashDataResponse {
 export const getTrashData = async (type?: FilterType): Promise<TrashDataResponse> => {
   const params = type && type !== 'all' ? { type } : {};
   const response = await api.get('/trash', { params });
-  const rawItems = response.data?.data || [];
+  const rawItems: Record<string, unknown>[] = response.data?.data || [];
   const rawCounts = response.data?.counts || { total: 0, incoming: 0, outgoing: 0, folder: 0, message: 0 };
 
-  const items = rawItems.map((item: any) => {
+  const items = rawItems.map((item) => {
     let resolvedType: TrashItemType = 'incoming';
     if (item.type) {
       resolvedType = item.type;

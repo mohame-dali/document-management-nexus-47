@@ -51,20 +51,32 @@ export const extractFromOcr = async (
   return response.data.data;
 };
 
+interface AxiosErrorLike {
+  code?: string;
+  message?: string;
+  response?: {
+    data?: {
+      code?: AIErrorCode;
+      message?: string;
+    };
+  };
+}
+
 /**
  * Extrait le code d'erreur structuré depuis une erreur Axios
  */
-export const getAIErrorCode = (error: any): AIError => {
-  const code = error?.response?.data?.code;
-  const message = error?.response?.data?.message;
+export const getAIErrorCode = (error: unknown): AIError => {
+  const err = error as AxiosErrorLike;
+  const code = err?.response?.data?.code;
+  const message = err?.response?.data?.message;
 
   if (code) return { code, message: message || '' };
 
   // Erreurs réseau / timeout côté client
-  if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+  if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
     return { code: 'CLIENT_TIMEOUT', message: '' };
   }
-  if (error?.code === 'ERR_CANCELED') {
+  if (err?.code === 'ERR_CANCELED') {
     return { code: 'CANCELLED', message: '' };
   }
 

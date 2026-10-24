@@ -91,7 +91,7 @@ class BackupService {
     return response.data;
   }
 
-  async restoreBackup(backupId: string): Promise<any> {
+  async restoreBackup(backupId: string): Promise<Record<string, unknown>> {
     const response = await api.post('/backup/restore', {
       backupId,
       confirmation: 'CONFIRM_RESTORE',
@@ -99,7 +99,7 @@ class BackupService {
     return response.data;
   }
 
-  async reloadBackupScheduler(): Promise<any> {
+  async reloadBackupScheduler(): Promise<Record<string, unknown>> {
     const response = await api.post('/backup/reload-scheduler');
     return response.data;
   }
@@ -107,12 +107,12 @@ class BackupService {
 
 export const backupService = new BackupService();
 
-export const getBackupHistory = async (page: number = 1, limit: number = 50): Promise<any> => {
+export const getBackupHistory = async (page: number = 1, limit: number = 50): Promise<BackupHistoryItem[] | Record<string, unknown>> => {
   const response = await api.get(`/backup/history?page=${page}&limit=${limit}`);
   return response.data?.data || response.data || [];
 };
 
-export const restoreBackup = async (backupId: string): Promise<any> => {
+export const restoreBackup = async (backupId: string): Promise<Record<string, unknown>> => {
   const response = await api.post('/backup/restore', {
     backupId,
     confirmation: 'CONFIRM_RESTORE',
@@ -120,12 +120,12 @@ export const restoreBackup = async (backupId: string): Promise<any> => {
   return response.data;
 };
 
-export const reloadBackupScheduler = async (): Promise<any> => {
+export const reloadBackupScheduler = async (): Promise<Record<string, unknown>> => {
   const response = await api.post('/backup/reload-scheduler');
   return response.data;
 };
 
-export const deleteBackup = async (backupId: string): Promise<any> => {
+export const deleteBackup = async (backupId: string): Promise<Record<string, unknown>> => {
   const response = await api.delete(`/backup/${backupId}`);
   return response.data;
 };

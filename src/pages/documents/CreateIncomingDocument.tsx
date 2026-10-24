@@ -108,7 +108,7 @@ const CreateIncomingDocument = () => {
 
   // Start scan mutation
   const scanDocumentMutation = useMutation({
-    mutationFn: (options: any) => scanTemporaryDocument(options)
+    mutationFn: (options: Record<string, unknown>) => scanTemporaryDocument(options)
   });
 
   if (loadingDepartments) {
