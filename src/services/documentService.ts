@@ -24,7 +24,7 @@ api.interceptors.request.use((config) => {
 // Advanced Search API calls
 export const getAvailableYears = async (type: 'all' | 'incoming' | 'outgoing' = 'all'): Promise<number[]> => {
   try {
-    const promises: Promise<any>[] = [];
+    const promises: Promise<(number | string)[]>[] = [];
     if (type === 'all' || type === 'incoming') {
       promises.push(
         api.get(`${API_URL}/incoming-documents/years/available`)
@@ -41,8 +41,8 @@ export const getAvailableYears = async (type: 'all' | 'incoming' | 'outgoing' = 
     }
     const results = await Promise.all(promises);
     const set = new Set<number>();
-    results.flat().forEach((y: any) => {
-      const num = parseInt(y, 10);
+    results.flat().forEach((y: number | string) => {
+      const num = parseInt(String(y), 10);
       if (!isNaN(num)) set.add(num);
     });
     return Array.from(set).sort((a, b) => b - a);
@@ -184,7 +184,8 @@ export const getIncomingDocuments = async (filters?: {
 export const getIncomingDocument = async (id: string): Promise<IncomingDocument> => {
   try {
     // Ensure we're sending a clean string ID
-    const cleanId = typeof id === 'object' ? (id as any)._id || (id as any).id || String(id) : String(id);
+    const objId = id as unknown as { _id?: string; id?: string };
+    const cleanId = typeof id === 'object' ? objId?._id || objId?.id || String(id) : String(id);
     console.log('Fetching incoming document with ID:', cleanId);
     
     const response = await api.get(`${API_URL}/incoming-documents/${cleanId}`);
@@ -195,7 +196,7 @@ export const getIncomingDocument = async (id: string): Promise<IncomingDocument>
   }
 };
 
-export const createIncomingDocument = async (documentData: FormData | any): Promise<IncomingDocument> => {
+export const createIncomingDocument = async (documentData: FormData | Record<string, unknown>): Promise<IncomingDocument> => {
   try {
     const headers: Record<string, string> = {};
     
@@ -317,7 +318,8 @@ export const getOutgoingDocuments = async (filters?: {
 export const getOutgoingDocument = async (id: string): Promise<OutgoingDocument> => {
   try {
     // Ensure we're sending a clean string ID
-    const cleanId = typeof id === 'object' ? (id as any)._id || (id as any).id || String(id) : String(id);
+    const objId = id as unknown as { _id?: string; id?: string };
+    const cleanId = typeof id === 'object' ? objId?._id || objId?.id || String(id) : String(id);
     console.log('Fetching outgoing document with ID:', cleanId);
     
     const response = await api.get(`${API_URL}/outgoing-documents/${cleanId}`);
@@ -328,7 +330,7 @@ export const getOutgoingDocument = async (id: string): Promise<OutgoingDocument>
   }
 };
 
-export const createOutgoingDocument = async (documentData: FormData | any): Promise<OutgoingDocument> => {
+export const createOutgoingDocument = async (documentData: FormData | Record<string, unknown>): Promise<OutgoingDocument> => {
   try {
     const headers: Record<string, string> = {};
     

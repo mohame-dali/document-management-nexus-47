@@ -15,14 +15,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { extractFromOcr, getAIErrorCode } from '@/services/aiExtractionService';
 
+import { Department } from '@/types';
+import { UseMutationResult } from '@tanstack/react-query';
+import { FieldValues } from 'react-hook-form';
+
 interface IncomingDocumentFormProps {
-  t: any;
-  departments: any[];
+  t: (key: string) => string;
+  departments: Department[];
   currentDepartmentId?: string;
-  scanData?: any;
-  scannerStatus?: any;
+  scanData?: Record<string, unknown> | null;
+  scannerStatus?: Record<string, unknown> | null;
   loadingScannerStatus: boolean;
-  scanTemporaryDocumentMutation: any;
+  scanTemporaryDocumentMutation: UseMutationResult<unknown, unknown, unknown, unknown>;
 }
 
 const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
@@ -108,8 +112,9 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
       toast.success('✅ تم استخراج المعلومات', {
         description: `درجة الثقة: ${Math.round(extracted.confidence * 100)}%`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       const { code } = getAIErrorCode(error);
+      const errResp = error as { response?: { data?: { message?: string } } };
 
       switch (code) {
         case 'AI_SERVICE_DOWN':
@@ -141,7 +146,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
           break;
         default:
           toast.error('❌ فشل الاستخراج الذكي', {
-            description: error?.response?.data?.message || 'خطأ غير متوقع',
+            description: errResp?.response?.data?.message || 'خطأ غير متوقع',
           });
       }
     } finally {
@@ -160,7 +165,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
     console.log('Extracted text length:', extractedText.length);
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: FieldValues) => {
     // Add OCR text to the form data
     const formDataWithOcr = {
       ...data,

@@ -37,9 +37,37 @@ export interface ContactUrgenceItem {
   adresse: string;
 }
 
+export interface PersonnelExtendedData extends Partial<Personnel> {
+  nomPere?: string;
+  nomMere?: string;
+  nomGrandPere?: string;
+  groupeSanguin?: string;
+  dateEmissionCin?: string | Date | null;
+  numeroUnite?: string;
+  numeroArmee?: string;
+  dateEngagement?: string | Date | null;
+  typeEngagement?: string;
+  origineEngagement?: string;
+  niveauEtude?: string;
+  diplomeBase?: string;
+  specialite?: string;
+  arme?: string;
+  posteActuel?: string;
+  etatCivil?: string;
+  nomConjoint?: string;
+  dateMariage?: string | Date | null;
+  nombreEnfants?: string | number;
+  enfants?: string | number;
+  numeroPasseport?: string;
+  dateValiditePasseport?: string | Date | null;
+  personnesAPrevenir?: ContactUrgenceItem[];
+  contactsUrgence?: ContactUrgenceItem[];
+  [key: string]: unknown;
+}
+
 interface PersonnelFormProps {
-  initialData?: Partial<Personnel> & Record<string, any>;
-  onSubmit: (data: Partial<Personnel> & Record<string, any>, photoFile?: File | null) => void;
+  initialData?: PersonnelExtendedData;
+  onSubmit: (data: PersonnelExtendedData, photoFile?: File | null) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -75,52 +103,52 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   const [notes, setNotes] = useState(initialData?.notes || '');
 
   // Groupe A — Identité étendue
-  const [nomPere, setNomPere] = useState((initialData as any)?.nomPere || '');
-  const [nomMere, setNomMere] = useState((initialData as any)?.nomMere || '');
-  const [nomGrandPere, setNomGrandPere] = useState((initialData as any)?.nomGrandPere || '');
-  const [groupeSanguin, setGroupeSanguin] = useState<string>((initialData as any)?.groupeSanguin || 'NONE');
+  const [nomPere, setNomPere] = useState(initialData?.nomPere || '');
+  const [nomMere, setNomMere] = useState(initialData?.nomMere || '');
+  const [nomGrandPere, setNomGrandPere] = useState(initialData?.nomGrandPere || '');
+  const [groupeSanguin, setGroupeSanguin] = useState<string>(initialData?.groupeSanguin || 'NONE');
 
   // Groupe B — Situation administrative
   const [dateEmissionCin, setDateEmissionCin] = useState(
-    (initialData as any)?.dateEmissionCin
-      ? new Date((initialData as any).dateEmissionCin).toISOString().split('T')[0]
+    initialData?.dateEmissionCin
+      ? new Date(initialData.dateEmissionCin).toISOString().split('T')[0]
       : ''
   );
-  const [numeroUnite, setNumeroUnite] = useState((initialData as any)?.numeroUnite || '');
-  const [numeroArmee, setNumeroArmee] = useState((initialData as any)?.numeroArmee || '');
+  const [numeroUnite, setNumeroUnite] = useState(initialData?.numeroUnite || '');
+  const [numeroArmee, setNumeroArmee] = useState(initialData?.numeroArmee || '');
   const [dateEngagement, setDateEngagement] = useState(
-    (initialData as any)?.dateEngagement
-      ? new Date((initialData as any).dateEngagement).toISOString().split('T')[0]
+    initialData?.dateEngagement
+      ? new Date(initialData.dateEngagement).toISOString().split('T')[0]
       : ''
   );
-  const [typeEngagement, setTypeEngagement] = useState((initialData as any)?.typeEngagement || '');
-  const [origineEngagement, setOrigineEngagement] = useState((initialData as any)?.origineEngagement || '');
-  const [niveauEtude, setNiveauEtude] = useState((initialData as any)?.niveauEtude || '');
-  const [diplomeBase, setDiplomeBase] = useState((initialData as any)?.diplomeBase || '');
-  const [specialite, setSpecialite] = useState((initialData as any)?.specialite || '');
-  const [arme, setArme] = useState((initialData as any)?.arme || '');
-  const [posteActuel, setPosteActuel] = useState((initialData as any)?.posteActuel || (initialData as any)?.poste || '');
+  const [typeEngagement, setTypeEngagement] = useState(initialData?.typeEngagement || '');
+  const [origineEngagement, setOrigineEngagement] = useState(initialData?.origineEngagement || '');
+  const [niveauEtude, setNiveauEtude] = useState(initialData?.niveauEtude || '');
+  const [diplomeBase, setDiplomeBase] = useState(initialData?.diplomeBase || '');
+  const [specialite, setSpecialite] = useState(initialData?.specialite || '');
+  const [arme, setArme] = useState(initialData?.arme || '');
+  const [posteActuel, setPosteActuel] = useState(initialData?.posteActuel || initialData?.poste || '');
 
   // Groupe C — Situation familiale
-  const [etatCivil, setEtatCivil] = useState<string>((initialData as any)?.etatCivil || 'NONE');
-  const [nomConjoint, setNomConjoint] = useState((initialData as any)?.nomConjoint || '');
+  const [etatCivil, setEtatCivil] = useState<string>(initialData?.etatCivil || 'NONE');
+  const [nomConjoint, setNomConjoint] = useState(initialData?.nomConjoint || '');
   const [dateMariage, setDateMariage] = useState(
-    (initialData as any)?.dateMariage ? new Date((initialData as any).dateMariage).toISOString().split('T')[0] : ''
+    initialData?.dateMariage ? new Date(initialData.dateMariage).toISOString().split('T')[0] : ''
   );
   const [nombreEnfants, setNombreEnfants] = useState<string | number>(
-    (initialData as any)?.nombreEnfants ?? (initialData as any)?.enfants ?? ''
+    initialData?.nombreEnfants ?? initialData?.enfants ?? ''
   );
 
   // Groupe D — Passeport
-  const [numeroPasseport, setNumeroPasseport] = useState((initialData as any)?.numeroPasseport || '');
+  const [numeroPasseport, setNumeroPasseport] = useState(initialData?.numeroPasseport || '');
   const [dateValiditePasseport, setDateValiditePasseport] = useState(
-    (initialData as any)?.dateValiditePasseport
-      ? new Date((initialData as any).dateValiditePasseport).toISOString().split('T')[0]
+    initialData?.dateValiditePasseport
+      ? new Date(initialData.dateValiditePasseport).toISOString().split('T')[0]
       : ''
   );
 
   // Groupe E — 3 personnes à prévenir
-  const initialContacts = (initialData as any)?.personnesAPrevenir || (initialData as any)?.contactsUrgence || [];
+  const initialContacts = initialData?.personnesAPrevenir || initialData?.contactsUrgence || [];
   const [personne1, setPersonne1] = useState<ContactUrgenceItem>({
     nom: initialContacts[0]?.nom || '',
     lien: initialContacts[0]?.lien || '',
@@ -183,54 +211,54 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       setNotes(initialData.notes || '');
 
       // Groupe A
-      setNomPere((initialData as any).nomPere || '');
-      setNomMere((initialData as any).nomMere || '');
-      setNomGrandPere((initialData as any).nomGrandPere || '');
-      setGroupeSanguin((initialData as any).groupeSanguin || 'NONE');
+      setNomPere(initialData.nomPere || '');
+      setNomMere(initialData.nomMere || '');
+      setNomGrandPere(initialData.nomGrandPere || '');
+      setGroupeSanguin(initialData.groupeSanguin || 'NONE');
 
       // Groupe B
       setDateEmissionCin(
-        (initialData as any).dateEmissionCin
-          ? new Date((initialData as any).dateEmissionCin).toISOString().split('T')[0]
+        initialData.dateEmissionCin
+          ? new Date(initialData.dateEmissionCin).toISOString().split('T')[0]
           : ''
       );
-      setNumeroUnite((initialData as any).numeroUnite || '');
-      setNumeroArmee((initialData as any).numeroArmee || '');
+      setNumeroUnite(initialData.numeroUnite || '');
+      setNumeroArmee(initialData.numeroArmee || '');
       setDateEngagement(
-        (initialData as any).dateEngagement
-          ? new Date((initialData as any).dateEngagement).toISOString().split('T')[0]
+        initialData.dateEngagement
+          ? new Date(initialData.dateEngagement).toISOString().split('T')[0]
           : ''
       );
-      setTypeEngagement((initialData as any).typeEngagement || '');
-      setOrigineEngagement((initialData as any).origineEngagement || '');
-      setNiveauEtude((initialData as any).niveauEtude || '');
-      setDiplomeBase((initialData as any).diplomeBase || '');
-      setSpecialite((initialData as any).specialite || '');
-      setArme((initialData as any).arme || '');
-      setPosteActuel((initialData as any).posteActuel || (initialData as any).poste || '');
+      setTypeEngagement(initialData.typeEngagement || '');
+      setOrigineEngagement(initialData.origineEngagement || '');
+      setNiveauEtude(initialData.niveauEtude || '');
+      setDiplomeBase(initialData.diplomeBase || '');
+      setSpecialite(initialData.specialite || '');
+      setArme(initialData.arme || '');
+      setPosteActuel(initialData.posteActuel || initialData.poste || '');
 
       // Groupe C
-      setEtatCivil((initialData as any).etatCivil || 'NONE');
-      setNomConjoint((initialData as any).nomConjoint || '');
+      setEtatCivil(initialData.etatCivil || 'NONE');
+      setNomConjoint(initialData.nomConjoint || '');
       setDateMariage(
-        (initialData as any).dateMariage
-          ? new Date((initialData as any).dateMariage).toISOString().split('T')[0]
+        initialData.dateMariage
+          ? new Date(initialData.dateMariage).toISOString().split('T')[0]
           : ''
       );
       setNombreEnfants(
-        (initialData as any).nombreEnfants ?? (initialData as any).enfants ?? ''
+        initialData.nombreEnfants ?? initialData.enfants ?? ''
       );
 
       // Groupe D
-      setNumeroPasseport((initialData as any).numeroPasseport || '');
+      setNumeroPasseport(initialData.numeroPasseport || '');
       setDateValiditePasseport(
-        (initialData as any).dateValiditePasseport
-          ? new Date((initialData as any).dateValiditePasseport).toISOString().split('T')[0]
+        initialData.dateValiditePasseport
+          ? new Date(initialData.dateValiditePasseport).toISOString().split('T')[0]
           : ''
       );
 
       // Groupe E
-      const contacts = (initialData as any).personnesAPrevenir || (initialData as any).contactsUrgence || [];
+      const contacts = initialData.personnesAPrevenir || initialData.contactsUrgence || [];
       setPersonne1({
         nom: contacts[0]?.nom || '',
         lien: contacts[0]?.lien || '',
@@ -339,7 +367,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       (c) => c.nom.trim() || c.telephone.trim() || c.lien.trim() || c.adresse.trim()
     );
 
-    const payload: Partial<Personnel> & Record<string, any> = {
+    const payload: PersonnelExtendedData = {
       nom: nom.trim(),
       prenom: prenom.trim(),
       dateNaissance: dateNaissance ? new Date(dateNaissance).toISOString() : null,

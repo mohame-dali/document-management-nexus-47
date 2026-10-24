@@ -34,7 +34,7 @@ process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 
 // Connect to database (with fallback to mockRouter if offline)
-connectDB().catch((err: any) => {
+connectDB().catch((err: Error) => {
   console.warn('Database initialization warning:', err.message);
 });
 
@@ -42,13 +42,13 @@ connectDB().catch((err: any) => {
 try {
   const { startBackupScheduler } = require('./backend/services/backupScheduler');
   mongoose.connection.on('connected', () => {
-    startBackupScheduler().catch((e: any) => console.warn('[Backup Scheduler] Notice:', e.message));
+    startBackupScheduler().catch((e: Error) => console.warn('[Backup Scheduler] Notice:', e.message));
   });
   if (mongoose.connection.readyState === 1) {
-    startBackupScheduler().catch((e: any) => console.warn('[Backup Scheduler] Notice:', e.message));
+    startBackupScheduler().catch((e: Error) => console.warn('[Backup Scheduler] Notice:', e.message));
   }
-} catch (err: any) {
-  console.warn('[Server] Backup scheduler non démarré:', err.message);
+} catch (err: unknown) {
+  console.warn('[Server] Backup scheduler non démarré:', (err as Error).message);
 }
 
 const app = express();
@@ -64,8 +64,8 @@ const io = new SocketIOServer(httpServer, {
 
 try {
   require('./backend/sockets/index')(io);
-} catch (e: any) {
-  console.warn('Socket handler initialization notice:', e.message);
+} catch (e: unknown) {
+  console.warn('Socket handler initialization notice:', (e as Error).message);
 }
 
 // Body & Cookie parsers
@@ -123,8 +123,8 @@ try {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });
-} catch (err: any) {
-  console.warn('Swagger docs initialization notice:', err.message);
+} catch (err: unknown) {
+  console.warn('Swagger docs initialization notice:', (err as Error).message);
 }
 
 // If MongoDB is connected, use real backend routes; otherwise fallback seamlessly to mockRouter
@@ -166,8 +166,8 @@ try {
   app.use('/api/trash', require('./backend/routes/trashRoutes'));
   app.use('/api/organization-chart', require('./backend/routes/organizationChartRoutes'));
   app.use('/api/ai', require('./backend/routes/aiRoutes'));
-} catch (err: any) {
-  console.warn('Notice loading backend routes:', err.message);
+} catch (err: unknown) {
+  console.warn('Notice loading backend routes:', (err as Error).message);
 }
 
 // Fallback to mockRouter for any unhandled /api endpoints
@@ -177,7 +177,11 @@ app.use('/api', mockRouter);
 app.use(errorHandler);
 
 // Global DB offline error fallback as per web.md
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+interface AppError extends Error {
+  name: string;
+  message: string;
+}
+app.use((err: AppError, req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (err.name === 'MongooseError' || err.name === 'MongoNetworkError' || err.message?.includes('buffering timed out')) {
     console.warn('[AI Studio] Database offline — returning mock response');
     if (req.method === 'GET') {
@@ -235,7 +239,7 @@ async function start() {
     });
   }
 
-  httpServer.on('error', (err: any) => {
+  httpServer.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
       console.error(`🔴 Port ${PORT} already in use. Waiting or retry.`);
     } else {
@@ -249,7 +253,7 @@ async function start() {
   });
 }
 
-start().catch((err: any) => {
+start().catch((err: unknown) => {
   console.error('Fatal startup error:', err);
   process.exit(1);
 });
