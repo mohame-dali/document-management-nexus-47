@@ -13,7 +13,7 @@ export function useKeyboardShortcuts() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         const searchInput = document.querySelector<HTMLInputElement>(
-          'input[type="search"], input[placeholder*="بحث"], input[placeholder*="ابحث"]'
+          '#global-search-input, input[type="search"], input[placeholder*="بحث"], input[placeholder*="ابحث"]'
         );
         if (searchInput) {
           searchInput.focus();

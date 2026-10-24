@@ -388,7 +388,7 @@ const IncomingDocumentsPage: React.FC = () => {
   // Search match highlight
   const highlightMatch = (text: string, query: string) => {
     if (!query || !query.trim()) return text;
-    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
     return (
       <>
         {parts.map((part, i) =>

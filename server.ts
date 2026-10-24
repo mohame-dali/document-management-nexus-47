@@ -166,6 +166,7 @@ try {
   app.use('/api/trash', require('./backend/routes/trashRoutes'));
   app.use('/api/organization-chart', require('./backend/routes/organizationChartRoutes'));
   app.use('/api/ai', require('./backend/routes/aiRoutes'));
+  app.use('/api/search', require('./backend/routes/globalSearchRoutes'));
 } catch (err: unknown) {
   console.warn('Notice loading backend routes:', (err as Error).message);
 }
