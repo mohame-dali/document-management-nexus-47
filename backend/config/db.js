@@ -65,11 +65,7 @@ const connectDB = async () => {
     // Create default admin account if needed
     await createDefaultAdmin();
   } catch (error) {
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    console.error('⚠️  Backend will NOT work without MongoDB.');
-    console.error('⚠️  Please ensure MongoDB is running on 127.0.0.1:27017');
-    // ⚠️ NE PAS quitter pour permettre le debug
-    // process.exit(1);  // Décommenter en production
+    console.warn(`[Database] MongoDB offline (${error.message}) — Bascule automatique sur mockRouter.`);
   }
 };
 
