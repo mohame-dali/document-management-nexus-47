@@ -64,7 +64,9 @@ export const FloatingAIChat: React.FC = () => {
           y: Math.max(MARGIN, Math.min(window.innerHeight - ICON_SIZE - MARGIN, p.y)),
         };
       }
-    } catch {}
+    } catch {
+      // Ignorer si parsing invalide
+    }
     return { x: 24, y: 24 };
   });
 
@@ -93,7 +95,9 @@ export const FloatingAIChat: React.FC = () => {
   useEffect(() => {
     try {
       localStorage.setItem('ai_chat_position', JSON.stringify(position));
-    } catch {}
+    } catch {
+      // Ignorer si écriture localStorage non disponible
+    }
   }, [position]);
 
   // Détection position intelligente du panneau selon la position de l'icône

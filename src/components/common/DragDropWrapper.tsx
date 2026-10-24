@@ -31,52 +31,40 @@ const DragDropWrapper: React.FC<DragDropWrapperProps> = ({
   isDragDisabled = false,
   isDropDisabled = false
 }) => {
-  // Add safety check for drag and drop context
-  let isDragging = false;
-  let isOver = false;
-  let canDrop = false;
-  let drag: any = null;
-  let drop: any = null;
-
-  try {
-    const [dragState, dragRef] = useDrag({
+  const [dragState, dragRef] = useDrag({
+    type: dragType || 'default',
+    item: () => ({
       type: dragType || 'default',
-      item: () => ({
-        type: dragType || 'default',
-        id: dragData?.id || 'unknown',
-        data: dragData
-      }),
-      collect: (monitor) => ({
-        isDragging: monitor.isDragging(),
-      }),
-      canDrag: !isDragDisabled && !!dragType
-    });
+      id: dragData?.id || 'unknown',
+      data: dragData
+    }),
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+    canDrag: !isDragDisabled && !!dragType
+  });
 
-    const [dropState, dropRef] = useDrop({
-      accept: dropTypes,
-      drop: (item: DragItem) => {
-        if (onDrop) {
-          onDrop(item);
-        }
-      },
-      collect: (monitor) => ({
-        isOver: monitor.isOver(),
-        canDrop: monitor.canDrop(),
-      }),
-      canDrop: (item: DragItem, monitor: DropTargetMonitor<DragItem, void>) => {
-        return !isDropDisabled && dropTypes.length > 0;
+  const [dropState, dropRef] = useDrop({
+    accept: dropTypes,
+    drop: (item: DragItem) => {
+      if (onDrop) {
+        onDrop(item);
       }
-    });
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+    canDrop: (_item: DragItem, _monitor: DropTargetMonitor<DragItem, void>) => {
+      return !isDropDisabled && dropTypes.length > 0;
+    }
+  });
 
-    isDragging = dragState.isDragging;
-    isOver = dropState.isOver || false;
-    canDrop = dropState.canDrop || false;
-    drag = dragRef;
-    drop = dropRef;
-  } catch (error) {
-    // If drag-drop context is not available, continue without drag-drop functionality
-    console.warn('Drag-drop context not available:', error);
-  }
+  const isDragging = dragState.isDragging;
+  const isOver = dropState.isOver || false;
+  const canDrop = dropState.canDrop || false;
+  const drag = dragRef;
+  const drop = dropRef;
 
   const ref = React.useRef<HTMLDivElement>(null);
   

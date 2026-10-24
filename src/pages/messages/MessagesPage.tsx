@@ -161,7 +161,7 @@ const MessagesPage: React.FC = () => {
       if ((a.unreadCount || 0) === 0 && (b.unreadCount || 0) > 0) return 1;
       return new Date(b.lastMessageTime || 0).getTime() - new Date(a.lastMessageTime || 0).getTime();
     });
-  }, [messages, currentUserId]);
+  }, [messages, currentUserId, t]);
 
   // Filter conversations according to tab (if 'sent', show conversations where user sent messages)
   const conversations = useMemo(() => {

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Bell, FileText, User, MessageSquare, AlertCircle, CheckCircle, Info } from 'lucide-react';
@@ -28,6 +28,62 @@ const NotificationSystem: React.FC = () => {
     refetchInterval: 60000,
   });
 
+  const handleMarkAsRead = useCallback(async (notificationId: string) => {
+    try {
+      await markNotificationAsRead(notificationId);
+      queryClient.invalidateQueries({ queryKey: ['activityNotifications'] });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  }, [queryClient]);
+
+  const showInstantNotification = useCallback((notification: any) => {
+    const getIcon = () => {
+      switch (notification.notificationType) {
+        case 'document_assigned':
+        case 'responsible_assigned':
+          return <FileText className="h-5 w-5 text-blue-500" />;
+        case 'overdue':
+          return <AlertCircle className="h-5 w-5 text-red-500" />;
+        case 'today':
+        case 'tomorrow':
+          return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+        default:
+          return <Info className="h-5 w-5 text-blue-500" />;
+      }
+    };
+
+    const getToastType = () => {
+      switch (notification.notificationType) {
+        case 'overdue':
+          return 'error';
+        case 'today':
+          case 'tomorrow':
+          return 'warning';
+        case 'responsible_assigned':
+        case 'document_assigned':
+          return 'success';
+        default:
+          return 'info';
+      }
+    };
+
+    toast[getToastType() as 'success' | 'error' | 'warning' | 'info'](
+      notification.message || 'إشعار جديد',
+      {
+        description: `تاريخ النشاط: ${formatArabicDateTime(notification.createdAt)}`,
+        icon: getIcon(),
+        duration: 8000,
+        action: notification.notificationType === 'responsible_assigned' ? {
+          label: 'تم قراءته',
+          onClick: () => handleMarkAsRead(notification._id)
+        } : undefined,
+        className: 'text-right',
+        style: { direction: 'rtl' }
+      }
+    );
+  }, [handleMarkAsRead]);
+
   // Check for new notifications and show instant pop-ups
   useEffect(() => {
     if (!notifications || notifications.length === 0) return;
@@ -53,63 +109,7 @@ const NotificationSystem: React.FC = () => {
     if (newNotifications.length > 0) {
       setLastNotificationCheck(Date.now());
     }
-  }, [notifications, currentUser?._id, lastNotificationCheck, shownNotifications]);
-
-  const showInstantNotification = (notification: any) => {
-    const getIcon = () => {
-      switch (notification.notificationType) {
-        case 'document_assigned':
-        case 'responsible_assigned':
-          return <FileText className="h-5 w-5 text-blue-500" />;
-        case 'overdue':
-          return <AlertCircle className="h-5 w-5 text-red-500" />;
-        case 'today':
-        case 'tomorrow':
-          return <AlertCircle className="h-5 w-5 text-yellow-500" />;
-        default:
-          return <Info className="h-5 w-5 text-blue-500" />;
-      }
-    };
-
-    const getToastType = () => {
-      switch (notification.notificationType) {
-        case 'overdue':
-          return 'error';
-        case 'today':
-        case 'tomorrow':
-          return 'warning';
-        case 'responsible_assigned':
-        case 'document_assigned':
-          return 'success';
-        default:
-          return 'info';
-      }
-    };
-
-    toast[getToastType() as 'success' | 'error' | 'warning' | 'info'](
-      notification.message || 'إشعار جديد',
-      {
-        description: `تاريخ النشاط: ${formatArabicDateTime(notification.createdAt)}`,
-        icon: getIcon(),
-        duration: 8000,
-        action: notification.notificationType === 'responsible_assigned' ? {
-          label: 'تم قراءته',
-          onClick: () => handleMarkAsRead(notification._id)
-        } : undefined,
-        className: 'text-right',
-        style: { direction: 'rtl' }
-      }
-    );
-  };
-
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await markNotificationAsRead(notificationId);
-      queryClient.invalidateQueries({ queryKey: ['activityNotifications'] });
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
+  }, [notifications, currentUser?._id, lastNotificationCheck, shownNotifications, showInstantNotification]);
 
   // Show message notifications
   useEffect(() => {

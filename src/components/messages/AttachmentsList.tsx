@@ -58,7 +58,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
   const apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
   const getDiskName = (att: any) => {
-    return (att.path?.split(/[\/\\]/).pop()) || att.filename || '';
+    return (att.path?.split(/[/\\]/).pop()) || att.filename || '';
   };
 
   return (

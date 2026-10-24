@@ -72,7 +72,7 @@ export const advancedSearchDocuments = async (filters: {
   totalCount?: number;
 }> => {
   try {
-    let results = { incoming: [], outgoing: [], hasMore: false, totalCount: 0 };
+    const results = { incoming: [], outgoing: [], hasMore: false, totalCount: 0 };
     
     // Build search parameters
     const params = new URLSearchParams();

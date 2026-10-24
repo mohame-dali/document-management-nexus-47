@@ -91,10 +91,12 @@ const BackupSettingsPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<'all' | 'manual' | 'automatic'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'failed'>('all');
 
+  // Initialisation des données au montage du composant uniquement (évite les boucles infinies de rechargement)
   useEffect(() => {
     loadData();
     loadSavedPath();
     loadBackupHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBackupHistory = async () => {

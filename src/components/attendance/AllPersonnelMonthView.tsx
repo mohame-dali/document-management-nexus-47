@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -96,14 +96,14 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
     onYearMonthChange(now.getFullYear(), now.getMonth() + 1);
   };
 
-  const getDepartmentName = (dept: unknown): string => {
+  const getDepartmentName = useCallback((dept: unknown): string => {
     if (!dept) return '-';
     if (typeof dept === 'object' && 'name' in (dept as Record<string, unknown>)) {
       return String((dept as { name: string }).name);
     }
     const found = departments.find((d) => d._id === String(dept));
     return found?.name || '-';
-  };
+  }, [departments]);
 
   const getMotifLabel = (code: string) => {
     const r = leaveReasons.find((reason) => reason.code === code);
@@ -131,7 +131,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
       }
       return 0;
     });
-  }, [records, sortField, sortOrder]);
+  }, [records, sortField, sortOrder, getDepartmentName]);
 
   const toggleSort = (field: 'nom' | 'dept' | 'presents' | 'absents') => {
     if (sortField === field) {

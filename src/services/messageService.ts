@@ -164,7 +164,7 @@ export const downloadAttachment = async (attachment: any, openInNewTab = false):
     let filename = '';
     // Priorité 1 : extraire depuis path (nom réel Multer, présent partout sur anciens et nouveaux messages)
     if (attachment.path) {
-      const fromPath = attachment.path.split(/[\/\\]/).pop() || '';
+      const fromPath = attachment.path.split(/[/\\]/).pop() || '';
       if (fromPath) {
         filename = fromPath;
       }

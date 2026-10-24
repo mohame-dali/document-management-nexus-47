@@ -216,7 +216,7 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
         formData.append('document', selectedFiles[0]);
       } else if (scanResult?.filePath) {
         // Clean the file path for backend processing
-        const relativePath = scanResult.filePath.replace(/^[\/\\]+/, '');
+        const relativePath = scanResult.filePath.replace(/^[/\\]+/, '');
         formData.append('scannedDocumentPath', relativePath);
         
         if (scanResult.ocrText) {

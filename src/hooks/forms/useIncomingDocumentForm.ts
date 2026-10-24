@@ -335,7 +335,7 @@ export const useIncomingDocumentForm = (t: any, currentDepartmentId?: string, sc
       
       // Log what we're sending
       console.log('FormData contents:');
-      for (let [key, value] of formData.entries()) {
+      for (const [key, value] of formData.entries()) {
         console.log(key, value);
       }
       
