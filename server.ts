@@ -38,10 +38,15 @@ connectDB().catch((err: any) => {
   console.warn('Database initialization warning:', err.message);
 });
 
-// Démarrer le scheduler de backup
+// Démarrer le scheduler de backup si MongoDB est connecté
 try {
   const { startBackupScheduler } = require('./backend/services/backupScheduler');
-  setTimeout(() => startBackupScheduler(), 3000);
+  mongoose.connection.on('connected', () => {
+    startBackupScheduler().catch((e: any) => console.warn('[Backup Scheduler] Notice:', e.message));
+  });
+  if (mongoose.connection.readyState === 1) {
+    startBackupScheduler().catch((e: any) => console.warn('[Backup Scheduler] Notice:', e.message));
+  }
 } catch (err: any) {
   console.warn('[Server] Backup scheduler non démarré:', err.message);
 }
@@ -230,11 +235,22 @@ async function start() {
     });
   }
 
+  httpServer.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`🔴 Port ${PORT} already in use. Waiting or retry.`);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
     checkAIModels();
   });
 }
 
-start();
+start().catch((err: any) => {
+  console.error('Fatal startup error:', err);
+  process.exit(1);
+});
 
