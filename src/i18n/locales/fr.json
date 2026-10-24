@@ -1201,5 +1201,16 @@
   "personnel.delete.description": "Êtes-vous sûr de vouloir supprimer la fiche de l'employé {{name}}{{cin}} ?",
   "personnel.delete.warning": "Cette action est irréversible.",
   "personnel.delete.confirmButton": "Confirmer la suppression",
-  "personnel.delete.deleting": "Suppression en cours..."
+  "personnel.delete.deleting": "Suppression en cours...",
+  "hr.form.steps.identity": "Identité & Infos personnelles",
+  "hr.form.steps.family": "Situation familiale",
+  "hr.form.steps.admin": "Situation administrative",
+  "hr.form.steps.contacts": "Contacts d'urgence",
+  "hr.form.steps.stepCount": "Étape {{current}} sur {{total}}",
+  "hr.form.nav.previous": "Précédent",
+  "hr.form.nav.next": "Suivant",
+  "hr.form.nav.save": "Enregistrer l'employé",
+  "hr.form.nav.cancel": "Annuler",
+  "hr.form.nav.saving": "Enregistrement...",
+  "hr.form.validation.requiredStep1": "Veuillez remplir les champs obligatoires avant de continuer"
 }

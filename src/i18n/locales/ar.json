@@ -1201,5 +1201,16 @@
   "personnel.delete.description": "هل أنت متأكد من رغبتك في حذف بطاقة الموظف {{name}}{{cin}}؟",
   "personnel.delete.warning": "هذا الإجراء نهائي ولا يمكن التراجع عنه.",
   "personnel.delete.confirmButton": "تأكيد الحذف",
-  "personnel.delete.deleting": "جاري الحذف..."
+  "personnel.delete.deleting": "جاري الحذف...",
+  "hr.form.steps.identity": "الهوية والمعلومات الشخصية",
+  "hr.form.steps.family": "الوضع العائلي",
+  "hr.form.steps.admin": "الوضع الإداري والمهني",
+  "hr.form.steps.contacts": "جهات الاتصال للطوارئ",
+  "hr.form.steps.stepCount": "الخطوة {{current}} من {{total}}",
+  "hr.form.nav.previous": "السابق",
+  "hr.form.nav.next": "التالي",
+  "hr.form.nav.save": "حفظ الموظف",
+  "hr.form.nav.cancel": "إلغاء",
+  "hr.form.nav.saving": "جاري الحفظ...",
+  "hr.form.validation.requiredStep1": "يرجى ملء الحقول الإلزامية في هذه الخطوة قبل المتابعة"
 }
