@@ -26,6 +26,15 @@ const errorHandler = (err, req, res, next) => {
     error = new ErrorResponse(message, 400);
   }
 
+  // Multer limit file size (413 Payload Too Large)
+  if (err.code === 'LIMIT_FILE_SIZE' || error.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      success: false,
+      message: 'Fichier trop volumineux. Maximum 10 Mo.',
+      error: 'Fichier trop volumineux. Maximum 10 Mo.'
+    });
+  }
+
   res.status(error.statusCode || 500).json({
     success: false,
     error: error.message || 'Server Error'

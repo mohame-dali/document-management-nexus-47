@@ -232,16 +232,36 @@ exports.updateUser = async (req, res, next) => {
     delete updateData.deletedAt;
     delete updateData.deletedBy;
     
+    // Synchronisation activeDepartment si departments est mis à jour
+    if (updateData.departments !== undefined) {
+      const newDeptIds = Array.isArray(updateData.departments)
+        ? updateData.departments.map(d => (d && d._id ? d._id.toString() : d.toString()))
+        : [];
+
+      const currentActiveId = updateData.activeDepartment !== undefined
+        ? (updateData.activeDepartment && (updateData.activeDepartment._id || updateData.activeDepartment)?.toString())
+        : (user.activeDepartment && (user.activeDepartment._id || user.activeDepartment)?.toString());
+
+      if (!currentActiveId || !newDeptIds.includes(currentActiveId)) {
+        if (newDeptIds.length > 0) {
+          updateData.activeDepartment = newDeptIds[0];
+        } else {
+          updateData.activeDepartment = null;
+        }
+      }
+    }
+    
     console.log('Update data (password and soft delete protected):', updateData);
     
-    // Update user
-    user = await User.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate('departments')
-     .populate('activeDepartment')
-     .populate('createdBy', 'username');
+    // Appliquer les modifications et sauvegarder avec user.save() pour déclencher les hooks
+    Object.assign(user, updateData);
+    await user.save();
+    
+    // Recharger avec les relations peuplées
+    user = await User.findById(user._id)
+      .populate('departments')
+      .populate('activeDepartment')
+      .populate('createdBy', 'username');
     
     console.log(`User updated successfully: ${user.username}`);
     

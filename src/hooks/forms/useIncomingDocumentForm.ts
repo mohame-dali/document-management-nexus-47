@@ -56,7 +56,7 @@ export const useIncomingDocumentForm = (t: FormTranslations, currentDepartmentId
     typeDocument: z.string().optional(),
     activity: z.string().optional().or(z.literal('')),
     dateActivity: z.date().optional(),
-    departments: z.string().array().optional(),
+    departments: z.array(z.string()).min(1, t.required || 'Un courrier doit être affecté à au moins un département.'),
     description: z.string().optional()
   }).refine((data) => {
     // If activity is provided, dateActivity should also be provided

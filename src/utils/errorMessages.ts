@@ -45,6 +45,12 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
   'Director cannot': 'لا يمكن لمدير الإدارة القيام بهذا الإجراء',
   'Only one Director allowed': 'يُسمح بمدير إدارة واحد فقط',
 
+  // File upload
+  'Fichier trop volumineux. Maximum 10 Mo.': 'حجم الملف كبير جداً. الحد الأقصى 10 ميغابايت',
+  'Fichier trop volumineux': 'حجم الملف كبير جداً. الحد الأقصى 10 ميغابايت',
+  'File too large': 'حجم الملف كبير جداً. الحد الأقصى 10 ميغابايت',
+  'LIMIT_FILE_SIZE': 'حجم الملف كبير جداً. الحد الأقصى 10 ميغابايت',
+
   // Network
   'Network Error': 'خطأ في الاتصال بالشبكة',
   'Timeout': 'انتهت مدة الطلب. يرجى المحاولة مرة أخرى',
@@ -102,13 +108,14 @@ export function getErrorMessage(error: unknown, fallbackMessage?: string): strin
   }
 
   // 2. Fallback to HTTP status code
-  const status = error?.response?.status;
+  const status = err?.response?.status;
   switch (status) {
     case 400: return 'البيانات المدخلة غير صحيحة';
     case 401: return 'يجب تسجيل الدخول مرة أخرى';
     case 403: return 'ليس لديك صلاحية للقيام بهذا الإجراء';
     case 404: return 'العنصر المطلوب غير موجود';
     case 409: return 'هذا العنصر موجود مسبقاً';
+    case 413: return 'حجم الملف كبير جداً. الحد الأقصى 10 ميغابايت';
     case 422: return 'البيانات المدخلة غير مكتملة';
     case 429: return 'عدد الطلبات كبير جداً. يرجى المحاولة بعد قليل';
     case 500: return 'خطأ داخلي في النظام';

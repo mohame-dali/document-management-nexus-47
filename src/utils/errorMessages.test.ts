@@ -10,6 +10,7 @@ describe('errorMessages', () => {
   it('traduit les codes HTTP', () => {
     expect(getErrorMessage({ response: { status: 403 } })).toBe('ليس لديك صلاحية للقيام بهذا الإجراء');
     expect(getErrorMessage({ response: { status: 404 } })).toBe('العنصر المطلوب غير موجود');
+    expect(getErrorMessage({ response: { status: 413 } })).toBe('حجم الملف كبير جداً. الحد الأقصى 10 ميغابايت');
   });
 
   it('retourne un message par défaut', () => {
