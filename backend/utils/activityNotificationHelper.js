@@ -72,6 +72,16 @@ const createActivityNotifications = async (documentId, activity, dateActivity, a
       recipients,
       message: `النشاط "${activity}" مجدول خلال 3 أيام - ${documentInfo}`
     });
+  } else if (daysDiff > 3) {
+    // Future due dates (> 3 days)
+    notifications.push({
+      documentId,
+      activity,
+      dateActivity: activityDate,
+      notificationType: '3days',
+      recipients,
+      message: `النشاط "${activity}" مجدول خلال ${daysDiff} يوماً (متبقي ${daysDiff} أيام) - ${documentInfo}`
+    });
   } else if (daysDiff < 0) {
     // Overdue
     notifications.push({
@@ -135,68 +145,22 @@ const markNotificationAsRead = async (notificationId, userId) => {
 
 // Daily notification check (to be run via cron job)
 const checkDailyNotifications = async () => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  const twoDaysAhead = new Date(today);
-  twoDaysAhead.setDate(twoDaysAhead.getDate() + 2);
-  
-  const threeDaysAhead = new Date(today);
-  threeDaysAhead.setDate(threeDaysAhead.getDate() + 3);
+  try {
+    const IncomingDocument = require('../models/IncomingDocument');
+    
+    // Find all documents with activity and dateActivity to catch up notifications
+    const documents = await IncomingDocument.find({
+      activity: { $ne: null, $exists: true },
+      dateActivity: { $ne: null, $exists: true }
+    }).populate('assignedTo.id');
 
-  // Find documents with activities due today, tomorrow, in 2 days, or in 3 days
-  const IncomingDocument = require('../models/IncomingDocument');
-  
-  const documentsToday = await IncomingDocument.find({
-    activity: { $ne: null },
-    dateActivity: {
-      $gte: today,
-      $lt: tomorrow
+    for (const doc of documents) {
+      if (doc.activity && doc.dateActivity && doc.assignedTo && doc.assignedTo.length > 0) {
+        await updateActivityNotifications(doc._id, doc.activity, doc.dateActivity, doc.assignedTo);
+      }
     }
-  }).populate('assignedTo.id');
-
-  const documentsTomorrow = await IncomingDocument.find({
-    activity: { $ne: null },
-    dateActivity: {
-      $gte: tomorrow,
-      $lt: new Date(tomorrow.getTime() + 24 * 60 * 60 * 1000)
-    }
-  }).populate('assignedTo.id');
-
-  const documentsTwoDays = await IncomingDocument.find({
-    activity: { $ne: null },
-    dateActivity: {
-      $gte: twoDaysAhead,
-      $lt: new Date(twoDaysAhead.getTime() + 24 * 60 * 60 * 1000)
-    }
-  }).populate('assignedTo.id');
-
-  const documentsThreeDays = await IncomingDocument.find({
-    activity: { $ne: null },
-    dateActivity: {
-      $gte: threeDaysAhead,
-      $lt: new Date(threeDaysAhead.getTime() + 24 * 60 * 60 * 1000)
-    }
-  }).populate('assignedTo.id');
-
-  // Create notifications for each category
-  for (const doc of documentsToday) {
-    await createActivityNotifications(doc._id, doc.activity, doc.dateActivity, doc.assignedTo);
-  }
-
-  for (const doc of documentsTomorrow) {
-    await createActivityNotifications(doc._id, doc.activity, doc.dateActivity, doc.assignedTo);
-  }
-
-  for (const doc of documentsTwoDays) {
-    await createActivityNotifications(doc._id, doc.activity, doc.dateActivity, doc.assignedTo);
-  }
-
-  for (const doc of documentsThreeDays) {
-    await createActivityNotifications(doc._id, doc.activity, doc.dateActivity, doc.assignedTo);
+  } catch (error) {
+    console.error('Erreur checkDailyNotifications:', error);
   }
 };
 

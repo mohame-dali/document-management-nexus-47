@@ -51,6 +51,18 @@ try {
   console.warn('[Server] Backup scheduler non démarré:', (err as Error).message);
 }
 
+// Cron quotidien à 8h pour le rattrapage des notifications d'activité
+try {
+  const cron = require('node-cron');
+  const { checkDailyNotifications } = require('./backend/utils/activityNotificationHelper');
+  cron.schedule('0 8 * * *', () => {
+    console.log('[Cron] Exécution du rattrapage quotidien des notifications d\'activité');
+    checkDailyNotifications().catch((e: Error) => console.warn('[Cron Notifications] Error:', e.message));
+  });
+} catch (err: unknown) {
+  console.warn('[Server] Cron notification activité non démarré:', (err as Error).message);
+}
+
 const app = express();
 const httpServer = createServer(app);
 

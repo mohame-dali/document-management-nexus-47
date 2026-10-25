@@ -81,6 +81,7 @@ import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { exportToCsv } from '@/utils/exportCsv';
 
 const IncomingDocumentsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -590,6 +591,32 @@ const IncomingDocumentsPage: React.FC = () => {
               <Download className="h-4 w-4" />
             )}
             <span>{t('incoming.actions.exportPdf')}</span>
+          </Button>
+
+          {/* Export Excel Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => exportToCsv('courriers-entrants.csv', documents)}
+            disabled={documents.length === 0}
+            className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200 flex items-center gap-2"
+            title="تصدير Excel"
+          >
+            <Download className="h-4 w-4" />
+            <span>تصدير Excel</span>
+          </Button>
+
+          {/* Refresh Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200 flex items-center gap-2"
+            title={t('common.refresh')}
+          >
+            <RotateCcw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+            <span>{t('common.refresh')}</span>
           </Button>
 
           {/* Add Document Action Button */}

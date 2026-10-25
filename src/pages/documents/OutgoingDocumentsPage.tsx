@@ -89,6 +89,7 @@ import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { exportToCsv } from '@/utils/exportCsv';
 
 const OutgoingDocumentsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -465,6 +466,18 @@ const OutgoingDocumentsPage: React.FC = () => {
                   <Download className="h-4 w-4 ml-1" />
                 )}
                 <span>{t('outgoing.actions.exportPdf')}</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => exportToCsv('courriers-sortants.csv', documents)}
+                disabled={documents.length === 0}
+                className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200 shadow-xs flex items-center gap-2"
+                title="تصدير Excel"
+              >
+                <Download className="h-4 w-4 ml-1" />
+                <span>تصدير Excel</span>
               </Button>
 
               <Button

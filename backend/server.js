@@ -275,6 +275,18 @@ app.use('/api/search', require('./routes/globalSearchRoutes'));
 startIndexRetryScheduler();
 startBackupScheduler();
 
+// Cron quotidien à 8h pour le rattrapage des notifications d'activité
+try {
+  const cron = require('node-cron');
+  const { checkDailyNotifications } = require('./utils/activityNotificationHelper');
+  cron.schedule('0 8 * * *', () => {
+    console.log('[Cron] Exécution du rattrapage quotidien des notifications d\'activité');
+    checkDailyNotifications().catch(err => console.warn('[Cron Notifications] Error:', err.message));
+  });
+} catch (err) {
+  console.warn('[Server] Cron notification activité non démarré:', err.message);
+}
+
 // Add a simple test route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working' });
