@@ -1,5 +1,6 @@
 
 const User = require('../../models/User');
+const Personnel = require('../../models/Personnel');
 const ErrorResponse = require('../../utils/errorResponse');
 const bcrypt = require('bcryptjs');
 
@@ -80,6 +81,19 @@ exports.createUser = async (req, res, next) => {
     // Validate required fields
     if (!req.body.username || !req.body.password) {
       return next(new ErrorResponse('Username and password are required', 400));
+    }
+
+    // Validation croisée (CIN ↔ Username) : vérifier si le username correspond au CIN d'un Personnel existant
+    const trimmedUsername = req.body.username.trim();
+    const existingPersonnelWithCin = await Personnel.findOne({
+      cin: trimmedUsername,
+      isDeleted: { $ne: true }
+    });
+    if (existingPersonnelWithCin) {
+      return res.status(400).json({
+        success: false,
+        message: "Ce nom d'utilisateur correspond déjà au CIN d'un agent existant. Veuillez d'abord lier ce compte."
+      });
     }
     
     // Add createdBy field
@@ -319,6 +333,24 @@ exports.deleteUser = async (req, res, next) => {
     user.deletedAt = new Date();
     user.deletedBy = req.user ? (req.user.id || req.user._id) : null;
     await user.save();
+
+    // Dissocier la fiche Personnel liée s'il y en a une pour éviter un userId orphelin
+    try {
+      let linkedPersonnel = null;
+      if (user.personnelId) {
+        linkedPersonnel = await Personnel.findById(user.personnelId);
+      }
+      if (!linkedPersonnel) {
+        linkedPersonnel = await Personnel.findOne({ userId: user._id, isDeleted: { $ne: true } });
+      }
+      if (linkedPersonnel) {
+        linkedPersonnel.userId = null;
+        await linkedPersonnel.save();
+        console.log(`Personnel unlinked successfully for deleted user: ${user.username}`);
+      }
+    } catch (unlinkErr) {
+      console.warn('Erreur lors de la dissociation du Personnel pour l\'utilisateur supprimé:', unlinkErr.message);
+    }
     
     console.log(`User soft deleted successfully: ${user.username}`);
     

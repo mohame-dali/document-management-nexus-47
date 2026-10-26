@@ -97,6 +97,21 @@ exports.createPersonnel = async (req, res, next) => {
       }
     }
 
+    // Validation croisée (CIN ↔ Username) : vérifier si le CIN correspond au username d'un User existant
+    if (cin && cin.trim()) {
+      const trimmedCin = cin.trim();
+      const existingUserWithUsername = await User.findOne({
+        username: trimmedCin,
+        isDeleted: { $ne: true }
+      });
+      if (existingUserWithUsername) {
+        return res.status(400).json({
+          success: false,
+          message: "Ce CIN correspond déjà à un nom d'utilisateur existant dans le système."
+        });
+      }
+    }
+
     // Création de la fiche avec statut initial 'en_attente' et userId null
     const personnelData = {
       nom: nom.trim(),
@@ -148,6 +163,27 @@ exports.createPersonnel = async (req, res, next) => {
     };
 
     const personnel = await Personnel.create(personnelData);
+
+    // Synchronisation du département vers le User s'il est lié à la création
+    if (personnel.userId && personnel.activeDepartment) {
+      try {
+        const user = await User.findById(personnel.userId);
+        if (user) {
+          user.activeDepartment = personnel.activeDepartment;
+          const newDeptId = personnel.activeDepartment.toString();
+          const deptExists = (user.departments || []).some(
+            d => (d._id || d).toString() === newDeptId
+          );
+          if (!deptExists) {
+            user.departments = user.departments || [];
+            user.departments.push(personnel.activeDepartment);
+          }
+          await user.save();
+        }
+      } catch (syncErr) {
+        console.warn('Erreur lors de la synchronisation département à la création du personnel:', syncErr.message);
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -366,6 +402,21 @@ exports.updatePersonnel = async (req, res, next) => {
       }
     });
 
+    // Validation croisée (CIN ↔ Username) si le CIN est mis à jour
+    if (req.body.cin && req.body.cin.trim()) {
+      const trimmedCin = req.body.cin.trim();
+      const existingUserWithUsername = await User.findOne({
+        username: trimmedCin,
+        isDeleted: { $ne: true }
+      });
+      if (existingUserWithUsername && (!personnel.userId || existingUserWithUsername._id.toString() !== personnel.userId.toString())) {
+        return res.status(400).json({
+          success: false,
+          message: "Ce CIN correspond déjà à un nom d'utilisateur existant dans le système."
+        });
+      }
+    }
+
     // Validation activeDepartment si mis à jour
     if (req.body.activeDepartment) {
       if (!mongoose.Types.ObjectId.isValid(req.body.activeDepartment)) {
@@ -377,6 +428,27 @@ exports.updatePersonnel = async (req, res, next) => {
     }
 
     await personnel.save();
+
+    // Synchronisation du département (Personnel → User)
+    if (personnel.userId && personnel.activeDepartment) {
+      try {
+        const user = await User.findById(personnel.userId);
+        if (user) {
+          user.activeDepartment = personnel.activeDepartment;
+          const newDeptId = personnel.activeDepartment.toString();
+          const deptExists = (user.departments || []).some(
+            d => (d._id || d).toString() === newDeptId
+          );
+          if (!deptExists) {
+            user.departments = user.departments || [];
+            user.departments.push(personnel.activeDepartment);
+          }
+          await user.save();
+        }
+      } catch (syncErr) {
+        console.warn('Erreur lors de la synchronisation département vers le User:', syncErr.message);
+      }
+    }
 
     const updatedPersonnel = await Personnel.findById(id)
       .populate('activeDepartment', 'name description')
@@ -680,17 +752,69 @@ exports.linkUserToPersonnel = async (req, res, next) => {
       });
     }
 
-    // f. Mettre à jour :
-    // • Personnel.userId = userId
-    // • Personnel.statut = 'actif'
-    // • User.personnelId = personnelId
+    // Sauvegarder l'état initial pour le pattern de compensation
+    const originalPersonnelUserId = personnel.userId;
+    const originalPersonnelStatut = personnel.statut;
+    const originalUserPersonnelId = user.personnelId;
+
+    // f. Mettre à jour les références
     personnel.userId = user._id;
     personnel.statut = 'actif';
     user.personnelId = personnel._id;
 
-    // g. Sauvegarder les deux documents
-    await personnel.save();
-    await user.save();
+    // Synchronisation du département lors de la liaison
+    if (personnel.activeDepartment) {
+      user.activeDepartment = personnel.activeDepartment;
+      const deptIdStr = personnel.activeDepartment.toString();
+      const deptExists = (user.departments || []).some(
+        d => (d._id || d).toString() === deptIdStr
+      );
+      if (!deptExists) {
+        user.departments = user.departments || [];
+        user.departments.push(personnel.activeDepartment);
+      }
+    }
+
+    // g. Sauvegarde atomique avec Transaction Mongoose et Fallback par compensation
+    let session = null;
+    try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+      await personnel.save({ session });
+      await user.save({ session });
+      await session.commitTransaction();
+    } catch (txError) {
+      if (session) {
+        await session.abortTransaction().catch(() => {});
+      }
+
+      const isStandalone = txError.message && (
+        txError.message.includes('replica set') ||
+        txError.message.includes('Transaction numbers are only allowed') ||
+        txError.code === 20 ||
+        txError.codeName === 'IllegalOperation'
+      );
+
+      if (isStandalone) {
+        // Fallback par compensation pour les instances MongoDB standalone
+        await personnel.save();
+        try {
+          await user.save();
+        } catch (userSaveErr) {
+          // Annulation de la première sauvegarde
+          personnel.userId = originalPersonnelUserId;
+          personnel.statut = originalPersonnelStatut;
+          await personnel.save().catch(() => {});
+          throw userSaveErr;
+        }
+      } else {
+        throw txError;
+      }
+    } finally {
+      if (session) {
+        session.endSession().catch(() => {});
+      }
+    }
 
     // h. Retourner { success: true, data: { personnel, user } }
     res.status(200).json({
