@@ -230,6 +230,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const { startIndexRetryScheduler } = require('./services/indexRetryScheduler');
 const { startBackupScheduler } = require('./services/backupScheduler');
+const { startCleanupScheduler } = require('./services/cleanupScheduler');
 
 // Mount Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -271,9 +272,10 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/search', require('./routes/globalSearchRoutes'));
 
-// Démarrer les crons d'arrière-plan (rattrapage RAG et politique de sauvegarde)
+// Démarrer les crons d'arrière-plan (rattrapage RAG, politique de sauvegarde, purge fichiers temp)
 startIndexRetryScheduler();
 startBackupScheduler();
+startCleanupScheduler();
 
 // Cron quotidien à 8h pour le rattrapage des notifications d'activité
 try {
@@ -367,3 +369,19 @@ process.on('unhandledRejection', (err, promise) => {
   // Close server & exit process
   httpServer.close(() => process.exit(1));
 });
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM reçu, arrêt propre...');
+  mongoose.connection.close(false, () => {
+    httpServer.close(() => process.exit(0));
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT reçu, arrêt propre...');
+  mongoose.connection.close(false, () => {
+    httpServer.close(() => process.exit(0));
+  });
+});
+

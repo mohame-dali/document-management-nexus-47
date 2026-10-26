@@ -9,7 +9,6 @@ const bcrypt = require('bcryptjs');
 exports.createUser = async (req, res, next) => {
   try {
     console.log(`User creation request from ${req.user.role} user: ${req.user.username}`);
-    console.log('Request body:', req.body);
     
     // Handle departments based on role
     if (req.user.role === 'AdminDepartment') {

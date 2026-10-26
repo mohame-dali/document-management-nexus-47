@@ -26,7 +26,6 @@ exports.protect = async (req, res, next) => {
 
   // Make sure token exists
   if (!token) {
-    console.log('No token provided');
     return next(new ErrorResponse('Not authorized to access this route', 401));
   }
 
@@ -39,44 +38,30 @@ exports.protect = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    console.log('Token decoded successfully:', decoded.id);
 
     // Find the user and populate departments
     const user = await User.findById(decoded.id).populate('departments activeDepartment');
 
     if (!user) {
-      console.log('User not found for id:', decoded.id);
       return next(new ErrorResponse('User not found', 404));
     }
 
     if (!user.isActive) {
-      console.log('User account is deactivated:', decoded.id);
       return next(new ErrorResponse('Your account has been deactivated', 403));
     }
 
     // Set the user on the request object
     req.user = user;
-    console.log('User authenticated successfully:', user.username);
-    console.log('User role:', user.role);
-    console.log('User departments:', user.departments?.map(d => ({ id: d._id, name: d.name })));
-    console.log('User active department:', user.activeDepartment ? { id: user.activeDepartment._id, name: user.activeDepartment.name } : 'None');
     
     next();
   } catch (err) {
-    console.error('Token verification error:', err.message);
-    
     // Clear any invalid tokens to force re-login
     if (err.name === 'JsonWebTokenError') {
-      console.log('Invalid token detected - clearing client storage recommended');
       return next(new ErrorResponse('Invalid token - please login again', 401));
     } else if (err.name === 'TokenExpiredError') {
-      console.log('Token expired - clearing client storage recommended');
       return next(new ErrorResponse('Token expired - please login again', 401));
     }
     
-    // For any other JWT errors, recommend clearing storage
-    console.log('JWT verification failed - client should clear storage and re-login');
     return next(new ErrorResponse('Authentication failed - please login again', 401));
   }
 };

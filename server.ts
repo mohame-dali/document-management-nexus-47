@@ -51,6 +51,14 @@ try {
   console.warn('[Server] Backup scheduler non démarré:', (err as Error).message);
 }
 
+// Démarrer le scheduler de nettoyage des fichiers temporaires (>24h)
+try {
+  const { startCleanupScheduler } = require('./backend/services/cleanupScheduler');
+  startCleanupScheduler();
+} catch (err: unknown) {
+  console.warn('[Server] Cleanup scheduler non démarré:', (err as Error).message);
+}
+
 // Cron quotidien à 8h pour le rattrapage des notifications d'activité
 try {
   const cron = require('node-cron');
@@ -269,5 +277,20 @@ async function start() {
 start().catch((err: unknown) => {
   console.error('Fatal startup error:', err);
   process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM reçu, arrêt propre...');
+  mongoose.connection.close(false, () => {
+    httpServer.close(() => process.exit(0));
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT reçu, arrêt propre...');
+  mongoose.connection.close(false, () => {
+    httpServer.close(() => process.exit(0));
+  });
 });
 
