@@ -262,7 +262,6 @@ export const AdminHubLayout: React.FC = () => {
       label: t('sidebar.organizationChart'),
       icon: Network,
       color: 'text-emerald-500',
-      allowedRoles: ['Admin', 'Director', 'AdminDepartment'],
     },
     {
       to: '/dashboard/admin/settings',

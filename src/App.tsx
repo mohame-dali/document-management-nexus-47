@@ -233,13 +233,11 @@ function App() {
                           <Route path="my-attendance" element={<MyAttendanceCalendarPage />} />
                         </Route>
 
-                        {/* Route spécifique Organigramme (accessible aussi à AdminDepartment) */}
+                        {/* Route spécifique Organigramme (accessible à TOUS les utilisateurs connectés) */}
                         <Route
                           path="admin/organization-chart"
                           element={
-                            <ProtectedRoute
-                              allowedRoles={['Admin', 'Director', 'AdminDepartment']}
-                            >
+                            <ProtectedRoute>
                               <AdminHubLayout />
                             </ProtectedRoute>
                           }

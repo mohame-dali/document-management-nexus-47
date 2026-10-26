@@ -158,8 +158,8 @@ const Sidebar = () => {
         location.pathname.startsWith('/dashboard/guide'),
     }] : []),
 
-    // 6b. 🌐 الهيكل التنظيمي (organigramme) — AdminDepartment uniquement (accès direct ciblé)
-    ...(currentUser?.role === 'AdminDepartment' ? [{
+    // 6b. 🌐 الهيكل التنظيمي (organigramme) — Pour tous les rôles non-Admin/Director (AdminTuningDesk, AdminDepartment, User)
+    ...(!['Admin', 'Director'].includes(currentUser?.role || '') ? [{
       id: 'organization-chart',
       path: '/dashboard/admin/organization-chart',
       label: t('sidebar.organizationChart'),

@@ -254,7 +254,6 @@ export const ADMIN_HUB: HubDefinition = {
       labelFr: 'Organigramme',
       path: '/dashboard/admin/organization-chart',
       icon: 'Network',
-      roles: ['Admin', 'Director', 'AdminDepartment'],
     },
     {
       id: 'settings',
