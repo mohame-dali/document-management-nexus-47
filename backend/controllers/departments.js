@@ -1,6 +1,9 @@
 
 const Department = require('../models/Department');
 const User = require('../models/User');
+const Personnel = require('../models/Personnel');
+const Folder = require('../models/Folder');
+const IncomingDocument = require('../models/IncomingDocument');
 const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Get all departments
@@ -113,15 +116,43 @@ exports.deleteDepartment = async (req, res, next) => {
       );
     }
     
-    // Check if users are assigned to this department
-    const usersWithDepartment = await User.countDocuments({
-      departments: department._id
+    // 1. Vérifier s'il y a des Personnel rattachés à ce département (actif ou secondaire)
+    const personnelCount = await Personnel.countDocuments({
+      $or: [
+        { activeDepartment: department._id },
+        { departments: department._id }
+      ]
     });
-    
-    if (usersWithDepartment > 0) {
+
+    // 2. Vérifier s'il y a des Folder avec ce department ID
+    const foldersCount = await Folder.countDocuments({
+      department: department._id
+    });
+
+    // 3. Vérifier s'il y a des IncomingDocument avec assignedTo.id = cet ID
+    const documentsCount = await IncomingDocument.countDocuments({
+      'assignedTo.id': department._id
+    });
+
+    // 4. Vérifier s'il y a des comptes User assignés à ce département
+    const usersCount = await User.countDocuments({
+      $or: [
+        { departments: department._id },
+        { activeDepartment: department._id }
+      ]
+    });
+
+    // Si l'une de ces entités existe (count > 0), bloquer la suppression
+    if (personnelCount > 0 || foldersCount > 0 || documentsCount > 0 || usersCount > 0) {
+      const details = [];
+      if (personnelCount > 0) details.push(`${personnelCount} agent(s)`);
+      if (foldersCount > 0) details.push(`${foldersCount} dossier(s)`);
+      if (documentsCount > 0) details.push(`${documentsCount} courrier(s)`);
+      if (usersCount > 0) details.push(`${usersCount} utilisateur(s)`);
+
       return next(
         new ErrorResponse(
-          `Cannot delete department with assigned users. Reassign users first.`,
+          `Impossible de supprimer ce département. Il contient encore ${details.join(' et ')}. Veuillez d'abord réaffecter ces éléments.`,
           400
         )
       );
