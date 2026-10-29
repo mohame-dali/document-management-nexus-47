@@ -282,7 +282,7 @@ const BackupSettingsPage: React.FC = () => {
             setIsBackingUp(false);
             setCurrentBackupId(null);
             
-            const actualPath = status.filePath || exportPath || '/tmp/backups';
+            const actualPath = status.filePath || exportPath || 'backups/';
             const successMessage = isYearlyBackup ? 
               `تم إنشاء النسخة الاحتياطية لعام ${selectedYear} بنجاح` : 
               `تم إنشاء النسخة الاحتياطية بنجاح`;
@@ -534,7 +534,7 @@ const BackupSettingsPage: React.FC = () => {
                   <div className="flex gap-2">
                     <Input
                       id="export-path"
-                      placeholder={savedBackupPath || "/tmp/backups"}
+                      placeholder={savedBackupPath || "backups/"}
                       value={exportPath}
                       onChange={(e) => setExportPath(e.target.value)}
                       className="h-11 text-base border-[#cbd5e1] rounded bg-white flex-1"
@@ -565,7 +565,7 @@ const BackupSettingsPage: React.FC = () => {
                 <div className="flex gap-2">
                   <Input
                     id="export-path-regular"
-                    placeholder={savedBackupPath || "/tmp/backups"}
+                    placeholder={savedBackupPath || "backups/"}
                     value={exportPath}
                     onChange={(e) => setExportPath(e.target.value)}
                     className="h-11 text-base border-[#cbd5e1] rounded bg-white flex-1"
@@ -636,7 +636,7 @@ const BackupSettingsPage: React.FC = () => {
                   
                   <div className="mt-4 space-y-2 text-right">
                     <div className="p-3 bg-[#f7fafc] rounded text-base border border-[#e2e8f0] text-[#1a202c]">
-                      <strong>مسار التصدير:</strong> {exportPath || savedBackupPath || '/tmp/backups'}
+                      <strong>مسار التصدير:</strong> {exportPath || savedBackupPath || 'backups/'}
                     </div>
                     {isYearlyBackup && (
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded text-base text-[#2c5282]">

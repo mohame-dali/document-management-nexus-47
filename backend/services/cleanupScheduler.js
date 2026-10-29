@@ -18,7 +18,7 @@ async function cleanupTempFiles() {
     path.join(__dirname, '..', 'uploads', 'temp'),
     path.join(process.cwd(), 'uploads', 'temp'),
     path.join(process.cwd(), 'backend', 'uploads', 'temp'),
-    '/tmp/ocr-uploads'
+    path.join(require('os').tmpdir(), 'ocr-uploads')
   ];
 
   // Dédupliquer les répertoires
