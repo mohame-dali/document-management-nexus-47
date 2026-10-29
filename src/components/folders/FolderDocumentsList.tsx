@@ -166,7 +166,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
       </div>
 
       {/* Two-column view: Incoming & Outgoing */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Incoming Column */}
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-xs flex flex-col">
           <div className="p-4 sm:p-5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
@@ -190,7 +190,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                 {incomingDocuments.map((doc: IncomingDocument) => (
                   <div 
                     key={doc._id} 
-                    className="p-4 sm:p-5 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 shadow-2xs flex flex-col justify-between gap-3 min-w-0"
+                    className="p-4 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 shadow-2xs flex flex-col justify-between gap-3 min-w-0"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1] shadow-2xs">
@@ -203,7 +203,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                     </div>
 
                     <h4 
-                      className="font-bold text-base text-[#1a202c] line-clamp-2 leading-relaxed break-words"
+                      className="font-bold text-sm sm:text-base text-[#1a202c] line-clamp-2 leading-relaxed break-words text-ellipsis overflow-hidden"
                       title={doc.subject}
                     >
                       {doc.subject}
@@ -221,20 +221,20 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                       <button
                         type="button"
                         onClick={() => handleViewDocument(doc._id, 'incoming')}
-                        className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#2c5282] text-[#2c5282] hover:bg-[#2c5282] hover:text-white transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                        className="flex-1 h-8 px-3 text-xs rounded border border-[#2c5282] text-[#2c5282] hover:bg-[#2c5282] hover:text-white transition-colors duration-200 flex items-center justify-center gap-1.5 font-semibold shadow-2xs"
                         title="عرض المستند"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5" />
                         <span>عرض</span>
                       </button>
                       {doc.scannedDocument && (
                         <button
                           type="button"
                           onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'incoming')}
-                          className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                          className="flex-1 h-8 px-3 text-xs rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center justify-center gap-1.5 font-semibold shadow-2xs"
                           title="تحميل الملف الممسوح"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-3.5 w-3.5" />
                           <span>تحميل</span>
                         </button>
                       )}
@@ -269,7 +269,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                 {outgoingDocuments.map((doc: OutgoingDocument) => (
                   <div 
                     key={doc._id} 
-                    className="p-4 sm:p-5 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 shadow-2xs flex flex-col justify-between gap-3 min-w-0"
+                    className="p-4 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 shadow-2xs flex flex-col justify-between gap-3 min-w-0"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-emerald-800 border border-[#cbd5e1] shadow-2xs">
@@ -282,7 +282,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                     </div>
 
                     <h4 
-                      className="font-bold text-base text-[#1a202c] line-clamp-2 leading-relaxed break-words"
+                      className="font-bold text-sm sm:text-base text-[#1a202c] line-clamp-2 leading-relaxed break-words text-ellipsis overflow-hidden"
                       title={doc.subject}
                     >
                       {doc.subject}
@@ -300,20 +300,20 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                       <button
                         type="button"
                         onClick={() => handleViewDocument(doc._id, 'outgoing')}
-                        className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-emerald-700 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                        className="flex-1 h-8 px-3 text-xs rounded border border-emerald-700 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors duration-200 flex items-center justify-center gap-1.5 font-semibold shadow-2xs"
                         title="عرض المستند"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5" />
                         <span>عرض</span>
                       </button>
                       {doc.scannedDocument && (
                         <button
                           type="button"
                           onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'outgoing')}
-                          className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                          className="flex-1 h-8 px-3 text-xs rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center justify-center gap-1.5 font-semibold shadow-2xs"
                           title="تحميل الملف الممسوح"
                         >
-                          <Download className="h-4 w-4" />
+                          <Download className="h-3.5 w-3.5" />
                           <span>تحميل</span>
                         </button>
                       )}

@@ -280,10 +280,11 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
   };
 
   const handleOpenDocuments = (folder: FolderType) => {
-    setSelectedFolder(folder);
-    setIsDocsModalOpen(true);
     if (onFolderSelect) {
       onFolderSelect(folder);
+    } else {
+      setSelectedFolder(folder);
+      setIsDocsModalOpen(true);
     }
   };
 
@@ -797,13 +798,15 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
         documentCount={selectedFolder ? documentCounts[selectedFolder._id] || 0 : 0}
       />
 
-      {/* Documents Modal */}
-      <FolderDocumentsModal
-        selectedFolder={selectedFolder}
-        isOpen={isDocsModalOpen}
-        onClose={() => { setIsDocsModalOpen(false); setSelectedFolder(null); }}
-        canManage={canManageFolders}
-      />
+      {/* Documents Modal (uniquement si non géré par le composant parent) */}
+      {!onFolderSelect && (
+        <FolderDocumentsModal
+          selectedFolder={selectedFolder}
+          isOpen={isDocsModalOpen}
+          onClose={() => { setIsDocsModalOpen(false); setSelectedFolder(null); }}
+          canManage={canManageFolders}
+        />
+      )}
     </div>
   );
 };
