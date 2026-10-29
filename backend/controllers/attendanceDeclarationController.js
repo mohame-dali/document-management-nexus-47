@@ -338,37 +338,59 @@ exports.approveDeclaration = async (req, res) => {
       }
     }
 
-    // Mettre à jour ou insérer dans Attendance (upsert)
-    const attendanceRecord = await Attendance.findOneAndUpdate(
-      {
+    // Vérifier d'abord si une présence existe déjà pour cet agent à cette date
+    const existingAttendance = await Attendance.findOne({
+      personnelId: declaration.personnelId,
+      date: start
+    });
+
+    if (existingAttendance && existingAttendance.saisiPar) {
+      return res.status(400).json({
+        success: false,
+        message: 'Une présence a déjà été saisie pour cette date. Veuillez la modifier manuellement si nécessaire.'
+      });
+    }
+
+    // Créer ou enregistrer la présence issue de la déclaration
+    let attendanceRecord;
+    if (existingAttendance) {
+      existingAttendance.departmentId = declaration.departmentId;
+      existingAttendance.statut = declaration.statut;
+      existingAttendance.motif = safeMotif;
+      existingAttendance.leaveReasonId = isPresent ? null : leaveReasonId;
+      existingAttendance.impacteSolde = isPresent ? false : impacteSolde;
+      existingAttendance.detailsMotif = {
+        serviceNom: declaration.detailsMotif?.nomService || '',
+        missionLieu: declaration.detailsMotif?.lieuMission || '',
+        missionObjet: declaration.detailsMotif?.objetMission || '',
+        formationIntitule: declaration.detailsMotif?.intituleFormation || '',
+        commentaire: declaration.detailsMotif?.commentaire || ''
+      };
+      existingAttendance.heureArrivee = isPresent ? (declaration.heureArrivee || null) : null;
+      existingAttendance.saisiPar = req.user._id;
+      existingAttendance.modifiePar = req.user._id;
+      attendanceRecord = await existingAttendance.save();
+    } else {
+      attendanceRecord = await Attendance.create({
         personnelId: declaration.personnelId,
-        date: start
-      },
-      {
-        $set: {
-          departmentId: declaration.departmentId,
-          statut: declaration.statut,
-          motif: safeMotif,
-          leaveReasonId: isPresent ? null : leaveReasonId,
-          impacteSolde: isPresent ? false : impacteSolde,
-          detailsMotif: {
-            serviceNom: declaration.detailsMotif?.nomService || '',
-            missionLieu: declaration.detailsMotif?.lieuMission || '',
-            missionObjet: declaration.detailsMotif?.objetMission || '',
-            formationIntitule: declaration.detailsMotif?.intituleFormation || '',
-            commentaire: declaration.detailsMotif?.commentaire || ''
-          },
-          heureArrivee: isPresent ? (declaration.heureArrivee || null) : null,
-          saisiPar: req.user._id,
-          modifiePar: req.user._id
-        }
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true
-      }
-    );
+        departmentId: declaration.departmentId,
+        date: start,
+        statut: declaration.statut,
+        motif: safeMotif,
+        leaveReasonId: isPresent ? null : leaveReasonId,
+        impacteSolde: isPresent ? false : impacteSolde,
+        detailsMotif: {
+          serviceNom: declaration.detailsMotif?.nomService || '',
+          missionLieu: declaration.detailsMotif?.lieuMission || '',
+          missionObjet: declaration.detailsMotif?.objetMission || '',
+          formationIntitule: declaration.detailsMotif?.intituleFormation || '',
+          commentaire: declaration.detailsMotif?.commentaire || ''
+        },
+        heureArrivee: isPresent ? (declaration.heureArrivee || null) : null,
+        saisiPar: req.user._id,
+        modifiePar: req.user._id
+      });
+    }
 
     // Mettre à jour la déclaration
     declaration.validationStatus = 'approuvee';

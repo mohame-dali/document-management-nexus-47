@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const Message = require('../models/Message');
 const { 
   getMessages, 
   getInboxMessages,
@@ -50,14 +51,49 @@ router.get('/inbox', getInboxMessages);
 router.get('/sent', getSentMessages);
 router.put('/read-all', markAllAsRead);
 
-// Route to serve attachment files
-router.get('/attachments/:filename', (req, res) => {
+// Route to serve attachment files (secured with access control)
+router.get('/attachments/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
     const UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'attachments');
 
     // Sécurité : nettoyer le nom pour éviter path traversal
     const safeName = path.basename(filename);
+
+    // 1. Chercher le message correspondant dans la base de données
+    const escapedName = safeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const message = await Message.findOne({
+      $or: [
+        { 'attachments.filename': safeName },
+        { 'attachments.originalName': safeName },
+        { 'attachments.path': { $regex: escapedName, $options: 'i' } }
+      ]
+    });
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: 'الملف أو الرسالة غير موجودة'
+      });
+    }
+
+    // 2. Vérifier que req.user._id est soit l'expéditeur (sender), soit dans les destinataires (recipients.user)
+    const currentUserId = (req.user._id || req.user.id)?.toString();
+    const isSender = message.sender && message.sender.toString() === currentUserId;
+    const isRecipient = Array.isArray(message.recipients) && message.recipients.some(r => {
+      const rId = r.user?._id || r.user || r;
+      return rId && rId.toString() === currentUserId;
+    });
+    const isSuperUser = req.user.role === 'Admin' || req.user.role === 'Director';
+
+    if (!isSender && !isRecipient && !isSuperUser) {
+      return res.status(403).json({
+        success: false,
+        error: 'غير مصرح لك بالوصول إلى هذه القطعة المرفقة'
+      });
+    }
+
+    // 3. Servir le fichier
     let filePath = path.join(UPLOAD_DIR, safeName);
 
     // Cas 1 : fichier trouvé directement (nom réel Multer)
