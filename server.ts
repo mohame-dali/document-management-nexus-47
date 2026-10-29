@@ -16,7 +16,6 @@ dotenv.config();
 
 const require = createRequire(import.meta.url);
 const connectDB = require('./backend/config/db');
-const mockRouter = require('./backend/mockRouter');
 const errorHandler = require('./backend/middleware/error');
 
 // Check JWT_SECRET
@@ -33,7 +32,7 @@ if (!process.env.JWT_SECRET) {
 process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 
-// Connect to database (with fallback to mockRouter if offline)
+// Connect to database
 connectDB().catch((err: Error) => {
   console.warn('Database initialization warning:', err.message);
 });
@@ -147,12 +146,15 @@ try {
   console.warn('Swagger docs initialization notice:', (err as Error).message);
 }
 
-// If MongoDB is connected, use real backend routes; otherwise fallback seamlessly to mockRouter
-app.use('/api', (req, res, next) => {
+// Strict production check: if MongoDB is disconnected, return 503
+app.use('/api', (_req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (mongoose.connection.readyState === 1) {
     return next();
   }
-  return mockRouter(req, res, next);
+  return res.status(503).json({
+    success: false,
+    message: 'Service temporairement indisponible (Base de données hors ligne)'
+  });
 });
 
 // Real backend routes (used when MongoDB is connected)
@@ -191,24 +193,20 @@ try {
   console.warn('Notice loading backend routes:', (err as Error).message);
 }
 
-// Fallback to mockRouter for any unhandled /api endpoints
-app.use('/api', mockRouter);
-
 // Error handler middleware
 app.use(errorHandler);
 
-// Global DB offline error fallback as per web.md
+// Global DB offline error fallback
 interface AppError extends Error {
   name: string;
   message: string;
 }
-app.use((err: AppError, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: AppError, _req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (err.name === 'MongooseError' || err.name === 'MongoNetworkError' || err.message?.includes('buffering timed out')) {
-    console.warn('[AI Studio] Database offline — returning mock response');
-    if (req.method === 'GET') {
-      return res.json(req.path.endsWith('s') || req.path.endsWith('s/') ? { success: true, count: 0, data: [] } : { success: true, data: null });
-    }
-    return res.status(503).json({ error: 'Service temporarily unavailable (database offline)' });
+    return res.status(503).json({
+      success: false,
+      message: 'Service temporairement indisponible (Base de données hors ligne)'
+    });
   }
   next(err);
 });

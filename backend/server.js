@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path');
@@ -177,6 +178,17 @@ const loginLimiter = rateLimit({
 // Appliquer les limiteurs
 app.use('/api', globalLimiter);
 app.use('/api/auth/login', loginLimiter);
+
+// Strict production check: si MongoDB est déconnecté, renvoyer une erreur 503
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: 'Service temporairement indisponible (Base de données hors ligne)'
+    });
+  }
+  next();
+});
 
 // Protected file routes with authentication & RBAC
 const { protect } = require('./middleware/auth');

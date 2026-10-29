@@ -65,7 +65,7 @@ const connectDB = async () => {
     // Create default admin account if needed
     await createDefaultAdmin();
   } catch (error) {
-    console.warn(`[Database] MongoDB offline (${error.message}) — Bascule automatique sur mockRouter.`);
+    console.warn(`[Database] MongoDB offline (${error.message}).`);
   }
 };
 
