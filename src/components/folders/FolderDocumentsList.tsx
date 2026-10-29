@@ -166,9 +166,9 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
       </div>
 
       {/* Two-column view: Incoming & Outgoing */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Incoming Column */}
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-xs">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-xs flex flex-col">
           <div className="p-4 sm:p-5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Inbox className="h-6 w-6 text-[#2c5282]" />
@@ -179,7 +179,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
             </span>
           </div>
 
-          <div className="p-4 sm:p-5">
+          <div className="p-4 sm:p-5 flex-1">
             {incomingDocuments.length === 0 ? (
               <div className="text-center py-12 text-gray-400 space-y-2">
                 <Inbox className="h-12 w-12 mx-auto opacity-30 text-gray-400" />
@@ -190,54 +190,55 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                 {incomingDocuments.map((doc: IncomingDocument) => (
                   <div 
                     key={doc._id} 
-                    className="p-4 sm:p-5 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 min-h-[64px] shadow-2xs space-y-2.5"
+                    className="p-4 sm:p-5 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 shadow-2xs flex flex-col justify-between gap-3 min-w-0"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1] shadow-2xs">
-                          #{doc.serialNumber}/{doc.year}
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 font-medium">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          {formatArabicDate(doc.arrivalDate)}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleViewDocument(doc._id, 'incoming')}
-                          className="h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#2c5282] text-[#2c5282] hover:bg-[#2c5282] hover:text-white transition-colors duration-200 flex items-center gap-1.5 font-bold shadow-2xs"
-                          title="عرض المستند"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>عرض</span>
-                        </button>
-                        {doc.scannedDocument && (
-                          <button
-                            type="button"
-                            onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'incoming')}
-                            className="h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center gap-1.5 font-bold shadow-2xs"
-                            title="تحميل الملف الممسوح"
-                          >
-                            <Download className="h-4 w-4" />
-                            <span>تحميل</span>
-                          </button>
-                        )}
-                      </div>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1] shadow-2xs">
+                        #{doc.serialNumber}/{doc.year}
+                      </span>
+                      <span className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 font-medium">
+                        <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
+                        {formatArabicDate(doc.arrivalDate)}
+                      </span>
                     </div>
 
-                    <h4 className="font-bold text-base sm:text-lg text-[#1a202c] line-clamp-2 leading-relaxed">
+                    <h4 
+                      className="font-bold text-base text-[#1a202c] line-clamp-2 leading-relaxed break-words"
+                      title={doc.subject}
+                    >
                       {doc.subject}
                     </h4>
 
                     {doc.source && (
-                      <div className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 pt-1 border-t border-gray-100">
-                        <Building className="h-4 w-4 text-[#2c5282]" />
-                        <span>الجهة المصدرة:</span>
-                        <span className="text-gray-900 font-bold">{doc.source}</span>
+                      <div className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 pt-2 border-t border-gray-100 min-w-0">
+                        <Building className="h-4 w-4 text-[#2c5282] shrink-0" />
+                        <span className="text-gray-500 shrink-0">الجهة المصدرة:</span>
+                        <span className="text-gray-900 font-bold truncate">{doc.source}</span>
                       </div>
                     )}
+
+                    <div className="flex flex-row items-center gap-2 pt-2 border-t border-gray-100 mt-auto w-full">
+                      <button
+                        type="button"
+                        onClick={() => handleViewDocument(doc._id, 'incoming')}
+                        className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#2c5282] text-[#2c5282] hover:bg-[#2c5282] hover:text-white transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                        title="عرض المستند"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>عرض</span>
+                      </button>
+                      {doc.scannedDocument && (
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'incoming')}
+                          className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                          title="تحميل الملف الممسوح"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>تحميل</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -246,7 +247,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
         </div>
 
         {/* Outgoing Column */}
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-xs">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-xs flex flex-col">
           <div className="p-4 sm:p-5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Send className="h-6 w-6 text-emerald-700" />
@@ -257,7 +258,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
             </span>
           </div>
 
-          <div className="p-4 sm:p-5">
+          <div className="p-4 sm:p-5 flex-1">
             {outgoingDocuments.length === 0 ? (
               <div className="text-center py-12 text-gray-400 space-y-2">
                 <Send className="h-12 w-12 mx-auto opacity-30 text-gray-400" />
@@ -268,54 +269,55 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                 {outgoingDocuments.map((doc: OutgoingDocument) => (
                   <div 
                     key={doc._id} 
-                    className="p-4 sm:p-5 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 min-h-[64px] shadow-2xs space-y-2.5"
+                    className="p-4 sm:p-5 bg-white hover:bg-[#f8fafc] rounded border border-[#e2e8f0] hover:border-[#cbd5e1] transition-colors duration-200 shadow-2xs flex flex-col justify-between gap-3 min-w-0"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-emerald-800 border border-[#cbd5e1] shadow-2xs">
-                          #{doc.serialNumber}/{doc.year}
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 font-medium">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          {formatArabicDate(doc.issueDate)}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleViewDocument(doc._id, 'outgoing')}
-                          className="h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-emerald-700 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors duration-200 flex items-center gap-1.5 font-bold shadow-2xs"
-                          title="عرض المستند"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span>عرض</span>
-                        </button>
-                        {doc.scannedDocument && (
-                          <button
-                            type="button"
-                            onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'outgoing')}
-                            className="h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center gap-1.5 font-bold shadow-2xs"
-                            title="تحميل الملف الممسوح"
-                          >
-                            <Download className="h-4 w-4" />
-                            <span>تحميل</span>
-                          </button>
-                        )}
-                      </div>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-emerald-800 border border-[#cbd5e1] shadow-2xs">
+                        #{doc.serialNumber}/{doc.year}
+                      </span>
+                      <span className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 font-medium">
+                        <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
+                        {formatArabicDate(doc.issueDate)}
+                      </span>
                     </div>
 
-                    <h4 className="font-bold text-base sm:text-lg text-[#1a202c] line-clamp-2 leading-relaxed">
+                    <h4 
+                      className="font-bold text-base text-[#1a202c] line-clamp-2 leading-relaxed break-words"
+                      title={doc.subject}
+                    >
                       {doc.subject}
                     </h4>
 
                     {doc.assignedTo && doc.assignedTo.length > 0 && (
-                      <div className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 pt-1 border-t border-gray-100">
-                        <UserCheck className="h-4 w-4 text-[#2c5282]" />
-                        <span>الجهة الموجه إليها:</span>
-                        <span className="text-gray-900 font-bold">{doc.assignedTo.join(', ')}</span>
+                      <div className="text-xs sm:text-sm text-gray-600 flex items-center gap-1.5 pt-2 border-t border-gray-100 min-w-0">
+                        <UserCheck className="h-4 w-4 text-[#2c5282] shrink-0" />
+                        <span className="text-gray-500 shrink-0">الجهة الموجه إليها:</span>
+                        <span className="text-gray-900 font-bold truncate">{doc.assignedTo.join(', ')}</span>
                       </div>
                     )}
+
+                    <div className="flex flex-row items-center gap-2 pt-2 border-t border-gray-100 mt-auto w-full">
+                      <button
+                        type="button"
+                        onClick={() => handleViewDocument(doc._id, 'outgoing')}
+                        className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-emerald-700 text-emerald-700 hover:bg-emerald-700 hover:text-white transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                        title="عرض المستند"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>عرض</span>
+                      </button>
+                      {doc.scannedDocument && (
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(doc.scannedDocument!, doc.serialNumber, doc.year, 'outgoing')}
+                          className="flex-1 h-9 min-h-[36px] px-3.5 text-xs sm:text-sm rounded border border-[#FFD758] bg-[#FFCB56] text-[#78350f] hover:bg-[#FFD758] transition-colors duration-200 flex items-center justify-center gap-1.5 font-bold shadow-2xs"
+                          title="تحميل الملف الممسوح"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>تحميل</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
