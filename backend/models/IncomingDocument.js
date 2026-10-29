@@ -93,6 +93,7 @@ const incomingDocumentSchema = new mongoose.Schema({
 incomingDocumentSchema.index({ serialNumber: 1, year: 1 }, { unique: true });
 incomingDocumentSchema.index({ "assignedTo.id": 1 });
 incomingDocumentSchema.index({ dateActivity: 1 });
+incomingDocumentSchema.index({ createdAt: -1 });
 
 // ═══════════════════════════════════════════════════════════════
 // HOOKS RAG — Auto-indexation vectorielle (non-bloquant)

@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 // Admin default credentials
 const DEFAULT_ADMIN = {
   username: 'admin',
-  password: 'admin123', // This will be hashed
+  password: 'Admin123!', // This will be hashed
   role: 'Admin',
   isActive: true,
   mustChangePassword: true

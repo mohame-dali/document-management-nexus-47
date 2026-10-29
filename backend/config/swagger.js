@@ -101,6 +101,9 @@ const options = {
       { name: 'Ressources Humaines', description: 'Personnel, congés, présences et stages' },
       { name: 'Sauvegardes', description: 'Politiques, historique et restauration' },
       { name: 'IA & OCR', description: 'Résumé, traduction et extraction assistée' },
+      { name: 'Recherche', description: 'Recherche globale multi-entités' },
+      { name: 'Corbeille', description: 'Gestion de la corbeille et restauration' },
+      { name: 'Dossiers', description: 'Arborescence des dossiers et classement' },
     ],
     paths: {
       '/api/test': {
@@ -287,6 +290,105 @@ const options = {
           responses: {
             200: {
               description: 'Traduction générée',
+            },
+          },
+        },
+      },
+      '/api/search': {
+        get: {
+          summary: 'Recherche globale multi-entités (Courriers, Personnel, Dossiers)',
+          tags: ['Recherche'],
+          parameters: [
+            {
+              name: 'q',
+              in: 'query',
+              required: true,
+              schema: { type: 'string' },
+              description: 'Terme de recherche (sujet, référence, nom, etc.)',
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Résultats groupés par type d\'entité',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          incoming: { type: 'array', items: { type: 'object' } },
+                          outgoing: { type: 'array', items: { type: 'object' } },
+                          personnel: { type: 'array', items: { type: 'object' } },
+                          folders: { type: 'array', items: { type: 'object' } },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/trash': {
+        get: {
+          summary: 'Lister les éléments supprimés dans la corbeille',
+          tags: ['Corbeille'],
+          responses: {
+            200: {
+              description: 'Liste des éléments placés en corbeille',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: {
+                        type: 'object',
+                        properties: {
+                          incomingDocuments: { type: 'array', items: { type: 'object' } },
+                          outgoingDocuments: { type: 'array', items: { type: 'object' } },
+                          folders: { type: 'array', items: { type: 'object' } },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      '/api/folders': {
+        get: {
+          summary: 'Lister les dossiers et arborescence de classement',
+          tags: ['Dossiers'],
+          parameters: [
+            {
+              name: 'departmentId',
+              in: 'query',
+              required: false,
+              schema: { type: 'string' },
+              description: 'Identifiant du département (optionnel)',
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Liste des dossiers',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: { type: 'array', items: { type: 'object' } },
+                    },
+                  },
+                },
+              },
             },
           },
         },

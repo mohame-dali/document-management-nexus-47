@@ -2,6 +2,7 @@
 const User = require('../../models/User');
 const ErrorResponse = require('../../utils/errorResponse');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 // @desc    Deactivate user (soft delete)
 // @route   PUT /api/users/:id/deactivate
@@ -135,8 +136,20 @@ exports.resetPassword = async (req, res, next) => {
       );
     }
     
-    // Set new password (default or from request)
-    const newPassword = req.body.newPassword || 'password123';
+    // Set new password (randomly generated strong password or from request)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    let newPassword = req.body.newPassword;
+    
+    if (newPassword) {
+      if (!passwordRegex.test(newPassword)) {
+        return next(
+          new ErrorResponse('Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre.', 400)
+        );
+      }
+    } else {
+      // Génération aléatoire d'un mot de passe fort
+      newPassword = crypto.randomBytes(4).toString('hex') + 'Aa1!';
+    }
     
     // Hash password
     const salt = await bcrypt.genSalt(10);

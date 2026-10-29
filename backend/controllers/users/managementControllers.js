@@ -83,6 +83,12 @@ exports.createUser = async (req, res, next) => {
       return next(new ErrorResponse('Username and password are required', 400));
     }
 
+    // Validate password complexity
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(req.body.password)) {
+      return next(new ErrorResponse('Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre.', 400));
+    }
+
     // Validation croisée (CIN ↔ Username) : vérifier si le username correspond au CIN d'un Personnel existant
     const trimmedUsername = req.body.username.trim();
     const existingPersonnelWithCin = await Personnel.findOne({

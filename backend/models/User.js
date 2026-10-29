@@ -13,7 +13,11 @@ const userSchema = new mongoose.Schema({
   password: { 
     type: String, 
     required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters'],
+    minlength: [8, 'Le mot de passe doit contenir au moins 8 caractères'],
+    match: [
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+      'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre.'
+    ],
     select: false
   },
   role: {
