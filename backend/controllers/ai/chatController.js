@@ -113,13 +113,22 @@ exports.chatSearch = async (req, res) => {
     if (typeFilter === 'incoming' || typeFilter === 'outgoing') {
       filter.documentType = typeFilter;
     }
-    if (yearFilter) {
-      filter['metadata.year'] = yearFilter;
+    // Détection intelligente d'une année dans la requête utilisateur (ex: 2024, 2025, 2026)
+    if (!yearFilter) {
+      const yearMatch = searchQuery.match(/\b(19\d{2}|20\d{2})\b/);
+      if (yearMatch) {
+        filter['metadata.year'] = parseInt(yearMatch[1], 10);
+        console.log(`[AI Chat] 📅 Année détectée dans la requête : ${yearMatch[1]}`);
+      }
     }
 
     console.log(`[RAG Security] Filter:`, JSON.stringify(filter));
 
-    const allIndexed = await SemanticIndex.find(filter).lean();
+    // Récupérer un sous-ensemble sécurisé (max 2000 vecteurs) avec projection stricte pour protéger la RAM
+    const allIndexed = await SemanticIndex.find(filter)
+      .select('embedding documentId documentType metadata sourceText')
+      .limit(2000)
+      .lean();
 
     if (allIndexed.length === 0) {
       return res.json({

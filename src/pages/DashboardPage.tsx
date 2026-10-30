@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { getIncomingDocumentsList, getOutgoingDocumentsList } from '@/services/documentService';
+import { getDashboardStatsAPI } from '@/services/documentService';
 import { getUsers } from '@/services/userService';
 import { getFolders } from '@/services/folderService';
 import { getDepartments } from '@/services/departmentService';
@@ -16,16 +16,10 @@ const DashboardPage = () => {
   const { currentUser } = useAuth();
   const currentYear = new Date().getFullYear().toString();
 
-  // Fetch real data
-  const { data: incomingDocs, isLoading: loadingIncoming } = useQuery({
-    queryKey: ['incomingDocuments', currentYear],
-    queryFn: () => getIncomingDocumentsList({ year: currentYear }),
-    enabled: !!currentUser
-  });
-
-  const { data: outgoingDocs, isLoading: loadingOutgoing } = useQuery({
-    queryKey: ['outgoingDocuments', currentYear],
-    queryFn: () => getOutgoingDocumentsList({ year: currentYear }),
+  // Fetch real count data directly via MongoDB aggregation
+  const { data: docStats, isLoading: loadingDocStats } = useQuery({
+    queryKey: ['dashboardStats', currentYear],
+    queryFn: () => getDashboardStatsAPI(currentYear),
     enabled: !!currentUser
   });
 
@@ -48,9 +42,9 @@ const DashboardPage = () => {
   });
 
   const getDashboardStats = () => {
-    const totalIncoming = incomingDocs?.length || 0;
-    const totalOutgoing = outgoingDocs?.length || 0;
-    const totalDocuments = totalIncoming + totalOutgoing;
+    const totalIncoming = docStats?.incomingTotal || 0;
+    const totalOutgoing = docStats?.outgoingTotal || 0;
+    const totalDocuments = docStats?.totalDocuments ?? (totalIncoming + totalOutgoing);
     const activeUsers = users?.filter(user => user.isActive)?.length || 0;
     const inactiveUsers = users?.filter(user => !user.isActive)?.length || 0;
     const totalFolders = folders?.length || 0;
@@ -78,7 +72,7 @@ const DashboardPage = () => {
   };
 
   const stats = getDashboardStats();
-  const isLoading = loadingIncoming || loadingOutgoing || loadingUsers || loadingFolders || loadingDepartments;
+  const isLoading = loadingDocStats || loadingUsers || loadingFolders || loadingDepartments;
 
   if (!currentUser) return null;
 

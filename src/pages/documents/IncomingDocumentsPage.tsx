@@ -177,11 +177,12 @@ const IncomingDocumentsPage: React.FC = () => {
     enabled: true,
   });
 
-  // Infinite documents query
+  // Infinite documents query (avec protection anti-freeze navigateur max 200 documents)
   const {
     documents,
     totalCount,
     loadedCount,
+    maxPagesReached,
     isLoading,
     isError,
     isFetching,
@@ -196,17 +197,6 @@ const IncomingDocumentsPage: React.FC = () => {
     source: selectedSource,
     enabled: isValidYear,
   });
-
-  // Auto-refresh when window regains focus
-  useEffect(() => {
-    const handleFocus = () => {
-      if (isValidYear) {
-        refetch();
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [refetch, isValidYear]);
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -1338,6 +1328,12 @@ const IncomingDocumentsPage: React.FC = () => {
                     t('incoming.pagination.loadMore')
                   )}
                 </Button>
+              )}
+
+              {maxPagesReached && (
+                <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">
+                  تم الوصول إلى الحد الأقصى للمعاينة (200 وثيقة). يرجى استخدام البحث لتخصيص النتائج.
+                </span>
               )}
 
               {/* Page Size Selector */}

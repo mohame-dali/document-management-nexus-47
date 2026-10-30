@@ -83,6 +83,10 @@ outgoingDocumentSchema.index({ serialNumber: 1, year: 1 }, { unique: true });
 outgoingDocumentSchema.index({ "source.id": 1 });
 outgoingDocumentSchema.index({ createdAt: -1 });
 
+// Index composés pour la scalabilité massive (tri par date sur une année avec ou sans département)
+outgoingDocumentSchema.index({ year: 1, createdAt: -1, isDeleted: 1 });
+outgoingDocumentSchema.index({ "source.id": 1, year: 1, createdAt: -1 });
+
 // ═══════════════════════════════════════════════════════════════
 // HOOKS RAG — Auto-indexation vectorielle (non-bloquant)
 // ═══════════════════════════════════════════════════════════════

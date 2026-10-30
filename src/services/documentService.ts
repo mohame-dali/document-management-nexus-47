@@ -21,6 +21,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Dashboard high-performance count aggregation
+export interface DashboardStatsData {
+  year: number;
+  incomingTotal: number;
+  outgoingTotal: number;
+  pending: number;
+  totalDocuments: number;
+}
+
+export const getDashboardStatsAPI = async (year?: string | number): Promise<DashboardStatsData> => {
+  try {
+    const params = year ? `?year=${year}` : '';
+    const response = await api.get(`${API_URL}/dashboard/stats${params}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
+  }
+};
+
 // Advanced Search API calls
 export const getAvailableYears = async (type: 'all' | 'incoming' | 'outgoing' = 'all'): Promise<number[]> => {
   try {

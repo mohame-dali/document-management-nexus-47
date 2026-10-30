@@ -95,6 +95,10 @@ incomingDocumentSchema.index({ "assignedTo.id": 1 });
 incomingDocumentSchema.index({ dateActivity: 1 });
 incomingDocumentSchema.index({ createdAt: -1 });
 
+// Index composés pour la scalabilité massive (tri par date sur une année avec ou sans département)
+incomingDocumentSchema.index({ year: 1, createdAt: -1, isDeleted: 1 });
+incomingDocumentSchema.index({ "assignedTo.id": 1, year: 1, createdAt: -1 });
+
 // ═══════════════════════════════════════════════════════════════
 // HOOKS RAG — Auto-indexation vectorielle (non-bloquant)
 // ═══════════════════════════════════════════════════════════════

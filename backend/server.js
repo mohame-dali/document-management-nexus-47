@@ -282,6 +282,7 @@ app.use('/api/hr', rhStagePersonnelRoutes);
 app.use('/api/hr', rhPersonnelHistoryRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/search', require('./routes/globalSearchRoutes'));
 
 // Démarrer les crons d'arrière-plan (rattrapage RAG, politique de sauvegarde, purge fichiers temp)
