@@ -1,13 +1,12 @@
 /**
  * backend/scripts/importExistingPdfs.js
- * Script d'importation et de synchronisation des fichiers PDF manuels vers MongoDB
+ * Script d'importation optimisé (Anti-OOM) des fichiers PDF manuels vers MongoDB
  *
- * Scanne les dossiers :
- *   - backend/courrier/{year}/Incoming-Doc/*.pdf
- *   - backend/courrier/{year}/Outgoing-Doc/*.pdf
- * Pour les années [2024, 2025, 2026]
- *
- * Crée les documents manquants en base de données et déclenche l'indexation RAG.
+ * OPTIMISATIONS APPLIQUÉES :
+ * 1. Zéro OCR lourd : Texte indicatif immédiat sans sollicitation CPU/RAM
+ * 2. Zéro chargement de modèle IA : Utilisation de insertMany({ ordered: false })
+ *    qui contourne les hooks post('save') et évite le chargement en RAM de ALLaM 7B / BGE-M3
+ * 3. Batching & Pause système : Pause toutes les 50 créations et garbage collector optionnel
  */
 
 const fs = require('fs');
@@ -23,7 +22,6 @@ const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
 const Department = require('../models/Department');
 const User = require('../models/User');
-const { extractTextFromPDF } = require('../utils/ocrProcessor');
 
 // Helper pour temporiser
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -31,7 +29,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function importExistingPdfs() {
   const dbUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/document-management';
   console.log('======================================================================');
-  console.log('🚀 DÉMARRAGE DU SCRIPT D\'IMPORTATION DES PDFS EXISTANTS');
+  console.log('🚀 DÉMARRAGE DU SCRIPT D\'IMPORTATION OPTIMISÉ (ANTI-OOM KILL)');
   console.log(`🔗 Connexion MongoDB : ${dbUri.split('@').pop()}`);
   console.log('======================================================================\n');
 
@@ -83,6 +81,8 @@ async function importExistingPdfs() {
     const courrierRoot = possibleCourrierRoots.find(p => fs.existsSync(p)) || possibleCourrierRoots[0];
     console.log(`📁 Répertoire racine courrier détecté : ${courrierRoot}\n`);
 
+    let globalCounter = 0;
+
     for (const year of years) {
       stats.incoming.byYear[year] = 0;
       stats.outgoing.byYear[year] = 0;
@@ -120,7 +120,7 @@ async function importExistingPdfs() {
               serialNumber,
               year,
               isDeleted: { $ne: true }
-            });
+            }).select('_id').lean();
 
             if (existingDoc) {
               console.log(`⏭️ Fichier ${file} ignoré (Déjà en base : #${serialNumber}/${year})`);
@@ -128,25 +128,16 @@ async function importExistingPdfs() {
               continue;
             }
 
-            // Tenter d'extraire le texte OCR du PDF existant si lisible
-            let extractedOcr = null;
-            try {
-              extractedOcr = await extractTextFromPDF(fullPath, 'ara+fra+eng');
-            } catch (ocrErr) {
-              // Si tesseract n'est pas dispo ou PDF scanné pur, fallback
-            }
+            // OPTIMISATION ANTI-OOM : Aucun OCR lourd durant l'import
+            const ocrText = "Document importé manuellement. En attente d'OCR.";
 
-            const ocrText = (extractedOcr && extractedOcr.trim().length > 10)
-              ? extractedOcr.trim()
-              : `Document importé manuellement (${file}). Année ${year}. En attente d'OCR.`;
-
-            // Formater le chemin relatif pour la base (ex: 2024/Incoming-Doc/1.pdf ou courrier/2024/Incoming-Doc/1.pdf)
+            // Formater le chemin relatif pour la base
             const relativeScannedPath = `courrier/${year}/Incoming-Doc/${file}`;
             const seqStr = String(serialNumber).padStart(3, '0');
             const fileStat = fs.statSync(fullPath);
             const arrivalDate = fileStat.mtime || new Date();
 
-            const newIncoming = new IncomingDocument({
+            const docData = {
               serialNumber,
               year,
               arrivalDate,
@@ -163,16 +154,25 @@ async function importExistingPdfs() {
               }],
               createdBy: defaultUserId,
               isDeleted: false
-            });
+            };
 
-            // await save() pour déclencher les hooks RAG
-            await newIncoming.save();
+            // OPTIMISATION ANTI-OOM : insertMany sans déclencher le hook post('save') RAG
+            await IncomingDocument.insertMany([docData], { ordered: false });
             stats.incoming.imported++;
             stats.incoming.byYear[year]++;
             console.log(`✅ Fichier ${file} importé (Année ${year}, Incoming #${serialNumber})`);
 
-            // Petite temporisation pour ne pas saturer le thread CPU avec l'indexation RAG
-            await sleep(200);
+            globalCounter++;
+
+            // Batching & Respiration mémoire
+            if (globalCounter % 50 === 0) {
+              console.log(`⏸️ Pause de 2 secondes après ${globalCounter} fichiers traités pour laisser le système respirer...`);
+              await sleep(2000);
+            }
+
+            if (globalCounter % 100 === 0 && global.gc) {
+              global.gc();
+            }
           } catch (err) {
             console.error(`❌ Erreur lors de l'importation de ${file} (Incoming) :`, err.message);
             stats.incoming.errors++;
@@ -205,7 +205,7 @@ async function importExistingPdfs() {
               serialNumber,
               year,
               isDeleted: { $ne: true }
-            });
+            }).select('_id').lean();
 
             if (existingOutDoc) {
               console.log(`⏭️ Fichier ${file} ignoré (Déjà en base : #${serialNumber}/${year})`);
@@ -213,23 +213,14 @@ async function importExistingPdfs() {
               continue;
             }
 
-            // Tenter l'extraction OCR
-            let extractedOcr = null;
-            try {
-              extractedOcr = await extractTextFromPDF(fullPath, 'ara+fra+eng');
-            } catch (ocrErr) {
-              // Fallback
-            }
-
-            const ocrText = (extractedOcr && extractedOcr.trim().length > 10)
-              ? extractedOcr.trim()
-              : `Document importé manuellement (${file}). Année ${year}. En attente d'OCR.`;
+            // OPTIMISATION ANTI-OOM : Aucun OCR lourd durant l'import
+            const ocrText = "Document importé manuellement. En attente d'OCR.";
 
             const relativeScannedPath = `courrier/${year}/Outgoing-Doc/${file}`;
             const fileStat = fs.statSync(fullPath);
             const issueDate = fileStat.mtime || new Date();
 
-            const newOutgoing = new OutgoingDocument({
+            const docData = {
               serialNumber,
               year,
               issueDate,
@@ -245,15 +236,25 @@ async function importExistingPdfs() {
               ocrText,
               createdBy: defaultUserId,
               isDeleted: false
-            });
+            };
 
-            // await save() pour déclencher les hooks RAG
-            await newOutgoing.save();
+            // OPTIMISATION ANTI-OOM : insertMany sans déclencher le hook post('save') RAG
+            await OutgoingDocument.insertMany([docData], { ordered: false });
             stats.outgoing.imported++;
             stats.outgoing.byYear[year]++;
             console.log(`✅ Fichier ${file} importé (Année ${year}, Outgoing #${serialNumber})`);
 
-            await sleep(200);
+            globalCounter++;
+
+            // Batching & Respiration mémoire
+            if (globalCounter % 50 === 0) {
+              console.log(`⏸️ Pause de 2 secondes après ${globalCounter} fichiers traités pour laisser le système respirer...`);
+              await sleep(2000);
+            }
+
+            if (globalCounter % 100 === 0 && global.gc) {
+              global.gc();
+            }
           } catch (err) {
             console.error(`❌ Erreur lors de l'importation de ${file} (Outgoing) :`, err.message);
             stats.outgoing.errors++;
@@ -268,7 +269,7 @@ async function importExistingPdfs() {
     // RÉCAPITULATIF FINAL
     // ------------------------------------------------------------------
     console.log('\n======================================================================');
-    console.log('✨ RÉCAPITULATIF DE L\'IMPORTATION DES FICHIERS PDF');
+    console.log('✨ RÉCAPITULATIF DE L\'IMPORTATION DES FICHIERS PDF (MODE ALLÉGÉ)');
     console.log('======================================================================');
     console.log(`📥 COURRIERS ENTRANTS (Incoming) :`);
     console.log(`   - Importés avec succès : ${stats.incoming.imported}`);
