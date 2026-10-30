@@ -122,6 +122,8 @@ async function retryFailedIndexes(options = {}) {
           stats.incoming.failed++;
           console.error(`[RAG Retry] ❌ Incoming #${doc.serialNumber || doc._id} exception :`, docErr.message);
         }
+        // Throttling to prevent CPU saturation
+        await new Promise(r => setTimeout(r, 200));
       }
     }
 
@@ -189,6 +191,8 @@ async function retryFailedIndexes(options = {}) {
           stats.outgoing.failed++;
           console.error(`[RAG Retry] ❌ Outgoing #${doc.serialNumber || doc._id} exception :`, docErr.message);
         }
+        // Throttling to prevent CPU saturation
+        await new Promise(r => setTimeout(r, 200));
       }
     }
 

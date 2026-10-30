@@ -40,7 +40,8 @@ exports.serveProtectedFile = async (req, res) => {
     }
 
     const safeFilename = path.basename(filename);
-    const ROOT = path.resolve(process.env.DOCUMENT_PATH || path.join(process.cwd(), 'courrier'));
+    const ROOT = path.resolve(process.env.DOCUMENT_PATH || path.join(__dirname, '../../backend/courrier'));
+    const ALLOWED_ROOT = path.resolve(process.cwd());
 
     // Check multiple potential locations safely
     const possiblePaths = [
@@ -64,6 +65,10 @@ exports.serveProtectedFile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Fichier introuvable' });
     }
 
+    if (!targetFile.startsWith(ALLOWED_ROOT)) {
+      return res.status(403).json({ message: 'Accès refusé' });
+    }
+
     res.sendFile(targetFile);
   } catch (err) {
     console.error('[FileController] Error:', err.message);
@@ -77,7 +82,7 @@ exports.serveProtectedFile = async (req, res) => {
  * Vérifie que l'utilisateur est authentifié et empêche le Path Traversal
  */
 exports.serveCourrierStatic = (req, res, next) => {
-  const ROOT = path.resolve(process.env.DOCUMENT_PATH || path.join(process.cwd(), 'courrier'));
+  const ROOT = path.resolve(process.env.DOCUMENT_PATH || path.join(__dirname, '../../backend/courrier'));
   const safePath = path.resolve(ROOT, '.' + req.path);
 
   if (!safePath.startsWith(ROOT + path.sep) && safePath !== ROOT) {
