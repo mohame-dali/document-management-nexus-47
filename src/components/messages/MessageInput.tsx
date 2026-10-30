@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Smile, Send, ThumbsUp, X, File as FileIcon, Image as ImageIcon } from 'lucide-react';
+import { Plus, Smile, Send, ThumbsUp, X, File as FileIcon, Image as ImageIcon, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { AttachmentPreviewModal } from './AttachmentPreviewModal';
 
 export interface MessageInputProps {
   onSend: (content: string, files: File[]) => void;
@@ -35,6 +36,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const { t } = useLanguage();
   const [content, setContent] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -138,6 +140,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 </span>
                 <button
                   type="button"
+                  onClick={() => setPreviewFile(file)}
+                  className="text-slate-400 hover:text-[#2c5282] transition-colors p-0.5 rounded-full"
+                  title={t('common.preview')}
+                >
+                  <Eye className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleRemoveFile(idx)}
                   className="text-slate-400 hover:text-red-500 transition-colors p-0.5 rounded-full"
                   title={t('common.remove')}
@@ -149,6 +159,14 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           })}
         </div>
       )}
+
+      {/* Modale d'aperçu du fichier avant envoi */}
+      <AttachmentPreviewModal
+        isOpen={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        filename={previewFile?.name}
+        localBlob={previewFile}
+      />
 
       {/* Barre principale Messenger */}
       <div className="flex items-center gap-2">

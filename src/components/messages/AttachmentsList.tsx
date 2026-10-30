@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Download, FileText, Image as ImageIcon, File, ExternalLink, Paperclip, Loader2 } from 'lucide-react';
+import { Download, FileText, Image as ImageIcon, File, ExternalLink, Paperclip, Loader2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Message } from '@/types';
 import { downloadAttachment } from '@/services/messageService';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/utils/errorMessages';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { AttachmentPreviewModal } from './AttachmentPreviewModal';
 
 interface AttachmentsListProps {
   attachments: Message['attachments'];
@@ -14,6 +15,7 @@ interface AttachmentsListProps {
 const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
   const { t } = useLanguage();
   const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
+  const [previewFile, setPreviewFile] = useState<{ url: string; name: string } | null>(null);
 
   if (!attachments || attachments.length === 0) {
     return null;
@@ -78,7 +80,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                   src={imgSrc}
                   alt={displayName}
                   className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => downloadAttachment(img, true)}
+                  onClick={() => setPreviewFile({ url: img.path || diskName, name: displayName })}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
@@ -102,7 +104,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                 src={imgSrc}
                 alt={displayName}
                 className="w-full h-auto max-h-[220px] object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                onClick={() => downloadAttachment(img, true)}
+                onClick={() => setPreviewFile({ url: img.path || diskName, name: displayName })}
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -144,6 +146,20 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
+                    onClick={() => {
+                      const diskName = getDiskName(att);
+                      setPreviewFile({
+                        url: att.path || diskName,
+                        name: displayName
+                      });
+                    }}
+                    className="p-1 text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
+                    title={t('common.preview')}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleDownload(att, globalIndex, true)}
                     disabled={isCurrentDownloading}
                     className="p-1 text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
@@ -170,6 +186,14 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
           })}
         </div>
       )}
+
+      {/* Modale d'aperçu de pièce jointe (PDF, Image, etc.) */}
+      <AttachmentPreviewModal
+        isOpen={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        filename={previewFile?.name}
+        fileUrl={previewFile?.url}
+      />
     </div>
   );
 };
