@@ -66,10 +66,9 @@ import {
 
 import { getDepartments } from '@/services/departmentService';
 import { getDocumentOptions } from '@/services/documentOptionsService';
-import { deleteIncomingDocument, downloadDocument } from '@/services/documentService';
+import { deleteIncomingDocument, downloadDocument, getIncomingDocuments } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { IncomingDocument, Department } from '@/types';
-import { useInfiniteDocuments } from '@/hooks/useInfiniteDocuments';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import { getActivityUrgency } from '@/utils/activityUtils';
@@ -92,6 +91,17 @@ const IncomingDocumentsPage: React.FC = () => {
 
   // Filters & UI State with persistence
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search query by 300ms and reset to page 1
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const [viewMode, setViewMode] = useLocalStorageState<'table' | 'grid'>('incomingDocs_viewMode', 'table');
   const [selectedDepartment, setSelectedDepartment] = useLocalStorageState<string>('incomingDocs_selectedDepartment', 'all');
   const [selectedSource, setSelectedSource] = useLocalStorageState<string>('incomingDocs_selectedSource', 'all_sources');
@@ -177,26 +187,28 @@ const IncomingDocumentsPage: React.FC = () => {
     enabled: true,
   });
 
-  // Infinite documents query (avec protection anti-freeze navigateur max 200 documents)
+  // Server-paginated documents query
   const {
-    documents,
-    totalCount,
-    loadedCount,
-    maxPagesReached,
+    data: docsResponse,
     isLoading,
     isError,
     isFetching,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
     refetch,
-  } = useInfiniteDocuments({
-    documentType: 'incoming',
-    year: selectedYear,
-    department: selectedDepartment,
-    source: selectedSource,
+  } = useQuery({
+    queryKey: ['incomingDocuments', selectedYear, selectedDepartment, selectedSource, currentPage, pageSize, debouncedSearch],
+    queryFn: () => getIncomingDocuments({
+      year: selectedYear,
+      department: selectedDepartment === 'all' ? undefined : selectedDepartment,
+      source: selectedSource === 'all_sources' ? undefined : selectedSource,
+      page: currentPage,
+      limit: pageSize,
+      q: debouncedSearch,
+    }),
     enabled: isValidYear,
   });
+
+  const documents = useMemo(() => docsResponse?.data || [], [docsResponse]);
+  const totalCount = docsResponse?.totalCount || 0;
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -214,21 +226,9 @@ const IncomingDocumentsPage: React.FC = () => {
     },
   });
 
-  // Filter documents
+  // Filter documents on current page (status filter)
   const filteredDocuments = useMemo(() => {
     return (documents as IncomingDocument[]).filter((doc: IncomingDocument) => {
-      // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchesSerial = String(doc.serialNumber).toLowerCase().includes(query);
-        const matchesSubject = (doc.subject || '').toLowerCase().includes(query);
-        const matchesSource = doc.source ? doc.source.toLowerCase().includes(query) : false;
-        const matchesActivity = doc.activity ? doc.activity.toLowerCase().includes(query) : false;
-        if (!matchesSerial && !matchesSubject && !matchesSource && !matchesActivity) {
-          return false;
-        }
-      }
-
       // Status filter
       if (statusFilter === 'pending' && doc.answer) return false;
       if (statusFilter === 'answered' && !doc.answer) return false;
@@ -241,9 +241,9 @@ const IncomingDocumentsPage: React.FC = () => {
 
       return true;
     });
-  }, [documents, searchQuery, statusFilter]);
+  }, [documents, statusFilter]);
 
-  // Sort documents
+  // Sort documents on current page
   const sortedDocuments = useMemo(() => {
     return [...filteredDocuments].sort((a, b) => {
       let valA: string | number = '';
@@ -284,13 +284,13 @@ const IncomingDocumentsPage: React.FC = () => {
   }, [filteredDocuments, sortField, sortDirection, sortBy]);
 
   // Pagination calculation
-  const totalFiltered = sortedDocuments.length;
-  const totalPages = Math.ceil(totalFiltered / pageSize) || 1;
+  const totalFiltered = totalCount;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const clampedPage = Math.min(Math.max(currentPage, 1), totalPages);
 
   const startIndex = (clampedPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalFiltered);
-  const paginatedDocuments = sortedDocuments.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + sortedDocuments.length, totalCount);
+  const paginatedDocuments = sortedDocuments;
 
   // Reset pagination on filter change
   const handleFilterReset = () => {
@@ -1297,45 +1297,13 @@ const IncomingDocumentsPage: React.FC = () => {
           <div className="pt-4 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-base text-[#4a5568]">
               {t('incoming.pagination.info', {
-                from: startIndex + 1,
+                from: totalCount === 0 ? 0 : startIndex + 1,
                 to: endIndex,
                 total: totalFiltered
               })}
-              {totalCount > loadedCount && (
-                <span className="text-xs text-[#718096] mr-2">
-                  {t('incoming.pagination.loadedOfTotal', { loaded: loadedCount, total: totalCount })}
-                </span>
-              )}
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              {/* Load more from server button if needed */}
-              {hasNextPage && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  className="h-11 px-3 text-sm font-semibold border-[#FFCB56] bg-amber-50 hover:bg-[#FFCB56] text-[#1a202c] rounded transition-colors duration-200"
-                >
-                  {isFetchingNextPage ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin ml-1 text-[#1a202c]" />
-                      {t('incoming.pagination.loadingMore')}
-                    </>
-                  ) : (
-                    t('incoming.pagination.loadMore')
-                  )}
-                </Button>
-              )}
-
-              {maxPagesReached && (
-                <span className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">
-                  تم الوصول إلى الحد الأقصى للمعاينة (200 وثيقة). يرجى استخدام البحث لتخصيص النتائج.
-                </span>
-              )}
-
               {/* Page Size Selector */}
               <div className="flex items-center gap-2 text-sm text-[#4a5568]">
                 <span>{t('incoming.pagination.perPage')}</span>
@@ -1364,7 +1332,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={clampedPage <= 1}
+                  disabled={clampedPage <= 1 || isFetching}
                   className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -1379,16 +1347,8 @@ const IncomingDocumentsPage: React.FC = () => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    if (clampedPage < totalPages) {
-                      setCurrentPage(clampedPage + 1);
-                    } else if (hasNextPage && !isFetchingNextPage) {
-                      fetchNextPage().then(() => {
-                        setCurrentPage(clampedPage + 1);
-                      });
-                    }
-                  }}
-                  disabled={clampedPage >= totalPages && !hasNextPage}
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={clampedPage >= totalPages || isFetching}
                   className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
                 >
                   {t('common.next')}

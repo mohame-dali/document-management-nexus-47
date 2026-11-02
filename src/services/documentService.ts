@@ -159,6 +159,8 @@ export const getIncomingDocuments = async (filters?: {
   year?: string; 
   page?: number; 
   limit?: number; 
+  q?: string;
+  source?: string;
 }): Promise<{
   data: IncomingDocument[];
   totalCount: number;
@@ -169,7 +171,7 @@ export const getIncomingDocuments = async (filters?: {
   try {
     const params = new URLSearchParams();
     
-    if (filters?.department) {
+    if (filters?.department && filters.department !== 'all') {
       params.append('department', filters.department);
     }
     
@@ -183,6 +185,14 @@ export const getIncomingDocuments = async (filters?: {
     
     if (filters?.limit) {
       params.append('limit', filters.limit.toString());
+    }
+
+    if (filters?.q && filters.q.trim()) {
+      params.append('q', filters.q.trim());
+    }
+
+    if (filters?.source && filters.source !== 'all_sources') {
+      params.append('source', filters.source);
     }
     
     const url = `${API_URL}/incoming-documents?${params.toString()}`;
@@ -293,6 +303,7 @@ export const getOutgoingDocuments = async (filters?: {
   year?: string; 
   page?: number; 
   limit?: number; 
+  q?: string;
 }): Promise<{
   data: OutgoingDocument[];
   totalCount: number;
@@ -303,7 +314,7 @@ export const getOutgoingDocuments = async (filters?: {
   try {
     const params = new URLSearchParams();
     
-    if (filters?.department) {
+    if (filters?.department && filters.department !== 'all') {
       params.append('department', filters.department);
     }
     
@@ -317,6 +328,10 @@ export const getOutgoingDocuments = async (filters?: {
     
     if (filters?.limit) {
       params.append('limit', filters.limit.toString());
+    }
+
+    if (filters?.q && filters.q.trim()) {
+      params.append('q', filters.q.trim());
     }
     
     const url = `${API_URL}/outgoing-documents?${params.toString()}`;

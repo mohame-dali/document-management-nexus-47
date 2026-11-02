@@ -40,6 +40,24 @@ exports.getIncomingDocuments = async (req, res, next) => {
       }
     }
 
+    // Search query: server-side text and numeric search (subject, source, serialNumber)
+    if (req.query.q && req.query.q.trim() !== '') {
+      const q = req.query.q.trim();
+      const safeQ = sanitizeSearchQuery(q);
+      const orConditions = [];
+      if (safeQ) {
+        orConditions.push({ subject: { $regex: safeQ, $options: 'i' } });
+        orConditions.push({ source: { $regex: safeQ, $options: 'i' } });
+      }
+      const num = Number(q);
+      if (!isNaN(num) && num > 0) {
+        orConditions.push({ serialNumber: num });
+      }
+      if (orConditions.length > 0) {
+        query.$or = orConditions;
+      }
+    }
+
     // Pagination parameters
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 20, 100); // Max 100 per request
