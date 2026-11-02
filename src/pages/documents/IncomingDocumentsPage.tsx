@@ -778,7 +778,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
           {/* Right controls: View Toggle and Live Fetch indicator */}
           <div className="flex items-center gap-3">
-            {isFetching && !isFetchingNextPage && (
+            {isFetching && (
               <span className="text-xs text-[#2c5282] font-semibold flex items-center gap-1 bg-blue-50 px-2 py-1 rounded border border-blue-200">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 {t('incoming.filters.refreshingData')}
