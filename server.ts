@@ -278,11 +278,15 @@ start().catch((err: unknown) => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM reçu, arrêt propre...');
-  mongoose.connection.close(false, () => {
+  try {
+    await mongoose.connection.close();
     httpServer.close(() => process.exit(0));
-  });
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
 });
 
 if (process.platform === 'win32') {
@@ -294,10 +298,14 @@ if (process.platform === 'win32') {
   });
 }
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT reçu, arrêt propre...');
-  mongoose.connection.close(false, () => {
+  try {
+    await mongoose.connection.close();
     httpServer.close(() => process.exit(0));
-  });
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
 });
 

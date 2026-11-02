@@ -17,7 +17,8 @@
     "test:coverage": "vitest run --coverage",
     "postinstall": "node scripts/check-os.js",
     "setup": "node scripts/run-setup.js",
-    "download-models": "node scripts/download-models.js"
+    "download-models": "node scripts/download-models.js",
+    "check-models": "node backend/scripts/checkModelPath.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
