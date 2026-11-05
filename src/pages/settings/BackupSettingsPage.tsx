@@ -86,23 +86,25 @@ const BackupSettingsPage: React.FC = () => {
   const [backupHistory, setBackupHistory] = useState<BackupHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
-  const [selectedBackup, setSelectedBackup] = useState<any>(null);
+  const [selectedBackup, setSelectedBackup] = useState<BackupHistoryItem | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | 'manual' | 'automatic'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'failed'>('all');
 
+  // Initialisation des données au montage du composant uniquement (évite les boucles infinies de rechargement)
   useEffect(() => {
     loadData();
     loadSavedPath();
     loadBackupHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBackupHistory = async () => {
     setHistoryLoading(true);
     try {
       const history = await getBackupHistory();
-      const list = Array.isArray(history) ? history : (history?.data || []);
-      setBackupHistory(list);
+      const list = Array.isArray(history) ? history : ((history as { data?: BackupHistoryItem[] })?.data || []);
+      setBackupHistory(list as BackupHistoryItem[]);
     } catch (error) {
       console.error(error);
     } finally {
@@ -110,8 +112,10 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const getErrorMessage = (error: any) =>
-    error?.response?.data?.message || error?.message || 'خطأ غير معروف';
+  const getErrorMessage = (error: unknown) => {
+    const err = error as { response?: { data?: { message?: string } }; message?: string };
+    return err?.response?.data?.message || err?.message || 'خطأ غير معروف';
+  };
 
   const handleReloadScheduler = async () => {
     try {
@@ -122,7 +126,7 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const handleRestoreClick = (backup: any) => {
+  const handleRestoreClick = (backup: BackupHistoryItem) => {
     setSelectedBackup(backup);
     setRestoreDialogOpen(true);
   };
@@ -144,7 +148,7 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const handleDownloadClick = async (backup: any) => {
+  const handleDownloadClick = async (backup: BackupHistoryItem) => {
     try {
       await downloadBackup(backup._id, backup.fileName);
       sonnerToast.success('✅ بدأ التحميل');
@@ -155,7 +159,7 @@ const BackupSettingsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = async (backup: any) => {
+  const handleDeleteClick = async (backup: BackupHistoryItem) => {
     if (!window.confirm(`حذف النسخة "${backup.fileName}" نهائياً؟`)) return;
 
     try {
@@ -278,7 +282,7 @@ const BackupSettingsPage: React.FC = () => {
             setIsBackingUp(false);
             setCurrentBackupId(null);
             
-            const actualPath = status.filePath || exportPath || '/tmp/backups';
+            const actualPath = status.filePath || exportPath || 'backups/';
             const successMessage = isYearlyBackup ? 
               `تم إنشاء النسخة الاحتياطية لعام ${selectedYear} بنجاح` : 
               `تم إنشاء النسخة الاحتياطية بنجاح`;
@@ -530,7 +534,7 @@ const BackupSettingsPage: React.FC = () => {
                   <div className="flex gap-2">
                     <Input
                       id="export-path"
-                      placeholder={savedBackupPath || "/tmp/backups"}
+                      placeholder={savedBackupPath || "backups/"}
                       value={exportPath}
                       onChange={(e) => setExportPath(e.target.value)}
                       className="h-11 text-base border-[#cbd5e1] rounded bg-white flex-1"
@@ -561,7 +565,7 @@ const BackupSettingsPage: React.FC = () => {
                 <div className="flex gap-2">
                   <Input
                     id="export-path-regular"
-                    placeholder={savedBackupPath || "/tmp/backups"}
+                    placeholder={savedBackupPath || "backups/"}
                     value={exportPath}
                     onChange={(e) => setExportPath(e.target.value)}
                     className="h-11 text-base border-[#cbd5e1] rounded bg-white flex-1"
@@ -632,7 +636,7 @@ const BackupSettingsPage: React.FC = () => {
                   
                   <div className="mt-4 space-y-2 text-right">
                     <div className="p-3 bg-[#f7fafc] rounded text-base border border-[#e2e8f0] text-[#1a202c]">
-                      <strong>مسار التصدير:</strong> {exportPath || savedBackupPath || '/tmp/backups'}
+                      <strong>مسار التصدير:</strong> {exportPath || savedBackupPath || 'backups/'}
                     </div>
                     {isYearlyBackup && (
                       <div className="p-3 bg-blue-50 border border-blue-200 rounded text-base text-[#2c5282]">
@@ -825,7 +829,7 @@ const BackupSettingsPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <Label htmlFor="type-filter" className="text-sm text-[#4a5568] whitespace-nowrap">النوع:</Label>
-                <Select value={typeFilter} onValueChange={(val: any) => setTypeFilter(val)}>
+                <Select value={typeFilter} onValueChange={(val: 'all' | 'manual' | 'automatic') => setTypeFilter(val)}>
                   <SelectTrigger id="type-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>
@@ -839,7 +843,7 @@ const BackupSettingsPage: React.FC = () => {
 
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
                 <Label htmlFor="status-filter" className="text-sm text-[#4a5568] whitespace-nowrap">الحالة:</Label>
-                <Select value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)}>
+                <Select value={statusFilter} onValueChange={(val: 'all' | 'completed' | 'in_progress' | 'failed') => setStatusFilter(val)}>
                   <SelectTrigger id="status-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>

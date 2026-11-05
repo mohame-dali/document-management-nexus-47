@@ -12,12 +12,12 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import { ControllerRenderProps } from 'react-hook-form';
+import { ControllerRenderProps, FieldValues } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-interface DatePickerFieldProps {
-  field: ControllerRenderProps<any, any>;
+interface DatePickerFieldProps<TFieldValues extends FieldValues = FieldValues> {
+  field: ControllerRenderProps<TFieldValues>;
   label: string;
   description?: string;
   selectDateText: string;

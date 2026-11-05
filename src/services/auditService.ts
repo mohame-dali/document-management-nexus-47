@@ -13,7 +13,7 @@ export interface AuditLog {
     username: string;
     role: string;
   };
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   createdAt: Date;
   ipAddress?: string;
 }

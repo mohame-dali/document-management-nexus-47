@@ -14,7 +14,7 @@ export const useOnlineUsers = () => {
       sendHeartbeat().catch(() => {});
     }, 60000);
     return () => clearInterval(interval);
-  }, [currentUser?._id]);
+  }, [currentUser]);
 
   // Polling toutes les 15s
   const { data: onlineUsers = [] } = useQuery({

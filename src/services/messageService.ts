@@ -159,12 +159,21 @@ export const getConversation = async (userId: string): Promise<Message[]> => {
   }
 };
 
-export const downloadAttachment = async (attachment: any, openInNewTab = false): Promise<void> => {
+export interface MessageAttachmentItem {
+  path?: string;
+  filename?: string;
+  originalName?: string;
+  mimetype?: string;
+  size?: number;
+  [key: string]: unknown;
+}
+
+export const downloadAttachment = async (attachment: MessageAttachmentItem, openInNewTab = false): Promise<void> => {
   try {
     let filename = '';
     // Priorité 1 : extraire depuis path (nom réel Multer, présent partout sur anciens et nouveaux messages)
     if (attachment.path) {
-      const fromPath = attachment.path.split(/[\/\\]/).pop() || '';
+      const fromPath = attachment.path.split(/[/\\]/).pop() || '';
       if (fromPath) {
         filename = fromPath;
       }

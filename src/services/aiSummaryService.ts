@@ -9,8 +9,8 @@ export interface DocumentSummary {
 }
 
 /**
- * Résume automatiquement un texte OCR via l'IA locale (Ollama / Qwen).
- * Timeout: 65s (backend = 60s).
+ * Résume automatiquement un texte OCR via l'IA locale (node-llama-cpp / Qwen).
+ * Timeout: 120s (backend = 120s).
  */
 export const summarizeDocument = async (
   ocrText: string,
@@ -21,22 +21,33 @@ export const summarizeDocument = async (
     '/ai/summarize',
     { ocrText, maxLength },
     {
-      timeout: 65000,
+      timeout: 120000,
       signal,
     }
   );
   return response.data.data;
 };
 
+interface SummaryErrorLike {
+  code?: string;
+  response?: {
+    data?: {
+      code?: string;
+      message?: string;
+    };
+  };
+}
+
 /**
  * Extrait un message d'erreur lisible pour l'interface utilisateur
  */
-export const getSummaryErrorMessage = (error: any): string => {
-  const code = error?.response?.data?.code;
+export const getSummaryErrorMessage = (error: unknown): string => {
+  const err = error as SummaryErrorLike;
+  const code = err?.response?.data?.code;
   if (code === 'AI_SERVICE_DOWN') {
-    return 'خدمة الذكاء الاصطناعي (Ollama) غير مشغلة حالياً. يرجى التحقق من تشغيل الخدمة.';
+    return 'خدمة الذكاء الاصطناعي المحلي غير مشغلة حالياً. يرجى التحقق من تشغيل الخدمة.';
   }
-  if (code === 'AI_TIMEOUT' || error?.code === 'ECONNABORTED') {
+  if (code === 'AI_TIMEOUT' || err?.code === 'ECONNABORTED') {
     return 'استغرقت عملية التلخيص وقتاً أطول من المتوقع. يرجى إعادة المحاولة.';
   }
   if (code === 'OCR_TOO_SHORT') {

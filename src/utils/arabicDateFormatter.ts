@@ -66,19 +66,19 @@ export const formatArabicDateWithDay = (date: string | Date): string => {
 };
 
 // Helper function to format any date value to Arabic format
-export const formatDateToArabic = (dateValue: any): string => {
+export const formatDateToArabic = (dateValue: unknown): string => {
   if (!dateValue) return 'تاريخ غير محدد';
   
   let dateObj: Date;
   
   // Handle different date formats
-  if (typeof dateValue === 'string') {
+  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
     dateObj = new Date(dateValue);
   } else if (dateValue instanceof Date) {
     dateObj = dateValue;
-  } else if (typeof dateValue === 'object' && dateValue.$date) {
+  } else if (typeof dateValue === 'object' && dateValue !== null && '$date' in dateValue) {
     // Handle MongoDB date format
-    dateObj = new Date(dateValue.$date);
+    dateObj = new Date((dateValue as { $date: string | number }).$date);
   } else {
     return 'تاريخ غير صحيح';
   }

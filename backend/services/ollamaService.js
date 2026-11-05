@@ -2,13 +2,27 @@ const path = require('path');
 const fs = require('fs');
 
 // ═══════════════════════════════════════════════════════════════
-// Configuration Modèles GGUF (node-llama-cpp)
-// ═══════════════════════════════════════════════════════════════
-const CHAT_MODEL_PATH = process.env.LLAMA_CHAT_MODEL_PATH
-  || path.join(__dirname, '../../models/qwen2.5-7b-instruct-q4_k_m.gguf');
+function resolveModelPath(envPath, targetFilename) {
+  if (envPath) {
+    if (fs.existsSync(envPath)) return envPath;
+    // Si envPath omettait le préfixe ALLaM-AI_ ou inversement, vérifier le fichier physique correspondant
+    const dir = path.dirname(envPath);
+    const correctedPath = path.join(dir, targetFilename);
+    if (fs.existsSync(correctedPath)) return correctedPath;
+    return envPath;
+  }
+  return path.join(__dirname, '../../models', targetFilename);
+}
 
-const EMBEDDING_MODEL_PATH = process.env.LLAMA_EMBEDDING_MODEL_PATH
-  || path.join(__dirname, '../../models/nomic-embed-text-v1.5.Q8_0.gguf');
+const CHAT_MODEL_PATH = resolveModelPath(
+  process.env.LLAMA_CHAT_MODEL_PATH,
+  'ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf'
+);
+
+const EMBEDDING_MODEL_PATH = resolveModelPath(
+  process.env.LLAMA_EMBEDDING_MODEL_PATH,
+  'bge-m3-q4_k_m.gguf'
+);
 
 const LLAMA_THREADS = parseInt(process.env.LLAMA_THREADS || '4', 10);
 const LLAMA_GPU_LAYERS = parseInt(process.env.LLAMA_GPU_LAYERS || '0', 10);
@@ -48,16 +62,23 @@ async function initModels() {
 
   initPromise = (async () => {
     try {
+      console.log('[AI] Vérification du modèle Chat :', CHAT_MODEL_PATH);
       if (!fs.existsSync(CHAT_MODEL_PATH)) {
-        const err = new Error(`Chat model file not found: ${CHAT_MODEL_PATH}`);
+        console.error(`❌ FICHIER INTROUVABLE : ${CHAT_MODEL_PATH}`);
+        const err = new Error('AI_SERVICE_DOWN');
         err.code = 'AI_SERVICE_DOWN';
         throw err;
       }
+      console.log('[AI] ✅ Modèle Chat trouvé, chargement en cours...');
+
+      console.log('[AI] Vérification du modèle Embedding :', EMBEDDING_MODEL_PATH);
       if (!fs.existsSync(EMBEDDING_MODEL_PATH)) {
-        const err = new Error(`Embedding model file not found: ${EMBEDDING_MODEL_PATH}`);
+        console.error(`❌ FICHIER INTROUVABLE : ${EMBEDDING_MODEL_PATH}`);
+        const err = new Error('AI_SERVICE_DOWN');
         err.code = 'AI_SERVICE_DOWN';
         throw err;
       }
+      console.log('[AI] ✅ Modèle Embedding trouvé, chargement en cours...');
 
       const { getLlama } = await getLlamaModule();
 
@@ -71,8 +92,9 @@ async function initModels() {
         gpuLayers: LLAMA_GPU_LAYERS,
       });
 
+      // Optimisation mémoire anti-OOM : contextSize réduit à 1024 tokens
       chatContext = await chatModel.createContext({
-        contextSize: 2048,
+        contextSize: 1024,
         threads: LLAMA_THREADS,
       });
 
@@ -99,6 +121,11 @@ async function initModels() {
     }
   })();
 
+  // Verrou strict de concurrence : en cas de rejet, nettoyer le singleton pour autoriser un nouvel essai
+  initPromise.catch(() => {
+    initPromise = null;
+  });
+
   return initPromise;
 }
 
@@ -119,7 +146,7 @@ async function chat(prompt, systemPrompt = '', options = {}) {
     systemPrompt: systemPrompt || undefined,
   });
 
-  const timeoutMs = options.timeoutMs || 60000;
+  const timeoutMs = options.timeoutMs || 120000;
 
   try {
     const promptPromise = session.prompt(prompt, {
@@ -441,6 +468,7 @@ Réponds au format JSON strict :
     format: 'json',
     temperature: 0.2,
     maxTokens: 800,
+    timeoutMs: options.timeoutMs || 120000,
   });
 
   const parsed = parseRobustJson(response);
@@ -505,6 +533,7 @@ Réponds au format JSON strict :
     format: 'json',
     temperature: 0.1,
     maxTokens: 2000,
+    timeoutMs: options.timeoutMs || 180000,
   });
 
   const parsed = parseRobustJson(response);

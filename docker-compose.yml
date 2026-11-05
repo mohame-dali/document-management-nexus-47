@@ -21,7 +21,7 @@ services:
       - ./courrier:/app/courrier
     environment:
       - NODE_ENV=production
-      - MONGO_URI=mongodb://mongo:27017/dms
+      - MONGODB_URI=mongodb://mongo:27017/dms
     depends_on:
       mongo:
         condition: service_healthy

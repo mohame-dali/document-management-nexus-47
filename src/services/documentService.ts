@@ -21,10 +21,30 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Dashboard high-performance count aggregation
+export interface DashboardStatsData {
+  year: number;
+  incomingTotal: number;
+  outgoingTotal: number;
+  pending: number;
+  totalDocuments: number;
+}
+
+export const getDashboardStatsAPI = async (year?: string | number): Promise<DashboardStatsData> => {
+  try {
+    const params = year ? `?year=${year}` : '';
+    const response = await api.get(`${API_URL}/dashboard/stats${params}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
+  }
+};
+
 // Advanced Search API calls
 export const getAvailableYears = async (type: 'all' | 'incoming' | 'outgoing' = 'all'): Promise<number[]> => {
   try {
-    const promises: Promise<any>[] = [];
+    const promises: Promise<(number | string)[]>[] = [];
     if (type === 'all' || type === 'incoming') {
       promises.push(
         api.get(`${API_URL}/incoming-documents/years/available`)
@@ -41,8 +61,8 @@ export const getAvailableYears = async (type: 'all' | 'incoming' | 'outgoing' = 
     }
     const results = await Promise.all(promises);
     const set = new Set<number>();
-    results.flat().forEach((y: any) => {
-      const num = parseInt(y, 10);
+    results.flat().forEach((y: number | string) => {
+      const num = parseInt(String(y), 10);
       if (!isNaN(num)) set.add(num);
     });
     return Array.from(set).sort((a, b) => b - a);
@@ -72,7 +92,7 @@ export const advancedSearchDocuments = async (filters: {
   totalCount?: number;
 }> => {
   try {
-    let results = { incoming: [], outgoing: [], hasMore: false, totalCount: 0 };
+    const results = { incoming: [], outgoing: [], hasMore: false, totalCount: 0 };
     
     // Build search parameters
     const params = new URLSearchParams();
@@ -139,6 +159,8 @@ export const getIncomingDocuments = async (filters?: {
   year?: string; 
   page?: number; 
   limit?: number; 
+  q?: string;
+  source?: string;
 }): Promise<{
   data: IncomingDocument[];
   totalCount: number;
@@ -149,7 +171,7 @@ export const getIncomingDocuments = async (filters?: {
   try {
     const params = new URLSearchParams();
     
-    if (filters?.department) {
+    if (filters?.department && filters.department !== 'all') {
       params.append('department', filters.department);
     }
     
@@ -163,6 +185,14 @@ export const getIncomingDocuments = async (filters?: {
     
     if (filters?.limit) {
       params.append('limit', filters.limit.toString());
+    }
+
+    if (filters?.q && filters.q.trim()) {
+      params.append('q', filters.q.trim());
+    }
+
+    if (filters?.source && filters.source !== 'all_sources') {
+      params.append('source', filters.source);
     }
     
     const url = `${API_URL}/incoming-documents?${params.toString()}`;
@@ -184,7 +214,8 @@ export const getIncomingDocuments = async (filters?: {
 export const getIncomingDocument = async (id: string): Promise<IncomingDocument> => {
   try {
     // Ensure we're sending a clean string ID
-    const cleanId = typeof id === 'object' ? (id as any)._id || (id as any).id || String(id) : String(id);
+    const objId = id as unknown as { _id?: string; id?: string };
+    const cleanId = typeof id === 'object' ? objId?._id || objId?.id || String(id) : String(id);
     console.log('Fetching incoming document with ID:', cleanId);
     
     const response = await api.get(`${API_URL}/incoming-documents/${cleanId}`);
@@ -195,7 +226,7 @@ export const getIncomingDocument = async (id: string): Promise<IncomingDocument>
   }
 };
 
-export const createIncomingDocument = async (documentData: FormData | any): Promise<IncomingDocument> => {
+export const createIncomingDocument = async (documentData: FormData | Record<string, unknown>): Promise<IncomingDocument> => {
   try {
     const headers: Record<string, string> = {};
     
@@ -272,6 +303,7 @@ export const getOutgoingDocuments = async (filters?: {
   year?: string; 
   page?: number; 
   limit?: number; 
+  q?: string;
 }): Promise<{
   data: OutgoingDocument[];
   totalCount: number;
@@ -282,7 +314,7 @@ export const getOutgoingDocuments = async (filters?: {
   try {
     const params = new URLSearchParams();
     
-    if (filters?.department) {
+    if (filters?.department && filters.department !== 'all') {
       params.append('department', filters.department);
     }
     
@@ -296,6 +328,10 @@ export const getOutgoingDocuments = async (filters?: {
     
     if (filters?.limit) {
       params.append('limit', filters.limit.toString());
+    }
+
+    if (filters?.q && filters.q.trim()) {
+      params.append('q', filters.q.trim());
     }
     
     const url = `${API_URL}/outgoing-documents?${params.toString()}`;
@@ -317,7 +353,8 @@ export const getOutgoingDocuments = async (filters?: {
 export const getOutgoingDocument = async (id: string): Promise<OutgoingDocument> => {
   try {
     // Ensure we're sending a clean string ID
-    const cleanId = typeof id === 'object' ? (id as any)._id || (id as any).id || String(id) : String(id);
+    const objId = id as unknown as { _id?: string; id?: string };
+    const cleanId = typeof id === 'object' ? objId?._id || objId?.id || String(id) : String(id);
     console.log('Fetching outgoing document with ID:', cleanId);
     
     const response = await api.get(`${API_URL}/outgoing-documents/${cleanId}`);
@@ -328,7 +365,7 @@ export const getOutgoingDocument = async (id: string): Promise<OutgoingDocument>
   }
 };
 
-export const createOutgoingDocument = async (documentData: FormData | any): Promise<OutgoingDocument> => {
+export const createOutgoingDocument = async (documentData: FormData | Record<string, unknown>): Promise<OutgoingDocument> => {
   try {
     const headers: Record<string, string> = {};
     
@@ -461,7 +498,16 @@ export const getDocumentUrl = (documentPath: string): string => {
   cleanPath = cleanPath.replace(/^\/+/, '');
   
   const baseUrl = API_URL.replace('/api', '');
-  return `${baseUrl}/${cleanPath}`;
+  const url = `${baseUrl}/${cleanPath}`;
+
+  // Append token for protected iframe and file access
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token && !url.includes('token=')) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(token)}`;
+  }
+
+  return url;
 };
 
 // Document download helper - Updated to use fixed URL construction

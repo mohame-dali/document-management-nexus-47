@@ -9,10 +9,10 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 
-interface DocumentTypeFieldProps {
-  form: UseFormReturn<any>;
+interface DocumentTypeFieldProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
   label: string;
   description: string;
   name?: string;

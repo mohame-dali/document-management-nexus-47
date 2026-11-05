@@ -113,13 +113,22 @@ exports.chatSearch = async (req, res) => {
     if (typeFilter === 'incoming' || typeFilter === 'outgoing') {
       filter.documentType = typeFilter;
     }
-    if (yearFilter) {
-      filter['metadata.year'] = yearFilter;
+    // Détection intelligente d'une année dans la requête utilisateur (ex: 2024, 2025, 2026)
+    if (!yearFilter) {
+      const yearMatch = searchQuery.match(/\b(19\d{2}|20\d{2})\b/);
+      if (yearMatch) {
+        filter['metadata.year'] = parseInt(yearMatch[1], 10);
+        console.log(`[AI Chat] 📅 Année détectée dans la requête : ${yearMatch[1]}`);
+      }
     }
 
     console.log(`[RAG Security] Filter:`, JSON.stringify(filter));
 
-    const allIndexed = await SemanticIndex.find(filter).lean();
+    // Récupérer un sous-ensemble sécurisé (max 2000 vecteurs) avec projection stricte pour protéger la RAM
+    const allIndexed = await SemanticIndex.find(filter)
+      .select('embedding documentId documentType metadata sourceText')
+      .limit(2000)
+      .lean();
 
     if (allIndexed.length === 0) {
       return res.json({
@@ -227,7 +236,21 @@ ${contextLines}
       },
     });
   } catch (error) {
-    console.error('[AI Chat] Erreur:', error.message);
+    console.error('[AI Chat] Erreur interceptée :', error.message);
+    const isServiceDown = error.message === 'AI_SERVICE_DOWN' || 
+                          error.code === 'AI_SERVICE_DOWN' || 
+                          error.message?.includes('FICHIER INTROUVABLE') ||
+                          error.message?.includes('ENOENT') ||
+                          error.message?.includes('Cannot find module');
+
+    if (isServiceDown) {
+      return res.status(503).json({
+        success: false,
+        code: 'AI_SERVICE_DOWN',
+        message: 'Le service IA est actuellement indisponible (modèle non chargé).',
+      });
+    }
+
     res.status(500).json({
       success: false,
       code: 'CHAT_ERROR',

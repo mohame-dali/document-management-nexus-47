@@ -8,13 +8,37 @@ import { createOutgoingDocument } from '@/services/documentService';
 import { getNextSerialNumber, validateSerialNumber } from '@/services/serialNumberService';
 import { getErrorMessage } from '@/utils/errorMessages';
 
-export const useOutgoingDocumentForm = (t: any, currentDepartmentId?: string, scanData?: any) => {
+export interface OutgoingFormTranslations {
+  required?: string;
+  scanComplete?: string;
+  [key: string]: string | undefined;
+}
+
+export interface OutgoingScanResultData {
+  filePath?: string;
+  url?: string;
+  ocrText?: string;
+  data?: unknown;
+  [key: string]: unknown;
+}
+
+export interface OutgoingScanMutationRunner {
+  mutate: (
+    options: { documentType: string; format: string; resolution: number; temporary: boolean },
+    callbacks?: {
+      onSuccess?: (response: { data?: OutgoingScanResultData; [key: string]: unknown }) => void;
+      onError?: (error: unknown) => void;
+    }
+  ) => void;
+}
+
+export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepartmentId?: string, scanData?: OutgoingScanResultData) => {
   const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<OutgoingScanResultData | null>(null);
   const [scanSettings, setScanSettings] = useState({
     resolution: '300',
     format: 'pdf'
@@ -177,7 +201,7 @@ export const useOutgoingDocumentForm = (t: any, currentDepartmentId?: string, sc
     setScanResult(null);
   };
 
-  const handleStartScan = (scanTemporaryDocumentMutation: any) => {
+  const handleStartScan = (scanTemporaryDocumentMutation: OutgoingScanMutationRunner) => {
     setScanning(true);
     setScanProgress(10);
     
@@ -200,13 +224,13 @@ export const useOutgoingDocumentForm = (t: any, currentDepartmentId?: string, sc
     }, 500);
     
     scanTemporaryDocumentMutation.mutate(scanOptions, {
-      onSuccess: (response: any) => {
+      onSuccess: (response: { data?: OutgoingScanResultData; [key: string]: unknown }) => {
         console.log('Scan mutation success:', response);
         setScanning(false);
         setScanProgress(100);
         
         // Handle both direct data and nested data response
-        const scanData = response.data || response;
+        const scanData = (response.data || response) as OutgoingScanResultData;
         setScanResult(scanData);
         toast.success(t.scanComplete);
         

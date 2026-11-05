@@ -38,6 +38,8 @@ import ViewIncomingDocument from './pages/documents/ViewIncomingDocument';
 import ViewOutgoingDocument from './pages/documents/ViewOutgoingDocument';
 import EditIncomingDocument from './pages/documents/EditIncomingDocument';
 import EditOutgoingDocument from './pages/documents/EditOutgoingDocument';
+import ScanDocumentPage from './pages/documents/ScanDocumentPage';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import FoldersPage from './pages/folders/FolderManagementPage';
 import MessagesPage from './pages/messages/MessagesPage';
 import AdminDepartmentDashboard from './pages/department/AdminDepartmentDashboard';
@@ -85,9 +87,9 @@ const queryClient = new QueryClient({
       refetchOnMount: 'always',
 
       // Conserver la logique retry existante avec 429 et 401
-      retry: (failureCount, error: any) => {
-        if (error?.response?.status === 429) return false;
-        if (error?.response?.status === 401) return false;
+      retry: (failureCount, error: unknown) => {
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 429 || status === 401) return false;
         return failureCount < 2;
       },
 
@@ -108,37 +110,42 @@ const RedirectWithId = ({ toPrefix, suffix = '' }: { toPrefix: string; suffix?: 
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <DndProvider backend={HTML5Backend}>
-        <Router>
-          <LanguageProvider>
-            <AuthProvider>
-              <DepartmentProvider>
-                <KeyboardShortcuts />
-                <div className="min-h-screen bg-background">
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center min-h-screen">
-                      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-                    </div>
-                  }>
-                    <Routes>
-                      {/* Landing page as default */}
-                      <Route path="/" element={<LandingPage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      
-                      {/* Setup Wizard route - Admin only */}
-                      <Route path="/setup" element={
-                        <ProtectedRoute allowedRoles={['Admin']}>
-                          <SetupWizardPage />
-                        </ProtectedRoute>
-                      } />
-                      
-                      <Route path="/dashboard" element={
-                        <ProtectedRoute>
-                          <DashboardLayout />
-                        </ProtectedRoute>
-                      }>
-                        <Route index element={<DashboardPage />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <DndProvider backend={HTML5Backend}>
+          <Router>
+            <LanguageProvider>
+              <AuthProvider>
+                <DepartmentProvider>
+                  <KeyboardShortcuts />
+                  <div className="min-h-screen bg-background">
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center min-h-screen">
+                        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+                      </div>
+                    }>
+                      <Routes>
+                        {/* Landing page as default */}
+                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/scan" element={<Navigate to="/dashboard/scan" replace />} />
+                        
+                        {/* Setup Wizard route - Admin only */}
+                        <Route path="/setup" element={
+                          <ProtectedRoute allowedRoles={['Admin']}>
+                            <SetupWizardPage />
+                          </ProtectedRoute>
+                        } />
+                        
+                        <Route path="/dashboard" element={
+                          <ProtectedRoute>
+                            <DashboardLayout />
+                          </ProtectedRoute>
+                        }>
+                          <Route index element={<DashboardPage />} />
+                          
+                          {/* Route Scanner */}
+                          <Route path="scan" element={<ScanDocumentPage />} />
                         
                         {/* ======================================================== */}
                         {/* NOUVELLES ROUTES HUBS (Architecture Gmail à 5 Hubs)     */}
@@ -226,13 +233,11 @@ function App() {
                           <Route path="my-attendance" element={<MyAttendanceCalendarPage />} />
                         </Route>
 
-                        {/* Route spécifique Organigramme (accessible aussi à AdminDepartment) */}
+                        {/* Route spécifique Organigramme (accessible à TOUS les utilisateurs connectés) */}
                         <Route
                           path="admin/organization-chart"
                           element={
-                            <ProtectedRoute
-                              allowedRoles={['Admin', 'Director', 'AdminDepartment']}
-                            >
+                            <ProtectedRoute>
                               <AdminHubLayout />
                             </ProtectedRoute>
                           }
@@ -596,6 +601,7 @@ function App() {
         </Router>
       </DndProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

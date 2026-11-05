@@ -74,7 +74,8 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
     queryKey: ['leave-reasons-active'],
     queryFn: async () => {
       const res = await getLeaveReasons({ isActive: true });
-      if (Array.isArray((res as any)?.data)) return (res as any).data;
+      const resData = (res as { data?: unknown })?.data;
+      if (Array.isArray(resData)) return resData as LeaveReason[];
       if (Array.isArray(res)) return res;
       return [];
     },

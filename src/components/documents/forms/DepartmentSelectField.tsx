@@ -14,11 +14,11 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { ControllerRenderProps } from 'react-hook-form';
+import { ControllerRenderProps, FieldValues } from 'react-hook-form';
 import { Department } from '@/types';
 
-interface DepartmentSelectFieldProps {
-  field: ControllerRenderProps<any, any>;
+interface DepartmentSelectFieldProps<TFieldValues extends FieldValues = FieldValues> {
+  field: ControllerRenderProps<TFieldValues>;
   label: string;
   description?: string;
   departments: Department[];

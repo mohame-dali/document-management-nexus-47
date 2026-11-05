@@ -11,8 +11,8 @@ exports.updatePassword = async (req, res, next) => {
     const { currentPassword, newPassword } = req.body;
 
     // Validate new password
-    if (!newPassword || newPassword.length < 6) {
-      return next(new ErrorResponse('Password must be at least 6 characters', 400));
+    if (!newPassword || newPassword.length < 8) {
+      return next(new ErrorResponse('Password must be at least 8 characters', 400));
     }
 
     const user = await User.findById(req.user.id).select('+password');
@@ -41,8 +41,8 @@ exports.updateUserPassword = async (req, res, next) => {
   try {
     const { newPassword } = req.body;
     
-    if (!newPassword || newPassword.length < 6) {
-      return next(new ErrorResponse('Password must be at least 6 characters', 400));
+    if (!newPassword || newPassword.length < 8) {
+      return next(new ErrorResponse('Password must be at least 8 characters', 400));
     }
 
     const user = await User.findById(req.params.id);

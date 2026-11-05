@@ -95,7 +95,7 @@ const UserForm: React.FC<UserFormProps> = ({
   const activeDept = departments.find(d => String(d._id) === effectiveDeptId) ||
     (typeof currentUser?.activeDepartment === 'object' ? currentUser?.activeDepartment : null);
   const activeDeptName = (activeDept?.name || '').trim().toLowerCase();
-  const activeDeptCode = ((activeDept as any)?.code || '').trim().toUpperCase();
+  const activeDeptCode = ((activeDept as { code?: string } | null)?.code || '').trim().toUpperCase();
 
   // ID du département RH configuré dans OrganizationSettings
   const rhDeptId = typeof orgSettings?.rhDepartmentId === 'object' && orgSettings?.rhDepartmentId

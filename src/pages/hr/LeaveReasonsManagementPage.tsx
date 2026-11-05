@@ -71,7 +71,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
       setLoading(true);
       const data = await getLeaveReasons();
       setReasons(data);
-    } catch (err: any) {
+    } catch (_err: unknown) {
       toast.error('حدث خطأ أثناء تحميل أنواع الغياب');
     } finally {
       setLoading(false);
@@ -156,7 +156,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
           ? 'تم تفعيل نوع الغياب بنجاح'
           : 'تم تعطيل نوع الغياب بنجاح'
       );
-    } catch (err: any) {
+    } catch (_err: unknown) {
       toast.error('تعذر تغيير حالة نوع الغياب');
     }
   };
@@ -179,10 +179,11 @@ export const LeaveReasonsManagementPage: React.FC = () => {
       setReasons((prev) => prev.filter((r) => r._id !== reasonToDelete._id));
       setDeleteDialogOpen(false);
       setReasonToDelete(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errResp = err as { response?: { data?: { message?: string } }; message?: string };
       const msg =
-        err.response?.data?.message ||
-        err.message ||
+        errResp?.response?.data?.message ||
+        errResp?.message ||
         'حدث خطأ أثناء محاولة الحذف';
       toast.error(msg);
     } finally {

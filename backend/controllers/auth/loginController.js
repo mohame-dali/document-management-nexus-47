@@ -1,4 +1,3 @@
-
 const User = require('../../models/User');
 const ErrorResponse = require('../../utils/errorResponse');
 const { sendTokenResponse } = require('./utils');
@@ -8,47 +7,44 @@ const { sendTokenResponse } = require('./utils');
 // @access  Public
 exports.login = async (req, res, next) => {
   try {
-    console.log('Login request received with body:', JSON.stringify(req.body));
-    
-    const { username, password } = req.body;
+    const username = req.body?.username;
+    const password = req.body?.password;
 
-    // Validate email & password
-    if (!username || !password) {
-      console.log('Missing username or password');
+    // Strict type validation to prevent NoSQL injection
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ success: false, message: 'Invalid credentials format' });
+    }
+
+    if (!username.trim() || !password) {
       return next(new ErrorResponse('Please provide username and password', 400));
     }
 
-    console.log(`Login attempt for username: ${username}`);
+    if (username.length > 100 || password.length > 200) {
+      return res.status(400).json({ success: false, message: 'Invalid credentials format' });
+    }
 
     // Check for user
-    const user = await User.findOne({ username }).select('+password');
+    const user = await User.findOne({ username: username.trim() }).select('+password');
 
     if (!user) {
-      console.log(`User not found: ${username}`);
       return next(new ErrorResponse('Invalid credentials', 401));
     }
 
-    console.log(`User found: ${username}, Active status: ${user.isActive}`);
-
     // Check if user account is active
     if (!user.isActive) {
-      console.log(`User ${username} account is deactivated`);
       return next(new ErrorResponse('Your account has been deactivated', 401));
     }
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
-    console.log(`Password match for ${username}: ${isMatch}`);
 
     if (!isMatch) {
-      console.log(`Invalid password for ${username}`);
       return next(new ErrorResponse('Invalid credentials', 401));
     }
 
-    console.log(`Login successful for user: ${username}`);
     sendTokenResponse(user, 200, res);
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error:', err.message || err);
     next(err);
   }
 };

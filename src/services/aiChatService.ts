@@ -52,7 +52,7 @@ export const askAIAssistant = async (
     await new Promise((resolve) => setTimeout(resolve, 500));
     return {
       query,
-      summary: `[Mode Mock Démo] Résumé simulé pour : "${query}". En production, les réponses proviennent de l'indexation RAG réelle et du modèle Ollama.`,
+      summary: `[Mode Mock Démo] Résumé simulé pour : "${query}". En production, les réponses proviennent de l'indexation RAG réelle et du modèle IA local.`,
       totalFound: 1,
       sources: [
         {
@@ -82,7 +82,7 @@ export const askAIAssistant = async (
       typeFilter: options?.typeFilter,
     },
     {
-      timeout: 90000,
+      timeout: 120000,
       signal: options?.signal,
     }
   );

@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path');
@@ -11,13 +12,22 @@ const cookieParser = require('cookie-parser');
 // Load env vars
 dotenv.config();
 
+// Check JWT_SECRET
+if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('🔴 FATAL: JWT_SECRET absent du .env');
+    console.error('   Générer : node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+    process.exit(1);
+  } else {
+    console.warn('⚠️ AVERTISSEMENT: JWT_SECRET absent du .env — utilisation d\'une clé sécurisée pour le développement.');
+    process.env.JWT_SECRET = 'dms_dev_jwt_secret_key_64_bytes_secure_random_fallback_token_2026';
+  }
+}
+
 // Set default JWT cookie expiration if not provided
 if (!process.env.JWT_COOKIE_EXPIRE) {
   process.env.JWT_COOKIE_EXPIRE = 30; // Default to 30 days
 }
-
-// Connect to database
-connectDB();
 
 const app = express();
 const httpServer = createServer(app);
@@ -67,6 +77,21 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Cookie parser
 app.use(cookieParser());
+
+// Sanitize NoSQL operator injection in req.body, req.params, req.query
+const mongoSanitize = require('express-mongo-sanitize');
+app.use((req, _res, next) => {
+  if (req.body) {
+    mongoSanitize.sanitize(req.body, { replaceWith: '_', allowDots: false });
+  }
+  if (req.params) {
+    mongoSanitize.sanitize(req.params, { replaceWith: '_', allowDots: false });
+  }
+  if (req.query) {
+    mongoSanitize.sanitize(req.query, { replaceWith: '_', allowDots: false });
+  }
+  next();
+});
 
 // Enable CORS
 app.use(cors({
@@ -151,16 +176,37 @@ const loginLimiter = rateLimit({
 app.use('/api', globalLimiter);
 app.use('/api/auth/login', loginLimiter);
 
-// Set static folders for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Strict production check: si MongoDB est déconnecté, renvoyer une erreur 503 (sauf pour toutes les routes /auth/*)
+app.use('/api', (req, res, next) => {
+  // Exclure toutes les routes d'authentification (/auth/login, /auth/me, /auth/logout, /auth/register, etc.)
+  if (req.path.startsWith('/auth/') || req.path === '/auth') {
+    return next();
+  }
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: 'Service temporairement indisponible (Base de données hors ligne)'
+    });
+  }
+  next();
+});
+
+// Protected file routes with authentication & RBAC
+const { protect } = require('./middleware/auth');
+const fileController = require('./controllers/fileController');
+
+// Route sécurisée pour les documents (RBAC + Path Traversal check)
+app.get('/api/files/:type/:id/:filename', protect, fileController.serveProtectedFile);
+
+// Protect /courrier against unauthenticated access
+app.use('/courrier', protect, fileController.serveCourrierStatic);
+
+// Public profile photos (avatars)
 app.use('/uploads/usersphoto', express.static(path.join(__dirname, 'uploads/usersphoto')));
 app.use('/uploads/personnelphoto', express.static(path.join(__dirname, 'uploads/personnelphoto')));
 
-// Add static serving for courrier documents
-app.use('/courrier', express.static(path.join(__dirname, 'courrier')));
-
-// Add static serving for templates
-app.use('/uploads/templates', express.static(path.join(__dirname, 'uploads/templates')));
+// Protect sensitive uploads and templates
+app.use('/uploads', protect, express.static(path.join(__dirname, 'uploads')));
 
 // Route files
 const auth = require('./routes/auth');
@@ -196,6 +242,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const { startIndexRetryScheduler } = require('./services/indexRetryScheduler');
+const { startBackupScheduler } = require('./services/backupScheduler');
+const { startCleanupScheduler } = require('./services/cleanupScheduler');
 
 // Mount Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -235,9 +283,25 @@ app.use('/api/hr', rhStagePersonnelRoutes);
 app.use('/api/hr', rhPersonnelHistoryRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/search', require('./routes/globalSearchRoutes'));
 
-// Démarrer le cron de rattrapage d'indexation vectorielle RAG (toutes les heures)
+// Démarrer les crons d'arrière-plan (rattrapage RAG, politique de sauvegarde, purge fichiers temp)
 startIndexRetryScheduler();
+startBackupScheduler();
+startCleanupScheduler();
+
+// Cron quotidien à 8h pour le rattrapage des notifications d'activité
+try {
+  const cron = require('node-cron');
+  const { checkDailyNotifications } = require('./utils/activityNotificationHelper');
+  cron.schedule('0 8 * * *', () => {
+    console.log('[Cron] Exécution du rattrapage quotidien des notifications d\'activité');
+    checkDailyNotifications().catch(err => console.warn('[Cron Notifications] Error:', err.message));
+  });
+} catch (err) {
+  console.warn('[Server] Cron notification activité non démarré:', err.message);
+}
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {
@@ -250,18 +314,26 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 // Try to start the server, if port is in use, increment and try again
-const startServer = (port) => {
-  httpServer.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-    console.log(`Access the API at http://localhost:${port}/api`);
-  }).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${port} is busy, trying ${port + 1}...`);
-      startServer(port + 1);
-    } else {
-      console.error(err);
-    }
-  });
+const startServer = async (port) => {
+  try {
+    await connectDB(); // On attend la connexion à MongoDB
+    console.log('✅ MongoDB connecté, démarrage du serveur HTTP...');
+
+    httpServer.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+      console.log(`Access the API at http://localhost:${port}/api`);
+    }).on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`Port ${port} is busy, trying ${port + 1}...`);
+        startServer(port + 1);
+      } else {
+        console.error(err);
+      }
+    });
+  } catch (err) {
+    console.error('❌ Impossible de se connecter à MongoDB:', err);
+    process.exit(1);
+  }
 };
 
 startServer(PORT);
@@ -319,3 +391,45 @@ process.on('unhandledRejection', (err, promise) => {
   // Close server & exit process
   httpServer.close(() => process.exit(1));
 });
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM reçu, arrêt propre...');
+  try {
+    await mongoose.connection.close();
+    httpServer.close(() => process.exit(0));
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
+});
+
+if (process.platform === 'win32') {
+  require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+  }).on('SIGINT', () => {
+    process.emit('SIGINT');
+  });
+}
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT reçu, arrêt propre...');
+  try {
+    await mongoose.connection.close();
+    httpServer.close(() => process.exit(0));
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
+});
+
+// Filet de sécurité global du serveur (anti-crash fatal)
+process.on('uncaughtException', (err) => {
+  console.error('🔥 CRITICAL UNCAUGHT EXCEPTION:', err?.message || err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 UNHANDLED REJECTION:', reason);
+});
+

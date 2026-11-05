@@ -1,0 +1,6 @@
+{
+  "summary": "Audit de maturité complet de la migration IA (Ollama vers node-llama-cpp) avec inventaire ligne par ligne, analyse des résidus, diagnostic précis du timeout de traduction (65s), évaluation RAG/embeddings et plan de remédiation chiffré (Score : 82/100 - MVP Avancé).",
+  "updatedAt": "2026-10-14T10:23:43.289786133Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

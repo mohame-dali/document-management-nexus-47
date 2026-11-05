@@ -32,7 +32,7 @@ exports.translate = async (req, res) => {
         return res.status(503).json({
           success: false,
           code: 'AI_SERVICE_DOWN',
-          message: 'Le service IA local n\'est pas accessible. Vérifiez qu\'Ollama est lancé.',
+          message: 'Le service IA local n\'est pas accessible. Vérifiez que le moteur IA local est opérationnel.',
         });
       case 'AI_TIMEOUT':
         return res.status(504).json({

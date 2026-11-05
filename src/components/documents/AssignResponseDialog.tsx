@@ -55,8 +55,9 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
       setSelectedOutgoingDoc('');
       setSerialNumberSearch('');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || t('documents.assignResponse.toast.error'));
+    onError: (error: unknown) => {
+      const errorMsg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(errorMsg || t('documents.assignResponse.toast.error'));
     }
   });
 

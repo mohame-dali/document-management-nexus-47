@@ -69,8 +69,9 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
       queryClient.invalidateQueries({ queryKey: ['folderDocuments'] });
       toast.success(variables.folderId ? 'تم تصنيف المستند في المجلد بنجاح' : 'تمت إزالة المستند من المجلد');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في تصنيف المستند');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في تصنيف المستند');
     }
   });
 

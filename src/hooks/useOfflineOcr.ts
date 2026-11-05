@@ -18,14 +18,6 @@ export const useOfflineOcr = (): UseOfflineOcrResult => {
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isUnmountedRef = useRef(false);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      isUnmountedRef.current = true;
-      cleanup();
-    };
-  }, []);
-
   const cleanup = useCallback(() => {
     if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
@@ -37,6 +29,14 @@ export const useOfflineOcr = (): UseOfflineOcrResult => {
       console.warn('OCR cleanup warning:', err);
     });
   }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isUnmountedRef.current = true;
+      cleanup();
+    };
+  }, [cleanup]);
 
   const extractText = useCallback(async (file: File): Promise<string> => {
     if (isUnmountedRef.current) {

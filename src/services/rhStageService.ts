@@ -26,7 +26,7 @@ export interface RHStage {
     cin?: string;
     matricule?: string;
     poste?: string;
-    activeDepartment?: any;
+    activeDepartment?: { _id: string; name: string } | string | null;
   } | string;
   sessionFormationId?: string | null;
   sourceDocumentId?: {

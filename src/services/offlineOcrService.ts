@@ -116,13 +116,13 @@ export class OfflineOcrService {
     console.log('Cleaning Arabic OCR text...');
     
     // If text is just numbers or very short, might be OCR error
-    if (text.trim().match(/^[\d\s\.\-]+$/) && text.trim().length < 10) {
+    if (text.trim().match(/^[\d\s.-]+$/) && text.trim().length < 10) {
       console.log('Text appears to be OCR error (only numbers/symbols):', text.trim());
       return '';
     }
     
     // First, normalize the text
-    let cleanedText = text
+    const cleanedText = text
       // Remove excessive whitespace but preserve Arabic text structure
       .replace(/\s{3,}/g, ' ')
       .replace(/\n{3,}/g, '\n\n')
@@ -161,7 +161,7 @@ export class OfflineOcrService {
       // Remove lines that are likely OCR errors
       if (line.length < 2) return false;
       // Must contain Arabic characters OR be meaningful text (not just numbers)
-      return this.containsArabicText(line) || (line.length > 2 && !/^[\d\s\.\-]+$/.test(line));
+      return this.containsArabicText(line) || (line.length > 2 && !/^[\d\s.-]+$/.test(line));
     });
 
     const result = lines.join('\n');
@@ -172,7 +172,7 @@ export class OfflineOcrService {
     console.log(`Arabic text cleaned: ${arabicCharCount} Arabic chars, ${totalCharCount} total chars`);
     
     // If no Arabic text and result looks like OCR error, return empty
-    if (arabicCharCount === 0 && result.match(/^[\d\s\.\-]+$/)) {
+    if (arabicCharCount === 0 && result.match(/^[\d\s.-]+$/)) {
       console.log('Result appears to be OCR error, returning empty string');
       return '';
     }

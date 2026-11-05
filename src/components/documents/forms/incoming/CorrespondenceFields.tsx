@@ -9,11 +9,11 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
 
-interface CorrespondenceFieldsProps {
-  form: UseFormReturn<any>;
+interface CorrespondenceFieldsProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
 }
 
 const CorrespondenceFields: React.FC<CorrespondenceFieldsProps> = ({

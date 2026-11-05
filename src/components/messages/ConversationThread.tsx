@@ -8,6 +8,7 @@ import { getDateGroup } from '@/utils/relativeTime';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { Message } from '@/types';
 
 export interface ConversationData {
   interlocutorId: string;
@@ -19,7 +20,7 @@ export interface ConversationData {
   lastMessage?: string;
   lastMessageTime?: Date | string;
   unreadCount?: number;
-  messages: any[];
+  messages: Message[];
 }
 
 export interface ConversationThreadProps {
@@ -70,9 +71,9 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
   });
 
-  const checkIsOwn = (msg: any): boolean => {
-    if (msg.isSender !== undefined) return Boolean(msg.isSender);
-    const senderId = typeof msg.sender === 'object' ? msg.sender?._id : msg.sender;
+  const checkIsOwn = (msg: Message): boolean => {
+    if ((msg as Message & { isSender?: boolean }).isSender !== undefined) return Boolean((msg as Message & { isSender?: boolean }).isSender);
+    const senderId = typeof msg.sender === 'object' && msg.sender !== null ? (msg.sender as { _id?: string })._id : msg.sender;
     return String(senderId) === String(currentUserId);
   };
 

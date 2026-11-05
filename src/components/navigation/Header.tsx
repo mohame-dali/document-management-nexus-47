@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useSetupStatus } from '@/hooks/useSetupStatus';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import GlobalSearch from '@/components/navigation/GlobalSearch';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -113,8 +114,13 @@ const Header = () => {
         </div>
       </div>
 
+      {/* Recherche globale multi-modules (Centré) */}
+      <div className="flex-1 max-w-md mx-2 sm:mx-6 min-w-0">
+        <GlobalSearch />
+      </div>
+
       {/* Actions & Profil à GAUCHE */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
         {/* Language Switcher */}
         <LanguageSwitcher />
 

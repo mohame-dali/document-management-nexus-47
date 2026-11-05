@@ -8,8 +8,17 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ScannedDocumentPreview from './ScannedDocumentPreview';
 
+interface ScannerStatus {
+  error?: string;
+  data?: {
+    deviceId?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 interface ScannerTabProps {
-  t: any;
+  t: Record<string, string>;
   scanSettings: {
     resolution: string;
     format: string;
@@ -17,8 +26,8 @@ interface ScannerTabProps {
   handleScanSettingChange: (key: string, value: string) => void;
   scanning: boolean;
   scanProgress: number;
-  scanResult: any;
-  scannerStatus: any;
+  scanResult: Record<string, unknown> | null;
+  scannerStatus: ScannerStatus | null;
   loadingScannerStatus: boolean;
   handleStartScan: () => void;
   onRemoveScan?: () => void;

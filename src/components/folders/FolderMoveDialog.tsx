@@ -49,8 +49,9 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
       onOpenChange(false);
       setSelectedParentId(null);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'فشل في نقل المجلد');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في نقل المجلد');
     },
   });
 

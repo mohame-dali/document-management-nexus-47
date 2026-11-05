@@ -5,7 +5,7 @@ import { logAuditAction } from './auditService';
 export interface DragDropResult {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 // Handle document drop to folder
@@ -37,11 +37,12 @@ export const handleDocumentDrop = async (
       message: targetFolderId ? 'تم نقل المستند إلى المجلد بنجاح' : 'تم إزالة المستند من المجلد بنجاح',
       data: updatedDocument
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error handling document drop:', error);
+    const errResp = error as { response?: { data?: { message?: string } } };
     return {
       success: false,
-      message: error.response?.data?.message || 'فشل في نقل المستند'
+      message: errResp?.response?.data?.message || 'فشل في نقل المستند'
     };
   }
 };
@@ -50,8 +51,8 @@ export const handleDocumentDrop = async (
 export const validateDrop = (
   dragType: string,
   dropType: string,
-  dragData: any,
-  dropData: any
+  _dragData: unknown,
+  _dropData: unknown
 ): boolean => {
   // Document to folder
   if (dragType === 'document' && dropType === 'folder') {

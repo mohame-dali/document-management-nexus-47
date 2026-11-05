@@ -64,10 +64,11 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
       onMessageSent();
       onClose();
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast({
         title: "خطأ في الإرسال",
-        description: err.response?.data?.message || t('messages.sendError'),
+        description: errorMsg || t('messages.sendError'),
         variant: "destructive"
       });
     }

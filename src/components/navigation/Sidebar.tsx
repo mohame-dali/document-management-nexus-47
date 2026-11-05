@@ -65,8 +65,8 @@ const Sidebar = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const rhDepartmentId = typeof orgSettings?.rhDepartmentId === 'object'
-    ? (orgSettings?.rhDepartmentId as any)?._id
+  const rhDepartmentId = (typeof orgSettings?.rhDepartmentId === 'object' && orgSettings?.rhDepartmentId !== null)
+    ? (orgSettings.rhDepartmentId as { _id?: string })._id
     : orgSettings?.rhDepartmentId;
 
   const userActiveDeptId = typeof currentUser?.activeDepartment === 'object'
@@ -158,8 +158,8 @@ const Sidebar = () => {
         location.pathname.startsWith('/dashboard/guide'),
     }] : []),
 
-    // 6b. 🌐 الهيكل التنظيمي (organigramme) — AdminDepartment uniquement (accès direct ciblé)
-    ...(currentUser?.role === 'AdminDepartment' ? [{
+    // 6b. 🌐 الهيكل التنظيمي (organigramme) — Pour tous les rôles non-Admin/Director (AdminTuningDesk, AdminDepartment, User)
+    ...(!['Admin', 'Director'].includes(currentUser?.role || '') ? [{
       id: 'organization-chart',
       path: '/dashboard/admin/organization-chart',
       label: t('sidebar.organizationChart'),
@@ -212,7 +212,7 @@ const Sidebar = () => {
     return username ? username.charAt(0).toUpperCase() : 'U';
   };
 
-  const getUserPhotoUrl = (user: any) => {
+  const getUserPhotoUrl = (user: { photo?: string } | null | undefined) => {
     if (user?.photo) {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       // Remove leading slash if it exists to avoid double slashes

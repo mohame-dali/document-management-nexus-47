@@ -84,12 +84,16 @@ export const useInfiniteDocuments = ({
     queryFn: fetchDocuments,
     initialPageParam: 1,
     enabled: enabled && year.length === 4 && /^\d{4}$/.test(year),
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage, allPages) => {
+      // Sécurité anti-freeze navigateur : plafonner à 10 pages (200 documents max en mémoire locale)
+      if (allPages.length >= 10) {
+        return undefined;
+      }
       return lastPage.hasMore ? lastPage.page + 1 : undefined;
     },
     staleTime: 1000 * 30, // 30 seconds
-    refetchOnWindowFocus: true,
-    refetchInterval: 60 * 1000, // 1 minute
+    refetchOnWindowFocus: false, // Éviter les refetchs intempestifs massifs
+    refetchInterval: false, // Désactiver le polling automatique coûteux
     refetchIntervalInBackground: false,
   });
 
@@ -130,10 +134,13 @@ export const useInfiniteDocuments = ({
   const isLoading = status === 'pending';
   const isError = status === 'error';
 
+  const maxPagesReached = (data?.pages.length || 0) >= 10 && Boolean(data?.pages[data.pages.length - 1]?.hasMore);
+
   return {
     documents: allDocuments,
     totalCount,
     loadedCount,
+    maxPagesReached,
     error,
     isLoading,
     isError,

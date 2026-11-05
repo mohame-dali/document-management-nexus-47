@@ -8,6 +8,7 @@ const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
 const User = require('../models/User');
 const OrganizationSettings = require('../models/OrganizationSettings');
+const { sanitizeSearchQuery } = require('../utils/regexUtils');
 
 // Helper pour vérifier si l'utilisateur est un chef de département non-RH
 const isNonRHAdminDepartment = async (user) => {
@@ -41,7 +42,35 @@ exports.createPersonnel = async (req, res, next) => {
       departments,
       dateEmbauche,
       notes,
-      photo
+      photo,
+      // Groupe A — Identité étendue
+      nomPere,
+      nomMere,
+      nomGrandPere,
+      groupeSanguin,
+      // Groupe B — Situation administrative
+      dateEmissionCin,
+      numeroUnite,
+      numeroArmee,
+      dateEngagement,
+      typeEngagement,
+      origineEngagement,
+      niveauEtude,
+      diplomeBase,
+      specialite,
+      arme,
+      posteActuel,
+      // Groupe C — Situation familiale
+      etatCivil,
+      nomConjoint,
+      dateMariage,
+      nombreEnfants,
+      enfants,
+      // Groupe D — Passeport
+      numeroPasseport,
+      dateValiditePasseport,
+      // Groupe E — 3 personnes à prévenir
+      personnesAPrevenir
     } = req.body;
 
     if (!nom || !prenom) {
@@ -68,6 +97,21 @@ exports.createPersonnel = async (req, res, next) => {
       }
     }
 
+    // Validation croisée (CIN ↔ Username) : vérifier si le CIN correspond au username d'un User existant
+    if (cin && cin.trim()) {
+      const trimmedCin = cin.trim();
+      const existingUserWithUsername = await User.findOne({
+        username: trimmedCin,
+        isDeleted: { $ne: true }
+      });
+      if (existingUserWithUsername) {
+        return res.status(400).json({
+          success: false,
+          message: "Ce CIN correspond déjà à un nom d'utilisateur existant dans le système."
+        });
+      }
+    }
+
     // Création de la fiche avec statut initial 'en_attente' et userId null
     const personnelData = {
       nom: nom.trim(),
@@ -75,7 +119,7 @@ exports.createPersonnel = async (req, res, next) => {
       dateNaissance: dateNaissance || null,
       lieuNaissance: lieuNaissance ? lieuNaissance.trim() : '',
       sexe: sexe || undefined,
-      cin: cin ? cin.trim() : '',
+      cin: cin && cin.trim() ? cin.trim() : undefined,
       adresse: adresse ? adresse.trim() : '',
       telephone: telephone ? telephone.trim() : '',
       emailPersonnel: emailPersonnel ? emailPersonnel.trim().toLowerCase() : '',
@@ -87,16 +131,71 @@ exports.createPersonnel = async (req, res, next) => {
       userId: null,
       notes: notes ? notes.trim() : '',
       photo: photo ? photo.trim() : '',
+      // Groupe A — Identité étendue
+      nomPere: nomPere ? nomPere.trim() : '',
+      nomMere: nomMere ? nomMere.trim() : '',
+      nomGrandPere: nomGrandPere ? nomGrandPere.trim() : '',
+      groupeSanguin: groupeSanguin || '',
+      // Groupe B — Situation administrative
+      dateEmissionCin: dateEmissionCin || null,
+      numeroUnite: numeroUnite ? numeroUnite.trim() : '',
+      numeroArmee: numeroArmee ? numeroArmee.trim() : '',
+      dateEngagement: dateEngagement || null,
+      typeEngagement: typeEngagement ? typeEngagement.trim() : '',
+      origineEngagement: origineEngagement ? origineEngagement.trim() : '',
+      niveauEtude: niveauEtude ? niveauEtude.trim() : '',
+      diplomeBase: diplomeBase ? diplomeBase.trim() : '',
+      specialite: specialite ? specialite.trim() : '',
+      arme: arme ? arme.trim() : '',
+      posteActuel: posteActuel ? posteActuel.trim() : '',
+      // Groupe C — Situation familiale
+      etatCivil: etatCivil || '',
+      nomConjoint: nomConjoint ? nomConjoint.trim() : '',
+      dateMariage: dateMariage || null,
+      nombreEnfants: nombreEnfants !== undefined ? Number(nombreEnfants) : 0,
+      enfants: enfants !== undefined ? Number(enfants) : (nombreEnfants !== undefined ? Number(nombreEnfants) : 0),
+      // Groupe D — Passeport
+      numeroPasseport: numeroPasseport ? numeroPasseport.trim() : '',
+      dateValiditePasseport: dateValiditePasseport || null,
+      // Groupe E — 3 personnes à prévenir
+      personnesAPrevenir: Array.isArray(personnesAPrevenir) ? personnesAPrevenir : [],
       createdBy: req.user ? (req.user._id || req.user.id) : null
     };
 
     const personnel = await Personnel.create(personnelData);
+
+    // Synchronisation du département vers le User s'il est lié à la création
+    if (personnel.userId && personnel.activeDepartment) {
+      try {
+        const user = await User.findById(personnel.userId);
+        if (user) {
+          user.activeDepartment = personnel.activeDepartment;
+          const newDeptId = personnel.activeDepartment.toString();
+          const deptExists = (user.departments || []).some(
+            d => (d._id || d).toString() === newDeptId
+          );
+          if (!deptExists) {
+            user.departments = user.departments || [];
+            user.departments.push(personnel.activeDepartment);
+          }
+          await user.save();
+        }
+      } catch (syncErr) {
+        console.warn('Erreur lors de la synchronisation département à la création du personnel:', syncErr.message);
+      }
+    }
 
     res.status(201).json({
       success: true,
       data: personnel
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un agent avec ce CIN existe déjà.'
+      });
+    }
     next(error);
   }
 };
@@ -135,12 +234,15 @@ exports.getPersonnelList = async (req, res, next) => {
 
     // Filtre de recherche textuelle (nom, prenom, cin)
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search.trim(), 'i');
-      query.$or = [
-        { nom: searchRegex },
-        { prenom: searchRegex },
-        { cin: searchRegex }
-      ];
+      const safeSearch = sanitizeSearchQuery(req.query.search);
+      if (safeSearch) {
+        const searchRegex = new RegExp(safeSearch, 'i');
+        query.$or = [
+          { nom: searchRegex },
+          { prenom: searchRegex },
+          { cin: searchRegex }
+        ];
+      }
     }
 
     // Filtre par statut
@@ -251,12 +353,42 @@ exports.updatePersonnel = async (req, res, next) => {
       'departments',
       'dateEmbauche',
       'notes',
-      'photo'
+      'photo',
+      // Groupe A — Identité étendue
+      'nomPere',
+      'nomMere',
+      'nomGrandPere',
+      'groupeSanguin',
+      // Groupe B — Situation administrative
+      'dateEmissionCin',
+      'numeroUnite',
+      'numeroArmee',
+      'dateEngagement',
+      'typeEngagement',
+      'origineEngagement',
+      'niveauEtude',
+      'diplomeBase',
+      'specialite',
+      'arme',
+      'posteActuel',
+      // Groupe C — Situation familiale
+      'etatCivil',
+      'nomConjoint',
+      'dateMariage',
+      'nombreEnfants',
+      'enfants',
+      // Groupe D — Passeport
+      'numeroPasseport',
+      'dateValiditePasseport',
+      // Groupe E — 3 personnes à prévenir
+      'personnesAPrevenir'
     ];
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        if (field === 'nom' || field === 'prenom') {
+        if (field === 'cin') {
+          personnel.cin = req.body.cin && req.body.cin.trim() ? req.body.cin.trim() : undefined;
+        } else if (field === 'nom' || field === 'prenom') {
           if (req.body[field] && req.body[field].trim()) {
             personnel[field] = req.body[field].trim();
           }
@@ -270,6 +402,21 @@ exports.updatePersonnel = async (req, res, next) => {
       }
     });
 
+    // Validation croisée (CIN ↔ Username) si le CIN est mis à jour
+    if (req.body.cin && req.body.cin.trim()) {
+      const trimmedCin = req.body.cin.trim();
+      const existingUserWithUsername = await User.findOne({
+        username: trimmedCin,
+        isDeleted: { $ne: true }
+      });
+      if (existingUserWithUsername && (!personnel.userId || existingUserWithUsername._id.toString() !== personnel.userId.toString())) {
+        return res.status(400).json({
+          success: false,
+          message: "Ce CIN correspond déjà à un nom d'utilisateur existant dans le système."
+        });
+      }
+    }
+
     // Validation activeDepartment si mis à jour
     if (req.body.activeDepartment) {
       if (!mongoose.Types.ObjectId.isValid(req.body.activeDepartment)) {
@@ -282,6 +429,27 @@ exports.updatePersonnel = async (req, res, next) => {
 
     await personnel.save();
 
+    // Synchronisation du département (Personnel → User)
+    if (personnel.userId && personnel.activeDepartment) {
+      try {
+        const user = await User.findById(personnel.userId);
+        if (user) {
+          user.activeDepartment = personnel.activeDepartment;
+          const newDeptId = personnel.activeDepartment.toString();
+          const deptExists = (user.departments || []).some(
+            d => (d._id || d).toString() === newDeptId
+          );
+          if (!deptExists) {
+            user.departments = user.departments || [];
+            user.departments.push(personnel.activeDepartment);
+          }
+          await user.save();
+        }
+      } catch (syncErr) {
+        console.warn('Erreur lors de la synchronisation département vers le User:', syncErr.message);
+      }
+    }
+
     const updatedPersonnel = await Personnel.findById(id)
       .populate('activeDepartment', 'name description')
       .populate('departments', 'name');
@@ -291,6 +459,12 @@ exports.updatePersonnel = async (req, res, next) => {
       data: updatedPersonnel
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Un agent avec ce CIN existe déjà.'
+      });
+    }
     next(error);
   }
 };
@@ -578,17 +752,69 @@ exports.linkUserToPersonnel = async (req, res, next) => {
       });
     }
 
-    // f. Mettre à jour :
-    // • Personnel.userId = userId
-    // • Personnel.statut = 'actif'
-    // • User.personnelId = personnelId
+    // Sauvegarder l'état initial pour le pattern de compensation
+    const originalPersonnelUserId = personnel.userId;
+    const originalPersonnelStatut = personnel.statut;
+    const originalUserPersonnelId = user.personnelId;
+
+    // f. Mettre à jour les références
     personnel.userId = user._id;
     personnel.statut = 'actif';
     user.personnelId = personnel._id;
 
-    // g. Sauvegarder les deux documents
-    await personnel.save();
-    await user.save();
+    // Synchronisation du département lors de la liaison
+    if (personnel.activeDepartment) {
+      user.activeDepartment = personnel.activeDepartment;
+      const deptIdStr = personnel.activeDepartment.toString();
+      const deptExists = (user.departments || []).some(
+        d => (d._id || d).toString() === deptIdStr
+      );
+      if (!deptExists) {
+        user.departments = user.departments || [];
+        user.departments.push(personnel.activeDepartment);
+      }
+    }
+
+    // g. Sauvegarde atomique avec Transaction Mongoose et Fallback par compensation
+    let session = null;
+    try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+      await personnel.save({ session });
+      await user.save({ session });
+      await session.commitTransaction();
+    } catch (txError) {
+      if (session) {
+        await session.abortTransaction().catch(() => {});
+      }
+
+      const isStandalone = txError.message && (
+        txError.message.includes('replica set') ||
+        txError.message.includes('Transaction numbers are only allowed') ||
+        txError.code === 20 ||
+        txError.codeName === 'IllegalOperation'
+      );
+
+      if (isStandalone) {
+        // Fallback par compensation pour les instances MongoDB standalone
+        await personnel.save();
+        try {
+          await user.save();
+        } catch (userSaveErr) {
+          // Annulation de la première sauvegarde
+          personnel.userId = originalPersonnelUserId;
+          personnel.statut = originalPersonnelStatut;
+          await personnel.save().catch(() => {});
+          throw userSaveErr;
+        }
+      } else {
+        throw txError;
+      }
+    } finally {
+      if (session) {
+        session.endSession().catch(() => {});
+      }
+    }
 
     // h. Retourner { success: true, data: { personnel, user } }
     res.status(200).json({

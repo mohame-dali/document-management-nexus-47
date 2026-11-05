@@ -1,7 +1,7 @@
 
 declare global {
   interface Window {
-    cachedUser?: any;
+    cachedUser?: import('./index').User | null;
   }
 }
 

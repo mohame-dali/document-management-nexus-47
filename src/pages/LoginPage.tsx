@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogIn, ArrowLeft, AlertCircle } from 'lucide-react';
+import { LogIn, ArrowLeft, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 
@@ -30,6 +30,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const savedUsername = typeof window !== 'undefined' ? localStorage.getItem('dms-remembered-username') || '' : '';
   
@@ -162,6 +163,7 @@ const LoginPage = () => {
                         <Input 
                           placeholder={t('login.enterUsername')}
                           {...field} 
+                          name="username"
                           className="text-start"
                           autoComplete="username"
                           autoFocus
@@ -179,13 +181,25 @@ const LoginPage = () => {
                     <FormItem>
                       <FormLabel className="text-xs font-medium text-[#4a5568]">{t('login.password')}</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder={t('login.enterPassword')}
-                          {...field} 
-                          className="text-start"
-                          autoComplete="current-password"
-                        />
+                        <div className="relative">
+                          <Input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder={t('login.enterPassword')}
+                            {...field} 
+                            name="password"
+                            className="text-start pe-10"
+                            autoComplete="current-password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none p-1 rounded"
+                            tabIndex={-1}
+                            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage className="text-xs text-[#e53e3e]" />
                     </FormItem>
@@ -230,7 +244,10 @@ const LoginPage = () => {
           </CardContent>
           <CardFooter className="flex flex-col text-center text-xs text-[#718096] border-t border-[#f7fafc] pt-3">
             <p className="w-full mb-1">
-              {t('login.credentials')}: <strong className="text-[#2d3748]" dir="ltr">admin / admin123</strong>
+              {t('login.credentials')}: <code className="font-mono font-semibold px-1.5 py-0.5 rounded bg-[#edf2f7] text-[#2c5282]" dir="ltr">admin / Admin123!</code>
+            </p>
+            <p className="text-[11px] text-[#718096] mb-1">
+              (N'oubliez pas la majuscule et le point d'exclamation)
             </p>
             <p className="text-xs text-[#a0aec0]">
               {t('login.appDescription')}

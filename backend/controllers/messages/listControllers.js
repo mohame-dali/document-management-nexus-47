@@ -1,6 +1,7 @@
 
 const Message = require('../../models/Message');
 const ErrorResponse = require('../../utils/errorResponse');
+const { sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // Helper to format messages with read status and recipient info
 const formatMessages = (messages, userId) => {
@@ -66,14 +67,17 @@ exports.getMessages = async (req, res, next) => {
     }
     
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      query.$and = query.$and || [];
-      query.$and.push({
-        $or: [
-          { subject: searchRegex },
-          { content: searchRegex }
-        ]
-      });
+      const safeSearch = sanitizeSearchQuery(search);
+      if (safeSearch) {
+        const searchRegex = new RegExp(safeSearch, 'i');
+        query.$and = query.$and || [];
+        query.$and.push({
+          $or: [
+            { subject: searchRegex },
+            { content: searchRegex }
+          ]
+        });
+      }
     }
     
     const messages = await Message.find(query)
@@ -152,4 +156,141 @@ exports.getSentMessages = async (req, res, next) => {
   req.query.type = 'sent';
   return exports.getMessages(req, res, next);
 };
+
+// @desc    Search messages for current user
+// @route   GET /api/messages/search?q=...
+// @access  Private
+exports.searchMessages = async (req, res, next) => {
+  try {
+    const q = req.query.q || req.query.search || '';
+    const userId = req.user._id;
+
+    if (!q || !q.trim()) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: []
+      });
+    }
+
+    const safeSearch = sanitizeSearchQuery(q);
+    if (!safeSearch) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: []
+      });
+    }
+
+    const searchRegex = new RegExp(safeSearch, 'i');
+
+    const query = {
+      deletedBy: { $ne: userId },
+      $or: [
+        { sender: userId },
+        { 'recipients.user': userId }
+      ],
+      $and: [
+        {
+          $or: [
+            { subject: searchRegex },
+            { content: searchRegex }
+          ]
+        }
+      ]
+    };
+
+    const messages = await Message.find(query)
+      .populate({
+        path: 'sender',
+        select: 'username photo role activeDepartment',
+        populate: {
+          path: 'activeDepartment',
+          select: 'name'
+        }
+      })
+      .populate({
+        path: 'recipients.user',
+        select: 'username photo role activeDepartment',
+        populate: {
+          path: 'activeDepartment',
+          select: 'name'
+        }
+      })
+      .sort({ createdAt: -1 });
+
+    const formattedMessages = formatMessages(messages, userId);
+
+    res.status(200).json({
+      success: true,
+      count: formattedMessages.length,
+      data: formattedMessages
+    });
+  } catch (err) {
+    console.error('Error searching messages:', err);
+    next(err);
+  }
+};
+
+// @desc    Get conversation between current user and target user
+// @route   GET /api/messages/conversation/:userId
+// @access  Private
+exports.getConversation = async (req, res, next) => {
+  try {
+    const currentUserId = req.user._id;
+    const targetUserId = req.params.userId;
+
+    if (!targetUserId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Target user ID is required'
+      });
+    }
+
+    const query = {
+      deletedBy: { $ne: currentUserId },
+      $or: [
+        {
+          sender: currentUserId,
+          'recipients.user': targetUserId
+        },
+        {
+          sender: targetUserId,
+          'recipients.user': currentUserId
+        }
+      ]
+    };
+
+    const messages = await Message.find(query)
+      .populate({
+        path: 'sender',
+        select: 'username photo role activeDepartment',
+        populate: {
+          path: 'activeDepartment',
+          select: 'name'
+        }
+      })
+      .populate({
+        path: 'recipients.user',
+        select: 'username photo role activeDepartment',
+        populate: {
+          path: 'activeDepartment',
+          select: 'name'
+        }
+      })
+      .sort({ createdAt: 1 });
+
+    const formattedMessages = formatMessages(messages, currentUserId);
+
+    res.status(200).json({
+      success: true,
+      count: formattedMessages.length,
+      data: formattedMessages
+    });
+  } catch (err) {
+    console.error('Error fetching conversation:', err);
+    next(err);
+  }
+};
+
 

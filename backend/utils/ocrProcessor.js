@@ -483,16 +483,9 @@ const enhancedArabicTextCleanup = (text) => {
  */
 const checkLanguageSupport = async () => {
   try {
-    if (os.platform() === 'win32') {
-      return { 
-        supported: false, 
-        message: 'Language check not available on Windows',
-        recommendations: 'For Windows, install Tesseract from GitHub releases and ensure Arabic language data is included'
-      };
-    }
-
     // Check if tesseract is available
-    await execAsync('which tesseract');
+    const checkCmd = process.platform === 'win32' ? 'where tesseract' : 'which tesseract';
+    await execAsync(checkCmd);
     
     // Check available languages
     const availableLanguages = await checkAvailableLanguages();

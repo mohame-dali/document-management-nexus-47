@@ -85,8 +85,9 @@ const TrashPage: React.FC = () => {
       toast.success('تمت استعادة العنصر بنجاح');
       invalidateQueries();
     },
-    onError: (err: any) => {
-      const message = err?.response?.data?.message || err?.message || 'حدث خطأ أثناء استعادة العنصر';
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      const message = e?.response?.data?.message || e?.message || 'حدث خطأ أثناء استعادة العنصر';
       toast.error(message);
     },
   });
@@ -99,8 +100,9 @@ const TrashPage: React.FC = () => {
       setItemToDelete(null);
       invalidateQueries();
     },
-    onError: (err: any) => {
-      const message = err?.response?.data?.message || err?.message || 'حدث خطأ أثناء الحذف النهائي';
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      const message = e?.response?.data?.message || e?.message || 'حدث خطأ أثناء الحذف النهائي';
       toast.error(message);
     },
   });
@@ -113,8 +115,9 @@ const TrashPage: React.FC = () => {
       setIsEmptyTrashOpen(false);
       invalidateQueries();
     },
-    onError: (err: any) => {
-      const message = err?.response?.data?.message || err?.message || 'حدث خطأ أثناء إفراغ السلة';
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      const message = e?.response?.data?.message || e?.message || 'حدث خطأ أثناء إفراغ السلة';
       toast.error(message);
     },
   });
@@ -365,7 +368,7 @@ const TrashPage: React.FC = () => {
             </div>
             <h3 className="text-base font-semibold text-slate-800">تعذر تحميل سلة المحذوفات</h3>
             <p className="text-sm text-slate-500 max-w-md mx-auto">
-              {(error as any)?.message || 'حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
+              {(error as Error)?.message || 'حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
             </p>
             <Button
               type="button"
@@ -467,7 +470,7 @@ const TrashPage: React.FC = () => {
                                 <span className="text-slate-400">إلى:</span>
                                 <span className="truncate max-w-[140px]">
                                   {item.recipients
-                                    .map((r: any) => r.user?.username || r.username || 'مستخدم')
+                                    .map((r: { user?: { username?: string }; username?: string }) => r.user?.username || r.username || 'مستخدم')
                                     .join('، ')}
                                 </span>
                               </div>

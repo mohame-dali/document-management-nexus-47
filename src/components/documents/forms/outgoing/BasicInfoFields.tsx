@@ -9,15 +9,16 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
 import DocumentOptionSelect from '@/components/ui/document-option-select';
 import MultiDocumentOptionSelect from '@/components/ui/multi-document-option-select';
+import { Department } from '@/types';
 
-interface BasicInfoFieldsProps {
-  form: UseFormReturn<any>;
-  t: any;
-  departments: any[];
+interface BasicInfoFieldsProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
+  t: Record<string, string>;
+  departments: Department[];
   onSerialNumberChange?: (value: string) => void;
 }
 

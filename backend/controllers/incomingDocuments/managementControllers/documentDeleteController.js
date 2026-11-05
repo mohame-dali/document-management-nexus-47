@@ -1,5 +1,6 @@
 
 const IncomingDocument = require('../../../models/IncomingDocument');
+const OutgoingDocument = require('../../../models/OutgoingDocument');
 const ErrorResponse = require('../../../utils/errorResponse');
 
 // @desc    Delete incoming document (Soft delete)
@@ -13,6 +14,16 @@ exports.deleteIncomingDocument = async (req, res, next) => {
       return next(
         new ErrorResponse(`Document not found with id of ${req.params.id}`, 404)
       );
+    }
+
+    // Si on supprime un entrant qui a une answer, trouver le sortant associé et mettre son reference à null
+    if (document.answer) {
+      const associatedOutgoing = await OutgoingDocument.findById(document.answer);
+      if (associatedOutgoing) {
+        associatedOutgoing.reference = null;
+        await associatedOutgoing.save({ validateBeforeSave: false });
+      }
+      document.answer = null;
     }
     
     document.isDeleted = true;

@@ -1,6 +1,7 @@
 
 const IncomingDocument = require('../../models/IncomingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
+const { sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // @desc    Get all incoming documents with pagination
 // @route   GET /api/incoming-documents
@@ -33,7 +34,28 @@ exports.getIncomingDocuments = async (req, res, next) => {
 
     // Filter by source if provided
     if (req.query.source && req.query.source.trim() !== '') {
-      query.source = { $regex: req.query.source, $options: 'i' };
+      const safeSource = sanitizeSearchQuery(req.query.source);
+      if (safeSource) {
+        query.source = { $regex: safeSource, $options: 'i' };
+      }
+    }
+
+    // Search query: server-side text and numeric search (subject, source, serialNumber)
+    if (req.query.q && req.query.q.trim() !== '') {
+      const q = req.query.q.trim();
+      const safeQ = sanitizeSearchQuery(q);
+      const orConditions = [];
+      if (safeQ) {
+        orConditions.push({ subject: { $regex: safeQ, $options: 'i' } });
+        orConditions.push({ source: { $regex: safeQ, $options: 'i' } });
+      }
+      const num = Number(q);
+      if (!isNaN(num) && num > 0) {
+        orConditions.push({ serialNumber: num });
+      }
+      if (orConditions.length > 0) {
+        query.$or = orConditions;
+      }
     }
 
     // Pagination parameters

@@ -95,7 +95,8 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
     enabled: !!documentId,
   });
 
-  const isForbidden = (error as any)?.response?.status === 403 || error?.message?.includes('403');
+  const isForbidden = (error as { response?: { status?: number } } | null)?.response?.status === 403 || 
+    (error instanceof Error && error.message.includes('403'));
 
   // Fetch association types list
   const { data: typesList = ['Stage', 'Formation', 'Diplôme', 'Autre'] } = useQuery({

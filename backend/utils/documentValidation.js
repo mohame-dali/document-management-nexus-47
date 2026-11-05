@@ -12,6 +12,15 @@ exports.validateIncomingDocumentFields = (data) => {
   if (!arrivalDate || !correspondenceNumber || !correspondenceDate || !subject) {
     throw new ErrorResponse('Please provide all required fields', 400);
   }
+
+  const deptList = data.departments || data.departmentIds || data.assignedTo;
+  const hasDepartments = Array.isArray(deptList)
+    ? deptList.length > 0
+    : (typeof deptList === 'string' && deptList.trim().length > 0);
+
+  if (!hasDepartments) {
+    throw new ErrorResponse('Un courrier doit être affecté à au moins un département.', 400);
+  }
 };
 
 /**

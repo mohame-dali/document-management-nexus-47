@@ -35,7 +35,7 @@ interface AuditTableProps {
 
 const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
   const getActionIcon = (action: string) => {
-    const iconMap: Record<string, React.ComponentType<any>> = {
+    const iconMap: Record<string, LucideIcon> = {
       'document_create': Plus,
       'document_update': Edit,
       'document_delete': Trash2,

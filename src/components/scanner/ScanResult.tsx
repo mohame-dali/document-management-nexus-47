@@ -5,11 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
+export interface ScanResultData {
+  filePath?: string;
+  serialNumber?: string;
+  documentType?: string;
+  ocrText?: string;
+  [key: string]: unknown;
+}
+
 interface ScanResultProps {
-  t: any;
+  t: Record<string, string>;
   scanning: boolean;
   progress: number;
-  scanResult: any;
+  scanResult: ScanResultData | null;
   onCreateFromScan: () => void;
   API_URL: string;
 }

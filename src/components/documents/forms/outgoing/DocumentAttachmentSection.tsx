@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import DocumentUploadWithOcr from '@/components/documents/DocumentUploadWithOcr';
 
 interface DocumentAttachmentSectionProps {
-  t: any;
+  t: Record<string, string>;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   handleFileSelect: (files: File[]) => void;
@@ -22,8 +22,8 @@ interface DocumentAttachmentSectionProps {
   handleScanSettingChange: (key: string, value: string) => void;
   scanning: boolean;
   scanProgress: number;
-  scanResult: any;
-  scannerStatus?: any;
+  scanResult: Record<string, unknown> | null;
+  scannerStatus?: Record<string, unknown> | null;
   loadingScannerStatus?: boolean;
   handleStartScan: () => void;
   onRemoveScan?: () => void;

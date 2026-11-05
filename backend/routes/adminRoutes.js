@@ -40,7 +40,7 @@ router.post('/reindex-failed', adminAuth, async (req, res) => {
     if (result.status === 'service_down') {
       return res.status(503).json({
         success: false,
-        message: 'Service Ollama indisponible. Veuillez vérifier qu\'Ollama est bien démarré.',
+        message: 'Service IA local indisponible. Veuillez vérifier que le moteur est bien opérationnel.',
         data: result,
       });
     }

@@ -151,7 +151,7 @@ const InstallationGuidePage: React.FC = () => {
 
   // If setup is verified done, ensure step 1 is marked or indicated
   useEffect(() => {
-    if (isSetupDone && !completedSteps.includes(1)) {
+    if (isSetupDone) {
       setCompletedSteps((prev) => (prev.includes(1) ? prev : [...prev, 1]));
     }
   }, [isSetupDone]);

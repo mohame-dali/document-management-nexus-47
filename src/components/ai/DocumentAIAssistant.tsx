@@ -95,7 +95,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
         }
       }
       toast.success('تم إنشاء الملخص الذكي بنجاح');
-    } catch (err: any) {
+    } catch (err: unknown) {
       const msg = getSummaryErrorMessage(err);
       setSummaryError(msg);
       toast.error(msg);
@@ -125,7 +125,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
         }
       }
       toast.success('تمت ترجمة النص بنجاح');
-    } catch (err: any) {
+    } catch (err: unknown) {
       const msg = getTranslationErrorMessage(err);
       setTranslationError(msg);
       toast.error(msg);

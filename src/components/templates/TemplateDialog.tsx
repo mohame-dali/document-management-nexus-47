@@ -53,8 +53,9 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
       toast.success('تم إنشاء النموذج بنجاح');
       onSuccess();
     },
-    onError: (error: any) => {
-      toast.error('فشل في إنشاء النموذج: ' + (error.response?.data?.message || error.message));
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error('فشل في إنشاء النموذج: ' + (err.response?.data?.message || err.message || ''));
     },
   });
 
@@ -64,8 +65,9 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
       toast.success('تم تحديث النموذج بنجاح');
       onSuccess();
     },
-    onError: (error: any) => {
-      toast.error('فشل في تحديث النموذج: ' + (error.response?.data?.message || error.message));
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error('فشل في تحديث النموذج: ' + (err.response?.data?.message || err.message || ''));
     },
   });
 

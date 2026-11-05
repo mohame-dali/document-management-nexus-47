@@ -9,10 +9,10 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 
-interface DescriptionFieldProps {
-  form: UseFormReturn<any>;
+interface DescriptionFieldProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
   label: string;
   description: string;
 }

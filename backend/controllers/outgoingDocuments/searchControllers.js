@@ -1,6 +1,7 @@
 
 const OutgoingDocument = require('../../models/OutgoingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
+const { escapeRegex, sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // @desc    Search outgoing documents
 // @route   GET /api/outgoing-documents/search
@@ -10,20 +11,21 @@ exports.searchOutgoingDocuments = async (req, res, next) => {
     const { q, year, dateFrom, dateTo, serialNumber, subject, page, limit } = req.query;
     
     // Build the query object
-    let query = {};
+    let query = { isDeleted: false };
     
     // Text search in multiple fields (with optional OCR toggle)
     const { includeOcr } = req.query;
     const shouldIncludeOcr = includeOcr === undefined || includeOcr === 'true' || includeOcr === true;
-    if (q) {
+    const safeQ = sanitizeSearchQuery(q);
+    if (safeQ) {
       const orConditions = [
-        { subject: { $regex: q, $options: 'i' } },
-        { 'source.name': { $regex: q, $options: 'i' } },
-        { assignedTo: { $regex: q, $options: 'i' } },
-        { pourInfo: { $regex: q, $options: 'i' } }
+        { subject: { $regex: safeQ, $options: 'i' } },
+        { 'source.name': { $regex: safeQ, $options: 'i' } },
+        { assignedTo: { $regex: safeQ, $options: 'i' } },
+        { pourInfo: { $regex: safeQ, $options: 'i' } }
       ];
       if (shouldIncludeOcr) {
-        orConditions.push({ ocrText: { $regex: q, $options: 'i' } });
+        orConditions.push({ ocrText: { $regex: safeQ, $options: 'i' } });
       }
       query.$or = orConditions;
     }
@@ -59,8 +61,11 @@ exports.searchOutgoingDocuments = async (req, res, next) => {
     }
     
     // Filter by subject if provided
-    if (subject) {
-      query.subject = { $regex: subject, $options: 'i' };
+    if (subject && typeof subject === 'string') {
+      const safeSubject = escapeRegex(subject.trim().slice(0, 200));
+      if (safeSubject) {
+        query.subject = { $regex: safeSubject, $options: 'i' };
+      }
     }
     
     // Date range filter

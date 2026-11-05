@@ -6,7 +6,7 @@ export interface TreeNode {
   id: string;
   label: string;
   icon?: LucideIcon;
-  data?: any;
+  data?: unknown;
   children: TreeNode[];
 }
 

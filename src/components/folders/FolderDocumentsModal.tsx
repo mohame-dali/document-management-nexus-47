@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FolderDocumentsList } from './FolderDocumentsList';
 import { Folder } from '@/types';
-import { X, FolderOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FolderOpen } from 'lucide-react';
 
 interface FolderDocumentsModalProps {
   selectedFolder: Folder | null;
@@ -125,48 +124,35 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
         style={{
           transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
           transition: isDragging ? 'none' : undefined,
         }}
-        className="w-[95vw] sm:w-[90vw] sm:max-w-5xl max-h-[88vh] overflow-hidden p-0 bg-white border border-[#e2e8f0] rounded shadow-sm"
+        className="max-w-[90vw] w-[90vw] md:w-[80vw] lg:w-[70vw] max-h-[90vh] overflow-y-auto p-6 bg-white border border-[#e2e8f0] rounded shadow-sm"
         dir="rtl"
       >
         <DialogHeader
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
           style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-          className="p-5 px-6 border-b border-[#e2e8f0] bg-[#f8fafc] select-none"
+          className="pb-4 pr-12 border-b border-[#e2e8f0] bg-transparent select-none text-right"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
-                <FolderOpen className="h-5 w-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
-                  {selectedFolder ? `مستندات المجلد: ${selectedFolder.name}` : 'مستندات المجلد'}
-                </DialogTitle>
-                <p className="text-sm text-gray-600 mt-0.5">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+              <FolderOpen className="h-5 w-5" />
             </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              aria-label="إغلاق النافذة"
-              title="إغلاق النافذة"
-              className="h-11 w-11 p-0 rounded hover:bg-gray-200 text-gray-500 transition-colors duration-200 flex items-center justify-center shrink-0"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div>
+              <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
+                {selectedFolder ? `مستندات المجلد: ${selectedFolder.name}` : 'مستندات المجلد'}
+              </DialogTitle>
+              <p className="text-sm text-gray-600 mt-0.5">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
+            </div>
           </div>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto p-6 bg-[#f7fafc]">
+        <div className="mt-4">
           <FolderDocumentsList
             selectedFolder={selectedFolder}
             canManage={canManage}

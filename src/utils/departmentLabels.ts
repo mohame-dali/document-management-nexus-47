@@ -14,10 +14,13 @@ interface OrgSettingsLike {
   rhDepartmentId?: string | { toString(): string; _id?: string } | null;
 }
 
-const extractId = (val: any): string => {
+const extractId = (val: unknown): string => {
   if (!val) return '';
-  if (typeof val === 'object') {
-    return String(val._id || val.toString() || '');
+  if (typeof val === 'object' && val !== null) {
+    if ('_id' in val && (val as { _id?: unknown })._id) {
+      return String((val as { _id: unknown })._id);
+    }
+    return String(val.toString?.() || '');
   }
   return String(val);
 };

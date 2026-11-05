@@ -79,9 +79,10 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
       setNewFolderName('');
       setParentFolderId(null);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Create folder error:', error);
-      toast.error(error.response?.data?.message || 'فشل في إنشاء المجلد');
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في إنشاء المجلد');
     },
   });
 
@@ -95,9 +96,10 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
       setSelectedFolder(null);
       setNewFolderName('');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Update folder error:', error);
-      toast.error(error.response?.data?.message || 'فشل في تحديث المجلد');
+      const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || 'فشل في تحديث المجلد');
     },
   });
 
@@ -112,18 +114,19 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         onFolderSelect(null);
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Delete folder error:', error);
       setIsDeleteDialogOpen(false);
       setFolderToDelete(null);
-      if (error.response?.status === 400) {
+      const errRes = (error as { response?: { status?: number; data?: { message?: string } } })?.response;
+      if (errRes?.status === 400) {
         toast.error('لا يمكن حذف مجلد يحتوي على مجلدات فرعية أو مستندات');
-      } else if (error.response?.status === 404) {
+      } else if (errRes?.status === 404) {
         toast.error('المجلد غير موجود أو تم حذفه مسبقاً');
         // Refresh the folders list to reflect the current state
         queryClient.invalidateQueries({ queryKey: ['folders'] });
       } else {
-        toast.error(error.response?.data?.message || 'فشل في حذف المجلد');
+        toast.error(errRes?.data?.message || 'فشل في حذف المجلد');
       }
     },
   });
@@ -171,10 +174,10 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
 
     createFolderMutation.mutate({
       name: newFolderName.trim(),
-      parentId: parentFolderId,
+      parentId: parentFolderId || undefined,
       department: targetDepartmentId,
       createdBy: currentUser?._id,
-    } as any);
+    });
   };
 
   const handleEditFolder = () => {

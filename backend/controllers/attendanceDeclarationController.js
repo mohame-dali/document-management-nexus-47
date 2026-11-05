@@ -338,37 +338,59 @@ exports.approveDeclaration = async (req, res) => {
       }
     }
 
-    // Mettre à jour ou insérer dans Attendance (upsert)
-    const attendanceRecord = await Attendance.findOneAndUpdate(
-      {
+    // Vérifier d'abord si une présence existe déjà pour cet agent à cette date
+    const existingAttendance = await Attendance.findOne({
+      personnelId: declaration.personnelId,
+      date: start
+    });
+
+    if (existingAttendance && existingAttendance.saisiPar) {
+      return res.status(400).json({
+        success: false,
+        message: 'Une présence a déjà été saisie pour cette date. Veuillez la modifier manuellement si nécessaire.'
+      });
+    }
+
+    // Créer ou enregistrer la présence issue de la déclaration
+    let attendanceRecord;
+    if (existingAttendance) {
+      existingAttendance.departmentId = declaration.departmentId;
+      existingAttendance.statut = declaration.statut;
+      existingAttendance.motif = safeMotif;
+      existingAttendance.leaveReasonId = isPresent ? null : leaveReasonId;
+      existingAttendance.impacteSolde = isPresent ? false : impacteSolde;
+      existingAttendance.detailsMotif = {
+        serviceNom: declaration.detailsMotif?.nomService || '',
+        missionLieu: declaration.detailsMotif?.lieuMission || '',
+        missionObjet: declaration.detailsMotif?.objetMission || '',
+        formationIntitule: declaration.detailsMotif?.intituleFormation || '',
+        commentaire: declaration.detailsMotif?.commentaire || ''
+      };
+      existingAttendance.heureArrivee = isPresent ? (declaration.heureArrivee || null) : null;
+      existingAttendance.saisiPar = req.user._id;
+      existingAttendance.modifiePar = req.user._id;
+      attendanceRecord = await existingAttendance.save();
+    } else {
+      attendanceRecord = await Attendance.create({
         personnelId: declaration.personnelId,
-        date: start
-      },
-      {
-        $set: {
-          departmentId: declaration.departmentId,
-          statut: declaration.statut,
-          motif: safeMotif,
-          leaveReasonId: isPresent ? null : leaveReasonId,
-          impacteSolde: isPresent ? false : impacteSolde,
-          detailsMotif: {
-            serviceNom: declaration.detailsMotif?.nomService || '',
-            missionLieu: declaration.detailsMotif?.lieuMission || '',
-            missionObjet: declaration.detailsMotif?.objetMission || '',
-            formationIntitule: declaration.detailsMotif?.intituleFormation || '',
-            commentaire: declaration.detailsMotif?.commentaire || ''
-          },
-          heureArrivee: isPresent ? (declaration.heureArrivee || null) : null,
-          saisiPar: req.user._id,
-          modifiePar: req.user._id
-        }
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true
-      }
-    );
+        departmentId: declaration.departmentId,
+        date: start,
+        statut: declaration.statut,
+        motif: safeMotif,
+        leaveReasonId: isPresent ? null : leaveReasonId,
+        impacteSolde: isPresent ? false : impacteSolde,
+        detailsMotif: {
+          serviceNom: declaration.detailsMotif?.nomService || '',
+          missionLieu: declaration.detailsMotif?.lieuMission || '',
+          missionObjet: declaration.detailsMotif?.objetMission || '',
+          formationIntitule: declaration.detailsMotif?.intituleFormation || '',
+          commentaire: declaration.detailsMotif?.commentaire || ''
+        },
+        heureArrivee: isPresent ? (declaration.heureArrivee || null) : null,
+        saisiPar: req.user._id,
+        modifiePar: req.user._id
+      });
+    }
 
     // Mettre à jour la déclaration
     declaration.validationStatus = 'approuvee';
@@ -422,6 +444,11 @@ exports.rejectDeclaration = async (req, res) => {
       }
     }
 
+    if (declaration.attendanceId) {
+      await Attendance.findByIdAndDelete(declaration.attendanceId);
+      declaration.attendanceId = null;
+    }
+
     declaration.validationStatus = 'rejetee';
     declaration.validatedBy = req.user._id;
     declaration.validatedAt = new Date();
@@ -472,6 +499,9 @@ exports.updateDeclaration = async (req, res) => {
       }
     }
 
+    const wasApproved = declaration.validationStatus === 'approuvee';
+    const oldAttendanceId = declaration.attendanceId;
+
     const {
       statut,
       motif,
@@ -480,7 +510,8 @@ exports.updateDeclaration = async (req, res) => {
       heureArrivee,
       adminComment,
       rejectionReason,
-      date
+      date,
+      validationStatus
     } = req.body;
 
     if (statut) declaration.statut = statut;
@@ -497,9 +528,23 @@ exports.updateDeclaration = async (req, res) => {
     if (rejectionReason !== undefined) declaration.rejectionReason = rejectionReason;
     if (date) declaration.date = parseDateToUTCStartOfDay(date);
 
-    declaration.validationStatus = 'modifiee';
+    const newValidationStatus = validationStatus || 'modifiee';
+    declaration.validationStatus = newValidationStatus;
     declaration.validatedBy = req.user._id;
     declaration.validatedAt = new Date();
+
+    // Si la déclaration était approuvée et qu'elle change de statut (repasse en modifiée, en attente, etc.)
+    if (wasApproved && newValidationStatus !== 'approuvee' && oldAttendanceId) {
+      await Attendance.findByIdAndDelete(oldAttendanceId);
+      declaration.attendanceId = null;
+    } else if (oldAttendanceId && newValidationStatus === 'approuvee') {
+      const isPresent = declaration.statut === 'present';
+      await Attendance.findByIdAndUpdate(oldAttendanceId, {
+        statut: declaration.statut,
+        motif: isPresent ? null : declaration.motif,
+        modifiePar: req.user._id
+      });
+    }
 
     await declaration.save();
 
@@ -547,6 +592,11 @@ exports.deleteDeclaration = async (req, res) => {
           message: 'Vous ne pouvez supprimer qu’une déclaration en attente'
         });
       }
+    }
+
+    // Supprimer également le document Attendance lié pour que le solde de congés soit resynchronisé
+    if (declaration.attendanceId) {
+      await Attendance.findByIdAndDelete(declaration.attendanceId);
     }
 
     await AttendanceDeclaration.findByIdAndDelete(req.params.id);
