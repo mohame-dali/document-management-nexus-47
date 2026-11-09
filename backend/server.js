@@ -8,9 +8,18 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const errorHandler = require('./middleware/error');
 const cookieParser = require('cookie-parser');
+const os = require('os');
 
 // Load env vars
 dotenv.config();
+
+// Configuration automatique des threads IA pour préserver le CPU
+if (!process.env.LLAMA_THREADS) {
+  // Utiliser les cœurs physiques (souvent la moitié des cœurs logiques)
+  const physicalCores = Math.max(1, Math.floor(os.cpus().length / 2));
+  process.env.LLAMA_THREADS = physicalCores.toString();
+  console.log(`[AI] LLAMA_THREADS configuré sur ${physicalCores} (cœurs physiques)`);
+}
 
 // Check JWT_SECRET
 if (!process.env.JWT_SECRET) {
@@ -31,6 +40,18 @@ if (!process.env.JWT_COOKIE_EXPIRE) {
 
 // Connect to database
 connectDB();
+
+// Warm-up de l'IA (non-bloquant)
+setTimeout(async () => {
+  try {
+    console.log('[AI Warm-up] Préchargement des modèles en cours...');
+    const { checkOllamaHealth } = require('./services/ollamaService');
+    await checkOllamaHealth();
+    console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
+  } catch (err) {
+    console.warn('[AI Warm-up] Erreur de préchargement:', err.message);
+  }
+}, 5000); // Attendre 5 secondes que le serveur soit stable avant de charger les 5 Go
 
 const app = express();
 const httpServer = createServer(app);

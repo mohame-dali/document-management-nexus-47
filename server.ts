@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cookieParser from 'cookie-parser';
@@ -13,6 +14,14 @@ import mongoose from 'mongoose';
 mongoose.set('bufferCommands', false);
 
 dotenv.config();
+
+// Configuration automatique des threads IA pour préserver le CPU
+if (!process.env.LLAMA_THREADS) {
+  // Utiliser les cœurs physiques (souvent la moitié des cœurs logiques)
+  const physicalCores = Math.max(1, Math.floor(os.cpus().length / 2));
+  process.env.LLAMA_THREADS = physicalCores.toString();
+  console.log(`[AI] LLAMA_THREADS configuré sur ${physicalCores} (cœurs physiques)`);
+}
 
 const require = createRequire(import.meta.url);
 const connectDB = require('./backend/config/db');
@@ -36,6 +45,18 @@ process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 connectDB().catch((err: Error) => {
   console.warn('Database initialization warning:', err.message);
 });
+
+// Warm-up de l'IA (non-bloquant)
+setTimeout(async () => {
+  try {
+    console.log('[AI Warm-up] Préchargement des modèles en cours...');
+    const { checkOllamaHealth } = require('./backend/services/ollamaService');
+    await checkOllamaHealth();
+    console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
+  } catch (err: unknown) {
+    console.warn('[AI Warm-up] Erreur de préchargement:', (err as Error).message);
+  }
+}, 5000); // Attendre 5 secondes que le serveur soit stable avant de charger les 5 Go
 
 // Démarrer le scheduler de backup si MongoDB est connecté
 try {
