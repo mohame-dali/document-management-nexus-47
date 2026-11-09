@@ -205,8 +205,16 @@ const loginLimiter = rateLimit({
 app.use('/api', globalLimiter);
 app.use('/api/auth/login', loginLimiter);
 
-// Strict production check: si MongoDB est déconnecté, renvoyer une erreur 503
+// Strict production check: si MongoDB est déconnecté, renvoyer une erreur 503 (sauf pour auth, setup, test, health)
 app.use('/api', (req, res, next) => {
+  if (
+    req.path.startsWith('/auth/') ||
+    req.path.startsWith('/setup') ||
+    req.path === '/test' ||
+    req.path === '/health'
+  ) {
+    return next();
+  }
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({
       success: false,
@@ -328,9 +336,16 @@ try {
   console.warn('[Server] Cron notification activité non démarré:', err.message);
 }
 
-// Add a simple test route
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working' });
+// Simple test / health routes
+app.get(['/api/test', '/api/health'], (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is working',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  });
 });
 
 // Error handler middleware

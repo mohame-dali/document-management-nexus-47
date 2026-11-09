@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import { fileURLToPath } from 'url'; // ✅ IMPORT AJOUTÉ
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cookieParser from 'cookie-parser';
@@ -10,6 +11,10 @@ import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { createRequire } from 'module';
 import mongoose from 'mongoose';
+
+// ✅ CORRECTION POUR LES MODULES ES (Node 20+)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 mongoose.set('bufferCommands', false);
 
@@ -168,8 +173,16 @@ try {
   console.warn('Swagger docs initialization notice:', (err as Error).message);
 }
 
-// Strict production check: if MongoDB is disconnected, return 503
-app.use('/api', (_req: express.Request, res: express.Response, next: express.NextFunction) => {
+// MIDDLEWARE 503 : Exclure les routes d'authentification, setup, test et health
+app.use('/api', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (
+    req.path.startsWith('/auth/') || 
+    req.path.startsWith('/setup') || 
+    req.path === '/test' || 
+    req.path === '/health'
+  ) {
+    return next();
+  }
   if (mongoose.connection.readyState === 1) {
     return next();
   }
@@ -214,6 +227,18 @@ try {
 } catch (err: unknown) {
   console.warn('Notice loading backend routes:', (err as Error).message);
 }
+
+// Health check endpoints for proxy and connectivity diagnostics
+app.get(['/api/test', '/api/health'], (_req: express.Request, res: express.Response) => {
+  res.json({
+    success: true,
+    message: 'API is working',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  });
+});
 
 // Error handler middleware
 app.use(errorHandler);
@@ -330,4 +355,3 @@ process.on('SIGINT', async () => {
     process.exit(1);
   }
 });
-

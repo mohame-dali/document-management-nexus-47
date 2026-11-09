@@ -12,13 +12,14 @@ import { Separator } from '@/components/ui/separator';
 import BasicInfoFields from './outgoing/BasicInfoFields';
 import DocumentAttachmentSection from './outgoing/DocumentAttachmentSection';
 import { OutgoingDocument, Department } from '@/types';
+import { OutgoingScanMutationRunner, OutgoingScanResultData } from '@/hooks/forms/useOutgoingDocumentForm';
 
 interface EditOutgoingDocumentFormProps {
   document: OutgoingDocument;
   departments: Department[];
-  scannerStatus?: any;
+  scannerStatus?: unknown;
   loadingScannerStatus?: boolean;
-  scanTemporaryDocumentMutation?: any;
+  scanTemporaryDocumentMutation?: OutgoingScanMutationRunner;
 }
 
 const formSchema = z.object({
@@ -46,7 +47,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<OutgoingScanResultData | null>(null);
   const [scanSettings, setScanSettings] = useState({
     resolution: '600',
     format: 'pdf'
@@ -103,7 +104,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
     }, 500);
     
     scanTemporaryDocumentMutation.mutate(scanOptions, {
-      onSuccess: (response: any) => {
+      onSuccess: (response: { data?: OutgoingScanResultData }) => {
         setScanning(false);
         setScanProgress(100);
         setScanResult(response.data);

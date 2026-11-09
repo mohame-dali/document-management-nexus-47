@@ -18,7 +18,8 @@
     "postinstall": "node scripts/check-os.js",
     "setup": "node scripts/run-setup.js",
     "download-models": "node scripts/download-models.js",
-    "check-models": "node backend/scripts/checkModelPath.js"
+    "check-models": "node backend/scripts/checkModelPath.js",
+    "test:proxy": "node scripts/check-proxy-connectivity.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

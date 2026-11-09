@@ -4,7 +4,7 @@
  * @param filename File name for the download (e.g. 'courriers-entrants.csv')
  * @param rows Array of objects to export
  */
-export function exportToCsv(filename: string, rows: Record<string, any>[]): void {
+export function exportToCsv(filename: string, rows: Record<string, unknown>[]): void {
   if (!rows || rows.length === 0) {
     console.warn('[exportToCsv] No rows to export');
     return;
@@ -24,7 +24,7 @@ export function exportToCsv(filename: string, rows: Record<string, any>[]): void
   }
 
   // Format a single cell value for CSV
-  const formatCell = (val: any): string => {
+  const formatCell = (val: unknown): string => {
     if (val === null || val === undefined) {
       return '';
     }
@@ -33,18 +33,20 @@ export function exportToCsv(filename: string, rows: Record<string, any>[]): void
       return val.toISOString().split('T')[0];
     }
 
-    if (typeof val === 'object') {
+    if (typeof val === 'object' && val !== null) {
       if (Array.isArray(val)) {
         return val
           .map((item) => {
             if (typeof item === 'object' && item !== null) {
-              return item.name || item.nom || item.title || item._id || JSON.stringify(item);
+              const record = item as Record<string, unknown>;
+              return String(record.name || record.nom || record.title || record._id || JSON.stringify(item));
             }
             return String(item);
           })
           .join('; ');
       }
-      return val.name || val.nom || val.title || val.username || val._id || JSON.stringify(val);
+      const obj = val as Record<string, unknown>;
+      return String(obj.name || obj.nom || obj.title || obj.username || obj._id || JSON.stringify(val));
     }
 
     const str = String(val);

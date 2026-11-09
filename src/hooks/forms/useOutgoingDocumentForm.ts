@@ -32,6 +32,17 @@ export interface OutgoingScanMutationRunner {
   ) => void;
 }
 
+export interface OutgoingFormValues {
+  serialNumber: string;
+  subject: string;
+  assignedTo: string[];
+  issueDate: Date;
+  department: string;
+  typeDocument?: string;
+  pourInfo?: string[];
+  ocrText?: string;
+}
+
 export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepartmentId?: string, scanData?: OutgoingScanResultData) => {
   const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
