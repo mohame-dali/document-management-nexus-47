@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/apiService';
+import { getUnreadCount } from '@/services/messageService';
 
 /**
  * Hook centralisé pour récupérer tous les compteurs de badges.
@@ -10,16 +11,9 @@ import api from '@/services/apiService';
  */
 export const useHubBadges = () => {
   // Compteur messages non lus (endpoint existant)
-  const { data: unreadMessages } = useQuery({
-    queryKey: ['hub-badge-unread-messages'],
-    queryFn: async () => {
-      try {
-        const response = await api.get('/messages/unread/count');
-        return response.data?.data?.count || response.data?.count || 0;
-      } catch {
-        return 0;
-      }
-    },
+  const { data: unreadData } = useQuery({
+    queryKey: ['unread-messages-count'],
+    queryFn: getUnreadCount,
     staleTime: 60 * 1000, // 1 min
     refetchInterval: 2 * 60 * 1000, // 2 min
     retry: false,
@@ -58,7 +52,7 @@ export const useHubBadges = () => {
   });
 
   return {
-    unreadMessages: unreadMessages || 0,
+    unreadMessages: unreadData?.count || 0,
     pendingDeclarations: pendingDeclarations || 0,
     pendingIncoming: pendingIncoming || 0,
   };

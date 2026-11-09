@@ -42,7 +42,7 @@ const Header = () => {
 
   // Fetch unread message count
   const { data: unreadData } = useQuery({
-    queryKey: ['unreadMessages'],
+    queryKey: ['unread-messages-count'],
     queryFn: getUnreadCount,
     enabled: !!currentUser,
     refetchInterval: 60000, // Refetch every 60 seconds

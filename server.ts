@@ -47,18 +47,17 @@ if (!process.env.JWT_SECRET) {
 process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 
-// Connect to database
-connectDB().catch((err: Error) => {
-  console.warn('Database initialization warning:', err.message);
-});
-
 // Warm-up de l'IA (non-bloquant)
 setTimeout(async () => {
   try {
     console.log('[AI Warm-up] Préchargement des modèles en cours...');
     const { checkOllamaHealth } = require('./backend/services/ollamaService');
-    await checkOllamaHealth();
-    console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
+    const health = await checkOllamaHealth();
+    if (health?.ok) {
+      console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
+    } else {
+      console.log('[AI Warm-up] ℹ️ Modèles IA non téléchargés (mode hors ligne).');
+    }
   } catch (err: unknown) {
     console.warn('[AI Warm-up] Erreur de préchargement:', (err as Error).message);
   }
@@ -291,38 +290,47 @@ function checkAIModels() {
 }
 
 async function start() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('(.*)', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
-  httpServer.on('error', (err: NodeJS.ErrnoException) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`🔴 Port ${PORT} already in use. Waiting or retry.`);
-    } else {
-      console.error('Server error:', err);
+  try {
+    try {
+      await connectDB();
+      console.log('✅ MongoDB connecté, démarrage du serveur HTTP...');
+    } catch (err: unknown) {
+      console.warn('Database initialization warning:', (err as Error).message);
     }
-  });
 
-  httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-    checkAIModels();
-  });
+    if (process.env.NODE_ENV !== 'production') {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), 'dist');
+      app.use(express.static(distPath));
+      app.get('(.*)', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
+
+    httpServer.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`🔴 Port ${PORT} already in use. Waiting or retry.`);
+      } else {
+        console.error('Server error:', err);
+      }
+    });
+
+    httpServer.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://0.0.0.0:${PORT}`);
+      checkAIModels();
+    });
+  } catch (err: unknown) {
+    console.error('Fatal startup error:', err);
+    process.exit(1);
+  }
 }
 
-start().catch((err: unknown) => {
-  console.error('Fatal startup error:', err);
-  process.exit(1);
-});
+start();
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
