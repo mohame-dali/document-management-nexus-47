@@ -1,17 +1,19 @@
-const express = require('express');
+const path = require('path');
 const dotenv = require('dotenv');
+
+// Load env vars AVANT les autres imports
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config(); // Fallback pour .env à la racine
+
+const express = require('express');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const cors = require('cors');
-const path = require('path');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const errorHandler = require('./middleware/error');
 const cookieParser = require('cookie-parser');
 const os = require('os');
-
-// Load env vars
-dotenv.config();
 
 // Configuration automatique des threads IA pour préserver le CPU
 if (!process.env.LLAMA_THREADS) {
@@ -32,6 +34,9 @@ if (!process.env.JWT_SECRET) {
     process.env.JWT_SECRET = 'dms_dev_jwt_secret_key_64_bytes_secure_random_fallback_token_2026';
   }
 }
+
+// Fallback JWT_EXPIRE
+process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 
 // Set default JWT cookie expiration if not provided
 if (!process.env.JWT_COOKIE_EXPIRE) {

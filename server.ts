@@ -13,7 +13,8 @@ import mongoose from 'mongoose';
 
 mongoose.set('bufferCommands', false);
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, 'backend', '.env') });
+dotenv.config(); // Fallback vers .env racine si présent
 
 // Configuration automatique des threads IA pour préserver le CPU
 if (!process.env.LLAMA_THREADS) {
