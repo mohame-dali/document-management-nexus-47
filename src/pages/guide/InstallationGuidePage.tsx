@@ -192,7 +192,7 @@ const InstallationGuidePage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleReset}
-              className="text-[#718096] hover:text-[#2c5282] text-xs h-9 border-[#cbd5e1]"
+              className="text-[#5f6b7d] hover:text-[#2c5282] text-xs h-9 border-[#cbd5e1]"
               title="إعادة تعيين التقدم"
             >
               <RotateCcw className="w-3.5 h-3.5 ml-1.5" />
@@ -339,7 +339,7 @@ const InstallationGuidePage: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleStep(step.id)}
-                    className="text-xs text-[#718096] hover:text-[#2c5282] hover:bg-[#edf2f7] h-8"
+                    className="text-xs text-[#5f6b7d] hover:text-[#2c5282] hover:bg-[#edf2f7] h-8"
                   >
                     {isCompleted ? 'إلغاء التحديد كـ مكتمل' : 'وضع علامة مكتمل'}
                   </Button>

@@ -154,7 +154,7 @@ const TemplatesPage = () => {
                 )}
 
                 {/* Metadata */}
-                <div className="text-xs text-[#718096] flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[#f1f5f9]">
+                <div className="text-xs text-[#5f6b7d] flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[#f1f5f9]">
                   <div className="flex items-center gap-1">
                     <Users className="h-3 w-3 text-[#718096]" />
                     <span>{template.downloads} تحميل</span>
@@ -207,8 +207,8 @@ const TemplatesPage = () => {
         /* Empty State */
         <div className="bg-white border border-[#e2e8f0] rounded p-12 text-center shadow-sm">
           <FileText className="h-12 w-12 mx-auto mb-3 text-[#cbd5e0]" />
-          <h3 className="text-base font-medium text-[#718096] mb-1">لا توجد نماذج متاحة</h3>
-          <p className="text-sm text-[#a0aec0] mb-4">
+          <h3 className="text-base font-medium text-[#5f6b7d] mb-1">لا توجد نماذج متاحة</h3>
+          <p className="text-sm text-[#5f6b7d] mb-4">
             {canManageTemplates 
               ? 'ابدأ بإضافة النموذج الأول للمستخدمين'
               : 'لم يتم رفع أي نماذج بعد'

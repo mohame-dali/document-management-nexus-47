@@ -435,7 +435,7 @@ const IncomingDocumentsPage: React.FC = () => {
               />
             </div>
             {yearInput.length > 0 && yearInput.length < 4 && (
-              <p className="text-sm text-[#718096]">
+              <p className="text-sm text-[#5f6b7d]">
                 {t('incoming.yearModal.incomplete')}
               </p>
             )}
@@ -450,7 +450,7 @@ const IncomingDocumentsPage: React.FC = () => {
             </div>
             {/* Quick Year Shortcuts */}
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-sm font-medium text-[#718096]">{t('incoming.yearModal.quickYears')}</span>
+              <span className="text-sm font-medium text-[#5f6b7d]">{t('incoming.yearModal.quickYears')}</span>
               {[
                 new Date().getFullYear(),
                 new Date().getFullYear() - 1,
@@ -825,7 +825,7 @@ const IncomingDocumentsPage: React.FC = () => {
         {totalFiltered === 0 ? (
           /* Empty State */
           <div className="border border-[#e2e8f0] rounded p-8 sm:p-12 text-center bg-[#f7fafc] space-y-4">
-            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#718096]">
+            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
               <FileText className="h-7 w-7 text-[#2c5282]" />
             </div>
             <div>
@@ -917,7 +917,7 @@ const IncomingDocumentsPage: React.FC = () => {
                             <span className="font-bold text-base text-[#1a202c]">
                               #{highlightMatch(String(doc.serialNumber), searchQuery)}
                             </span>
-                            <span className="text-xs text-[#718096]">
+                            <span className="text-xs text-[#5f6b7d]">
                               {doc.year}
                             </span>
                           </div>
@@ -993,7 +993,7 @@ const IncomingDocumentsPage: React.FC = () => {
                           )}
 
                           {doc.responsibleUser && typeof doc.responsibleUser === 'object' && (
-                            <span className="text-xs text-[#718096] flex items-center gap-1">
+                            <span className="text-xs text-[#5f6b7d] flex items-center gap-1">
                               <Users className="h-3 w-3 text-[#718096]" />
                               {t('incoming.responsible.label', { name: doc.responsibleUser.username })}
                             </span>
@@ -1083,7 +1083,7 @@ const IncomingDocumentsPage: React.FC = () => {
                                 variant="ghost"
                                 size="sm"
                                 aria-label={t('incoming.actions.more')}
-                                className="h-11 w-11 p-0 text-[#718096] hover:text-[#1a202c] hover:bg-gray-100 rounded"
+                                className="h-11 w-11 p-0 text-[#5f6b7d] hover:text-[#1a202c] hover:bg-gray-100 rounded"
                                 title={t('incoming.actions.more')}
                               >
                                 <MoreHorizontal className="h-4 w-4" />

@@ -105,7 +105,7 @@ const Header = () => {
             <h1 className="text-lg font-bold text-[#2c5282] leading-tight">
               {nomAdmin || t('header.title')}
             </h1>
-            <p className="text-xs text-[#718096]">
+            <p className="text-xs text-[#5f6b7d]">
               {currentUser.role === 'AdminDepartment' && currentUser.activeDepartment
                 ? currentUser.activeDepartment.name
                 : t('header.subtitle')}
@@ -168,7 +168,7 @@ const Header = () => {
                   <p className="text-sm font-bold text-[#1a202c] leading-tight">
                     {currentUser.username}
                   </p>
-                  <p className="text-xs text-[#718096] leading-tight mt-0.5">
+                  <p className="text-xs text-[#5f6b7d] leading-tight mt-0.5">
                     {t(`roles.${currentUser.role}`)}
                   </p>
                 </div>

@@ -280,7 +280,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                   <Label htmlFor="impacteSolde" className="text-sm font-bold text-[#1a202c] cursor-pointer">
                     يخصم من رصيد العطل السنوي (Déduit du solde)
                   </Label>
-                  <p className="text-xs text-[#718096]">
+                  <p className="text-xs text-[#5f6b7d]">
                     إذا تم التفعيل، سيتم استقطاع أيام هذا الغياب تلقائياً من رصيد العطل السنوية للموظف.
                   </p>
                 </div>
@@ -413,7 +413,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 <Label htmlFor="isActive" className="text-sm font-bold text-[#1a202c] cursor-pointer">
                   حالة النوع : {formData.isActive ? 'مفعل (نشط)' : 'معطل'}
                 </Label>
-                <p className="text-xs text-[#718096]">
+                <p className="text-xs text-[#5f6b7d]">
                   عند التعطيل، لن يظهر هذا النوع في قوائم تسجيل الغياب الجديدة مع بقاء البيانات القديمة سليمة.
                 </p>
               </div>

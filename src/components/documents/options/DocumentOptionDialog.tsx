@@ -158,7 +158,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                         <SelectItem key={value} value={value} className="text-base py-2">
                           <div className="flex flex-col text-right">
                             <span className="font-semibold text-[#1a202c]">{item.label}</span>
-                            <span className="text-xs text-[#718096]">{item.desc}</span>
+                            <span className="text-xs text-[#5f6b7d]">{item.desc}</span>
                           </div>
                         </SelectItem>
                       ))}

@@ -137,7 +137,7 @@ const LoginPage = () => {
               </div>
             </div>
             <CardTitle className="text-xl font-bold text-center text-[#1a202c]">{t('login.welcome')}</CardTitle>
-            <CardDescription className="text-center text-xs text-[#718096]">
+            <CardDescription className="text-center text-xs text-[#5f6b7d]">
               {t('login.subtitle')}
             </CardDescription>
           </CardHeader>
@@ -242,14 +242,14 @@ const LoginPage = () => {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex flex-col text-center text-xs text-[#718096] border-t border-[#f7fafc] pt-3">
+          <CardFooter className="flex flex-col text-center text-xs text-[#5f6b7d] border-t border-[#f7fafc] pt-3">
             <p className="w-full mb-1">
               {t('login.credentials')}: <code className="font-mono font-semibold px-1.5 py-0.5 rounded bg-[#edf2f7] text-[#2c5282]" dir="ltr">admin / Admin123!</code>
             </p>
-            <p className="text-[11px] text-[#718096] mb-1">
+            <p className="text-[11px] text-[#5f6b7d] mb-1">
               (N'oubliez pas la majuscule et le point d'exclamation)
             </p>
-            <p className="text-xs text-[#a0aec0]">
+            <p className="text-xs text-[#5f6b7d]">
               {t('login.appDescription')}
             </p>
           </CardFooter>

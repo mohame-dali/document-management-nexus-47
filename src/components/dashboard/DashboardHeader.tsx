@@ -68,7 +68,7 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
                 {getWelcomeMessage()}
               </p>
               {!isMobile && (
-                <p className="text-xs text-[#718096] mt-1">
+                <p className="text-xs text-[#5f6b7d] mt-1">
                   {t('dashboard.header.today')}: {formattedDate}
                 </p>
               )}
@@ -96,7 +96,7 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
           {isMobile && (
             <Badge 
               variant="outline" 
-              className="text-xs px-2 py-1 w-full justify-center border-[#e2e8f0] text-[#718096] rounded"
+              className="text-xs px-2 py-1 w-full justify-center border-[#e2e8f0] text-[#5f6b7d] rounded"
             >
               {formattedDate}
             </Badge>

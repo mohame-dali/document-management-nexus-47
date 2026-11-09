@@ -129,7 +129,7 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#718096] font-medium flex items-center gap-1">
+          <span className="text-xs text-[#5f6b7d] font-medium flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
             <span>{formatArabicDateWithDay(date)}</span>
           </span>
@@ -361,7 +361,7 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
       )}
 
       {/* Pied de tableau */}
-      <div className="pt-2 flex items-center justify-between text-xs text-[#718096]">
+      <div className="pt-2 flex items-center justify-between text-xs text-[#5f6b7d]">
         <span>إجمالي السجلات المعروضة : <strong className="font-mono">{records.length}</strong> موظف</span>
         <span className="text-[11px] flex items-center gap-1">
           <Info className="h-3 w-3" />

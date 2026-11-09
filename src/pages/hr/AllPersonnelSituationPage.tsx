@@ -510,7 +510,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
     <div className="space-y-6 pb-12" dir="rtl">
       {/* 1. Fil d'Ariane & En-tête */}
       <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-3">
-        <nav className="flex items-center gap-1.5 text-xs text-[#718096]">
+        <nav className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
           <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">
             الرئيسية
           </Link>
@@ -531,7 +531,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
                 <span>إدارة الموارد البشرية</span>
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#718096] mt-1">
+            <p className="text-xs sm:text-sm text-[#5f6b7d] mt-1">
               متابعة شاملة ومجمّعة لحالة حضور وغياب كافة موظفي الإدارة حسب اليوم، الأسبوع، الشهر، أو السنة
             </p>
           </div>

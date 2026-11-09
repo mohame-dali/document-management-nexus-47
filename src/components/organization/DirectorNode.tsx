@@ -37,7 +37,7 @@ const DirectorNode: React.FC<DirectorNodeProps> = ({ data }) => {
           <Crown className="h-3 w-3" />
           مدير الإدارة
         </div>
-        <span className="text-[11px] text-[#718096] font-medium">المستوى الأول</span>
+        <span className="text-[11px] text-[#5f6b7d] font-medium">المستوى الأول</span>
       </div>
 
       {/* Director Identity */}

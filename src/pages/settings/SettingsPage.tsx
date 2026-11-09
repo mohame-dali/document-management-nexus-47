@@ -361,7 +361,7 @@ const SettingsPage = () => {
                   <Camera className="h-5 w-5 text-[#2c5282]" />
                   <span>الصورة الشخصية</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#718096]">
+                <CardDescription className="text-base text-[#5f6b7d]">
                   صورتك تظهر في التوقيعات وسجلات العمليات
                 </CardDescription>
               </CardHeader>
@@ -430,7 +430,7 @@ const SettingsPage = () => {
                     <User className="h-5 w-5 text-[#2c5282]" />
                     <span>بيانات الحساب</span>
                   </CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     المعلومات الإدارية المسجلة لحسابك في المنظومة
                   </CardDescription>
                 </CardHeader>
@@ -523,7 +523,7 @@ const SettingsPage = () => {
                 <Shield className="h-5 w-5 text-[#2c5282]" />
                 <span>سياسات الأمان والحماية</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#718096]">
+              <CardDescription className="text-base text-[#5f6b7d]">
                 تكوين معايير الجلسات وحماية الدخول ضد المحاولات المشبوهة
               </CardDescription>
             </CardHeader>
@@ -654,7 +654,7 @@ const SettingsPage = () => {
                 <Bell className="h-5 w-5 text-[#2c5282]" />
                 <span>قنوات وتفضيلات التنبيهات</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#718096]">
+              <CardDescription className="text-base text-[#5f6b7d]">
                 تخصيص الإشعارات الفورية والتنبيهات البريدية للأحداث الهامة
               </CardDescription>
             </CardHeader>
@@ -766,7 +766,7 @@ const SettingsPage = () => {
                 <Sliders className="h-5 w-5 text-[#2c5282]" />
                 <span>تفضيلات العرض والمظهر</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#718096]">
+              <CardDescription className="text-base text-[#5f6b7d]">
                 ضبط كثافة الجداول، عدد النتائج الافتراضي، وطريقة ترتيب السجلات
               </CardDescription>
             </CardHeader>
@@ -865,7 +865,7 @@ const SettingsPage = () => {
                   <Database className="h-5 w-5 text-[#2c5282]" />
                   <span>النسخ الاحتياطي وأرشفة البيانات</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#718096]">
+                <CardDescription className="text-base text-[#5f6b7d]">
                   متابعة وتأمين الوثائق والمرفقات بصيغة رقمية متكاملة
                 </CardDescription>
               </div>
@@ -959,7 +959,7 @@ const SettingsPage = () => {
                   <MessageCircle className="h-5 w-5 text-[#2c5282]" />
                   <span>سياسة حفظ وحذف المراسلات</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#718096]">
+                <CardDescription className="text-base text-[#5f6b7d]">
                   إدارة سعة التخزين وتحديد فترة الاحتفاظ بالمراسلات والمرفقات
                 </CardDescription>
               </div>
@@ -1049,7 +1049,7 @@ const SettingsPage = () => {
                       <CardTitle className="text-xl font-bold text-[#1a202c]">
                         هوية المؤسسة والأقسام السيادية
                       </CardTitle>
-                      <CardDescription className="text-sm text-[#718096] mt-0.5">
+                      <CardDescription className="text-sm text-[#5f6b7d] mt-0.5">
                         إدارة التسمية الرسمية، شعار المؤسسة، وتعيين الأقسام الوظيفية الرئيسية (RH، مكتب الضبط، الإدارة العامة)
                       </CardDescription>
                     </div>

@@ -81,7 +81,7 @@ const DocumentDataGrid: React.FC<DocumentDataGridProps> = ({ documents, type }) 
 
   if (!documents || documents.length === 0) {
     return (
-      <div className="text-center py-12 text-[#718096]" dir="rtl">
+      <div className="text-center py-12 text-[#5f6b7d]" dir="rtl">
         <FileInput className="h-10 w-10 mx-auto mb-3 text-[#a0aec0]" />
         <p className="text-sm">{translations.noDocuments}</p>
       </div>

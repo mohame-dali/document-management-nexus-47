@@ -97,7 +97,7 @@ const AuditSummary: React.FC = () => {
               <CardTitle className="text-base sm:text-lg font-bold text-[#1a202c]">
                 {t('dashboard.audit.title')}
               </CardTitle>
-              <div className="flex items-center gap-1.5 text-xs text-[#718096] mt-0.5">
+              <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d] mt-0.5">
                 <TrendingUp className="h-3.5 w-3.5 text-[#38a169]" />
                 <span>{t('dashboard.audit.subtitle')}</span>
               </div>
@@ -119,7 +119,7 @@ const AuditSummary: React.FC = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10">
             <div className="w-8 h-8 border-2 border-[#bee3f8] border-t-[#2c5282] rounded-full animate-spin"></div>
-            <p className="mt-3 text-xs text-[#718096]">{t('common.loading')}</p>
+            <p className="mt-3 text-xs text-[#5f6b7d]">{t('common.loading')}</p>
           </div>
         ) : (
           <ScrollArea className="h-[340px]">
@@ -137,20 +137,20 @@ const AuditSummary: React.FC = () => {
                           <Badge className={`${getActionColor(log.action)} border text-xs px-2 py-0.5 rounded font-normal`}>
                             {getActionText(log.action)}
                           </Badge>
-                          <Badge variant="outline" className="text-[11px] bg-[#f7fafc] border-[#e2e8f0] text-[#718096] px-2 py-0.5 rounded font-normal">
+                          <Badge variant="outline" className="text-[11px] bg-[#f7fafc] border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
                             {log.entityType}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-[#718096]">
+                        <div className="flex items-center gap-2 text-xs text-[#5f6b7d]">
                           <div className="flex items-center gap-1.5">
                             <User className="h-3 w-3 text-[#a0aec0]" />
                             <span className="font-medium text-[#2d3748]">{log.userDetails.username}</span>
                           </div>
                           <span className="text-[#cbd5e1]">•</span>
-                          <span className="text-[11px] text-[#718096]">{getRoleDisplayName(log.userDetails.role)}</span>
+                          <span className="text-[11px] text-[#5f6b7d]">{getRoleDisplayName(log.userDetails.role)}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-[#718096] bg-[#f7fafc] px-2.5 py-1.5 rounded border border-[#e2e8f0] flex-shrink-0">
+                      <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d] bg-[#f7fafc] px-2.5 py-1.5 rounded border border-[#e2e8f0] flex-shrink-0">
                         <Clock className="h-3 w-3 text-[#a0aec0]" />
                         <span className="text-[11px]">
                           {formatDateTime(log.createdAt)}
@@ -169,7 +169,7 @@ const AuditSummary: React.FC = () => {
                     <h3 className="text-sm font-medium text-[#4a5568]">
                       {t('dashboard.audit.noRecentActivities')}
                     </h3>
-                    <p className="text-xs text-[#a0aec0]">
+                    <p className="text-xs text-[#5f6b7d]">
                       {t('dashboard.audit.noActivitiesDescription')}
                     </p>
                   </div>

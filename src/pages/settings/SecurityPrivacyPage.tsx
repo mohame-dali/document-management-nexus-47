@@ -324,7 +324,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">سياسة تعقيد كلمات المرور</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     تكوين شروط كلمة المرور الإلزامية للمستخدمين في النظام
                   </CardDescription>
                 </div>
@@ -402,7 +402,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">المصادقة الثنائية (2FA)</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     طبقة حماية إضافية تمنع الوصول غير المصرح به حتى عند تسرب كلمة المرور
                   </CardDescription>
                 </div>
@@ -444,7 +444,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">الخصوصية وتصدير البيانات</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     خيارات الاحتفاظ بسجلات الأمان وتصدير البيانات الإدارية
                   </CardDescription>
                 </div>
@@ -515,7 +515,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">الجلسات النشطة حالياً</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     الأجهزة والمتصفحات المسجل الدخول إليها بحسابك في الوقت الراهن
                   </CardDescription>
                 </div>

@@ -51,9 +51,9 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           height: '500px'
         }}
       >
-        <div className="flex flex-col items-center justify-center w-full h-full text-[#a0aec0] p-4" dir="rtl">
+        <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir="rtl">
           <FileInput className="h-8 w-8 mb-2" />
-          <p className="text-sm text-center text-[#718096]">{translations.noPreview}</p>
+          <p className="text-sm text-center text-[#5f6b7d]">{translations.noPreview}</p>
         </div>
       </div>
     );
@@ -75,7 +75,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
       {/* Header with document title */}
       <div className="bg-[#f7fafc] px-3.5 py-2.5 border-b border-[#e2e8f0]" dir="rtl">
         <h3 className="text-xs font-semibold text-[#1a202c] truncate">{document.subject}</h3>
-        <p className="text-[11px] text-[#718096]">#{document.serialNumber} - {document.year}</p>
+        <p className="text-[11px] text-[#5f6b7d]">#{document.serialNumber} - {document.year}</p>
       </div>
 
       <div className="flex flex-col h-full">
@@ -221,7 +221,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           {hasValidPDF ? (
             <>
               {loadError ? (
-                <div className="flex flex-col items-center justify-center w-full h-full text-[#a0aec0] p-4" dir="rtl">
+                <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir="rtl">
                   <AlertCircle className="h-6 w-6 mb-2 text-[#e53e3e]" />
                   <p className="text-xs text-center text-[#e53e3e]">فشل في تحميل المعاينة</p>
                 </div>
@@ -247,9 +247,9 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full text-[#a0aec0] p-4" dir="rtl">
+            <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir="rtl">
               <FileInput className="h-6 w-6 mb-2" />
-              <p className="text-xs text-center text-[#718096]">{translations.noPreview}</p>
+              <p className="text-xs text-center text-[#5f6b7d]">{translations.noPreview}</p>
             </div>
           )}
         </div>

@@ -403,7 +403,7 @@ export const AttendancePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-xs text-[#718096]">
+            <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
               <Link to="/dashboard" className="hover:text-[#2c5282] flex items-center gap-1">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
@@ -424,7 +424,7 @@ export const AttendancePage: React.FC = () => {
                 <h1 className="text-xl font-bold text-[#1a202c]">
                   ورقة تسجيل الحضور اليومي
                 </h1>
-                <p className="text-sm text-[#718096]">
+                <p className="text-sm text-[#5f6b7d]">
                   تسجيل إثبات الحضور والغياب واحتساب الخصم من الرصيد ديناميكياً
                 </p>
               </div>
@@ -539,17 +539,17 @@ export const AttendancePage: React.FC = () => {
         {/* Barre de stats et filtre d'affichage */}
         <div className="pt-3 border-t border-[#edf2f7] flex flex-wrap items-center justify-between gap-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[#718096]">إجمالي الموظفين:</span>
+            <span className="text-[#5f6b7d]">إجمالي الموظفين:</span>
             <span className="font-bold text-[#1a202c] px-2 py-0.5 bg-gray-100 rounded">
               {stats.total}
             </span>
 
-            <span className="text-[#718096] mr-2">الحاضرون:</span>
+            <span className="text-[#5f6b7d] mr-2">الحاضرون:</span>
             <span className="font-bold text-green-700 px-2 py-0.5 bg-green-50 rounded border border-green-200">
               {stats.presents}
             </span>
 
-            <span className="text-[#718096] mr-2">الغائبون:</span>
+            <span className="text-[#5f6b7d] mr-2">الغائبون:</span>
             <span className="font-bold text-red-700 px-2 py-0.5 bg-red-50 rounded border border-red-200">
               {stats.absents}
             </span>
@@ -562,7 +562,7 @@ export const AttendancePage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className="text-[#718096]">تصفية العرض:</span>
+            <span className="text-[#5f6b7d]">تصفية العرض:</span>
             <Button
               size="sm"
               variant={statusFilter === 'all' ? 'default' : 'ghost'}
@@ -662,7 +662,7 @@ export const AttendancePage: React.FC = () => {
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#718096] mt-0.5">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#5f6b7d] mt-0.5">
                           {row.personnel.cin && (
                             <span className="font-mono">ب.ت.و: {row.personnel.cin}</span>
                           )}
@@ -917,7 +917,7 @@ export const AttendancePage: React.FC = () => {
       {/* 4. Bouton "Enregistrer" en bas */}
       {filteredRows.length > 0 && (
         <div className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-          <div className="text-xs text-[#718096]">
+          <div className="text-xs text-[#5f6b7d]">
             <span>التاريخ المحدد: </span>
             <span className="font-bold text-[#1a202c] ml-3">{selectedDate}</span>
             <span>عدد الموظفين: </span>

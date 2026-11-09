@@ -148,7 +148,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
           </Button>
         </div>
 
-        <div className="text-xs text-[#718096] flex items-center gap-1.5 font-mono">
+        <div className="text-xs text-[#5f6b7d] flex items-center gap-1.5 font-mono">
           <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
           <span>{weekRangeLabel}</span>
         </div>
@@ -230,7 +230,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
       {/* Résumé en bas */}
       <div className="pt-3 border-t border-[#edf2f7] flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[#718096]">حصيلة هذا الأسبوع :</span>
+          <span className="text-[#5f6b7d]">حصيلة هذا الأسبوع :</span>
           <span className="flex items-center gap-1 text-green-700 bg-green-50 px-2.5 py-1 rounded border border-green-200 font-medium">
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>حضور : {weekStats.presents} أيام</span>

@@ -202,7 +202,7 @@ const MessageRetentionPage = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-[#1a202c]">إجمالي المراسلات</CardTitle>
-                    <CardDescription className="text-base text-[#718096]">عدد الرسائل المسجلة في النظام</CardDescription>
+                    <CardDescription className="text-base text-[#5f6b7d]">عدد الرسائل المسجلة في النظام</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -224,7 +224,7 @@ const MessageRetentionPage = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-[#1a202c]">إجمالي المرفقات</CardTitle>
-                    <CardDescription className="text-base text-[#718096]">الملفات والمستندات الملحقة بالرسائل</CardDescription>
+                    <CardDescription className="text-base text-[#5f6b7d]">الملفات والمستندات الملحقة بالرسائل</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -248,7 +248,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">توزيع الرسائل حسب العمر</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">تصنيف المراسلات بحسب الفترة الزمنية لانقضائها</CardDescription>
+                  <CardDescription className="text-base text-[#5f6b7d]">تصنيف المراسلات بحسب الفترة الزمنية لانقضائها</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -313,7 +313,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">سياسة الحفظ التلقائي</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     تكوين جدولة الحذف التلقائي للمراسلات والمرفقات القديمة
                   </CardDescription>
                 </div>
@@ -420,7 +420,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-red-700">تنظيف يدوي للرسائل</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     حذف فوري للمراسلات والمرفقات الأقدم من فترة زمنية محددة
                   </CardDescription>
                 </div>

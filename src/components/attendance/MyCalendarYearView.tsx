@@ -145,7 +145,7 @@ export const MyCalendarYearView: React.FC<MyCalendarYearViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#718096] font-medium">السنة المعروضة :</span>
+          <span className="text-xs text-[#5f6b7d] font-medium">السنة المعروضة :</span>
           <span className="text-base font-bold text-[#1a202c] font-mono px-3 py-1 bg-gray-100 rounded border border-gray-200">
             {year}
           </span>

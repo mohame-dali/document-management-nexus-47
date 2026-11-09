@@ -456,7 +456,7 @@ const ViewOutgoingDocument: React.FC = () => {
         {/* Document Subject Callout Box */}
         <div className="bg-[#f8fafc] border-s-4 border-[#2c5282] border-y border-e border-[#e2e8f0] rounded p-5 sm:p-6 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-bold text-[#718096] uppercase tracking-wide">
+            <span className="text-sm font-bold text-[#5f6b7d] uppercase tracking-wide">
               {t('documents.viewOutgoing.subject.title')}
             </span>
             <div className="flex items-center gap-2">
@@ -516,7 +516,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Building2 className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-[#718096] font-medium block">{t('documents.viewOutgoing.metric.issuingService')}</span>
+              <span className="text-xs text-[#5f6b7d] font-medium block">{t('documents.viewOutgoing.metric.issuingService')}</span>
               <span className="text-base font-bold text-[#1a202c] truncate block" title={sourceName}>
                 {sourceName}
               </span>
@@ -529,7 +529,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Calendar className="h-5 w-5 text-[#1a202c]" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-[#718096] font-medium block">{t('documents.viewOutgoing.metric.actualIssueDate')}</span>
+              <span className="text-xs text-[#5f6b7d] font-medium block">{t('documents.viewOutgoing.metric.actualIssueDate')}</span>
               <span className="text-base font-bold text-[#1a202c] block">
                 {formatArabicDate(document.issueDate)}
               </span>
@@ -542,7 +542,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Users className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-[#718096] font-medium block">{t('documents.viewOutgoing.metric.recipients')}</span>
+              <span className="text-xs text-[#5f6b7d] font-medium block">{t('documents.viewOutgoing.metric.recipients')}</span>
               <span className="text-base font-bold text-[#1a202c] block">
                 {assignedCount > 0 ? t('documents.viewOutgoing.metric.recipientsCount', { count: assignedCount }) : t('documents.viewOutgoing.fallback.unspecified')}
               </span>
@@ -555,7 +555,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Eye className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-[#718096] font-medium block">{t('documents.viewOutgoing.metric.pourInfo')}</span>
+              <span className="text-xs text-[#5f6b7d] font-medium block">{t('documents.viewOutgoing.metric.pourInfo')}</span>
               <span className="text-base font-bold text-[#1a202c] block">
                 {pourInfoCount > 0 ? t('documents.viewOutgoing.metric.pourInfoCount', { count: pourInfoCount }) : t('documents.viewOutgoing.metric.noCopies')}
               </span>
@@ -583,39 +583,39 @@ const ViewOutgoingDocument: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-base">
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">رقم القيد الصادر:</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">رقم القيد الصادر:</span>
                 <span className="text-base font-bold text-[#2c5282]">
                   #{document.serialNumber} لسنة {document.year}
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">تاريخ الإصدار / الإرسال:</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">تاريخ الإصدار / الإرسال:</span>
                 <span className="text-base font-medium text-[#1a202c]">
                   {formatArabicDate(document.issueDate)}
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">نوع الوثيقة:</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">نوع الوثيقة:</span>
                 <span className="text-base font-medium text-[#1a202c]">
                   {document.typeDocument || 'غير مصنف'}
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">تاريخ الإنشاء والتسجيل بالمنظومة:</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">تاريخ الإنشاء والتسجيل بالمنظومة:</span>
                 <span className="text-base font-medium text-[#1a202c]">
                   {formatArabicDateTime(document.createdAt)}
                 </span>
               </div>
 
               <div className="md:col-span-2">
-                <span className="text-sm font-semibold text-[#718096] block mb-1">المصلحة / القسم المصدر:</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">المصلحة / القسم المصدر:</span>
                 <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center justify-between">
                   <span className="text-base font-bold text-[#1a202c]">{sourceName}</span>
                   {sourceId && (
-                    <span className="text-xs text-[#718096]">معرّف المصلحة: {String(sourceId)}</span>
+                    <span className="text-xs text-[#5f6b7d]">معرّف المصلحة: {String(sourceId)}</span>
                   )}
                 </div>
               </div>
@@ -641,7 +641,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <Users className="h-4 w-4 text-[#2c5282]" />
                     الجهات الموجه إليها (المستلمون الأساسيون):
                   </span>
-                  <span className="text-xs text-[#718096] font-semibold">
+                  <span className="text-xs text-[#5f6b7d] font-semibold">
                     {assignedCount} جهة
                   </span>
                 </div>
@@ -659,7 +659,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-3 bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded text-[#718096] text-sm">
+                  <div className="p-3 bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded text-[#5f6b7d] text-sm">
                     لم يتم تحديد جهات توجيه أساسية لهذه الوثيقة
                   </div>
                 )}
@@ -674,7 +674,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <Eye className="h-4 w-4 text-[#d69e2e]" />
                     نسخ للإعلام والإطلاع (Pour Information):
                   </span>
-                  <span className="text-xs text-[#718096] font-semibold">
+                  <span className="text-xs text-[#5f6b7d] font-semibold">
                     {pourInfoCount} جهة
                   </span>
                 </div>
@@ -692,7 +692,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-3 bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded text-[#718096] text-sm">
+                  <div className="p-3 bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded text-[#5f6b7d] text-sm">
                     لا توجد نسخ محددة للإعلام مع هذه المراسلة
                   </div>
                 )}
@@ -712,7 +712,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <h3 className="text-xl font-bold text-[#1a202c]">
                       النص المستخرج آلياً (OCR)
                     </h3>
-                    <p className="text-xs text-[#718096]">تم التعرف على النص عبر خوارزميات المسح الضوئي</p>
+                    <p className="text-xs text-[#5f6b7d]">تم التعرف على النص عبر خوارزميات المسح الضوئي</p>
                   </div>
                 </div>
 
@@ -753,7 +753,7 @@ const ViewOutgoingDocument: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setOcrSearchQuery('')}
-                    className="text-xs text-[#718096] hover:text-[#1a202c] absolute top-2.5 left-3 font-semibold"
+                    className="text-xs text-[#5f6b7d] hover:text-[#1a202c] absolute top-2.5 left-3 font-semibold"
                   >
                     مسح
                   </button>
@@ -766,7 +766,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-[#718096] pt-1">
+              <div className="flex items-center justify-between text-xs text-[#5f6b7d] pt-1">
                 <span>عدد الكلمات التقريبي: {document.ocrText.trim().split(/\s+/).length} كلمة</span>
                 <span>الحروف: {document.ocrText.length} حرف</span>
               </div>
@@ -805,20 +805,20 @@ const ViewOutgoingDocument: React.FC = () => {
               <div className="space-y-3">
                 <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-[#718096] font-semibold">رقم القيد الوارد:</span>
+                    <span className="text-xs text-[#5f6b7d] font-semibold">رقم القيد الوارد:</span>
                     <span className="text-sm font-bold text-[#2c5282]">
                       #{referenceDocument.serialNumber} / {referenceDocument.year}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-xs text-[#718096] font-semibold block mb-0.5">موضوع الوارد:</span>
+                    <span className="text-xs text-[#5f6b7d] font-semibold block mb-0.5">موضوع الوارد:</span>
                     <p className="text-sm font-bold text-[#1a202c] line-clamp-2">
                       {referenceDocument.subject}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-[#718096] pt-1 border-t border-[#e2e8f0]">
+                  <div className="flex items-center justify-between text-xs text-[#5f6b7d] pt-1 border-t border-[#e2e8f0]">
                     <span>تاريخ الوصول:</span>
                     <span className="font-semibold text-[#1a202c]">{formatArabicDate(referenceDocument.arrivalDate)}</span>
                   </div>
@@ -838,7 +838,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <div className="p-4 bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded text-center space-y-2">
                 <FileOutput className="h-8 w-8 text-[#718096] mx-auto opacity-50" />
                 <p className="text-base font-semibold text-[#4a5568]">مراسلة صادرة ابتدائية</p>
-                <p className="text-xs text-[#718096] leading-relaxed">
+                <p className="text-xs text-[#5f6b7d] leading-relaxed">
                   هذه الوثيقة غير مرتبطة بوارد سابق، وصدرت مباشرة بمبادرة إدارية من المصلحة المصدرة.
                 </p>
               </div>
@@ -868,12 +868,12 @@ const ViewOutgoingDocument: React.FC = () => {
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center gap-3">
               <FolderTree className="h-6 w-6 text-[#718096] flex-shrink-0" />
               <div>
-                <span className="text-xs text-[#718096] block">المجلد الحالي:</span>
+                <span className="text-xs text-[#5f6b7d] block">المجلد الحالي:</span>
                 <span className="text-base font-bold text-[#1a202c]">{folderName}</span>
               </div>
             </div>
 
-            <p className="text-xs text-[#718096] leading-relaxed">
+            <p className="text-xs text-[#5f6b7d] leading-relaxed">
               تصنيف الوثيقة داخل مجلد يضمن سهولة الفهرسة والبحث والرجوع المستقبلي للوثائق المشتركة.
             </p>
           </div>
@@ -895,7 +895,7 @@ const ViewOutgoingDocument: React.FC = () => {
               </li>
 
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${assignedCount > 0 ? 'text-emerald-600' : 'text-[#a0aec0]'}`} />
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${assignedCount > 0 ? 'text-emerald-600' : 'text-[#5f6b7d]'}`} />
                 <div>
                   <span className="font-semibold text-[#1a202c] block">تحديد الموجه إليهم:</span>
                   <span>{assignedCount > 0 ? `${assignedCount} جهة` : 'غير محدد'}</span>
@@ -1091,11 +1091,11 @@ const ViewOutgoingDocument: React.FC = () => {
         ) : (
           /* Empty Attachments State */
           <div className="p-10 bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded text-center space-y-3">
-            <div className="w-14 h-14 rounded bg-gray-100 text-[#718096] flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded bg-gray-100 text-[#5f6b7d] flex items-center justify-center mx-auto">
               <Paperclip className="h-7 w-7" />
             </div>
             <h3 className="text-lg font-bold text-[#1a202c]">لا توجد وثائق ممسوحة ضوئياً مرفقة</h3>
-            <p className="text-base text-[#718096] max-w-md mx-auto leading-relaxed">
+            <p className="text-base text-[#5f6b7d] max-w-md mx-auto leading-relaxed">
               لم يتم تحميل أي ملف PDF ممسوح ضوئياً لهذه المراسلة الصادرة حتى الآن.
             </p>
             {canEdit && (
@@ -1248,7 +1248,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <span className="text-base font-bold text-[#1a202c]">
                       {item.action || 'إجراء إداري'}
                     </span>
-                    <span className="text-xs text-[#718096] font-medium">
+                    <span className="text-xs text-[#5f6b7d] font-medium">
                       {formatArabicDateTime(item.createdAt)}
                     </span>
                   </div>
@@ -1270,7 +1270,7 @@ const ViewOutgoingDocument: React.FC = () => {
                   <span className="text-base font-bold text-[#1a202c]">
                     تسجيل وقيد الوثيقة في سجل الصادر
                   </span>
-                  <span className="text-xs text-[#718096] font-medium">
+                  <span className="text-xs text-[#5f6b7d] font-medium">
                     {formatArabicDateTime(document.createdAt || document.issueDate)}
                   </span>
                 </div>

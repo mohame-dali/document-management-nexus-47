@@ -68,7 +68,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
         <div className="px-5 sm:px-6 lg:px-8 pt-5 pb-0 max-w-[1600px] mx-auto">
           {/* Breadcrumb */}
           {breadcrumb && breadcrumb.length > 0 && (
-            <nav className="flex items-center gap-1.5 text-xs text-[#718096] mb-3" aria-label="Breadcrumb">
+            <nav className="flex items-center gap-1.5 text-xs text-[#5f6b7d] mb-3" aria-label="Breadcrumb">
               <Link to="/dashboard" className="flex items-center gap-1 hover:text-[#2c5282] transition-colors">
                 <Home className="w-3.5 h-3.5" />
                 <span>الرئيسية</span>
@@ -100,7 +100,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
                 {title}
               </h1>
               {description && (
-                <p className="text-sm text-[#718096] mt-0.5">
+                <p className="text-sm text-[#5f6b7d] mt-0.5">
                   {description}
                 </p>
               )}

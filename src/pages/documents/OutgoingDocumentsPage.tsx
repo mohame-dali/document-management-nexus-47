@@ -518,7 +518,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#718096] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#5f6b7d] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
                   >
                     {t('outgoing.filters.clear')}
                   </button>
@@ -738,7 +738,7 @@ const OutgoingDocumentsPage: React.FC = () => {
           ) : totalFiltered === 0 ? (
             /* Empty State */
             <div className="border border-[#e2e8f0] rounded p-8 sm:p-12 text-center bg-[#f7fafc] space-y-4">
-              <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#718096]">
+              <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
                 <FileOutput className="h-7 w-7 text-[#2c5282]" />
               </div>
               <div>
@@ -829,7 +829,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               <span className="font-bold text-base text-[#1a202c]">
                                 #{highlightMatch(String(doc.serialNumber), searchQuery)}
                               </span>
-                              <span className="text-xs text-[#718096]">
+                              <span className="text-xs text-[#5f6b7d]">
                                 {doc.year}
                               </span>
                             </div>
@@ -901,7 +901,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-[#a0aec0]">{t('outgoing.source.unspecified')}</span>
+                            <span className="text-xs text-[#5f6b7d]">{t('outgoing.source.unspecified')}</span>
                           )}
                         </td>
 
@@ -913,7 +913,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorizedInFolder')}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#718096] bg-slate-100 border border-slate-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#5f6b7d] bg-slate-100 border border-slate-200">
                               {t('outgoing.status.uncategorized')}
                             </span>
                           )}
@@ -1020,7 +1020,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                     variant="ghost"
                                     size="sm"
                                     aria-label={t('outgoing.actions.moreActions')}
-                                    className="h-11 w-11 p-0 rounded hover:bg-slate-100 text-[#718096]"
+                                    className="h-11 w-11 p-0 rounded hover:bg-slate-100 text-[#5f6b7d]"
                                   >
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
@@ -1068,7 +1068,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                             {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorized')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#718096] border border-slate-200">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#5f6b7d] border border-slate-200">
                             {t('outgoing.status.uncategorized')}
                           </span>
                         )}
@@ -1105,7 +1105,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 </span>
                               ))}
                               {doc.assignedTo.length > 2 && (
-                                <span className="text-xs text-[#718096]">
+                                <span className="text-xs text-[#5f6b7d]">
                                   +{doc.assignedTo.length - 2}
                                 </span>
                               )}
@@ -1219,7 +1219,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 {/* Page Size Selector */}
                 <div className="flex items-center gap-1.5 ml-3">
-                  <span className="text-xs font-semibold text-[#718096]">{t('outgoing.pagination.itemsLabel')}</span>
+                  <span className="text-xs font-semibold text-[#5f6b7d]">{t('outgoing.pagination.itemsLabel')}</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -1384,7 +1384,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 <div className="font-bold text-[#1a202c]">
                   {t('outgoing.transfer.subjectLabel', { subject: transferDoc.subject })}
                 </div>
-                <div className="text-sm text-[#718096] flex items-center gap-4">
+                <div className="text-sm text-[#5f6b7d] flex items-center gap-4">
                   <span>{t('outgoing.transfer.issueDateLabel', { date: formatArabicDate(transferDoc.issueDate) })}</span>
                   <span>{t('outgoing.transfer.sourceLabel', { source: transferDoc.source?.name || t('outgoing.source.unspecified') })}</span>
                 </div>

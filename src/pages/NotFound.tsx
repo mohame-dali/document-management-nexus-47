@@ -25,7 +25,7 @@ const NotFound = () => {
           </p>
         </div>
 
-        <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-2.5 text-xs text-[#718096]">
+        <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-2.5 text-xs text-[#5f6b7d]">
           المسار المطلوب: <span className="font-mono text-[11px] text-[#2c5282] font-semibold">{location.pathname}</span>
         </div>
 

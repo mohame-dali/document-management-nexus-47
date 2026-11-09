@@ -323,7 +323,7 @@ const ViewIncomingDocument: React.FC = () => {
           </div>
 
           {/* Registration Date Pill */}
-          <div className="text-sm font-medium text-[#718096] flex items-center gap-1.5">
+          <div className="text-sm font-medium text-[#5f6b7d] flex items-center gap-1.5">
             <Clock className="h-4 w-4 text-[#718096]" />
             <span>{t('documents.viewIncoming.badge.registeredOn', { date: formatArabicDateTime(document.createdAt) })}</span>
           </div>
@@ -331,7 +331,7 @@ const ViewIncomingDocument: React.FC = () => {
 
         {/* Document Main Subject (H2 display) */}
         <div className="space-y-2">
-          <span className="text-xs font-semibold text-[#718096] tracking-wider uppercase">
+          <span className="text-xs font-semibold text-[#5f6b7d] tracking-wider uppercase">
             {t('documents.viewIncoming.subject.title')}
           </span>
           <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] leading-relaxed">
@@ -343,7 +343,7 @@ const ViewIncomingDocument: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
           {/* 1. Source / Sender */}
           <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#718096]">
+            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
               <Building2 className="h-4 w-4 text-[#2c5282]" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.source')}</span>
             </div>
@@ -354,7 +354,7 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* 2. Arrival Date */}
           <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#718096]">
+            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
               <Calendar className="h-4 w-4 text-[#2c5282]" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.arrivalDate')}</span>
             </div>
@@ -365,7 +365,7 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* 3. Original Correspondence */}
           <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#718096]">
+            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
               <Hash className="h-4 w-4 text-[#2c5282]" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.originalCorrespondence')}</span>
             </div>
@@ -374,7 +374,7 @@ const ViewIncomingDocument: React.FC = () => {
                 <>
                   <span>#{document.correspondenceNumber}</span>
                   {document.correspondenceDate && (
-                    <span className="text-xs text-[#718096] font-normal me-1.5">
+                    <span className="text-xs text-[#5f6b7d] font-normal me-1.5">
                       ({formatArabicDate(document.correspondenceDate)})
                     </span>
                   )}
@@ -387,7 +387,7 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* 4. Responsible Officer */}
           <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#718096]">
+            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
               <User className="h-4 w-4 text-[#2c5282]" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.responsible')}</span>
             </div>
@@ -417,41 +417,41 @@ const ViewIncomingDocument: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-base">
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.adminInfo.internalSerial')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.internalSerial')}</span>
                 <span className="text-base font-bold text-[#1a202c]">#{document.serialNumber} / {document.year}</span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.adminInfo.arrivalDateAtInstitution')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.arrivalDateAtInstitution')}</span>
                 <span className="text-base font-medium text-[#1a202c]">{formatArabicDate(document.arrivalDate)}</span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.adminInfo.senderCorrespondenceNumber')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.senderCorrespondenceNumber')}</span>
                 <span className="text-base font-medium text-[#1a202c]">{document.correspondenceNumber || t('documents.viewIncoming.fallback.none')}</span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.adminInfo.originalIssueDate')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.originalIssueDate')}</span>
                 <span className="text-base font-medium text-[#1a202c]">
                   {document.correspondenceDate ? formatArabicDate(document.correspondenceDate) : t('documents.viewIncoming.fallback.unspecified')}
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.adminInfo.documentType')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.documentType')}</span>
                 <span className="text-base font-medium text-[#1a202c]">{document.typeDocument || t('documents.viewIncoming.fallback.unclassified')}</span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.adminInfo.relatedActivity')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.relatedActivity')}</span>
                 <span className="text-base font-medium text-[#1a202c]">
                   {document.activity ? (
                     <span className="inline-flex items-center gap-1.5 text-[#2c5282] font-semibold">
                       <Bookmark className="h-4 w-4" />
                       {document.activity}
                       {document.dateActivity && (
-                        <span className="text-xs text-[#718096] font-normal">
+                        <span className="text-xs text-[#5f6b7d] font-normal">
                           {t('documents.viewIncoming.adminInfo.onDate', { date: formatArabicDate(document.dateActivity) })}
                         </span>
                       )}
@@ -477,7 +477,7 @@ const ViewIncomingDocument: React.FC = () => {
 
             <div className="space-y-4 text-base">
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.sender.sourceLabel')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.sender.sourceLabel')}</span>
                 <p className="text-base font-bold text-[#1a202c]">
                   {document.source || t('documents.viewIncoming.fallback.unspecified')}
                 </p>
@@ -486,7 +486,7 @@ const ViewIncomingDocument: React.FC = () => {
               <Separator />
 
               <div>
-                <span className="text-sm font-semibold text-[#718096] block mb-2">{t('documents.viewIncoming.sender.assignedDepartments')}</span>
+                <span className="text-sm font-semibold text-[#5f6b7d] block mb-2">{t('documents.viewIncoming.sender.assignedDepartments')}</span>
                 {document.assignedTo && document.assignedTo.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {document.assignedTo.map((dept, index) => (
@@ -500,7 +500,7 @@ const ViewIncomingDocument: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-base text-[#718096]">{t('documents.viewIncoming.sender.noDepartments')}</p>
+                  <p className="text-base text-[#5f6b7d]">{t('documents.viewIncoming.sender.noDepartments')}</p>
                 )}
               </div>
             </div>
@@ -518,7 +518,7 @@ const ViewIncomingDocument: React.FC = () => {
                     <h3 className="text-xl font-bold text-[#1a202c]">
                       {t('documents.viewIncoming.ocr.title')}
                     </h3>
-                    <p className="text-xs text-[#718096]">{t('documents.viewIncoming.ocr.subtitle')}</p>
+                    <p className="text-xs text-[#5f6b7d]">{t('documents.viewIncoming.ocr.subtitle')}</p>
                   </div>
                 </div>
 
@@ -587,17 +587,17 @@ const ViewIncomingDocument: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
                 <div>
-                  <span className="text-xs font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
+                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
                   <span className="font-bold text-[#1a202c]">
                     #{answerDocument.serialNumber} / {answerDocument.year}
                   </span>
-                  <span className="text-xs text-[#718096] me-1.5 block">
+                  <span className="text-xs text-[#5f6b7d] me-1.5 block">
                     {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatArabicDate(answerDocument.issueDate) })}
                   </span>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs font-semibold text-[#718096] block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
+                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
                   <p className="font-medium text-[#1a202c] line-clamp-2">
                     {answerDocument.subject}
                   </p>
@@ -633,12 +633,12 @@ const ViewIncomingDocument: React.FC = () => {
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center gap-3">
               <FolderTree className="h-6 w-6 text-[#718096] flex-shrink-0" />
               <div>
-                <span className="text-xs text-[#718096] block">{t('documents.viewIncoming.sidebar.folder.current')}</span>
+                <span className="text-xs text-[#5f6b7d] block">{t('documents.viewIncoming.sidebar.folder.current')}</span>
                 <span className="text-base font-bold text-[#1a202c]">{folderName}</span>
               </div>
             </div>
 
-            <p className="text-xs text-[#718096] leading-relaxed">
+            <p className="text-xs text-[#5f6b7d] leading-relaxed">
               {t('documents.viewIncoming.sidebar.folder.description')}
             </p>
           </div>
@@ -668,7 +668,7 @@ const ViewIncomingDocument: React.FC = () => {
                 {responsibleName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <span className="text-xs text-[#718096] block">{t('documents.viewIncoming.sidebar.responsible.assignedTo')}</span>
+                <span className="text-xs text-[#5f6b7d] block">{t('documents.viewIncoming.sidebar.responsible.assignedTo')}</span>
                 <span className="text-base font-bold text-[#1a202c]">{responsibleName}</span>
               </div>
             </div>
@@ -870,11 +870,11 @@ const ViewIncomingDocument: React.FC = () => {
         ) : (
           /* Empty Attachments State */
           <div className="p-8 sm:p-12 text-center bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-3">
-            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#718096]">
+            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
               <Paperclip className="h-7 w-7 text-[#718096]" />
             </div>
             <h3 className="text-lg font-bold text-[#1a202c]">{t('documents.viewIncoming.attachments.empty.title')}</h3>
-            <p className="text-base text-[#718096] max-w-md mx-auto leading-relaxed">
+            <p className="text-base text-[#5f6b7d] max-w-md mx-auto leading-relaxed">
               {t('documents.viewIncoming.attachments.empty.description')}
             </p>
             {canEdit && (
@@ -1003,7 +1003,7 @@ const ViewIncomingDocument: React.FC = () => {
                     <span className="text-base font-bold text-[#1a202c]">
                       {item.action || t('documents.viewIncoming.timeline.fallback.action')}
                     </span>
-                    <span className="text-xs text-[#718096] font-medium">
+                    <span className="text-xs text-[#5f6b7d] font-medium">
                       {formatArabicDateTime(item.createdAt)}
                     </span>
                   </div>
@@ -1025,7 +1025,7 @@ const ViewIncomingDocument: React.FC = () => {
                   <span className="text-base font-bold text-[#1a202c]">
                     {t('documents.viewIncoming.timeline.lifecycle.step1.title')}
                   </span>
-                  <span className="text-xs text-[#718096] font-medium">
+                  <span className="text-xs text-[#5f6b7d] font-medium">
                     {formatArabicDateTime(document.createdAt || document.arrivalDate)}
                   </span>
                 </div>

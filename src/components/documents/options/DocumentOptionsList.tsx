@@ -376,7 +376,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
       {totalFiltered === 0 ? (
         /* Empty State */
         <div className="border border-[#e2e8f0] rounded p-8 sm:p-12 text-center bg-[#f7fafc] space-y-4">
-          <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#718096]">
+          <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
             <FileText className="h-7 w-7 text-[#2c5282]" />
           </div>
           <div>
@@ -469,7 +469,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                         {formatArabicDate(option.createdAt)}
                       </span>
                       {option.createdBy?.username && (
-                        <span className="flex items-center gap-1 text-xs text-[#718096]">
+                        <span className="flex items-center gap-1 text-xs text-[#5f6b7d]">
                           <User className="h-3 w-3" />
                           {option.createdBy.username}
                         </span>
@@ -597,7 +597,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                   {formatArabicDate(option.createdAt)}
                 </span>
                 {option.createdBy?.username && (
-                  <span className="flex items-center gap-1 text-[#718096]">
+                  <span className="flex items-center gap-1 text-[#5f6b7d]">
                     <User className="h-3 w-3" />
                     {option.createdBy.username}
                   </span>

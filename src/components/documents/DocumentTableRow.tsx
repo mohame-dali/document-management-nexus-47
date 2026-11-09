@@ -83,7 +83,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
             <div className="font-bold text-sm text-[#1a202c] group-hover:text-[#2c5282] transition-colors duration-200">
               #{doc.serialNumber}
             </div>
-            <div className="text-xs text-[#718096]">{doc.year}</div>
+            <div className="text-xs text-[#5f6b7d]">{doc.year}</div>
           </div>
           <div className="flex-shrink-0 relative">
             {isIncomingDocument(doc) ? (
@@ -172,7 +172,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
               )}
             </div>
           ) : (
-            <span className="text-[#a0aec0] text-sm font-medium">-</span>
+            <span className="text-[#5f6b7d] text-sm font-medium">-</span>
           )}
         </TableCell>
       )}
@@ -184,7 +184,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
               {doc.responsibleUser.username}
             </div>
           ) : (
-            <span className="text-[#a0aec0] text-sm font-medium">-</span>
+            <span className="text-[#5f6b7d] text-sm font-medium">-</span>
           )}
         </TableCell>
       )}
@@ -203,7 +203,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
               )}
             </div>
           ) : (
-            <span className="text-[#a0aec0] text-sm font-medium">-</span>
+            <span className="text-[#5f6b7d] text-sm font-medium">-</span>
           )}
         </TableCell>
       )}

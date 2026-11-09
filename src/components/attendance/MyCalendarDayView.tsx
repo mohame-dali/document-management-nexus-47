@@ -97,7 +97,7 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
 
         {/* Sélecteur de date direct */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#718096] font-medium">اختر التاريخ:</span>
+          <span className="text-xs text-[#5f6b7d] font-medium">اختر التاريخ:</span>
           <Input
             type="date"
             value={selectedDate}
@@ -124,7 +124,7 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
             }}
           >
             <div className="space-y-1">
-              <span className="text-xs text-[#718096] font-medium block">
+              <span className="text-xs text-[#5f6b7d] font-medium block">
                 تاريخ المعاينة اليومية
               </span>
               <h3 className="text-lg font-bold text-[#1a202c]">

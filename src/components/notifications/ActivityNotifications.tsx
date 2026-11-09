@@ -146,7 +146,7 @@ const ActivityNotifications: React.FC = () => {
 
     return (
       <div className="mb-2">
-        <div className="px-3 py-1 bg-[#f8fafc] border-y border-[#edf2f7] text-[11px] font-bold text-[#718096]">
+        <div className="px-3 py-1 bg-[#f8fafc] border-y border-[#edf2f7] text-[11px] font-bold text-[#5f6b7d]">
           {title} ({items.length})
         </div>
         <div className="divide-y divide-[#f1f5f9]">
@@ -178,7 +178,7 @@ const ActivityNotifications: React.FC = () => {
                   }`}>
                     {notification.activity ? `نشاط: ${notification.activity}` : notification.title}
                   </p>
-                  <span className="text-[10px] text-[#718096] shrink-0 font-medium">
+                  <span className="text-[10px] text-[#5f6b7d] shrink-0 font-medium">
                     {getRelativeTime(notification.createdAt)}
                   </span>
                 </div>
@@ -197,7 +197,7 @@ const ActivityNotifications: React.FC = () => {
                 )}
 
                 {notification.message && (
-                  <p className="text-[11px] text-[#718096] line-clamp-2 mt-0.5 leading-relaxed">
+                  <p className="text-[11px] text-[#5f6b7d] line-clamp-2 mt-0.5 leading-relaxed">
                     {notification.message}
                   </p>
                 )}
@@ -226,7 +226,7 @@ const ActivityNotifications: React.FC = () => {
                     e.stopPropagation();
                     handleDelete(notification._id);
                   }}
-                  className="h-6 w-6 p-0 text-[#a0aec0] hover:text-red-600 hover:bg-red-50 rounded"
+                  className="h-6 w-6 p-0 text-[#5f6b7d] hover:text-red-600 hover:bg-red-50 rounded"
                   title="حذف"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -274,16 +274,16 @@ const ActivityNotifications: React.FC = () => {
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto"></div>
-            <p className="text-xs text-[#718096] mt-2 font-medium">جاري تحميل الإشعارات...</p>
+            <p className="text-xs text-[#5f6b7d] mt-2 font-medium">جاري تحميل الإشعارات...</p>
           </div>
         ) : transformedNotifications.length === 0 ? (
           /* Clean Empty State */
           <div className="text-center py-10 px-4">
-            <div className="w-12 h-12 bg-slate-100 text-[#a0aec0] rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-slate-100 text-[#5f6b7d] rounded-full flex items-center justify-center mx-auto mb-3">
               <Bell className="w-6 h-6 stroke-[1.5]" />
             </div>
             <h4 className="text-sm font-bold text-[#4a5568]">لا توجد إشعارات جديدة</h4>
-            <p className="text-xs text-[#a0aec0] mt-1">ستظهر هنا كافة تنبيهات النظام والمستندات والمهام</p>
+            <p className="text-xs text-[#5f6b7d] mt-1">ستظهر هنا كافة تنبيهات النظام والمستندات والمهام</p>
           </div>
         ) : (
           <div>

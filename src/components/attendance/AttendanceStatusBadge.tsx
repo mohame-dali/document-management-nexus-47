@@ -27,7 +27,7 @@ export const AttendanceStatusBadge: React.FC<AttendanceStatusBadgeProps> = ({
   if (!statut || statut === 'unrecorded') {
     return (
       <span
-        className={`inline-flex items-center gap-1 font-medium rounded border border-[#e2e8f0] bg-[#f7fafc] text-[#718096] ${
+        className={`inline-flex items-center gap-1 font-medium rounded border border-[#e2e8f0] bg-[#f7fafc] text-[#5f6b7d] ${
           size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs'
         } ${className}`}
       >

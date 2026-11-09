@@ -402,7 +402,7 @@ const BackupSettingsPage: React.FC = () => {
               </div>
               <span>إحصائيات البيانات المتوفرة للأرشفة</span>
             </CardTitle>
-            <CardDescription className="text-base text-[#718096]">
+            <CardDescription className="text-base text-[#5f6b7d]">
               نظرة تفصيلية على حجم الوثائق والمراسلات المتاحة للنسخ الاحتياطي
             </CardDescription>
           </CardHeader>
@@ -475,7 +475,7 @@ const BackupSettingsPage: React.FC = () => {
             </div>
             <span>إنشاء نسخة احتياطية يدوية</span>
           </CardTitle>
-          <CardDescription className="text-base text-[#718096]">
+          <CardDescription className="text-base text-[#5f6b7d]">
             إنشاء وتصدير نسخة احتياطية فورية من جميع الوثائق مع ملفات PDF
           </CardDescription>
         </CardHeader>
@@ -671,7 +671,7 @@ const BackupSettingsPage: React.FC = () => {
             </div>
             <span>النسخ الاحتياطي التلقائي المجدول</span>
           </CardTitle>
-          <CardDescription className="text-base text-[#718096]">
+          <CardDescription className="text-base text-[#5f6b7d]">
             تكوين جدولة دورية لإنشاء النسخ الاحتياطية تلقائياً مع ملفات PDF
           </CardDescription>
         </CardHeader>
@@ -791,7 +791,7 @@ const BackupSettingsPage: React.FC = () => {
               </div>
               <span>سجل النسخ الاحتياطية</span>
             </CardTitle>
-            <CardDescription className="text-base text-[#718096] mt-1">
+            <CardDescription className="text-base text-[#5f6b7d] mt-1">
               {filteredHistory.length} من أصل {backupHistory.length} نسخة محفوظة
             </CardDescription>
           </div>

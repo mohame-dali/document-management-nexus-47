@@ -439,7 +439,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-[#718096]">
+            <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
               <Link to="/dashboard" className="hover:text-[#2c5282] flex items-center gap-1">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
@@ -460,7 +460,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                 <h1 className="text-xl font-bold text-[#1a202c]">
                   حضوري — تقويم وسجل الحضور الشخصي
                 </h1>
-                <p className="text-sm text-[#718096]">
+                <p className="text-sm text-[#5f6b7d]">
                   متابعة حالة الحضور اليومي، فترات التكوين، المهمات، ورصيد الإجازات السنوية
                 </p>
               </div>
@@ -564,7 +564,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="text-xs text-[#718096] px-2 font-mono flex items-center gap-1.5">
+        <div className="text-xs text-[#5f6b7d] px-2 font-mono flex items-center gap-1.5">
           <CalendarDays className="h-4 w-4 text-[#2c5282]" />
           <span>
             {viewMode === 'day' && `معاينة اليوم : ${selectedDate}`}
