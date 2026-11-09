@@ -221,7 +221,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
           {/* Sélection Date & Heure */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+              <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <CalendarIcon className="w-3.5 h-3.5 text-[#2c5282]" />
                 التاريخ المعني <span className="text-red-500">*</span>
               </Label>
@@ -243,7 +243,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+              <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#2c5282]" />
                 ساعة الحضور المتوقعة
               </Label>
@@ -264,7 +264,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
 
           {/* Choix Statut (حاضر / غائب) */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-700">
+            <Label className="text-sm font-semibold text-gray-700">
               نوع التصريح <span className="text-red-500">*</span>
             </Label>
             <div className="grid grid-cols-2 gap-3">
@@ -300,7 +300,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
           {selectedStatut === 'absent' && (
             <div className="p-4 bg-amber-50/40 rounded-lg border border-amber-200/80 space-y-4 animate-in fade-in-50 duration-200">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center justify-between">
                   <span>سبب أو نوع الغياب <span className="text-red-500">*</span></span>
                   {currentReason?.impacteSolde && (
                     <span className="text-[11px] text-red-600 font-normal">
@@ -348,7 +348,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
               {/* Champ conditionnel : Nom du service */}
               {(currentReason?.requiresServiceName || selectedMotif === 'service') && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <Building className="w-3.5 h-3.5 text-[#2c5282]" />
                     اسم المصلحة / الإدارة المستقبلة <span className="text-red-500">*</span>
                   </Label>
@@ -370,7 +370,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
               {(currentReason?.requiresLieu || selectedMotif === 'mission') && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5 text-[#2c5282]" />
                       مكان المأمورية <span className="text-red-500">*</span>
                     </Label>
@@ -387,7 +387,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700">موضوع المأمورية</Label>
+                    <Label className="text-sm font-semibold text-gray-700">موضوع المأمورية</Label>
                     <Controller
                       control={control}
                       name="objetMission"
@@ -406,7 +406,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
               {/* Champ conditionnel : Formation */}
               {(currentReason?.requiresFormationDetails || selectedMotif === 'formation') && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <GraduationCap className="w-3.5 h-3.5 text-[#2c5282]" />
                     عنوان الدورة التكوينية أو التدريب <span className="text-red-500">*</span>
                   </Label>
@@ -426,7 +426,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
 
               {/* Commentaire ou précisions */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                   <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
                   ملاحظات أو تفاصيل إضافية
                 </Label>

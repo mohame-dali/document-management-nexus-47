@@ -133,7 +133,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div>
-            <Label className="text-xs font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-gray-700 block mb-1">
               الخطة الوظيفية / التكليف <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -157,7 +157,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 تاريخ المباشرة / البداية <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -180,7 +180,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 تاريخ الانتهاء (اختياري)
               </Label>
               <Input
@@ -205,7 +205,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 المرجع / التكليف
               </Label>
               <Input
@@ -217,7 +217,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 مكان العمل / الإدارة
               </Label>
               <Input
@@ -230,7 +230,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
           </div>
 
           <div>
-            <Label className="text-xs font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-gray-700 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea

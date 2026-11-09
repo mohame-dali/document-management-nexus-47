@@ -523,7 +523,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1a202c] tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
                 وضعية الموظفين
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">

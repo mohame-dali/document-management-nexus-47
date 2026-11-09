@@ -183,7 +183,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="code" className="text-xs font-semibold text-[#4a5568]">
+                <Label htmlFor="code" className="text-sm font-semibold text-[#4a5568]">
                   الرمز البرمجي (Code) <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -202,7 +202,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="category" className="text-xs font-semibold text-[#4a5568]">
+                <Label htmlFor="category" className="text-sm font-semibold text-[#4a5568]">
                   التصنيف (Category) <span className="text-red-500">*</span>
                 </Label>
                 <Select
@@ -225,7 +225,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="labelAr" className="text-xs font-semibold text-[#4a5568]">
+                <Label htmlFor="labelAr" className="text-sm font-semibold text-[#4a5568]">
                   التسمية بالعربية <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -239,7 +239,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="labelFr" className="text-xs font-semibold text-[#4a5568]">
+                <Label htmlFor="labelFr" className="text-sm font-semibold text-[#4a5568]">
                   التسمية بالفرنسية (اختياري)
                 </Label>
                 <Input
@@ -254,7 +254,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs font-semibold text-[#4a5568]">
+              <Label htmlFor="description" className="text-sm font-semibold text-[#4a5568]">
                 الوصف والملاحظات
               </Label>
               <Textarea
@@ -293,7 +293,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
               <div className="border-t border-[#e2e8f0] pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex items-center justify-between bg-white p-2.5 rounded border border-[#e2e8f0]">
-                  <Label htmlFor="requiresDoc" className="text-xs font-medium text-[#4a5568] cursor-pointer">
+                  <Label htmlFor="requiresDoc" className="text-sm font-medium text-[#4a5568] cursor-pointer">
                     يتطلب وثيقة تبرير (شهادة/تقرير)
                   </Label>
                   <Switch
@@ -304,7 +304,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between bg-white p-2.5 rounded border border-[#e2e8f0]">
-                  <Label htmlFor="requiresLieu" className="text-xs font-medium text-[#4a5568] cursor-pointer">
+                  <Label htmlFor="requiresLieu" className="text-sm font-medium text-[#4a5568] cursor-pointer">
                     يتطلب تحديد المكان (خاص بالمهمات)
                   </Label>
                   <Switch
@@ -315,7 +315,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between bg-white p-2.5 rounded border border-[#e2e8f0]">
-                  <Label htmlFor="requiresService" className="text-xs font-medium text-[#4a5568] cursor-pointer">
+                  <Label htmlFor="requiresService" className="text-sm font-medium text-[#4a5568] cursor-pointer">
                     يتطلب اسم المصلحة (خاص بالخدمة)
                   </Label>
                   <Switch
@@ -326,7 +326,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between bg-white p-2.5 rounded border border-[#e2e8f0]">
-                  <Label htmlFor="requiresFormation" className="text-xs font-medium text-[#4a5568] cursor-pointer">
+                  <Label htmlFor="requiresFormation" className="text-sm font-medium text-[#4a5568] cursor-pointer">
                     يتطلب تفاصيل التكوين
                   </Label>
                   <Switch
@@ -348,7 +348,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="color" className="text-xs font-semibold text-[#4a5568]">
+                <Label htmlFor="color" className="text-sm font-semibold text-[#4a5568]">
                   لون الشارة (Couleur)
                 </Label>
                 <div className="flex items-center gap-2">
@@ -371,7 +371,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="icon" className="text-xs font-semibold text-[#4a5568]">
+                <Label htmlFor="icon" className="text-sm font-semibold text-[#4a5568]">
                   أيقونة Lucide (اختياري)
                 </Label>
                 <Input
@@ -385,7 +385,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="order" className="text-xs font-semibold text-[#4a5568]">
+                <Label htmlFor="order" className="text-sm font-semibold text-[#4a5568]">
                   ترتيب العرض (Ordre)
                 </Label>
                 <Input

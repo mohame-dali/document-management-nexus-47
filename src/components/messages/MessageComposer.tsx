@@ -122,7 +122,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
         <CardContent className="p-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label className="text-xs font-semibold text-slate-700 block mb-1">
+              <Label className="text-sm font-semibold text-slate-700 block mb-1">
                 {t('messages.recipients')} *
               </Label>
               <ContactSelector 
@@ -133,7 +133,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
-                <Label htmlFor="quick-subject" className="text-xs font-semibold text-slate-700 block mb-1">
+                <Label htmlFor="quick-subject" className="text-sm font-semibold text-slate-700 block mb-1">
                   {t('messages.subject')} *
                 </Label>
                 <Input
@@ -147,7 +147,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
               </div>
 
               <div>
-                <Label className="text-xs font-semibold text-slate-700 block mb-1">
+                <Label className="text-sm font-semibold text-slate-700 block mb-1">
                   الأولوية
                 </Label>
                 <select
@@ -163,7 +163,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="quick-content" className="text-xs font-semibold text-slate-700 block mb-1">
+              <Label htmlFor="quick-content" className="text-sm font-semibold text-slate-700 block mb-1">
                 {t('messages.content')} *
               </Label>
               <Textarea

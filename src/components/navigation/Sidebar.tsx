@@ -239,7 +239,7 @@ const Sidebar = () => {
             </div>
             {isOpen && (
               <div className="min-w-0">
-                <h1 className="text-base font-bold text-white tracking-tight truncate">
+                <h1 className="text-base font-bold text-white truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
                 <p className="text-sm text-slate-400 truncate">{t('sidebar.documentManagement')}</p>

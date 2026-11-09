@@ -839,10 +839,10 @@ const DepartmentsPage: React.FC = () => {
                 <Table className="w-full">
                   <TableHeader className="bg-[#f8fafc]">
                     <TableRow>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700 w-12">الصورة</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700">اسم المستخدم</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700">الدور</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700">الحالة</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700 w-12">الصورة</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">اسم المستخدم</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">الدور</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">الحالة</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
