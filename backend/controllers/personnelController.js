@@ -169,14 +169,19 @@ exports.createPersonnel = async (req, res, next) => {
       try {
         const user = await User.findById(personnel.userId);
         if (user) {
-          user.activeDepartment = personnel.activeDepartment;
-          const newDeptId = personnel.activeDepartment.toString();
-          const deptExists = (user.departments || []).some(
-            d => (d._id || d).toString() === newDeptId
-          );
-          if (!deptExists) {
-            user.departments = user.departments || [];
-            user.departments.push(personnel.activeDepartment);
+          if (user.role !== 'AdminTuningDesk') {
+            user.activeDepartment = personnel.activeDepartment;
+            const newDeptId = personnel.activeDepartment.toString();
+            const deptExists = (user.departments || []).some(
+              d => (d._id || d).toString() === newDeptId
+            );
+            if (!deptExists) {
+              user.departments = user.departments || [];
+              user.departments.push(personnel.activeDepartment);
+            }
+          } else {
+            user.departments = [];
+            user.activeDepartment = null;
           }
           await user.save();
         }
@@ -434,14 +439,19 @@ exports.updatePersonnel = async (req, res, next) => {
       try {
         const user = await User.findById(personnel.userId);
         if (user) {
-          user.activeDepartment = personnel.activeDepartment;
-          const newDeptId = personnel.activeDepartment.toString();
-          const deptExists = (user.departments || []).some(
-            d => (d._id || d).toString() === newDeptId
-          );
-          if (!deptExists) {
-            user.departments = user.departments || [];
-            user.departments.push(personnel.activeDepartment);
+          if (user.role !== 'AdminTuningDesk') {
+            user.activeDepartment = personnel.activeDepartment;
+            const newDeptId = personnel.activeDepartment.toString();
+            const deptExists = (user.departments || []).some(
+              d => (d._id || d).toString() === newDeptId
+            );
+            if (!deptExists) {
+              user.departments = user.departments || [];
+              user.departments.push(personnel.activeDepartment);
+            }
+          } else {
+            user.departments = [];
+            user.activeDepartment = null;
           }
           await user.save();
         }
@@ -762,8 +772,8 @@ exports.linkUserToPersonnel = async (req, res, next) => {
     personnel.statut = 'actif';
     user.personnelId = personnel._id;
 
-    // Synchronisation du département lors de la liaison
-    if (personnel.activeDepartment) {
+    // Synchronisation du département lors de la liaison (non applicable à AdminTuningDesk)
+    if (user.role !== 'AdminTuningDesk' && personnel.activeDepartment) {
       user.activeDepartment = personnel.activeDepartment;
       const deptIdStr = personnel.activeDepartment.toString();
       const deptExists = (user.departments || []).some(
@@ -773,6 +783,9 @@ exports.linkUserToPersonnel = async (req, res, next) => {
         user.departments = user.departments || [];
         user.departments.push(personnel.activeDepartment);
       }
+    } else if (user.role === 'AdminTuningDesk') {
+      user.departments = [];
+      user.activeDepartment = null;
     }
 
     // g. Sauvegarde atomique avec Transaction Mongoose et Fallback par compensation
