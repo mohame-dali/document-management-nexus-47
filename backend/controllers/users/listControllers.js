@@ -9,8 +9,8 @@ exports.getUsers = async (req, res, next) => {
   try {
     let query;
     
-    // Check if this is a messaging route request
-    const isMessagingRoute = req.originalUrl.includes('/messaging');
+    // Check if this is a messaging route request (/api/users/messaging)
+    const isMessagingRoute = req.path === '/messaging' || (req.baseUrl + req.path) === '/api/users/messaging';
     
     if (isMessagingRoute) {
       // For messaging routes, allow all authenticated users to see active users for messaging

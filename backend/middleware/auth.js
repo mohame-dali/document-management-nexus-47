@@ -69,22 +69,11 @@ exports.protect = async (req, res, next) => {
 // Grant access to specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    // Enhanced messaging route detection - allow all authenticated users access to messaging
-    const isMessagingRoute = req.originalUrl.includes('/messaging') || 
-                           req.originalUrl.includes('/messages') ||
-                           req.originalUrl.includes('/api/messages') ||
-                           req.originalUrl.includes('/api/users/messaging');
-    
-    if (isMessagingRoute) {
-      console.log(`Messaging route access granted for ${req.user.role} (${req.user.username}) to: ${req.originalUrl}`);
-      return next();
-    }
-    
-    if (!roles.includes(req.user.role)) {
-      console.log(`Access denied for ${req.user.role} to route: ${req.originalUrl}`);
+    if (!req.user || !roles.includes(req.user.role)) {
+      console.log(`Access denied for ${req.user ? req.user.role : 'unauthenticated'} to route: ${req.originalUrl}`);
       return next(
         new ErrorResponse(
-          `User role ${req.user.role} is not authorized to access this route`,
+          `User role ${req.user ? req.user.role : 'unauthenticated'} is not authorized to access this route`,
           403
         )
       );
