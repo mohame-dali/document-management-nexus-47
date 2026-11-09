@@ -22,7 +22,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
 
   const getDocumentUrl = (documentPath: string) => {
     if (!documentPath) return '';
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_URL = import.meta.env.VITE_API_URL || '/api';
     return documentPath.startsWith('http') 
       ? documentPath 
       : `${API_URL.replace('/api', '')}/${documentPath}`;

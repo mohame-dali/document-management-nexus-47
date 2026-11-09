@@ -106,7 +106,7 @@ const LoginPage = () => {
       if (err.message === 'Network Error') {
         setLoginError(t('login.networkError'));
       } else if (err.code === 'ERR_NETWORK') {
-        setLoginError(`${t('login.connectionError')}: http://localhost:5000`);
+        setLoginError(t('login.connectionError'));
       } else if (err.response) {
         const errorMessage = err.response.data?.error || t('login.authFailed');
         setLoginError(errorMessage);

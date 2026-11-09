@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { ActivityNotification } from '@/types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Set up axios defaults
 axios.defaults.withCredentials = true;

@@ -391,7 +391,7 @@ export const AttendancePage: React.FC = () => {
 
   const getAgentPhotoUrl = (photo?: string) => {
     if (!photo) return undefined;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const API_URL = import.meta.env.VITE_API_URL || '';
     const cleanPath = photo.startsWith('/') ? photo.slice(1) : photo;
     return `${API_URL}/${cleanPath}`;
   };
