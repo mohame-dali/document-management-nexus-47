@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const require = createRequire(import.meta.url);
-const mongoose = require('mongoose');
+const { connectDB, mongoose } = require('./backend/config/db');
 
 // Désactivation du buffering des commandes Mongoose pour fail-fast immédiat
 mongoose.set('bufferCommands', false);
@@ -46,7 +46,7 @@ if (!process.env.LLAMA_THREADS) {
   console.log(`[AI] LLAMA_THREADS configuré sur ${physicalCores} (cœurs physiques)`);
 }
 
-const connectDB = require('./backend/config/db');
+// Instance unique connectDB et mongoose déjà importée depuis ./backend/config/db
 const errorHandler = require('./backend/middleware/error');
 
 // Check JWT_SECRET
@@ -322,9 +322,9 @@ function checkAIModels() {
 async function start() {
   try {
     try {
-      await connectDB();
-      if (mongoose.connection.readyState === 1) {
-        console.log('[Database] ✅ Connexion MongoDB établie, démarrage du serveur HTTP...');
+      const conn = await connectDB();
+      if (conn && conn.connection.readyState === 1) {
+        console.log('[Database] ✅ Connexion MongoDB établie (readyState: 1), démarrage du serveur HTTP...');
       } else {
         console.log('[Database] ⚠️ Démarrage HTTP en mode dégradé (MongoDB hors ligne, readyState: ' + mongoose.connection.readyState + ')...');
       }

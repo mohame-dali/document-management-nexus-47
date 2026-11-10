@@ -51,11 +51,13 @@ const connectDB = async () => {
     
     if (!dbUri) {
       console.warn('MongoDB URI is not defined. Running in mock database mode.');
-      return;
+      return null;
     }
     
     console.log('Connecting to MongoDB...');
+    const isLocalOrStandalone = !dbUri.includes('+srv') && !dbUri.includes('replicaSet');
     const conn = await mongoose.connect(dbUri, {
+      ...(isLocalOrStandalone ? { directConnection: true } : {}),
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 0,
     });
@@ -64,9 +66,13 @@ const connectDB = async () => {
     
     // Create default admin account if needed
     await createDefaultAdmin();
+    return conn;
   } catch (error) {
     console.warn(`[Database] MongoDB offline (${error.message}).`);
+    throw error;
   }
 };
 
 module.exports = connectDB;
+connectDB.connectDB = connectDB;
+connectDB.mongoose = mongoose;
