@@ -44,6 +44,7 @@ router.get('/pending/count', protect, getPendingCount);
 router.route('/')
   .get(auditDocumentActivity('document_view'), getIncomingDocuments)
   .post(
+    protect,
     authorize('Admin', 'AdminTuningDesk'), 
     uploadDocument,
     auditDocumentActivity('document_create'), 
