@@ -34,7 +34,8 @@ import {
   ChevronDown,
   ChevronsUpDown,
   ShieldAlert,
-  Inbox
+  Inbox,
+  Bookmark
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
