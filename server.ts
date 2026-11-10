@@ -189,7 +189,8 @@ try {
 }
 
 // MIDDLEWARE 503 : Exclure les routes d'authentification, setup, test et health
-app.use('/api', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use('/api', async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // 1. Laisser passer les routes d'auth, setup, test et health
   if (
     req.path.startsWith('/auth') || 
     req.path.startsWith('/setup') || 
@@ -198,10 +199,22 @@ app.use('/api', (req: express.Request, res: express.Response, next: express.Next
   ) {
     return next();
   }
-  // Vérification dynamique en temps réel de l'état de la connexion Mongoose unifiée
+  
+  // 2. Si connecté, on continue
   if (mongoose.connection.readyState === 1) {
     return next();
   }
+  
+  // 3. Si en cours de connexion/reconnexion (2), on attend 1 seconde pour laisser Mongo se reconnecter
+  if (mongoose.connection.readyState === 2) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (mongoose.connection.readyState === 1) {
+      return next();
+    }
+  }
+
+  // 4. Sinon, on renvoie l'erreur 503
+  console.log(`[503] Route: ${req.originalUrl} | readyState: ${mongoose.connection.readyState}`);
   return res.status(503).json({
     success: false,
     message: 'Service temporairement indisponible (Base de données hors ligne)'
