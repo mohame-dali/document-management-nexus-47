@@ -10,13 +10,30 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import { createRequire } from 'module';
-import mongoose from 'mongoose';
 
 // ✅ CORRECTION POUR LES MODULES ES (Node 20+)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const require = createRequire(import.meta.url);
+const mongoose = require('mongoose');
+
+// Désactivation du buffering des commandes Mongoose pour fail-fast immédiat
 mongoose.set('bufferCommands', false);
+
+// Journalisation d'une ligne à chaque changement d'état de connexion MongoDB (sans donnée sensible)
+mongoose.connection.on('connected', () => {
+  console.log('[Database] MongoDB connecté (readyState: 1)');
+});
+mongoose.connection.on('disconnected', () => {
+  console.warn('[Database] MongoDB déconnecté (readyState: 0)');
+});
+mongoose.connection.on('reconnected', () => {
+  console.log('[Database] MongoDB reconnecté (readyState: 1)');
+});
+mongoose.connection.on('error', (err: Error) => {
+  console.error('[Database] Erreur connexion MongoDB:', err.message);
+});
 
 dotenv.config({ path: path.join(__dirname, 'backend', '.env') });
 dotenv.config(); // Fallback vers .env racine si présent
@@ -29,7 +46,6 @@ if (!process.env.LLAMA_THREADS) {
   console.log(`[AI] LLAMA_THREADS configuré sur ${physicalCores} (cœurs physiques)`);
 }
 
-const require = createRequire(import.meta.url);
 const connectDB = require('./backend/config/db');
 const errorHandler = require('./backend/middleware/error');
 
@@ -175,13 +191,14 @@ try {
 // MIDDLEWARE 503 : Exclure les routes d'authentification, setup, test et health
 app.use('/api', (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (
-    req.path.startsWith('/auth/') || 
+    req.path.startsWith('/auth') || 
     req.path.startsWith('/setup') || 
     req.path === '/test' || 
     req.path === '/health'
   ) {
     return next();
   }
+  // Vérification dynamique en temps réel de l'état de la connexion Mongoose unifiée
   if (mongoose.connection.readyState === 1) {
     return next();
   }
@@ -293,9 +310,13 @@ async function start() {
   try {
     try {
       await connectDB();
-      console.log('✅ MongoDB connecté, démarrage du serveur HTTP...');
+      if (mongoose.connection.readyState === 1) {
+        console.log('[Database] ✅ Connexion MongoDB établie, démarrage du serveur HTTP...');
+      } else {
+        console.log('[Database] ⚠️ Démarrage HTTP en mode dégradé (MongoDB hors ligne, readyState: ' + mongoose.connection.readyState + ')...');
+      }
     } catch (err: unknown) {
-      console.warn('Database initialization warning:', (err as Error).message);
+      console.warn('[Database] Avertissement initialisation MongoDB:', (err as Error).message);
     }
 
     if (process.env.NODE_ENV !== 'production') {
