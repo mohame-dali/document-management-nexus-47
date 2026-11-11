@@ -44,15 +44,15 @@ console.log('═'.repeat(78));
 console.log('🔍 DMS — CONTRÔLE DE L\'ENVIRONNEMENT DE PRODUCTION (PRE-FLIGHT CHECK)');
 console.log('═'.repeat(78));
 
-// 1. Contrôle de la version de Node.js
+// 1. Contrôle de la version de Node.js (Exige Node >= 22)
 const nodeVersion = process.version;
 const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0], 10);
 console.log(`\n[Node.js] Version détectée : ${nodeVersion}`);
-if (majorVersion < 20) {
-  console.error(`  ❌ ERREUR : Node.js >= 20.x requis (recommandé v22.x LTS). Version actuelle : ${nodeVersion}`);
+if (majorVersion < 22) {
+  console.error(`  ❌ ERREUR : Node.js >= 22.x requis pour la production (version actuelle : ${nodeVersion})`);
   hasErrors = true;
 } else {
-  console.log('  ✅ Version de Node.js conforme.');
+  console.log('  ✅ Version de Node.js conforme (>= 22.x).');
 }
 
 // 2. Contrôle de NODE_ENV
@@ -101,6 +101,25 @@ if (!jwtSecret) {
     hasErrors = true;
   } else {
     console.log('  ✅ Clé personnalisée forte (aucune signature par défaut connue détectée).');
+  }
+
+  // Contrôle de sécurité statique : vérifie si server.ts contient un fallback hardcodé (signalement sans bloquer)
+  try {
+    const serverPath = path.join(process.cwd(), 'server.ts');
+    if (fs.existsSync(serverPath)) {
+      const serverCode = fs.readFileSync(serverPath, 'utf8');
+      const lines = serverCode.split('\n');
+      lines.forEach((line, idx) => {
+        if (line.includes('process.env.JWT_SECRET =') || (line.includes('JWT_SECRET ||') && !line.includes('if (!process.env.JWT_SECRET)'))) {
+          console.warn(`  ⚠️ SIGNALEMENT SÉCURITÉ : server.ts:${idx + 1} affecte un fallback de JWT_SECRET en mémoire :`);
+          console.warn(`     ${line.trim()}`);
+          console.warn(`     [ATTENTION] Si JWT_SECRET est absent du .env en dev, cette valeur par défaut est active.`);
+          hasWarnings = true;
+        }
+      });
+    }
+  } catch (err) {
+    // Ignorer si lecture impossible
   }
 }
 

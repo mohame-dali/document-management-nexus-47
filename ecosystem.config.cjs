@@ -36,10 +36,10 @@ module.exports = {
       max_restarts: 10,
       restart_delay: 4000,
       kill_timeout: 8000,
-      // Variables d'environnement pour la production
+      // Variables d'environnement pour la production (PORT 3000 unique)
       env: {
         NODE_ENV: 'production',
-        PORT: 5000,
+        PORT: 3000,
       },
       // Fichiers de logs relatifs pour compatibilité multi-OS
       error_file: './logs/err.log',

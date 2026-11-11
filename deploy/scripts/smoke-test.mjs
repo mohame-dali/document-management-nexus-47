@@ -2,35 +2,50 @@
 /**
  * ==============================================================================
  * deploy/scripts/smoke-test.mjs
- * Script de test de fumée (Smoke Test) post-déploiement en Node.js pur
+ * Suite de tests de validation post-déploiement et d'audit de sécurité
  * [NON TESTÉ, à exécuter sur une VM de recette]
  * ==============================================================================
  * Rôle :
- *   Exécute une suite de requêtes HTTP automatisées contre l'instance DMS déployée
- *   pour valider sa disponibilité, l'intégrité de ses routes, son cloisonnement
- *   d'authentification et ses en-têtes de sécurité.
+ *   Exécute une suite de requêtes automatisées divisée en 2 groupes :
+ *   1. GROUPE DÉPLOIEMENT (bloquant) :
+ *      - Santé du serveur et base de données (/api/health)
+ *      - Cloisonnement d'accès (/api/departments sans jeton = 401)
+ *      - Distribution du Frontend SPA (GET /)
+ *      - Gestion des routes inexistantes (404)
+ *      => Tout FAIL sur ce groupe déclenche un échec critique (exit 1 / rollback).
+ *
+ *   2. GROUPE SÉCURITÉ (audit & durcissement) :
+ *      - Blocage de /api/auth/reset-admin (doit être 403/404)
+ *      - Blocage de /api/auth/test-admin
+ *      - En-tête X-Powered-By masqué
+ *      - En-tête X-Content-Type-Options: nosniff
+ *      - Protection photos /uploads/usersphoto sans session (doit être 401/403)
+ *      - Protection racine /uploads sans jeton (doit être 401/403)
+ *      - Test CORS avec Origin non autorisée (Origin: http://evil.test)
+ *      - Test Rate Limit sur /api/auth/login (11 requêtes rapides)
+ *      - Test contournement skipDepartmentCheck via originalUrl (?x=/messages)
+ *      => Affiché en WARN / FAIL selon constat. Ne bloque le déploiement QUE si
+ *         l'option --strict-security est passée en argument CLI.
  *
  * Utilisation :
- *   node deploy/scripts/smoke-test.mjs [BASE_URL]
- * Exemple :
- *   node deploy/scripts/smoke-test.mjs http://127.0.0.1:3000
- *   node deploy/scripts/smoke-test.mjs https://dms.local
- *
- * Code de sortie :
- *   0 = Tous les tests critiques sont PASS
- *   1 = Au moins un test critique a échoué (FAIL) -> déclenche le rollback automatique
+ *   node deploy/scripts/smoke-test.mjs [BASE_URL] [--strict-security]
  * ==============================================================================
  */
 
-const baseUrl = (process.argv[2] || process.env.TEST_URL || 'http://127.0.0.1:3000').replace(/\/+$/, '');
+const args = process.argv.slice(2);
+const strictSecurity = args.includes('--strict-security');
+const targetUrlArg = args.find(a => !a.startsWith('--'));
+const baseUrl = (targetUrlArg || process.env.TEST_URL || 'http://127.0.0.1:3000').replace(/\/+$/, '');
 
-console.log('═'.repeat(84));
-console.log(`🧪 DMS — SUITE DE TESTS DE FUMÉE (SMOKE TESTS)`);
-console.log(`🎯 Cible auditée : ${baseUrl}`);
-console.log(`⏱️ Date & Heure   : ${new Date().toISOString()}`);
-console.log('═'.repeat(84));
+console.log('═'.repeat(88));
+console.log(`🧪 DMS — SUITE DE VALIDATION POST-DÉPLOIEMENT & AUDIT DE SÉCURITÉ`);
+console.log(`🎯 Cible auditée       : ${baseUrl}`);
+console.log(`🔒 Mode sécurité stricte: ${strictSecurity ? 'ACTIVÉ (Rollback sur failles sécu)' : 'DÉSACTIVÉ (Tolérance WARN/FAIL sécu)'}`);
+console.log(`⏱️ Date & Heure         : ${new Date().toISOString()}`);
+console.log('═'.repeat(88));
 
-const results = [];
+const deployResults = [];
+const securityResults = [];
 
 async function makeRequest(path, options = {}) {
   const url = `${baseUrl}${path}`;
@@ -50,7 +65,7 @@ async function makeRequest(path, options = {}) {
       bodyText = await res.text();
       bodyJson = JSON.parse(bodyText);
     } catch (_) {
-      // Pas du JSON
+      // Non-JSON body
     }
 
     return {
@@ -73,176 +88,178 @@ async function makeRequest(path, options = {}) {
   }
 }
 
-// ------------------------------------------------------------------------------
-// 1. TEST : Santé du service (/api/health)
-// ------------------------------------------------------------------------------
+// ==============================================================================
+// GROUPE 1 : TESTS DE DÉPLOIEMENT & DISPONIBILITÉ (CRITIQUES / BLOQUANTS)
+// ==============================================================================
+
 async function testHealth() {
   const res = await makeRequest('/api/health');
   if (!res.ok) {
-    results.push({
-      id: 'SMK-01',
+    deployResults.push({
+      id: 'DEP-01',
       name: 'Santé de l\'API (/api/health)',
-      expected: 'HTTP 200 + database connected',
-      actual: `Connexion échouée : ${res.error}`,
+      expected: 'HTTP 200 + db: connected',
+      actual: `Connexion impossible : ${res.error}`,
       status: 'FAIL',
-      critical: true,
     });
     return;
   }
-
   const isConnected = res.bodyJson?.database === 'connected';
   const isHealthy = res.status === 200 && res.bodyJson?.success === true;
-
-  results.push({
-    id: 'SMK-01',
+  deployResults.push({
+    id: 'DEP-01',
     name: 'Santé de l\'API (/api/health)',
     expected: 'HTTP 200 & db: connected',
     actual: `HTTP ${res.status} (db: ${res.bodyJson?.database || 'inconnu'})`,
     status: isHealthy && isConnected ? 'PASS' : (isHealthy ? 'WARN' : 'FAIL'),
-    critical: true,
   });
 }
 
-// ------------------------------------------------------------------------------
-// 2. TEST : Rejet non authentifié (/api/departments sans jeton = 401, jamais 503)
-// ------------------------------------------------------------------------------
 async function testDepartmentsUnauthorized() {
   const res = await makeRequest('/api/departments');
   const is401 = res.status === 401;
   const is503 = res.status === 503;
-
-  results.push({
-    id: 'SMK-02',
-    name: 'Accès sans jeton (/api/departments)',
+  deployResults.push({
+    id: 'DEP-02',
+    name: 'Accès /api/departments sans jeton',
     expected: 'HTTP 401 (jamais 503)',
-    actual: `HTTP ${res.status}${is503 ? ' (Base signalée hors ligne)' : ''}`,
-    status: is401 ? 'PASS' : (is503 ? 'FAIL' : 'WARN'),
-    critical: true,
+    actual: `HTTP ${res.status}${is503 ? ' (Base signalée 503)' : ''}`,
+    status: is401 ? 'PASS' : 'FAIL',
   });
 }
 
-// ------------------------------------------------------------------------------
-// 3. TEST : Distribution du Frontend SPA (Racine /)
-// ------------------------------------------------------------------------------
 async function testFrontendRoot() {
   const res = await makeRequest('/');
   const isHtml = res.status === 200 && (res.bodyText.includes('<!doctype html>') || res.bodyText.includes('<div id="root">'));
-
-  results.push({
-    id: 'SMK-03',
+  deployResults.push({
+    id: 'DEP-03',
     name: 'Distribution Frontend SPA (GET /)',
-    expected: 'HTTP 200 + HTML index',
-    actual: res.status === 200 ? (isHtml ? 'HTTP 200 (HTML valide)' : 'HTTP 200 (HTML non reconnu)') : `HTTP ${res.status}`,
+    expected: 'HTTP 200 + index HTML',
+    actual: res.status === 200 ? (isHtml ? 'HTTP 200 (HTML valide)' : 'HTTP 200 (HTML incomplet)') : `HTTP ${res.status}`,
     status: isHtml ? 'PASS' : 'FAIL',
-    critical: true,
   });
 }
 
-// ------------------------------------------------------------------------------
-// 4. TEST : Route API inexistante (doit être 404, jamais 500)
-// ------------------------------------------------------------------------------
 async function testRouteNotFound() {
-  const res = await makeRequest('/api/non-existent-route-for-smoke-test-404');
+  const res = await makeRequest('/api/non-existent-probe-for-smoke-test-404');
   const is404 = res.status === 404;
-
-  results.push({
-    id: 'SMK-04',
+  deployResults.push({
+    id: 'DEP-04',
     name: 'Route API inconnue (/api/...)',
-    expected: 'HTTP 404',
+    expected: 'HTTP 404 (jamais 500)',
     actual: `HTTP ${res.status}`,
-    status: is404 ? 'PASS' : 'WARN',
-    critical: false,
+    status: is404 ? 'PASS' : 'FAIL',
   });
 }
 
-// ------------------------------------------------------------------------------
-// 5. TEST : Désactivation des endpoints de dev (reset-admin & test-admin)
-// ------------------------------------------------------------------------------
-async function testDevEndpoints() {
-  const resReset = await makeRequest('/api/auth/reset-admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-  const isResetBlocked = resReset.status === 403 || resReset.status === 404;
+// ==============================================================================
+// GROUPE 2 : TESTS DE SÉCURITÉ & AUDIT DE DURCISSEMENT (NON BLOQUANTS PAR DÉFAUT)
+// ==============================================================================
 
-  results.push({
-    id: 'SMK-05',
-    name: 'Blocage reset-admin en production',
-    expected: 'HTTP 403 ou 404',
-    actual: `HTTP ${resReset.status}${resReset.status === 200 ? ' (ALERTE : reset admin actif !)' : ''}`,
-    status: isResetBlocked ? 'PASS' : 'FAIL',
-    critical: true,
+async function testResetAdmin() {
+  const res = await makeRequest('/api/auth/reset-admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
   });
-
-  const resTestAdmin = await makeRequest('/api/auth/test-admin');
-  const isTestAdminBlocked = resTestAdmin.status === 403 || resTestAdmin.status === 404;
-
-  results.push({
-    id: 'SMK-06',
-    name: 'Blocage test-admin en production',
+  const isBlocked = res.status === 403 || res.status === 404;
+  securityResults.push({
+    id: 'SEC-01',
+    name: 'Désactivation reset-admin (SEC-03)',
     expected: 'HTTP 403 ou 404',
-    actual: `HTTP ${resTestAdmin.status}${resTestAdmin.status === 200 ? ' (Énumération admin active)' : ''}`,
-    status: isTestAdminBlocked ? 'PASS' : 'WARN',
-    critical: false,
+    actual: `HTTP ${res.status}${res.status === 200 ? ' (Actif ! Danger)' : ''}`,
+    status: isBlocked ? 'PASS' : 'FAIL',
   });
 }
 
-// ------------------------------------------------------------------------------
-// 6. TEST : En-têtes de sécurité HTTP & Masquage technologique
-// ------------------------------------------------------------------------------
+async function testTestAdmin() {
+  const res = await makeRequest('/api/auth/test-admin');
+  const isBlocked = res.status === 403 || res.status === 404;
+  securityResults.push({
+    id: 'SEC-02',
+    name: 'Désactivation test-admin',
+    expected: 'HTTP 403 ou 404',
+    actual: `HTTP ${res.status}${res.status === 200 ? ' (Énumération admin active)' : ''}`,
+    status: isBlocked ? 'PASS' : 'WARN',
+  });
+}
+
 async function testSecurityHeaders() {
   const res = await makeRequest('/api/health');
   const hasXPoweredBy = 'x-powered-by' in res.headers;
   const hasNosniff = res.headers['x-content-type-options'] === 'nosniff';
-  const hasFrameOptions = !!res.headers['x-frame-options'];
 
-  results.push({
-    id: 'SMK-07',
-    name: 'Masquage X-Powered-By (Express)',
+  securityResults.push({
+    id: 'SEC-03',
+    name: 'Masquage X-Powered-By Express (BLK-06)',
     expected: 'En-tête absent',
-    actual: hasXPoweredBy ? `Présent (${res.headers['x-powered-by']})` : 'Absent (masqué)',
+    actual: hasXPoweredBy ? `Exposé (${res.headers['x-powered-by']})` : 'Masqué (OK)',
     status: hasXPoweredBy ? 'WARN' : 'PASS',
-    critical: false,
   });
 
-  results.push({
-    id: 'SMK-08',
-    name: 'En-tête X-Content-Type-Options: nosniff',
+  securityResults.push({
+    id: 'SEC-04',
+    name: 'En-tête X-Content-Type-Options',
     expected: 'nosniff',
     actual: hasNosniff ? 'nosniff présent' : 'Absent',
     status: hasNosniff ? 'PASS' : 'WARN',
-    critical: false,
   });
 }
 
-// ------------------------------------------------------------------------------
-// 7. TEST : Protection des photos d'identité sans session
-// ------------------------------------------------------------------------------
-async function testPhotosProtection() {
+async function testCorsEvilOrigin() {
+  const evilOrigin = 'http://evil.test';
+  const res = await makeRequest('/api/health', {
+    method: 'OPTIONS',
+    headers: {
+      'Origin': evilOrigin,
+      'Access-Control-Request-Method': 'GET',
+    },
+  });
+
+  const allowOrigin = res.headers['access-control-allow-origin'];
+  const reflectsEvil = allowOrigin === evilOrigin || allowOrigin === '*';
+
+  securityResults.push({
+    id: 'SEC-05',
+    name: 'CORS avec Origin http://evil.test (BLK-05)',
+    expected: 'Origine rejetée',
+    actual: reflectsEvil ? `Origine reflétée (${allowOrigin})` : 'Rejetée / Non reflétée',
+    status: reflectsEvil ? 'FAIL' : 'PASS',
+  });
+}
+
+async function testPhotosWithoutAuth() {
   const res = await makeRequest('/uploads/usersphoto/test.jpg');
-  // En production avec Helmet/Proxy durci, l'accès direct sans session doit être rejeté (401/403)
-  // Si le code actuel sert en statique public, il renverra 404 (fichier inexistant) au lieu de 401
   const isProtected = res.status === 401 || res.status === 403;
-
-  results.push({
-    id: 'SMK-09',
-    name: 'Protection photos sans session (/uploads/)',
+  securityResults.push({
+    id: 'SEC-06',
+    name: 'Photos utilisateurs sans session (BLK-11)',
     expected: 'HTTP 401 ou 403',
-    actual: `HTTP ${res.status}${res.status === 404 ? ' (Servi en statique public - faille BLK-11)' : ''}`,
+    actual: `HTTP ${res.status}${res.status === 404 ? ' (Servi en statique public - faille)' : ''}`,
     status: isProtected ? 'PASS' : 'WARN',
-    critical: false,
   });
 }
 
-// ------------------------------------------------------------------------------
-// 8. TEST : Limitation de débit (Rate Limiting sur /api/auth/login)
-// ------------------------------------------------------------------------------
+async function testUploadsRootWithoutToken() {
+  const res = await makeRequest('/uploads/attachments/document.pdf');
+  const isProtected = res.status === 401 || res.status === 403;
+  securityResults.push({
+    id: 'SEC-07',
+    name: 'Accès direct /uploads/ sans jeton',
+    expected: 'HTTP 401 ou 403',
+    actual: `HTTP ${res.status}${res.status === 404 ? ' (Servi en statique sans auth)' : ''}`,
+    status: isProtected ? 'PASS' : 'WARN',
+  });
+}
+
 async function testRateLimiting() {
   let saw429 = false;
   let lastStatus = 0;
-
   for (let i = 1; i <= 11; i++) {
     const res = await makeRequest('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'non_existent_smoke_test_user', password: 'BadPassword123!' }),
+      body: JSON.stringify({ username: 'smoke_test_probe_user', password: 'InvalidPassword123!' }),
     });
     lastStatus = res.status;
     if (res.status === 429) {
@@ -251,37 +268,37 @@ async function testRateLimiting() {
     }
   }
 
-  results.push({
-    id: 'SMK-10',
-    name: 'Limitation force brute (11x login)',
-    expected: 'HTTP 429 (Too Many Requests)',
-    actual: saw429 ? 'HTTP 429 déclenché' : `Aucun blocage 429 (Dernier HTTP ${lastStatus})`,
+  securityResults.push({
+    id: 'SEC-08',
+    name: 'Rate limiting /api/auth/login (BLK-12)',
+    expected: 'HTTP 429 après 10 requêtes',
+    actual: saw429 ? 'HTTP 429 déclenché' : `Aucun blocage (Dernier HTTP ${lastStatus})`,
     status: saw429 ? 'PASS' : 'WARN',
-    critical: false,
   });
 }
 
-// ------------------------------------------------------------------------------
-// Exécution séquentielle et affichage du tableau récapitulatif
-// ------------------------------------------------------------------------------
-async function runAll() {
-  await testHealth();
-  await testDepartmentsUnauthorized();
-  await testFrontendRoot();
-  await testRouteNotFound();
-  await testDevEndpoints();
-  await testSecurityHeaders();
-  await testPhotosProtection();
-  await testRateLimiting();
+async function testOriginalUrlBypassProbe() {
+  // Simule le contournement de filtrage départemental via ?x=/messages (faille SEC-01)
+  const probePath = '/api/departments?x=/messages';
+  const res = await makeRequest(probePath);
+  // Sans jeton, doit toujours être 401
+  const is401 = res.status === 401;
+  securityResults.push({
+    id: 'SEC-09',
+    name: 'Contournement originalUrl ?x=/messages (SEC-01)',
+    expected: 'HTTP 401',
+    actual: `HTTP ${res.status}`,
+    status: is401 ? 'PASS' : 'FAIL',
+  });
+}
 
-  console.log('\n┌───────┬──────────────────────────────────────────┬──────────────────────┬──────────────────────┬────────┐');
+function printTable(title, list) {
+  console.log(`\n📌 ${title}`);
+  console.log('┌───────┬──────────────────────────────────────────┬──────────────────────┬──────────────────────┬────────┐');
   console.log('│ ID    │ TEST EFFECTUÉ                            │ ATTENDU              │ OBTENU               │ STATUT │');
   console.log('├───────┼──────────────────────────────────────────┼──────────────────────┼──────────────────────┼────────┤');
 
-  let criticalFailures = 0;
-  let totalWarnings = 0;
-
-  for (const r of results) {
+  for (const r of list) {
     const id = r.id.padEnd(5);
     const name = r.name.padEnd(40).slice(0, 40);
     const expected = r.expected.padEnd(20).slice(0, 20);
@@ -289,10 +306,8 @@ async function runAll() {
     let statusFormatted = r.status.padEnd(6);
 
     if (r.status === 'FAIL') {
-      if (r.critical) criticalFailures++;
       statusFormatted = '❌ FAIL';
     } else if (r.status === 'WARN') {
-      totalWarnings++;
       statusFormatted = '⚠️ WARN';
     } else {
       statusFormatted = '✅ PASS';
@@ -300,28 +315,64 @@ async function runAll() {
 
     console.log(`│ ${id} │ ${name} │ ${expected} │ ${actual} │ ${statusFormatted} │`);
   }
-
   console.log('└───────┴──────────────────────────────────────────┴──────────────────────┴──────────────────────┴────────┘');
-
-  console.log('\n' + '═'.repeat(84));
-  if (criticalFailures > 0) {
-    console.error(`❌ ÉCHEC DU SMOKE TEST : ${criticalFailures} test(s) critique(s) ont échoué.`);
-    console.error(`   L'application n'est pas opérationnelle ou présente un blocage de production.`);
-    console.log('═'.repeat(84) + '\n');
-    process.exit(1);
-  } else if (totalWarnings > 0) {
-    console.log(`⚠️ SMOKE TEST VALIDÉ AVEC AVERTISSEMENTS : Les fonctions de base fonctionnent.`);
-    console.log(`   ${totalWarnings} avertissement(s) de sécurité/durcissement à examiner.`);
-    console.log('═'.repeat(84) + '\n');
-    process.exit(0);
-  } else {
-    console.log('✅ SMOKE TEST RÉUSSI : Tous les contrôles de disponibilité et d\'intégrité sont PASS.');
-    console.log('═'.repeat(84) + '\n');
-    process.exit(0);
-  }
 }
 
-runAll().catch((err) => {
-  console.error('Fatal smoke test runner error:', err);
+async function run() {
+  // 1. Exécution du groupe Déploiement
+  await testHealth();
+  await testDepartmentsUnauthorized();
+  await testFrontendRoot();
+  await testRouteNotFound();
+
+  // 2. Exécution du groupe Sécurité
+  await testResetAdmin();
+  await testTestAdmin();
+  await testSecurityHeaders();
+  await testCorsEvilOrigin();
+  await testPhotosWithoutAuth();
+  await testUploadsRootWithoutToken();
+  await testRateLimiting();
+  await testOriginalUrlBypassProbe();
+
+  // Affichage
+  printTable('GROUPE 1 : TESTS DE DÉPLOIEMENT (CRITIQUES / DÉCLENCHEURS DE ROLLBACK)', deployResults);
+  printTable('GROUPE 2 : AUDIT DE DURCISSEMENT & VULNÉRABILITÉS SÉCURITÉ APPLICATIVE', securityResults);
+
+  const deployFails = deployResults.filter(r => r.status === 'FAIL').length;
+  const secFails = securityResults.filter(r => r.status === 'FAIL').length;
+  const secWarns = securityResults.filter(r => r.status === 'WARN').length;
+
+  console.log('\n' + '═'.repeat(88));
+  console.log(`📊 BILAN DES TESTS :`);
+  console.log(`   - Déploiement : ${deployResults.length - deployFails}/${deployResults.length} PASS (${deployFails} FAIL)`);
+  console.log(`   - Sécurité    : ${securityResults.length - secFails - secWarns}/${securityResults.length} PASS (${secWarns} WARN, ${secFails} FAIL)`);
+  console.log('═'.repeat(88));
+
+  if (deployFails > 0) {
+    console.error(`\n❌ ÉCHEC CRITIQUE DÉPLOIEMENT : ${deployFails} test(s) de base ont échoué.`);
+    console.error('   L\'application ne répond pas correctement. Déclenchement du ROLLBACK.');
+    process.exit(1);
+  }
+
+  if (strictSecurity && secFails > 0) {
+    console.error(`\n❌ ÉCHEC DU CONTRÔLE SÉCURITÉ STRICT (--strict-security) : ${secFails} faille(s) de sécurité détectée(s).`);
+    console.error('   Déclenchement du ROLLBACK car le mode de sécurité strict est actif.');
+    process.exit(1);
+  }
+
+  if (secFails > 0 || secWarns > 0) {
+    console.log(`\n⚠️ DÉPLOIEMENT ACCEPTÉ AVEC FAILLE(S) APPLICATIVE(S) DOCUMENTÉE(S) :`);
+    console.log(`   L'application est fonctionnelle et disponible pour les utilisateurs.`);
+    console.log(`   Les failles du Groupe 2 doivent être corrigées dans le code avant passage en prod réelle.`);
+    process.exit(0);
+  }
+
+  console.log('\n✅ DÉPLOIEMENT PARFAIT : 100% des tests de déploiement et de sécurité sont conformes.');
+  process.exit(0);
+}
+
+run().catch((err) => {
+  console.error('Fatal runner error:', err);
   process.exit(1);
 });

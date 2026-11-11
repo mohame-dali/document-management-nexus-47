@@ -1,0 +1,15 @@
+[Unit]
+Description=DMS Full Database and Document Daily Backup
+After=network.target mongod.service
+
+[Service]
+Type=oneshot
+User=dms
+Group=dms
+WorkingDirectory=/var/www/dms
+ExecStart=/bin/bash /var/www/dms/deploy/scripts/backup-all.sh /var/backups/dms 14
+StandardOutput=append:/var/www/dms/logs/backup.log
+StandardError=append:/var/www/dms/logs/backup.err
+
+[Install]
+WantedBy=multi-user.target

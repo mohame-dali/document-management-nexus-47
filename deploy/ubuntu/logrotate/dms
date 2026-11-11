@@ -1,0 +1,14 @@
+/var/www/dms/logs/*.log /var/www/dms/logs/*.err {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 dms dms
+    sharedscripts
+    postrotate
+        # Signaler à PM2 de rouvrir ses descripteurs de fichiers de log
+        su - dms -c "pm2 reloadLogs" >/dev/null 2>&1 || true
+    endscript
+}
