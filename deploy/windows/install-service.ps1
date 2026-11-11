@@ -1,72 +1,115 @@
 <#
 .SYNOPSIS
-    Script PowerShell d'installation de l'application DMS en tant que service Windows via PM2.
+    Script PowerShell d'installation de l'application DMS en tant que service Windows via NSSM.
+    [NON TESTÉ, à exécuter sur une VM de recette]
+
 .DESCRIPTION
     Ce script :
-    1. Vérifie les droits Administrateur.
-    2. Configure PM2 et l'utilitaire pm2-windows-service (ou pm2-installer).
-    3. Démarre l'application DMS à partir de ecosystem.config.cjs.
-    4. Configure le démarrage automatique au démarrage de Windows.
+    1. Vérifie les droits Administrateur ($ErrorActionPreference = 'Stop').
+    2. Localise l'exécutable NSSM (Non-Sucking Service Manager).
+    3. Configure le service Windows 'DMSBackend' pour exécuter 'node_modules\.bin\tsx.cmd server.ts'.
+    4. Définit l'environnement d'exécution (NODE_ENV=production, PORT=5000).
+    5. Configure le redémarrage automatique en cas de crash et la journalisation des sorties.
+    6. Démarre le service Windows.
 #>
+
+$ErrorActionPreference = "Stop"
 
 # 1. Vérification des privilèges Administrateur
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 if (-not $isAdmin) {
-    Write-Error "Ce script doit être exécuté dans une invite PowerShell en tant qu'Administrateur."
+    Write-Error "❌ Ce script doit être exécuté dans une session PowerShell en tant qu'Administrateur."
     Exit 1
 }
 
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  INSTALLATION DU SERVICE WINDOWS DMS (PM2)" -ForegroundColor Cyan
-Write-Host "==========================================================" -ForegroundColor Cyan
+Write-Host "======================================================================" -ForegroundColor Cyan
+Write-Host "⚙️ DMS — INSTALLATION DU SERVICE WINDOWS VIA NSSM (PORT 5000)" -ForegroundColor Cyan
+Write-Host "======================================================================" -ForegroundColor Cyan
 
-# Répertoire du projet
-$ProjectRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
+# 2. Localisation de NSSM
+$NssmPath = (Get-Command "nssm" -ErrorAction SilentlyContinue).Source
+if (-not $NssmPath) {
+    $fallbackNssm = "C:\ProgramData\chocolatey\bin\nssm.exe"
+    if (Test-Path $fallbackNssm) {
+        $NssmPath = $fallbackNssm
+    } else {
+        Write-Error "❌ NSSM est introuvable. Veuillez exécuter 'choco install nssm -y' ou lancer install-prereqs.ps1."
+        Exit 1
+    }
+}
+Write-Host "Utilisation de NSSM : $NssmPath" -ForegroundColor Gray
+
+# 3. Répertoire racine du projet
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ProjectRoot = (Get-Item $ScriptDir).Parent.Parent.FullName
 Set-Location $ProjectRoot
-Write-Host "Dossier racine du projet : $ProjectRoot" -ForegroundColor Yellow
-
-# 2. Vérification de Node.js et PM2
-if (-not (Get-Command "node" -ErrorAction SilentlyContinue)) {
-    Write-Error "Node.js n'est pas détecté dans le PATH. Veuillez installer Node.js 20 LTS d'abord."
-    Exit 1
-}
-
-if (-not (Get-Command "pm2" -ErrorAction SilentlyContinue)) {
-    Write-Host "Installation globale de PM2..." -ForegroundColor Yellow
-    npm install -g pm2
-}
-
-# 3. Configuration de PM2_HOME pour persister la configuration sous Windows
-$env:PM2_HOME = "$env:ProgramData\pm2"
-[Environment]::SetEnvironmentVariable("PM2_HOME", "$env:ProgramData\pm2", "Machine")
-if (-not (Test-Path "$env:ProgramData\pm2")) {
-    New-Item -ItemType Directory -Path "$env:ProgramData\pm2" -Force | Out-Null
-}
+Write-Host "Répertoire du projet : $ProjectRoot" -ForegroundColor Gray
 
 # Création du dossier logs s'il n'existe pas
-if (-not (Test-Path "$ProjectRoot\logs")) {
-    New-Item -ItemType Directory -Path "$ProjectRoot\logs" -Force | Out-Null
+$LogsDir = Join-Path $ProjectRoot "logs"
+if (-not (Test-Path $LogsDir)) {
+    New-Item -ItemType Directory -Path $LogsDir -Force | Out-Null
 }
 
-# 4. Démarrage de l'application avec ecosystem.config.cjs
-Write-Host "Démarrage de l'application DMS sous PM2..." -ForegroundColor Yellow
-pm2 start ecosystem.config.cjs
+# 4. Localisation de tsx.cmd
+$TsxCmd = Join-Path $ProjectRoot "node_modules\.bin\tsx.cmd"
+if (-not (Test-Path $TsxCmd)) {
+    Write-Host "⚠️ tsx local non trouvé dans node_modules. Utilisation de tsx global ou npx..." -ForegroundColor Yellow
+    $TsxCmd = (Get-Command "npx.cmd" -ErrorAction SilentlyContinue).Source
+    $ServiceArgs = "tsx server.ts"
+} else {
+    $ServiceArgs = "server.ts"
+}
 
-# 5. Sauvegarde de la liste des processus
-pm2 save
+$ServiceName = "DMSBackend"
 
-# 6. Installation du service Windows pour démarrage automatique
-Write-Host "Installation de pm2-windows-service..." -ForegroundColor Yellow
-npm install -g pm2-windows-service
+# 5. Arrêt et suppression de l'ancien service s'il existe déjà (idempotence)
+$existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+if ($existingService) {
+    Write-Host "Arrêt de l'ancien service $ServiceName..." -ForegroundColor Yellow
+    & $NssmPath stop $ServiceName 2>$null
+    & $NssmPath remove $ServiceName confirm 2>$null
+    Start-Sleep -Seconds 2
+}
 
-Write-Host "Configuration du service d'arrière-plan Windows..." -ForegroundColor Yellow
-# Exécution de pm2-service-install (mode non interactif)
-$env:PM2_SERVICE_SCRIPTPATH = (Get-Command pm2).Source
-$env:PM2_SERVICE_PM2_DIR = "$env:ProgramData\pm2"
+# 6. Installation et paramétrage du service via NSSM
+Write-Host "Installation du service $ServiceName..." -ForegroundColor Yellow
+& $NssmPath install $ServiceName $TsxCmd $ServiceArgs
+& $NssmPath set $ServiceName AppDirectory $ProjectRoot
+& $NssmPath set $ServiceName Description "DMS - Courrier Hybride, Ressources Humaines et IA Souveraine"
+& $NssmPath set $ServiceName Start SERVICE_AUTO_START
 
-Write-Host "`n✅ Service Windows PM2 configuré avec succès !" -ForegroundColor Green
-Write-Host "L'application 'dms-backend' démarrera automatiquement au boot du serveur." -ForegroundColor Green
-Write-Host "Commandes de contrôle :" -ForegroundColor Cyan
-Write-Host "  - pm2 status"
-Write-Host "  - pm2 logs dms-backend"
-Write-Host "  - pm2 restart dms-backend"
+# Configuration des variables d'environnement du service
+& $NssmPath set $ServiceName AppEnvironmentExtra "NODE_ENV=production`r`nPORT=5000"
+
+# Configuration des flux de journaux (logs)
+$OutLog = Join-Path $LogsDir "service-out.log"
+$ErrLog = Join-Path $LogsDir "service-err.log"
+& $NssmPath set $ServiceName AppStdout $OutLog
+& $NssmPath set $ServiceName AppStderr $ErrLog
+& $NssmPath set $ServiceName AppRotateFiles 1
+& $NssmPath set $ServiceName AppRotateOnline 1
+& $NssmPath set $ServiceName AppRotateSeconds 86400
+& $NssmPath set $ServiceName AppRotateBytes 10485760
+
+# Configuration de la politique de redémarrage (restart delay de 4 secondes)
+& $NssmPath set $ServiceName AppRestartDelay 4000
+
+# 7. Démarrage du service
+Write-Host "Démarrage du service $ServiceName..." -ForegroundColor Yellow
+& $NssmPath start $ServiceName
+Start-Sleep -Seconds 3
+
+# 8. Contrôle du statut
+$serviceStatus = Get-Service -Name $ServiceName
+if ($serviceStatus.Status -eq "Running") {
+    Write-Host "======================================================================" -ForegroundColor Green
+    Write-Host "✅ SERVICE WINDOWS '$ServiceName' DÉMARRÉ AVEC SUCCÈS !" -ForegroundColor Green
+    Write-Host "  Statut : $($serviceStatus.Status)"
+    Write-Host "  URL locale : http://localhost:5000"
+    Write-Host "  Logs : $LogsDir"
+    Write-Host "======================================================================" -ForegroundColor Green
+} else {
+    Write-Error "❌ Le service n'a pas pu démarrer. Consultez $ErrLog pour identifier la cause."
+    Exit 1
+}

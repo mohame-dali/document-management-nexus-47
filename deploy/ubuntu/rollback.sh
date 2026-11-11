@@ -39,8 +39,8 @@ sleep 3
 
 # 3. Contrôle de santé basique
 echo "[3/3] 🔍 Vérification de la disponibilité du serveur..."
-if curl -s -f "http://127.0.0.1:3000/api/health" >/dev/null; then
-  echo "  ✅ Serveur opérationnel sur http://127.0.0.1:3000/api/health."
+if curl -s -f "http://127.0.0.1:5000/api/health" >/dev/null; then
+  echo "  ✅ Serveur opérationnel sur http://127.0.0.1:5000/api/health."
   echo "🎉 ROLLBACK TERMINÉ : Le service a été rétabli dans son état antérieur."
 else
   echo "  ❌ ATTENTION : Le serveur ne répond pas sur /api/health après rollback !"

@@ -75,7 +75,7 @@ sleep 5
 # 6. Exécution du Smoke Test Post-Déploiement
 echo "\n[6/6] 🧪 Exécution de la suite de validation (smoke-test)..."
 set +e
-node "${APP_DIR}/deploy/scripts/smoke-test.mjs" "http://127.0.0.1:3000"
+node "${APP_DIR}/deploy/scripts/smoke-test.mjs" "http://127.0.0.1:5000"
 TEST_EXIT_CODE=$?
 set -e
 

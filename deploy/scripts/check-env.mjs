@@ -35,7 +35,7 @@ const FORBIDDEN_JWT_SECRETS = [
 ];
 
 const MIN_JWT_SECRET_LENGTH = 32;
-const EXPECTED_PORT = '3000';
+const EXPECTED_PORT = '5000';
 
 let hasErrors = false;
 let hasWarnings = false;
