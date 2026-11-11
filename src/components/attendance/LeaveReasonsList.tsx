@@ -53,7 +53,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="p-12 text-center text-[#718096]">
+      <div className="p-12 text-center text-[#5f6b7d]">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2c5282] mb-3"></div>
         <p className="text-sm font-medium">جاري تحميل قائمة أنواع الغياب...</p>
       </div>
@@ -65,7 +65,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
       <div className="p-12 text-center bg-white border border-[#e2e8f0] rounded">
         <Tag className="h-10 w-10 text-gray-300 mx-auto mb-3" />
         <h3 className="text-base font-bold text-[#1a202c]">لا توجد أنواع غياب مطابقة</h3>
-        <p className="text-sm text-[#718096] mt-1">قم بتعديل خيارات البحث أو الفلترة أو أضف نوع غياب جديد.</p>
+        <p className="text-sm text-[#5f6b7d] mt-1">قم بتعديل خيارات البحث أو الفلترة أو أضف نوع غياب جديد.</p>
       </div>
     );
   }
@@ -93,7 +93,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                 className="hover:bg-[#f8fafc] transition-colors duration-150"
               >
                 {/* Order */}
-                <TableCell className="py-3 px-4 text-xs font-mono font-bold text-[#718096]">
+                <TableCell className="py-3 px-4 text-xs font-mono font-bold text-[#5f6b7d]">
                   {reason.order ?? 100}
                 </TableCell>
 
@@ -124,7 +124,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                       {reason.labelAr}
                     </span>
                     {reason.labelFr && (
-                      <span className="block text-xs text-[#718096] font-normal" dir="ltr">
+                      <span className="block text-xs text-[#5f6b7d] font-normal" dir="ltr">
                         {reason.labelFr}
                       </span>
                     )}
@@ -152,7 +152,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                       يخصم
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs text-[#718096] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                    <span className="inline-flex items-center gap-1 text-xs text-[#5f6b7d] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
                       <XCircle className="h-3.5 w-3.5 text-slate-400" />
                       لا يخصم
                     </span>

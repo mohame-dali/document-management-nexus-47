@@ -44,7 +44,7 @@ export default {
           foreground: 'hsl(var(--destructive-foreground))'
         },
         success: {
-          DEFAULT: '#38a169',
+          DEFAULT: '#2f855a',
           foreground: '#ffffff',
           soft: '#ebf8f1',
           text: '#22543d',
@@ -58,7 +58,7 @@ export default {
           border: '#fbd38d',
         },
         danger: {
-          DEFAULT: '#e53e3e',
+          DEFAULT: '#c53030',
           foreground: '#ffffff',
           soft: '#feeeee',
           text: '#9b2c2c',

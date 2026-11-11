@@ -214,7 +214,7 @@ const Sidebar = () => {
 
   const getUserPhotoUrl = (user: { photo?: string } | null | undefined) => {
     if (user?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const API_URL = import.meta.env.VITE_API_URL || '';
       // Remove leading slash if it exists to avoid double slashes
       const photoPath = user.photo.startsWith('/') ? user.photo.slice(1) : user.photo;
       return `${API_URL}/${photoPath}`;
@@ -239,7 +239,7 @@ const Sidebar = () => {
             </div>
             {isOpen && (
               <div className="min-w-0">
-                <h1 className="text-base font-bold text-white tracking-tight truncate">
+                <h1 className="text-base font-bold text-white truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
                 <p className="text-sm text-slate-400 truncate">{t('sidebar.documentManagement')}</p>

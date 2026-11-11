@@ -29,7 +29,7 @@ const ForbiddenPage: React.FC = () => {
         </div>
 
         {currentUser && (
-          <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-3 text-xs text-[#718096] text-right space-y-1">
+          <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-3 text-xs text-[#5f6b7d] text-right space-y-1">
             <div className="flex justify-between">
               <span className="text-[#4a5568] font-medium">المستخدم الحالي:</span>
               <span className="font-semibold text-[#1a202c]">{currentUser.username}</span>

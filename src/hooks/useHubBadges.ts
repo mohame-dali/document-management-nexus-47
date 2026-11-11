@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/apiService';
+import { getUnreadCount } from '@/services/messageService';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * Hook centralisé pour récupérer tous les compteurs de badges.
@@ -9,23 +11,19 @@ import api from '@/services/apiService';
  * ⚠️ Ne casse pas si un endpoint n'existe pas (retourne 0 silencieusement).
  */
 export const useHubBadges = () => {
+  const { currentUser } = useAuth();
+  const isRHRole = ['Admin', 'Director', 'AdminDepartment'].includes(currentUser?.role || '');
+
   // Compteur messages non lus (endpoint existant)
-  const { data: unreadMessages } = useQuery({
-    queryKey: ['hub-badge-unread-messages'],
-    queryFn: async () => {
-      try {
-        const response = await api.get('/messages/unread/count');
-        return response.data?.data?.count || response.data?.count || 0;
-      } catch {
-        return 0;
-      }
-    },
+  const { data: unreadData } = useQuery({
+    queryKey: ['unread-messages-count'],
+    queryFn: getUnreadCount,
     staleTime: 60 * 1000, // 1 min
     refetchInterval: 2 * 60 * 1000, // 2 min
     retry: false,
   });
 
-  // Compteur déclarations en attente (si endpoint existe)
+  // Compteur déclarations en attente (si endpoint existe - réservé aux rôles RH)
   const { data: pendingDeclarations } = useQuery({
     queryKey: ['hub-badge-pending-declarations'],
     queryFn: async () => {
@@ -36,6 +34,7 @@ export const useHubBadges = () => {
         return 0;
       }
     },
+    enabled: isRHRole, // ✅ Ne s'exécute que pour les rôles RH
     staleTime: 60 * 1000,
     refetchInterval: 2 * 60 * 1000,
     retry: false,
@@ -58,7 +57,7 @@ export const useHubBadges = () => {
   });
 
   return {
-    unreadMessages: unreadMessages || 0,
+    unreadMessages: unreadData?.count || 0,
     pendingDeclarations: pendingDeclarations || 0,
     pendingIncoming: pendingIncoming || 0,
   };

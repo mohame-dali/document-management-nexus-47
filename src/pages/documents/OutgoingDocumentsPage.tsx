@@ -77,10 +77,9 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { getDepartments } from '@/services/departmentService';
 import { getDocumentOptions } from '@/services/documentOptionsService';
-import { deleteOutgoingDocument, downloadDocument } from '@/services/documentService';
+import { deleteOutgoingDocument, downloadDocument, getOutgoingDocuments } from '@/services/documentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { OutgoingDocument, Department } from '@/types';
-import { useInfiniteDocuments } from '@/hooks/useInfiniteDocuments';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
@@ -100,6 +99,17 @@ const OutgoingDocumentsPage: React.FC = () => {
 
   // Filters & UI State with persistence
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search query by 300ms and reset to page 1
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const [viewMode, setViewMode] = useLocalStorageState<'table' | 'grid'>('outgoingDocs_viewMode', 'table');
   const [selectedDepartment, setSelectedDepartment] = useLocalStorageState<string>('outgoingDocs_selectedDepartment', 'all');
   const [selectedType, setSelectedType] = useLocalStorageState<string>('outgoingDocs_selectedType', 'all_types');
@@ -159,24 +169,27 @@ const OutgoingDocumentsPage: React.FC = () => {
     enabled: true,
   });
 
-  // Infinite documents query
+  // Server-paginated documents query
   const {
-    documents,
-    totalCount,
-    loadedCount,
+    data: docsResponse,
     isLoading,
     isError,
     isFetching,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
     refetch,
-  } = useInfiniteDocuments({
-    documentType: 'outgoing',
-    year: selectedYear,
-    department: selectedDepartment === 'all' ? undefined : selectedDepartment,
+  } = useQuery({
+    queryKey: ['outgoingDocuments', selectedYear, selectedDepartment, currentPage, pageSize, debouncedSearch],
+    queryFn: () => getOutgoingDocuments({
+      year: selectedYear,
+      department: selectedDepartment === 'all' ? undefined : selectedDepartment,
+      page: currentPage,
+      limit: pageSize,
+      q: debouncedSearch,
+    }),
     enabled: isValidYear,
   });
+
+  const documents = useMemo(() => docsResponse?.data || [], [docsResponse]);
+  const totalCount = docsResponse?.totalCount || 0;
 
   // Auto-refresh when user returns to tab
   useEffect(() => {
@@ -203,28 +216,9 @@ const OutgoingDocumentsPage: React.FC = () => {
     },
   });
 
-  // Filter documents based on all search criteria
+  // Filter documents on current page
   const filteredDocuments = useMemo(() => {
     return (documents as OutgoingDocument[]).filter((doc: OutgoingDocument) => {
-      // Search input match
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchesSerial = String(doc.serialNumber).toLowerCase().includes(query);
-        const matchesSubject = (doc.subject || '').toLowerCase().includes(query);
-        const sourceName = doc.source?.name || '';
-        const matchesSource = sourceName.toLowerCase().includes(query);
-        const matchesRecipients = Array.isArray(doc.assignedTo) && doc.assignedTo.some(dest => 
-          dest.toLowerCase().includes(query)
-        );
-        const matchesPourInfo = Array.isArray(doc.pourInfo) && doc.pourInfo.some(info => 
-          info.toLowerCase().includes(query)
-        );
-
-        if (!matchesSerial && !matchesSubject && !matchesSource && !matchesRecipients && !matchesPourInfo) {
-          return false;
-        }
-      }
-
       // Document Type filter
       if (selectedType !== 'all_types') {
         if (doc.typeDocument !== selectedType) {
@@ -238,9 +232,9 @@ const OutgoingDocumentsPage: React.FC = () => {
 
       return true;
     });
-  }, [documents, searchQuery, selectedType, folderFilter]);
+  }, [documents, selectedType, folderFilter]);
 
-  // Sort documents
+  // Sort documents on current page
   const sortedDocuments = useMemo(() => {
     return [...filteredDocuments].sort((a, b) => {
       let valA: string | number = '';
@@ -281,20 +275,13 @@ const OutgoingDocumentsPage: React.FC = () => {
   }, [filteredDocuments, sortField, sortDirection, sortBy]);
 
   // Pagination calculation
-  const totalFiltered = sortedDocuments.length;
-  const totalPages = Math.ceil(totalFiltered / pageSize) || 1;
+  const totalFiltered = totalCount;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const clampedPage = Math.min(Math.max(currentPage, 1), totalPages);
 
   const startIndex = (clampedPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalFiltered);
-  const paginatedDocuments = sortedDocuments.slice(startIndex, endIndex);
-
-  // Auto-fetch next pages if needed when navigating
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && paginatedDocuments.length < pageSize && sortedDocuments.length < totalCount) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, paginatedDocuments.length, pageSize, sortedDocuments.length, totalCount, fetchNextPage]);
+  const endIndex = Math.min(startIndex + sortedDocuments.length, totalCount);
+  const paginatedDocuments = sortedDocuments;
 
   // Reset filters
   const handleFilterReset = () => {
@@ -531,7 +518,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#718096] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#5f6b7d] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
                   >
                     {t('outgoing.filters.clear')}
                   </button>
@@ -751,7 +738,7 @@ const OutgoingDocumentsPage: React.FC = () => {
           ) : totalFiltered === 0 ? (
             /* Empty State */
             <div className="border border-[#e2e8f0] rounded p-8 sm:p-12 text-center bg-[#f7fafc] space-y-4">
-              <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#718096]">
+              <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
                 <FileOutput className="h-7 w-7 text-[#2c5282]" />
               </div>
               <div>
@@ -842,7 +829,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               <span className="font-bold text-base text-[#1a202c]">
                                 #{highlightMatch(String(doc.serialNumber), searchQuery)}
                               </span>
-                              <span className="text-xs text-[#718096]">
+                              <span className="text-xs text-[#5f6b7d]">
                                 {doc.year}
                               </span>
                             </div>
@@ -914,7 +901,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-[#a0aec0]">{t('outgoing.source.unspecified')}</span>
+                            <span className="text-xs text-[#5f6b7d]">{t('outgoing.source.unspecified')}</span>
                           )}
                         </td>
 
@@ -926,7 +913,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorizedInFolder')}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#718096] bg-slate-100 border border-slate-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#5f6b7d] bg-slate-100 border border-slate-200">
                               {t('outgoing.status.uncategorized')}
                             </span>
                           )}
@@ -1033,7 +1020,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                     variant="ghost"
                                     size="sm"
                                     aria-label={t('outgoing.actions.moreActions')}
-                                    className="h-11 w-11 p-0 rounded hover:bg-slate-100 text-[#718096]"
+                                    className="h-11 w-11 p-0 rounded hover:bg-slate-100 text-[#5f6b7d]"
                                   >
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
@@ -1081,7 +1068,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                             {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorized')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#718096] border border-slate-200">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#5f6b7d] border border-slate-200">
                             {t('outgoing.status.uncategorized')}
                           </span>
                         )}
@@ -1118,7 +1105,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 </span>
                               ))}
                               {doc.assignedTo.length > 2 && (
-                                <span className="text-xs text-[#718096]">
+                                <span className="text-xs text-[#5f6b7d]">
                                   +{doc.assignedTo.length - 2}
                                 </span>
                               )}
@@ -1232,7 +1219,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 {/* Page Size Selector */}
                 <div className="flex items-center gap-1.5 ml-3">
-                  <span className="text-xs font-semibold text-[#718096]">{t('outgoing.pagination.itemsLabel')}</span>
+                  <span className="text-xs font-semibold text-[#5f6b7d]">{t('outgoing.pagination.itemsLabel')}</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -1253,7 +1240,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={clampedPage <= 1}
+                  disabled={clampedPage <= 1 || isFetching}
                   className="h-11 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
                 >
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -1274,6 +1261,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         key={pageNum}
                         type="button"
                         onClick={() => setCurrentPage(pageNum)}
+                        disabled={isFetching}
                         className={`h-11 w-11 text-xs font-bold rounded transition-colors duration-200 ${
                           clampedPage === pageNum
                             ? 'bg-[#2c5282] text-white'
@@ -1292,7 +1280,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={clampedPage >= totalPages}
+                  disabled={clampedPage >= totalPages || isFetching}
                   className="h-11 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
                 >
                   {t('common.next')}
@@ -1396,7 +1384,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 <div className="font-bold text-[#1a202c]">
                   {t('outgoing.transfer.subjectLabel', { subject: transferDoc.subject })}
                 </div>
-                <div className="text-sm text-[#718096] flex items-center gap-4">
+                <div className="text-sm text-[#5f6b7d] flex items-center gap-4">
                   <span>{t('outgoing.transfer.issueDateLabel', { date: formatArabicDate(transferDoc.issueDate) })}</span>
                   <span>{t('outgoing.transfer.sourceLabel', { source: transferDoc.source?.name || t('outgoing.source.unspecified') })}</span>
                 </div>

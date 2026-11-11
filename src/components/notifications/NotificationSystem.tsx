@@ -24,7 +24,7 @@ const NotificationSystem: React.FC = () => {
 
   // Fetch unread message count
   const { data: messageCount } = useQuery({
-    queryKey: ['unreadMessageCount'],
+    queryKey: ['unread-messages-count'],
     queryFn: getUnreadCount,
     refetchInterval: 60000,
   });

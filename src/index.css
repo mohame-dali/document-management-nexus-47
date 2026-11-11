@@ -27,7 +27,7 @@
     --accent: 214 100% 97%;         /* #ebf4ff */
     --accent-foreground: 214 49% 34%;/* #2c5282 */
 
-    --destructive: 0 76% 57%;       /* #e53e3e */
+    --destructive: 0 61% 48%;       /* #c53030 */
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 32% 91%;          /* #e2e8f0 */
@@ -92,13 +92,14 @@
   }
 
   body {
-    @apply bg-background text-foreground font-cairo antialiased;
+    @apply bg-background text-foreground font-cairo antialiased leading-relaxed;
+    line-height: 1.7;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   /* Enhanced typography for better readability across devices */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-cairo font-semibold tracking-tight;
+    @apply font-cairo font-semibold;
     text-wrap: balance;
   }
 
@@ -123,7 +124,7 @@
   }
 
   h6 {
-    @apply text-xs sm:text-sm lg:text-base;
+    @apply text-sm lg:text-base;
   }
 
   /* Responsive text sizing */
@@ -240,7 +241,7 @@
 
   /* High-contrast heading text (replacing saturated gradients) */
   .gradient-text {
-    @apply text-foreground font-bold tracking-tight;
+    @apply text-foreground font-bold;
   }
 
   /* Calm card effects with subtle shadow and 200ms transition */

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Folder, IncomingDocument, OutgoingDocument } from '@/types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Get all folders
 export const getFolders = async (departmentId?: string, search?: string, status?: string): Promise<Folder[]> => {

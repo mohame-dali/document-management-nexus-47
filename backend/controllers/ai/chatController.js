@@ -124,10 +124,10 @@ exports.chatSearch = async (req, res) => {
 
     console.log(`[RAG Security] Filter:`, JSON.stringify(filter));
 
-    // Récupérer un sous-ensemble sécurisé (max 2000 vecteurs) avec projection stricte pour protéger la RAM
+    // Récupérer un sous-ensemble sécurisé (max 500 vecteurs) avec projection stricte pour protéger la RAM
     const allIndexed = await SemanticIndex.find(filter)
       .select('embedding documentId documentType metadata sourceText')
-      .limit(2000)
+      .limit(500)
       .lean();
 
     if (allIndexed.length === 0) {
@@ -165,14 +165,15 @@ exports.chatSearch = async (req, res) => {
     if (scored.length === 0) {
       summary = `لم أجد أي وثيقة مطابقة لـ "${searchQuery}". جرّب صياغة مختلفة.`;
     } else {
-      // Construire le contexte pour le LLM
+      // Construire le contexte pour le LLM avec le texte réel (sourceText)
       const contextLines = scored.map((s, i) => {
         const m = s.metadata || {};
         const dateStr = m.documentDate 
           ? new Date(m.documentDate).toLocaleDateString('fr-FR') 
           : 'Date inconnue';
-        return `[${i + 1}] ${m.subject || 'بدون عنوان'} — من: ${m.source || '—'} — رقم: ${m.serialNumber || '?'}/${m.year || '?'} — تاريخ: ${dateStr} — النوع: ${s.documentType === 'incoming' ? 'وارد' : 'صادر'} — درجة الصلة: ${(s.score * 100).toFixed(0)}%`;
-      }).join('\n');
+        const cleanText = (s.sourceText || '').substring(0, 600).replace(/\s+/g, ' ').trim();
+        return `[${i + 1}] ${m.subject || 'بدون عنوان'} — من: ${m.source || '—'} — رقم: ${m.serialNumber || '?'}/${m.year || '?'} — تاريخ: ${dateStr} — النوع: ${s.documentType === 'incoming' ? 'وارد' : 'صادر'} — درجة الصلة: ${(s.score * 100).toFixed(0)}%\nالمضمون: ${cleanText || 'لا يوجد نص مستخرج'}`;
+      }).join('\n\n');
 
       const systemPrompt = `Tu es un assistant administratif tunisien.
 Réponds UNIQUEMENT en te basant sur les documents fournis.

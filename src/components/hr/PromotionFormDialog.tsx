@@ -133,7 +133,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 الرتبة السابقة
               </Label>
               <Input
@@ -145,7 +145,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 الرتبة الجديدة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -170,7 +170,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 تاريخ الترقية <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -193,7 +193,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 المرجع / القرار
               </Label>
               <Input
@@ -206,7 +206,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
           </div>
 
           <div>
-            <Label className="text-xs font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-gray-700 block mb-1">
               سبب أو نمط الترقية
             </Label>
             <Input
@@ -218,7 +218,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
           </div>
 
           <div>
-            <Label className="text-xs font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-gray-700 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea

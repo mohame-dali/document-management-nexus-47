@@ -212,7 +212,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <td className="py-3.5 px-4 text-[#2d3748] font-medium leading-relaxed max-w-xs md:max-w-md">
                       <div className="line-clamp-2">{doc.subject}</div>
                       {doc.typeDocument && (
-                        <span className="text-xs text-[#718096] block mt-0.5">
+                        <span className="text-xs text-[#5f6b7d] block mt-0.5">
                           {doc.typeDocument}
                         </span>
                       )}
@@ -272,7 +272,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <td className="py-3.5 px-4 text-[#2d3748] font-medium leading-relaxed max-w-xs md:max-w-md">
                       <div className="line-clamp-2">{doc.subject}</div>
                       {doc.typeDocument && (
-                        <span className="text-xs text-[#718096] block mt-0.5">
+                        <span className="text-xs text-[#5f6b7d] block mt-0.5">
                           {doc.typeDocument}
                         </span>
                       )}
@@ -481,7 +481,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           )}
 
           {!hasNextPage && combinedResultsCount > 0 && (
-            <span className="text-sm font-medium text-[#718096] bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
+            <span className="text-sm font-medium text-[#5f6b7d] bg-gray-50 px-3 py-1.5 rounded border border-gray-200">
               تم الوصول لنهاية النتائج
             </span>
           )}

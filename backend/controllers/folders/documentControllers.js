@@ -35,7 +35,8 @@ exports.getFolderDocuments = async (req, res, next) => {
     }).populate('responsibleUser', 'username')
       .populate('answer')
       .populate('createdBy', 'username')
-      .sort({ arrivalDate: -1, createdAt: -1 });
+      .sort({ arrivalDate: -1, createdAt: -1 })
+      .limit(100);
     
     // Get outgoing documents
     const outgoingDocuments = await OutgoingDocument.find({
@@ -43,7 +44,8 @@ exports.getFolderDocuments = async (req, res, next) => {
       isDeleted: false
     }).populate('reference')
       .populate('createdBy', 'username')
-      .sort({ issueDate: -1, createdAt: -1 });
+      .sort({ issueDate: -1, createdAt: -1 })
+      .limit(100);
     
     res.status(200).json({
       success: true,

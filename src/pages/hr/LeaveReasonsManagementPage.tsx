@@ -205,7 +205,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-[#718096]">
+            <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
               <Link to="/dashboard" className="hover:text-[#2c5282] flex items-center gap-1">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
@@ -226,7 +226,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
                 <h1 className="text-xl font-bold text-[#1a202c]">
                   إدارة أنواع وأسباب الغياب
                 </h1>
-                <p className="text-sm text-[#718096]">
+                <p className="text-sm text-[#5f6b7d]">
                   تكوين أسباب الغياب والعطل، تحديد شروط الاستقطاع من الرصيد والوثائق المطلوبة
                 </p>
               </div>
@@ -263,7 +263,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Total */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#718096]">إجمالي الأنواع</p>
+            <p className="text-xs font-medium text-[#5f6b7d]">إجمالي الأنواع</p>
             <p className="text-2xl font-bold text-[#1a202c] mt-1">{stats.total}</p>
           </div>
           <div className="p-3 bg-blue-50 text-[#2c5282] rounded">
@@ -274,7 +274,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Active */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#718096]">الأنواع المفعلة</p>
+            <p className="text-xs font-medium text-[#5f6b7d]">الأنواع المفعلة</p>
             <p className="text-2xl font-bold text-emerald-700 mt-1">{stats.active}</p>
           </div>
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded">
@@ -285,7 +285,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Inactive */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#718096]">الأنواع المعطلة</p>
+            <p className="text-xs font-medium text-[#5f6b7d]">الأنواع المعطلة</p>
             <p className="text-2xl font-bold text-slate-600 mt-1">{stats.inactive}</p>
           </div>
           <div className="p-3 bg-slate-100 text-slate-500 rounded">
@@ -296,7 +296,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Deducts from balance */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-[#718096]">تخصم من الرصيد السنوي</p>
+            <p className="text-xs font-medium text-[#5f6b7d]">تخصم من الرصيد السنوي</p>
             <p className="text-2xl font-bold text-amber-700 mt-1">{stats.deducts}</p>
           </div>
           <div className="p-3 bg-amber-50 text-amber-600 rounded">
@@ -369,7 +369,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
               onClick={resetFilters}
               title="إعادة تعيين الفلاتر"
               aria-label="إعادة تعيين الفلاتر"
-              className="h-11 px-3 border-[#e2e8f0] rounded text-[#718096] hover:bg-slate-50"
+              className="h-11 px-3 border-[#e2e8f0] rounded text-[#5f6b7d] hover:bg-slate-50"
             >
               <RotateCcw className="h-4 w-4" />
             </Button>
@@ -389,7 +389,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
       {/* 6. Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between bg-white border border-[#e2e8f0] rounded p-4 text-xs">
-          <span className="text-[#718096]">
+          <span className="text-[#5f6b7d]">
             عرض {paginatedReasons.length} من أصل {filteredReasons.length} نوع
           </span>
 

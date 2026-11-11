@@ -311,7 +311,7 @@ const DepartmentsPage: React.FC = () => {
   const getPhotoUrl = (photoPath: string) => {
     if (!photoPath) return '';
     if (photoPath.startsWith('http')) return photoPath;
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const baseUrl = import.meta.env.VITE_API_URL || '';
     const cleanPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
     return `${baseUrl}${cleanPath}`;
   };
@@ -839,10 +839,10 @@ const DepartmentsPage: React.FC = () => {
                 <Table className="w-full">
                   <TableHeader className="bg-[#f8fafc]">
                     <TableRow>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700 w-12">الصورة</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700">اسم المستخدم</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700">الدور</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-xs font-bold text-gray-700">الحالة</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700 w-12">الصورة</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">اسم المستخدم</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">الدور</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">الحالة</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

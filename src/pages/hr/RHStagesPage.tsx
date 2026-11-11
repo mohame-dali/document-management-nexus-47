@@ -233,7 +233,7 @@ export const RHStagesPage: React.FC = () => {
                   عرض شامل
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-[#718096] mt-1">
+              <p className="text-xs sm:text-sm text-[#5f6b7d] mt-1">
                 عرض وإدارة تربصات جميع الموظفين (بتونس وبالخارج)
               </p>
             </div>

@@ -133,7 +133,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 تاريخ العقوبة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -156,7 +156,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 عدد الأيام (إن وجد)
               </Label>
               <Input
@@ -171,7 +171,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
           </div>
 
           <div>
-            <Label className="text-xs font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-gray-700 block mb-1">
               سبب العقوبة <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -195,7 +195,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 نوع أو درجة العقوبة
               </Label>
               <Input
@@ -207,7 +207,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 المرجع / القرار التأديبي
               </Label>
               <Input
@@ -220,7 +220,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
           </div>
 
           <div>
-            <Label className="text-xs font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-gray-700 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea

@@ -1,0 +1,81 @@
+name: E2E Playwright Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-e2e:
+    name: Run E2E Automated Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Application Dependencies
+        run: |
+          npm ci
+          cd backend && npm ci
+
+      - name: Setup Environment Variables
+        run: |
+          cp backend/.env.example backend/.env
+          echo "MONGODB_URI=mongodb://localhost:27017/document-management" >> backend/.env
+          echo "JWT_SECRET=super_test_jwt_secret_ci_key_12345678" >> backend/.env
+
+      - name: Seed Database
+        run: |
+          node backend/scripts/seedDatabaseMultiYear.js
+
+      - name: Start Backend Server
+        run: |
+          cd backend && node server.js &
+          npx wait-on http://localhost:5000/api/dashboard/stats --timeout 30000
+
+      - name: Build & Start Frontend
+        run: |
+          npm run build
+          npx serve -s dist -l 5173 &
+          npx wait-on http://localhost:5173 --timeout 30000
+
+      - name: Install Playwright & Browsers
+        run: |
+          cd e2e-tests
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run E2E Smoke Tests
+        run: |
+          cd e2e-tests
+          npm run test:smoke
+
+      - name: Run E2E P0 Critical Tests
+        if: success()
+        run: |
+          cd e2e-tests
+          npm run test:p0
+
+      - name: Upload Playwright Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e-tests/playwright-report/
+          retention-days: 14
+

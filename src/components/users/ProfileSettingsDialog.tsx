@@ -155,7 +155,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
 
   const getUserPhotoUrl = (user: User) => {
     if (user?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const API_URL = import.meta.env.VITE_API_URL || '';
       const photoPath = user.photo.startsWith('/') ? user.photo.slice(1) : user.photo;
       return `${API_URL}/${photoPath}`;
     }

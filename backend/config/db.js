@@ -46,17 +46,18 @@ const createDefaultAdmin = async () => {
 
 const connectDB = async () => {
   try {
-    // Use the provided MONGODB_URI from environment variables or fall back to the default
-    const dbUri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
+    const dbUri = process.env.MONGODB_URI;
     
     if (!dbUri) {
-      console.warn('MongoDB URI is not defined. Running in mock database mode.');
-      return;
+      console.warn('[Database] MONGODB_URI not defined — running in mock database mode.');
+      return null;
     }
     
     console.log('Connecting to MongoDB...');
+    const isLocalOrStandalone = !dbUri.includes('+srv') && !dbUri.includes('replicaSet');
     const conn = await mongoose.connect(dbUri, {
-      serverSelectionTimeoutMS: 3000,
+      ...(isLocalOrStandalone ? { directConnection: true } : {}),
+      serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 5000,
     });
 
@@ -64,9 +65,13 @@ const connectDB = async () => {
     
     // Create default admin account if needed
     await createDefaultAdmin();
+    return conn;
   } catch (error) {
-    console.warn(`[Database] MongoDB offline (${error.message}).`);
+    console.warn(`[Database] MongoDB offline (${error.message}) — running in mock database mode.`);
+    return null;
   }
 };
 
 module.exports = connectDB;
+connectDB.connectDB = connectDB;
+connectDB.mongoose = mongoose;

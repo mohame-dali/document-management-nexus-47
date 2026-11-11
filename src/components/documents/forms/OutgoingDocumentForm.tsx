@@ -1,7 +1,12 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import useOutgoingDocumentForm from '@/hooks/forms/useOutgoingDocumentForm';
+import useOutgoingDocumentForm, {
+  OutgoingFormTranslations,
+  OutgoingScanResultData,
+  OutgoingScanMutationRunner,
+  OutgoingFormValues
+} from '@/hooks/forms/useOutgoingDocumentForm';
 import { Form } from '@/components/ui/form';
 import { Department } from '@/types';
 import BasicInfoFields from './outgoing/BasicInfoFields';
@@ -10,13 +15,13 @@ import FormActions from './outgoing/FormActions';
 import { Separator } from '@/components/ui/separator';
 
 interface OutgoingDocumentFormProps {
-  t: any;
+  t: OutgoingFormTranslations;
   departments: Department[];
   currentDepartmentId?: string;
-  scannerStatus?: any;
+  scannerStatus?: unknown;
   loadingScannerStatus: boolean;
-  scanData?: any;
-  scanTemporaryDocumentMutation: any;
+  scanData?: OutgoingScanResultData;
+  scanTemporaryDocumentMutation: OutgoingScanMutationRunner;
 }
 
 const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
@@ -56,7 +61,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
     console.log('Extracted text length:', extractedText.length);
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: OutgoingFormValues) => {
     // Add OCR text to the form data
     const formDataWithOcr = {
       ...data,

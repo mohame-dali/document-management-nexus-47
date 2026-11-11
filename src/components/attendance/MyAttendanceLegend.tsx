@@ -93,7 +93,7 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
         <h3 className="text-xs font-bold text-[#1a202c]">
           دليل الألوان والرموز (Légende des statuts)
         </h3>
-        <span className="text-[11px] text-[#718096]">
+        <span className="text-[11px] text-[#5f6b7d]">
           يتم تحميل أسباب الغياب ديناميكياً بحسب إعدادات المؤسسة
         </span>
       </div>
@@ -106,7 +106,7 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
         </div>
 
         {/* Non saisi */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#f7fafc] border border-[#e2e8f0] text-[#718096]">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d]">
           <span className="w-2.5 h-2.5 rounded-full bg-[#a0aec0] shrink-0" />
           <span>غير مسجل بعد</span>
         </div>

@@ -1,16 +1,27 @@
-const express = require('express');
+const path = require('path');
 const dotenv = require('dotenv');
+
+// Load env vars AVANT les autres imports
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config(); // Fallback pour .env à la racine
+
+const express = require('express');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const cors = require('cors');
-const path = require('path');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const errorHandler = require('./middleware/error');
 const cookieParser = require('cookie-parser');
+const os = require('os');
 
-// Load env vars
-dotenv.config();
+// Configuration automatique des threads IA pour préserver le CPU
+if (!process.env.LLAMA_THREADS) {
+  // Utiliser les cœurs physiques (souvent la moitié des cœurs logiques)
+  const physicalCores = Math.max(1, Math.floor(os.cpus().length / 2));
+  process.env.LLAMA_THREADS = physicalCores.toString();
+  console.log(`[AI] LLAMA_THREADS configuré sur ${physicalCores} (cœurs physiques)`);
+}
 
 // Check JWT_SECRET
 if (!process.env.JWT_SECRET) {
@@ -24,6 +35,9 @@ if (!process.env.JWT_SECRET) {
   }
 }
 
+// Fallback JWT_EXPIRE
+process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
+
 // Set default JWT cookie expiration if not provided
 if (!process.env.JWT_COOKIE_EXPIRE) {
   process.env.JWT_COOKIE_EXPIRE = 30; // Default to 30 days
@@ -31,6 +45,18 @@ if (!process.env.JWT_COOKIE_EXPIRE) {
 
 // Connect to database
 connectDB();
+
+// Warm-up de l'IA (non-bloquant)
+setTimeout(async () => {
+  try {
+    console.log('[AI Warm-up] Préchargement des modèles en cours...');
+    const { checkOllamaHealth } = require('./services/ollamaService');
+    await checkOllamaHealth();
+    console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
+  } catch (err) {
+    console.warn('[AI Warm-up] Erreur de préchargement:', err.message);
+  }
+}, 5000); // Attendre 5 secondes que le serveur soit stable avant de charger les 5 Go
 
 const app = express();
 const httpServer = createServer(app);
@@ -179,8 +205,16 @@ const loginLimiter = rateLimit({
 app.use('/api', globalLimiter);
 app.use('/api/auth/login', loginLimiter);
 
-// Strict production check: si MongoDB est déconnecté, renvoyer une erreur 503
+// Strict production check: si MongoDB est déconnecté, renvoyer une erreur 503 (sauf pour auth, setup, test, health)
 app.use('/api', (req, res, next) => {
+  if (
+    req.path.startsWith('/auth/') ||
+    req.path.startsWith('/setup') ||
+    req.path === '/test' ||
+    req.path === '/health'
+  ) {
+    return next();
+  }
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({
       success: false,
@@ -302,9 +336,16 @@ try {
   console.warn('[Server] Cron notification activité non démarré:', err.message);
 }
 
-// Add a simple test route
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working' });
+// Simple test / health routes
+app.get(['/api/test', '/api/health'], (req, res) => {
+  res.json({
+    success: true,
+    message: 'API is working',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  });
 });
 
 // Error handler middleware
@@ -384,11 +425,15 @@ process.on('unhandledRejection', (err, promise) => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM reçu, arrêt propre...');
-  mongoose.connection.close(false, () => {
+  try {
+    await mongoose.connection.close();
     httpServer.close(() => process.exit(0));
-  });
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
 });
 
 if (process.platform === 'win32') {
@@ -400,10 +445,14 @@ if (process.platform === 'win32') {
   });
 }
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT reçu, arrêt propre...');
-  mongoose.connection.close(false, () => {
+  try {
+    await mongoose.connection.close();
     httpServer.close(() => process.exit(0));
-  });
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
 });
 

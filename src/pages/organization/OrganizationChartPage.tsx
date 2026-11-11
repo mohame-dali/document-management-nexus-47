@@ -291,7 +291,7 @@ const OrganizationChartPage: React.FC = () => {
           </div>
           <button
             type="button"
-            className="flex items-center gap-1 text-[#718096] hover:text-[#2c5282] text-xs font-medium"
+            className="flex items-center gap-1 text-[#5f6b7d] hover:text-[#2c5282] text-xs font-medium"
           >
             <span>{showLegend ? 'إخفاء' : 'عرض الدليل'}</span>
             {showLegend ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -318,7 +318,7 @@ const OrganizationChartPage: React.FC = () => {
                 <span className="text-[#4a5568]">المستوى 3 : الأقسام والمصالح العملياتية</span>
               </div>
             </div>
-            <div className="text-[#718096] text-[11px]">
+            <div className="text-[#5f6b7d] text-[11px]">
               * انقر على زر "عرض" لتوسيع قائمة موظفي أي قسم، أو انقر على موظف/مدير لفتح ملفه
             </div>
           </div>

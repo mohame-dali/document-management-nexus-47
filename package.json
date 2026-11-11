@@ -17,7 +17,9 @@
     "test:coverage": "vitest run --coverage",
     "postinstall": "node scripts/check-os.js",
     "setup": "node scripts/run-setup.js",
-    "download-models": "node scripts/download-models.js"
+    "download-models": "node scripts/download-models.js",
+    "check-models": "node backend/scripts/checkModelPath.js",
+    "test:proxy": "node scripts/check-proxy-connectivity.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -133,6 +135,7 @@
     "tsx": "^4.23.15",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
+    "undici": "^8.12.3",
     "vite": "^5.4.1",
     "vitest": "^2.1.8"
   }

@@ -264,7 +264,7 @@ const DocumentOptionsPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#718096]">إجمالي الخيارات المسجلة</span>
+              <span className="text-sm font-medium text-[#5f6b7d]">إجمالي الخيارات المسجلة</span>
               <div className="text-2xl font-bold text-[#1a202c]">{totalCount}</div>
             </div>
             <span className="w-10 h-10 rounded bg-[#f7fafc] border border-[#e2e8f0] flex items-center justify-center text-[#2c5282]">
@@ -274,7 +274,7 @@ const DocumentOptionsPage: React.FC = () => {
 
           <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#718096]">الخيارات المفعلة (نشطة)</span>
+              <span className="text-sm font-medium text-[#5f6b7d]">الخيارات المفعلة (نشطة)</span>
               <div className="text-2xl font-bold text-emerald-700">{activeCount}</div>
             </div>
             <span className="w-10 h-10 rounded bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
@@ -284,7 +284,7 @@ const DocumentOptionsPage: React.FC = () => {
 
           <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#718096]">الخيارات المعطلة</span>
+              <span className="text-sm font-medium text-[#5f6b7d]">الخيارات المعطلة</span>
               <div className="text-2xl font-bold text-[#78350f]">{inactiveCount}</div>
             </div>
             <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
@@ -345,7 +345,7 @@ const DocumentOptionsPage: React.FC = () => {
                       {cat.count}
                     </span>
                   </div>
-                  <p className="text-xs text-[#718096] mt-2 line-clamp-1 leading-relaxed">
+                  <p className="text-xs text-[#5f6b7d] mt-2 line-clamp-1 leading-relaxed">
                     {cat.description}
                   </p>
                 </button>

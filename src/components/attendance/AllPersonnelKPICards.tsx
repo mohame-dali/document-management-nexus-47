@@ -98,7 +98,7 @@ export const AllPersonnelKPICards: React.FC<AllPersonnelKPICardsProps> = ({
       value: counts.unrecorded,
       unit: 'موظف',
       icon: HelpCircle,
-      iconColor: 'text-[#718096]',
+      iconColor: 'text-[#5f6b7d]',
       bgIcon: 'bg-gray-100 border-gray-200',
       activeBorder: 'ring-2 ring-[#718096]',
     },
@@ -119,14 +119,14 @@ export const AllPersonnelKPICards: React.FC<AllPersonnelKPICardsProps> = ({
             } ${isActive ? card.activeBorder : ''}`}
           >
             <div>
-              <span className="text-[11px] text-[#718096] font-medium block truncate">
+              <span className="text-[11px] text-[#5f6b7d] font-medium block truncate">
                 {card.title}
               </span>
               <div className="mt-1 flex items-baseline gap-1">
                 <span className="text-2xl font-bold text-[#1a202c] font-mono leading-none">
                   {card.value}
                 </span>
-                <span className="text-[10px] text-[#718096] font-normal">
+                <span className="text-[10px] text-[#5f6b7d] font-normal">
                   {card.unit}
                 </span>
               </div>

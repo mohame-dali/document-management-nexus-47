@@ -31,11 +31,12 @@ exports.testAdminCredentials = async (req, res, next) => {
 // @route   POST /api/auth/reset-admin
 // @access  Public
 exports.resetAdminPassword = async (req, res, next) => {
+  // Immédiatement bloqué en environnement de production
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, message: 'Cette route est strictement interdite en production' });
+  }
+
   try {
-    // Only allow in development environment
-    if (process.env.NODE_ENV === 'production') {
-      return next(new ErrorResponse('This route is not available in production', 403));
-    }
     
     // Find admin user
     let admin = await User.findOne({ username: 'admin' });

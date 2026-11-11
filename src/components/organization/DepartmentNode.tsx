@@ -84,7 +84,7 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
             {data.totalPersonnel} موظف{data.totalPersonnel > 1 ? 'ين' : ''}
           </span>
         </span>
-        <span className="flex items-center gap-1 text-[11px] text-[#718096]">
+        <span className="flex items-center gap-1 text-[11px] text-[#5f6b7d]">
           {expanded ? (
             <>
               <span>إخفاء</span>
@@ -126,18 +126,18 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                     {p.prenom} {p.nom}
                   </p>
                   {p.poste ? (
-                    <p className="text-[10px] text-[#718096] truncate">{p.poste}</p>
+                    <p className="text-[10px] text-[#5f6b7d] truncate">{p.poste}</p>
                   ) : (
-                    <p className="text-[10px] text-[#a0aec0] italic truncate">بدون خطة</p>
+                    <p className="text-[10px] text-[#5f6b7d] italic truncate">بدون خطة</p>
                   )}
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-[#a0aec0] text-center py-2">لا يوجد موظفين مسجلين</p>
+            <p className="text-[11px] text-[#5f6b7d] text-center py-2">لا يوجد موظفين مسجلين</p>
           )}
           {data.totalPersonnel > 10 && (
-            <p className="text-[10px] text-[#718096] text-center pt-1 border-t border-dashed border-[#e2e8f0]">
+            <p className="text-[10px] text-[#5f6b7d] text-center pt-1 border-t border-dashed border-[#e2e8f0]">
               + {data.totalPersonnel - 10} موظفين آخرين
             </p>
           )}

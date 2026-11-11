@@ -45,7 +45,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
           ) : (
             <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalDocuments}</div>
           )}
-          <p className="text-xs text-[#718096] mt-1">
+          <p className="text-xs text-[#5f6b7d] mt-1">
             {t('dashboard.stats.forYear', { year: currentYear })}
           </p>
         </CardContent>
@@ -65,7 +65,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
           ) : (
             <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalIncoming}</div>
           )}
-          <p className="text-xs text-[#718096] mt-1">
+          <p className="text-xs text-[#5f6b7d] mt-1">
             {t('dashboard.stats.incomingDocUnit')}
           </p>
         </CardContent>
@@ -85,7 +85,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
           ) : (
             <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalOutgoing}</div>
           )}
-          <p className="text-xs text-[#718096] mt-1">
+          <p className="text-xs text-[#5f6b7d] mt-1">
             {t('dashboard.stats.outgoingDocUnit')}
           </p>
         </CardContent>
@@ -106,7 +106,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
             ) : (
               <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalDepartments}</div>
             )}
-            <p className="text-xs text-[#718096] mt-1">
+            <p className="text-xs text-[#5f6b7d] mt-1">
               {t('dashboard.stats.activeDepartmentUnit')}
             </p>
           </CardContent>
@@ -125,7 +125,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
             ) : (
               <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.activeUsers}</div>
             )}
-            <p className="text-xs text-[#718096] mt-1">
+            <p className="text-xs text-[#5f6b7d] mt-1">
               {t('dashboard.stats.activeUserUnit')}
             </p>
           </CardContent>
@@ -144,7 +144,7 @@ const StatsCards = ({ currentUser, currentYear, stats, isLoading }: StatsCardsPr
             ) : (
               <div className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{stats.totalFolders}</div>
             )}
-            <p className="text-xs text-[#718096] mt-1">
+            <p className="text-xs text-[#5f6b7d] mt-1">
               {t('dashboard.stats.organizedFolderUnit')}
             </p>
           </CardContent>

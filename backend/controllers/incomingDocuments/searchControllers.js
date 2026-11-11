@@ -11,7 +11,7 @@ exports.searchIncomingDocuments = async (req, res, next) => {
     const { q, year, dateFrom, dateTo, serialNumber, subject, source, page, limit } = req.query;
     
     // Build the query object
-    let query = {};
+    let query = { isDeleted: false };
     
     // Text search in multiple fields (with optional OCR toggle)
     const { includeOcr } = req.query;

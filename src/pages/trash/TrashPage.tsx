@@ -169,7 +169,7 @@ const TrashPage: React.FC = () => {
       case 'folder':
       case 'Folder':
         return (
-          <Badge className="bg-[#FFCB56]/20 text-[#975a16] hover:bg-[#FFCB56]/30 border border-[#d69e2e]/40 gap-1.5 py-1 px-2.5 font-medium text-xs">
+          <Badge className="bg-[#FFCB56]/20 text-[#744210] hover:bg-[#FFCB56]/30 border border-[#d69e2e]/40 gap-1.5 py-1 px-2.5 font-medium text-xs">
             <Folder className="h-3.5 w-3.5 text-[#b7791f]" />
             <span>مجلد</span>
           </Badge>

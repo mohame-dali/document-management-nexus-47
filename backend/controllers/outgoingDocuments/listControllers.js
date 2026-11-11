@@ -1,6 +1,7 @@
 
 const OutgoingDocument = require('../../models/OutgoingDocument');
 const ErrorResponse = require('../../utils/errorResponse');
+const { sanitizeSearchQuery } = require('../../utils/regexUtils');
 
 // @desc    Get all outgoing documents with pagination
 // @route   GET /api/outgoing-documents
@@ -31,6 +32,24 @@ exports.getOutgoingDocuments = async (req, res, next) => {
       query.year = new Date().getFullYear();
     }
     
+    // Search query: server-side text and numeric search (subject, assignedTo, serialNumber)
+    if (req.query.q && req.query.q.trim() !== '') {
+      const q = req.query.q.trim();
+      const safeQ = sanitizeSearchQuery(q);
+      const orConditions = [];
+      if (safeQ) {
+        orConditions.push({ subject: { $regex: safeQ, $options: 'i' } });
+        orConditions.push({ assignedTo: { $regex: safeQ, $options: 'i' } });
+      }
+      const num = Number(q);
+      if (!isNaN(num) && num > 0) {
+        orConditions.push({ serialNumber: num });
+      }
+      if (orConditions.length > 0) {
+        query.$or = orConditions;
+      }
+    }
+
     // Check if we just need the count for dashboard stats
     if (req.query.count === 'true') {
       const count = await OutgoingDocument.countDocuments(query);
