@@ -496,4 +496,400 @@ bash deploy/ubuntu/rollback.sh
 
 ---
 
-*(Fin de la PARTIE 2/4 — En attente de l'instruction "suite" pour la PARTIE 3/4 : WINDOWS SERVER)*
+## PARTIE 3/4 : DÉPLOIEMENT SUR WINDOWS SERVER (2019 / 2022)
+
+> **Avertissement de statut :** Toutes les procédures de cette partie s'appuient sur les scripts sous `deploy/windows/` et sont étiquetées `[NON TESTÉ EN RÉEL]`.  
+> Le port d'écoute interne de l'application est désigné par la variable `${PORT}` (décision du propriétaire).
+
+---
+
+### 3.1. Installation des prérequis système
+*(Fichier source : `deploy/windows/install-prereqs.ps1`)* `[NON TESTÉ EN RÉEL]`
+
+Dans une invite de commandes PowerShell lancée en tant qu'**Administrateur** :
+
+```powershell
+# Exécution sous privilèges Administrateur (Source : deploy/windows/install-prereqs.ps1)
+Set-ExecutionPolicy RemoteSigned -Scope Process -Force
+.\deploy\windows\install-prereqs.ps1
+```
+
+#### Ce que fait le script :
+1. **Gestionnaire de paquets :** Installe Chocolatey si absent.
+2. **Runtime & Outils :** Installe Node.js 22 LTS (`nodejs-lts` v22.14.0) et Git pour Windows.
+3. **Outils C++ :** Installe `visualstudio2022buildtools` (charge de travail `VCTools` pour `node-llama-cpp`) et CMake.
+4. **Base de données :** Installe MongoDB Community Server et `mongodb-database-tools`.
+5. **OCR & Traitement PDF :** Installe Tesseract OCR et Poppler (`pdftoppm`).
+6. **Superviseur de service :** Installe NSSM (*Non-Sucking Service Manager*).
+7. **Verrouillage MongoDB :** Tente de modifier `mongod.cfg` pour restreindre `bindIp: 127.0.0.1` et redémarre le service Windows `MongoDB`.
+
+#### ⚠️ Signalement critique sur IIS URL Rewrite et ARR :
+- **Constat dans `install-prereqs.ps1` :** Le script n'installe **ni URL Rewrite 2.1 ni ARR 3.0 (Application Request Routing)**. Les installeurs MSI Microsoft pour ces deux modules sont absents du dépôt `[FICHIER ABSENT : installeurs IIS URL Rewrite et ARR]`.
+- **Conséquence bloquante :** Le fichier `deploy/windows/web.config` **ne fonctionnera pas** sans ces deux modules installés sur IIS. Si IIS tente de charger un `web.config` contenant des balises `<rewrite>` sans URL Rewrite, il renverra une erreur HTTP 500.19 bloquante. De plus, le reverse proxy nécessite impérativement d'activer la directive proxy dans ARR.
+- **Action requise avant configuration Web :**
+  1. Installer manuellement **URL Rewrite Module 2.1** (x64) via le site officiel Microsoft.
+  2. Installer manuellement **Application Request Routing 3.0** (x64).
+  3. Dans IIS Manager > Serveur (racine) > **Application Request Routing Cache** > volet droit **Server Proxy Settings...** > Cocher **Enable proxy** > Cliquer sur **Apply**.
+
+---
+
+### 3.2. Configuration de l'authentification MongoDB sous Windows
+`[FICHIER ABSENT : script configure-mongodb.ps1]`
+
+Le script `install-prereqs.ps1` installe MongoDB mais ne crée pas les comptes administrateur et applicatif. Il n'existe pas de script PowerShell dédié dans le dépôt `[FICHIER ABSENT]`.
+
+#### Procédure manuelle recommandée (sans mot de passe en dur) :
+Dans un terminal PowerShell :
+```powershell
+# Connexion au shell MongoDB local
+mongosh --host 127.0.0.1 --port 27017
+```
+Exécuter les instructions d'initialisation :
+```javascript
+// Création du compte administrateur global
+use admin;
+db.createUser({
+  user: "admin_dms",
+  pwd: passwordPrompt(), // Saisie masquée au clavier
+  roles: [ { role: "userAdminAnyDatabase", db: "admin" }, { role: "readWriteAnyDatabase", db: "admin" } ]
+});
+
+// Création du compte applicatif restreint
+use document-management;
+db.createUser({
+  user: "dms_app_user",
+  pwd: passwordPrompt(), // Saisie masquée au clavier
+  roles: [ { role: "readWrite", db: "document-management" }, { role: "dbAdmin", db: "document-management" } ]
+});
+exit;
+```
+Activer ensuite la sécurité dans le fichier de configuration de MongoDB (ex : `C:\Program Files\MongoDB\Server\7.0\bin\mongod.cfg`) :
+```yaml
+security:
+  authorization: enabled
+```
+Redémarrer le service Windows :
+```powershell
+Restart-Service -Name "MongoDB"
+```
+
+---
+
+### 3.3. Configuration du fichier `.env` et ACLs Windows (`icacls`)
+*(Fichier source : `.env.production.example`)* `[NON TESTÉ EN RÉEL]`
+
+```powershell
+# Depuis la racine C:\inetpub\wwwroot\dms (ou dossier choisi)
+Copy-Item .env.production.example .env
+
+# Génération d'une clé JWT forte via PowerShell (sans afficher le secret dans les logs) :
+$bytes = New-Object byte[] 48
+(New-Object Security.Cryptography.RNGCryptoServiceProvider).GetBytes($bytes)
+$jwtSecret = -join ($bytes | ForEach-Object { "{0:x2}" -f $_ })
+```
+Éditer `.env` avec le bloc-notes ou PowerShell :
+- `PORT=${PORT}`
+- `MONGODB_URI=mongodb://dms_app_user:<MOT_DE_PASSE>@127.0.0.1:27017/document-management?authSource=admin`
+- `JWT_SECRET=<CHAINE_GENEREE>`
+- `DOCUMENT_PATH=C:\inetpub\wwwroot\dms\backend\courrier`
+- `UPLOAD_DIR=C:\inetpub\wwwroot\dms\backend\uploads`
+- `BACKUP_DIR=C:\backups\dms`
+
+#### Protection stricte du fichier `.env` via `icacls` :
+Pour empêcher les utilisateurs standards de la machine de lire les secrets :
+```powershell
+# Suppression de l'héritage et restriction à SYSTEM et Administrateurs
+icacls .env /inheritance:r
+icacls .env /grant:r "SYSTEM:(R)"
+icacls .env /grant:r "Administrators:(F)"
+```
+
+- **Vérification de l'environnement :**
+  ```powershell
+  node deploy\scripts\check-env.mjs
+  ```
+
+---
+
+### 3.4. Installation du Service Windows via NSSM
+*(Fichier source : `deploy/windows/install-service.ps1`)* `[NON TESTÉ EN RÉEL]`
+
+```powershell
+# Exécution sous privilèges Administrateur (Source : deploy/windows/install-service.ps1)
+.\deploy\windows\install-service.ps1
+```
+
+#### Ce que configure le script :
+1. Détecte la présence de `nssm.exe`.
+2. Configure le service Windows nommé `DMSBackend`.
+3. Commande exécutée : `node_modules\.bin\tsx.cmd server.ts` (ou `npx tsx server.ts`).
+4. Répertoire de travail : Répertoire racine du projet (`$ProjectRoot`).
+5. Variables d'environnement injectées dans le service :
+   ```
+   NODE_ENV=production
+   PORT=${PORT}
+   ```
+6. **Politique de redémarrage :** En cas de crash inattendu, NSSM redémarre le service après un délai de 4 secondes (`AppRestartDelay 4000`).
+7. **Journaux et rotation :** Redirige les sorties vers :
+   - `logs\service-out.log`
+   - `logs\service-err.log`
+   Avec rotation quotidienne (`AppRotateSeconds 86400`) ou si la taille dépasse 10 Mo (`AppRotateBytes 10485760`).
+
+#### ⚠️ Comparaison des chemins de journaux :
+Dans `install-service.ps1:68-75`, les logs de sortie sont écrits dans `logs\service-out.log` et `logs\service-err.log`, alors que la configuration PM2 (`ecosystem.config.cjs:45-46`) cible `logs\err.log` et `logs\out.log`. Cette distinction est normale sous Windows où NSSM assure sa propre rotation de fichiers en ligne (`AppRotateOnline 1`).
+
+- **Vérification :**
+  ```powershell
+  Get-Service -Name "DMSBackend"  # Doit afficher Status: Running
+  ```
+
+---
+
+### 3.5. Configuration d'IIS et audit de `web.config`
+*(Fichier source : `deploy/windows/web.config`)* `[NON TESTÉ EN RÉEL]`
+
+Copier `deploy/windows/web.config` à la racine du site Web IIS hébergeant le frontend (`dist/`) :
+
+```powershell
+Copy-Item deploy\windows\web.config dist\web.config
+```
+
+#### Audit de sécurité de `deploy/windows/web.config` :
+1. **Limite de téléversement :**  
+   `<requestLimits maxAllowedContentLength="52428800" />` (50 Mo autorisés pour les documents administratifs et scans PDF).
+2. **Support WebSocket :**  
+   `<webSocket enabled="true" />` active le protocole WebSocket nécessaire pour Socket.IO.
+3. **Protection des documents et téléversements sensibles (Règles 4 & 5) :**
+   ```xml
+   <!-- Proxy vers les documents scannés Courrier (Protection Express obligatoire) -->
+   <rule name="Courrier Proxy" stopProcessing="true">
+     <match url="^courrier/(.*)" />
+     <action type="Rewrite" url="http://localhost:${PORT}/courrier/{R:1}" />
+   </rule>
+
+   <!-- Proxy vers les uploads Multer (Protection Express obligatoire) -->
+   <rule name="Uploads Proxy" stopProcessing="true">
+     <match url="^uploads/(.*)" />
+     <action type="Rewrite" url="http://localhost:${PORT}/uploads/{R:1}" />
+   </rule>
+   ```
+   Ces deux règles redirigent l'ensemble des accès `/courrier/` et `/uploads/` vers le serveur Express local pour validation des droits et de la session JWT.
+4. **Positionnement AVANT le fallback SPA (Règle 6) :**  
+   La règle `React SPA Routes` réécrit les URLs vers `/index.html` avec la condition stricte :
+   `pattern="^/(api|socket\.io|courrier|uploads|api-docs)" negate="true"`.  
+   Les PDF du courrier et les pièces jointes ne tombent plus par erreur dans le template HTML de React.
+5. **Zéro exposition statique directe :** IIS ne sert aucun fichier de `courrier` ou `uploads` en direct.
+
+---
+
+### 3.6. Configuration HTTPS et liaison de certificat sous IIS
+`[FICHIER ABSENT : script New-SelfSignedCert.ps1 / liaison IIS]`
+
+Le dépôt ne contient aucun script PowerShell automatisant la création d'un certificat auto-signé Windows ou la création du binding HTTPS dans IIS `[FICHIER ABSENT]`.
+
+#### Procédure PowerShell recommandée pour générer le certificat et la liaison :
+```powershell
+# Générer un certificat auto-signé avec SAN IP Locale (remplacer 192.168.1.100 par l'IP réelle)
+$cert = New-SelfSignedCertificate -DnsName "dms.local", "192.168.1.100", "localhost" `
+  -CertStoreLocation "Cert:\LocalMachine\My" `
+  -NotAfter (Get-Date).AddYears(3) `
+  -FriendlyName "DMS Local Admin Certificate"
+
+# Dans IIS Manager > Site Web DMS > Liaisons (Bindings) :
+# Ajouter une liaison : Type: https | Port: 443 | Certificat SSL : Sélectionner "DMS Local Admin Certificate"
+```
+
+---
+
+### 3.7. Configuration du Pare-feu Windows
+`[FICHIER ABSENT : script firewall.ps1]`
+
+Le dépôt ne contient aucun script pour le pare-feu Windows `[FICHIER ABSENT]`.
+
+#### Commandes PowerShell impératives pour sécuriser le serveur local :
+```powershell
+# 1. Autoriser le trafic entrant sur les ports Web IIS
+New-NetFirewallRule -DisplayName "DMS - HTTP (80)" -Direction Inbound -LocalPort 80 -Protocol TCP -Action Allow
+New-NetFirewallRule -DisplayName "DMS - HTTPS (443)" -Direction Inbound -LocalPort 443 -Protocol TCP -Action Allow
+
+# 2. Bloquer explicitement les accès externes directs au serveur Express et à MongoDB
+New-NetFirewallRule -DisplayName "DMS - Blocage Express Externe" -Direction Inbound -LocalPort ${PORT} -Protocol TCP -Action Block
+New-NetFirewallRule -DisplayName "DMS - Blocage MongoDB Externe" -Direction Inbound -LocalPort 27017 -Protocol TCP -Action Block
+```
+
+---
+
+### 3.8. Procédures de mise à jour et retour arrière sous Windows
+`[FICHIER ABSENT : deploy.ps1 et rollback.ps1]`
+
+Il n'existe actuellement aucun script `deploy.ps1` ni `rollback.ps1` sous `deploy/windows/` `[FICHIER ABSENT]`.
+
+#### Procédure manuelle séquentielle de mise à jour :
+1. Créer une sauvegarde manuelle :  
+   `powershell -File .\deploy\backup\backup-mongo.ps1`
+2. Mettre à jour le code (`git pull` ou copie de release).
+3. Installer les dépendances : `npm ci`.
+4. Recompiler le frontend Vite : `npm run build`.
+5. Redémarrer le service NSSM :  
+   `Restart-Service -Name "DMSBackend"`.
+6. Valider le fonctionnement :  
+   `node deploy\scripts\smoke-test.mjs http://localhost:${PORT}`.
+
+#### Procédure manuelle en cas d'anomalie (Rollback) :
+1. Rétablir le dossier `dist` antérieur.
+2. `Restart-Service -Name "DMSBackend"`.
+3. Vérifier le retour à la normale sur `http://localhost:${PORT}/api/health`.
+
+---
+
+## PARTIE 4/4 : EXPLOITATION, RECETTE ET ANNEXES
+
+> **Avertissement de statut :** Toutes les procédures d'exécution dépendent de scripts ou commandes étiquetés `[NON TESTÉ EN RÉEL]`.  
+> Le port d'écoute interne de référence est noté `${PORT}`.
+
+---
+
+### 4.1. Sauvegarde et restauration (Ubuntu et Windows)
+
+#### A. Procédure sous Ubuntu Server
+*(Fichiers sources : `deploy/scripts/backup-all.sh`, `restore-all.sh`, `deploy/ubuntu/systemd/dms-backup.*`)* `[NON TESTÉ EN RÉEL]`
+
+1. **Sauvegarde manuelle intégrale :**
+   ```bash
+   # Syntaxe : bash deploy/scripts/backup-all.sh [DOSSIER_DESTINATION] [JOURS_RETENTION]
+   bash deploy/scripts/backup-all.sh /var/backups/dms 14
+   ```
+   - **Opérations :** `mongodump` BSON compressé (`--gzip`) + copie récursive de `courrier/` et `uploads/` + empreinte SHA256 des fichiers `.gguf` dans `ai_models_manifest.txt` + compression `.tar.gz` consolidée.
+   - **Rétention :** Purge des archives de plus de 14 jours, avec **protection stricte de la dernière archive valide**.
+2. **Planification automatique :**
+   L'unité `dms-backup.timer` déclenche la sauvegarde quotidienne à 02:00 sous le compte `dms`.
+3. **Test de restauration sécurisé (Base temporaire de test par défaut) :**
+   ```bash
+   # Restaure par défaut vers 'document-management-test' SANS toucher à la base de production
+   bash deploy/scripts/restore-all.sh /var/backups/dms/dms_full_backup_YYYYMMDD_HHMMSS.tar.gz
+   ```
+   - Vérifie préalablement l'intégrité de l'archive (`tar -tzf`).
+4. **Restauration en Production (avec écrasement `--drop`) :**
+   ```bash
+   # Exige le flag explicite et la confirmation au clavier 'OUI'
+   bash deploy/scripts/restore-all.sh /var/backups/dms/dms_full_backup_YYYYMMDD_HHMMSS.tar.gz --target-prod
+   ```
+
+#### B. Procédure sous Windows Server
+*(Fichier source : `deploy/backup/backup-mongo.ps1`)* `[NON TESTÉ EN RÉEL]`
+
+1. **Sauvegarde manuelle intégrale :**
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\deploy\backup\backup-mongo.ps1
+   ```
+   - Archive MongoDB, `courrier/` et `uploads/` dans `backups\dms_full_backup_YYYYMMDD_HHMMSS.zip` avec rétention 14 jours protégeant la dernière archive.
+2. **Planification automatique (Planificateur de tâches Windows) :**
+   ```powershell
+   # Enregistrement d'une tâche planifiée quotidienne à 02:00
+   $action = New-ScheduledTaskAction -Execute "PowerShell.exe" `
+     -Argument "-ExecutionPolicy Bypass -File C:\inetpub\wwwroot\dms\deploy\backup\backup-mongo.ps1"
+   $trigger = New-ScheduledTaskTrigger -Daily -At 02:00
+   Register-ScheduledTask -TaskName "DMS-DailyBackup" -Action $action -Trigger $trigger -User "SYSTEM" -RunLevel Highest
+   ```
+3. **Restauration sous Windows :**  
+   `[FICHIER ABSENT : script restore-mongo.ps1]`. La restauration manuelle exige d'extraire le fichier ZIP, d'utiliser `mongorestore.exe --gzip --drop` et de recopier les dossiers `courrier\` et `uploads\`.
+
+---
+
+### 4.2. Recette de réception post-déploiement (Tableau de validation)
+
+Exécuter cette suite de requêtes de contrôle depuis une machine cliente ou directement sur le serveur :
+
+| N° | Test effectué | Commande de validation (`curl` ou PowerShell) | Résultat attendu | Statut |
+| :---: | :--- | :--- | :--- | :---: |
+| **REC-01** | **Santé de l'API & Base** | `curl -s -i http://127.0.0.1:${PORT}/api/health` | HTTP 200 + `{"database":"connected"}` | `[À TESTER]` |
+| **REC-02** | **Accès non authentifié** | `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${PORT}/api/departments` | **HTTP 401** (jamais 503 ni 200) | `[À TESTER]` |
+| **REC-03** | **Route inexistante** | `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${PORT}/api/route-inexistante-404` | **HTTP 404** (gestion d'erreur propre, pas de 500) | `[À TESTER]` |
+| **REC-04** | **Protection /courrier/** | `curl -s -o /dev/null -w "%{http_code}" https://dms.local/courrier/test.pdf` | **HTTP 401 ou 403** (bloqué par Node, pas de fuite) | `[À TESTER]` |
+| **REC-05** | **Protection /uploads/** | `curl -s -o /dev/null -w "%{http_code}" https://dms.local/uploads/usersphoto/test.jpg` | **HTTP 401 ou 403** (bloqué par Node, pas de fuite) | `[À TESTER]` |
+| **REC-06** | **CORS Origine malveillante** | `curl -s -I -H "Origin: http://evil.test" https://dms.local/api/health` | L'en-tête `Access-Control-Allow-Origin: http://evil.test` **NE DOIT PAS** être renvoyé | `[À TESTER]` |
+| **REC-07** | **Rate Limiting Login** | Exécuter 12 requêtes POST successives sur `/api/auth/login` avec un faux compte | **HTTP 429** (*Too Many Requests*) avant la 12ème tentative | `[À TESTER]` |
+| **REC-08** | **Validité du certificat HTTPS** | `curl -s -I https://dms.local/` (ou navigateur Web) | Connexion TLS établie sans interruption | `[À TESTER]` |
+| **REC-09** | **Redémarrage et reprise** | `sudo reboot` (ou redémarrage Windows), puis tester `/api/health` | Le service DMS redémarre automatiquement sans intervention | `[À TESTER]` |
+
+*(Note : L'ensemble de ces contrôles est automatisable via `node deploy/scripts/smoke-test.mjs http://127.0.0.1:${PORT} [--strict-security]`)*.
+
+---
+
+### 4.3. Tableau de dépannage (Diagnostics et Résolutions)
+
+| Symptôme constaté | Cause probable | Commande de diagnostic / Résolution |
+| :--- | :--- | :--- |
+| **HTTP 502 Bad Gateway** sous Nginx ou IIS | Le serveur applicatif Node.js (`server.ts`) est éteint ou a crashé au démarrage. | **Ubuntu :** `pm2 logs dms-backend --lines 50`<br>**Windows :** `Get-Content logs\service-err.log -Tail 50` |
+| **Erreur de connexion MongoDB (MongooseServerSelectionError)** | Le service MongoDB est arrêté, écoute sur la mauvaise IP, ou les identifiants `.env` sont incorrects. | `sudo systemctl status mongod`<br>Vérifier `grep bindIp /etc/mongod.conf` (doit être `127.0.0.1`). |
+| **HTTP 500.19 sous IIS** | Les modules IIS **URL Rewrite 2.1** ou **ARR 3.0** ne sont pas installés sur le serveur Windows. | Télécharger et installer les extensions officielles Microsoft URL Rewrite et Application Request Routing. |
+| **Lenteur extrême sur la 1ère requête du Chat IA** | Le modèle GGUF est volumineux (~4.2 Go) et le warm-up initial n'a pas été déclenché. | Activer `AI_WARMUP=true` dans le fichier `.env` pour que le modèle soit chargé en tâche de fond au démarrage. |
+| **Erreur Out of Memory (OOM) ou Process killed** | La RAM allouée est insuffisante pour le modèle ALLaM 7B ou PM2 a atteint sa limite mémoire. | Vérifier la RAM libre (`free -h`). S'assurer qu'une seule instance PM2 tourne (`instances: 1` en mode `fork`). |
+| **Les fichiers PDF du courrier affichent le HTML de React** | La règle de réécriture IIS ou Nginx pour `/courrier/` est manquante ou placée après la SPA. | Vérifier dans `web.config` que la règle `Courrier Proxy` est active et placée **avant** `React SPA Routes`. |
+
+---
+
+### 4.4. Commandes d'exploitation courante
+
+#### A. Sous Ubuntu Server (PM2 & Systemd) :
+- **Consulter l'état du serveur :** `pm2 status`
+- **Consulter les journaux en direct :** `pm2 logs dms-backend`
+- **Consulter les journaux d'erreurs :** `tail -n 100 /var/www/dms/logs/err.log`
+- **Redémarrer le backend :** `pm2 restart dms-backend`
+- **Recharger sans interruption :** `pm2 reload ecosystem.config.cjs --update-env`
+- **Statut de la base MongoDB :** `sudo systemctl status mongod`
+- **Statut du reverse proxy :** `sudo systemctl status nginx`
+
+#### B. Sous Windows Server (NSSM & IIS) :
+- **Consulter l'état du service :** `Get-Service -Name "DMSBackend"`
+- **Démarrer le service :** `Start-Service -Name "DMSBackend"`
+- **Arrêter le service :** `Stop-Service -Name "DMSBackend"`
+- **Redémarrer le service :** `Restart-Service -Name "DMSBackend"`
+- **Consulter les journaux :** `Get-Content .\logs\service-out.log -Tail 50 -Wait`
+- **Consulter les erreurs :** `Get-Content .\logs\service-err.log -Tail 50`
+- **Redémarrer le serveur Web IIS :** `iisreset`
+
+---
+
+### 4.5. Annexes
+
+#### Annexe A : Incohérences détectées dans le dépôt
+1. **Port d'écoute interne non tranché :**  
+   - `server.ts:316` fixe par défaut `PORT = 3000` si la variable d'environnement `PORT` n'est pas transmise.
+   - Les fichiers de déploiement (`ecosystem.config.cjs`, `web.config`, `dms.nginx.conf`, `smoke-test.mjs`, `.env.production.example`) ont été rédigés ou alignés sur `PORT = 5000`.
+   - **Règle impérative :** La variable `PORT` définie dans `.env` fait foi et prévaut lors du lancement.
+2. **Commande `npm start` vs `tsx` :**  
+   - `package.json:9` définit `"start": "node server.ts"`. Or, vanilla Node.js ne compile pas les fichiers `.ts` sans chargeur TypeScript.
+   - L'exploitation de production doit s'appuyer sur `tsx server.ts` (comme défini dans `ecosystem.config.cjs` et `install-service.ps1`).
+3. **Règle UFW restrictive sur le mauvais port :**  
+   - `deploy/ubuntu/setup-system.sh:106` bloque `3000/tcp` au lieu de `${PORT}/tcp`.
+4. **Journaux de logrotate vs PM2 :**  
+   - `deploy/ubuntu/logrotate/dms` cible `/var/www/dms/logs/*.log`, ignorant les logs générés par PM2 sous `~/.pm2/logs/`.
+5. **Doublons de scripts de sauvegarde :**  
+   - Présence de `deploy/scripts/backup-all.sh` et de `deploy/backup/backup-mongo.sh`.
+
+#### Annexe B : Liste des `[FICHIER ABSENT]` identifiés
+- `[FICHIER ABSENT : script seed-superadmin.mjs]` : Création interactive d'un SuperAdmin personnalisé avant mise en service.
+- `[FICHIER ABSENT : script restore-mongo.ps1]` : Restauration automatisée sous Windows Server.
+- `[FICHIER ABSENT : script firewall.ps1]` : Automatisation des règles de pare-feu Windows via PowerShell.
+- `[FICHIER ABSENT : deploy.ps1 et rollback.ps1]` : Automatisation de mise à jour et de retour arrière sous Windows.
+- `[FICHIER ABSENT : installeurs IIS URL Rewrite et ARR]` : Binaires MSI requis pour IIS.
+- `[FICHIER ABSENT : script Let's Encrypt interne]` : Automatisation TLS pour domaine local d'administration.
+
+#### Annexe C : Ce que ce guide ne couvre pas
+- L'administration de l'annuaire d'entreprise Active Directory / LDAP.
+- La mise en cluster haute disponibilité multi-serveurs de MongoDB (Replica Set).
+- La configuration physique des baies de stockage SAN/NAS ou du matériel scanner réseau.
+- La correction intrinsèque des failles du code source applicatif répertoriées ci-dessous.
+
+#### Annexe D : Questions pour le propriétaire du système
+1. **Quel est le port interne définitif retenu pour l'écoute d'Express ?** (5000 ou 3000 ?).
+2. **Quelle est la plateforme hôte finale ?** (Ubuntu Server 22.04 LTS, Ubuntu Server 24.04 LTS, Windows Server 2019 ou Windows Server 2022 ?).
+3. **Quel est le nom de domaine local ou l'adresse IP statique du serveur ?** (Pour sceller les certificats SSL SAN et la variable `ALLOWED_ORIGINS`).
+4. **Quelle est la volumétrie prévisionnelle des agents utilisateurs simultanés ?** (Pour ajuster le dimensionnement CPU/RAM et les cœurs alloués à l'inférence IA).
+5. **Le serveur dispose-t-il d'un GPU Nvidia dédié ?** (Si oui, configurer les pilotes CUDA/Vulkan et ajuster `LLAMA_GPU_LAYERS > 0` dans `.env`).
+6. **Le matériel de numérisation (scanner) est-il raccordé en USB local ou en scanner réseau ?** (Pour confirmer l'utilisation de SANE sous Linux ou WIA sous Windows).
+
+---
+
+*(Fin du guide de déploiement — Document scellé)*
