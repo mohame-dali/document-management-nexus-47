@@ -104,9 +104,9 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={onClose}
-            aria-label="إغلاق النافذة"
-            title="إغلاق النافذة"
-            className="h-11 w-11 p-0 text-slate-400 hover:text-slate-700 rounded flex items-center justify-center shrink-0"
+            aria-label={t('common.close')}
+            title={t('common.close')}
+            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-slate-400 hover:text-slate-700 rounded flex items-center justify-center shrink-0"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -185,7 +185,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => document.getElementById('quick-file-upload')?.click()}
-                  className="h-10 text-xs border-dashed border-[#cbd5e1] hover:border-[#2c5282] text-slate-600 rounded flex items-center gap-1.5"
+                  className="h-11 min-h-[44px] text-xs border-dashed border-[#cbd5e1] hover:border-[#2c5282] text-slate-600 rounded flex items-center gap-1.5"
                 >
                   <Paperclip className="h-3.5 w-3.5" />
                   <span>إرفاق ملفات ({attachments.length})</span>
@@ -198,7 +198,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                   {attachments.map((file, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-slate-200 rounded text-xs text-slate-700 shadow-2xs"
+                      className="flex items-center gap-1 ps-2.5 pe-1 py-0.5 bg-white border border-slate-200 rounded text-xs text-slate-700 shadow-2xs"
                     >
                       <FileText className="h-3.5 w-3.5 text-[#2c5282] shrink-0" />
                       <span className="truncate max-w-[140px] font-medium" dir="ltr">
@@ -210,18 +210,20 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                       <button
                         type="button"
                         onClick={() => setPreviewFile(file)}
-                        className="text-slate-400 hover:text-[#2c5282] p-0.5 rounded transition-colors"
+                        aria-label={t('common.preview')}
+                        className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-slate-400 hover:text-[#2c5282] hover:bg-slate-100 rounded transition-colors"
                         title={t('common.preview')}
                       >
-                        <Eye className="h-3.5 w-3.5" />
+                        <Eye className="h-4 w-4" />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeAttachment(idx)}
-                        className="text-slate-400 hover:text-red-500 p-0.5 rounded transition-colors"
+                        aria-label={t('common.remove')}
+                        className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                         title={t('common.remove')}
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}

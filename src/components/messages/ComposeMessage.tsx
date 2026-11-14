@@ -253,7 +253,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                   type="button"
                   variant="outline"
                   onClick={() => document.getElementById('file-upload-input')?.click()}
-                  className="h-9 text-xs border border-dashed border-[#cbd5e1] hover:border-[#2c5282] hover:bg-slate-50 w-full transition-colors duration-200 rounded text-slate-600 flex items-center justify-center gap-2"
+                  className="h-11 min-h-[44px] text-xs border border-dashed border-[#cbd5e1] hover:border-[#2c5282] hover:bg-slate-50 w-full transition-colors duration-200 rounded text-slate-600 flex items-center justify-center gap-2"
                 >
                   <Upload className="h-3.5 w-3.5 text-slate-500" />
                   <span>{t('messages.addAttachments')}</span>
@@ -265,13 +265,13 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                   {attachments.map((file, index) => (
                     <div 
                       key={index} 
-                      className="flex items-center justify-between bg-[#f8fafc] border border-[#e2e8f0] px-3 py-1.5 rounded text-xs"
+                      className="flex items-center justify-between bg-[#f8fafc] border border-[#e2e8f0] ps-3 pe-1 py-1 rounded text-xs"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <Paperclip className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                         <span className="font-medium text-slate-700 truncate">{file.name}</span>
                         <span className="text-[10px] text-slate-400 flex-shrink-0">
-                          ({(file.size / 1024).toFixed(0)} ك.ب)
+                          ({(file.size / 1024).toFixed(0)} {t('common.kb')})
                         </span>
                       </div>
                       <Button
@@ -279,9 +279,11 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => removeAttachment(index)}
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-red-600 rounded"
+                        aria-label={t('common.remove')}
+                        title={t('common.remove')}
+                        className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-slate-400 hover:text-red-600 rounded shrink-0"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}

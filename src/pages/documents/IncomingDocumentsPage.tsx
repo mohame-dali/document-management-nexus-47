@@ -850,53 +850,69 @@ const IncomingDocumentsPage: React.FC = () => {
         ) : viewMode === 'table' ? (
           /* TABULAR VIEW (AdminLTE style, 8h/day professional ergonomics) */
           <div className="overflow-x-auto border border-[#e2e8f0] rounded">
-            <table className="w-full text-right border-collapse text-sm">
+            <table className="w-full text-start border-collapse text-sm">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#2d3748]">
-                  <th 
-                    className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('serialNumber')}
+                  <th
+                    className="p-0 font-bold text-sm whitespace-nowrap"
+                    aria-sort={sortField === 'serialNumber' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('serialNumber')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.serialNumber')}</span>
                       {sortField === 'serialNumber' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'serialNumber' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'serialNumber' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
-                  <th 
-                    className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('subject')}
+                  <th
+                    className="p-0 font-bold text-sm"
+                    aria-sort={sortField === 'subject' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('subject')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.subjectAndType')}</span>
                       {sortField === 'subject' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'subject' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'subject' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
-                  <th 
-                    className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('arrivalDate')}
+                  <th
+                    className="p-0 font-bold text-sm whitespace-nowrap"
+                    aria-sort={sortField === 'arrivalDate' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('arrivalDate')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.arrivalDate')}</span>
                       {sortField === 'arrivalDate' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'arrivalDate' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'arrivalDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
-                  <th className="py-3 px-4 font-bold text-sm">{t('incoming.table.source')}</th>
-                  <th 
-                    className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('status')}
+                  <th className="py-3 px-4 font-bold text-sm text-start">{t('incoming.table.source')}</th>
+                  <th
+                    className="p-0 font-bold text-sm"
+                    aria-sort={sortField === 'status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('status')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.status')}</span>
                       {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
                   <th className="py-3 px-4 font-bold text-sm text-center">{t('incoming.table.actions')}</th>
                 </tr>
@@ -928,13 +944,14 @@ const IncomingDocumentsPage: React.FC = () => {
                       {/* Subject, Document Type, Activity */}
                       <td className="py-3 px-4">
                         <div className="max-w-[340px] space-y-1.5">
-                          <div 
+                          <button
+                            type="button"
                             onClick={() => handleView(doc._id)}
-                            className="font-bold text-base text-[#1a202c] hover:text-[#2c5282] cursor-pointer leading-relaxed transition-colors duration-200"
+                            className="text-start font-bold text-base text-[#1a202c] hover:text-[#2c5282] cursor-pointer leading-relaxed transition-colors duration-200 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
                             title={doc.subject}
                           >
                             {highlightMatch(doc.subject, searchQuery)}
-                          </div>
+                          </button>
 
                           <div className="flex items-center gap-2 flex-wrap">
                             {doc.typeDocument && (
@@ -1002,142 +1019,135 @@ const IncomingDocumentsPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* Actions: Voir, Traiter, Archiver, Transférer + Dropdown */}
+                      {/* Actions: 2 primary actions + ... menu */}
                       <td className="py-3 px-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          {/* 1. Voir (عرض) */}
+                          {/* Primary 1: Voir */}
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleView(doc._id)}
                             title={t('incoming.actions.viewTooltip')}
-                            className="h-11 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
+                            className="h-11 min-h-[44px] px-3 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
                           >
-                            <Eye className="h-3.5 w-3.5 ml-1" />
+                            <Eye className="h-3.5 w-3.5 me-1" />
                             {t('incoming.actions.view')}
                           </Button>
 
-                          {/* معاينة (Aperçu) */}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPreviewDoc(doc)}
-                            title={t('incoming.actions.previewTooltip')}
-                            className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
-                          >
-                            <FileText className="h-3.5 w-3.5 ml-1" />
-                            {t('incoming.actions.preview')}
-                          </Button>
-
-                          {/* 2. Traiter (معالجة / إضافة رد) */}
-                          {canAssignOrRespond && (
+                          {/* Primary 2: Traiter (if allowed) else Aperçu */}
+                          {canAssignOrRespond ? (
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
                               onClick={() => setResponseDoc(doc)}
                               title={t('incoming.actions.processTooltip')}
-                              className="h-11 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
+                              className="h-11 min-h-[44px] px-3 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
                             >
-                              <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
+                              <MessageSquare className="h-3.5 w-3.5 me-1 text-[#1a202c]" />
                               {t('incoming.actions.process')}
                             </Button>
-                          )}
-
-                          {/* 3. Archiver (أرشفة في مجلد) */}
-                          {canViewCategorization && (
+                          ) : (
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => setFolderDoc(doc)}
-                              title={canOrganizeDocuments ? t('incoming.actions.archiveTooltip') : t('incoming.actions.archiveViewTooltip')}
-                              className="h-11 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
+                              onClick={() => setPreviewDoc(doc)}
+                              title={t('incoming.actions.previewTooltip')}
+                              className="h-11 min-h-[44px] px-3 text-xs font-semibold rounded text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
                             >
-                              <FolderOpen className="h-3.5 w-3.5 ml-1" />
-                              {t('incoming.actions.archive')}
+                              <FileText className="h-3.5 w-3.5 me-1" />
+                              {t('incoming.actions.preview')}
                             </Button>
                           )}
 
-                          {/* 4. Transférer (تحويل / تعيين مسؤول) */}
-                          {canAssignOrRespond && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setResponsibleDoc(doc)}
-                              title={t('incoming.actions.transferTooltip')}
-                              className="h-11 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
-                            >
-                              <UserPlus className="h-3.5 w-3.5 ml-1" />
-                              {t('incoming.actions.transfer')}
-                            </Button>
-                          )}
-
-                          {/* More Actions Dropdown (PDF, Edit, Delete) */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                aria-label={t('incoming.actions.more')}
-                                className="h-11 w-11 p-0 text-[#5f6b7d] hover:text-[#1a202c] hover:bg-gray-100 rounded"
-                                title={t('incoming.actions.more')}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 bg-white border border-[#e2e8f0] rounded shadow-sm">
-                              <DropdownMenuItem 
-                                onClick={() => setPreviewDoc(doc)}
-                                className="text-sm py-2 cursor-pointer"
-                              >
-                                <Eye className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                {t('incoming.actions.previewModal')}
-                              </DropdownMenuItem>
-
-                              {doc.scannedDocument && (
-                                <DropdownMenuItem 
-                                  onClick={() => handleDownload(doc)}
-                                  disabled={downloadingDocId === doc._id}
-                                  className="text-sm py-2 cursor-pointer"
+                          {/* Secondary Actions Dropdown (...) */}
+                          {(canAssignOrRespond || canViewCategorization || doc.scannedDocument || canEdit || canDelete) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  aria-label={t('incoming.actions.more')}
+                                  className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-[#5f6b7d] hover:text-[#1a202c] hover:bg-gray-100 rounded"
+                                  title={t('incoming.actions.more')}
                                 >
-                                  {downloadingDocId === doc._id ? (
-                                    <Loader2 className="ml-2 h-4 w-4 text-[#2c5282] animate-spin" />
-                                  ) : (
-                                    <Download className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                  )}
-                                  {downloadingDocId === doc._id ? t('incoming.actions.downloading') : t('incoming.actions.downloadPdf')}
-                                </DropdownMenuItem>
-                              )}
-
-                              {canEdit && (
-                                <DropdownMenuItem 
-                                  onClick={() => handleEdit(doc._id)}
-                                  className="text-sm py-2 cursor-pointer"
-                                >
-                                  <Edit className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                  {t('incoming.actions.editDoc')}
-                                </DropdownMenuItem>
-                              )}
-
-                              {canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={() => setDeleteDoc(doc)}
-                                    className="text-sm py-2 text-red-600 focus:text-red-600 cursor-pointer"
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52 bg-white border border-[#e2e8f0] rounded shadow-sm">
+                                {canAssignOrRespond && (
+                                  <DropdownMenuItem
+                                    onClick={() => setPreviewDoc(doc)}
+                                    className="text-sm py-2.5 cursor-pointer"
                                   >
-                                    <Trash2 className="ml-2 h-4 w-4 text-red-600" />
-                                    {t('incoming.actions.deleteDoc')}
+                                    <FileText className="me-2 h-4 w-4 text-amber-700" />
+                                    {t('incoming.actions.previewModal')}
                                   </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                )}
+
+                                {canViewCategorization && (
+                                  <DropdownMenuItem
+                                    onClick={() => setFolderDoc(doc)}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    <FolderOpen className="me-2 h-4 w-4 text-[#4a5568]" />
+                                    {t('incoming.actions.archive')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {canAssignOrRespond && (
+                                  <DropdownMenuItem
+                                    onClick={() => setResponsibleDoc(doc)}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    <UserPlus className="me-2 h-4 w-4 text-purple-700" />
+                                    {t('incoming.actions.transfer')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {doc.scannedDocument && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleDownload(doc)}
+                                    disabled={downloadingDocId === doc._id}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    {downloadingDocId === doc._id ? (
+                                      <Loader2 className="me-2 h-4 w-4 text-[#2c5282] animate-spin" />
+                                    ) : (
+                                      <Download className="me-2 h-4 w-4 text-[#2c5282]" />
+                                    )}
+                                    {downloadingDocId === doc._id ? t('incoming.actions.downloading') : t('incoming.actions.downloadPdf')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {canEdit && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleEdit(doc._id)}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    <Edit className="me-2 h-4 w-4 text-[#2c5282]" />
+                                    {t('incoming.actions.editDoc')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {canDelete && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => setDeleteDoc(doc)}
+                                      className="text-sm py-2.5 text-red-600 focus:text-red-600 cursor-pointer"
+                                    >
+                                      <Trash2 className="me-2 h-4 w-4 text-red-600" />
+                                      {t('incoming.actions.deleteDoc')}
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1178,12 +1188,15 @@ const IncomingDocumentsPage: React.FC = () => {
                     </div>
 
                     {/* Subject */}
-                    <h3 
-                      onClick={() => handleView(doc._id)}
-                      className="text-lg font-bold text-[#1a202c] hover:text-[#2c5282] cursor-pointer leading-relaxed line-clamp-2"
-                      title={doc.subject}
-                    >
-                      {highlightMatch(doc.subject, searchQuery)}
+                    <h3 className="text-lg font-bold leading-relaxed">
+                      <button
+                        type="button"
+                        onClick={() => handleView(doc._id)}
+                        className="text-start font-bold text-[#1a202c] hover:text-[#2c5282] cursor-pointer line-clamp-2 w-full rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
+                        title={doc.subject}
+                      >
+                        {highlightMatch(doc.subject, searchQuery)}
+                      </button>
                     </h3>
 
                     {/* Meta badges */}
@@ -1224,67 +1237,118 @@ const IncomingDocumentsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Card Action Buttons (Voir, Traiter, Archiver, Transférer) */}
-                  <div className="flex items-center gap-1.5 pt-3 border-t border-[#f1f5f9] flex-wrap">
+                  {/* Card Action Buttons (2 primary actions + ... menu) */}
+                  <div className="flex items-center gap-1.5 pt-3 border-t border-[#f1f5f9]">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleView(doc._id)}
-                      className="flex-1 h-11 text-xs font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
+                      className="flex-1 h-11 min-h-[44px] text-xs font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
                     >
-                      <Eye className="h-3.5 w-3.5 ml-1" />
+                      <Eye className="h-3.5 w-3.5 me-1" />
                       {t('incoming.actions.view')}
                     </Button>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPreviewDoc(doc)}
-                      className="flex-1 h-11 text-xs font-semibold text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 rounded"
-                    >
-                      <FileText className="h-3.5 w-3.5 ml-1" />
-                      {t('incoming.actions.preview')}
-                    </Button>
-
-                    {canAssignOrRespond && (
+                    {canAssignOrRespond ? (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => setResponseDoc(doc)}
-                        className="flex-1 h-11 text-xs font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
+                        className="flex-1 h-11 min-h-[44px] text-xs font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
                       >
-                        <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
+                        <MessageSquare className="h-3.5 w-3.5 me-1 text-[#1a202c]" />
                         {t('incoming.actions.process')}
                       </Button>
-                    )}
-
-                    {canViewCategorization && (
+                    ) : (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setFolderDoc(doc)}
-                        className="flex-1 h-11 text-xs font-semibold text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 rounded"
+                        onClick={() => setPreviewDoc(doc)}
+                        className="flex-1 h-11 min-h-[44px] text-xs font-semibold text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 rounded"
                       >
-                        <FolderOpen className="h-3.5 w-3.5 ml-1" />
-                        {t('incoming.actions.archive')}
+                        <FileText className="h-3.5 w-3.5 me-1" />
+                        {t('incoming.actions.preview')}
                       </Button>
                     )}
 
-                    {canAssignOrRespond && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setResponsibleDoc(doc)}
-                        className="flex-1 h-11 text-xs font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded"
-                      >
-                        <UserPlus className="h-3.5 w-3.5 ml-1" />
-                        {t('incoming.actions.transfer')}
-                      </Button>
+                    {(canAssignOrRespond || canViewCategorization || doc.scannedDocument || canEdit || canDelete) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-label={t('incoming.actions.more')}
+                            title={t('incoming.actions.more')}
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-[#5f6b7d] hover:text-[#1a202c] hover:bg-gray-100 rounded shrink-0"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52 bg-white border border-[#e2e8f0] rounded shadow-sm">
+                          {canAssignOrRespond && (
+                            <DropdownMenuItem
+                              onClick={() => setPreviewDoc(doc)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <FileText className="me-2 h-4 w-4 text-amber-700" />
+                              {t('incoming.actions.previewModal')}
+                            </DropdownMenuItem>
+                          )}
+                          {canViewCategorization && (
+                            <DropdownMenuItem
+                              onClick={() => setFolderDoc(doc)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <FolderOpen className="me-2 h-4 w-4 text-[#4a5568]" />
+                              {t('incoming.actions.archive')}
+                            </DropdownMenuItem>
+                          )}
+                          {canAssignOrRespond && (
+                            <DropdownMenuItem
+                              onClick={() => setResponsibleDoc(doc)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <UserPlus className="me-2 h-4 w-4 text-purple-700" />
+                              {t('incoming.actions.transfer')}
+                            </DropdownMenuItem>
+                          )}
+                          {doc.scannedDocument && (
+                            <DropdownMenuItem
+                              onClick={() => handleDownload(doc)}
+                              disabled={downloadingDocId === doc._id}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <Download className="me-2 h-4 w-4 text-[#2c5282]" />
+                              {t('incoming.actions.downloadPdf')}
+                            </DropdownMenuItem>
+                          )}
+                          {canEdit && (
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(doc._id)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <Edit className="me-2 h-4 w-4 text-[#2c5282]" />
+                              {t('incoming.actions.editDoc')}
+                            </DropdownMenuItem>
+                          )}
+                          {canDelete && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setDeleteDoc(doc)}
+                                className="text-sm py-2.5 text-red-600 focus:text-red-600 cursor-pointer"
+                              >
+                                <Trash2 className="me-2 h-4 w-4 text-red-600" />
+                                {t('incoming.actions.deleteDoc')}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                 </div>

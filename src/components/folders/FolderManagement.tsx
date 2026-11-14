@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { getFolders } from '@/services/folderService';
@@ -7,10 +7,7 @@ import {
   Tag, 
   Building2, 
   Calendar, 
-  FileText, 
   ShieldCheck, 
-  Eye, 
-  Settings, 
   Folder,
   AlertCircle,
   RefreshCw
@@ -21,6 +18,7 @@ import { FolderDocumentsModal } from './FolderDocumentsModal';
 import { Folder as FolderType } from '@/types';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,12 +27,45 @@ interface FolderManagementProps {
   readOnly?: boolean;
 }
 
+const FOLDER_TABS: Array<'tree' | 'categorization'> = ['tree', 'categorization'];
+
 const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false }) => {
   const { currentUser } = useAuth();
   const { t } = useLanguage();
+  const { dir } = useDirection();
   const [selectedFolder, setSelectedFolder] = useState<FolderType | null>(null);
   const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'tree' | 'categorization'>('tree');
+  const tabRefs = useRef<Record<'tree' | 'categorization', HTMLButtonElement | null>>({
+    tree: null,
+    categorization: null,
+  });
+
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
+    const isRtl = dir === 'rtl';
+    let nextIndex: number | null = null;
+
+    if (e.key === 'ArrowRight') {
+      nextIndex = isRtl
+        ? (currentIndex - 1 + FOLDER_TABS.length) % FOLDER_TABS.length
+        : (currentIndex + 1) % FOLDER_TABS.length;
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = isRtl
+        ? (currentIndex + 1) % FOLDER_TABS.length
+        : (currentIndex - 1 + FOLDER_TABS.length) % FOLDER_TABS.length;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = FOLDER_TABS.length - 1;
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      const nextTab = FOLDER_TABS[nextIndex];
+      setActiveTab(nextTab);
+      tabRefs.current[nextTab]?.focus();
+    }
+  };
   
   // AdminTuningDesk and Director see all departments, others see their active department
   const targetDepartmentId = (currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Director')
@@ -152,10 +183,21 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
       </div>
 
       {/* Tabs Navigation Bar */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-xs">
+      <div
+        role="tablist"
+        aria-label={t('folders.banner.title')}
+        className="bg-white border border-[#e2e8f0] rounded p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-xs"
+      >
         <button
+          ref={(el) => { tabRefs.current.tree = el; }}
+          id="folders-tab-tree"
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'tree'}
+          aria-controls="folders-tabpanel"
+          tabIndex={activeTab === 'tree' ? 0 : -1}
           onClick={() => setActiveTab('tree')}
+          onKeyDown={(e) => handleTabKeyDown(e, 0)}
           className={`h-11 min-h-[44px] px-5 py-2.5 rounded text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-colors duration-200 ${
             activeTab === 'tree'
               ? 'bg-[#2c5282] text-white shadow-xs'
@@ -174,8 +216,15 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
         </button>
 
         <button
+          ref={(el) => { tabRefs.current.categorization = el; }}
+          id="folders-tab-categorization"
           type="button"
+          role="tab"
+          aria-selected={activeTab === 'categorization'}
+          aria-controls="folders-tabpanel"
+          tabIndex={activeTab === 'categorization' ? 0 : -1}
           onClick={() => setActiveTab('categorization')}
+          onKeyDown={(e) => handleTabKeyDown(e, 1)}
           className={`h-11 min-h-[44px] px-5 py-2.5 rounded text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-colors duration-200 ${
             activeTab === 'categorization'
               ? 'bg-[#2c5282] text-white shadow-xs'
@@ -187,44 +236,50 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
         </button>
       </div>
 
-      {/* Tab Panels */}
-      {activeTab === 'tree' ? (
-        <EnhancedFolderTree
-          onFolderSelect={handleFolderSelect}
-          selectedFolderId={selectedFolder?._id}
-          departmentId={targetDepartmentId}
-          readOnly={!canManageFolders}
-        />
-      ) : isFoldersLoading ? (
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-3">
-          {Array.from({ length: 5 }).map((_, idx) => (
-            <Skeleton key={idx} className="h-12 w-full" />
-          ))}
-        </div>
-      ) : isFoldersError ? (
-        <EmptyState
-          icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
-          title={t('folders.error.title')}
-          description={t('folders.error.description')}
-          className="border-red-200 bg-red-50/40"
-          action={
-            <Button
-              type="button"
-              onClick={() => refetchFolders()}
-              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span>{t('common.retry')}</span>
-            </Button>
-          }
-        />
-      ) : (
-        <DocumentCategoryManager
-          folders={folders || []}
-          canManage={canManageFolders}
-          departmentId={targetDepartmentId}
-        />
-      )}
+      {/* Tab Panel */}
+      <div
+        id="folders-tabpanel"
+        role="tabpanel"
+        aria-labelledby={activeTab === 'tree' ? 'folders-tab-tree' : 'folders-tab-categorization'}
+      >
+        {activeTab === 'tree' ? (
+          <EnhancedFolderTree
+            onFolderSelect={handleFolderSelect}
+            selectedFolderId={selectedFolder?._id}
+            departmentId={targetDepartmentId}
+            readOnly={!canManageFolders}
+          />
+        ) : isFoldersLoading ? (
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-3">
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <Skeleton key={idx} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : isFoldersError ? (
+          <EmptyState
+            icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+            title={t('folders.error.title')}
+            description={t('folders.error.description')}
+            className="border-red-200 bg-red-50/40"
+            action={
+              <Button
+                type="button"
+                onClick={() => refetchFolders()}
+                className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>{t('common.retry')}</span>
+              </Button>
+            }
+          />
+        ) : (
+          <DocumentCategoryManager
+            folders={folders || []}
+            canManage={canManageFolders}
+            departmentId={targetDepartmentId}
+          />
+        )}
+      </div>
 
       {/* Documents Modal */}
       <FolderDocumentsModal

@@ -397,7 +397,7 @@ export const AttendancePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 space-y-5">
+    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 pb-24 space-y-5">
       {/* 1. En-tête sobre */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -561,13 +561,13 @@ export const AttendancePage: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[#5f6b7d]">تصفية العرض:</span>
             <Button
               size="sm"
               variant={statusFilter === 'all' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('all')}
-              className={`h-7 text-xs px-2.5 rounded ${
+              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
                 statusFilter === 'all' ? 'bg-[#2c5282] text-white' : 'text-gray-600'
               }`}
             >
@@ -577,7 +577,7 @@ export const AttendancePage: React.FC = () => {
               size="sm"
               variant={statusFilter === 'present' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('present')}
-              className={`h-7 text-xs px-2.5 rounded ${
+              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
                 statusFilter === 'present'
                   ? 'bg-green-700 text-white'
                   : 'text-gray-600 hover:text-green-700'
@@ -589,7 +589,7 @@ export const AttendancePage: React.FC = () => {
               size="sm"
               variant={statusFilter === 'absent' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('absent')}
-              className={`h-7 text-xs px-2.5 rounded ${
+              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
                 statusFilter === 'absent'
                   ? 'bg-red-700 text-white'
                   : 'text-gray-600 hover:text-red-700'
@@ -916,7 +916,10 @@ export const AttendancePage: React.FC = () => {
 
       {/* 4. Bouton "Enregistrer" en bas */}
       {filteredRows.length > 0 && (
-        <div className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <div
+          data-sticky-validation-bar="true"
+          className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+        >
           <div className="text-xs text-[#5f6b7d]">
             <span>التاريخ المحدد: </span>
             <span className="font-bold text-[#1a202c] ml-3">{selectedDate}</span>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDirection } from '@/i18n/useDirection';
 import {
@@ -30,9 +30,12 @@ const PANEL_WIDTH = 380;
 const PANEL_HEIGHT = 600;
 const MARGIN = 16;
 const GAP = 8;
+const DEFAULT_BOTTOM_Y = 104;
+const DEFAULT_END_X = 24;
 
 export const FloatingAIChat: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const { dir } = useDirection();
 
@@ -53,7 +56,7 @@ export const FloatingAIChat: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Position et drag de l'icône
+  // Position logique (x = insetInlineEnd, y = bottom) et clearance des barres de validation en bas de page
   const [position, setPosition] = useState<{ x: number; y: number }>(() => {
     try {
       const saved = localStorage.getItem('ai_chat_position');
@@ -67,8 +70,9 @@ export const FloatingAIChat: React.FC = () => {
     } catch {
       // Ignorer si parsing invalide
     }
-    return { x: 24, y: 24 };
+    return { x: DEFAULT_END_X, y: DEFAULT_BOTTOM_Y };
   });
+  const [barClearance, setBarClearance] = useState<number>(0);
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -100,36 +104,78 @@ export const FloatingAIChat: React.FC = () => {
     }
   }, [position]);
 
-  // Détection position intelligente du panneau selon la position de l'icône
+  // Détection dynamique des barres d'actions collantes / fixes en bas de page (ex. AttendancePage)
+  useEffect(() => {
+    const measureBottomBars = () => {
+      const selectors = '[data-sticky-validation-bar], .sticky.bottom-4, .sticky.bottom-0, .fixed.bottom-0, .fixed.bottom-4';
+      const nodes = document.querySelectorAll(selectors);
+      let requiredBottom = 0;
+
+      nodes.forEach((node) => {
+        if ((node as HTMLElement).closest('[data-floating-ai-chat]')) return;
+        const rect = node.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const distanceFromBottom = window.innerHeight - rect.top;
+        if (distanceFromBottom > 0 && distanceFromBottom < window.innerHeight * 0.45) {
+          requiredBottom = Math.max(requiredBottom, Math.ceil(distanceFromBottom + 12));
+        }
+      });
+
+      setBarClearance(requiredBottom);
+    };
+
+    measureBottomBars();
+    const timer = window.setTimeout(measureBottomBars, 200);
+
+    const mutationObserver = new MutationObserver(measureBottomBars);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener('resize', measureBottomBars);
+    window.addEventListener('scroll', measureBottomBars, true);
+
+    return () => {
+      window.clearTimeout(timer);
+      mutationObserver.disconnect();
+      window.removeEventListener('resize', measureBottomBars);
+      window.removeEventListener('scroll', measureBottomBars, true);
+    };
+  }, [location.pathname, isOpen]);
+
+  const effectiveBottom = Math.min(
+    window.innerHeight - ICON_SIZE - MARGIN,
+    Math.max(position.y, barClearance)
+  );
+
+  // Détection position intelligente du panneau (en propriétés logiques) selon la position de l'icône
   const getPanelPosition = () => {
-    const iconTop = window.innerHeight - position.y - ICON_SIZE;
-    const iconLeft = window.innerWidth - position.x - ICON_SIZE;
+    const iconTop = window.innerHeight - effectiveBottom - ICON_SIZE;
+    const iconInlineStart = window.innerWidth - position.x - ICON_SIZE;
 
     // Vertical : icône dans la moitié HAUTE → panneau descend
     const openDownward = iconTop < window.innerHeight / 2;
 
-    // Horizontal : icône dans la moitié DROITE → panneau aligné à droite
-    const alignRight = position.x < window.innerWidth / 2;
+    // Horizontal (logique) : icône dans la moitié inline-end → panneau aligné sur inline-end
+    const alignInlineEnd = position.x < window.innerWidth / 2;
 
     let top: number | undefined;
     let bottom: number | undefined;
-    let left: number | undefined;
-    let right: number | undefined;
+    let insetInlineStart: number | undefined;
+    let insetInlineEnd: number | undefined;
 
     if (openDownward) {
       top = iconTop + ICON_SIZE + GAP;
       bottom = undefined;
     } else {
-      bottom = position.y + ICON_SIZE + GAP;
+      bottom = effectiveBottom + ICON_SIZE + GAP;
       top = undefined;
     }
 
-    if (alignRight) {
-      right = Math.max(MARGIN, Math.min(position.x, window.innerWidth - PANEL_WIDTH - MARGIN));
-      left = undefined;
+    if (alignInlineEnd) {
+      insetInlineEnd = Math.max(MARGIN, Math.min(position.x, window.innerWidth - PANEL_WIDTH - MARGIN));
+      insetInlineStart = undefined;
     } else {
-      left = Math.max(MARGIN, iconLeft);
-      right = undefined;
+      insetInlineStart = Math.max(MARGIN, Math.min(iconInlineStart, window.innerWidth - PANEL_WIDTH - MARGIN));
+      insetInlineEnd = undefined;
     }
 
     // Hauteur adaptative
@@ -144,10 +190,10 @@ export const FloatingAIChat: React.FC = () => {
     // Largeur adaptative
     const maxWidth = Math.min(PANEL_WIDTH, window.innerWidth - 2 * MARGIN);
 
-    return { top, bottom, left, right, maxHeight, maxWidth };
+    return { top, bottom, insetInlineStart, insetInlineEnd, maxHeight, maxWidth };
   };
 
-  // Drag de l'icône — contraindre dans le viewport
+  // Drag de l'icône — contraindre dans le viewport (RTL/LTR aware)
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isOpen) return;
     setIsDragging(true);
@@ -162,9 +208,10 @@ export const FloatingAIChat: React.FC = () => {
       hasDraggedRef.current = true;
       const dx = e.clientX - dragOffset.x;
       const dy = e.clientY - dragOffset.y;
+      const inlineDelta = dir === 'rtl' ? dx : -dx;
 
       setPosition((prev) => {
-        const newX = prev.x - dx;
+        const newX = prev.x + inlineDelta;
         const newY = prev.y - dy;
         const maxX = window.innerWidth - ICON_SIZE - MARGIN;
         const maxY = window.innerHeight - ICON_SIZE - MARGIN;
@@ -185,7 +232,7 @@ export const FloatingAIChat: React.FC = () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [isDragging, dragOffset]);
+  }, [isDragging, dragOffset, dir]);
 
   // Drag du panneau via son header
   const handlePanelDragStart = (e: React.MouseEvent) => {
@@ -203,9 +250,10 @@ export const FloatingAIChat: React.FC = () => {
       panelHasDraggedRef.current = true;
       const dx = e.clientX - panelDragOffset.x;
       const dy = e.clientY - panelDragOffset.y;
+      const inlineDelta = dir === 'rtl' ? dx : -dx;
 
       setPosition((prev) => {
-        const newX = prev.x - dx;
+        const newX = prev.x + inlineDelta;
         const newY = prev.y - dy;
         const maxX = window.innerWidth - ICON_SIZE - MARGIN;
         const maxY = window.innerHeight - ICON_SIZE - MARGIN;
@@ -226,7 +274,7 @@ export const FloatingAIChat: React.FC = () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [isPanelDragging, panelDragOffset]);
+  }, [isPanelDragging, panelDragOffset, dir]);
 
   // Resize — recadrer si la fenêtre rétrécit
   useEffect(() => {
@@ -350,17 +398,18 @@ export const FloatingAIChat: React.FC = () => {
       {!isOpen && (
         <button
           type="button"
+          data-floating-ai-chat="true"
           onClick={() => {
             if (!hasDraggedRef.current) setIsOpen(true);
           }}
           onMouseDown={handleMouseDown}
           onDoubleClick={() => {
-            setPosition({ x: 24, y: 24 });
+            setPosition({ x: DEFAULT_END_X, y: DEFAULT_BOTTOM_Y });
             toast.success(t('ai.assistant.resetPosition'));
           }}
           style={{
-            right: `${position.x}px`,
-            bottom: `${position.y}px`,
+            insetInlineEnd: `${position.x}px`,
+            bottom: `${effectiveBottom}px`,
             width: `${ICON_SIZE}px`,
             height: `${ICON_SIZE}px`,
             cursor: isDragging ? 'grabbing' : 'grab',
@@ -384,13 +433,14 @@ export const FloatingAIChat: React.FC = () => {
           return (
             <div
               dir={dir}
+              data-floating-ai-chat="true"
               role="dialog"
               aria-label={t('ai.assistant.title')}
               style={{
                 top: pos.top !== undefined ? `${pos.top}px` : undefined,
                 bottom: pos.bottom !== undefined ? `${pos.bottom}px` : undefined,
-                left: pos.left !== undefined ? `${pos.left}px` : undefined,
-                right: pos.right !== undefined ? `${pos.right}px` : undefined,
+                insetInlineStart: pos.insetInlineStart !== undefined ? `${pos.insetInlineStart}px` : undefined,
+                insetInlineEnd: pos.insetInlineEnd !== undefined ? `${pos.insetInlineEnd}px` : undefined,
                 width: `${pos.maxWidth}px`,
                 maxHeight: `${pos.maxHeight}px`,
                 height: `${Math.min(PANEL_HEIGHT, pos.maxHeight)}px`,
@@ -398,8 +448,8 @@ export const FloatingAIChat: React.FC = () => {
               className="fixed z-50 flex flex-col overflow-hidden bg-white 
                          shadow-2xl border border-slate-200 rounded-2xl 
                          transition-all duration-150
-                         max-sm:!top-0 max-sm:!bottom-0 max-sm:!left-0 
-                         max-sm:!right-0 max-sm:!w-full max-sm:!h-full 
+                         max-sm:!top-0 max-sm:!bottom-0 max-sm:!inset-x-0 
+                         max-sm:!w-full max-sm:!h-full 
                          max-sm:!max-h-full max-sm:!rounded-none"
             >
               {/* Header — DRAGGABLE */}
@@ -410,7 +460,7 @@ export const FloatingAIChat: React.FC = () => {
                   cursor: isPanelDragging ? 'grabbing' : 'grab',
                   touchAction: 'none',
                 }}
-                className="bg-[#2c5282] text-white px-4 py-3 flex items-center 
+                className="bg-[#2c5282] text-white px-4 py-2.5 flex items-center 
                            justify-between flex-shrink-0 select-none shadow-sm"
                 title={t('ai.assistant.dragTooltip')}
               >
@@ -426,7 +476,7 @@ export const FloatingAIChat: React.FC = () => {
                     <button
                       type="button"
                       onClick={clearHistory}
-                      className="p-1.5 rounded-lg text-white/80 hover:text-white 
+                      className="h-11 w-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-white/80 hover:text-white 
                                  hover:bg-white/10 transition-colors"
                       aria-label={t('ai.assistant.clearHistoryAria')}
                       title={t('ai.assistant.clearHistoryAria')}
@@ -437,7 +487,7 @@ export const FloatingAIChat: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className="p-1.5 rounded-lg text-white/80 hover:text-white 
+                    className="h-11 w-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-white/80 hover:text-white 
                                hover:bg-white/10 transition-colors"
                     aria-label={t('ai.assistant.close')}
                     title={t('ai.assistant.close')}
@@ -476,7 +526,7 @@ export const FloatingAIChat: React.FC = () => {
                             key={query}
                             type="button"
                             onClick={() => handleSendMessage(query)}
-                            className="text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-[#2c5282] hover:text-[#2c5282] hover:bg-blue-50/50 transition-colors text-slate-700 shadow-2xs text-right flex items-center justify-between"
+                            className="min-h-[44px] text-xs px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-[#2c5282] hover:text-[#2c5282] hover:bg-blue-50/50 transition-colors text-slate-700 shadow-2xs text-start flex items-center justify-between"
                           >
                             <span>{query}</span>
                             <Sparkles className="w-3.5 h-3.5 text-slate-400" />
@@ -494,7 +544,7 @@ export const FloatingAIChat: React.FC = () => {
                       }`}
                     >
                       {msg.role === 'user' ? (
-                        <div className="bg-[#2c5282] text-white rounded-2xl rounded-tr-xs p-3 text-sm max-w-[85%] leading-relaxed shadow-xs">
+                        <div className="bg-[#2c5282] text-white rounded-2xl rounded-se-xs p-3 text-sm max-w-[85%] leading-relaxed shadow-xs">
                           {msg.content}
                         </div>
                       ) : (
@@ -503,7 +553,7 @@ export const FloatingAIChat: React.FC = () => {
                             msg.isError
                               ? 'border-red-200 bg-red-50/30'
                               : 'border-slate-200'
-                          } rounded-2xl rounded-tl-xs p-3.5 text-sm max-w-[92%] shadow-2xs space-y-3 leading-relaxed`}
+                          } rounded-2xl rounded-ss-xs p-3.5 text-sm max-w-[92%] shadow-2xs space-y-3 leading-relaxed`}
                         >
                           <div className="whitespace-pre-wrap">{msg.content}</div>
 
@@ -526,7 +576,7 @@ export const FloatingAIChat: React.FC = () => {
                                       onClick={() =>
                                         handleNavigateToDocument(source)
                                       }
-                                      className="w-full text-right p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition-colors flex items-center justify-between gap-2 group text-xs text-slate-700"
+                                      className="w-full min-h-[44px] text-start p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/80 transition-colors flex items-center justify-between gap-2 group text-xs text-slate-700"
                                     >
                                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                         <FileText className="w-3.5 h-3.5 text-[#2c5282] flex-shrink-0" />
@@ -557,7 +607,7 @@ export const FloatingAIChat: React.FC = () => {
 
                 {/* Indicateur de chargement */}
                 {isLoading && (
-                  <div className="flex items-center gap-2 self-start bg-white border border-slate-200 text-slate-500 rounded-2xl rounded-tl-xs px-3.5 py-2.5 text-xs shadow-2xs">
+                  <div className="flex items-center gap-2 self-start bg-white border border-slate-200 text-slate-500 rounded-2xl rounded-ss-xs px-3.5 py-2.5 text-xs shadow-2xs">
                     <Loader2 className="w-4 h-4 animate-spin text-[#2c5282]" />
                     <span>{t('ai.assistant.loading')}</span>
                   </div>
@@ -576,14 +626,14 @@ export const FloatingAIChat: React.FC = () => {
                   onKeyDown={handleKeyDown}
                   disabled={isLoading}
                   placeholder={t('ai.assistant.placeholder')}
-                  className="flex-1 resize-none bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c5282] focus:bg-white text-slate-800 disabled:opacity-50 max-h-24 overflow-y-auto leading-relaxed"
+                  className="flex-1 min-h-[44px] resize-none bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2c5282] focus:bg-white text-slate-800 disabled:opacity-50 max-h-24 overflow-y-auto leading-relaxed"
                 />
 
                 <button
                   type="button"
                   onClick={() => handleSendMessage()}
                   disabled={isLoading || !input.trim()}
-                  className="p-2.5 rounded-xl bg-[#2c5282] hover:bg-[#234269] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center flex-shrink-0 shadow-xs"
+                  className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-xl bg-[#2c5282] hover:bg-[#234269] text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center flex-shrink-0 shadow-xs"
                   aria-label={t('ai.assistant.send')}
                   title={t('ai.assistant.send')}
                 >

@@ -91,7 +91,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
               size="icon"
               onClick={onBack}
               aria-label={t('messages.backToList')}
-              className="md:hidden h-9 w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full p-0"
+              className="md:hidden h-11 w-11 min-w-[44px] min-h-[44px] text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full p-0"
               title={t('messages.backToList')}
             >
               <ArrowRight className="h-5 w-5 ltr:rotate-180" />
@@ -134,7 +134,8 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
         {/* Actions Button */}
         <button
           type="button"
-          className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+          aria-label={t('messages.conversationOptions')}
+          className="h-11 w-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
           title={t('messages.conversationOptions')}
         >
           <MoreVertical className="w-4 h-4" />

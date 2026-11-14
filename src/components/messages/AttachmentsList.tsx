@@ -153,31 +153,34 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                         name: displayName
                       });
                     }}
-                    className="p-1 text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
+                    aria-label={t('common.preview')}
+                    className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
                     title={t('common.preview')}
                   >
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDownload(att, globalIndex, true)}
                     disabled={isCurrentDownloading}
-                    className="p-1 text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
+                    aria-label={t('common.view')}
+                    className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
                     title={t('common.view')}
                   >
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <ExternalLink className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDownload(att, globalIndex, false)}
                     disabled={isCurrentDownloading}
-                    className="p-1 text-[#2c5282] hover:bg-slate-100 rounded"
+                    aria-label={t('common.download')}
+                    className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-[#2c5282] hover:bg-slate-100 rounded"
                     title={t('common.download')}
                   >
                     {isCurrentDownloading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Download className="h-3.5 w-3.5" />
+                      <Download className="h-4 w-4" />
                     )}
                   </button>
                 </div>

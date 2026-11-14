@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getPaginationItems } from '@/utils/pagination';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -607,9 +608,9 @@ const DepartmentsPage: React.FC = () => {
                             variant="outline" 
                             size="icon"
                             onClick={() => setSelectedDepartmentForView(department)}
-                            aria-label="عرض تفاصيل ومنسوبي القسم"
-                            className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-blue-50 hover:text-[#2c5282] text-gray-700 rounded transition-colors"
-                            title="عرض تفاصيل ومنسوبي القسم"
+                            aria-label={t('departments.actions.viewAria')}
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] border-[#cbd5e1] hover:bg-blue-50 hover:text-[#2c5282] text-gray-700 rounded transition-colors"
+                            title={t('departments.actions.viewAria')}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -621,9 +622,9 @@ const DepartmentsPage: React.FC = () => {
                                 variant="outline" 
                                 size="icon"
                                 onClick={() => navigate(`/dashboard/departments/edit/${department._id}`)}
-                                aria-label="تعديل بيانات القسم"
-                                className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded transition-colors"
-                                title="تعديل بيانات القسم"
+                                aria-label={t('departments.actions.editAria')}
+                                className="h-11 w-11 min-w-[44px] min-h-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded transition-colors"
+                                title={t('departments.actions.editAria')}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -634,11 +635,11 @@ const DepartmentsPage: React.FC = () => {
                                 size="icon"
                                 onClick={() => handleToggleStatus(department)}
                                 disabled={toggleStatusMutation.isPending}
-                                aria-label={isActive ? 'تعطيل القسم' : 'تنشيط القسم'}
-                                className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] rounded transition-colors ${
+                                aria-label={isActive ? t('departments.actions.deactivateAria') : t('departments.actions.activateAria')}
+                                className={`h-11 w-11 min-w-[44px] min-h-[44px] border-[#cbd5e1] rounded transition-colors ${
                                   isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
                                 }`}
-                                title={isActive ? 'تعطيل القسم' : 'تنشيط القسم'}
+                                title={isActive ? t('departments.actions.deactivateAria') : t('departments.actions.activateAria')}
                               >
                                 {isActive ? (
                                   <ToggleRight className="h-5 w-5" />
@@ -653,9 +654,9 @@ const DepartmentsPage: React.FC = () => {
                                 size="icon"
                                 onClick={() => handleDeleteClick(department._id)}
                                 disabled={deleteMutation.isPending}
-                                aria-label="حذف القسم نهائياً"
-                                className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded transition-colors"
-                                title="حذف القسم نهائياً"
+                                aria-label={t('departments.actions.deleteAria')}
+                                className="h-11 w-11 min-w-[44px] min-h-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded transition-colors"
+                                title={t('departments.actions.deleteAria')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -667,13 +668,13 @@ const DepartmentsPage: React.FC = () => {
                                     variant="outline" 
                                     size="icon"
                                     disabled={setBureauMutation.isPending || setRhMutation.isPending}
-                                    aria-label="تخصيص الوحدة الوظيفية أو قسم الموارد البشرية"
-                                    className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] rounded transition-colors ${
+                                    aria-label={t('departments.actions.assignUnitAria')}
+                                    className={`h-11 w-11 min-w-[44px] min-h-[44px] rounded transition-colors ${
                                       isMarked 
                                         ? 'bg-[#FFCB56]/20 border-[#e2be40] text-[#1a202c] hover:bg-[#FFCB56]/30' 
                                         : 'border-[#cbd5e1] hover:bg-gray-100 text-gray-700'
                                     }`}
-                                    title="تخصيص الوحدة الوظيفية / قسم الموارد البشرية"
+                                    title={t('departments.actions.assignUnitAria')}
                                   >
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
@@ -748,51 +749,68 @@ const DepartmentsPage: React.FC = () => {
         {filteredDepartments.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[#e2e8f0] bg-[#f8fafc]">
             <div className="text-base text-gray-600 font-medium">
-              عرض <strong className="text-[#1a202c]">{((currentPage - 1) * itemsPerPage) + 1}</strong> إلى{' '}
-              <strong className="text-[#1a202c]">{Math.min(currentPage * itemsPerPage, filteredDepartments.length)}</strong>{' '}
-              من أصل <strong className="text-[#1a202c]">{filteredDepartments.length}</strong> قسم
+              {t('departments.paginationInfo', {
+                from: ((currentPage - 1) * itemsPerPage) + 1,
+                to: Math.min(currentPage * itemsPerPage, filteredDepartments.length),
+                total: filteredDepartments.length
+              })}
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center gap-1.5">
+              <nav aria-label={t('common.pagination')} className="flex items-center gap-1.5 flex-wrap justify-center">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                  <span>السابق</span>
+                  <ChevronLeft className="h-4 w-4 me-1 rtl-mirror" />
+                  <span>{t('common.previous')}</span>
                 </Button>
 
-                <div className="flex items-center gap-1 px-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`h-11 w-11 text-base font-bold rounded transition-colors ${
-                        currentPage === pageNum
-                          ? 'bg-[#2c5282] text-white'
-                          : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1 px-1">
+                  {getPaginationItems(currentPage, totalPages).map((item, idx) =>
+                    item === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        aria-hidden="true"
+                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-gray-500 font-bold select-none"
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setCurrentPage(item)}
+                        aria-current={currentPage === item ? 'page' : undefined}
+                        aria-label={t('common.pageNumber', { page: item })}
+                        className={`h-11 min-w-[44px] px-2 text-base font-bold rounded transition-colors ${
+                          currentPage === item
+                            ? 'bg-[#2c5282] text-white'
+                            : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
-                  <span>التالي</span>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <span>{t('common.next')}</span>
+                  <ChevronRight className="h-4 w-4 ms-1 rtl-mirror" />
                 </Button>
-              </div>
+              </nav>
             )}
           </div>
         )}

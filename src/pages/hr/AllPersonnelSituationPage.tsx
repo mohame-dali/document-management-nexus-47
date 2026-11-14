@@ -542,7 +542,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
               size="sm"
               onClick={handleExport}
               disabled={isExporting}
-              className="h-9 px-3 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
+              className="h-11 min-h-[44px] px-3.5 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
             >
               {isExporting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

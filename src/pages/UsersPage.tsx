@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getPaginationItems } from '@/utils/pagination';
 import { User, Department } from '@/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -492,61 +493,81 @@ const UsersPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] w-16">{t('users.table.photo')}</TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('username')}
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-[#2d3748] w-16">{t('users.table.photo')}</TableHead>
+                <TableHead
+                  aria-sort={sortField === 'username' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[160px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('username')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.username')}</span>
                     {sortField === 'username' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'username' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'username' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('role')}
+                <TableHead
+                  aria-sort={sortField === 'role' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[130px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('role')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.role')}</span>
                     {sortField === 'role' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'role' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'role' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('departments')}
+                <TableHead
+                  aria-sort={sortField === 'departments' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[180px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('departments')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.departments')}</span>
                     {sortField === 'departments' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'departments' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'departments' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('createdAt')}
+                <TableHead
+                  aria-sort={sortField === 'createdAt' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[140px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('createdAt')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.createdAt')}</span>
                     {sortField === 'createdAt' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'createdAt' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'createdAt' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[120px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('isActive')}
+                <TableHead
+                  aria-sort={sortField === 'isActive' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[120px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('isActive')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.status')}</span>
                     {sortField === 'isActive' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'isActive' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
                 <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px]">{t('users.table.actions')}</TableHead>
               </TableRow>
@@ -674,13 +695,13 @@ const UsersPage: React.FC = () => {
                                 variant="outline" 
                                 size="icon"
                                 aria-label={t('users.menu.editOptions')}
-                                className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
+                                className="h-11 w-11 min-w-[44px] min-h-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
                                 title={t('users.menu.editOptions')}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 text-right">
+                            <DropdownMenuContent align="end" className="w-48 text-start">
                               <DropdownMenuItem 
                                 onClick={() => navigate(`/dashboard/users/edit/${user._id}`)}
                                 className="text-sm py-2 cursor-pointer flex items-center gap-2"
@@ -708,7 +729,7 @@ const UsersPage: React.FC = () => {
                             onClick={() => handleToggleActivation(user)}
                             disabled={toggleActivationMutation.isPending}
                             aria-label={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
-                            className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] rounded transition-colors ${
+                            className={`h-11 w-11 min-w-[44px] min-h-[44px] border-[#cbd5e1] rounded transition-colors ${
                               user.isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
                             }`}
                             title={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
@@ -728,7 +749,7 @@ const UsersPage: React.FC = () => {
                             onClick={() => handleDeleteClick(user._id)}
                             disabled={deleteMutation.isPending}
                             aria-label={t('users.delete.userLabel')}
-                            className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
                             title={t('users.delete.userLabel')}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -755,45 +776,60 @@ const UsersPage: React.FC = () => {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center gap-1.5">
+              <nav aria-label={t('common.pagination')} className="flex items-center gap-1.5 flex-wrap justify-center">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronLeft className="h-4 w-4 me-1 rtl-mirror" />
                   <span>{t('common.previous')}</span>
                 </Button>
 
-                <div className="flex items-center gap-1 px-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`h-11 w-11 text-base font-bold rounded transition-colors ${
-                        currentPage === pageNum
-                          ? 'bg-[#2c5282] text-white'
-                          : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1 px-1">
+                  {getPaginationItems(currentPage, totalPages).map((item, idx) =>
+                    item === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        aria-hidden="true"
+                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-gray-500 font-bold select-none"
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setCurrentPage(item)}
+                        aria-current={currentPage === item ? 'page' : undefined}
+                        aria-label={t('common.pageNumber', { page: item })}
+                        className={`h-11 min-w-[44px] px-2 text-base font-bold rounded transition-colors ${
+                          currentPage === item
+                            ? 'bg-[#2c5282] text-white'
+                            : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
                   <span>{t('common.next')}</span>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <ChevronRight className="h-4 w-4 ms-1 rtl-mirror" />
                 </Button>
-              </div>
+              </nav>
             )}
           </div>
         )}

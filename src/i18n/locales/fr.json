@@ -1239,5 +1239,26 @@
   "folders.empty.createFirst": "Créer le premier dossier",
   "folders.loading": "Chargement de l'arborescence des dossiers...",
   "sidebar.openMenu": "Ouvrir le menu de navigation",
-  "sidebar.closeMenu": "Fermer le menu de navigation"
+  "sidebar.closeMenu": "Fermer le menu de navigation",
+  "common.preview": "Aperçu",
+  "common.close": "Fermer",
+  "common.pagination": "Pagination",
+  "common.pageNumber": "Page {{page}}",
+  "departments.actions.viewAria": "Afficher les détails et le personnel du département",
+  "departments.actions.editAria": "Modifier les données du département",
+  "departments.actions.deactivateAria": "Désactiver le département",
+  "departments.actions.activateAria": "Activer le département",
+  "departments.actions.deleteAria": "Supprimer définitivement le département",
+  "departments.actions.assignUnitAria": "Assigner comme unité fonctionnelle ou département RH",
+  "departments.paginationInfo": "Affichage de {{from}} à {{to}} sur {{total}} département(s)",
+  "backup.backToSettingsAria": "Retour aux paramètres",
+  "backup.actions.restoreAria": "Restaurer cette sauvegarde",
+  "backup.actions.downloadAria": "Télécharger la sauvegarde",
+  "backup.actions.deleteAria": "Supprimer définitivement la sauvegarde",
+  "backup.actions.savePathAria": "Enregistrer comme chemin par défaut",
+  "attendance.declarations.editAria": "Modifier la déclaration",
+  "attendance.declarations.clearDateAria": "Effacer le filtre de date",
+  "messages.deselectUserAria": "Désélectionner {{username}}",
+  "messages.removeRecipientAria": "Retirer {{username}}"
 }
+

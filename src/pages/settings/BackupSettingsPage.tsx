@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ import {
 
 const BackupSettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<BackupStats | null>(null);
   const [policy, setPolicy] = useState<BackupPolicy>({
     enabled: false,
@@ -353,8 +355,9 @@ const BackupSettingsPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate('/dashboard/settings')}
-            className="h-11 w-11 p-0 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 shrink-0"
-            title="العودة للإعدادات"
+            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 shrink-0"
+            title={t('backup.backToSettingsAria')}
+            aria-label={t('backup.backToSettingsAria')}
           >
             <ChevronLeft className="h-6 w-6 rtl-mirror" />
           </Button>
@@ -537,8 +540,9 @@ const BackupSettingsPage: React.FC = () => {
                       variant="outline"
                       onClick={() => saveDefaultPath(exportPath)}
                       disabled={!exportPath}
-                      className="h-11 px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
-                      title="حفظ كمسار افتراضي"
+                      className="h-11 min-h-[44px] min-w-[44px] px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
+                      title={t('backup.actions.savePathAria')}
+                      aria-label={t('backup.actions.savePathAria')}
                     >
                       <FolderOpen className="h-5 w-5" />
                     </Button>
@@ -568,8 +572,9 @@ const BackupSettingsPage: React.FC = () => {
                     variant="outline"
                     onClick={() => saveDefaultPath(exportPath)}
                     disabled={!exportPath}
-                    className="h-11 px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
-                    title="حفظ كمسار افتراضي"
+                    className="h-11 min-h-[44px] min-w-[44px] px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
+                    title={t('backup.actions.savePathAria')}
+                    aria-label={t('backup.actions.savePathAria')}
                   >
                     <FolderOpen className="h-5 w-5" />
                   </Button>
@@ -792,7 +797,7 @@ const BackupSettingsPage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleReloadScheduler}
-              className="h-10 px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
+              className="h-11 min-h-[44px] px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
               title="إعادة تحميل المجدول الزمني للنسخ التلقائي"
             >
               <RefreshCw className="w-4 h-4 ml-1.5" />
@@ -803,7 +808,7 @@ const BackupSettingsPage: React.FC = () => {
               size="sm"
               onClick={loadBackupHistory}
               disabled={historyLoading}
-              className="h-10 px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
+              className="h-11 min-h-[44px] px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
             >
               <RefreshCw className={`w-4 h-4 ml-1.5 ${historyLoading ? 'animate-spin' : ''}`} />
               تحديث السجل
@@ -893,8 +898,9 @@ const BackupSettingsPage: React.FC = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded"
-                              title="استعادة هذه النسخة"
+                              className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded"
+                              title={t('backup.actions.restoreAria')}
+                              aria-label={t('backup.actions.restoreAria')}
                               onClick={() => handleRestoreClick(backup)}
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -903,8 +909,9 @@ const BackupSettingsPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-[#2c5282] hover:bg-blue-50 rounded"
-                            title="تحميل النسخة الاحتياطية"
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-[#2c5282] hover:bg-blue-50 rounded"
+                            title={t('backup.actions.downloadAria')}
+                            aria-label={t('backup.actions.downloadAria')}
                             onClick={() => handleDownloadClick(backup)}
                           >
                             <Download className="w-4 h-4" />
@@ -912,8 +919,9 @@ const BackupSettingsPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 rounded"
-                            title="حذف النسخة نهائياً"
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-red-600 hover:bg-red-50 rounded"
+                            title={t('backup.actions.deleteAria')}
+                            aria-label={t('backup.actions.deleteAria')}
                             onClick={() => handleDeleteClick(backup)}
                           >
                             <Trash2 className="w-4 h-4" />

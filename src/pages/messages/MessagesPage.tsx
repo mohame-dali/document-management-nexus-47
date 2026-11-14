@@ -31,6 +31,7 @@ import ConversationList from '@/components/messages/ConversationList';
 import ConversationThread, { ConversationData } from '@/components/messages/ConversationThread';
 
 type ActiveTab = 'inbox' | 'sent' | 'contacts';
+const MESSAGE_TABS: ActiveTab[] = ['inbox', 'sent', 'contacts'];
 
 interface InterlocutorDetails {
   _id: string;
@@ -359,14 +360,39 @@ const MessagesPage: React.FC = () => {
         </div>
 
         {/* Onglets Reçus / Envoyés / Contacts */}
-        <div className="flex items-center gap-1 mt-4 pt-3 border-t border-[#edf2f7]">
+        <div
+          role="tablist"
+          aria-label={t('messages.title')}
+          className="flex items-center gap-1.5 mt-4 pt-3 border-t border-[#edf2f7] flex-wrap"
+        >
           <button
+            id="messages-tab-inbox"
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'inbox' && !isComposing}
+            aria-controls="messages-tabpanel"
+            tabIndex={activeTab === 'inbox' ? 0 : -1}
             onClick={() => {
               setActiveTab('inbox');
               setIsComposing(false);
             }}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
+            onKeyDown={(e) => {
+              const isRtl = document.documentElement.dir === 'rtl';
+              const idx = 0;
+              let nextIdx: number | null = null;
+              if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
+              else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
+              else if (e.key === 'Home') nextIdx = 0;
+              else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
+              if (nextIdx !== null) {
+                e.preventDefault();
+                const next = MESSAGE_TABS[nextIdx];
+                setActiveTab(next);
+                setIsComposing(false);
+                document.getElementById(`messages-tab-${next}`)?.focus();
+              }
+            }}
+            className={`min-h-[44px] h-11 px-3.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'inbox' && !isComposing
                 ? 'bg-[#2c5282] text-white'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -382,12 +408,33 @@ const MessagesPage: React.FC = () => {
           </button>
 
           <button
+            id="messages-tab-sent"
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'sent' && !isComposing}
+            aria-controls="messages-tabpanel"
+            tabIndex={activeTab === 'sent' ? 0 : -1}
             onClick={() => {
               setActiveTab('sent');
               setIsComposing(false);
             }}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
+            onKeyDown={(e) => {
+              const isRtl = document.documentElement.dir === 'rtl';
+              const idx = 1;
+              let nextIdx: number | null = null;
+              if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
+              else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
+              else if (e.key === 'Home') nextIdx = 0;
+              else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
+              if (nextIdx !== null) {
+                e.preventDefault();
+                const next = MESSAGE_TABS[nextIdx];
+                setActiveTab(next);
+                setIsComposing(false);
+                document.getElementById(`messages-tab-${next}`)?.focus();
+              }
+            }}
+            className={`min-h-[44px] h-11 px-3.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'sent' && !isComposing
                 ? 'bg-[#2c5282] text-white'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -398,12 +445,33 @@ const MessagesPage: React.FC = () => {
           </button>
 
           <button
+            id="messages-tab-contacts"
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'contacts' && !isComposing}
+            aria-controls="messages-tabpanel"
+            tabIndex={activeTab === 'contacts' ? 0 : -1}
             onClick={() => {
               setActiveTab('contacts');
               setIsComposing(false);
             }}
-            className={`px-3.5 py-1.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
+            onKeyDown={(e) => {
+              const isRtl = document.documentElement.dir === 'rtl';
+              const idx = 2;
+              let nextIdx: number | null = null;
+              if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
+              else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
+              else if (e.key === 'Home') nextIdx = 0;
+              else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
+              if (nextIdx !== null) {
+                e.preventDefault();
+                const next = MESSAGE_TABS[nextIdx];
+                setActiveTab(next);
+                setIsComposing(false);
+                document.getElementById(`messages-tab-${next}`)?.focus();
+              }
+            }}
+            className={`min-h-[44px] h-11 px-3.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'contacts' && !isComposing
                 ? 'bg-[#2c5282] text-white'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -428,62 +496,70 @@ const MessagesPage: React.FC = () => {
           onMessageSent={handleMessageSent}
           initialRecipients={composeRecipients}
         />
-      ) : activeTab === 'contacts' ? (
-        <ContactsList
-          onSelectUser={handleSelectUserFromContacts}
-          onComposeMessage={handleComposeMessage}
-        />
-      ) : isError ? (
-        <EmptyState
-          icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
-          title={t('messages.error.title')}
-          description={t('messages.error.description')}
-          className="border-red-200 bg-red-50/40"
-          action={
-            <Button
-              type="button"
-              onClick={() => refetch()}
-              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-sm font-semibold rounded inline-flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span>{t('common.retry')}</span>
-            </Button>
-          }
-        />
       ) : (
-        /* Modern 2-Column Chat Layout */
-        <div className="flex h-[calc(100vh-250px)] min-h-[550px] border border-[#e2e8f0] rounded-lg overflow-hidden bg-white shadow-xs">
-          {/* Left Column: Conversations List (35%) */}
-          <div
-            className={`w-full md:w-[35%] border-e border-[#e2e8f0] flex flex-col ${
-              mobileShowThread ? 'hidden md:flex' : 'flex'
-            }`}
-          >
-            <ConversationList
-              conversations={conversations}
-              selectedId={selectedConversationId}
-              onSelect={(id) => {
-                setSelectedConversationId(id);
-                setMobileShowThread(true);
-              }}
-              loading={isLoading}
+        <div
+          id="messages-tabpanel"
+          role="tabpanel"
+          aria-labelledby={`messages-tab-${activeTab}`}
+        >
+          {activeTab === 'contacts' ? (
+            <ContactsList
+              onSelectUser={handleSelectUserFromContacts}
+              onComposeMessage={handleComposeMessage}
             />
-          </div>
+          ) : isError ? (
+            <EmptyState
+              icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+              title={t('messages.error.title')}
+              description={t('messages.error.description')}
+              className="border-red-200 bg-red-50/40"
+              action={
+                <Button
+                  type="button"
+                  onClick={() => refetch()}
+                  className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-sm font-semibold rounded inline-flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>{t('common.retry')}</span>
+                </Button>
+              }
+            />
+          ) : (
+            /* Modern 2-Column Chat Layout */
+            <div className="flex h-[calc(100vh-250px)] min-h-[550px] border border-[#e2e8f0] rounded-lg overflow-hidden bg-white shadow-xs">
+              {/* Left Column: Conversations List (35%) */}
+              <div
+                className={`w-full md:w-[35%] border-e border-[#e2e8f0] flex flex-col ${
+                  mobileShowThread ? 'hidden md:flex' : 'flex'
+                }`}
+              >
+                <ConversationList
+                  conversations={conversations}
+                  selectedId={selectedConversationId}
+                  onSelect={(id) => {
+                    setSelectedConversationId(id);
+                    setMobileShowThread(true);
+                  }}
+                  loading={isLoading}
+                />
+              </div>
 
-          {/* Right Column: Chat Thread & Bubbles (65%) */}
-          <div
-            className={`flex-1 flex flex-col ${
-              mobileShowThread ? 'flex' : 'hidden md:flex'
-            }`}
-          >
-            <ConversationThread
-              conversation={selectedConversation}
-              currentUserId={currentUserId}
-              onSendMessage={handleSendMessageFromThread}
-              onBack={() => setMobileShowThread(false)}
-              isSending={isSending}
-            />
-          </div>
+              {/* Right Column: Chat Thread & Bubbles (65%) */}
+              <div
+                className={`flex-1 flex flex-col ${
+                  mobileShowThread ? 'flex' : 'hidden md:flex'
+                }`}
+              >
+                <ConversationThread
+                  conversation={selectedConversation}
+                  currentUserId={currentUserId}
+                  onSendMessage={handleSendMessageFromThread}
+                  onBack={() => setMobileShowThread(false)}
+                  isSending={isSending}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

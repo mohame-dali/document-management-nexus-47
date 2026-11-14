@@ -1239,5 +1239,26 @@
   "folders.empty.createFirst": "إنشاء المجلد الأول الآن",
   "folders.loading": "جاري تحميل هيكل المجلدات...",
   "sidebar.openMenu": "فتح قائمة التنقل",
-  "sidebar.closeMenu": "إغلاق قائمة التنقل"
+  "sidebar.closeMenu": "إغلاق قائمة التنقل",
+  "common.preview": "معاينة",
+  "common.close": "إغلاق",
+  "common.pagination": "التنقل بين الصفحات",
+  "common.pageNumber": "الصفحة {{page}}",
+  "departments.actions.viewAria": "عرض تفاصيل ومنسوبي القسم",
+  "departments.actions.editAria": "تعديل بيانات القسم",
+  "departments.actions.deactivateAria": "تعطيل القسم",
+  "departments.actions.activateAria": "تنشيط القسم",
+  "departments.actions.deleteAria": "حذف القسم نهائياً",
+  "departments.actions.assignUnitAria": "تخصيص الوحدة الوظيفية أو قسم الموارد البشرية",
+  "departments.paginationInfo": "عرض {{from}} إلى {{to}} من أصل {{total}} قسم",
+  "backup.backToSettingsAria": "العودة للإعدادات",
+  "backup.actions.restoreAria": "استعادة هذه النسخة",
+  "backup.actions.downloadAria": "تحميل النسخة الاحتياطية",
+  "backup.actions.deleteAria": "حذف النسخة نهائياً",
+  "backup.actions.savePathAria": "حفظ كمسار افتراضي",
+  "attendance.declarations.editAria": "تعديل التصريح",
+  "attendance.declarations.clearDateAria": "مسح تصفية التاريخ",
+  "messages.deselectUserAria": "إلغاء تحديد {{username}}",
+  "messages.removeRecipientAria": "إزالة {{username}}"
 }
+

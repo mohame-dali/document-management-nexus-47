@@ -470,7 +470,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setIsDeclarationDialogOpen(true)}
-              className="h-9 px-3.5 bg-[#2c5282] hover:bg-[#1a365d] text-white flex items-center gap-1.5 text-xs font-semibold rounded shadow-sm"
+              className="h-11 min-h-[44px] px-4 bg-[#2c5282] hover:bg-[#1a365d] text-white flex items-center gap-1.5 text-xs font-semibold rounded shadow-sm"
             >
               <FileCheck className="h-4 w-4 text-blue-200" />
               <span>تصريح بالحضور / الغياب</span>
@@ -480,7 +480,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
               size="sm"
               onClick={handleExport}
               disabled={isExporting || !profilePersonnel}
-              className="h-9 px-3 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
+              className="h-11 min-h-[44px] px-3.5 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
             >
               {isExporting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -647,7 +647,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           <Button
             size="sm"
             onClick={() => setIsDeclarationDialogOpen(true)}
-            className="h-9 px-3 bg-[#2c5282] hover:bg-[#1a365d] text-white text-xs font-semibold gap-1.5 rounded"
+            className="h-11 min-h-[44px] px-4 bg-[#2c5282] hover:bg-[#1a365d] text-white text-xs font-semibold gap-1.5 rounded"
           >
             <FileCheck className="w-3.5 h-3.5" />
             <span>تقديم تصريح جديد</span>
@@ -758,7 +758,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteDeclaration(decl._id)}
-                            className="h-7 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 text-xs gap-1"
+                            className="h-11 min-h-[44px] px-3 text-red-500 hover:text-red-700 hover:bg-red-50 text-xs gap-1"
                             title="إلغاء التصريح"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

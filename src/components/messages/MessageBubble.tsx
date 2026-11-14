@@ -82,19 +82,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
             : 'bg-slate-100 text-[#1a202c] rounded-2xl rounded-tl-sm'
         }`}
       >
-        {/* Delete button (hover, w-6 h-6 rond rouge) */}
+        {/* Delete button (hover/focus, 44x44 touch target with visual badge) */}
         {isOwnMessage && (
           <button
+            type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="absolute -top-2 -end-2 opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md transition-opacity z-10 hover:bg-red-600"
+            aria-label={t('messages.delete')}
+            className="absolute -top-4 -end-4 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-opacity z-10"
             title={t('messages.delete')}
           >
-            {isDeleting ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              <Trash2 className="w-3 h-3" />
-            )}
+            <span className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-md">
+              {isDeleting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+            </span>
           </button>
         )}
 
