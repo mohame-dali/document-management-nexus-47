@@ -27,6 +27,16 @@ import {
 import DocumentOptionDialog, { DocumentOptionFormData } from '@/components/documents/options/DocumentOptionDialog';
 import DocumentOptionsList from '@/components/documents/options/DocumentOptionsList';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ApiError {
   response?: {
@@ -43,6 +53,7 @@ const DocumentOptionsPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOption, setEditingOption] = useState<DocumentOption | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [optionIdToDelete, setOptionIdToDelete] = useState<string | null>(null);
 
   const { data: options = [], isLoading, error, refetch } = useQuery({
     queryKey: ['documentOptions'],
@@ -83,6 +94,7 @@ const DocumentOptionsPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
       toast.success('تم حذف خيار الوثيقة بنجاح');
+      setOptionIdToDelete(null);
     },
     onError: (err: ApiError) => {
       toast.error(err.response?.data?.message || 'فشل في حذف خيار الوثيقة');
@@ -134,9 +146,7 @@ const DocumentOptionsPage: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا الخيار نهائياً؟')) {
-      deleteMutation.mutate(id);
-    }
+    setOptionIdToDelete(id);
   };
 
   const handleToggleActive = (id: string, isActive: boolean) => {
@@ -378,6 +388,40 @@ const DocumentOptionsPage: React.FC = () => {
           setEditingOption(null);
         }}
       />
+
+      {/* Delete Option Confirmation AlertDialog */}
+      <AlertDialog
+        open={!!optionIdToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) {
+            setOptionIdToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف هذا الخيار نهائياً؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (optionIdToDelete) {
+                  deleteMutation.mutate(optionIdToDelete);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-[#b91c1c] hover:bg-[#991b1b] text-white"
+            >
+              {deleteMutation.isPending ? 'جاري الحذف...' : 'حذف نهائياً'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

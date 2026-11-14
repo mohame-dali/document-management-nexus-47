@@ -2,56 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Amiri';
-  src: url('/fonts/Amiri-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Amiri';
-  src: url('/fonts/Amiri-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 @layer base {
   :root {
-    /* Professional calm palette: #f7fafc background, #ffffff cards, #1a202c foreground, #2c5282 primary */
-    --background: 210 33% 98%;      /* #f7fafc */
-    --foreground: 220 26% 14%;      /* #1a202c */
+    /* Direction A "Registre Officiel" + Direction C high-contrast tokens */
+    --background: 210 40% 98%;      /* #f8fafc */
+    --foreground: 222 47% 11%;      /* #0f172a (>= 17:1 on #ffffff) */
 
     --card: 0 0% 100%;              /* #ffffff */
-    --card-foreground: 220 26% 14%; /* #1a202c */
+    --card-foreground: 222 47% 11%; /* #0f172a */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 14%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 214 49% 34%;         /* #2c5282 */
+    --primary: 214 49% 34%;         /* #2c5282 (>= 7.9:1 on #ffffff) */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 28% 95%;       /* #edf2f7 */
-    --secondary-foreground: 220 26% 14%;
+    --gold: 42 100% 67%;            /* #ffcb56 official gold accent */
+    --gold-foreground: 221 39% 11%; /* #111827 (>= 12:1 on #ffcb56) */
 
-    --muted: 210 28% 95%;           /* #edf2f7 */
-    --muted-foreground: 218 17% 38%; /* #4a5568 */
+    --secondary: 210 40% 96%;       /* #f1f5f9 */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;           /* #f1f5f9 */
+    --muted-foreground: 215 25% 27%; /* #334155 (>= 10:1 on #ffffff) */
 
     --accent: 214 100% 97%;         /* #ebf4ff */
-    --accent-foreground: 214 49% 34%;/* #2c5282 */
+    --accent-foreground: 214 52% 25%;/* #1e3a5f */
 
-    --destructive: 0 61% 48%;       /* #c53030 */
+    --destructive: 0 74% 42%;       /* #b91c1c (>= 6.4:1 on #ffffff) */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;          /* #e2e8f0 */
-    --input: 214 32% 91%;           /* #e2e8f0 */
+    --border: 214 32% 82%;          /* #cbd5e1 */
+    --input: 215 16% 58%;           /* #8594a6 crisp 1.5px input boundary (>= 3:1) */
     --ring: 214 49% 34%;            /* #2c5282 */
 
-    --radius: 0.25rem;              /* Moderate 0.25rem rounded corners */
+    --radius: 0.25rem;              /* 4px sharp institutional radius */
 
-    /* Professional dark sidebar: #1a202c */
+    /* Official dark navy/slate sidebar */
     --sidebar-background: 220 26% 14%;       /* #1a202c */
     --sidebar-foreground: 214 32% 91%;       /* #e2e8f0 */
     --sidebar-primary: 214 49% 34%;          /* #2c5282 */
@@ -59,7 +46,7 @@
     --sidebar-accent: 218 23% 23%;           /* #2d3748 */
     --sidebar-accent-foreground: 210 33% 98%;/* #f7fafc */
     --sidebar-border: 218 23% 23%;           /* #2d3748 */
-    --sidebar-ring: 214 49% 34%;
+    --sidebar-ring: 42 100% 67%;             /* #ffcb56 */
   }
 
   .dark {
@@ -107,14 +94,25 @@
   }
 
   body {
-    @apply bg-background text-foreground font-cairo antialiased leading-relaxed;
-    line-height: 1.7;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 0.9375rem; /* 15px Direction C legible base */
+    line-height: 1.65;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html[lang="ar"] body,
+  html[lang="ar"] :is(h1, h2, h3, h4, h5, h6) {
+    font-family: "Cairo", system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+  }
+
+  html[lang="fr"] body,
+  html[lang="fr"] :is(h1, h2, h3, h4, h5, h6) {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   }
 
   /* Enhanced typography for better readability across devices */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-cairo font-semibold;
+    @apply font-semibold text-foreground;
     text-wrap: balance;
   }
 
@@ -261,29 +259,29 @@
 
   /* Calm card effects with subtle shadow and 200ms transition */
   .enhanced-card {
-    @apply bg-card border border-border/80 rounded shadow-sm hover:shadow transition-shadow duration-200;
+    @apply bg-card border border-[#cbd5e1] rounded shadow-subtle hover:shadow-sm transition-shadow duration-200;
   }
 
   /* Calm professional primary button */
   .professional-button {
-    @apply bg-primary hover:bg-[#1e3a5f] text-primary-foreground font-medium px-4 py-2 sm:px-5 sm:py-2.5 rounded shadow-sm hover:shadow transition-colors duration-200 text-sm sm:text-base;
+    @apply bg-primary hover:bg-[#1e3a5f] text-primary-foreground font-medium px-4 py-2 sm:px-5 sm:py-2.5 rounded shadow-subtle hover:shadow-sm transition-colors duration-200 text-sm sm:text-base;
   }
 
-  /* Soft status badges (Badges statut doux) */
+  /* Official high-contrast status badges (Direction A + C >= 7:1) */
   .badge-soft-success {
-    @apply bg-[#ebf8f1] text-[#22543d] border border-[#bbf0d0] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#ecfdf5] text-[#14532d] border border-[#86efac] font-semibold rounded text-xs px-2.5 py-0.5;
   }
   .badge-soft-warning {
-    @apply bg-[#fef9e7] text-[#744210] border border-[#fbd38d] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#fef9e7] text-[#78350f] border border-[#f59e0b] font-semibold rounded text-xs px-2.5 py-0.5;
   }
   .badge-soft-danger {
-    @apply bg-[#feeeee] text-[#9b2c2c] border border-[#feb2b2] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#fef2f2] text-[#7f1d1d] border border-[#fca5a5] font-semibold rounded text-xs px-2.5 py-0.5;
   }
   .badge-soft-primary {
-    @apply bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#ebf4ff] text-[#1e3a5f] border border-[#93c5fd] font-semibold rounded text-xs px-2.5 py-0.5;
   }
   .badge-soft-neutral {
-    @apply bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0] font-medium rounded text-xs px-2.5 py-0.5;
+    @apply bg-[#f1f5f9] text-[#1e293b] border border-[#cbd5e1] font-semibold rounded text-xs px-2.5 py-0.5;
   }
 
   /* Subtle table row hover */

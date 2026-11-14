@@ -2,7 +2,7 @@
 import { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -593,7 +593,7 @@ function App() {
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                  <Toaster position="top-right" />
+                  <Toaster />
                 </div>
               </DepartmentProvider>
             </AuthProvider>

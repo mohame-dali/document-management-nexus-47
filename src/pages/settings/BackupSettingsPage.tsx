@@ -21,8 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { toast as sonnerToast } from 'sonner';
+import { toast } from 'sonner';
 import { 
   backupService, 
   BackupStats, 
@@ -63,7 +62,6 @@ import {
 
 const BackupSettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [stats, setStats] = useState<BackupStats | null>(null);
   const [policy, setPolicy] = useState<BackupPolicy>({
     enabled: false,
@@ -88,6 +86,8 @@ const BackupSettingsPage: React.FC = () => {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<BackupHistoryItem | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [backupToDelete, setBackupToDelete] = useState<BackupHistoryItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | 'manual' | 'automatic'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'failed'>('all');
 
@@ -120,9 +120,9 @@ const BackupSettingsPage: React.FC = () => {
   const handleReloadScheduler = async () => {
     try {
       await reloadBackupScheduler();
-      sonnerToast.success('✅ تم إعادة تحميل الجدول الزمني');
+      toast.success('✅ تم إعادة تحميل الجدول الزمني');
     } catch (error) {
-      sonnerToast.error('❌ خطأ', { description: getErrorMessage(error) });
+      toast.error('❌ خطأ', { description: getErrorMessage(error) });
     }
   };
 
@@ -136,13 +136,13 @@ const BackupSettingsPage: React.FC = () => {
     setIsRestoring(true);
     try {
       await restoreBackup(selectedBackup._id);
-      sonnerToast.success('✅ تمت الاستعادة بنجاح');
+      toast.success('✅ تمت الاستعادة بنجاح');
       setRestoreDialogOpen(false);
       setSelectedBackup(null);
       loadBackupHistory();
       loadData();
     } catch (error) {
-      sonnerToast.error('❌ فشل الاستعادة', { description: getErrorMessage(error) });
+      toast.error('❌ فشل الاستعادة', { description: getErrorMessage(error) });
     } finally {
       setIsRestoring(false);
     }
@@ -151,25 +151,32 @@ const BackupSettingsPage: React.FC = () => {
   const handleDownloadClick = async (backup: BackupHistoryItem) => {
     try {
       await downloadBackup(backup._id, backup.fileName);
-      sonnerToast.success('✅ بدأ التحميل');
+      toast.success('✅ بدأ التحميل');
     } catch (error) {
-      sonnerToast.error('❌ فشل التحميل', {
+      toast.error('❌ فشل التحميل', {
         description: getErrorMessage(error),
       });
     }
   };
 
-  const handleDeleteClick = async (backup: BackupHistoryItem) => {
-    if (!window.confirm(`حذف النسخة "${backup.fileName}" نهائياً؟`)) return;
+  const handleDeleteClick = (backup: BackupHistoryItem) => {
+    setBackupToDelete(backup);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!backupToDelete?._id) return;
+    setIsDeleting(true);
     try {
-      await deleteBackup(backup._id);
-      sonnerToast.success('✅ تم الحذف');
+      await deleteBackup(backupToDelete._id);
+      toast.success('✅ تم الحذف');
+      setBackupToDelete(null);
       loadBackupHistory();
     } catch (error) {
-      sonnerToast.error('❌ فشل الحذف', {
+      toast.error('❌ فشل الحذف', {
         description: getErrorMessage(error),
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -210,10 +217,8 @@ const BackupSettingsPage: React.FC = () => {
       setStats(statsData);
       setPolicy(policyData);
     } catch (error) {
-      toast({
-        title: "خطأ",
+      toast.error("خطأ", {
         description: "خطأ في تحميل بيانات النسخ الاحتياطي",
-        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -232,8 +237,7 @@ const BackupSettingsPage: React.FC = () => {
     if (path) {
       localStorage.setItem('backup_default_path', path);
       setSavedBackupPath(path);
-      toast({
-        title: "نجح",
+      toast.success("نجح", {
         description: "تم حفظ المسار الافتراضي بنجاح",
       });
     }
@@ -243,15 +247,12 @@ const BackupSettingsPage: React.FC = () => {
     try {
       setLoading(true);
       await backupService.updateBackupPolicy(policy);
-      toast({
-        title: "نجح",
+      toast.success("نجح", {
         description: "تم حفظ إعدادات النسخ الاحتياطي بنجاح",
       });
     } catch (error) {
-      toast({
-        title: "خطأ",
+      toast.error("خطأ", {
         description: "خطأ في حفظ الإعدادات",
-        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -290,8 +291,7 @@ const BackupSettingsPage: React.FC = () => {
             const fullMessage = `${successMessage} - المحفوظة في: ${actualPath}`;
             setLastBackupInfo(fullMessage);
             
-            toast({
-              title: "نجح",
+            toast.success("نجح", {
               description: fullMessage,
             });
             loadData();
@@ -299,10 +299,8 @@ const BackupSettingsPage: React.FC = () => {
           } else if (status.status === 'failed') {
             setIsBackingUp(false);
             setCurrentBackupId(null);
-            toast({
-              title: "خطأ",
+            toast.error("خطأ", {
               description: `خطأ في إنشاء النسخة الاحتياطية: ${status.errorMessage || 'خطأ غير معروف'}`,
-              variant: "destructive",
             });
           } else {
             setBackupProgress(prev => Math.min(prev + 10, 90));
@@ -311,20 +309,16 @@ const BackupSettingsPage: React.FC = () => {
         } catch (error) {
           setIsBackingUp(false);
           setCurrentBackupId(null);
-          toast({
-            title: "خطأ",
+          toast.error("خطأ", {
             description: "خطأ في متابعة حالة النسخة الاحتياطية",
-            variant: "destructive",
           });
         }
       };
       
       setTimeout(pollStatus, 2000);
     } catch (error) {
-      toast({
-        title: "خطأ",
+      toast.error("خطأ", {
         description: "خطأ في إنشاء النسخة الاحتياطية",
-        variant: "destructive",
       });
       setIsBackingUp(false);
       setCurrentBackupId(null);
@@ -948,6 +942,38 @@ const BackupSettingsPage: React.FC = () => {
         } : undefined}
         isLoading={isRestoring}
       />
+
+      {/* Delete Backup Confirmation AlertDialog */}
+      <AlertDialog
+        open={!!backupToDelete}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setBackupToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف النسخة الاحتياطية</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف النسخة &ldquo;{backupToDelete?.fileName}&rdquo; نهائياً؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteConfirm();
+              }}
+              disabled={isDeleting}
+              className="bg-[#b91c1c] hover:bg-[#991b1b] text-white"
+            >
+              {isDeleting ? 'جاري الحذف...' : 'حذف نهائياً'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

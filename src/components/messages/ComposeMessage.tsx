@@ -15,7 +15,7 @@ import {
   Clock,
   Check
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { sendMessage } from '@/services/messageService';
 import { User } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
@@ -56,8 +56,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
       priority: 'normal' | 'high' | 'urgent';
     }) => sendMessage(recipientIds, subject, content, attachments, priority),
     onSuccess: () => {
-      toast({
-        title: t('messages.sent'),
+      toast.success(t('messages.sent'), {
         description: t('messages.sentSuccess')
       });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
@@ -66,10 +65,8 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
     },
     onError: (err: unknown) => {
       const errorMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast({
-        title: "خطأ في الإرسال",
+      toast.error("خطأ في الإرسال", {
         description: errorMsg || t('messages.sendError'),
-        variant: "destructive"
       });
     }
   });
@@ -87,19 +84,15 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
     e.preventDefault();
     
     if (recipients.length === 0) {
-      toast({
-        title: "تنبيه",
+      toast.error("تنبيه", {
         description: t('messages.selectRecipient'),
-        variant: "destructive"
       });
       return;
     }
 
     if (!subject.trim() || !content.trim()) {
-      toast({
-        title: "تنبيه",
+      toast.error("تنبيه", {
         description: t('messages.fillFields'),
-        variant: "destructive"
       });
       return;
     }

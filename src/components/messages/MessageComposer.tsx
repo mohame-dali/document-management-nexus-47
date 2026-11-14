@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { X, Send, Paperclip, AlertCircle, Upload, Eye, FileText } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { sendMessage } from '@/services/messageService';
 import { User } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
@@ -43,8 +43,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
       priority: 'normal' | 'high' | 'urgent';
     }) => sendMessage(recipientIds, subject, content, attachments, priority),
     onSuccess: () => {
-      toast({
-        title: t('messages.sent'),
+      toast.success(t('messages.sent'), {
         description: t('messages.sentSuccess')
       });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
@@ -53,10 +52,8 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
     },
     onError: (error: unknown) => {
       const errorMsg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      toast({
-        title: "خطأ",
+      toast.error("خطأ", {
         description: errorMsg || t('messages.sendError'),
-        variant: "destructive"
       });
     }
   });
@@ -73,19 +70,15 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (recipients.length === 0) {
-      toast({
-        title: "تنبيه",
+      toast.error("تنبيه", {
         description: t('messages.selectRecipient'),
-        variant: "destructive"
       });
       return;
     }
 
     if (!subject.trim() || !content.trim()) {
-      toast({
-        title: "تنبيه",
+      toast.error("تنبيه", {
         description: t('messages.fillFields'),
-        variant: "destructive"
       });
       return;
     }

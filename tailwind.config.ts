@@ -20,9 +20,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        cairo: ['system-ui', '-apple-system', '"Segoe UI"', 'Tahoma', 'Arial', 'sans-serif'],
-        sans: ['system-ui', '-apple-system', '"Segoe UI"', 'Tahoma', 'Arial', 'sans-serif'],
-        amiri: ['Amiri', 'serif'],
+        cairo: ['"Cairo"', 'system-ui', '-apple-system', '"Segoe UI"', 'Tahoma', 'Arial', 'sans-serif'],
+        inter: ['"Inter"', 'system-ui', '-apple-system', '"Segoe UI"', 'Arial', 'sans-serif'],
+        sans: ['"Inter"', '"Cairo"', 'system-ui', '-apple-system', '"Segoe UI"', 'Tahoma', 'Arial', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -36,6 +36,11 @@ export default {
           dark: '#1e3a5f',
           light: '#ebf4ff',
         },
+        gold: {
+          DEFAULT: 'hsl(var(--gold))',
+          foreground: 'hsl(var(--gold-foreground))',
+          border: '#d97706',
+        },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))'
@@ -45,25 +50,25 @@ export default {
           foreground: 'hsl(var(--destructive-foreground))'
         },
         success: {
-          DEFAULT: '#2f855a',
+          DEFAULT: '#166534',
           foreground: '#ffffff',
-          soft: '#ebf8f1',
-          text: '#22543d',
-          border: '#bbf0d0',
+          soft: '#ecfdf5',
+          text: '#14532d',
+          border: '#86efac',
         },
         warning: {
-          DEFAULT: '#d69e2e',
+          DEFAULT: '#b45309',
           foreground: '#ffffff',
           soft: '#fef9e7',
-          text: '#744210',
-          border: '#fbd38d',
+          text: '#78350f',
+          border: '#f59e0b',
         },
         danger: {
-          DEFAULT: '#c53030',
+          DEFAULT: '#b91c1c',
           foreground: '#ffffff',
-          soft: '#feeeee',
-          text: '#9b2c2c',
-          border: '#feb2b2',
+          soft: '#fef2f2',
+          text: '#7f1d1d',
+          border: '#fca5a5',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',

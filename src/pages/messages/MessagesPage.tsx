@@ -16,7 +16,7 @@ import {
   MessageSquare, 
   MailCheck
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Message, User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
@@ -195,18 +195,15 @@ const MessagesPage: React.FC = () => {
   const markAllAsReadMutation = useMutation({
     mutationFn: markAllAsRead,
     onSuccess: () => {
-      toast({
-        title: t('messages.updated'),
+      toast.success(t('messages.updated'), {
         description: t('messages.allMarkedAsRead')
       });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       refetch();
     },
     onError: () => {
-      toast({
-        title: t('common.error'),
-        description: t('messages.cannotUpdateReadStatus'),
-        variant: "destructive"
+      toast.error(t('common.error'), {
+        description: t('messages.cannotUpdateReadStatus')
       });
     }
   });
@@ -233,8 +230,7 @@ const MessagesPage: React.FC = () => {
 
   const handleRefresh = () => {
     refetch();
-    toast({
-      title: t('messages.messagesUpdated'),
+    toast.success(t('messages.messagesUpdated'), {
       description: t('messages.messagesListUpdated')
     });
   };
@@ -286,10 +282,8 @@ const MessagesPage: React.FC = () => {
       await refetch();
     } catch (err: unknown) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
-      toast({
-        title: t('common.error'),
+      toast.error(t('common.error'), {
         description: errorObj?.response?.data?.message || errorObj?.message || t('messages.sendError'),
-        variant: "destructive",
       });
     } finally {
       setIsSending(false);
