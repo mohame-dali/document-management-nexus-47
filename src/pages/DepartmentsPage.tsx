@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getDepartments, 
@@ -39,7 +40,8 @@ import {
   MoreVertical,
   Award,
   ShieldCheck,
-  FileText
+  FileText,
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,8 +76,11 @@ import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import { Department, User } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getOrganizationSettings, setBureauDepartments, setRhDepartment } from '@/services/hr/personnelApi';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const DepartmentsPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
@@ -94,7 +99,7 @@ const DepartmentsPage: React.FC = () => {
   const itemsPerPage = 10;
   
   // Fetch Departments
-  const { data: departments = [], isLoading, refetch } = useQuery<Department[]>({
+  const { data: departments = [], isLoading, isError, refetch } = useQuery<Department[]>({
     queryKey: ['departments'],
     queryFn: getDepartments,
     refetchInterval: 30000,
@@ -318,10 +323,9 @@ const DepartmentsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[450px] w-full">
-        <div className="flex flex-col items-center gap-4 p-8 bg-white border border-[#e2e8f0] rounded">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2c5282]"></div>
-          <p className="text-base text-gray-600 font-medium">جاري تحميل بيانات الأقسام...</p>
+      <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          <TableSkeleton columns={5} rows={8} />
         </div>
       </div>
     );
@@ -367,6 +371,25 @@ const DepartmentsPage: React.FC = () => {
         </div>
       </div>
 
+      {isError ? (
+        <EmptyState
+          icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+          title={t('departments.error.title')}
+          description={t('departments.error.description')}
+          className="border-red-200 bg-red-50/40"
+          action={
+            <Button
+              type="button"
+              onClick={() => refetch()}
+              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>{t('common.retry')}</span>
+            </Button>
+          }
+        />
+      ) : (
+        <>
       {/* Metric Summary Indicators (Calm AdminLTE Cards, no gradients) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Total Departments */}
@@ -477,21 +500,25 @@ const DepartmentsPage: React.FC = () => {
             <TableBody>
               {paginatedDepartments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-40 text-center text-base text-gray-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Building className="h-8 w-8 text-gray-400" />
-                      <span>لا توجد أقسام مطابقة لمعايير البحث والتصفية المحددة.</span>
-                      {hasActiveFilters && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={resetFilters}
-                          className="mt-2 h-11 border-[#cbd5e1] text-sm"
-                        >
-                          إعادة ضبط التصفية
-                        </Button>
-                      )}
-                    </div>
+                  <TableCell colSpan={5} className="p-6">
+                    <EmptyState
+                      icon={<Building className="h-6 w-6 text-[#2c5282]" />}
+                      title={t('departments.empty.title')}
+                      description={t('departments.empty.filtered')}
+                      className="border-0 bg-transparent py-4"
+                      action={
+                        hasActiveFilters ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={resetFilters}
+                            className="h-11 border-[#cbd5e1] text-sm"
+                          >
+                            {t('departments.empty.reset')}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -770,6 +797,8 @@ const DepartmentsPage: React.FC = () => {
           </div>
         )}
       </div>
+        </>
+      )}
 
       {/* View Department Details & Affiliated Users Dialog (Rich modal >= 700px on desktop, 95% on mobile, padding >= 1.5rem) */}
       <Dialog 

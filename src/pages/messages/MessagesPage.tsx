@@ -14,8 +14,10 @@ import {
   Plus, 
   RefreshCw, 
   MessageSquare, 
-  MailCheck
+  MailCheck,
+  AlertCircle
 } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from 'sonner';
 import { Message, User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,6 +61,7 @@ const MessagesPage: React.FC = () => {
   const { 
     data: messagesResponse, 
     isLoading, 
+    isError,
     isFetching, 
     refetch, 
   } = useQuery({
@@ -429,6 +432,23 @@ const MessagesPage: React.FC = () => {
         <ContactsList
           onSelectUser={handleSelectUserFromContacts}
           onComposeMessage={handleComposeMessage}
+        />
+      ) : isError ? (
+        <EmptyState
+          icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+          title={t('messages.error.title')}
+          description={t('messages.error.description')}
+          className="border-red-200 bg-red-50/40"
+          action={
+            <Button
+              type="button"
+              onClick={() => refetch()}
+              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-sm font-semibold rounded inline-flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>{t('common.retry')}</span>
+            </Button>
+          }
         />
       ) : (
         /* Modern 2-Column Chat Layout */

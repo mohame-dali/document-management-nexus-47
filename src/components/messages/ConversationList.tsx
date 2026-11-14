@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Search, MessageSquare, Shield, Clock } from 'lucide-react';
+import { Search, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import { ConversationData } from '@/components/messages/ConversationThread';
 import { useLanguage } from '@/contexts/LanguageProvider';
@@ -66,20 +68,27 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       {/* List Container */}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
         {loading ? (
-          <div className="p-8 text-center text-slate-400 text-xs">
-            <div className="animate-spin inline-block w-5 h-5 border-2 border-[#2c5282] border-t-transparent rounded-full mb-2" />
-            <p>{t('messages.loadingConversations')}</p>
+          <div className="p-3 space-y-3" aria-busy="true" aria-label={t('messages.loadingConversations')}>
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <div key={idx} className="flex items-start gap-3 p-2">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Skeleton className="h-3.5 w-2/5" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                  <Skeleton className="h-3 w-4/5" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 text-xs flex flex-col items-center justify-center h-48">
-            <MessageSquare className="h-8 w-8 text-slate-300 mb-2" />
-            <p className="font-medium text-slate-700 mb-1">
-              {searchTerm ? t('messages.noMatchingResults') : t('messages.noConversationsYet')}
-            </p>
-            <p className="text-slate-400">
-              {searchTerm ? t('messages.tryOtherSearch') : t('messages.clickNewMessageToStart')}
-            </p>
-          </div>
+          <EmptyState
+            icon={<MessageSquare className="h-6 w-6 text-[#2c5282]" />}
+            title={searchTerm ? t('messages.noMatchingResults') : t('messages.noConversationsYet')}
+            description={searchTerm ? t('messages.tryOtherSearch') : t('messages.clickNewMessageToStart')}
+            className="border-0 bg-transparent py-10 px-4"
+          />
         ) : (
           filteredConversations.map((conv) => {
             const isSelected = selectedId === conv.interlocutorId;

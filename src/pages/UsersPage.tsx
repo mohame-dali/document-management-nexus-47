@@ -35,7 +35,8 @@ import {
   UserCheck,
   UserX,
   MoreHorizontal,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,6 +65,7 @@ import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import ChangePasswordDialog from '@/components/users/ChangePasswordDialog';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const UsersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -98,7 +100,7 @@ const UsersPage: React.FC = () => {
   const itemsPerPage = 10;
   
   // Data queries
-  const { data: users = [], isLoading, refetch } = useQuery<User[]>({
+  const { data: users = [], isLoading, isError, refetch } = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: getUsers,
     refetchInterval: 30000,
@@ -318,6 +320,25 @@ const UsersPage: React.FC = () => {
         </div>
       </div>
 
+      {isError ? (
+        <EmptyState
+          icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+          title={t('users.error.title')}
+          description={t('users.error.description')}
+          className="border-red-200 bg-red-50/40"
+          action={
+            <Button
+              type="button"
+              onClick={() => refetch()}
+              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>{t('common.retry')}</span>
+            </Button>
+          }
+        />
+      ) : (
+        <>
       {/* Metric Summary Indicators (Calm AdminLTE Cards, no gradients) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
@@ -533,21 +554,24 @@ const UsersPage: React.FC = () => {
             <TableBody>
               {paginatedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-40 text-center text-base text-gray-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Users className="h-8 w-8 text-gray-400" />
-                      <span>{t('users.filters.noResults')}</span>
-                      {hasActiveFilters && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={resetFilters}
-                          className="mt-2 h-11 border-[#cbd5e1] text-sm"
-                        >
-                          {t('users.filters.reset')}
-                        </Button>
-                      )}
-                    </div>
+                  <TableCell colSpan={7} className="p-6">
+                    <EmptyState
+                      icon={<Users className="h-6 w-6 text-[#2c5282]" />}
+                      title={t('users.filters.noResults')}
+                      className="border-0 bg-transparent py-4"
+                      action={
+                        hasActiveFilters ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={resetFilters}
+                            className="h-11 border-[#cbd5e1] text-sm"
+                          >
+                            {t('users.filters.reset')}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -774,6 +798,8 @@ const UsersPage: React.FC = () => {
           </div>
         )}
       </div>
+        </>
+      )}
 
       {/* Delete Confirmation Modal (Minimum 700px on desktop, 95% on mobile, padding >= 1.5rem) */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -735,30 +736,45 @@ const OutgoingDocumentsPage: React.FC = () => {
                 {t('outgoing.yearValidation.description')}
               </p>
             </div>
-          ) : totalFiltered === 0 ? (
-            /* Empty State */
-            <div className="border border-[#e2e8f0] rounded p-8 sm:p-12 text-center bg-[#f7fafc] space-y-4">
-              <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
-                <FileOutput className="h-7 w-7 text-[#2c5282]" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-[#1a202c]">{t('outgoing.empty.title')}</h3>
-                <p className="text-base text-[#4a5568] max-w-md mx-auto mt-1 leading-relaxed">
-                  {hasActiveFilters
-                    ? t('outgoing.empty.filtered')
-                    : t('outgoing.empty.noDocsYear', { year: selectedYear })}
-                </p>
-              </div>
-              {hasActiveFilters && (
+          ) : isError ? (
+            <EmptyState
+              icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+              title={t('outgoing.error.title')}
+              description={t('outgoing.error.description')}
+              className="border-red-200 bg-red-50/40"
+              action={
                 <Button
                   type="button"
-                  onClick={handleFilterReset}
-                  className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+                  onClick={() => refetch()}
+                  className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded inline-flex items-center gap-2 transition-colors duration-200"
                 >
-                  {t('outgoing.empty.showAll', { year: selectedYear })}
+                  <RotateCcw className="h-4 w-4" />
+                  <span>{t('common.retry')}</span>
                 </Button>
-              )}
-            </div>
+              }
+            />
+          ) : totalFiltered === 0 ? (
+            /* Empty State */
+            <EmptyState
+              icon={<FileOutput className="h-6 w-6 text-[#2c5282]" />}
+              title={t('outgoing.empty.title')}
+              description={
+                hasActiveFilters
+                  ? t('outgoing.empty.filtered')
+                  : t('outgoing.empty.noDocsYear', { year: selectedYear })
+              }
+              action={
+                hasActiveFilters ? (
+                  <Button
+                    type="button"
+                    onClick={handleFilterReset}
+                    className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+                  >
+                    {t('outgoing.empty.showAll', { year: selectedYear })}
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : viewMode === 'table' ? (
             /* TABULAR VIEW (AdminLTE style, 8h/day professional ergonomics, line height >= 64px) */
             <div className="overflow-x-auto border border-[#e2e8f0] rounded">

@@ -54,10 +54,12 @@ import {
   RefreshCw,
   Key,
   CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { InlineCreateUserModal } from '@/components/hr/InlineCreateUserModal';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export const PersonnelListPage: React.FC = () => {
   const { t } = useTranslation();
@@ -124,6 +126,7 @@ export const PersonnelListPage: React.FC = () => {
   const {
     data: responseData,
     isLoading,
+    isError,
     isFetching,
     refetch,
   } = useQuery({
@@ -330,18 +333,48 @@ export const PersonnelListPage: React.FC = () => {
                     <TableSkeleton columns={6} rows={8} />
                   </TableCell>
                 </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="p-6">
+                    <EmptyState
+                      icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+                      title={t('personnel.error.title')}
+                      description={t('personnel.error.description')}
+                      className="border-red-200 bg-red-50/40"
+                      action={
+                        <Button
+                          type="button"
+                          onClick={() => refetch()}
+                          className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          <span>{t('common.retry')}</span>
+                        </Button>
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
               ) : personnelList.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Users className="w-10 h-10 text-gray-300" />
-                      <p className="font-semibold text-gray-700">{t('personnel.empty.title')}</p>
-                      <p className="text-sm text-gray-500">
-                        {hasActiveFilters
-                          ? t('personnel.empty.filtered')
-                          : t('personnel.empty.start')}
-                      </p>
-                    </div>
+                  <TableCell colSpan={6} className="p-6">
+                    <EmptyState
+                      icon={<Users className="h-6 w-6 text-[#2c5282]" />}
+                      title={t('personnel.empty.title')}
+                      description={hasActiveFilters ? t('personnel.empty.filtered') : t('personnel.empty.start')}
+                      className="border-0 bg-transparent py-4"
+                      action={
+                        hasActiveFilters ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={resetFilters}
+                            className="h-11 border-[#cbd5e1] text-sm"
+                          >
+                            {t('personnel.filters.reset')}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ) : (

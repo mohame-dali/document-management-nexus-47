@@ -18,9 +18,10 @@ import { cn } from '@/lib/utils';
 
 interface FolderSidebarProps {
   className?: string;
+  onNavigate?: () => void;
 }
 
-const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
+const FolderSidebar: React.FC<FolderSidebarProps> = ({ className, onNavigate }) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -57,6 +58,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
 
   const handleViewFolder = (folderId: string) => {
     navigate(`/dashboard/folders?folder=${folderId}`);
+    onNavigate?.();
   };
 
   const renderFolder = (folder: FolderType, level: number = 0) => {
@@ -161,7 +163,10 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
             variant="outline"
             size="sm"
             className="w-full h-11 text-xs flex items-center justify-center gap-1.5 bg-[#1a202c] hover:bg-[#2d3748] text-slate-200 hover:text-white border-slate-700 rounded transition-colors duration-200"
-            onClick={() => navigate('/dashboard/folders')}
+            onClick={() => {
+              navigate('/dashboard/folders');
+              onNavigate?.();
+            }}
           >
             <Eye className="h-3.5 w-3.5" />
             عرض جميع المجلدات

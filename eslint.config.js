@@ -5,7 +5,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "vite.config.ts.timestamp-*.mjs", "**/*.timestamp-*.mjs"] },
+  { ignores: ["dist", "_sauvegarde_ux", "vite.config.ts.timestamp-*.mjs", "**/*.timestamp-*.mjs"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

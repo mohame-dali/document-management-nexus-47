@@ -11,7 +11,9 @@ import {
   ShieldCheck, 
   Eye, 
   Settings, 
-  Folder 
+  Folder,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import EnhancedFolderTree from './EnhancedFolderTree';
 import DocumentCategoryManager from './DocumentCategoryManager';
@@ -19,6 +21,9 @@ import { FolderDocumentsModal } from './FolderDocumentsModal';
 import { Folder as FolderType } from '@/types';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface FolderManagementProps {
   readOnly?: boolean;
@@ -36,7 +41,7 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
     ? undefined 
     : currentUser?.activeDepartment?._id;
 
-  const { data: folders } = useQuery({
+  const { data: folders, isLoading: isFoldersLoading, isError: isFoldersError, refetch: refetchFolders } = useQuery({
     queryKey: ['folders', targetDepartmentId],
     queryFn: () => getFolders(targetDepartmentId),
     enabled: !!currentUser,
@@ -189,6 +194,29 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
           selectedFolderId={selectedFolder?._id}
           departmentId={targetDepartmentId}
           readOnly={!canManageFolders}
+        />
+      ) : isFoldersLoading ? (
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-3">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <Skeleton key={idx} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : isFoldersError ? (
+        <EmptyState
+          icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+          title={t('folders.error.title')}
+          description={t('folders.error.description')}
+          className="border-red-200 bg-red-50/40"
+          action={
+            <Button
+              type="button"
+              onClick={() => refetchFolders()}
+              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>{t('common.retry')}</span>
+            </Button>
+          }
         />
       ) : (
         <DocumentCategoryManager

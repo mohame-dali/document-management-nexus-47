@@ -83,29 +83,29 @@ const Header = () => {
   const photoSource = myProfile?.photo || currentUser?.photo;
 
   return (
-    <header className="flex justify-between items-center h-16 px-6 bg-white border-b border-[#e2e8f0] shadow-sm z-10 select-none">
+    <header className="flex justify-between items-center h-16 px-3 sm:px-4 md:px-6 bg-white border-b border-[#e2e8f0] shadow-sm z-10 select-none gap-2 min-w-0 w-full">
       {/* Branding à DROITE (RTL: premier élément) */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial sm:max-w-[240px] lg:max-w-[300px] xl:max-w-sm">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={toggle}
           title={t('header.toggleSidebar')}
           aria-label={t('header.toggleSidebar') || t('header.sidebarFallback')}
-          className="text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded transition-colors duration-200"
+          className="h-10 w-10 sm:min-w-[44px] sm:min-h-[44px] shrink-0 text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded transition-colors duration-200"
         >
           <Menu className="h-5 w-5" />
         </Button>
 
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#ebf4ff] text-[#2c5282] rounded">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="hidden lg:flex p-2 bg-[#ebf4ff] text-[#2c5282] rounded shrink-0">
             <FileText className="h-5 w-5" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-[#2c5282] leading-tight">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-sm sm:text-base md:text-lg font-bold text-[#2c5282] leading-tight truncate">
               {nomAdmin || t('header.title')}
             </h1>
-            <p className="text-xs text-[#5f6b7d]">
+            <p className="hidden md:block text-xs text-[#5f6b7d] truncate">
               {currentUser.role === 'AdminDepartment' && currentUser.activeDepartment
                 ? currentUser.activeDepartment.name
                 : t('header.subtitle')}
@@ -115,12 +115,12 @@ const Header = () => {
       </div>
 
       {/* Recherche globale multi-modules (Centré) */}
-      <div className="flex-1 max-w-md mx-2 sm:mx-6 min-w-0">
+      <div className="hidden sm:block flex-1 max-w-md mx-2 lg:mx-6 min-w-0">
         <GlobalSearch />
       </div>
 
       {/* Actions & Profil à GAUCHE */}
-      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
         {/* Language Switcher */}
         <LanguageSwitcher />
 
@@ -135,7 +135,7 @@ const Header = () => {
             onClick={handleNotificationClick}
             title={t('header.unreadMessagesCount')}
             aria-label={t('header.unreadMessagesCount')}
-            className="p-2.5 min-w-[44px] min-h-[44px] text-[#4a5568] hover:text-[#2c5282] hover:bg-[#f7fafc] rounded relative transition-colors duration-200 flex items-center justify-center"
+            className="p-2 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] text-[#4a5568] hover:text-[#2c5282] hover:bg-[#f7fafc] rounded relative transition-colors duration-200 flex items-center justify-center"
           >
             <MessageSquare className="h-5 w-5" />
             {unreadCount > 0 && (
@@ -149,12 +149,12 @@ const Header = () => {
         </div>
 
         {/* PROFIL UTILISATEUR (à gauche) */}
-        <div className="border-e border-s border-[#e2e8f0] ps-4">
+        <div className="border-s border-[#e2e8f0] ps-1.5 sm:ps-3 md:ps-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
                 aria-label={t('header.userMenu')}
-                className="flex items-center min-h-[44px] gap-2.5 bg-white hover:bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2"
+                className="flex items-center min-h-[40px] sm:min-h-[44px] gap-2 bg-white hover:bg-[#f7fafc] border border-[#e2e8f0] rounded p-1 lg:px-3 lg:py-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2"
               >
                 <PersonnelAvatar
                   photo={photoSource}
@@ -162,17 +162,17 @@ const Header = () => {
                   prenom={myProfile?.prenom}
                   username={currentUser.username}
                   size="md"
-                  className="w-10 h-10 rounded-full border border-[#e2e8f0]"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#e2e8f0] shrink-0"
                 />
-                <div className="text-start">
-                  <p className="text-sm font-bold text-[#1a202c] leading-tight">
+                <div className="hidden lg:block text-start max-w-[140px] min-w-0">
+                  <p className="text-sm font-bold text-[#1a202c] leading-tight truncate">
                     {currentUser.username}
                   </p>
-                  <p className="text-xs text-[#5f6b7d] leading-tight mt-0.5">
+                  <p className="text-xs text-[#5f6b7d] leading-tight mt-0.5 truncate">
                     {t(`roles.${currentUser.role}`)}
                   </p>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[#718096]" />
+                <ChevronDown className="hidden lg:block h-4 w-4 text-[#718096] shrink-0" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 text-start">

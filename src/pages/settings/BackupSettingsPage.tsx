@@ -96,7 +96,6 @@ const BackupSettingsPage: React.FC = () => {
     loadData();
     loadSavedPath();
     loadBackupHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBackupHistory = async () => {
