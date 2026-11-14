@@ -193,9 +193,8 @@ const LoginPage = () => {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none p-1 rounded"
-                            tabIndex={-1}
-                            aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-1 p-1 rounded"
+                            aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
@@ -243,12 +242,6 @@ const LoginPage = () => {
             </Form>
           </CardContent>
           <CardFooter className="flex flex-col text-center text-xs text-[#5f6b7d] border-t border-[#f7fafc] pt-3">
-            <p className="w-full mb-1">
-              {t('login.credentials')}: <code className="font-mono font-semibold px-1.5 py-0.5 rounded bg-[#edf2f7] text-[#2c5282]" dir="ltr">admin / Admin123!</code>
-            </p>
-            <p className="text-[11px] text-[#5f6b7d] mb-1">
-              (N'oubliez pas la majuscule et le point d'exclamation)
-            </p>
             <p className="text-xs text-[#5f6b7d]">
               {t('login.appDescription')}
             </p>

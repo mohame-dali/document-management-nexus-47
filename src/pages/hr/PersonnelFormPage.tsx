@@ -113,7 +113,7 @@ export const PersonnelFormPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right" dir="rtl">
+    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right">
       {/* En-tête */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">

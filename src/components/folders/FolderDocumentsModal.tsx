@@ -131,7 +131,6 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
           transition: isDragging ? 'none' : undefined,
         }}
         className="max-w-[90vw] w-[90vw] md:w-[80vw] lg:w-[70vw] max-h-[90vh] overflow-y-auto p-6 bg-white border border-[#e2e8f0] rounded shadow-sm"
-        dir="rtl"
       >
         <DialogHeader
           onMouseDown={handleMouseDown}

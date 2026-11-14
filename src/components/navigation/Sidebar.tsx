@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageProvider';
-import { useDirection } from '@/i18n/useDirection';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -52,7 +51,6 @@ const Sidebar = () => {
   const { currentUser } = useAuth();
   const { isOpen } = useSidebar();
   const { t } = useLanguage();
-  const { isRTL } = useDirection();
   const navigate = useNavigate();
   const location = useLocation();
   const [profileDialogOpen, setProfileDialogOpen] = React.useState(false);
@@ -223,7 +221,9 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={cn(
+    <div
+      data-surface="dark"
+      className={cn(
       "h-screen flex flex-col bg-[#1a202c] text-slate-100 border-e border-slate-800 shadow-sm transition-all duration-200 ease-in-out select-none",
       isOpen ? "w-64" : "w-16"
     )}>
@@ -233,7 +233,7 @@ const Sidebar = () => {
         isOpen ? "p-4 sm:p-5" : "p-3"
       )}>
         <div>
-          <div className={cn("flex items-center gap-3 mb-3", isRTL ? "flex-row-reverse" : "flex-row")}>
+          <div className="flex flex-row items-center gap-3 mb-3">
             <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm">
               <FileText className="h-5 w-5" />
             </div>
@@ -248,7 +248,7 @@ const Sidebar = () => {
           </div>
           
           {currentUser && (
-            <div className={cn("flex items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm", isRTL ? "flex-row-reverse" : "flex-row")}>
+            <div className="flex flex-row items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
               <ContextMenu>
                 <ContextMenuTrigger>
                   <Avatar 
@@ -260,11 +260,7 @@ const Sidebar = () => {
                       alt={currentUser.username}
                       className="object-cover"
                       onError={(e) => {
-                        console.log('Image failed to load:', getUserPhotoUrl(currentUser));
                         e.currentTarget.style.display = 'none';
-                      }}
-                      onLoad={() => {
-                        console.log('Image loaded successfully:', getUserPhotoUrl(currentUser));
                       }}
                     />
                     <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
@@ -317,8 +313,7 @@ const Sidebar = () => {
                   key={item.id}
                   type="button"
                   className={cn(
-                    "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-start relative",
-                    isRTL ? "flex-row-reverse" : "flex-row",
+                    "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row items-center group text-start relative focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]",
                     isOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
                     active 
                       ? "bg-[#2c5282] text-white shadow-sm font-medium" 

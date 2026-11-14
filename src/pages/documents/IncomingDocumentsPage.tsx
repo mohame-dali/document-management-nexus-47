@@ -399,7 +399,7 @@ const IncomingDocumentsPage: React.FC = () => {
   // Incomplete year view
   if (!isValidYear) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8">
         <div className="max-w-xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 sm:p-12 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center mx-auto">
             <Calendar className="h-7 w-7" />
@@ -481,7 +481,7 @@ const IncomingDocumentsPage: React.FC = () => {
   // Loading view
   if (isLoading && isValidYear) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
           <TableSkeleton columns={6} rows={8} />
         </div>
@@ -492,7 +492,7 @@ const IncomingDocumentsPage: React.FC = () => {
   // Error view
   if (isError && isValidYear) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8">
         <div className="max-w-xl mx-auto bg-white border border-red-200 rounded p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
             <AlertCircle className="h-7 w-7" />
@@ -513,9 +513,9 @@ const IncomingDocumentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Fil d'Ariane (Breadcrumbs) */}
-      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500">
         <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">{t('common.home')}</Link>
         <ChevronLeft className="w-4 h-4 text-gray-400" />
         <span className="text-[#1a202c] font-medium">{t('incoming.page.breadcrumb')}</span>
@@ -681,7 +681,7 @@ const IncomingDocumentsPage: React.FC = () => {
               <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
                 <SelectValue placeholder={t('incoming.filters.sourcePlaceholder')} />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="all_sources" className="text-base">{t('incoming.filters.allSources')}</SelectItem>
                 {sourceOptions.filter(opt => opt.isActive).map((opt) => (
                   <SelectItem key={opt._id} value={opt.value} className="text-base">
@@ -704,7 +704,7 @@ const IncomingDocumentsPage: React.FC = () => {
               <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
                 <SelectValue placeholder={t('incoming.filters.statusPlaceholder')} />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="all" className="text-base">{t('incoming.filters.allStatuses')}</SelectItem>
                 <SelectItem value="pending" className="text-base">{t('incoming.filters.pending')}</SelectItem>
                 <SelectItem value="answered" className="text-base">{t('incoming.filters.answered')}</SelectItem>
@@ -731,7 +731,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   <SelectTrigger className="h-9 min-w-[180px] text-sm text-right border-[#cbd5e1] rounded bg-white">
                     <SelectValue placeholder={t('incoming.filters.departmentPlaceholder')} />
                   </SelectTrigger>
-                  <SelectContent dir="rtl">
+                  <SelectContent>
                     <SelectItem value="all" className="text-sm">{t('incoming.filters.allDepartments')}</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept._id} value={dept._id} className="text-sm">
@@ -753,7 +753,7 @@ const IncomingDocumentsPage: React.FC = () => {
                 <SelectTrigger className="h-9 min-w-[170px] text-sm text-right border-[#cbd5e1] rounded bg-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent dir="rtl">
+                <SelectContent>
                   <SelectItem value="newest-arrival" className="text-sm">{t('incoming.sort.newestArrival')}</SelectItem>
                   <SelectItem value="oldest-arrival" className="text-sm">{t('incoming.sort.oldestArrival')}</SelectItem>
                   <SelectItem value="serial-desc" className="text-sm">{t('incoming.sort.serialDesc')}</SelectItem>
@@ -1090,7 +1090,7 @@ const IncomingDocumentsPage: React.FC = () => {
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" dir="rtl" className="w-48 bg-white border border-[#e2e8f0] rounded shadow-sm">
+                            <DropdownMenuContent align="end" className="w-48 bg-white border border-[#e2e8f0] rounded shadow-sm">
                               <DropdownMenuItem 
                                 onClick={() => setPreviewDoc(doc)}
                                 className="text-sm py-2 cursor-pointer"
@@ -1318,7 +1318,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   <SelectTrigger className="h-9 w-20 text-sm text-right border-[#cbd5e1] rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent dir="rtl">
+                  <SelectContent>
                     <SelectItem value="10" className="text-sm">10</SelectItem>
                     <SelectItem value="20" className="text-sm">20</SelectItem>
                     <SelectItem value="50" className="text-sm">50</SelectItem>
@@ -1398,7 +1398,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
       {/* 8. Delete Confirmation Dialog */}
       <AlertDialog open={Boolean(deleteDoc)} onOpenChange={(open) => { if (!open) setDeleteDoc(null); }}>
-        <AlertDialogContent dir="rtl" className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm">
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">
               <Trash2 className="h-6 w-6" />

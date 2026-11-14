@@ -397,7 +397,7 @@ export const AttendancePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 space-y-5" dir="rtl">
+    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 space-y-5">
       {/* 1. En-tête sobre */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -491,7 +491,7 @@ export const AttendancePage: React.FC = () => {
                 <SelectTrigger className="h-11 border-[#e2e8f0] rounded text-sm bg-white">
                   <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
-                <SelectContent dir="rtl">
+                <SelectContent>
                   <SelectItem value="all">جميع الأقسام</SelectItem>
                   {departments.map((d) => (
                     <SelectItem key={d._id} value={d._id}>
@@ -753,7 +753,7 @@ export const AttendancePage: React.FC = () => {
                             <SelectTrigger className="h-10 border-[#cbd5e0] rounded text-sm bg-white">
                               <SelectValue placeholder="اختر سبب الغياب" />
                             </SelectTrigger>
-                            <SelectContent dir="rtl" className="max-h-60">
+                            <SelectContent className="max-h-60">
                               {leaveReasons.map((lr) => (
                                 <SelectItem key={lr._id} value={lr.code} className="text-sm py-2">
                                   <div className="flex items-center justify-between gap-3 w-full">

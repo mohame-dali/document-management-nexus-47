@@ -36,7 +36,6 @@ const DocumentPreviewModal = ({
       <DialogContent 
         className="max-w-4xl w-[95vw] p-0 overflow-hidden bg-white 
                    max-h-[92vh] flex flex-col rounded-lg"
-        dir="rtl"
       >
         {/* HEADER */}
         <DialogHeader className="p-4 bg-slate-50 border-b border-slate-200">

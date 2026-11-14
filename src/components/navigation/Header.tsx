@@ -154,7 +154,7 @@ const Header = () => {
             <DropdownMenuTrigger asChild>
               <button 
                 aria-label={t('header.userMenu')}
-                className="flex items-center min-h-[44px] gap-2.5 bg-white hover:bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5 transition-colors cursor-pointer outline-none"
+                className="flex items-center min-h-[44px] gap-2.5 bg-white hover:bg-[#f7fafc] border border-[#e2e8f0] rounded px-3 py-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2"
               >
                 <PersonnelAvatar
                   photo={photoSource}

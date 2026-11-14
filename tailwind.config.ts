@@ -20,8 +20,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        cairo: ['Cairo', 'sans-serif'],
-        sans: ['Cairo', 'system-ui', 'sans-serif'],
+        cairo: ['system-ui', '-apple-system', '"Segoe UI"', 'Tahoma', 'Arial', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', '"Segoe UI"', 'Tahoma', 'Arial', 'sans-serif'],
+        amiri: ['Amiri', 'serif'],
       },
       colors: {
         border: 'hsl(var(--border))',

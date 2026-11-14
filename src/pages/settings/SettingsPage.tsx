@@ -241,7 +241,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section - Clean Institutional AdminLTE */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -1153,7 +1153,6 @@ const SettingsPage = () => {
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
         <DialogContent
           className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm"
-          dir="rtl"
         >
           <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
             <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] flex items-center gap-3">
@@ -1267,7 +1266,6 @@ const SettingsPage = () => {
       <AlertDialog open={isTerminateSessionsOpen} onOpenChange={setIsTerminateSessionsOpen}>
         <AlertDialogContent
           className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm"
-          dir="rtl"
         >
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">

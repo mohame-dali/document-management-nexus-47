@@ -270,7 +270,7 @@ const UsersPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8" dir="rtl">
+      <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8">
         <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
           <TableSkeleton columns={7} rows={8} />
         </div>
@@ -279,7 +279,7 @@ const UsersPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
         <div>
@@ -656,7 +656,7 @@ const UsersPage: React.FC = () => {
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 text-right" dir="rtl">
+                            <DropdownMenuContent align="end" className="w-48 text-right">
                               <DropdownMenuItem 
                                 onClick={() => navigate(`/dashboard/users/edit/${user._id}`)}
                                 className="text-sm py-2 cursor-pointer flex items-center gap-2"
@@ -778,8 +778,7 @@ const UsersPage: React.FC = () => {
       {/* Delete Confirmation Modal (Minimum 700px on desktop, 95% on mobile, padding >= 1.5rem) */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent 
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-sm" 
-          dir="rtl"
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-sm"
         >
           <AlertDialogHeader className="text-right pb-4 border-b border-[#e2e8f0]">
             <AlertDialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-red-600">

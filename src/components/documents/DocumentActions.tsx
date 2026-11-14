@@ -184,7 +184,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 text-right">تأكيد الحذف</AlertDialogTitle>
             <AlertDialogDescription className="text-base text-gray-600 mt-2 text-right">

@@ -192,7 +192,7 @@ const TrashPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
       <div className="bg-white rounded border border-[#e2e8f0] p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
@@ -531,7 +531,7 @@ const TrashPage: React.FC = () => {
         open={Boolean(itemToDelete)}
         onOpenChange={(open) => !open && setItemToDelete(null)}
       >
-        <AlertDialogContent dir="rtl" className="text-right">
+        <AlertDialogContent className="text-right">
           <AlertDialogHeader className="text-right sm:text-right">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-red-100 text-red-600 rounded">
@@ -580,7 +580,7 @@ const TrashPage: React.FC = () => {
         open={isEmptyTrashOpen}
         onOpenChange={setIsEmptyTrashOpen}
       >
-        <AlertDialogContent dir="rtl" className="text-right">
+        <AlertDialogContent className="text-right">
           <AlertDialogHeader className="text-right sm:text-right">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-red-100 text-red-600 rounded">

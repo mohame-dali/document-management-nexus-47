@@ -336,7 +336,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto" dir="rtl">
+    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
       {/* En-tête de la page */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
         <div>
@@ -462,7 +462,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
               <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
                 <SelectValue placeholder="تصفية حسب الحالة" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="all">كل الحالات ({declarations.length})</SelectItem>
                 <SelectItem value="en_attente">قيد المراجعة فقط</SelectItem>
                 <SelectItem value="approuvee">المقبولة</SelectItem>
@@ -481,7 +481,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
               <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
                 <SelectValue placeholder="كل الأقسام / المصالح" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="all">كل الأقسام والمصالح</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept._id} value={dept._id}>
@@ -697,7 +697,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal d'approbation avec commentaire optionnel */}
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
-        <DialogContent className="sm:max-w-[460px] text-right" dir="rtl">
+        <DialogContent className="sm:max-w-[460px] text-right">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2 text-emerald-700">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -750,7 +750,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal de Rejet avec motif obligatoire */}
       <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
-        <DialogContent className="sm:max-w-[460px] text-right" dir="rtl">
+        <DialogContent className="sm:max-w-[460px] text-right">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
               <XCircle className="w-5 h-5 text-red-600" />
@@ -809,7 +809,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal d'Édition Admin */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="sm:max-w-[520px] text-right" dir="rtl">
+        <DialogContent className="sm:max-w-[520px] text-right">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Edit3 className="w-5 h-5 text-[#2c5282]" />
@@ -827,7 +827,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                   <SelectTrigger className="h-10 border-[#e2e8f0]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent dir="rtl">
+                  <SelectContent>
                     <SelectItem value="present">حاضر</SelectItem>
                     <SelectItem value="absent">غائب / مصلحة</SelectItem>
                   </SelectContent>
@@ -854,7 +854,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                     <SelectTrigger className="h-10 border-[#e2e8f0]">
                       <SelectValue placeholder="اختر السبب" />
                     </SelectTrigger>
-                    <SelectContent dir="rtl">
+                    <SelectContent>
                       {leaveReasons.map((r) => (
                         <SelectItem key={r._id} value={r.code}>
                           {r.labelAr}

@@ -369,7 +369,7 @@ export const FloatingAIChat: React.FC = () => {
           className="fixed z-50 rounded-full bg-[#2c5282] hover:bg-[#234269] 
                      text-white shadow-lg flex items-center justify-center 
                      transition-all duration-150 select-none
-                     focus:outline-none focus:ring-2 focus:ring-[#2c5282] focus:ring-offset-2"
+                     focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2"
           aria-label={t('ai.assistant.openAria')}
           title={t('ai.assistant.iconTooltip')}
         >
@@ -404,6 +404,7 @@ export const FloatingAIChat: React.FC = () => {
             >
               {/* Header — DRAGGABLE */}
               <div
+                data-surface="dark"
                 onMouseDown={handlePanelDragStart}
                 style={{
                   cursor: isPanelDragging ? 'grabbing' : 'grab',

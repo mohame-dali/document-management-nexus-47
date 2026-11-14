@@ -318,7 +318,7 @@ const DepartmentsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[450px] w-full" dir="rtl">
+      <div className="flex items-center justify-center min-h-[450px] w-full">
         <div className="flex flex-col items-center gap-4 p-8 bg-white border border-[#e2e8f0] rounded">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2c5282]"></div>
           <p className="text-base text-gray-600 font-medium">جاري تحميل بيانات الأقسام...</p>
@@ -328,7 +328,7 @@ const DepartmentsPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
         <div>
@@ -651,7 +651,7 @@ const DepartmentsPage: React.FC = () => {
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-60 text-right" dir="rtl">
+                                <DropdownMenuContent align="end" className="w-60 text-right">
                                   <DropdownMenuItem
                                     onClick={() => handleMarkAsBureauDirecteur(department._id)}
                                     className="cursor-pointer flex items-center justify-between text-sm py-2"
@@ -778,7 +778,6 @@ const DepartmentsPage: React.FC = () => {
       >
         <DialogContent 
           className="w-[95vw] sm:w-[90vw] sm:max-w-[780px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-xl max-h-[90vh] overflow-y-auto"
-          dir="rtl"
         >
           <DialogHeader className="pb-4 border-b border-[#e2e8f0] text-right">
             <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
@@ -925,8 +924,7 @@ const DepartmentsPage: React.FC = () => {
       {/* Delete Confirmation Modal (Minimum 700px on desktop, 95% on mobile, padding >= 1.5rem) */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent 
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-xl" 
-          dir="rtl"
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-xl"
         >
           <AlertDialogHeader className="text-right pb-4 border-b border-[#e2e8f0]">
             <AlertDialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-red-600">

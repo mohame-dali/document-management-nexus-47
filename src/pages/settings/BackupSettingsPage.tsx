@@ -352,7 +352,7 @@ const BackupSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -622,7 +622,6 @@ const BackupSettingsPage: React.FC = () => {
             </AlertDialogTrigger>
             <AlertDialogContent
               className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xl"
-              dir="rtl"
             >
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] text-right">
@@ -782,7 +781,7 @@ const BackupSettingsPage: React.FC = () => {
       </Card>
 
       {/* 5. Backup History Section */}
-      <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
+      <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
         <CardHeader className="p-6 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-3">

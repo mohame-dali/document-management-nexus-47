@@ -497,6 +497,8 @@
   "login.welcome": "Bienvenue",
   "login.username": "Nom d'utilisateur",
   "login.password": "Mot de passe",
+  "login.showPassword": "Afficher le mot de passe",
+  "login.hidePassword": "Masquer le mot de passe",
   "login.submit": "Se connecter",
   "login.rememberMe": "Se souvenir de moi",
   "login.error": "Identifiants invalides",

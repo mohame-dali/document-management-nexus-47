@@ -400,7 +400,7 @@ const OutgoingDocumentsPage: React.FC = () => {
   // Loading view — Afficher un skeleton pendant le chargement initial
   if (isLoading && isValidYear) {
     return (
-      <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8" dir="rtl">
+      <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
           <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xs">
             <TableSkeleton columns={7} rows={8} />
@@ -411,11 +411,11 @@ const OutgoingDocumentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8" dir="rtl">
+    <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
         
         {/* Fil d'Ariane (Breadcrumbs) */}
-        <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500">
           <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">{t('common.home')}</Link>
           <ChevronLeft className="w-4 h-4 text-gray-400" />
           <span className="text-[#1a202c] font-medium">{t('outgoing.page.title')}</span>
@@ -1312,7 +1312,7 @@ const OutgoingDocumentsPage: React.FC = () => {
           if (!open) setDeleteDoc(null);
         }}
       >
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
               {t('outgoing.delete.title')}
@@ -1364,7 +1364,7 @@ const OutgoingDocumentsPage: React.FC = () => {
           if (!open) setTransferDoc(null);
         }}
       >
-        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm" dir="rtl">
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] flex items-center gap-3">
               <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
@@ -1399,7 +1399,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   <SelectTrigger className="h-11 text-base border-[#cbd5e1] rounded bg-white">
                     <SelectValue placeholder={t('outgoing.transfer.targetDeptPlaceholder')} />
                   </SelectTrigger>
-                  <SelectContent className="rounded border-[#cbd5e1] text-base" dir="rtl">
+                  <SelectContent className="rounded border-[#cbd5e1] text-base">
                     {departments.map((dept) => (
                       <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
                         {dept.name}
