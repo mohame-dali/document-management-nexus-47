@@ -178,7 +178,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
   };
 
   return (
-    <div className="bg-white border border-[#cbd5e1] rounded-lg shadow-sm overflow-hidden text-right font-sans" dir="rtl">
+    <div className="bg-white border border-[#cbd5e1] rounded-lg shadow-sm overflow-hidden text-right font-sans">
       {/* En-tête AdminLTE Sobre */}
       <div className="bg-[#2c5282] text-white px-5 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -322,7 +322,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                 <p className="text-sm font-bold text-[#2c5282]">
                   جاري تحليل النص واستخراج جوهر المراسلة الرسمية...
                 </p>
-                <p className="text-xs text-[#718096]">
+                <p className="text-xs text-[#5f6b7d]">
                   يتم المعالجة عبر النموذج الإداري المحلي (Qwen) في سرية وأمان تام
                 </p>
               </div>
@@ -391,7 +391,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* Message d'incitation initial */}
             {!isSummarizing && !summaryData && !summaryError && (
-              <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded text-center text-xs text-[#718096]">
+              <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded text-center text-xs text-[#5f6b7d]">
                 اضغط على زر <strong className="text-[#2c5282]">"توليد ملخص المراسلة"</strong> للحصول على تحليل ذكي موجز لمحتوى النص المستخرج.
               </div>
             )}
@@ -481,7 +481,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                 <p className="text-sm font-bold text-[#2c5282]">
                   جاري ترجمة المراسلة الإدارية مع الحفاظ على الصياغة الرسمية...
                 </p>
-                <p className="text-xs text-[#718096]">
+                <p className="text-xs text-[#5f6b7d]">
                   ترجمة مطابقة للمصطلحات الإدارية التونسية المعتمدة
                 </p>
               </div>
@@ -531,7 +531,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
             )}
 
             {!isTranslating && !translationData && !translationError && (
-              <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded text-center text-xs text-[#718096]">
+              <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded text-center text-xs text-[#5f6b7d]">
                 اختر اتجاه الترجمة واضغط على <strong className="text-[#2c5282]">"ترجمة نص الوثيقة"</strong> للحصول على ترجمة إدارية فورية.
               </div>
             )}

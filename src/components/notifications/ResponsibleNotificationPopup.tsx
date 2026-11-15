@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { useDirection } from '@/i18n/useDirection';
 
 interface ResponsibleNotificationPopupProps {
   documentId: string;
@@ -27,10 +28,11 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
   onMarkAsRead,
   onTemporaryDismiss
 }) => {
+  const { dir } = useDirection();
   return (
     <div 
-      className="fixed top-4 right-4 z-[9999] animate-in slide-in-from-right-full duration-200"
-      dir="rtl"
+      className={`fixed top-4 end-4 z-[9999] animate-in ${dir === 'rtl' ? 'slide-in-from-left-full' : 'slide-in-from-right-full'} duration-200`}
+      dir={dir}
     >
       <Card className="w-96 bg-white border-2 border-blue-500 shadow-sm">
         <CardHeader className="pb-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
@@ -64,7 +66,7 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
                   {documentSubject}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  رقم الوثيقة: {documentSerialNumber}/{documentYear}
+                  رقم الوثيقة: <bdi dir="ltr">{documentSerialNumber}/{documentYear}</bdi>
                 </p>
               </div>
             </div>

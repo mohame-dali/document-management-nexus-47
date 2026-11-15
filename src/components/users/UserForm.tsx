@@ -320,7 +320,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   <span>بطاقة الموظف المرتبطة (Fiche Personnel associée)</span>
                 </div>
                 {!canManagePersonnel && (
-                  <Badge variant="outline" className="bg-[#f7fafc] text-[#718096] border-[#cbd5e1]">
+                  <Badge variant="outline" className="bg-[#f7fafc] text-[#5f6b7d] border-[#cbd5e1]">
                     اختيار من قائمة الموظفين
                   </Badge>
                 )}
@@ -364,11 +364,11 @@ const UserForm: React.FC<UserFormProps> = ({
                         </SelectTrigger>
                         <SelectContent dir="rtl">
                           {isLoadingPersonnel ? (
-                            <div className="p-3 text-center text-sm text-[#718096]">
+                            <div className="p-3 text-center text-sm text-[#5f6b7d]">
                               جاري تحميل القائمة...
                             </div>
                           ) : personnels.length === 0 ? (
-                            <div className="p-3 text-center text-sm text-[#718096]">
+                            <div className="p-3 text-center text-sm text-[#5f6b7d]">
                               لا يوجد موظفون في قسمك
                             </div>
                           ) : (

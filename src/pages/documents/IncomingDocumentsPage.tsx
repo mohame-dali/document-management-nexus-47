@@ -34,7 +34,8 @@ import {
   ChevronDown,
   ChevronsUpDown,
   ShieldAlert,
-  Inbox
+  Inbox,
+  Bookmark
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -398,7 +399,7 @@ const IncomingDocumentsPage: React.FC = () => {
   // Incomplete year view
   if (!isValidYear) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8">
         <div className="max-w-xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 sm:p-12 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center mx-auto">
             <Calendar className="h-7 w-7" />
@@ -415,11 +416,12 @@ const IncomingDocumentsPage: React.FC = () => {
             className="pt-2 flex flex-col items-center space-y-4"
           >
             <div className="relative">
-              <Calendar className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
+              <Calendar className="absolute start-3.5 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
               <Input
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                placeholder={new Date().getFullYear().toString()}
                 value={yearInput}
                 onChange={handleYearInputChange}
                 onKeyDown={(e) => {
@@ -428,14 +430,20 @@ const IncomingDocumentsPage: React.FC = () => {
                     handleApplyYear();
                   }
                 }}
-                placeholder={new Date().getFullYear().toString()}
+                onBlur={() => {
+                  if (yearInput.length === 4 && /^\d{4}$/.test(yearInput)) {
+                    handleApplyYear();
+                  } else {
+                    setYearInput(selectedYear);
+                  }
+                }}
                 maxLength={4}
                 autoFocus
-                className="w-40 h-12 pr-10 text-center text-lg font-bold border-[#cbd5e1] rounded focus:border-[#2c5282] bg-white"
+                className="w-40 h-12 ps-10 text-center text-lg font-bold border-[#cbd5e1] rounded focus:border-[#2c5282] bg-white"
               />
             </div>
             {yearInput.length > 0 && yearInput.length < 4 && (
-              <p className="text-sm text-[#718096]">
+              <p className="text-sm text-[#5f6b7d]">
                 {t('incoming.yearModal.incomplete')}
               </p>
             )}
@@ -450,7 +458,7 @@ const IncomingDocumentsPage: React.FC = () => {
             </div>
             {/* Quick Year Shortcuts */}
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-sm font-medium text-[#718096]">{t('incoming.yearModal.quickYears')}</span>
+              <span className="text-sm font-medium text-[#5f6b7d]">{t('incoming.yearModal.quickYears')}</span>
               {[
                 new Date().getFullYear(),
                 new Date().getFullYear() - 1,
@@ -467,7 +475,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   }}
                   className="px-2.5 py-1 text-xs font-semibold rounded border border-[#cbd5e1] bg-slate-50 hover:bg-[#ebf4ff] hover:text-[#2c5282] text-[#4a5568] transition-colors"
                 >
-                  {yr}
+                  <bdi dir="ltr">{yr}</bdi>
                 </button>
               ))}
             </div>
@@ -480,7 +488,7 @@ const IncomingDocumentsPage: React.FC = () => {
   // Loading view
   if (isLoading && isValidYear) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
           <TableSkeleton columns={6} rows={8} />
         </div>
@@ -491,7 +499,7 @@ const IncomingDocumentsPage: React.FC = () => {
   // Error view
   if (isError && isValidYear) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8">
         <div className="max-w-xl mx-auto bg-white border border-red-200 rounded p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
             <AlertCircle className="h-7 w-7" />
@@ -512,11 +520,11 @@ const IncomingDocumentsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Fil d'Ariane (Breadcrumbs) */}
-      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500" dir="rtl">
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500">
         <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">{t('common.home')}</Link>
-        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <ChevronLeft className="w-4 h-4 text-gray-400 rtl:rotate-0 ltr:rotate-180" />
         <span className="text-[#1a202c] font-medium">{t('incoming.page.breadcrumb')}</span>
       </nav>
 
@@ -627,7 +635,7 @@ const IncomingDocumentsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search Input */}
           <div className="relative lg:col-span-2">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
             <Input
               placeholder={t('incoming.filters.searchPlaceholder')}
               value={searchQuery}
@@ -635,14 +643,14 @@ const IncomingDocumentsPage: React.FC = () => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-11 pr-10 text-base text-right border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+              className="h-11 ps-10 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
             />
           </div>
 
           {/* Year Filter */}
           <div>
             <div className="relative">
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
+              <Calendar className="absolute start-3 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
               <Input
                 type="text"
                 inputMode="numeric"
@@ -663,7 +671,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   }
                 }}
                 maxLength={4}
-                className="h-11 pr-10 text-base text-center font-bold border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                className="h-11 ps-10 text-base text-center font-bold border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
               />
             </div>
           </div>
@@ -677,10 +685,10 @@ const IncomingDocumentsPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
+              <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white">
                 <SelectValue placeholder={t('incoming.filters.sourcePlaceholder')} />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="all_sources" className="text-base">{t('incoming.filters.allSources')}</SelectItem>
                 {sourceOptions.filter(opt => opt.isActive).map((opt) => (
                   <SelectItem key={opt._id} value={opt.value} className="text-base">
@@ -700,10 +708,10 @@ const IncomingDocumentsPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
+              <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white">
                 <SelectValue placeholder={t('incoming.filters.statusPlaceholder')} />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="all" className="text-base">{t('incoming.filters.allStatuses')}</SelectItem>
                 <SelectItem value="pending" className="text-base">{t('incoming.filters.pending')}</SelectItem>
                 <SelectItem value="answered" className="text-base">{t('incoming.filters.answered')}</SelectItem>
@@ -727,10 +735,10 @@ const IncomingDocumentsPage: React.FC = () => {
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="h-9 min-w-[180px] text-sm text-right border-[#cbd5e1] rounded bg-white">
+                  <SelectTrigger className="h-9 min-w-[180px] text-sm text-start border-[#cbd5e1] rounded bg-white">
                     <SelectValue placeholder={t('incoming.filters.departmentPlaceholder')} />
                   </SelectTrigger>
-                  <SelectContent dir="rtl">
+                  <SelectContent>
                     <SelectItem value="all" className="text-sm">{t('incoming.filters.allDepartments')}</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept._id} value={dept._id} className="text-sm">
@@ -749,10 +757,10 @@ const IncomingDocumentsPage: React.FC = () => {
                 {t('incoming.sort.label')}
               </span>
               <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
-                <SelectTrigger className="h-9 min-w-[170px] text-sm text-right border-[#cbd5e1] rounded bg-white">
+                <SelectTrigger className="h-9 min-w-[170px] text-sm text-start border-[#cbd5e1] rounded bg-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent dir="rtl">
+                <SelectContent>
                   <SelectItem value="newest-arrival" className="text-sm">{t('incoming.sort.newestArrival')}</SelectItem>
                   <SelectItem value="oldest-arrival" className="text-sm">{t('incoming.sort.oldestArrival')}</SelectItem>
                   <SelectItem value="serial-desc" className="text-sm">{t('incoming.sort.serialDesc')}</SelectItem>
@@ -805,7 +813,7 @@ const IncomingDocumentsPage: React.FC = () => {
                 type="button"
                 onClick={() => setViewMode('grid')}
                 aria-label={t('incoming.view.cardsLabel')}
-                className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
+                className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-s border-[#cbd5e1] transition-colors duration-200 ${
                   viewMode === 'grid'
                     ? 'bg-[#2c5282] text-white'
                     : 'text-[#4a5568] hover:bg-gray-50'
@@ -825,7 +833,7 @@ const IncomingDocumentsPage: React.FC = () => {
         {totalFiltered === 0 ? (
           /* Empty State */
           <div className="border border-[#e2e8f0] rounded p-8 sm:p-12 text-center bg-[#f7fafc] space-y-4">
-            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#718096]">
+            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
               <FileText className="h-7 w-7 text-[#2c5282]" />
             </div>
             <div>
@@ -849,53 +857,69 @@ const IncomingDocumentsPage: React.FC = () => {
         ) : viewMode === 'table' ? (
           /* TABULAR VIEW (AdminLTE style, 8h/day professional ergonomics) */
           <div className="overflow-x-auto border border-[#e2e8f0] rounded">
-            <table className="w-full text-right border-collapse text-sm">
+            <table className="w-full text-start border-collapse text-sm">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#2d3748]">
-                  <th 
-                    className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('serialNumber')}
+                  <th
+                    className="p-0 font-bold text-sm whitespace-nowrap"
+                    aria-sort={sortField === 'serialNumber' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('serialNumber')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.serialNumber')}</span>
                       {sortField === 'serialNumber' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'serialNumber' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'serialNumber' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
-                  <th 
-                    className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('subject')}
+                  <th
+                    className="p-0 font-bold text-sm"
+                    aria-sort={sortField === 'subject' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('subject')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.subjectAndType')}</span>
                       {sortField === 'subject' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'subject' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'subject' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
-                  <th 
-                    className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('arrivalDate')}
+                  <th
+                    className="p-0 font-bold text-sm whitespace-nowrap"
+                    aria-sort={sortField === 'arrivalDate' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('arrivalDate')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.arrivalDate')}</span>
                       {sortField === 'arrivalDate' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'arrivalDate' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'arrivalDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
-                  <th className="py-3 px-4 font-bold text-sm">{t('incoming.table.source')}</th>
-                  <th 
-                    className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                    onClick={() => handleTableSort('status')}
+                  <th className="py-3 px-4 font-bold text-sm text-start">{t('incoming.table.source')}</th>
+                  <th
+                    className="p-0 font-bold text-sm"
+                    aria-sort={sortField === 'status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                   >
-                    <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTableSort('status')}
+                      className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    >
                       <span>{t('incoming.table.status')}</span>
                       {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                       {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                       {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                    </div>
+                    </button>
                   </th>
                   <th className="py-3 px-4 font-bold text-sm text-center">{t('incoming.table.actions')}</th>
                 </tr>
@@ -915,10 +939,10 @@ const IncomingDocumentsPage: React.FC = () => {
                           <span className="w-2.5 h-2.5 rounded-full bg-[#2c5282] flex-shrink-0" />
                           <div className="flex flex-col">
                             <span className="font-bold text-base text-[#1a202c]">
-                              #{highlightMatch(String(doc.serialNumber), searchQuery)}
+                              <bdi dir="ltr">#{highlightMatch(String(doc.serialNumber), searchQuery)}</bdi>
                             </span>
-                            <span className="text-xs text-[#718096]">
-                              {doc.year}
+                            <span className="text-xs text-[#5f6b7d]">
+                              <bdi dir="ltr">{doc.year}</bdi>
                             </span>
                           </div>
                         </div>
@@ -927,13 +951,14 @@ const IncomingDocumentsPage: React.FC = () => {
                       {/* Subject, Document Type, Activity */}
                       <td className="py-3 px-4">
                         <div className="max-w-[340px] space-y-1.5">
-                          <div 
+                          <button
+                            type="button"
                             onClick={() => handleView(doc._id)}
-                            className="font-bold text-base text-[#1a202c] hover:text-[#2c5282] cursor-pointer leading-relaxed transition-colors duration-200"
+                            className="text-start font-bold text-base text-[#1a202c] hover:text-[#2c5282] cursor-pointer leading-relaxed transition-colors duration-200 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
                             title={doc.subject}
                           >
                             {highlightMatch(doc.subject, searchQuery)}
-                          </div>
+                          </button>
 
                           <div className="flex items-center gap-2 flex-wrap">
                             {doc.typeDocument && (
@@ -963,7 +988,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       <td className="py-3 px-4 whitespace-nowrap text-sm text-[#4a5568]">
                         <div className="flex items-center gap-1.5 font-medium">
                           <Clock className="h-4 w-4 text-[#718096]" />
-                          <span>{formatArabicDate(doc.arrivalDate)}</span>
+                          <bdi dir="ltr">{formatArabicDate(doc.arrivalDate)}</bdi>
                         </div>
                       </td>
 
@@ -993,7 +1018,7 @@ const IncomingDocumentsPage: React.FC = () => {
                           )}
 
                           {doc.responsibleUser && typeof doc.responsibleUser === 'object' && (
-                            <span className="text-xs text-[#718096] flex items-center gap-1">
+                            <span className="text-xs text-[#5f6b7d] flex items-center gap-1">
                               <Users className="h-3 w-3 text-[#718096]" />
                               {t('incoming.responsible.label', { name: doc.responsibleUser.username })}
                             </span>
@@ -1001,142 +1026,135 @@ const IncomingDocumentsPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* Actions: Voir, Traiter, Archiver, Transférer + Dropdown */}
+                      {/* Actions: 2 primary actions + ... menu */}
                       <td className="py-3 px-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          {/* 1. Voir (عرض) */}
+                          {/* Primary 1: Voir */}
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleView(doc._id)}
                             title={t('incoming.actions.viewTooltip')}
-                            className="h-11 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
+                            className="h-11 min-h-[44px] px-3 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
                           >
-                            <Eye className="h-3.5 w-3.5 ml-1" />
+                            <Eye className="h-3.5 w-3.5 me-1" />
                             {t('incoming.actions.view')}
                           </Button>
 
-                          {/* معاينة (Aperçu) */}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPreviewDoc(doc)}
-                            title={t('incoming.actions.previewTooltip')}
-                            className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
-                          >
-                            <FileText className="h-3.5 w-3.5 ml-1" />
-                            {t('incoming.actions.preview')}
-                          </Button>
-
-                          {/* 2. Traiter (معالجة / إضافة رد) */}
-                          {canAssignOrRespond && (
+                          {/* Primary 2: Traiter (if allowed) else Aperçu */}
+                          {canAssignOrRespond ? (
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
                               onClick={() => setResponseDoc(doc)}
                               title={t('incoming.actions.processTooltip')}
-                              className="h-11 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
+                              className="h-11 min-h-[44px] px-3 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
                             >
-                              <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
+                              <MessageSquare className="h-3.5 w-3.5 me-1 text-[#1a202c]" />
                               {t('incoming.actions.process')}
                             </Button>
-                          )}
-
-                          {/* 3. Archiver (أرشفة في مجلد) */}
-                          {canViewCategorization && (
+                          ) : (
                             <Button
                               type="button"
                               variant="outline"
                               size="sm"
-                              onClick={() => setFolderDoc(doc)}
-                              title={canOrganizeDocuments ? t('incoming.actions.archiveTooltip') : t('incoming.actions.archiveViewTooltip')}
-                              className="h-11 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
+                              onClick={() => setPreviewDoc(doc)}
+                              title={t('incoming.actions.previewTooltip')}
+                              className="h-11 min-h-[44px] px-3 text-xs font-semibold rounded text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
                             >
-                              <FolderOpen className="h-3.5 w-3.5 ml-1" />
-                              {t('incoming.actions.archive')}
+                              <FileText className="h-3.5 w-3.5 me-1" />
+                              {t('incoming.actions.preview')}
                             </Button>
                           )}
 
-                          {/* 4. Transférer (تحويل / تعيين مسؤول) */}
-                          {canAssignOrRespond && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setResponsibleDoc(doc)}
-                              title={t('incoming.actions.transferTooltip')}
-                              className="h-11 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
-                            >
-                              <UserPlus className="h-3.5 w-3.5 ml-1" />
-                              {t('incoming.actions.transfer')}
-                            </Button>
-                          )}
-
-                          {/* More Actions Dropdown (PDF, Edit, Delete) */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                aria-label={t('incoming.actions.more')}
-                                className="h-11 w-11 p-0 text-[#718096] hover:text-[#1a202c] hover:bg-gray-100 rounded"
-                                title={t('incoming.actions.more')}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" dir="rtl" className="w-48 bg-white border border-[#e2e8f0] rounded shadow-sm">
-                              <DropdownMenuItem 
-                                onClick={() => setPreviewDoc(doc)}
-                                className="text-sm py-2 cursor-pointer"
-                              >
-                                <Eye className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                {t('incoming.actions.previewModal')}
-                              </DropdownMenuItem>
-
-                              {doc.scannedDocument && (
-                                <DropdownMenuItem 
-                                  onClick={() => handleDownload(doc)}
-                                  disabled={downloadingDocId === doc._id}
-                                  className="text-sm py-2 cursor-pointer"
+                          {/* Secondary Actions Dropdown (...) */}
+                          {(canAssignOrRespond || canViewCategorization || doc.scannedDocument || canEdit || canDelete) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  aria-label={t('incoming.actions.more')}
+                                  className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-[#5f6b7d] hover:text-[#1a202c] hover:bg-gray-100 rounded"
+                                  title={t('incoming.actions.more')}
                                 >
-                                  {downloadingDocId === doc._id ? (
-                                    <Loader2 className="ml-2 h-4 w-4 text-[#2c5282] animate-spin" />
-                                  ) : (
-                                    <Download className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                  )}
-                                  {downloadingDocId === doc._id ? t('incoming.actions.downloading') : t('incoming.actions.downloadPdf')}
-                                </DropdownMenuItem>
-                              )}
-
-                              {canEdit && (
-                                <DropdownMenuItem 
-                                  onClick={() => handleEdit(doc._id)}
-                                  className="text-sm py-2 cursor-pointer"
-                                >
-                                  <Edit className="ml-2 h-4 w-4 text-[#2c5282]" />
-                                  {t('incoming.actions.editDoc')}
-                                </DropdownMenuItem>
-                              )}
-
-                              {canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
-                                    onClick={() => setDeleteDoc(doc)}
-                                    className="text-sm py-2 text-red-600 focus:text-red-600 cursor-pointer"
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52 bg-white border border-[#e2e8f0] rounded shadow-sm">
+                                {canAssignOrRespond && (
+                                  <DropdownMenuItem
+                                    onClick={() => setPreviewDoc(doc)}
+                                    className="text-sm py-2.5 cursor-pointer"
                                   >
-                                    <Trash2 className="ml-2 h-4 w-4 text-red-600" />
-                                    {t('incoming.actions.deleteDoc')}
+                                    <FileText className="me-2 h-4 w-4 text-amber-700" />
+                                    {t('incoming.actions.previewModal')}
                                   </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                )}
+
+                                {canViewCategorization && (
+                                  <DropdownMenuItem
+                                    onClick={() => setFolderDoc(doc)}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    <FolderOpen className="me-2 h-4 w-4 text-[#4a5568]" />
+                                    {t('incoming.actions.archive')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {canAssignOrRespond && (
+                                  <DropdownMenuItem
+                                    onClick={() => setResponsibleDoc(doc)}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    <UserPlus className="me-2 h-4 w-4 text-purple-700" />
+                                    {t('incoming.actions.transfer')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {doc.scannedDocument && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleDownload(doc)}
+                                    disabled={downloadingDocId === doc._id}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    {downloadingDocId === doc._id ? (
+                                      <Loader2 className="me-2 h-4 w-4 text-[#2c5282] animate-spin" />
+                                    ) : (
+                                      <Download className="me-2 h-4 w-4 text-[#2c5282]" />
+                                    )}
+                                    {downloadingDocId === doc._id ? t('incoming.actions.downloading') : t('incoming.actions.downloadPdf')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {canEdit && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleEdit(doc._id)}
+                                    className="text-sm py-2.5 cursor-pointer"
+                                  >
+                                    <Edit className="me-2 h-4 w-4 text-[#2c5282]" />
+                                    {t('incoming.actions.editDoc')}
+                                  </DropdownMenuItem>
+                                )}
+
+                                {canDelete && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => setDeleteDoc(doc)}
+                                      className="text-sm py-2.5 text-red-600 focus:text-red-600 cursor-pointer"
+                                    >
+                                      <Trash2 className="me-2 h-4 w-4 text-red-600" />
+                                      {t('incoming.actions.deleteDoc')}
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1160,7 +1178,7 @@ const IncomingDocumentsPage: React.FC = () => {
                     {/* Card Top: Serial and Status */}
                     <div className="flex items-center justify-between gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-sm font-bold bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
-                        #{doc.serialNumber} / {doc.year}
+                        <bdi dir="ltr">#{doc.serialNumber} / {doc.year}</bdi>
                       </span>
 
                       {doc.answer ? (
@@ -1177,12 +1195,15 @@ const IncomingDocumentsPage: React.FC = () => {
                     </div>
 
                     {/* Subject */}
-                    <h3 
-                      onClick={() => handleView(doc._id)}
-                      className="text-lg font-bold text-[#1a202c] hover:text-[#2c5282] cursor-pointer leading-relaxed line-clamp-2"
-                      title={doc.subject}
-                    >
-                      {highlightMatch(doc.subject, searchQuery)}
+                    <h3 className="text-lg font-bold leading-relaxed">
+                      <button
+                        type="button"
+                        onClick={() => handleView(doc._id)}
+                        className="text-start font-bold text-[#1a202c] hover:text-[#2c5282] cursor-pointer line-clamp-2 w-full rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
+                        title={doc.subject}
+                      >
+                        {highlightMatch(doc.subject, searchQuery)}
+                      </button>
                     </h3>
 
                     {/* Meta badges */}
@@ -1212,7 +1233,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 text-[#718096]" />
-                        <span>{formatArabicDate(doc.arrivalDate)}</span>
+                        <bdi dir="ltr">{formatArabicDate(doc.arrivalDate)}</bdi>
                       </div>
                       {doc.responsibleUser && typeof doc.responsibleUser === 'object' && (
                         <div className="flex items-center gap-1.5">
@@ -1223,67 +1244,118 @@ const IncomingDocumentsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Card Action Buttons (Voir, Traiter, Archiver, Transférer) */}
-                  <div className="flex items-center gap-1.5 pt-3 border-t border-[#f1f5f9] flex-wrap">
+                  {/* Card Action Buttons (2 primary actions + ... menu) */}
+                  <div className="flex items-center gap-1.5 pt-3 border-t border-[#f1f5f9]">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleView(doc._id)}
-                      className="flex-1 h-11 text-xs font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
+                      className="flex-1 h-11 min-h-[44px] text-xs font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded"
                     >
-                      <Eye className="h-3.5 w-3.5 ml-1" />
+                      <Eye className="h-3.5 w-3.5 me-1" />
                       {t('incoming.actions.view')}
                     </Button>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPreviewDoc(doc)}
-                      className="flex-1 h-11 text-xs font-semibold text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 rounded"
-                    >
-                      <FileText className="h-3.5 w-3.5 ml-1" />
-                      {t('incoming.actions.preview')}
-                    </Button>
-
-                    {canAssignOrRespond && (
+                    {canAssignOrRespond ? (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => setResponseDoc(doc)}
-                        className="flex-1 h-11 text-xs font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
+                        className="flex-1 h-11 min-h-[44px] text-xs font-bold text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] rounded"
                       >
-                        <MessageSquare className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
+                        <MessageSquare className="h-3.5 w-3.5 me-1 text-[#1a202c]" />
                         {t('incoming.actions.process')}
                       </Button>
-                    )}
-
-                    {canViewCategorization && (
+                    ) : (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setFolderDoc(doc)}
-                        className="flex-1 h-11 text-xs font-semibold text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 rounded"
+                        onClick={() => setPreviewDoc(doc)}
+                        className="flex-1 h-11 min-h-[44px] text-xs font-semibold text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 rounded"
                       >
-                        <FolderOpen className="h-3.5 w-3.5 ml-1" />
-                        {t('incoming.actions.archive')}
+                        <FileText className="h-3.5 w-3.5 me-1" />
+                        {t('incoming.actions.preview')}
                       </Button>
                     )}
 
-                    {canAssignOrRespond && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setResponsibleDoc(doc)}
-                        className="flex-1 h-11 text-xs font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded"
-                      >
-                        <UserPlus className="h-3.5 w-3.5 ml-1" />
-                        {t('incoming.actions.transfer')}
-                      </Button>
+                    {(canAssignOrRespond || canViewCategorization || doc.scannedDocument || canEdit || canDelete) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-label={t('incoming.actions.more')}
+                            title={t('incoming.actions.more')}
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-[#5f6b7d] hover:text-[#1a202c] hover:bg-gray-100 rounded shrink-0"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52 bg-white border border-[#e2e8f0] rounded shadow-sm">
+                          {canAssignOrRespond && (
+                            <DropdownMenuItem
+                              onClick={() => setPreviewDoc(doc)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <FileText className="me-2 h-4 w-4 text-amber-700" />
+                              {t('incoming.actions.previewModal')}
+                            </DropdownMenuItem>
+                          )}
+                          {canViewCategorization && (
+                            <DropdownMenuItem
+                              onClick={() => setFolderDoc(doc)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <FolderOpen className="me-2 h-4 w-4 text-[#4a5568]" />
+                              {t('incoming.actions.archive')}
+                            </DropdownMenuItem>
+                          )}
+                          {canAssignOrRespond && (
+                            <DropdownMenuItem
+                              onClick={() => setResponsibleDoc(doc)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <UserPlus className="me-2 h-4 w-4 text-purple-700" />
+                              {t('incoming.actions.transfer')}
+                            </DropdownMenuItem>
+                          )}
+                          {doc.scannedDocument && (
+                            <DropdownMenuItem
+                              onClick={() => handleDownload(doc)}
+                              disabled={downloadingDocId === doc._id}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <Download className="me-2 h-4 w-4 text-[#2c5282]" />
+                              {t('incoming.actions.downloadPdf')}
+                            </DropdownMenuItem>
+                          )}
+                          {canEdit && (
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(doc._id)}
+                              className="text-sm py-2.5 cursor-pointer"
+                            >
+                              <Edit className="me-2 h-4 w-4 text-[#2c5282]" />
+                              {t('incoming.actions.editDoc')}
+                            </DropdownMenuItem>
+                          )}
+                          {canDelete && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setDeleteDoc(doc)}
+                                className="text-sm py-2.5 text-red-600 focus:text-red-600 cursor-pointer"
+                              >
+                                <Trash2 className="me-2 h-4 w-4 text-red-600" />
+                                {t('incoming.actions.deleteDoc')}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                 </div>
@@ -1314,10 +1386,10 @@ const IncomingDocumentsPage: React.FC = () => {
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="h-9 w-20 text-sm text-right border-[#cbd5e1] rounded bg-white">
+                  <SelectTrigger className="h-9 w-20 text-sm text-start border-[#cbd5e1] rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent dir="rtl">
+                  <SelectContent>
                     <SelectItem value="10" className="text-sm">10</SelectItem>
                     <SelectItem value="20" className="text-sm">20</SelectItem>
                     <SelectItem value="50" className="text-sm">50</SelectItem>
@@ -1335,12 +1407,12 @@ const IncomingDocumentsPage: React.FC = () => {
                   disabled={clampedPage <= 1 || isFetching}
                   className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
                 >
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronRight className="h-4 w-4 me-1 rtl:rotate-0 ltr:rotate-180" />
                   {t('common.previous')}
                 </Button>
 
                 <span className="text-sm font-semibold text-[#1a202c] px-2">
-                  {clampedPage} / {totalPages}
+                  <bdi dir="ltr">{clampedPage} / {totalPages}</bdi>
                 </span>
 
                 <Button
@@ -1352,7 +1424,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
                 >
                   {t('common.next')}
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <ChevronLeft className="h-4 w-4 ms-1 rtl:rotate-0 ltr:rotate-180" />
                 </Button>
               </div>
             </div>
@@ -1397,7 +1469,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
       {/* 8. Delete Confirmation Dialog */}
       <AlertDialog open={Boolean(deleteDoc)} onOpenChange={(open) => { if (!open) setDeleteDoc(null); }}>
-        <AlertDialogContent dir="rtl" className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm">
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">
               <Trash2 className="h-6 w-6" />

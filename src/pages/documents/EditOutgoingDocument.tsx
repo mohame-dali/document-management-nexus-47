@@ -10,10 +10,12 @@ import { getDistributableDepartments } from '@/utils/departmentDistributionFilte
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
 import EditOutgoingDocumentForm from '@/components/documents/forms/EditOutgoingDocumentForm';
+import { useDirection } from '@/i18n/useDirection';
 
 const EditOutgoingDocument = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { dir } = useDirection();
 
   const { data: document, isLoading } = useQuery({
     queryKey: ['outgoingDocument', id],
@@ -62,7 +64,7 @@ const EditOutgoingDocument = () => {
 
   if (!document) {
     return (
-      <div className="p-6" dir="rtl">
+      <div className="p-6" dir={dir}>
         <div className="flex flex-col items-center justify-center h-64">
           <FileText className="h-16 w-16 text-gray-300 mb-4" />
           <h2 className="text-xl font-medium text-gray-600">الوثيقة غير موجودة</h2>
@@ -76,16 +78,16 @@ const EditOutgoingDocument = () => {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto" dir="rtl">
+    <div className="p-6 max-w-4xl mx-auto" dir={dir}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => navigate('/dashboard/outgoing-documents')}
-            className="ml-2"
+            className="me-2"
           >
-            <ArrowLeft className="h-4 w-4 ml-1" />
+            <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" />
             رجوع
           </Button>
           <h1 className="text-2xl font-bold">تعديل الوثيقة الصادرة</h1>

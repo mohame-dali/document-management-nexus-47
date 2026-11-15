@@ -94,7 +94,7 @@ const MultiDepartmentSelectField: React.FC<MultiDepartmentSelectFieldProps> = ({
             <Badge 
               key={dept._id} 
               variant="secondary" 
-              className="flex items-center gap-1 pr-1"
+              className="flex items-center gap-1 ps-1"
             >
               {dept.name}
               <Button
@@ -124,7 +124,7 @@ const MultiDepartmentSelectField: React.FC<MultiDepartmentSelectFieldProps> = ({
                 ? placeholder 
                 : `${selectedDepartments.length} قسم محدد`
               }
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </FormControl>
         </PopoverTrigger>

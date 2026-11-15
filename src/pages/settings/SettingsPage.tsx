@@ -241,7 +241,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section - Clean Institutional AdminLTE */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -361,14 +361,14 @@ const SettingsPage = () => {
                   <Camera className="h-5 w-5 text-[#2c5282]" />
                   <span>الصورة الشخصية</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#718096]">
+                <CardDescription className="text-base text-[#5f6b7d]">
                   صورتك تظهر في التوقيعات وسجلات العمليات
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
                 <Avatar className="h-28 w-28 border-2 border-[#2c5282] shadow-sm">
                   <AvatarImage
-                    src={photoPreview || (currentUser?.photo ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${currentUser.photo}` : undefined)}
+                    src={photoPreview || (currentUser?.photo ? `${import.meta.env.VITE_API_URL || ''}${currentUser.photo}` : undefined)}
                     alt={currentUser?.username}
                   />
                   <AvatarFallback className="bg-[#2c5282] text-white text-2xl font-bold">
@@ -430,7 +430,7 @@ const SettingsPage = () => {
                     <User className="h-5 w-5 text-[#2c5282]" />
                     <span>بيانات الحساب</span>
                   </CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     المعلومات الإدارية المسجلة لحسابك في المنظومة
                   </CardDescription>
                 </CardHeader>
@@ -523,7 +523,7 @@ const SettingsPage = () => {
                 <Shield className="h-5 w-5 text-[#2c5282]" />
                 <span>سياسات الأمان والحماية</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#718096]">
+              <CardDescription className="text-base text-[#5f6b7d]">
                 تكوين معايير الجلسات وحماية الدخول ضد المحاولات المشبوهة
               </CardDescription>
             </CardHeader>
@@ -654,7 +654,7 @@ const SettingsPage = () => {
                 <Bell className="h-5 w-5 text-[#2c5282]" />
                 <span>قنوات وتفضيلات التنبيهات</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#718096]">
+              <CardDescription className="text-base text-[#5f6b7d]">
                 تخصيص الإشعارات الفورية والتنبيهات البريدية للأحداث الهامة
               </CardDescription>
             </CardHeader>
@@ -766,7 +766,7 @@ const SettingsPage = () => {
                 <Sliders className="h-5 w-5 text-[#2c5282]" />
                 <span>تفضيلات العرض والمظهر</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#718096]">
+              <CardDescription className="text-base text-[#5f6b7d]">
                 ضبط كثافة الجداول، عدد النتائج الافتراضي، وطريقة ترتيب السجلات
               </CardDescription>
             </CardHeader>
@@ -865,7 +865,7 @@ const SettingsPage = () => {
                   <Database className="h-5 w-5 text-[#2c5282]" />
                   <span>النسخ الاحتياطي وأرشفة البيانات</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#718096]">
+                <CardDescription className="text-base text-[#5f6b7d]">
                   متابعة وتأمين الوثائق والمرفقات بصيغة رقمية متكاملة
                 </CardDescription>
               </div>
@@ -959,7 +959,7 @@ const SettingsPage = () => {
                   <MessageCircle className="h-5 w-5 text-[#2c5282]" />
                   <span>سياسة حفظ وحذف المراسلات</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#718096]">
+                <CardDescription className="text-base text-[#5f6b7d]">
                   إدارة سعة التخزين وتحديد فترة الاحتفاظ بالمراسلات والمرفقات
                 </CardDescription>
               </div>
@@ -1049,7 +1049,7 @@ const SettingsPage = () => {
                       <CardTitle className="text-xl font-bold text-[#1a202c]">
                         هوية المؤسسة والأقسام السيادية
                       </CardTitle>
-                      <CardDescription className="text-sm text-[#718096] mt-0.5">
+                      <CardDescription className="text-sm text-[#5f6b7d] mt-0.5">
                         إدارة التسمية الرسمية، شعار المؤسسة، وتعيين الأقسام الوظيفية الرئيسية (RH، مكتب الضبط، الإدارة العامة)
                       </CardDescription>
                     </div>
@@ -1153,7 +1153,6 @@ const SettingsPage = () => {
       <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
         <DialogContent
           className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm"
-          dir="rtl"
         >
           <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
             <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] flex items-center gap-3">
@@ -1267,7 +1266,6 @@ const SettingsPage = () => {
       <AlertDialog open={isTerminateSessionsOpen} onOpenChange={setIsTerminateSessionsOpen}>
         <AlertDialogContent
           className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm"
-          dir="rtl"
         >
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">

@@ -140,7 +140,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 نوع الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -163,7 +163,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 موضوع / اختصاص الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -188,7 +188,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 تاريخ الحصول على الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -211,7 +211,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 المستوى التعليمي / الصنف
               </Label>
               <Input
@@ -225,7 +225,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 المؤسسة المانحة / الجامعة
               </Label>
               <Input
@@ -237,7 +237,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-gray-700 block mb-1">
                 المرجع / رقم التسجيل
               </Label>
               <Input
@@ -250,7 +250,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
           </div>
 
           <div>
-            <Label className="text-xs font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-gray-700 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea

@@ -176,8 +176,9 @@ exports.uploadPersonnelPhoto = multer({
 });
 
 exports.uploadDocument = (req, res, next) => {
-  // If there's already a scannedDocumentPath, skip multer and handle it
-  if (req.body.scannedDocumentPath) {
+  // Vérification sécurisée pour éviter le crash si req.body est undefined
+  // (req.body n'est défini que si Multer a traité le formulaire avant ou via body-parser)
+  if (req.body && req.body.scannedDocumentPath) {
     return exports.handleScannedDocument(req, res, next);
   }
   
@@ -189,6 +190,10 @@ exports.uploadDocument = (req, res, next) => {
   }).single('document')(req, res, (err) => {
     if (err) {
       return next(err);
+    }
+    // Si scannedDocumentPath a été fourni dans un champ de formulaire multipart
+    if (req.body && req.body.scannedDocumentPath && !req.file) {
+      return exports.handleScannedDocument(req, res, next);
     }
     next();
   });

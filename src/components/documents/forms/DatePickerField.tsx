@@ -15,6 +15,7 @@ import {
 import { ControllerRenderProps, FieldValues } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DatePickerFieldProps<TFieldValues extends FieldValues = FieldValues> {
   field: ControllerRenderProps<TFieldValues>;
@@ -30,6 +31,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
   selectDateText
 }) => {
   const isMobile = useIsMobile();
+  const { dir } = useDirection();
 
   return (
     <FormItem className="space-y-2">
@@ -40,15 +42,15 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
             <Button
               variant="outline"
               className={cn(
-                "w-full flex justify-start text-right font-normal touch-target input-responsive",
+                "w-full flex justify-start text-start font-normal touch-target input-responsive",
                 !field.value ? "text-muted-foreground" : "",
                 "hover:bg-accent hover:text-accent-foreground transition-colors"
               )}
             >
-              <Calendar className="ml-2 icon-responsive" />
-              <span className="flex-1 text-right">
+              <Calendar className="me-2 icon-responsive" />
+              <span className="flex-1 text-start">
                 {field.value ? (
-                  formatArabicDate(field.value)
+                  <bdi dir="ltr">{formatArabicDate(field.value)}</bdi>
                 ) : (
                   <span className="text-muted-foreground">{selectDateText}</span>
                 )}
@@ -72,7 +74,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
                 "p-3 pointer-events-auto",
                 isMobile ? "scale-95" : ""
               )}
-              dir="rtl"
+              dir={dir}
             />
           </PopoverContent>
         </Popover>

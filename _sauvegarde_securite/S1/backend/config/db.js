@@ -1,0 +1,77 @@
+
+const mongoose = require('mongoose');
+mongoose.set('bufferCommands', false);
+const User = require('../models/User');
+const bcrypt = require('bcryptjs');
+
+// Admin default credentials
+const DEFAULT_ADMIN = {
+  username: 'admin',
+  password: 'Admin123!', // This will be hashed
+  role: 'Admin',
+  isActive: true,
+  mustChangePassword: true
+};
+
+// Default MongoDB URI if not provided in environment variables
+const DEFAULT_MONGODB_URI = 'mongodb://127.0.0.1:27017/document-management';
+
+// Function to create default admin if none exists
+const createDefaultAdmin = async () => {
+  try {
+    // Check if there's any admin user already
+    const adminExists = await User.findOne({ role: 'Admin' });
+    
+    if (!adminExists) {
+      console.log('No admin user found. Creating default admin account...');
+      
+      // Create new admin user
+      await User.create({
+        username: DEFAULT_ADMIN.username,
+        password: DEFAULT_ADMIN.password, // This will be hashed by the pre-save hook in User model
+        role: DEFAULT_ADMIN.role,
+        isActive: DEFAULT_ADMIN.isActive,
+        mustChangePassword: DEFAULT_ADMIN.mustChangePassword
+      });
+      
+      console.log('Default admin user created successfully.');
+      console.log('Username:', DEFAULT_ADMIN.username);
+      console.log('Password:', DEFAULT_ADMIN.password);
+      console.log('Please change these credentials after first login!');
+    }
+  } catch (error) {
+    console.error('Error creating default admin:', error.message);
+  }
+};
+
+const connectDB = async () => {
+  try {
+    const dbUri = process.env.MONGODB_URI;
+    
+    if (!dbUri) {
+      console.warn('[Database] MONGODB_URI not defined — running in mock database mode.');
+      return null;
+    }
+    
+    console.log('Connecting to MongoDB...');
+    const isLocalOrStandalone = !dbUri.includes('+srv') && !dbUri.includes('replicaSet');
+    const conn = await mongoose.connect(dbUri, {
+      ...(isLocalOrStandalone ? { directConnection: true } : {}),
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 5000,
+    });
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // Create default admin account if needed
+    await createDefaultAdmin();
+    return conn;
+  } catch (error) {
+    console.warn(`[Database] MongoDB offline (${error.message}) — running in mock database mode.`);
+    return null;
+  }
+};
+
+module.exports = connectDB;
+connectDB.connectDB = connectDB;
+connectDB.mongoose = mongoose;

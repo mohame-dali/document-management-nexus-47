@@ -284,7 +284,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               السنوات الإدارية المتاحة
             </Label>
             {loadingYears && (
-              <span className="text-xs text-[#718096] flex items-center gap-1">
+              <span className="text-xs text-[#5f6b7d] flex items-center gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 جاري التحميل...
               </span>

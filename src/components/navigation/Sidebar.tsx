@@ -4,11 +4,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageProvider';
-import { useDirection } from '@/i18n/useDirection';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useDirection } from '@/i18n/useDirection';
 import { 
   Building2, 
   Users2, 
@@ -50,13 +57,18 @@ import { useHubBadges } from '@/hooks/useHubBadges';
 
 const Sidebar = () => {
   const { currentUser } = useAuth();
-  const { isOpen } = useSidebar();
+  const { isOpen, isMobileOpen, setIsMobileOpen, closeMobile } = useSidebar();
+  const isMobile = useIsMobile();
+  const { dir } = useDirection();
   const { t } = useLanguage();
-  const { isRTL } = useDirection();
   const navigate = useNavigate();
   const location = useLocation();
   const [profileDialogOpen, setProfileDialogOpen] = React.useState(false);
   const { unreadMessages } = useHubBadges();
+
+  React.useEffect(() => {
+    closeMobile();
+  }, [location.pathname, location.search, closeMobile]);
 
   // Récupérer les paramètres de l'organisation pour rhDepartmentId (LOT 8)
   const { data: orgSettings } = useQuery({
@@ -214,7 +226,7 @@ const Sidebar = () => {
 
   const getUserPhotoUrl = (user: { photo?: string } | null | undefined) => {
     if (user?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const API_URL = import.meta.env.VITE_API_URL || '';
       // Remove leading slash if it exists to avoid double slashes
       const photoPath = user.photo.startsWith('/') ? user.photo.slice(1) : user.photo;
       return `${API_URL}/${photoPath}`;
@@ -222,24 +234,32 @@ const Sidebar = () => {
     return null;
   };
 
-  return (
-    <div className={cn(
-      "h-screen flex flex-col bg-[#1a202c] text-slate-100 border-e border-slate-800 shadow-sm transition-all duration-200 ease-in-out select-none",
-      isOpen ? "w-64" : "w-16"
-    )}>
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    closeMobile();
+  };
+
+  const renderSidebarBody = (expanded: boolean) => (
+    <div
+      data-surface="dark"
+      className={cn(
+        "h-full flex flex-col bg-[#1a202c] text-slate-100 border-e border-slate-800 shadow-sm transition-all duration-200 ease-in-out select-none",
+        expanded ? "w-full md:w-64" : "w-16"
+      )}
+    >
       {/* Header - Fixed */}
       <div className={cn(
         "flex-shrink-0 border-b border-slate-800/80 bg-[#161b24] transition-all duration-200",
-        isOpen ? "p-4 sm:p-5" : "p-3"
+        expanded ? "p-4 sm:p-5" : "p-3"
       )}>
         <div>
-          <div className={cn("flex items-center gap-3 mb-3", isRTL ? "flex-row-reverse" : "flex-row")}>
-            <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm">
+          <div className="flex flex-row items-center gap-3 mb-3">
+            <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm shrink-0">
               <FileText className="h-5 w-5" />
             </div>
-            {isOpen && (
-              <div className="min-w-0">
-                <h1 className="text-base font-bold text-white tracking-tight truncate">
+            {expanded && (
+              <div className="min-w-0 pe-8 md:pe-0">
+                <h1 className="text-base font-bold text-white truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
                 <p className="text-sm text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
@@ -248,29 +268,30 @@ const Sidebar = () => {
           </div>
           
           {currentUser && (
-            <div className={cn("flex items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm", isRTL ? "flex-row-reverse" : "flex-row")}>
+            <div className="flex flex-row items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
               <ContextMenu>
-                <ContextMenuTrigger>
-                  <Avatar 
-                    className="h-10 w-10 ring-1 ring-slate-600 cursor-pointer hover:ring-[#2c5282] transition-colors duration-200"
-                    title={!isOpen ? currentUser.username : undefined}
+                <ContextMenuTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setProfileDialogOpen(true)}
+                    aria-label={t('sidebar.profileSettings')}
+                    title={!expanded ? currentUser.username : t('sidebar.profileSettings')}
+                    className="rounded-full shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]"
                   >
-                    <AvatarImage 
-                      src={getUserPhotoUrl(currentUser)} 
-                      alt={currentUser.username}
-                      className="object-cover"
-                      onError={(e) => {
-                        console.log('Image failed to load:', getUserPhotoUrl(currentUser));
-                        e.currentTarget.style.display = 'none';
-                      }}
-                      onLoad={() => {
-                        console.log('Image loaded successfully:', getUserPhotoUrl(currentUser));
-                      }}
-                    />
-                    <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
-                      {getUserInitials(currentUser.username)}
-                    </AvatarFallback>
-                  </Avatar>
+                    <Avatar className="h-10 w-10 ring-1 ring-slate-600 hover:ring-[#2c5282] transition-colors duration-200">
+                      <AvatarImage 
+                        src={getUserPhotoUrl(currentUser)} 
+                        alt={currentUser.username}
+                        className="object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
+                        {getUserInitials(currentUser.username)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
                 </ContextMenuTrigger>
                 <ContextMenuContent className="text-start">
                   <ContextMenuItem onClick={() => setProfileDialogOpen(true)}>
@@ -279,7 +300,7 @@ const Sidebar = () => {
                   </ContextMenuItem>
                 </ContextMenuContent>
               </ContextMenu>
-              {isOpen && (
+              {expanded && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">
                     {currentUser.username}
@@ -317,28 +338,27 @@ const Sidebar = () => {
                   key={item.id}
                   type="button"
                   className={cn(
-                    "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex items-center group text-start relative",
-                    isRTL ? "flex-row-reverse" : "flex-row",
-                    isOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
+                    "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row items-center group text-start relative focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]",
+                    expanded ? "justify-start gap-3 px-3" : "justify-center px-2",
                     active 
                       ? "bg-[#2c5282] text-white shadow-sm font-medium" 
                       : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
                   )}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => handleNavClick(item.path)}
                   title={item.label}
                 >
                   <item.icon className={cn(
                     "h-4 w-4 flex-shrink-0 transition-colors duration-200",
                     active ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                   )} />
-                  {isOpen ? (
+                  {expanded ? (
                     <>
                       <span className="truncate flex-1">
                         {item.label}
                       </span>
                       {hasBadge && (
                         <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold animate-pulse-subtle">
-                          {(item.badge ?? 0) > 99 ? '99+' : item.badge}
+                          <bdi dir="ltr">{(item.badge ?? 0) > 99 ? '99+' : item.badge}</bdi>
                         </Badge>
                       )}
                     </>
@@ -353,20 +373,45 @@ const Sidebar = () => {
           </nav>
 
           {/* Folder Categorization Sidebar for Users */}
-          {isOpen && currentUser?.role === 'User' && (
+          {expanded && currentUser?.role === 'User' && (
             <div className="flex-shrink-0 p-3 border-t border-slate-800 bg-[#161b24]/60">
-              <FolderSidebar />
+              <FolderSidebar onNavigate={closeMobile} />
             </div>
           )}
         </div>
       </ScrollArea>
-      
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar (>= 768px) */}
+      <aside className="hidden md:flex h-screen shrink-0">
+        {renderSidebarBody(isOpen)}
+      </aside>
+
+      {/* Mobile Drawer (< 768px) */}
+      {isMobile && (
+        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+          <SheetContent
+            side={dir === 'rtl' ? 'right' : 'left'}
+            dir={dir}
+            className="w-72 sm:max-w-72 p-0 bg-[#1a202c] text-slate-100 border-slate-800 flex flex-col gap-0"
+            closeButtonClassName="text-slate-200 hover:text-white hover:bg-[#2d3748] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]"
+          >
+            <SheetTitle className="sr-only">{t('sidebar.dmsSystem')}</SheetTitle>
+            <SheetDescription className="sr-only">{t('sidebar.documentManagement')}</SheetDescription>
+            {renderSidebarBody(true)}
+          </SheetContent>
+        </Sheet>
+      )}
+
       {/* Profile Settings Dialog */}
       <ProfileSettingsDialog 
         open={profileDialogOpen} 
         onOpenChange={setProfileDialogOpen} 
       />
-    </div>
+    </>
   );
 };
 

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDirection } from '@/i18n/useDirection';
 
 import ScannerSetup from '@/components/scanner/ScannerSetup';
 import ScanSettingsComponent from '@/components/scanner/ScanSettings';
@@ -18,7 +19,7 @@ import {
   getRecentScans
 } from '@/services/scannerService';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const translations = {
   title: 'مسح الوثائق',
@@ -51,6 +52,7 @@ const translations = {
 const ScanDocumentPage: React.FC = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { dir } = useDirection();
 
   const [selectedScanner, setSelectedScanner] = useState('');
   const [scanSettings, setScanSettings] = useState({
@@ -208,7 +210,7 @@ const ScanDocumentPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4" dir="rtl">
+    <div className="container mx-auto p-4" dir={dir}>
       <h1 className="text-2xl font-bold mb-6">{translations.title}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

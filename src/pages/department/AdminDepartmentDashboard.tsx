@@ -86,7 +86,7 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <Users className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#718096] px-2 py-0.5 rounded font-normal">
+            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
               المستخدمين
             </span>
           </div>
@@ -119,7 +119,7 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <FileText className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#718096] px-2 py-0.5 rounded font-normal">
+            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
               الوارد
             </span>
           </div>
@@ -152,7 +152,7 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <FileText className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#718096] px-2 py-0.5 rounded font-normal">
+            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
               الصادر
             </span>
           </div>
@@ -185,7 +185,7 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <FolderOpen className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#718096] px-2 py-0.5 rounded font-normal">
+            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
               التنظيم
             </span>
           </div>
@@ -209,7 +209,7 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <MessageSquare className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#718096] px-2 py-0.5 rounded font-normal">
+            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
               التواصل
             </span>
           </div>

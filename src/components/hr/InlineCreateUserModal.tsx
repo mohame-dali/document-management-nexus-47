@@ -180,7 +180,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[540px] text-right" dir="rtl">
+      <DialogContent className="sm:max-w-[540px] text-right">
         <DialogHeader className="text-right sm:text-right border-b border-[#e2e8f0] pb-4">
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-[#1a202c]">
             <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
@@ -297,7 +297,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
               <SelectTrigger id="quick-role" className="h-10 bg-white border-[#cbd5e1] text-right">
                 <SelectValue placeholder="اختر الدور" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="Director">مدير الإدارة (Director)</SelectItem>
                 <SelectItem value="AdminTuningDesk">مكتب الضبط (AdminTuningDesk)</SelectItem>
                 <SelectItem value="AdminDepartment">مدير قسم (AdminDepartment)</SelectItem>
@@ -321,7 +321,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
               <SelectTrigger id="quick-dept" className="h-10 bg-white border-[#cbd5e1] text-right">
                 <SelectValue placeholder="اختر القسم" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="none">بدون قسم محدد (تنسيق عام)</SelectItem>
                 {departments.map((d) => (
                   <SelectItem key={d._id} value={d._id}>

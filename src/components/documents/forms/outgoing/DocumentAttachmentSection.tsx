@@ -132,12 +132,12 @@ const DocumentAttachmentSection: React.FC<DocumentAttachmentSectionProps> = ({
           >
             {scanning ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2"></div>
                 جاري المسح...
               </>
             ) : (
               <>
-                <Scan className="h-4 w-4 mr-2" />
+                <Scan className="h-4 w-4 me-2" />
                 بدء المسح
               </>
             )}
@@ -151,7 +151,7 @@ const DocumentAttachmentSection: React.FC<DocumentAttachmentSectionProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>جاري المسح...</span>
-                  <span>{scanProgress}%</span>
+                  <bdi dir="ltr">{scanProgress}%</bdi>
                 </div>
                 <Progress value={scanProgress} className="h-2" />
               </div>

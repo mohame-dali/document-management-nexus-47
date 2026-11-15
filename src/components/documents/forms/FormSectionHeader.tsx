@@ -21,17 +21,17 @@ const FormSectionHeader: React.FC<FormSectionHeaderProps> = ({
 
   return (
     <div className={`flex items-center justify-between mb-6 ${className}`}>
-      <div className="flex items-center space-x-reverse space-x-4">
+      <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           onClick={() => navigate(backUrl)}
-          className={`flex items-center space-x-reverse space-x-2 ${
+          className={`flex items-center gap-2 ${
             className.includes('text-white') 
               ? 'text-white hover:bg-white/20' 
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
           <span>{backText}</span>
         </Button>
       </div>

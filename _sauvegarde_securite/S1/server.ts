@@ -1,0 +1,418 @@
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+import { fileURLToPath } from 'url'; // ✅ IMPORT AJOUTÉ
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { createServer as createViteServer } from 'vite';
+import { createRequire } from 'module';
+
+// ✅ CORRECTION POUR LES MODULES ES (Node 20+)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const require = createRequire(import.meta.url);
+const { connectDB, mongoose } = require('./backend/config/db');
+
+// Désactivation du buffering des commandes Mongoose pour fail-fast immédiat
+mongoose.set('bufferCommands', false);
+
+// Journalisation d'une ligne à chaque changement d'état de connexion MongoDB (sans donnée sensible)
+mongoose.connection.on('connected', () => {
+  console.log('[Database] MongoDB connecté (readyState: 1)');
+});
+mongoose.connection.on('disconnected', () => {
+  console.warn('[Database] MongoDB déconnecté (readyState: 0)');
+});
+mongoose.connection.on('reconnected', () => {
+  console.log('[Database] MongoDB reconnecté (readyState: 1)');
+});
+mongoose.connection.on('error', (err: Error) => {
+  console.error('[Database] Erreur connexion MongoDB:', err.message);
+});
+
+dotenv.config({ path: path.join(__dirname, 'backend', '.env') });
+dotenv.config(); // Fallback vers .env racine si présent
+
+// Configuration automatique des threads IA pour préserver le CPU
+if (!process.env.LLAMA_THREADS) {
+  // Utiliser les cœurs physiques (souvent la moitié des cœurs logiques)
+  const physicalCores = Math.max(1, Math.floor(os.cpus().length / 2));
+  process.env.LLAMA_THREADS = physicalCores.toString();
+  console.log(`[AI] LLAMA_THREADS configuré sur ${physicalCores} (cœurs physiques)`);
+}
+
+// Instance unique connectDB et mongoose déjà importée depuis ./backend/config/db
+const errorHandler = require('./backend/middleware/error');
+
+// Check JWT_SECRET
+if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('🔴 FATAL: JWT_SECRET absent du .env');
+    console.error('   Générer : node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+    process.exit(1);
+  } else {
+    console.warn('⚠️ AVERTISSEMENT: JWT_SECRET absent du .env — utilisation d\'une clé sécurisée pour le développement.');
+    process.env.JWT_SECRET = 'dms_dev_jwt_secret_key_64_bytes_secure_random_fallback_token_2026';
+  }
+}
+process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
+process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
+
+// Warm-up de l'IA (non-bloquant)
+setTimeout(async () => {
+  try {
+    console.log('[AI Warm-up] Préchargement des modèles en cours...');
+    const { checkOllamaHealth } = require('./backend/services/ollamaService');
+    const health = await checkOllamaHealth();
+    if (health?.ok) {
+      console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
+    } else {
+      console.log('[AI Warm-up] ℹ️ Modèles IA non téléchargés (mode hors ligne).');
+    }
+  } catch (err: unknown) {
+    console.warn('[AI Warm-up] Erreur de préchargement:', (err as Error).message);
+  }
+}, 5000); // Attendre 5 secondes que le serveur soit stable avant de charger les 5 Go
+
+// Démarrer le scheduler de backup si MongoDB est connecté
+try {
+  const { startBackupScheduler } = require('./backend/services/backupScheduler');
+  mongoose.connection.on('connected', () => {
+    startBackupScheduler().catch((e: Error) => console.warn('[Backup Scheduler] Notice:', e.message));
+  });
+  if (mongoose.connection.readyState === 1) {
+    startBackupScheduler().catch((e: Error) => console.warn('[Backup Scheduler] Notice:', e.message));
+  }
+} catch (err: unknown) {
+  console.warn('[Server] Backup scheduler non démarré:', (err as Error).message);
+}
+
+// Démarrer le scheduler de nettoyage des fichiers temporaires (>24h)
+try {
+  const { startCleanupScheduler } = require('./backend/services/cleanupScheduler');
+  startCleanupScheduler();
+} catch (err: unknown) {
+  console.warn('[Server] Cleanup scheduler non démarré:', (err as Error).message);
+}
+
+// Cron quotidien à 8h pour le rattrapage des notifications d'activité
+try {
+  const cron = require('node-cron');
+  const { checkDailyNotifications } = require('./backend/utils/activityNotificationHelper');
+  cron.schedule('0 8 * * *', () => {
+    console.log('[Cron] Exécution du rattrapage quotidien des notifications d\'activité');
+    checkDailyNotifications().catch((e: Error) => console.warn('[Cron Notifications] Error:', e.message));
+  });
+} catch (err: unknown) {
+  console.warn('[Server] Cron notification activité non démarré:', (err as Error).message);
+}
+
+const app = express();
+const httpServer = createServer(app);
+
+// Socket.io setup
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+try {
+  require('./backend/sockets/index')(io);
+} catch (e: unknown) {
+  console.warn('Socket handler initialization notice:', (e as Error).message);
+}
+
+// Body & Cookie parsers
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cookieParser());
+
+// Sanitize NoSQL operator injection in req.body, req.params, req.query (compatible with Express 5)
+const mongoSanitize = require('express-mongo-sanitize');
+app.use((req, _res, next) => {
+  if (req.body) {
+    mongoSanitize.sanitize(req.body, { replaceWith: '_', allowDots: false });
+  }
+  if (req.params) {
+    mongoSanitize.sanitize(req.params, { replaceWith: '_', allowDots: false });
+  }
+  if (req.query) {
+    mongoSanitize.sanitize(req.query, { replaceWith: '_', allowDots: false });
+  }
+  next();
+});
+
+// Enable CORS
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires', 'X-Requested-With', 'Accept', 'Origin']
+}));
+
+// Static & Protected document files
+const backendDir = path.join(process.cwd(), 'backend');
+const { protect } = require('./backend/middleware/auth');
+const fileController = require('./backend/controllers/fileController');
+
+// Protected document endpoint
+app.get('/api/files/:type/:id/:filename', protect, fileController.serveProtectedFile);
+
+// Protect /courrier against unauthenticated access
+app.use('/courrier', protect, fileController.serveCourrierStatic);
+
+// Public profile photos (avatars)
+app.use('/uploads/usersphoto', express.static(path.join(backendDir, 'uploads/usersphoto')));
+app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads/personnelphoto')));
+
+// Protect sensitive uploads and templates
+app.use('/uploads', protect, express.static(path.join(backendDir, 'uploads')));
+
+// Swagger API Documentation
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const swaggerSpec = require('./backend/config/swagger');
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api-docs.json', (_req: express.Request, res: express.Response) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+} catch (err: unknown) {
+  console.warn('Swagger docs initialization notice:', (err as Error).message);
+}
+
+// Log warning when API is accessed with offline database
+app.use('/api', (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+  if (mongoose.connection.readyState !== 1 && !req.path.startsWith('/test') && !req.path.startsWith('/health')) {
+    console.log(`[API Notice] Route: ${req.method} ${req.originalUrl} (DB offline, fallback mode active)`);
+  }
+  next();
+});
+
+// Real backend routes (used when MongoDB is connected)
+try {
+  app.use('/api/auth', require('./backend/routes/auth'));
+  app.use('/api/admin', require('./backend/routes/adminRoutes'));
+  app.use('/api/dashboard', require('./backend/routes/dashboardRoutes'));
+  app.use('/api/users', require('./backend/routes/users'));
+  app.use('/api/departments', require('./backend/routes/departments'));
+  app.use('/api/incoming-documents', require('./backend/routes/incomingDocuments'));
+  app.use('/api/outgoing-documents', require('./backend/routes/outgoingDocuments'));
+  app.use('/api/folders', require('./backend/routes/folders'));
+  app.use('/api/messages', require('./backend/routes/messages'));
+  app.use('/api/document-options', require('./backend/routes/documentOptions'));
+  app.use('/api/scan', require('./backend/routes/scan'));
+  app.use('/api/serial-number', require('./backend/routes/serialNumber'));
+  app.use('/api/templates', require('./backend/routes/templates'));
+  app.use('/api/responsible-notifications', require('./backend/routes/responsibleNotifications'));
+  app.use('/api/audit-logs', require('./backend/routes/auditLogs'));
+  app.use('/api/activity-notifications', require('./backend/routes/activityNotifications'));
+  app.use('/api/message-settings', require('./backend/routes/messageSettings'));
+  app.use('/api/backup', require('./backend/routes/backup'));
+  app.use('/api/organization-settings', require('./backend/routes/organizationSettingsRoutes'));
+  app.use('/api/hr', require('./backend/routes/personnelRoutes'));
+  app.use('/api/hr', require('./backend/routes/personnelDocumentRoutes'));
+  app.use('/api/hr/stages', require('./backend/routes/rhStageRoutes'));
+  app.use('/api/hr/references', require('./backend/routes/rhReferenceRoutes'));
+  app.use('/api/hr', require('./backend/routes/rhStagePersonnelRoutes'));
+  app.use('/api/hr', require('./backend/routes/rhPersonnelHistoryRoutes'));
+  app.use('/api/attendance', require('./backend/routes/attendanceRoutes'));
+  app.use('/api/attendance', require('./backend/routes/attendanceDeclarationRoutes'));
+  app.use('/api/hr/leave-reasons', require('./backend/routes/leaveReasonRoutes'));
+  app.use('/api/trash', require('./backend/routes/trashRoutes'));
+  app.use('/api/organization-chart', require('./backend/routes/organizationChartRoutes'));
+  app.use('/api/ai', require('./backend/routes/aiRoutes'));
+  app.use('/api/search', require('./backend/routes/globalSearchRoutes'));
+} catch (err: unknown) {
+  console.warn('Notice loading backend routes:', (err as Error).message);
+}
+
+// Health check endpoints for proxy and connectivity diagnostics
+app.get(['/api/test', '/api/health'], (_req: express.Request, res: express.Response) => {
+  res.json({
+    success: true,
+    message: 'API is working',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  });
+});
+
+// Global DB offline error fallback (per AI Studio Web Migration guidelines)
+interface AppError extends Error {
+  name: string;
+  message: string;
+  code?: string | number;
+}
+app.use((err: AppError, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (
+    err.name === 'MongooseError' ||
+    err.name === 'MongoNetworkError' ||
+    err.name === 'MongooseServerSelectionError' ||
+    err.message?.includes('buffering timed out') ||
+    err.message?.includes('before initial connection is complete') ||
+    err.message?.includes('connect ECONNREFUSED')
+  ) {
+    console.warn(`[AI Studio] Database offline — returning fallback response for ${req.method} ${req.originalUrl}`);
+    if (req.method === 'GET') {
+      if (req.path.includes('/organization-settings')) {
+        return res.json({
+          success: true,
+          data: {
+            nomAdministration: 'Système de Gestion du Courrier',
+            logoAdministration: '',
+            rhDepartmentId: null,
+            typesAssociationPersonnel: ['Stage', 'Formation', 'Diplôme', 'Autre'],
+          }
+        });
+      }
+      if (req.path.includes('/dashboard/stats')) {
+        return res.json({
+          success: true,
+          data: {
+            year: new Date().getFullYear(),
+            incomingTotal: 0,
+            outgoingTotal: 0,
+            pending: 0,
+            totalDocuments: 0,
+          }
+        });
+      }
+      if (req.path.includes('unread-count') || req.path.includes('/count')) {
+        return res.json({ success: true, count: 0, data: { count: 0 } });
+      }
+      return res.json({
+        success: true,
+        data: req.path.endsWith('s') || req.path.endsWith('s/') ? [] : {},
+        count: 0
+      });
+    }
+    return res.status(503).json({
+      success: false,
+      error: 'Service temporarily unavailable (database offline)'
+    });
+  }
+  next(err);
+});
+
+// Error handler middleware
+app.use(errorHandler);
+
+const portArg = process.argv.find((arg) => arg.startsWith('--port='));
+const portArgIndex = process.argv.indexOf('--port');
+const portFromArgs = portArg
+  ? parseInt(portArg.split('=')[1], 10)
+  : portArgIndex !== -1
+  ? parseInt(process.argv[portArgIndex + 1], 10)
+  : undefined;
+const PORT = Number(portFromArgs || (process.env.PORT && process.env.PORT !== '8080' ? process.env.PORT : 3000));
+
+// Vérification de la disponibilité des modèles IA GGUF (ALLaM 7B & BGE-M3) au démarrage
+function checkAIModels() {
+  const modelsDir = path.join(process.cwd(), 'models');
+  const chatModelName = 'ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf';
+  const embedModelName = 'bge-m3-q4_k_m.gguf';
+
+  const chatPath = process.env.LLAMA_CHAT_MODEL_PATH || path.join(modelsDir, chatModelName);
+  const embedPath = process.env.LLAMA_EMBEDDING_MODEL_PATH || path.join(modelsDir, embedModelName);
+
+  const hasChat = fs.existsSync(chatPath) || fs.existsSync(path.join(modelsDir, 'qwen2.5-7b-instruct-q4_k_m.gguf'));
+  const hasEmbed = fs.existsSync(embedPath) || fs.existsSync(path.join(modelsDir, 'nomic-embed-text-v1.5.Q8_0.gguf'));
+
+  if (!hasChat || !hasEmbed) {
+    console.warn('\n' + '═'.repeat(78));
+    console.warn("⚠️ MODÈLE IA MANQUANT. Lancez 'npm run download-models' ou 'npm run setup' pour télécharger ALLaM et BGE-M3.");
+    if (!hasChat) console.warn(`   ❌ Modèle Chat absent : ${path.basename(chatPath)}`);
+    if (!hasEmbed) console.warn(`   ❌ Modèle Embedding absent : ${path.basename(embedPath)}`);
+    console.warn('═'.repeat(78) + '\n');
+  } else {
+    console.log('[AI] ✅ Modèles GGUF détectés et prêts pour l\'inférence.');
+  }
+}
+
+async function start() {
+  try {
+    try {
+      const conn = await connectDB();
+      if (conn && conn.connection.readyState === 1) {
+        console.log('[Database] ✅ Connexion MongoDB établie (readyState: 1), démarrage du serveur HTTP...');
+      } else {
+        console.log('[Database] ⚠️ Démarrage HTTP en mode dégradé (MongoDB hors ligne, readyState: ' + mongoose.connection.readyState + ')...');
+      }
+    } catch (err: unknown) {
+      console.warn('[Database] Avertissement initialisation MongoDB:', (err as Error).message);
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), 'dist');
+      app.use(express.static(distPath));
+      app.get('(.*)', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
+
+    httpServer.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`🔴 Port ${PORT} already in use. Waiting or retry.`);
+      } else {
+        console.error('Server error:', err);
+      }
+    });
+
+    httpServer.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://0.0.0.0:${PORT}`);
+      checkAIModels();
+    });
+  } catch (err: unknown) {
+    console.error('Fatal startup error:', err);
+    process.exit(1);
+  }
+}
+
+start();
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM reçu, arrêt propre...');
+  try {
+    await mongoose.connection.close();
+    httpServer.close(() => process.exit(0));
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
+});
+
+if (process.platform === 'win32') {
+  require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+  }).on('SIGINT', () => {
+    process.emit('SIGINT');
+  });
+}
+
+process.on('SIGINT', async () => {
+  console.log('SIGINT reçu, arrêt propre...');
+  try {
+    await mongoose.connection.close();
+    httpServer.close(() => process.exit(0));
+  } catch (err) {
+    console.error('Erreur lors de la fermeture:', err);
+    process.exit(1);
+  }
+});

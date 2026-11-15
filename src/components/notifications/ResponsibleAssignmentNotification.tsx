@@ -17,11 +17,12 @@ export const showResponsibleAssignmentNotification = ({
   assignedBy,
   onMarkAsRead
 }: ResponsibleAssignmentNotificationProps) => {
+  const docDir: 'rtl' | 'ltr' = typeof document !== 'undefined' && document.documentElement.dir === 'ltr' ? 'ltr' : 'rtl';
   toast.success(
     'تم تعيينك كمسؤول عن وثيقة',
     {
       description: (
-        <div className="space-y-2" dir="rtl">
+        <div className="space-y-2" dir={docDir}>
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             <span className="font-medium">{documentSubject}</span>
@@ -41,8 +42,8 @@ export const showResponsibleAssignmentNotification = ({
         label: 'تم الاطلاع',
         onClick: onMarkAsRead || (() => {})
       },
-      className: 'text-right',
-      style: { direction: 'rtl' }
+      className: 'text-start',
+      style: { direction: docDir }
     }
   );
 };

@@ -27,6 +27,17 @@ import {
 import DocumentOptionDialog, { DocumentOptionFormData } from '@/components/documents/options/DocumentOptionDialog';
 import DocumentOptionsList from '@/components/documents/options/DocumentOptionsList';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDirection } from '@/i18n/useDirection';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ApiError {
   response?: {
@@ -39,10 +50,12 @@ interface ApiError {
 
 const DocumentOptionsPage: React.FC = () => {
   const { currentUser } = useAuth();
+  const { dir } = useDirection();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOption, setEditingOption] = useState<DocumentOption | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [optionIdToDelete, setOptionIdToDelete] = useState<string | null>(null);
 
   const { data: options = [], isLoading, error, refetch } = useQuery({
     queryKey: ['documentOptions'],
@@ -83,6 +96,7 @@ const DocumentOptionsPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
       toast.success('تم حذف خيار الوثيقة بنجاح');
+      setOptionIdToDelete(null);
     },
     onError: (err: ApiError) => {
       toast.error(err.response?.data?.message || 'فشل في حذف خيار الوثيقة');
@@ -104,7 +118,7 @@ const DocumentOptionsPage: React.FC = () => {
   // Permission verification
   if (currentUser?.role !== 'AdminTuningDesk') {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir={dir}>
         <div className="max-w-2xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-amber-50 border border-[#FFD758] flex items-center justify-center mx-auto text-[#78350f]">
             <ShieldAlert className="h-7 w-7" />
@@ -134,9 +148,7 @@ const DocumentOptionsPage: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا الخيار نهائياً؟')) {
-      deleteMutation.mutate(id);
-    }
+    setOptionIdToDelete(id);
   };
 
   const handleToggleActive = (id: string, isActive: boolean) => {
@@ -196,7 +208,7 @@ const DocumentOptionsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4" dir={dir}>
         <Loader2 className="h-10 w-10 text-[#2c5282] animate-spin" />
         <h2 className="text-xl font-bold text-[#1a202c]">جاري تحميل خيارات الوثائق...</h2>
         <p className="text-base text-[#4a5568]">يتم استرجاع فئات وخيارات حقول الوثائق من قاعدة البيانات</p>
@@ -206,7 +218,7 @@ const DocumentOptionsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir="rtl">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir={dir}>
         <div className="max-w-xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-600">
             <AlertCircle className="h-7 w-7" />
@@ -227,7 +239,7 @@ const DocumentOptionsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir={dir}>
       {/* 1. Page Institutional Header (En-tête) */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="flex items-center gap-3.5">
@@ -264,8 +276,8 @@ const DocumentOptionsPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#718096]">إجمالي الخيارات المسجلة</span>
-              <div className="text-2xl font-bold text-[#1a202c]">{totalCount}</div>
+              <span className="text-sm font-medium text-[#5f6b7d]">إجمالي الخيارات المسجلة</span>
+              <div className="text-2xl font-bold text-[#1a202c]"><bdi dir="ltr">{totalCount}</bdi></div>
             </div>
             <span className="w-10 h-10 rounded bg-[#f7fafc] border border-[#e2e8f0] flex items-center justify-center text-[#2c5282]">
               <Layers className="h-5 w-5" />
@@ -274,8 +286,8 @@ const DocumentOptionsPage: React.FC = () => {
 
           <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#718096]">الخيارات المفعلة (نشطة)</span>
-              <div className="text-2xl font-bold text-emerald-700">{activeCount}</div>
+              <span className="text-sm font-medium text-[#5f6b7d]">الخيارات المفعلة (نشطة)</span>
+              <div className="text-2xl font-bold text-emerald-700"><bdi dir="ltr">{activeCount}</bdi></div>
             </div>
             <span className="w-10 h-10 rounded bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
               <CheckCircle2 className="h-5 w-5" />
@@ -284,11 +296,11 @@ const DocumentOptionsPage: React.FC = () => {
 
           <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#718096]">الخيارات المعطلة</span>
-              <div className="text-2xl font-bold text-[#78350f]">{inactiveCount}</div>
+              <span className="text-sm font-medium text-[#5f6b7d]">الخيارات المعطلة</span>
+              <div className="text-2xl font-bold text-[#78350f]"><bdi dir="ltr">{inactiveCount}</bdi></div>
             </div>
             <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
-              {inactiveCount} خيار
+              <bdi dir="ltr">{inactiveCount}</bdi>&nbsp;خيار
             </span>
           </div>
         </div>
@@ -314,7 +326,7 @@ const DocumentOptionsPage: React.FC = () => {
                   : 'bg-gray-100 text-[#4a5568] hover:bg-gray-200'
               }`}
             >
-              عرض الكل ({totalCount})
+              عرض الكل (<bdi dir="ltr">{totalCount}</bdi>)
             </button>
           </div>
 
@@ -326,7 +338,7 @@ const DocumentOptionsPage: React.FC = () => {
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(isSelected ? 'all' : cat.id)}
-                  className={`text-right p-4 rounded border transition-colors duration-200 flex flex-col justify-between min-h-[105px] ${
+                  className={`text-start p-4 rounded border transition-colors duration-200 flex flex-col justify-between min-h-[105px] ${
                     isSelected
                       ? 'border-[#2c5282] bg-blue-50/70'
                       : 'border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:bg-slate-50/60'
@@ -342,10 +354,10 @@ const DocumentOptionsPage: React.FC = () => {
                         ? 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
                         : 'bg-gray-100 text-[#4a5568] border border-gray-200'
                     }`}>
-                      {cat.count}
+                      <bdi dir="ltr">{cat.count}</bdi>
                     </span>
                   </div>
-                  <p className="text-xs text-[#718096] mt-2 line-clamp-1 leading-relaxed">
+                  <p className="text-xs text-[#5f6b7d] mt-2 line-clamp-1 leading-relaxed">
                     {cat.description}
                   </p>
                 </button>
@@ -378,6 +390,40 @@ const DocumentOptionsPage: React.FC = () => {
           setEditingOption(null);
         }}
       />
+
+      {/* Delete Option Confirmation AlertDialog */}
+      <AlertDialog
+        open={!!optionIdToDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) {
+            setOptionIdToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف هذا الخيار نهائياً؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (optionIdToDelete) {
+                  deleteMutation.mutate(optionIdToDelete);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-[#b91c1c] hover:bg-[#991b1b] text-white"
+            >
+              {deleteMutation.isPending ? 'جاري الحذف...' : 'حذف نهائياً'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

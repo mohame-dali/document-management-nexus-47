@@ -2,7 +2,7 @@
 import { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -86,10 +86,10 @@ const queryClient = new QueryClient({
       // Refetch au montage du composant
       refetchOnMount: 'always',
 
-      // Conserver la logique retry existante avec 429 et 401
+      // Conserver la logique retry existante avec 429, 401 et 503 (pas de retry en boucle si BD hors ligne)
       retry: (failureCount, error: unknown) => {
         const status = (error as { response?: { status?: number } })?.response?.status;
-        if (status === 429 || status === 401) return false;
+        if (status === 429 || status === 401 || status === 503) return false;
         return failureCount < 2;
       },
 
@@ -593,7 +593,7 @@ function App() {
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                  <Toaster position="top-right" />
+                  <Toaster />
                 </div>
               </DepartmentProvider>
             </AuthProvider>

@@ -23,7 +23,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
   t,
   scanResult,
   onRemove,
-  API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+  API_URL = import.meta.env.VITE_API_URL || ''
 }) => {
   if (!scanResult) return null;
 
@@ -41,7 +41,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center justify-between">
           <span className="flex items-center">
-            <FileText className="h-5 w-5 mr-2 text-green-600" />
+            <FileText className="h-5 w-5 me-2 text-green-600" />
             {t.scanResults || 'نتائج المسح الضوئي'}
           </span>
           {onRemove && (
@@ -62,7 +62,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
         {scanResult.filePath && (
           <div className="bg-gray-50 p-3 rounded">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-gray-500" />
                 <span className="text-sm font-medium">
                   {scanResult.filePath.split('/').pop()}
@@ -72,7 +72,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleViewDocument}
-                className="flex items-center space-x-1"
+                className="flex items-center gap-1"
               >
                 <Eye className="h-4 w-4" />
                 <span>{t.viewDocument || 'عرض المستند'}</span>
@@ -100,7 +100,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
 
         {/* Scan Metadata */}
         <div className="text-xs text-gray-500 pt-2 border-t">
-          <p>{t.scannedAt || 'تم المسح في'}: {new Date().toLocaleString('ar-SA')}</p>
+          <p>{t.scannedAt || 'تم المسح في'}: <bdi dir="ltr">{new Date().toLocaleString('ar-SA')}</bdi></p>
           {scanResult.format && (
             <p>{t.format || 'الصيغة'}: {scanResult.format.toUpperCase()}</p>
           )}

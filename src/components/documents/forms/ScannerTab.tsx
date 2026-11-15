@@ -116,7 +116,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
       {/* Scan button and status */}
       <div className="flex flex-col items-center space-y-4">
         {loadingScannerStatus ? (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span>Loading scanner status...</span>
           </div>
@@ -129,12 +129,12 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
           >
             {scanning ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 {t.scanning || 'Scanning...'}
               </>
             ) : (
               <>
-                <FileScan className="mr-2 h-4 w-4" />
+                <FileScan className="me-2 h-4 w-4" />
                 {t.scanDocument || 'Scan Document'}
               </>
             )}
@@ -167,7 +167,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
               ></div>
             </div>
             <p className="text-sm text-center text-muted-foreground">
-              {scanProgress}% {t.complete || 'Complete'}
+              <bdi dir="ltr">{scanProgress}%</bdi> {t.complete || 'Complete'}
             </p>
           </div>
         )}

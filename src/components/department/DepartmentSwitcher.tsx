@@ -14,12 +14,14 @@ import {
 import { Building, ChevronDown, Check, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Department } from '@/types';
+import { useDirection } from '@/i18n/useDirection';
 
 // Type for department that can be either string ID or populated object
 type DepartmentReference = string | Department;
 
 const DepartmentSwitcher: React.FC = () => {
   const { currentUser, switchDepartment } = useAuth();
+  const { dir } = useDirection();
 
   // Debug logging
   console.log('DepartmentSwitcher - currentUser:', currentUser);
@@ -125,7 +127,7 @@ const DepartmentSwitcher: React.FC = () => {
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[280px]">
+        <DropdownMenuContent align="start" dir={dir} className="w-[280px]">
           <DropdownMenuLabel className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             تبديل القسم النشط
@@ -146,12 +148,12 @@ const DepartmentSwitcher: React.FC = () => {
               >
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
-                    <span className="font-medium text-right">{department.name}</span>
-                    <span className="text-xs text-muted-foreground text-right">
+                    <span className="font-medium text-start">{department.name}</span>
+                    <span className="text-xs text-muted-foreground text-start">
                       {department.isActive ? 'نشط' : 'غير نشط'}
                     </span>
                     {department.description && (
-                      <span className="text-xs text-gray-500 text-right">
+                      <span className="text-xs text-gray-500 text-start">
                         {department.description}
                       </span>
                     )}
@@ -166,7 +168,7 @@ const DepartmentSwitcher: React.FC = () => {
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="text-xs text-blue-600">
-        {validDepartments.length} أقسام متاحة
+        <bdi dir="ltr">{validDepartments.length}</bdi> أقسام متاحة
       </div>
     </div>
   );

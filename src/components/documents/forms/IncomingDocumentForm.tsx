@@ -281,7 +281,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                             className="h-11 bg-purple-600 text-white flex items-center gap-2"
                           >
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            جاري الاستخراج... ({progressTime}s)
+                            جاري الاستخراج... (<bdi dir="ltr">{progressTime}s</bdi>)
                           </Button>
                           <Button
                             type="button"
@@ -303,11 +303,11 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                               : 'bg-amber-100 text-amber-800 border-amber-300'
                           }
                         >
-                          {Math.round(extractionConfidence * 100)}% ثقة
+                          <bdi dir="ltr">{Math.round(extractionConfidence * 100)}%</bdi> ثقة
                         </Badge>
                       )}
 
-                      <p className="text-xs text-slate-500 mr-auto">
+                      <p className="text-xs text-slate-500 ms-auto">
                         يقوم الذكاء الاصطناعي المحلي بتحليل النص واستخراج البيانات تلقائياً
                       </p>
                     </div>

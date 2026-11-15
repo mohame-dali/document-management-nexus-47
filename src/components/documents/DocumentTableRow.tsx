@@ -64,7 +64,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
     }`;
 
     if (activityUrgency) {
-      baseClasses += ` ${activityUrgency.color} border-l-4 border-l-solid`;
+      baseClasses += ` ${activityUrgency.color} border-s-4 border-solid`;
     }
 
     return baseClasses;
@@ -77,13 +77,13 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
       onMouseLeave={onMouseLeave}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium text-right py-3.5">
+      <TableCell className="font-medium text-start py-3.5">
         <div className="flex items-center gap-2.5 justify-end">
-          <div className="text-right">
+          <div className="text-start">
             <div className="font-bold text-sm text-[#1a202c] group-hover:text-[#2c5282] transition-colors duration-200">
-              #{doc.serialNumber}
+              <bdi dir="ltr">#{doc.serialNumber}</bdi>
             </div>
-            <div className="text-xs text-[#718096]">{doc.year}</div>
+            <div className="text-xs text-[#5f6b7d]"><bdi dir="ltr">{doc.year}</bdi></div>
           </div>
           <div className="flex-shrink-0 relative">
             {isIncomingDocument(doc) ? (
@@ -97,7 +97,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
             )}
             {/* Activity urgency indicator */}
             {activityUrgency && (
-              <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-xs">
+              <div className="absolute -top-1 -start-1 bg-white rounded-full p-0.5 shadow-xs">
                 {activityUrgency.type === 'overdue' ? (
                   <AlertTriangle className="h-3 w-3 text-[#e53e3e]" />
                 ) : (
@@ -109,9 +109,9 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
         </div>
       </TableCell>
       
-      <TableCell className="text-right py-3.5">
+      <TableCell className="text-start py-3.5">
         <div className="max-w-[280px]">
-          <div className="font-medium text-sm text-[#1a202c] line-clamp-2 mb-1.5 text-right leading-relaxed group-hover:text-[#2c5282] transition-colors duration-200">
+          <div className="font-medium text-sm text-[#1a202c] line-clamp-2 mb-1.5 text-start leading-relaxed group-hover:text-[#2c5282] transition-colors duration-200">
             {doc.subject}
           </div>
           <div className="flex gap-1.5 flex-wrap justify-end">
@@ -123,14 +123,14 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
             {/* Activity urgency badge */}
             {activityUrgency && (
               <Badge className={`text-xs font-medium px-2 py-0.5 rounded ${activityUrgency.badgeColor} shadow-xs`}>
-                <Clock className="h-3 w-3 ml-1" />
+                <Clock className="h-3 w-3 me-1" />
                 {activityUrgency.label}
               </Badge>
             )}
             {/* Answer indicator for incoming documents */}
             {isIncomingDocument(doc) && doc.answer && (
               <Badge variant="outline" className="text-xs bg-[#ebf8f1] text-[#22543d] border-[#bbf0d0] font-medium px-2 py-0.5 rounded shadow-xs">
-                <FileOutput className="h-3 w-3 ml-1" />
+                <FileOutput className="h-3 w-3 me-1" />
                 مُجاب
               </Badge>
             )}
@@ -138,16 +138,18 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
         </div>
       </TableCell>
       
-      <TableCell className="text-right py-3.5">
+      <TableCell className="text-start py-3.5">
         <div className="inline-block text-xs font-medium text-[#2d3748] bg-[#f7fafc] px-2.5 py-1 rounded border border-[#e2e8f0]">
-          {format(
-            new Date(isIncomingDocument(doc) ? doc.arrivalDate : doc.issueDate),
-            'dd/MM/yyyy'
-          )}
+          <bdi dir="ltr">
+            {format(
+              new Date(isIncomingDocument(doc) ? doc.arrivalDate : doc.issueDate),
+              'dd/MM/yyyy'
+            )}
+          </bdi>
         </div>
       </TableCell>
       
-      <TableCell className="text-right py-3.5">
+      <TableCell className="text-start py-3.5">
         <div className="text-sm max-w-[150px] truncate font-normal text-[#4a5568] group-hover:text-[#1a202c] transition-colors duration-200">
           {isIncomingDocument(doc) 
             ? doc.source || 'غير معروف'
@@ -158,7 +160,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
       
       {/* Activity column for incoming documents */}
       {type === 'incoming' && (
-        <TableCell className="text-right py-3.5">
+        <TableCell className="text-start py-3.5">
           {isIncomingDocument(doc) && doc.activity ? (
             <div className="flex items-center gap-1.5 justify-end bg-[#ebf4ff] px-2.5 py-1 rounded border border-[#bee3f8] inline-flex">
               <Activity className="h-3.5 w-3.5 text-[#2c5282]" />
@@ -167,30 +169,30 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
               </span>
               {doc.dateActivity && (
                 <span className="text-[11px] text-[#2c5282]/80">
-                  ({format(new Date(doc.dateActivity), 'dd/MM')})
+                  (<bdi dir="ltr">{format(new Date(doc.dateActivity), 'dd/MM')}</bdi>)
                 </span>
               )}
             </div>
           ) : (
-            <span className="text-[#a0aec0] text-sm font-medium">-</span>
+            <span className="text-[#5f6b7d] text-sm font-medium">-</span>
           )}
         </TableCell>
       )}
       
       {type === 'incoming' && (
-        <TableCell className="text-right py-3.5">
+        <TableCell className="text-start py-3.5">
           {isIncomingDocument(doc) && doc.responsibleUser && typeof doc.responsibleUser === 'object' ? (
             <div className="text-xs font-medium text-[#4a5568] bg-[#f7fafc] px-2.5 py-1 rounded border border-[#e2e8f0] truncate inline-block">
               {doc.responsibleUser.username}
             </div>
           ) : (
-            <span className="text-[#a0aec0] text-sm font-medium">-</span>
+            <span className="text-[#5f6b7d] text-sm font-medium">-</span>
           )}
         </TableCell>
       )}
       
       {type === 'outgoing' && (
-        <TableCell className="text-right py-3.5">
+        <TableCell className="text-start py-3.5">
           {!isIncomingDocument(doc) && (doc as OutgoingDocument).assignedTo && (doc as OutgoingDocument).assignedTo.length > 0 ? (
             <div className="flex gap-1.5 justify-end">
               <Badge variant="outline" className="text-xs max-w-[100px] truncate bg-purple-50 text-purple-700 border-purple-200 font-medium px-2 py-0.5 rounded">
@@ -198,12 +200,12 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
               </Badge>
               {(doc as OutgoingDocument).assignedTo.length > 1 && (
                 <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200 font-medium px-2 py-0.5 rounded">
-                  +{(doc as OutgoingDocument).assignedTo.length - 1}
+                  <bdi dir="ltr">+{(doc as OutgoingDocument).assignedTo.length - 1}</bdi>
                 </Badge>
               )}
             </div>
           ) : (
-            <span className="text-[#a0aec0] text-sm font-medium">-</span>
+            <span className="text-[#5f6b7d] text-sm font-medium">-</span>
           )}
         </TableCell>
       )}

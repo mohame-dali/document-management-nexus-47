@@ -59,7 +59,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
             <h2 className="text-base font-bold text-[#1a202c]">
               رصيد الإجازات السنوية (Solde de congés)
             </h2>
-            <p className="text-xs text-[#718096]">
+            <p className="text-xs text-[#5f6b7d]">
               متابعة الأيام المستحقة، المستنفذة والرصيد المتبقي لسنة {year}
             </p>
           </div>
@@ -74,12 +74,12 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
         {/* Total days */}
         <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-[#718096] font-medium block">
+            <span className="text-xs text-[#5f6b7d] font-medium block">
               الرصيد الإجمالي السنوي
             </span>
             <div className="mt-1 flex items-baseline gap-1">
               <span className="text-2xl font-bold text-[#1a202c] font-mono">{total}</span>
-              <span className="text-xs text-[#718096]">يوم</span>
+              <span className="text-xs text-[#5f6b7d]">يوم</span>
             </div>
           </div>
           <div className="p-2.5 bg-blue-50 text-[#2c5282] rounded border border-blue-100">
@@ -90,12 +90,12 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
         {/* Used days */}
         <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-[#718096] font-medium block">
+            <span className="text-xs text-[#5f6b7d] font-medium block">
               الأيام المستهلكة (الغياب المخصوم)
             </span>
             <div className="mt-1 flex items-baseline gap-1">
               <span className="text-2xl font-bold text-amber-700 font-mono">{used}</span>
-              <span className="text-xs text-[#718096]">يوم</span>
+              <span className="text-xs text-[#5f6b7d]">يوم</span>
             </div>
           </div>
           <div className="p-2.5 bg-amber-50 text-amber-700 rounded border border-amber-200">
@@ -106,7 +106,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
         {/* Remaining days */}
         <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-[#718096] font-medium block">
+            <span className="text-xs text-[#5f6b7d] font-medium block">
               الرصيد المتبقي المتاح
             </span>
             <div className="mt-1 flex items-baseline gap-1">
@@ -122,7 +122,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
 
       {/* Progress Bar & Details */}
       <div className="pt-2">
-        <div className="flex items-center justify-between text-xs text-[#718096] mb-1.5 font-medium">
+        <div className="flex items-center justify-between text-xs text-[#5f6b7d] mb-1.5 font-medium">
           <span>نسبة استهلاك الرصيد السنوي</span>
           <span className="font-mono">{percentUsed}% ({used} من {total} يوم)</span>
         </div>
@@ -137,7 +137,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
       {/* Breakdown by motif if available */}
       {balance?.byMotif && Object.keys(balance.byMotif).length > 0 && (
         <div className="pt-2 border-t border-[#edf2f7] flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-[#718096] flex items-center gap-1">
+          <span className="text-[#5f6b7d] flex items-center gap-1">
             <Info className="h-3.5 w-3.5" />
             <span>تفاصيل الاستهلاك :</span>
           </span>

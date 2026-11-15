@@ -13,9 +13,11 @@ import AvailableFeatures from '@/components/dashboard/AvailableFeatures';
 import AuditSummary from '@/components/dashboard/AuditSummary';
 
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 const DashboardPage = () => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear().toString();
 
   // Fetch real count data directly via MongoDB aggregation
@@ -115,11 +117,11 @@ const DashboardPage = () => {
 
         {/* Error Banner */}
         {isError && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="bg-red-50 border-s-4 border-red-500 p-4 rounded-e-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
               <p className="text-sm font-medium text-red-800">
-                Erreur de connexion au serveur. Impossible de charger les statistiques.
+                {t('dashboard.error.serverConnection')}
               </p>
             </div>
             <button
@@ -128,7 +130,7 @@ const DashboardPage = () => {
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded shadow-sm transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Réessayer
+              {t('common.retry')}
             </button>
           </div>
         )}

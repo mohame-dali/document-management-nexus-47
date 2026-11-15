@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../../models/User');
 const ErrorResponse = require('../../utils/errorResponse');
 const { sendTokenResponse } = require('./utils');
@@ -23,8 +24,24 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid credentials format' });
     }
 
-    // Check for user
-    const user = await User.findOne({ username: username.trim() }).select('+password');
+    // Refuse authentication with 503 when MongoDB is unavailable
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Service temporairement indisponible (base de données hors ligne)'
+      });
+    }
+
+    // Check for user in database
+    let user;
+    try {
+      user = await User.findOne({ username: username.trim() }).select('+password');
+    } catch (_dbErr) {
+      return res.status(503).json({
+        success: false,
+        message: 'Service temporairement indisponible (base de données hors ligne)'
+      });
+    }
 
     if (!user) {
       return next(new ErrorResponse('Invalid credentials', 401));

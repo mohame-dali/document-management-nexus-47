@@ -22,6 +22,7 @@ import {
 } from '@/services/activityNotificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRelativeTime, getDateGroup } from '@/utils/relativeTime';
+import { useDirection } from '@/i18n/useDirection';
 
 interface TransformedNotification extends ActivityNotification {
   isRead: boolean;
@@ -31,6 +32,7 @@ interface TransformedNotification extends ActivityNotification {
 
 const ActivityNotifications: React.FC = () => {
   const { currentUser } = useAuth();
+  const { dir } = useDirection();
   const queryClient = useQueryClient();
   
   const { data: notifications = [], isLoading, refetch } = useQuery({
@@ -146,15 +148,15 @@ const ActivityNotifications: React.FC = () => {
 
     return (
       <div className="mb-2">
-        <div className="px-3 py-1 bg-[#f8fafc] border-y border-[#edf2f7] text-[11px] font-bold text-[#718096]">
-          {title} ({items.length})
+        <div className="px-3 py-1 bg-[#f8fafc] border-y border-[#edf2f7] text-[11px] font-bold text-[#5f6b7d]">
+          {title} (<bdi dir="ltr">{items.length}</bdi>)
         </div>
         <div className="divide-y divide-[#f1f5f9]">
           {items.map((notification) => (
             <div
               key={notification._id}
               onClick={() => !notification.isRead && handleMarkAsRead(notification._id)}
-              className={`p-3 transition-colors cursor-pointer flex items-start gap-2.5 text-right relative ${
+              className={`p-3 transition-colors cursor-pointer flex items-start gap-2.5 text-start relative ${
                 !notification.isRead ? 'bg-[#f0f9ff]/70 hover:bg-[#e0f2fe]/70' : 'hover:bg-[#f8fafc]'
               }`}
             >
@@ -178,15 +180,15 @@ const ActivityNotifications: React.FC = () => {
                   }`}>
                     {notification.activity ? `نشاط: ${notification.activity}` : notification.title}
                   </p>
-                  <span className="text-[10px] text-[#718096] shrink-0 font-medium">
-                    {getRelativeTime(notification.createdAt)}
+                  <span className="text-[10px] text-[#5f6b7d] shrink-0 font-medium">
+                    <bdi>{getRelativeTime(notification.createdAt)}</bdi>
                   </span>
                 </div>
 
                 {notification.documentId && typeof notification.documentId === 'object' && (
                   <div className="flex items-center gap-1 text-[11px] text-[#2c5282] font-semibold mt-1">
                     <FileText className="w-3 h-3 shrink-0" />
-                    <span>الوثيقة {notification.documentId.serialNumber}/{notification.documentId.year}</span>
+                    <span>الوثيقة <bdi dir="ltr">{notification.documentId.serialNumber}/{notification.documentId.year}</bdi></span>
                   </div>
                 )}
 
@@ -197,7 +199,7 @@ const ActivityNotifications: React.FC = () => {
                 )}
 
                 {notification.message && (
-                  <p className="text-[11px] text-[#718096] line-clamp-2 mt-0.5 leading-relaxed">
+                  <p className="text-[11px] text-[#5f6b7d] line-clamp-2 mt-0.5 leading-relaxed">
                     {notification.message}
                   </p>
                 )}
@@ -226,7 +228,7 @@ const ActivityNotifications: React.FC = () => {
                     e.stopPropagation();
                     handleDelete(notification._id);
                   }}
-                  className="h-6 w-6 p-0 text-[#a0aec0] hover:text-red-600 hover:bg-red-50 rounded"
+                  className="h-6 w-6 p-0 text-[#5f6b7d] hover:text-red-600 hover:bg-red-50 rounded"
                   title="حذف"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -240,7 +242,7 @@ const ActivityNotifications: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white rounded-md shadow-lg border border-[#e2e8f0] overflow-hidden" dir="rtl">
+    <div className="w-full bg-white rounded-md shadow-lg border border-[#e2e8f0] overflow-hidden" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
         <div className="flex items-center gap-2">
@@ -248,7 +250,7 @@ const ActivityNotifications: React.FC = () => {
           <span className="text-sm font-bold text-[#1a202c]">الإشعارات والتنبيهات</span>
           {unreadCount > 0 ? (
             <span className="inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">
-              {unreadCount} جديد
+              <bdi dir="ltr">{unreadCount}</bdi> جديد
             </span>
           ) : (
             <span className="inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600">
@@ -274,16 +276,16 @@ const ActivityNotifications: React.FC = () => {
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto"></div>
-            <p className="text-xs text-[#718096] mt-2 font-medium">جاري تحميل الإشعارات...</p>
+            <p className="text-xs text-[#5f6b7d] mt-2 font-medium">جاري تحميل الإشعارات...</p>
           </div>
         ) : transformedNotifications.length === 0 ? (
           /* Clean Empty State */
           <div className="text-center py-10 px-4">
-            <div className="w-12 h-12 bg-slate-100 text-[#a0aec0] rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-slate-100 text-[#5f6b7d] rounded-full flex items-center justify-center mx-auto mb-3">
               <Bell className="w-6 h-6 stroke-[1.5]" />
             </div>
             <h4 className="text-sm font-bold text-[#4a5568]">لا توجد إشعارات جديدة</h4>
-            <p className="text-xs text-[#a0aec0] mt-1">ستظهر هنا كافة تنبيهات النظام والمستندات والمهام</p>
+            <p className="text-xs text-[#5f6b7d] mt-1">ستظهر هنا كافة تنبيهات النظام والمستندات والمهام</p>
           </div>
         ) : (
           <div>

@@ -185,7 +185,7 @@ const GlobalSearch: React.FC = () => {
                 </button>
               )}
               {!searchTerm && (
-                <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-400 bg-white border border-slate-200 rounded shadow-xs pointer-events-none select-none">
+                <kbd dir="ltr" className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-400 bg-white border border-slate-200 rounded shadow-xs pointer-events-none select-none">
                   <span className="text-[9px]">Ctrl</span>K
                 </kbd>
               )}
@@ -246,13 +246,17 @@ const GlobalSearch: React.FC = () => {
                         <div className="min-w-0 flex-1 pe-2">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
                             <span className="font-mono text-blue-700 font-bold shrink-0">
-                              #{doc.serialNumber}/{doc.year}
+                              <bdi dir="ltr">#{doc.serialNumber}/{doc.year}</bdi>
                             </span>
                             <span className="truncate">{doc.subject}</span>
                           </div>
                           {doc.correspondenceNumber && (
                             <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                              {isRtl ? `رقم الإرسالية: ${doc.correspondenceNumber}` : `Réf : ${doc.correspondenceNumber}`}
+                              {isRtl ? (
+                                <>رقم الإرسالية: <bdi dir="ltr">{doc.correspondenceNumber}</bdi></>
+                              ) : (
+                                <>Réf : <bdi dir="ltr">{doc.correspondenceNumber}</bdi></>
+                              )}
                             </p>
                           )}
                         </div>
@@ -286,7 +290,7 @@ const GlobalSearch: React.FC = () => {
                         <div className="min-w-0 flex-1 pe-2">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
                             <span className="font-mono text-emerald-700 font-bold shrink-0">
-                              #{doc.serialNumber}/{doc.year}
+                              <bdi dir="ltr">#{doc.serialNumber}/{doc.year}</bdi>
                             </span>
                             <span className="truncate">{doc.subject}</span>
                           </div>
@@ -330,7 +334,7 @@ const GlobalSearch: React.FC = () => {
                             {p.nom} {p.prenom}
                           </p>
                           <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                            {p.cin && <span>CIN: {p.cin}</span>}
+                            {p.cin && <span>CIN: <bdi dir="ltr">{p.cin}</bdi></span>}
                             {p.poste && <span>• {p.poste}</span>}
                             {p.activeDepartment?.name && (
                               <span className="truncate">• {p.activeDepartment.name}</span>
@@ -369,7 +373,7 @@ const GlobalSearch: React.FC = () => {
                         <div className="min-w-0 flex-1 pe-2">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-slate-800">
-                              @{u.username}
+                              <bdi dir="ltr">@{u.username}</bdi>
                             </span>
                             <Badge variant="secondary" className="text-[10px] py-0 px-1 font-normal">
                               {u.role}

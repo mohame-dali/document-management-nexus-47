@@ -121,7 +121,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
           {isDragActive ? 'أفلت الملفات هنا' : 'اسحب الملفات أو انقر للتحديد'}
         </p>
         <p className="text-sm text-muted-foreground">
-          يدعم ملفات PDF والصور (JPG, PNG) حتى {maxSize / (1024 * 1024)}MB
+          يدعم ملفات PDF والصور (JPG, PNG) حتى <bdi dir="ltr">{maxSize / (1024 * 1024)}MB</bdi>
         </p>
       </div>
 
@@ -134,7 +134,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
               <span className="font-medium">جاري استخراج النص...</span>
             </div>
             <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground mt-1">{progress}% مكتمل</p>
+            <p className="text-sm text-muted-foreground mt-1"><bdi dir="ltr">{progress}%</bdi> مكتمل</p>
           </CardContent>
         </Card>
       )}
@@ -165,7 +165,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
                     <div>
                       <p className="font-medium text-sm">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        <bdi dir="ltr">{(file.size / (1024 * 1024)).toFixed(2)} MB</bdi>
                       </p>
                     </div>
                     {processingFiles.has(file.name) && (

@@ -54,10 +54,12 @@ import {
   RefreshCw,
   Key,
   CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { InlineCreateUserModal } from '@/components/hr/InlineCreateUserModal';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export const PersonnelListPage: React.FC = () => {
   const { t } = useTranslation();
@@ -124,6 +126,7 @@ export const PersonnelListPage: React.FC = () => {
   const {
     data: responseData,
     isLoading,
+    isError,
     isFetching,
     refetch,
   } = useQuery({
@@ -172,7 +175,7 @@ export const PersonnelListPage: React.FC = () => {
     searchTerm.trim() !== '' || statutFilter !== 'ALL' || departmentFilter !== 'ALL';
 
   return (
-    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right" dir="rtl">
+    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right">
       {/* 1. En-tête de la page */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -263,7 +266,7 @@ export const PersonnelListPage: React.FC = () => {
               <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('personnel.filters.statusPlaceholder')} />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="ALL" className="text-base py-2 font-medium">{t('personnel.filters.allStatuses')}</SelectItem>
                 <SelectItem value="en_attente" className="text-base py-2">{t('personnel.filters.statusPending')}</SelectItem>
                 <SelectItem value="actif" className="text-base py-2">{t('personnel.filters.statusActive')}</SelectItem>
@@ -284,7 +287,7 @@ export const PersonnelListPage: React.FC = () => {
               <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('personnel.filters.departmentPlaceholder')} />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="ALL" className="text-base py-2 font-medium">{t('personnel.filters.allDepartments')}</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
@@ -330,18 +333,48 @@ export const PersonnelListPage: React.FC = () => {
                     <TableSkeleton columns={6} rows={8} />
                   </TableCell>
                 </TableRow>
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="p-6">
+                    <EmptyState
+                      icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+                      title={t('personnel.error.title')}
+                      description={t('personnel.error.description')}
+                      className="border-red-200 bg-red-50/40"
+                      action={
+                        <Button
+                          type="button"
+                          onClick={() => refetch()}
+                          className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          <span>{t('common.retry')}</span>
+                        </Button>
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
               ) : personnelList.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-gray-500 text-sm">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Users className="w-10 h-10 text-gray-300" />
-                      <p className="font-semibold text-gray-700">{t('personnel.empty.title')}</p>
-                      <p className="text-sm text-gray-500">
-                        {hasActiveFilters
-                          ? t('personnel.empty.filtered')
-                          : t('personnel.empty.start')}
-                      </p>
-                    </div>
+                  <TableCell colSpan={6} className="p-6">
+                    <EmptyState
+                      icon={<Users className="h-6 w-6 text-[#2c5282]" />}
+                      title={t('personnel.empty.title')}
+                      description={hasActiveFilters ? t('personnel.empty.filtered') : t('personnel.empty.start')}
+                      className="border-0 bg-transparent py-4"
+                      action={
+                        hasActiveFilters ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={resetFilters}
+                            className="h-11 border-[#cbd5e1] text-sm"
+                          >
+                            {t('personnel.filters.reset')}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -523,7 +556,7 @@ export const PersonnelListPage: React.FC = () => {
                 <SelectTrigger className="h-11 w-20 text-sm bg-white border-[#cbd5e1] rounded">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent dir="rtl">
+                <SelectContent>
                   <SelectItem value="10">10</SelectItem>
                   <SelectItem value="20">20</SelectItem>
                   <SelectItem value="50">50</SelectItem>
@@ -564,7 +597,7 @@ export const PersonnelListPage: React.FC = () => {
 
       {/* Modal de confirmation de suppression */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent dir="rtl" className="text-right">
+        <AlertDialogContent className="text-right">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold text-red-600">
               {t('personnel.delete.title')}

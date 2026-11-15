@@ -82,16 +82,37 @@ exports.serveProtectedFile = async (req, res) => {
  * Vérifie que l'utilisateur est authentifié et empêche le Path Traversal
  */
 exports.serveCourrierStatic = (req, res, next) => {
-  const ROOT = path.resolve(process.env.DOCUMENT_PATH || path.join(__dirname, '../../backend/courrier'));
-  const safePath = path.resolve(ROOT, '.' + req.path);
+  const ROOT = path.resolve(
+    process.env.DOCUMENT_PATH || path.join(__dirname, '../../backend/courrier')
+  );
+  const relativePath = req.path.replace(/^\/courrier/, '');
+  const safePath = path.resolve(ROOT, '.' + relativePath);
 
   if (!safePath.startsWith(ROOT + path.sep) && safePath !== ROOT) {
     return res.status(400).json({ success: false, message: 'Invalid path' });
   }
 
-  if (!fs.existsSync(safePath) || !fs.statSync(safePath).isFile()) {
+  let targetFile = safePath;
+  if (!fs.existsSync(targetFile) || !fs.statSync(targetFile).isFile()) {
+    const filename = path.basename(safePath);
+    const fallbacks = [
+      path.resolve(ROOT, filename),
+      path.resolve(process.cwd(), 'backend', 'courrier', '.' + relativePath),
+      path.resolve(process.cwd(), 'backend', 'uploads', filename),
+      path.resolve(process.cwd(), 'uploads', filename),
+    ];
+    targetFile = fallbacks.find((p) => {
+      try {
+        return fs.existsSync(p) && fs.statSync(p).isFile();
+      } catch (_) {
+        return false;
+      }
+    });
+  }
+
+  if (!targetFile || !fs.existsSync(targetFile) || !fs.statSync(targetFile).isFile()) {
     return res.status(404).json({ success: false, message: 'Fichier introuvable' });
   }
 
-  res.sendFile(safePath);
+  res.sendFile(targetFile);
 };

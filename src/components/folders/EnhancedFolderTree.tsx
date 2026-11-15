@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { 
@@ -17,10 +18,14 @@ import {
   ExternalLink,
   ChevronsDown,
   ChevronsUp,
-  FolderPlus
+  FolderPlus,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Dialog, 
@@ -93,10 +98,11 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
   const [formName, setFormName] = useState('');
   const [formDescription, setFormDescription] = useState('');
 
+  const { t } = useTranslation();
   const targetDepartmentId = departmentId || currentUser?.activeDepartment?._id;
   const canManageFolders = currentUser?.role === 'AdminDepartment' && !readOnly;
 
-  const { data: folders, isLoading } = useQuery({
+  const { data: folders, isLoading, isError, refetch } = useQuery({
     queryKey: ['folders', targetDepartmentId],
     queryFn: () => getFolders(targetDepartmentId),
     enabled: !!targetDepartmentId,
@@ -465,7 +471,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
   };
 
   return (
-    <div className="space-y-5" dir="rtl">
+    <div className="space-y-5">
       {/* Metrics Row - AdminLTE clean style */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-5 shadow-xs space-y-2">
@@ -598,27 +604,50 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
       {/* Tree Content Area */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 sm:p-6 min-h-[420px] shadow-xs">
         {isLoading ? (
-          <div className="text-center py-16 text-gray-500 space-y-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] mx-auto"></div>
-            <p className="text-base text-gray-600 font-medium">جاري تحميل هيكل المجلدات...</p>
+          <div className="space-y-3 py-4" aria-busy="true" aria-label={t('folders.loading')}>
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="flex items-center gap-3 p-2">
+                <Skeleton className="h-5 w-5 rounded shrink-0" />
+                <Skeleton className="h-5 flex-1 max-w-md" />
+                <Skeleton className="h-5 w-16 shrink-0" />
+              </div>
+            ))}
           </div>
-        ) : filteredRootFolders.length === 0 ? (
-          <div className="text-center py-16 text-gray-500 space-y-3">
-            <Folder className="h-14 w-14 mx-auto opacity-30 text-gray-400" />
-            <p className="text-base sm:text-lg font-bold text-gray-700">
-              {searchTerm ? 'لا توجد مجلدات مطابقة لمعايير البحث' : 'لا توجد مجلدات مسجلة في هذا القسم'}
-            </p>
-            {canManageFolders && !searchTerm && (
+        ) : isError ? (
+          <EmptyState
+            icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+            title={t('folders.error.title')}
+            description={t('folders.error.description')}
+            className="border-red-200 bg-red-50/40"
+            action={
               <Button
                 type="button"
-                onClick={() => handleOpenCreate(null)}
-                className="h-11 min-h-[44px] px-6 text-base rounded border border-[#FFCB56] bg-[#FFD758]/20 text-[#78350f] hover:bg-[#FFD758]/40 font-bold inline-flex items-center gap-2 transition-colors duration-200"
+                onClick={() => refetch()}
+                className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
               >
-                <Plus className="h-5 w-5" />
-                <span>إنشاء المجلد الأول الآن</span>
+                <RefreshCw className="h-4 w-4" />
+                <span>{t('common.retry')}</span>
               </Button>
-            )}
-          </div>
+            }
+          />
+        ) : filteredRootFolders.length === 0 ? (
+          <EmptyState
+            icon={<Folder className="h-6 w-6 text-[#2c5282]" />}
+            title={searchTerm ? t('folders.empty.searchTitle') : t('folders.empty.noFoldersTitle')}
+            className="border-0 bg-transparent py-10"
+            action={
+              canManageFolders && !searchTerm ? (
+                <Button
+                  type="button"
+                  onClick={() => handleOpenCreate(null)}
+                  className="h-11 min-h-[44px] px-6 text-base rounded border border-[#FFCB56] bg-[#FFD758]/20 text-[#78350f] hover:bg-[#FFD758]/40 font-bold inline-flex items-center gap-2 transition-colors duration-200"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span>{t('folders.empty.createFirst')}</span>
+                </Button>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="space-y-2 max-h-[650px] overflow-y-auto pl-1 pr-1 custom-scrollbar">
             {filteredRootFolders.map(folder => renderFolderNode(folder, 0))}
@@ -628,7 +657,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base" dir="rtl">
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base">
           <DialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
             <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
               <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
@@ -688,7 +717,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base" dir="rtl">
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base">
           <DialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
             <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
               <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
@@ -748,7 +777,7 @@ const EnhancedFolderTree: React.FC<EnhancedFolderTreeProps> = ({
 
       {/* Delete Alert Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base">
           <AlertDialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 flex items-center gap-3">
               <div className="w-10 h-10 rounded bg-red-50 flex items-center justify-center text-red-600 shrink-0">

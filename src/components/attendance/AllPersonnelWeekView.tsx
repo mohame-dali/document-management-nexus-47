@@ -181,7 +181,7 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
           </Button>
         </div>
 
-        <div className="text-xs text-[#718096] flex items-center gap-1.5 font-mono">
+        <div className="text-xs text-[#5f6b7d] flex items-center gap-1.5 font-mono">
           <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
           <span>{weekRangeLabel}</span>
         </div>

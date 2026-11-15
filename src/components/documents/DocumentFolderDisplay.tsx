@@ -84,7 +84,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
                 variant={folderData.status === 'En cours' ? 'default' : 'secondary'}
                 className="text-sm font-medium shadow-sm"
               >
-                <Circle className="h-3 w-3 mr-1" />
+                <Circle className="h-3 w-3 me-1" />
                 {folderData.status === 'En cours' ? 'نشط' : 'مؤرشف'}
               </Badge>
             </div>
@@ -103,7 +103,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
                 تاريخ الإنشاء:
               </span>
               <span className="text-sm font-medium text-gray-800">
-                {formatArabicDate(folderData.createdAt)}
+                <bdi dir="ltr">{formatArabicDate(folderData.createdAt)}</bdi>
               </span>
             </div>
             <div className="flex justify-between items-center">

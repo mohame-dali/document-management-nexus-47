@@ -106,9 +106,13 @@ userSchema.pre('save', async function(next) {
 
 // Sign JWT and return
 userSchema.methods.getSignedJwtToken = function() {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE
-  });
+  return jwt.sign(
+    { id: this._id }, 
+    process.env.JWT_SECRET || 'votre_secret_super_securise_123', 
+    {
+      expiresIn: process.env.JWT_EXPIRE || '30d' // Fallback si absent
+    }
+  );
 };
 
 // Match user entered password to hashed password in database

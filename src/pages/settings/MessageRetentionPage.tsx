@@ -123,7 +123,7 @@ const MessageRetentionPage = () => {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -202,7 +202,7 @@ const MessageRetentionPage = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-[#1a202c]">إجمالي المراسلات</CardTitle>
-                    <CardDescription className="text-base text-[#718096]">عدد الرسائل المسجلة في النظام</CardDescription>
+                    <CardDescription className="text-base text-[#5f6b7d]">عدد الرسائل المسجلة في النظام</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -224,7 +224,7 @@ const MessageRetentionPage = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-[#1a202c]">إجمالي المرفقات</CardTitle>
-                    <CardDescription className="text-base text-[#718096]">الملفات والمستندات الملحقة بالرسائل</CardDescription>
+                    <CardDescription className="text-base text-[#5f6b7d]">الملفات والمستندات الملحقة بالرسائل</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -248,7 +248,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">توزيع الرسائل حسب العمر</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">تصنيف المراسلات بحسب الفترة الزمنية لانقضائها</CardDescription>
+                  <CardDescription className="text-base text-[#5f6b7d]">تصنيف المراسلات بحسب الفترة الزمنية لانقضائها</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -313,7 +313,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">سياسة الحفظ التلقائي</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     تكوين جدولة الحذف التلقائي للمراسلات والمرفقات القديمة
                   </CardDescription>
                 </div>
@@ -420,7 +420,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-red-700">تنظيف يدوي للرسائل</CardTitle>
-                  <CardDescription className="text-base text-[#718096]">
+                  <CardDescription className="text-base text-[#5f6b7d]">
                     حذف فوري للمراسلات والمرفقات الأقدم من فترة زمنية محددة
                   </CardDescription>
                 </div>
@@ -527,7 +527,6 @@ const MessageRetentionPage = () => {
       <AlertDialog open={isConfirmDeleteDialogOpen} onOpenChange={setIsConfirmDeleteDialogOpen}>
         <AlertDialogContent
           className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xl"
-          dir="rtl"
         >
           <AlertDialogHeader>
             <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">

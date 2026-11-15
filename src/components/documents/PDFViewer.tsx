@@ -65,7 +65,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ documentPath }) => {
               variant="outline" 
               onClick={handleDownload}
             >
-              <Download className="h-4 w-4 mr-1" />
+              <Download className="h-4 w-4 me-1" />
               Download
             </Button>
             <Button 
@@ -73,7 +73,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ documentPath }) => {
               variant="outline" 
               onClick={handleOpenInNewTab}
             >
-              <ExternalLink className="h-4 w-4 mr-1" />
+              <ExternalLink className="h-4 w-4 me-1" />
               Open
             </Button>
           </div>
@@ -108,11 +108,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ documentPath }) => {
               </p>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleDownload}>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 me-2" />
                   Download PDF
                 </Button>
                 <Button variant="outline" onClick={handleOpenInNewTab}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                  <ExternalLink className="h-4 w-4 me-2" />
                   Open in New Tab
                 </Button>
               </div>
