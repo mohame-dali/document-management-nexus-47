@@ -33,3 +33,6 @@ backend/.env.local
 # AI GGUF Models (Large binary files)
 models/*.gguf
 *.gguf
+
+# Local machine scanner selection (generated at runtime)
+backend/utils/scanner/config/devices.json

@@ -1,232 +1,279 @@
-
-const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { promisify } = require('util');
-const execAsync = promisify(exec);
+const {
+  getScanimagePath,
+  getTesseractPath,
+  runCommand,
+  CommandTimeoutError,
+  CommandAbortedError,
+} = require('../commandRunner');
+const {
+  isValidDeviceIdForPlatform,
+  validateResolution,
+  validateFormat,
+  validateColorMode,
+  ScannerError,
+} = require('../validation');
 const PdfConverter = require('./pdfConverter');
 
+const SANE_COLOR_MAP = {
+  Color: 'Color',
+  Grayscale: 'Gray',
+  BlackAndWhite: 'Lineart',
+};
+
+function mapLinuxCommandFailure(error) {
+  if (error instanceof ScannerError) return error;
+  if (error instanceof CommandTimeoutError) {
+    return new ScannerError('SCAN_TIMEOUT', 'Délai de numérisation dépassé (timeout).', 504);
+  }
+  if (error instanceof CommandAbortedError) {
+    return new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+  }
+
+  const combined = `${error.stderr || ''}\n${error.stdout || ''}\n${error.message || ''}`;
+  if (/SCANNER_NO_PAPER|PAPER_EMPTY|out of paper|feeder out of documents|no paper/i.test(combined)) {
+    return new ScannerError('SCANNER_NO_PAPER', 'Aucun papier détecté dans le scanner.', 409);
+  }
+  if (/SCANNER_BUSY|device busy|resource busy|EBUSY/i.test(combined)) {
+    return new ScannerError('SCANNER_BUSY', 'Le scanner est actuellement occupé.', 503);
+  }
+  if (/SCANNER_NOT_FOUND|no SANE devices|open of device .* failed.*Invalid|device .* not found/i.test(combined)) {
+    return new ScannerError('SCANNER_NOT_FOUND', 'Scanner introuvable ou déconnecté.', 503);
+  }
+
+  return new ScannerError('SCAN_FAILED', 'Échec matériel lors de la numérisation.', 500);
+}
+
 /**
- * Handles scan execution for Linux/macOS
+ * Handles scan execution for Linux/macOS safely via commandRunner (execFile/spawn, no shell).
  */
 class ScanExecutor {
-  /**
-   * Execute a scan job
-   * @param {Object} options - Scan options
-   * @param {Object} context - Scanner context
-   * @returns {Promise<string>} - Path to the scanned document
-   */
-  static async executeScan(options, context) {
+  static async executeScan(options) {
     const {
+      scannerDevice,
       format,
       resolution,
-      documentType,
-      userId,
-      scannerDevice,
+      colorMode = 'Color',
       outputPath,
-      tempDir,
+      jobTempDir,
       hasScanimageCmd,
       hasImg2pdfCmd,
-      scannerEnabled
+      scannerEnabled,
+      timeoutMs = 120000,
+      signal = null,
+      onPage = null,
+      onBeforeProcessing = null,
     } = options;
-    
-    const emit = context.emit.bind(context);
-    
-    // Check if scanner hardware is available
+
     if (!scannerEnabled || !hasScanimageCmd) {
-      emit('scanError', new Error('Scanner hardware required. No scan operation performed.'));
-      return Promise.reject(new Error('Scanner hardware required. No scan operation performed.'));
+      throw new ScannerError(
+        'SCANNER_NOT_FOUND',
+        'Scanner non activé ou utilitaire scanimage indisponible.',
+        503
+      );
     }
-    
-    // For PDF output, we need to scan to JPEG first and then convert
-    if (format.toLowerCase() === 'pdf') {
-      return this.scanToPdf(options, context);
-    } else {
-      return this.scanToImage(options, context);
+
+    if (!isValidDeviceIdForPlatform(scannerDevice, process.platform)) {
+      throw new ScannerError('INVALID_SCAN_PARAMS', 'Identifiant de scanner invalide.', 400);
     }
-  }
-  
-  /**
-   * Scan directly to image format (JPEG, PNG)
-   * @param {Object} options - Scan options
-   * @param {Object} context - Scanner context
-   * @returns {Promise<string>} - Path to the scanned image
-   */
-  static scanToImage(options, context) {
-    const {
-      format,
-      resolution,
-      scannerDevice,
-      outputPath,
-      userId,
-      documentType
-    } = options;
-    
-    const emit = context.emit.bind(context);
-    
-    // Escape device name for shell command
-    const sanitizedScannerName = scannerDevice.replace(/`/g, '').replace(/'/g, '').replace(/"/g, '\\"');
-    
-    // Special handling for Panasonic scanners which may need different options
-    const isPanasonic = sanitizedScannerName.includes('panamfs');
-    
-    let scanCommand;
-    if (isPanasonic) {
-      scanCommand = `scanimage --device="${sanitizedScannerName}" --format=${format.toLowerCase()} --resolution=${resolution} --mode Color > "${outputPath}"`;
-    } else {
-      scanCommand = `scanimage --device="${sanitizedScannerName}" --format=${format.toLowerCase()} --resolution=${resolution} --mode Color > "${outputPath}"`;
-    }
-    
-    emit('scanProgress', { status: 'starting', message: 'Starting scan process' });
-    console.log(`Executing scan command: ${scanCommand}`);
-    
-    return new Promise((resolve, reject) => {
-      // Set timeout for scan command execution
-      const scanTimeout = setTimeout(() => {
-        reject(new Error('Scan command timed out - check scanner connection and try again'));
-      }, 120000); // 2 minutes for scan command
-      
-      exec(scanCommand, { timeout: 120000 }, (scanError, stdout, stderr) => {
-        clearTimeout(scanTimeout);
-        if (scanError) {
-          emit('scanError', scanError);
-          console.error('Error during scanning:', scanError);
-          console.error('stderr:', stderr);
-          console.error('stdout:', stdout);
-          return reject(new Error(`Scanning failed: ${scanError.message}`));
-        }
-        
-        // Check if the file was created and has content
-        if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
-          const error = new Error('Scan completed but no output file was created. Check scanner connection.');
-          emit('scanError', error);
-          return reject(error);
-        }
-        
-        emit('scanComplete', { filePath: outputPath, userId, documentType });
-        console.log(`Scan complete: ${path.basename(outputPath)}`);
-        resolve(outputPath);
+
+    const safeResolution = validateResolution(resolution);
+    const safeFormat = validateFormat(format);
+    const safeColor = validateColorMode(colorMode);
+    const saneMode = SANE_COLOR_MAP[safeColor] || 'Color';
+
+    fs.mkdirSync(jobTempDir, { recursive: true });
+
+    if (safeFormat === 'pdf') {
+      return await this.scanToPdf({
+        scannerDevice,
+        resolution: safeResolution,
+        saneMode,
+        outputPath,
+        jobTempDir,
+        hasImg2pdfCmd,
+        timeoutMs,
+        signal,
+        onPage,
+        onBeforeProcessing,
       });
-    });
-  }
-  
-  /**
-   * Scan to JPEG and then convert to PDF
-   * @param {Object} options - Scan options
-   * @param {Object} context - Scanner context
-   * @returns {Promise<string>} - Path to the scanned PDF
-   */
-  static async scanToPdf(options, context) {
-    const {
-      resolution,
-      scannerDevice,
-      outputPath,
-      tempDir,
-      userId,
-      documentType,
-      hasImg2pdfCmd
-    } = options;
-    
-    const emit = context.emit.bind(context);
-    const jpegFilePathPattern = path.join(tempDir, `scanned_page_%d.jpg`);
-    
-    // Escape device name for shell command
-    const sanitizedScannerName = scannerDevice.replace(/`/g, '').replace(/'/g, '').replace(/"/g, '\\"');
-    
-    // Special handling for Panasonic scanners
-    const isPanasonic = sanitizedScannerName.includes('panamfs');
-    
-    let scanCommand;
-    if (isPanasonic) {
-      // Panasonic scanners might need specific options
-      scanCommand = `scanimage --device="${sanitizedScannerName}" --format=jpeg --resolution=${resolution} --mode Color --batch="${jpegFilePathPattern}"`;
-    } else {
-      scanCommand = `scanimage --device="${sanitizedScannerName}" --format=jpeg --resolution=${resolution} --mode Color --batch="${jpegFilePathPattern}"`;
     }
-    
-    // Build and execute scan command with progress reporting
-    emit('scanProgress', { status: 'starting', message: 'Starting multi-page scan' });
-    console.log(`Executing scan command: ${scanCommand}`);
-    
-    return new Promise((resolve, reject) => {
-      // Set timeout for scan command execution
-      const scanTimeout = setTimeout(() => {
-        reject(new Error('Multi-page scan command timed out - check scanner connection and try again'));
-      }, 180000); // 3 minutes for multi-page scan
-      
-      exec(scanCommand, { timeout: 180000 }, async (scanError, stdout, stderr) => {
-        clearTimeout(scanTimeout);
-        if (scanError) {
-          emit('scanError', scanError);
-          console.error('Error during scanning:', scanError);
-          console.error('stderr:', stderr);
-          console.error('stdout:', stdout);
-          return reject(new Error(`Scanning failed: ${scanError.message}`));
-        }
-        
-        try {
-          emit('scanProgress', { status: 'processing', message: 'Converting scanned images to PDF' });
-          
-          // List of scanned JPEG files
-          const jpegFiles = fs.readdirSync(tempDir)
-            .filter(file => file.startsWith('scanned_page_') && file.endsWith('.jpg'))
-            .map(file => path.join(tempDir, file))
-            .sort(); // Ensure pages are in order
-          
-          if (jpegFiles.length === 0) {
-            return reject(new Error('No scanned files were created. Check scanner connection.'));
-          }
-          
-          console.log(`Found ${jpegFiles.length} scanned pages`);
-          
-          // Convert JPEG files to PDF
-          if (hasImg2pdfCmd) {
-            await PdfConverter.convertWithImg2pdf(jpegFiles, outputPath);
-            console.log(`PDF created using img2pdf: ${outputPath}`);
-          } else {
-            await PdfConverter.convertWithPdfKit(jpegFiles, outputPath);
-            console.log(`PDF created using PDFKit: ${outputPath}`);
-          }
-          
-          emit('scanComplete', { filePath: outputPath, userId, documentType, pageCount: jpegFiles.length });
-          console.log(`Multi-page scan complete: ${path.basename(outputPath)} with ${jpegFiles.length} pages`);
-          resolve(outputPath);
-        } catch (error) {
-          emit('scanError', error);
-          reject(error);
-        }
-      });
+
+    return await this.scanToImage({
+      scannerDevice,
+      format: safeFormat,
+      resolution: safeResolution,
+      saneMode,
+      outputPath,
+      timeoutMs,
+      signal,
+      onPage,
     });
   }
 
-  /**
-   * Perform OCR on a PDF document
-   * @param {string} filePath - Path to the PDF file
-   * @param {boolean} hasTesseractCmd - Whether tesseract is available
-   * @returns {Promise<string>} - Extracted text
-   */
-  static async performOCR(filePath, hasTesseractCmd) {
-    if (!hasTesseractCmd) {
-      console.warn('Tesseract OCR not available, skipping OCR');
-      return null;
-    }
+  static async scanToImage({
+    scannerDevice,
+    format,
+    resolution,
+    saneMode,
+    outputPath,
+    timeoutMs,
+    signal,
+    onPage,
+  }) {
+    const saneFormat = format === 'jpg' ? 'jpeg' : 'png';
+    const scanimageBin = getScanimagePath();
+    const args = [
+      `--device-name=${scannerDevice}`,
+      `--format=${saneFormat}`,
+      `--resolution=${resolution}`,
+      '--mode',
+      saneMode,
+    ];
 
     try {
-      const tempTextFile = filePath.replace(/\.[^/.]+$/, '') + '.txt';
-      const ocrCommand = `tesseract "${filePath}" "${filePath.replace(/\.[^/.]+$/, '')}" -l ara+fra+eng`;
-      
-      console.log(`Executing OCR command: ${ocrCommand}`);
-      await execAsync(ocrCommand);
-      
+      await runCommand(scanimageBin, args, {
+        timeoutMs,
+        signal,
+        stdoutToFile: outputPath,
+      });
+    } catch (err) {
+      console.error('[Scanner][Linux] scanToImage failed:', err.stderr || err.message);
+      if (fs.existsSync(outputPath)) {
+        try { fs.unlinkSync(outputPath); } catch (_) {}
+      }
+      throw mapLinuxCommandFailure(err);
+    }
+
+    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+      if (fs.existsSync(outputPath)) {
+        try { fs.unlinkSync(outputPath); } catch (_) {}
+      }
+      throw new ScannerError('SCAN_FAILED', 'Aucune donnée image produite par le scanner.', 500);
+    }
+
+    if (typeof onPage === 'function') {
+      onPage(1);
+    }
+
+    return { outputPath, pageCount: 1 };
+  }
+
+  static async scanToPdf({
+    scannerDevice,
+    resolution,
+    saneMode,
+    outputPath,
+    jobTempDir,
+    hasImg2pdfCmd,
+    timeoutMs,
+    signal,
+    onPage,
+    onBeforeProcessing,
+  }) {
+    const scanimageBin = getScanimagePath();
+    const batchPattern = path.join(jobTempDir, 'page_%d.png');
+    const args = [
+      `--device-name=${scannerDevice}`,
+      '--format=png',
+      `--resolution=${resolution}`,
+      '--mode',
+      saneMode,
+      `--batch=${batchPattern}`,
+    ];
+
+    let highestReportedPage = 0;
+    const handleLine = (line) => {
+      const m = line.trim().match(/^(?:PAGE:|Scanned page |Scanning page )(\d+)/i);
+      if (m) {
+        const pageNum = Number(m[1]);
+        if (Number.isFinite(pageNum) && pageNum > highestReportedPage) {
+          highestReportedPage = pageNum;
+          if (typeof onPage === 'function') {
+            onPage(pageNum);
+          }
+        }
+      }
+    };
+
+    try {
+      await runCommand(scanimageBin, args, {
+        timeoutMs,
+        signal,
+        onStdoutLine: handleLine,
+        onStderrLine: handleLine,
+      });
+
+      const pageFiles = fs
+        .readdirSync(jobTempDir)
+        .filter((f) => /^page_\d+\.png$/i.test(f))
+        .sort((a, b) => {
+          const na = parseInt(a.match(/\d+/)[0], 10);
+          const nb = parseInt(b.match(/\d+/)[0], 10);
+          return na - nb;
+        })
+        .map((f) => path.join(jobTempDir, f));
+
+      if (pageFiles.length === 0) {
+        throw new ScannerError('SCAN_FAILED', 'Aucune page numérisée produite.', 500);
+      }
+
+      if (typeof onBeforeProcessing === 'function') {
+        onBeforeProcessing(pageFiles.length);
+      }
+
+      if (hasImg2pdfCmd) {
+        try {
+          await PdfConverter.convertWithImg2pdf(pageFiles, outputPath);
+        } catch (img2pdfErr) {
+          console.warn('[Scanner][Linux] img2pdf failed, using PDFKit:', img2pdfErr.message);
+          await PdfConverter.convertWithPdfKit(pageFiles, outputPath);
+        }
+      } else {
+        await PdfConverter.convertWithPdfKit(pageFiles, outputPath);
+      }
+
+      return { outputPath, pageCount: pageFiles.length };
+    } catch (err) {
+      console.error('[Scanner][Linux] scanToPdf failed:', err.stderr || err.message);
+      if (fs.existsSync(outputPath)) {
+        try { fs.unlinkSync(outputPath); } catch (_) {}
+      }
+      throw mapLinuxCommandFailure(err);
+    } finally {
+      if (fs.existsSync(jobTempDir)) {
+        try { fs.rmSync(jobTempDir, { recursive: true, force: true }); } catch (_) {}
+      }
+    }
+  }
+
+  static async performOCR(filePath, hasTesseractCmd) {
+    if (!hasTesseractCmd) {
+      return null;
+    }
+
+    const baseOut = filePath.replace(/\.[^/.]+$/, '');
+    const tempTextFile = `${baseOut}.txt`;
+
+    try {
+      await runCommand(
+        getTesseractPath(),
+        [filePath, baseOut, '-l', 'ara+fra+eng'],
+        { timeoutMs: 60000 }
+      );
+
       if (fs.existsSync(tempTextFile)) {
         const extractedText = fs.readFileSync(tempTextFile, 'utf8');
-        fs.unlinkSync(tempTextFile); // Clean up temp file
+        fs.unlinkSync(tempTextFile);
         return extractedText;
       }
-      
       return null;
     } catch (error) {
-      console.error('OCR processing error:', error);
+      console.error('[Scanner][Linux] OCR error:', error.message);
+      if (fs.existsSync(tempTextFile)) {
+        try { fs.unlinkSync(tempTextFile); } catch (_) {}
+      }
       return null;
     }
   }

@@ -1,128 +1,67 @@
-
 const fs = require('fs');
-const { exec } = require('child_process');
+const PDFDocument = require('pdfkit');
+const { getImg2pdfPath, runCommand } = require('../commandRunner');
+const { ScannerError } = require('../validation');
 
 /**
- * Provides PDF conversion functionality for Linux/macOS
+ * Provides PDF conversion functionality for Linux/macOS without shell exec.
  */
 class PdfConverter {
-  /**
-   * Convert JPEG files to PDF using img2pdf
-   * @param {string[]} jpegFiles - Array of JPEG file paths
-   * @param {string} outputPath - Output PDF path
-   * @returns {Promise<string>} - Path to the output PDF
-   */
-  static convertWithImg2pdf(jpegFiles, outputPath) {
-    const convertCommand = `img2pdf ${jpegFiles.join(' ')} -o "${outputPath}"`;
-    
-    return new Promise((resolve, reject) => {
-      exec(convertCommand, async (convertError) => {
-        // Clean up temp files regardless of success
-        try {
-          jpegFiles.forEach(file => {
-            if (fs.existsSync(file)) {
-              fs.unlinkSync(file);
-            }
-          });
-        } catch (deleteError) {
-          console.error('Error deleting temporary files:', deleteError);
-        }
-        
-        if (convertError) {
-          console.error('Error converting JPEG to PDF:', convertError);
-          return reject(new Error(`PDF conversion failed: ${convertError.message}`));
-        }
-        
-        resolve(outputPath);
-      });
-    });
+  static async convertWithImg2pdf(imageFiles, outputPath) {
+    if (!Array.isArray(imageFiles) || imageFiles.length === 0) {
+      throw new ScannerError('SCAN_FAILED', 'Aucune image à convertir en PDF.', 500);
+    }
+
+    const img2pdfBin = getImg2pdfPath();
+    await runCommand(img2pdfBin, [...imageFiles, '-o', outputPath], { timeoutMs: 60000 });
+
+    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+      throw new ScannerError('SCAN_FAILED', 'Le fichier PDF généré est vide.', 500);
+    }
+
+    return outputPath;
   }
 
-  /**
-   * Convert JPEG files to PDF using PDFKit (JavaScript)
-   * @param {string[]} jpegFiles - Array of JPEG file paths
-   * @param {string} outputPath - Output PDF path
-   * @returns {Promise<string>} - Path to the output PDF
-   */
-  static convertWithPdfKit(jpegFiles, outputPath) {
+  static convertWithPdfKit(imageFiles, outputPath) {
     return new Promise((resolve, reject) => {
+      if (!Array.isArray(imageFiles) || imageFiles.length === 0) {
+        return reject(new ScannerError('SCAN_FAILED', 'Aucune image à convertir en PDF.', 500));
+      }
+
       try {
-        const PDFDocument = require('pdfkit');
-        const doc = new PDFDocument();
+        const doc = new PDFDocument({ autoFirstPage: false });
         const stream = fs.createWriteStream(outputPath);
-        
-        // Pipe the PDF to a file
+
         doc.pipe(stream);
-        
-        // Add each scanned page to the PDF
-        for (const jpegFile of jpegFiles) {
-          if (!fs.existsSync(jpegFile)) {
-            console.warn(`Warning: JPEG file does not exist: ${jpegFile}`);
+
+        let addedPages = 0;
+        for (const imageFile of imageFiles) {
+          if (!fs.existsSync(imageFile)) {
             continue;
           }
-          
-          try {
-            doc.addPage();
-            doc.image(jpegFile, {
-              fit: [500, 700],
-              align: 'center',
-              valign: 'center'
-            });
-          } catch (imageError) {
-            console.error(`Error adding image to PDF: ${imageError.message}`);
-          }
+          doc.addPage();
+          doc.image(imageFile, {
+            fit: [500, 700],
+            align: 'center',
+            valign: 'center',
+          });
+          addedPages++;
         }
-        
-        // Finalize the PDF
+
+        if (addedPages === 0) {
+          doc.end();
+          return reject(new ScannerError('SCAN_FAILED', 'Aucune page valide pour le PDF.', 500));
+        }
+
         doc.end();
-        
-        // Handle events
-        stream.on('finish', () => {
-          // Clean up temp files
-          try {
-            jpegFiles.forEach(file => {
-              if (fs.existsSync(file)) {
-                fs.unlinkSync(file);
-              }
-            });
-          } catch (deleteError) {
-            console.error('Error deleting temporary files:', deleteError);
-          }
-          
-          resolve(outputPath);
-        });
-        
+
+        stream.on('finish', () => resolve(outputPath));
         stream.on('error', (err) => {
-          console.error('Error writing PDF:', err);
-          
-          // Clean up temp files
-          try {
-            jpegFiles.forEach(file => {
-              if (fs.existsSync(file)) {
-                fs.unlinkSync(file);
-              }
-            });
-          } catch (deleteError) {
-            console.error('Error deleting temporary files:', deleteError);
-          }
-          
-          reject(err);
+          reject(new ScannerError('SCAN_FAILED', `Échec d'écriture PDF : ${err.message}`, 500));
         });
       } catch (error) {
-        console.error('Error creating PDF document:', error);
-        
-        // Clean up temp files
-        try {
-          jpegFiles.forEach(file => {
-            if (fs.existsSync(file)) {
-              fs.unlinkSync(file);
-            }
-          });
-        } catch (deleteError) {
-          console.error('Error deleting temporary files:', deleteError);
-        }
-        
-        reject(error);
+        console.error('[Scanner][Linux] PDFKit conversion error:', error);
+        reject(new ScannerError('SCAN_FAILED', 'Échec lors de la création du PDF.', 500));
       }
     });
   }

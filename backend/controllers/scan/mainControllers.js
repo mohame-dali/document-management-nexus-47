@@ -1,211 +1,265 @@
-
-const scannerService = require('../../utils/scanner');
-const ErrorResponse = require('../../utils/errorResponse');
-const { extractTextFromPDF } = require('../../utils/ocrProcessor');
 const path = require('path');
 const fs = require('fs');
+const scannerService = require('../../utils/scanner');
+const { extractTextFromPDF } = require('../../utils/ocrProcessor');
+const { ScannerError, validateScanOptions } = require('../../utils/scanner/validation');
+
+function handleScannerControllerError(res, error, fallbackMessage = 'Erreur du service de numérisation.') {
+  if (error instanceof ScannerError) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      code: error.code,
+      message: error.message,
+    });
+  }
+
+  console.error('[Scanner Controller Error]', error);
+  return res.status(500).json({
+    success: false,
+    code: 'SCAN_FAILED',
+    message: fallbackMessage,
+  });
+}
+
+function sanitizeStatus(status) {
+  return {
+    enabled: Boolean(status.enabled),
+    isScanning: Boolean(status.isScanning),
+    deviceId: status.deviceId || 'Not selected',
+    resolution: status.resolution,
+    format: status.format,
+    platform: status.platform,
+    lastScanTime: status.lastScanTime || null,
+    errorState: status.errorState || null,
+    scanCount: status.scanCount || 0,
+    supportedFormats: status.supportedFormats || ['pdf', 'jpg', 'png'],
+    currentDocumentType: status.currentDocumentType || null,
+    lastOcrSuccess: status.lastOcrSuccess || null,
+    recentScans: Array.isArray(status.recentScans)
+      ? status.recentScans.map((entry) => ({
+          scanId: entry.scanId || null,
+          deviceId: entry.deviceId || null,
+          timestamp: entry.timestamp,
+          format: entry.format || null,
+          documentType: entry.documentType || null,
+          pageCount: entry.pageCount || 1,
+          success: entry.success !== false,
+          code: entry.code || undefined,
+          fileName: entry.outputPath ? path.basename(entry.outputPath) : undefined,
+        }))
+      : [],
+  };
+}
 
 // @desc    Start a scan job
 // @route   POST /api/scan/start
 // @access  Private/AdminTuningDesk/Admin
-exports.startScan = async (req, res, next) => {
+exports.startScan = async (req, res) => {
   try {
-    const { documentType, format, resolution } = req.body;
-    
-    // Validate input
-    if (!documentType || !['incoming', 'outgoing', 'temp'].includes(documentType)) {
-      return next(new ErrorResponse('Invalid document type. Must be "incoming", "outgoing", or "temp".', 400));
+    const {
+      documentType = 'temp',
+      format,
+      resolution,
+      colorMode,
+      documentSource,
+      scanId,
+    } = req.body || {};
+
+    if (!['incoming', 'outgoing', 'temp'].includes(documentType)) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_SCAN_PARAMS',
+        message: 'Type de document invalide (incoming, outgoing ou temp requis).',
+      });
     }
-    
-    // Get scanner status first to check if scanning is already in progress
-    const scannerStatus = scannerService.getStatus();
-    if (scannerStatus.isScanning) {
-      return next(new ErrorResponse('Scanner is currently busy with another job', 409));
-    }
-    
-    // Check for required utilities on Linux/macOS
-    if (scannerService.getPlatform() !== 'win32' && !scannerStatus.hasScanimageCmd) {
-      return next(new ErrorResponse(
-        'scanimage utility not found. Please install SANE package on your system with: sudo apt-get install sane-utils', 
-        400
-      ));
-    }
-    
-    // Start the scan job
-    const filePath = await scannerService.startScan({
-      documentType,
-      format: format || 'pdf',
-      resolution: resolution || 300,
-      userId: req.user.id
+
+    const validated = validateScanOptions({
+      format,
+      resolution,
+      colorMode,
+      documentSource,
+      scanId,
     });
-    
-    // Process the scanned document with OCR if it's a PDF
-    let ocrText = null;
+
+    const scanResult = await scannerService.startScan({
+      documentType,
+      format: validated.format,
+      resolution: validated.resolution,
+      colorMode: validated.colorMode,
+      documentSource: validated.documentSource,
+      scanId: validated.scanId || undefined,
+      userId: String(req.user?.id || req.user?._id || ''),
+    });
+
+    let ocrText = '';
     let ocrProcessed = false;
-    
-    if (path.extname(filePath).toLowerCase() === '.pdf') {
+
+    if (validated.format === 'pdf' && fs.existsSync(scanResult.filePath)) {
       try {
-        // Make sure the file exists
-        if (fs.existsSync(filePath)) {
-          ocrText = await extractTextFromPDF(filePath);
-          ocrProcessed = true;
-        }
-      } catch (error) {
-        console.error('OCR processing error:', error);
-        // Continue even if OCR fails
+        ocrText = (await extractTextFromPDF(scanResult.filePath, 'ara+fra+eng')) || '';
+        ocrProcessed = true;
+      } catch (ocrErr) {
+        console.error('[Scanner] OCR processing error:', ocrErr.message);
       }
     }
-    
-    // Inform scanner service about OCR result
-    scannerService.emit('scanComplete', { ocrProcessed });
-    
-    res.status(200).json({
+
+    scannerService.getStatusManager().setOcrResult(ocrProcessed);
+
+    return res.status(200).json({
       success: true,
       data: {
-        filePath,
+        scanId: scanResult.scanId,
+        fileName: path.basename(scanResult.filePath),
+        filePath: `/api/scan/file/${scanResult.scanId}`,
+        fileUrl: `/api/scan/file/${scanResult.scanId}`,
+        format: scanResult.format,
+        pageCount: scanResult.pageCount || 1,
         documentType,
         ocrText,
         ocrProcessed,
-        scannedAt: new Date()
-      }
+        scannedAt: new Date().toISOString(),
+      },
     });
   } catch (error) {
-    next(error);
+    return handleScannerControllerError(res, error, 'Échec du démarrage de la numérisation.');
   }
 };
 
 // @desc    Get scanner status
 // @route   GET /api/scan/status
 // @access  Private/AdminTuningDesk/Admin
-exports.getScannerStatus = async (req, res, next) => {
+exports.getScannerStatus = async (_req, res) => {
   try {
-    const status = scannerService.getStatus();
-    const platform = scannerService.getPlatform();
-    
-    // Add installation instructions based on platform
-    if (platform !== 'win32' && !status.hasScanimageCmd) {
-      status.installInstructions = 'Please install the SANE package using: sudo apt-get install sane-utils';
-      status.checkCommand = 'After installation, check for scanners with: scanimage -L';
-    } else if (platform === 'win32' && !status.hasScannersAvailable) {
-      status.installInstructions = 'Please ensure your scanner is properly connected and drivers are installed';
+    const config = scannerService.getConfig();
+    if (config.scannerEnabled) {
+      await scannerService.init().catch(() => {});
     }
-    
-    res.status(200).json({
+
+    const rawStatus = scannerService.getStatus();
+    const status = sanitizeStatus(rawStatus);
+    const platform = scannerService.getPlatform();
+
+    if (platform === 'win32') {
+      status.hasWindowsScanTools = Boolean(scannerService.hasWindowsScanTools);
+    } else {
+      status.hasScanimageCmd = Boolean(scannerService.hasScanimageCmd);
+    }
+
+    return res.status(200).json({
       success: true,
-      data: status
+      data: status,
     });
   } catch (error) {
-    next(error);
+    return handleScannerControllerError(res, error, 'Impossible de lire l’état du scanner.');
   }
 };
 
-// @desc    List available scanners
+// @desc    List available physical scanners (returns 503 SCANNER_NOT_FOUND when none/unavailable)
 // @route   GET /api/scan/devices
 // @access  Private/AdminTuningDesk/Admin
-exports.listScanners = async (req, res, next) => {
+exports.listScanners = async (_req, res) => {
   try {
-    // Get platform info
-    const platform = scannerService.getPlatform();
-    
-    // Check if scanimage is available for Linux/macOS
-    const status = scannerService.getStatus();
-    if (platform !== 'win32' && !status.hasScanimageCmd) {
-      return res.status(200).json({
+    if (!scannerService.getConfig().scannerEnabled) {
+      return res.status(503).json({
         success: false,
-        message: 'scanimage utility not found. Please install SANE package on your system.',
-        installInstructions: 'Run: sudo apt-get install sane-utils',
-        checkCommand: 'After installation, check for scanners with: scanimage -L',
-        data: []
+        code: 'SCANNER_NOT_FOUND',
+        message: 'Le module de numérisation est désactivé sur ce serveur (SCANNER_ENABLED=false).',
       });
     }
-    
+
     const scanners = await scannerService.listScanners();
-    
-    // If no scanners found, provide helpful information
-    if (scanners.length === 0) {
-      let message = 'No scanners detected.';
-      let installInstructions = '';
-      
-      if (platform !== 'win32') {
-        installInstructions = 'Check that your scanner is connected and recognized with: scanimage -L';
-      } else {
-        installInstructions = 'Ensure your scanner is properly connected and drivers are installed.';
-      }
-      
-      return res.status(200).json({
+
+    if (!Array.isArray(scanners) || scanners.length === 0) {
+      return res.status(503).json({
         success: false,
-        message,
-        installInstructions,
-        data: []
+        code: 'SCANNER_NOT_FOUND',
+        message: 'Aucun scanner physique détecté sur ce système.',
       });
     }
-    
-    res.status(200).json({
+
+    return res.status(200).json({
       success: true,
       count: scanners.length,
-      data: scanners
+      data: scanners,
     });
   } catch (error) {
-    // Provide helpful message if scanimage is not available
-    if (error.message && error.message.includes('scanimage utility not available')) {
-      return res.status(200).json({
-        success: false,
-        message: 'scanimage utility not found. Please install SANE package on your system.',
-        installInstructions: 'Run: sudo apt-get install sane-utils',
-        checkCommand: 'After installation, check for scanners with: scanimage -L',
-        data: []
-      });
-    }
-    
-    next(error);
+    return handleScannerControllerError(res, error, 'Impossible de lister les scanners disponibles.');
   }
 };
 
-// @desc    Get recent scans
+// @desc    Get recent scans (sanitized, without server paths)
 // @route   GET /api/scan/recent
 // @access  Private/AdminTuningDesk/Admin
-exports.getRecentScans = async (req, res, next) => {
+exports.getRecentScans = async (req, res) => {
   try {
-    // Get scan history from scanner service
-    const recentScans = scannerService.getScanHistory();
-    
-    res.status(200).json({
+    const limitParam = req.query?.limit ? Number(req.query.limit) : 10;
+    const limit = Number.isInteger(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 10;
+
+    const history = scannerService.getScanHistory().slice(0, limit).map((entry) => ({
+      scanId: entry.scanId || null,
+      deviceId: entry.deviceId || null,
+      timestamp: entry.timestamp,
+      format: entry.format || null,
+      documentType: entry.documentType || null,
+      pageCount: entry.pageCount || 1,
+      success: entry.success !== false,
+      code: entry.code || undefined,
+      fileName: entry.outputPath ? path.basename(entry.outputPath) : undefined,
+    }));
+
+    return res.status(200).json({
       success: true,
-      count: recentScans.length,
-      data: recentScans
+      count: history.length,
+      data: history,
     });
   } catch (error) {
-    next(error);
+    return handleScannerControllerError(res, error, 'Impossible de lire l’historique de numérisation.');
   }
 };
 
 // @desc    Select a specific scanner device
 // @route   POST /api/scan/select-device
 // @access  Private/AdminTuningDesk/Admin
-exports.selectScanner = async (req, res, next) => {
+exports.selectScanner = async (req, res) => {
   try {
-    const { scannerId } = req.body;
-    
-    if (!scannerId) {
-      return next(new ErrorResponse('Scanner ID is required', 400));
+    const rawDeviceId = req.body?.deviceId ?? req.body?.scannerId;
+
+    if (!rawDeviceId || typeof rawDeviceId !== 'string') {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_SCAN_PARAMS',
+        message: 'Identifiant de scanner requis.',
+      });
     }
-    
-    // Update the scanner service to use the selected device
-    const success = await scannerService.selectScannerDevice(scannerId);
-    
-    if (!success) {
-      return next(new ErrorResponse('Unable to select the specified scanner', 400));
+
+    if (!scannerService.getConfig().scannerEnabled) {
+      return res.status(503).json({
+        success: false,
+        code: 'SCANNER_NOT_FOUND',
+        message: 'Le module de numérisation est désactivé sur ce serveur.',
+      });
     }
-    
-    res.status(200).json({
+
+    const selected = await scannerService.selectScannerDevice(rawDeviceId.trim());
+
+    if (!selected) {
+      return res.status(503).json({
+        success: false,
+        code: 'SCANNER_NOT_FOUND',
+        message: 'Scanner introuvable parmi les périphériques détectés.',
+      });
+    }
+
+    return res.status(200).json({
       success: true,
-      message: 'Scanner device selected successfully',
+      message: 'Scanner sélectionné avec succès.',
       data: {
-        scannerId,
-        status: scannerService.getStatus()
-      }
+        deviceId: rawDeviceId.trim(),
+        scannerId: rawDeviceId.trim(),
+        status: sanitizeStatus(scannerService.getStatus()),
+      },
     });
   } catch (error) {
-    next(error);
+    return handleScannerControllerError(res, error, 'Impossible de sélectionner le scanner.');
   }
 };

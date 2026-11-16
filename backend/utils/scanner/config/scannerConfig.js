@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 
@@ -7,45 +6,47 @@ const path = require('path');
  */
 class ScannerConfig {
   constructor() {
-    // Configuration from environment variables
-    this.uploadDir = process.env.UPLOAD_PATH || './uploads';
+    this.uploadDir = path.resolve(process.env.UPLOAD_PATH || process.env.UPLOAD_DIR || './uploads');
     this.tempDir = path.join(this.uploadDir, 'temp');
-    
-    // Scanner configuration from environment
-    this.scannerEnabled = process.env.SCANNER_ENABLED === 'true';
+
+    // Explicit override flag when updated programmatically at runtime
+    this._enabledOverride = null;
     this.scannerDeviceId = process.env.SCANNER_DEVICE_ID || '';
     this.scannerResolution = process.env.SCANNER_RESOLUTION || '300';
-    this.scannerFormat = (process.env.SCANNER_FORMAT || 'PDF').toLowerCase();
-    
-    // Supported formats
-    this.supportedFormats = ['pdf', 'jpeg', 'png'];
-    
-    // Format validation and correction
-    if (!this.supportedFormats.includes(this.scannerFormat.toLowerCase())) {
-      console.warn(`Unsupported scanner format: ${this.scannerFormat}. Defaulting to PDF.`);
+    this.scannerFormat = (process.env.SCANNER_FORMAT || 'pdf').toLowerCase();
+    if (this.scannerFormat === 'jpeg') this.scannerFormat = 'jpg';
+
+    this.supportedFormats = ['pdf', 'jpg', 'png'];
+
+    if (!this.supportedFormats.includes(this.scannerFormat)) {
+      console.warn(`Unsupported scanner format: ${this.scannerFormat}. Defaulting to pdf.`);
       this.scannerFormat = 'pdf';
     }
-    
-    // Ensure directories exist
+
     this._ensureDirectories();
   }
 
-  /**
-   * Create necessary directories
-   */
+  get scannerEnabled() {
+    if (typeof this._enabledOverride === 'boolean') {
+      return this._enabledOverride;
+    }
+    return process.env.SCANNER_ENABLED === 'true';
+  }
+
+  set scannerEnabled(val) {
+    this._enabledOverride = Boolean(val);
+  }
+
   _ensureDirectories() {
     if (!fs.existsSync(this.uploadDir)) {
       fs.mkdirSync(this.uploadDir, { recursive: true });
     }
-    
+
     if (!fs.existsSync(this.tempDir)) {
       fs.mkdirSync(this.tempDir, { recursive: true });
     }
   }
-  
-  /**
-   * Get current scanner configuration
-   */
+
   getConfig() {
     return {
       enabled: this.scannerEnabled,
@@ -54,29 +55,29 @@ class ScannerConfig {
       format: this.scannerFormat,
       uploadDir: this.uploadDir,
       tempDir: this.tempDir,
-      supportedFormats: this.supportedFormats
+      supportedFormats: this.supportedFormats,
     };
   }
-  
-  /**
-   * Update scanner configuration
-   * @param {Object} config - New configuration values
-   */
-  updateConfig(config) {
-    if (config.deviceId) {
-      this.scannerDeviceId = config.deviceId;
+
+  updateConfig(config = {}) {
+    const deviceId = config.deviceId ?? config.scannerDeviceId;
+    if (typeof deviceId === 'string') {
+      this.scannerDeviceId = deviceId;
     }
-    
+
     if (config.resolution) {
-      this.scannerResolution = config.resolution;
+      this.scannerResolution = String(config.resolution);
     }
-    
-    if (config.format && this.supportedFormats.includes(config.format.toLowerCase())) {
-      this.scannerFormat = config.format.toLowerCase();
+
+    if (config.format) {
+      const normalized = String(config.format).toLowerCase() === 'jpeg' ? 'jpg' : String(config.format).toLowerCase();
+      if (this.supportedFormats.includes(normalized)) {
+        this.scannerFormat = normalized;
+      }
     }
-    
+
     if (typeof config.enabled === 'boolean') {
-      this.scannerEnabled = config.enabled;
+      this._enabledOverride = config.enabled;
     }
   }
 }

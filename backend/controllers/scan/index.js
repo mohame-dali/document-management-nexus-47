@@ -1,19 +1,21 @@
-
-// Main scanner functions
 const mainControllers = require('./mainControllers');
 const documentScanController = require('./documentScanController');
 
 module.exports = {
-  // Main controllers
+  // Main scanner operations
   startScan: mainControllers.startScan,
   getScannerStatus: mainControllers.getScannerStatus,
-  listScanners: mainControllers.listScanners, 
+  listScanners: mainControllers.listScanners,
   getRecentScans: mainControllers.getRecentScans,
-  
-  // Document controllers
+  selectScanner: mainControllers.selectScanner,
+
+  // Document & job lifecycle operations
   scanForDocument: documentScanController.scanForDocument,
   scanTemporaryDocument: documentScanController.scanTemporaryDocument,
-  
-  // Additional scanner utility function
-  selectScanner: mainControllers.selectScanner
+  getDocumentScan: documentScanController.getDocumentScan,
+  getScanJobStatus: documentScanController.getScanJobStatus,
+  cancelScanJob: documentScanController.cancelScanJob,
+  getScanFile: documentScanController.getScanFile,
+  deleteScanFile: documentScanController.deleteScanFile,
+  getScanMetadata: documentScanController.getScanMetadata,
 };

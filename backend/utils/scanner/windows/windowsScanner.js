@@ -1,256 +1,232 @@
-
-/**
- * Windows Scanner implementation
- * Handles scanner operations on Windows systems
- */
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 const ScannerBase = require('../scannerBase');
 const ScannerDetection = require('./scannerDetection');
 const ScanExecutor = require('./scanExecutor');
-const ScanSimulator = require('./scanSimulator');
 const PDFProcessor = require('./pdfProcessor');
-const { v4: uuidv4 } = require('uuid');
+const {
+  validateScanOptions,
+  getContentTypeForFormat,
+  ScannerError,
+} = require('../validation');
 
+/**
+ * Windows Scanner implementation using Windows Image Acquisition (WIA) — real hardware only.
+ */
 class WindowsScanner extends ScannerBase {
   constructor() {
     super();
-    this.hasWindowsScanTools = false;
-    this.simulator = new ScanSimulator();
-    
-    // Check for Windows scanning tools
-    this._detectWIATools();
-    
-    // Wire up simulator events
-    this._setupSimulatorEventForwarding();
+    this.hasWindowsScanTools = null;
   }
-  
-  /**
-   * Detect if Windows WIA tools are available
-   * @private
-   */
-  async _detectWIATools() {
+
+  async _performInit() {
     try {
       this.hasWindowsScanTools = await ScannerDetection.detectWIATools();
       if (!this.hasWindowsScanTools) {
-        console.warn('Windows scanning tools not available. Simulated scanner will be used.');
+        console.warn('[Scanner][Windows] WIA non disponible sur cette machine.');
       }
     } catch (error) {
-      console.error('Error detecting Windows scanning tools:', error);
+      console.error('[Scanner][Windows] Erreur détection outils WIA:', error.message);
       this.hasWindowsScanTools = false;
     }
+    return this.hasWindowsScanTools;
   }
-  
-  /**
-   * Forward events from the simulator to this instance
-   * @private
-   */
-  _setupSimulatorEventForwarding() {
-    ['scanStart', 'scanProgress', 'scanComplete', 'scanError'].forEach(event => {
-      this.simulator.on(event, (data) => this.emit(event, data));
-    });
-  }
-  
-  /**
-   * Generate a temporary file path
-   * @param {string} extension - File extension
-   * @returns {string} Temporary file path
-   * @private
-   */
-  _generateTempPath(extension) {
-    const uuid = uuidv4();
-    const tempDir = this.getConfig().tempDir;
-    
-    // Ensure temp directory exists
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+
+  _buildOutputPath(scanId, format) {
+    const ext = format === 'jpg' ? 'jpg' : format;
+    if (!fs.existsSync(this.config.tempDir)) {
+      fs.mkdirSync(this.config.tempDir, { recursive: true });
     }
-    
-    return path.join(tempDir, `scan_${uuid}${extension}`);
+    return path.join(this.config.tempDir, `scan_${scanId}.${ext}`);
   }
-  
-  /**
-   * Start a scan operation
-   * @param {Object} options - Scanning options
-   * @returns {Promise<string>} Path to the scanned file
-   */
-  async startScan(options) {
+
+  async startScan(options = {}) {
+    if (!this.config.scannerEnabled) {
+      throw new ScannerError(
+        'SCANNER_NOT_FOUND',
+        'Le module de numérisation est désactivé sur ce serveur (SCANNER_ENABLED=false).',
+        503
+      );
+    }
+
+    const validated = validateScanOptions(options);
+    const ownerId = options.userId || 'system';
+    const documentType = options.documentType || 'temp';
+
+    const job = this.statusManager.createJob({
+      scanId: validated.scanId || uuidv4(),
+      ownerId,
+      documentType,
+      format: validated.format,
+      resolution: validated.resolution,
+    });
+
+    let lockedDeviceId = null;
+
     try {
-      const deviceId = this.getDeviceManager().getCurrentDeviceId();
-      const resolution = options.resolution || 300;
-      const format = options.format || 'pdf';
-      
-      // Set status to scanning
-      this.getStatusManager().setScanning(true, options.documentType || 'document');
-      
-      // Emit scan start event
-      this.emit('scanStart', { deviceId, options });
-      
-      // Determine output paths
-      const tempImagePath = this._generateTempPath('.png');
-      const outputPath = this._generateTempPath(`.${format.toLowerCase()}`);
-      
-      let scanResult;
-      
-      // If we have scanning tools and a real device, use it
-      if (this.hasWindowsScanTools && deviceId !== 'simulated-scanner') {
-        try {
-          console.log(`Starting real scan with device: ${deviceId}`);
-          
-          // Execute the scan with increased timeout
-          scanResult = await Promise.race([
-            ScanExecutor.executeScan(deviceId, tempImagePath, resolution, {
-              colorMode: 'Color',
-              documentSource: 'Flatbed'
-            }),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Windows scan timeout')), 180000)
-            )
-          ]);
-          
-          // Convert to requested format
-          await PDFProcessor.processToFormat(scanResult.tempImagePath, outputPath, format);
-          
-          // Clean up the temp image
-          if (fs.existsSync(tempImagePath)) {
-            fs.unlinkSync(tempImagePath);
-          }
-          
-        } catch (realScanError) {
-          console.error('Real scan failed, falling back to simulation:', realScanError);
-          // Fall back to simulation
-          scanResult = await this.simulator.simulateScan(outputPath, options);
-        }
-      } else {
-        // Use simulation
-        console.log('Using simulated scanner');
-        scanResult = await this.simulator.simulateScan(outputPath, options);
+      this.statusManager.updateJob(job.scanId, { stage: 'detecting', page: 0 });
+      await this.init();
+
+      if (!this.hasWindowsScanTools) {
+        throw new ScannerError(
+          'SCANNER_NOT_FOUND',
+          'Outils WIA Windows indisponibles sur le serveur.',
+          503
+        );
       }
-      
-      // Set status to not scanning
-      this.getStatusManager().setScanning(false);
-      
-      // Emit scan complete event
-      this.emit('scanComplete', {
-        outputPath,
-        format,
-        deviceId,
+
+      const deviceId = await this.ensureValidDevice();
+      this.statusManager.updateJob(job.scanId, { deviceId });
+
+      if (job.cancelled || job.abortController.signal.aborted) {
+        throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+      }
+
+      // Per-device concurrency lock
+      this.statusManager.acquireDeviceLock(deviceId, job.scanId);
+      lockedDeviceId = deviceId;
+
+      const jobTempDir = path.join(this.config.tempDir, job.scanId);
+      fs.mkdirSync(jobTempDir, { recursive: true });
+
+      this.statusManager.updateJob(job.scanId, {
+        stage: 'preparing',
+        jobTempDir,
       });
-      
-      // Add to scan history
-      this.getStatusManager().addScanToHistory({
+      this.statusManager.setScanning(true, documentType);
+      this.emit('scanStart', { scanId: job.scanId, deviceId, options: validated });
+
+      const outputPath = this._buildOutputPath(job.scanId, validated.format);
+      const timeoutMs = Number(options.timeoutMs) || 120000;
+
+      this.statusManager.updateJob(job.scanId, { stage: 'scanning', page: 0 });
+
+      const { pageFiles } = await ScanExecutor.executeScan({
+        scannerDevice: deviceId,
+        jobTempDir,
+        resolution: validated.resolution,
+        format: validated.format,
+        colorMode: validated.colorMode,
+        documentSource: validated.documentSource,
+        timeoutMs,
+        signal: job.abortController.signal,
+        onPage: (pageNum) => {
+          this.statusManager.updateJob(job.scanId, { stage: 'scanning', page: pageNum });
+          this.emit('scanProgress', { scanId: job.scanId, stage: 'scanning', page: pageNum });
+        },
+      });
+
+      if (job.cancelled || job.abortController.signal.aborted) {
+        throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+      }
+
+      this.statusManager.updateJob(job.scanId, {
+        stage: 'processing',
+        page: pageFiles.length,
+      });
+      this.emit('scanProgress', {
+        scanId: job.scanId,
+        stage: 'processing',
+        page: pageFiles.length,
+      });
+
+      await PDFProcessor.processPagesToFormat(pageFiles, outputPath, validated.format);
+
+      if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+        throw new ScannerError('SCAN_FAILED', 'Le fichier numérisé produit est vide.', 500);
+      }
+
+      this.statusManager.updateJob(job.scanId, {
+        stage: 'done',
+        page: pageFiles.length,
+        filePath: outputPath,
+        mimeType: getContentTypeForFormat(validated.format),
+      });
+
+      // Clean up intermediate page files and PowerShell scripts
+      if (fs.existsSync(jobTempDir)) {
+        try { fs.rmSync(jobTempDir, { recursive: true, force: true }); } catch (_) {}
+      }
+      this.statusManager.updateJob(job.scanId, { jobTempDir: null });
+
+      this.statusManager.releaseDeviceLock(lockedDeviceId, job.scanId);
+      lockedDeviceId = null;
+
+      this.emit('scanComplete', {
+        scanId: job.scanId,
+        outputPath,
+        format: validated.format,
+        deviceId,
+        pageCount: pageFiles.length,
+      });
+
+      this.statusManager.addScanToHistory({
+        scanId: job.scanId,
         deviceId,
         timestamp: new Date(),
         outputPath,
-        format,
-        documentType: options.documentType,
-        userId: options.userId
+        format: validated.format,
+        documentType,
+        userId: ownerId,
+        pageCount: pageFiles.length,
       });
-      
-      return outputPath;
+
+      return {
+        scanId: job.scanId,
+        filePath: outputPath,
+        format: validated.format,
+        pageCount: pageFiles.length,
+      };
     } catch (error) {
-      // Update status and emit error event
-      this.getStatusManager().setScanning(false);
-      this.getStatusManager().setError(error);
-      this.emit('scanError', error);
-      
-      throw error;
+      const structured =
+        error instanceof ScannerError
+          ? error
+          : new ScannerError('SCAN_FAILED', 'Échec de la numérisation.', 500);
+
+      this.statusManager.updateJob(job.scanId, {
+        stage: 'error',
+        code: structured.code,
+        errorMessage: structured.message,
+      });
+      this.statusManager.cleanupJobTempFiles(this.statusManager.getJob(job.scanId));
+
+      if (lockedDeviceId) {
+        this.statusManager.releaseDeviceLock(lockedDeviceId, job.scanId);
+      } else {
+        this.statusManager.setScanning(false);
+      }
+
+      this.emit('scanError', structured);
+      throw structured;
     }
   }
-  
-  /**
-   * List available scanners
-   * @returns {Promise<Array>} List of available scanners
-   */
+
   async listScanners() {
-    try {
-      // Detect WIA tools again if needed
-      if (this.hasWindowsScanTools === null) {
-        this.hasWindowsScanTools = await ScannerDetection.detectWIATools();
-      }
-      
-      // Get scanners
-      const scanners = await ScannerDetection.listScanners(this.hasWindowsScanTools);
-      
-      // Emit event with scanner count
-      this.emit('devicesListed', { count: scanners.length });
-      
-      return scanners;
-    } catch (error) {
-      console.error('Error listing scanners:', error);
-      // Return simulated scanner in case of error
-      const simulatedScanner = [{
-        id: 'simulated-scanner',
-        name: 'Simulated Scanner (Error)',
-        type: 'Flatbed',
-        status: 'available'
-      }];
-      
-      this.emit('devicesListed', { count: simulatedScanner.length });
-      return simulatedScanner;
+    await this.init();
+    if (!this.hasWindowsScanTools) {
+      throw new ScannerError(
+        'SCANNER_NOT_FOUND',
+        'Outils WIA Windows indisponibles sur le serveur.',
+        503
+      );
     }
+
+    const scanners = await ScannerDetection.listScanners();
+    this.emit('devicesListed', { count: scanners.length });
+    return scanners;
   }
-  
-  /**
-   * Select a specific scanner device
-   * @param {string} deviceId - Scanner device ID to use
-   * @returns {Promise<boolean>} Whether selection was successful
-   */
-  async selectScannerDevice(deviceId) {
-    try {
-      // If device is simulated scanner and we're already in simulation mode
-      if (deviceId === 'simulated-scanner') {
-        this.getDeviceManager().setCurrentDeviceId(deviceId);
-        this.getConfig().updateConfig({ scannerDeviceId: deviceId });
-        this.emit('deviceSelected', { deviceId, simulated: true });
-        return true;
-      }
-      
-      // Detect WIA tools again if needed
-      if (this.hasWindowsScanTools === null) {
-        this.hasWindowsScanTools = await ScannerDetection.detectWIATools();
-      }
-      
-      // Check if scanner exists
-      const exists = await ScannerDetection.checkScannerExists(deviceId, this.hasWindowsScanTools);
-      
-      if (!exists) {
-        console.warn(`Scanner ${deviceId} does not exist`);
-        return false;
-      }
-      
-      // Set current device
-      this.getDeviceManager().setCurrentDeviceId(deviceId);
-      this.getConfig().updateConfig({ scannerDeviceId: deviceId });
-      
-      // Emit event
-      this.emit('deviceSelected', { deviceId });
-      
-      return true;
-    } catch (error) {
-      console.error('Error selecting scanner device:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * Test if the current scanner is working
-   * @returns {Promise<boolean>} Whether scanner is working
-   */
+
   async testScanner() {
-    const deviceId = this.getDeviceManager().getCurrentDeviceId();
-    
-    if (deviceId === 'simulated-scanner' || !this.hasWindowsScanTools) {
-      // Simulated scanner always works
-      return true;
-    }
-    
-    try {
-      return await ScanExecutor.testScannerConnection(deviceId);
-    } catch (error) {
-      console.error('Scanner test failed:', error);
+    await this.init();
+    if (!this.hasWindowsScanTools) {
       return false;
     }
+    const deviceId = this.deviceManager.getCurrentDeviceId();
+    if (!deviceId) {
+      return false;
+    }
+    return await ScanExecutor.testScannerConnection(deviceId);
   }
 }
 
