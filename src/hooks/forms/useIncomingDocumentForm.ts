@@ -10,8 +10,10 @@ import { getErrorMessage } from '@/utils/errorMessages';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import {
   ScanStage,
+  LiveThumbnail,
   createScanId,
   getScanJobStatus,
+  getScanPageThumbnailBlob,
   cancelScanJob,
   deleteScan,
   getScanStageProgress,
@@ -68,6 +70,8 @@ export const useIncomingDocumentForm = (
   const [scanStage, setScanStage] = useState<ScanStage | null>(null);
   const [scanPage, setScanPage] = useState(0);
   const [scanResult, setScanResult] = useState<ScanResultData | null>(scanData || null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [liveThumbnails, setLiveThumbnails] = useState<LiveThumbnail[]>([]);
   const [isScanAttached, setIsScanAttached] = useState<boolean>(Boolean(scanData));
   const [scanSettings, setScanSettings] = useState({
     resolution: '300',
@@ -78,10 +82,32 @@ export const useIncomingDocumentForm = (
   const isMountedRef = useRef(true);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scanAbortRef = useRef<AbortController | null>(null);
+  const thumbAbortRef = useRef<AbortController | null>(null);
   const activeScanIdRef = useRef<string | null>(null);
+  const thumbnailUrlsRef = useRef<string[]>([]);
+  const fetchedThumbPagesRef = useRef<Set<number>>(new Set());
+  const localScanIdRef = useRef<string | null>(null);
+  const hasSubmittedRef = useRef<boolean>(false);
   const scanStartTimeRef = useRef<number>(0);
   const maxPagesSeenRef = useRef<number>(1);
   const cancelledByUserRef = useRef<boolean>(false);
+
+  const clearLiveThumbnails = useCallback(() => {
+    if (thumbAbortRef.current) {
+      thumbAbortRef.current.abort();
+      thumbAbortRef.current = null;
+    }
+    fetchedThumbPagesRef.current.clear();
+    if (thumbnailUrlsRef.current.length > 0) {
+      for (const url of thumbnailUrlsRef.current) {
+        URL.revokeObjectURL(url);
+      }
+      thumbnailUrlsRef.current = [];
+    }
+    if (isMountedRef.current) {
+      setLiveThumbnails([]);
+    }
+  }, []);
 
   const stopPolling = useCallback(() => {
     if (pollTimerRef.current) {
@@ -95,6 +121,7 @@ export const useIncomingDocumentForm = (
     return () => {
       isMountedRef.current = false;
       stopPolling();
+      clearLiveThumbnails();
       if (scanAbortRef.current) {
         scanAbortRef.current.abort();
         scanAbortRef.current = null;
@@ -103,8 +130,12 @@ export const useIncomingDocumentForm = (
         cancelScanJob(activeScanIdRef.current).catch(() => {});
         activeScanIdRef.current = null;
       }
+      if (!hasSubmittedRef.current && localScanIdRef.current) {
+        deleteScan(localScanIdRef.current).catch(() => {});
+        localScanIdRef.current = null;
+      }
     };
-  }, [stopPolling]);
+  }, [stopPolling, clearLiveThumbnails]);
 
   const formSchema = z
     .object({
@@ -295,7 +326,10 @@ export const useIncomingDocumentForm = (
     if (typeof previousScanId === 'string' && previousScanId.trim()) {
       deleteScan(previousScanId).catch(() => {});
     }
+    localScanIdRef.current = null;
+    clearLiveThumbnails();
     setScanResult(null);
+    setScanError(null);
     setIsScanAttached(false);
     setScanStage(null);
     setScanPage(0);
@@ -320,6 +354,7 @@ export const useIncomingDocumentForm = (
     const scanId = activeScanIdRef.current;
     cancelledByUserRef.current = true;
     stopPolling();
+    clearLiveThumbnails();
     if (scanAbortRef.current) {
       scanAbortRef.current.abort();
       scanAbortRef.current = null;
@@ -329,6 +364,7 @@ export const useIncomingDocumentForm = (
     }
     activeScanIdRef.current = null;
     setScanning(false);
+    setScanError(null);
     setScanStage(null);
     setScanPage(0);
     setScanProgress(0);
@@ -343,19 +379,24 @@ export const useIncomingDocumentForm = (
     // If rescanning over a previous temporary scan, delete old temp file cleanly
     if (scanResult?.scanId && typeof scanResult.scanId === 'string') {
       deleteScan(scanResult.scanId).catch(() => {});
+      localScanIdRef.current = null;
     }
 
     stopPolling();
+    clearLiveThumbnails();
     const scanId = createScanId();
     const controller = new AbortController();
+    const thumbController = new AbortController();
 
     activeScanIdRef.current = scanId;
     scanAbortRef.current = controller;
+    thumbAbortRef.current = thumbController;
     scanStartTimeRef.current = Date.now();
     maxPagesSeenRef.current = 1;
     cancelledByUserRef.current = false;
 
     setScanning(true);
+    setScanError(null);
     setScanStage('detecting');
     setScanPage(0);
     setScanProgress(getScanStageProgress('detecting', 0));
@@ -370,14 +411,17 @@ export const useIncomingDocumentForm = (
       const maxAllowedMs = BASE_SCAN_TIMEOUT_MS * Math.max(1, maxPagesSeenRef.current);
       if (elapsedMs > maxAllowedMs) {
         stopPolling();
+        clearLiveThumbnails();
         activeScanIdRef.current = null;
         controller.abort();
         cancelScanJob(scanId).catch(() => {});
         if (isMountedRef.current) {
+          const timeoutMsg = getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang);
           setScanning(false);
           setScanStage('error');
+          setScanError(timeoutMsg);
           setScanProgress(0);
-          toast.error(getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang));
+          toast.error(timeoutMsg);
         }
         return;
       }
@@ -394,6 +438,31 @@ export const useIncomingDocumentForm = (
         setScanStage(stage);
         setScanPage(page);
         setScanProgress(getScanStageProgress(stage, page));
+
+        const availablePages = Number(jobStatus.availablePages || page || 0);
+        if (availablePages > 0 && stage !== 'done' && stage !== 'error') {
+          for (let p = 1; p <= availablePages; p++) {
+            if (fetchedThumbPagesRef.current.has(p)) continue;
+            fetchedThumbPagesRef.current.add(p);
+            getScanPageThumbnailBlob(scanId, p, thumbController.signal)
+              .then((blob) => {
+                if (!isMountedRef.current || activeScanIdRef.current !== scanId) {
+                  return;
+                }
+                const thumbUrl = URL.createObjectURL(blob);
+                thumbnailUrlsRef.current.push(thumbUrl);
+                setLiveThumbnails((prev) => {
+                  if (prev.some((item) => item.page === p)) {
+                    return prev;
+                  }
+                  return [...prev, { page: p, url: thumbUrl }].sort((a, b) => a.page - b.page);
+                });
+              })
+              .catch(() => {
+                fetchedThumbPagesRef.current.delete(p);
+              });
+          }
+        }
       } catch {
         // Transient 404 before job registers on backend is ignored during polling
       }
@@ -411,6 +480,7 @@ export const useIncomingDocumentForm = (
     scanTemporaryDocumentMutation.mutate(scanOptions, {
       onSuccess: (response: ScanResultData) => {
         stopPolling();
+        clearLiveThumbnails();
         scanAbortRef.current = null;
         activeScanIdRef.current = null;
         if (!isMountedRef.current) return;
@@ -420,6 +490,7 @@ export const useIncomingDocumentForm = (
         ) as ScanResultData;
 
         const resolvedScanId = String(rawData?.scanId || scanId);
+        localScanIdRef.current = resolvedScanId;
         const normalizedScan: ScanResultData = {
           ...rawData,
           scanId: resolvedScanId,
@@ -429,6 +500,7 @@ export const useIncomingDocumentForm = (
         };
 
         setScanning(false);
+        setScanError(null);
         setScanStage('done');
         setScanPage(Number(normalizedScan.pageCount || 1));
         setScanProgress(100);
@@ -441,6 +513,7 @@ export const useIncomingDocumentForm = (
       },
       onError: (error: unknown) => {
         stopPolling();
+        clearLiveThumbnails();
         scanAbortRef.current = null;
         activeScanIdRef.current = null;
         if (!isMountedRef.current) return;
@@ -453,14 +526,17 @@ export const useIncomingDocumentForm = (
 
         if (wasManualCancel || getScannerErrorCode(error) === 'SCAN_CANCELLED') {
           setScanStage(null);
+          setScanError(null);
           if (!wasManualCancel) {
             toast.info(getScannerErrorMessage(error, translate, lang));
           }
           return;
         }
 
+        const errMsg = getScannerErrorMessage(error, translate, lang);
         setScanStage('error');
-        toast.error(getScannerErrorMessage(error, translate, lang));
+        setScanError(errMsg);
+        toast.error(errMsg);
       },
     });
   };
@@ -529,6 +605,8 @@ export const useIncomingDocumentForm = (
       }
 
       await createIncomingDocument(formData);
+      hasSubmittedRef.current = true;
+      localScanIdRef.current = null;
 
       toast.success(t.createSuccess);
       navigate('/dashboard/incoming-documents');
@@ -547,6 +625,8 @@ export const useIncomingDocumentForm = (
     scanStage,
     scanPage,
     scanResult,
+    scanError,
+    liveThumbnails,
     isScanAttached,
     scanSettings,
     handleFileSelect,

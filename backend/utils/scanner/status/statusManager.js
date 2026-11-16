@@ -60,6 +60,7 @@ class StatusManager {
       resolution,
       stage: 'detecting',
       page: 0,
+      availablePages: 0,
       code: undefined,
       errorMessage: undefined,
       filePath: null,
@@ -88,6 +89,7 @@ class StatusManager {
       scanId: job.scanId,
       stage: job.stage,
       page: job.page,
+      availablePages: job.availablePages || 0,
     };
     if (job.code) {
       payload.code = job.code;
@@ -196,6 +198,11 @@ class StatusManager {
       if (isTerminal && job.updatedAt < cutoff) {
         if (job.jobTempDir && fs.existsSync(job.jobTempDir)) {
           try { fs.rmSync(job.jobTempDir, { recursive: true, force: true }); } catch (_) {}
+          job.jobTempDir = null;
+        }
+        if (job.filePath && fs.existsSync(job.filePath)) {
+          try { fs.unlinkSync(job.filePath); } catch (_) {}
+          job.filePath = null;
         }
         this.jobs.delete(id);
       }

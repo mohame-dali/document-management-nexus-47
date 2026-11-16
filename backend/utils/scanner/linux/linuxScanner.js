@@ -118,7 +118,11 @@ class LinuxScanner extends ScannerBase {
         timeoutMs,
         signal: job.abortController.signal,
         onPage: (pageNum) => {
-          this.statusManager.updateJob(job.scanId, { stage: 'scanning', page: pageNum });
+          this.statusManager.updateJob(job.scanId, {
+            stage: 'scanning',
+            page: pageNum,
+            availablePages: pageNum,
+          });
           this.emit('scanProgress', { scanId: job.scanId, stage: 'scanning', page: pageNum });
         },
         onBeforeProcessing: (totalPages) => {

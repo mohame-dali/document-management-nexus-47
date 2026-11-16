@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Scan } from 'lucide-react';
 import DocumentUploadWithOcr from '@/components/documents/DocumentUploadWithOcr';
 import ScannerTab from '@/components/documents/forms/ScannerTab';
-import { ScanStage } from '@/services/scannerService';
+import { ScanStage, LiveThumbnail } from '@/services/scannerService';
 import { ScanPreviewData } from '@/components/documents/forms/ScannedDocumentPreview';
 
 interface DocumentAttachmentSectionProps {
@@ -20,6 +20,8 @@ interface DocumentAttachmentSectionProps {
   scanning: boolean;
   scanProgress: number;
   scanResult: ScanPreviewData | null;
+  scanError?: string | null;
+  liveThumbnails?: LiveThumbnail[];
   scannerStatus?: Record<string, unknown> | null;
   loadingScannerStatus?: boolean;
   handleStartScan: () => void;
@@ -43,6 +45,8 @@ const DocumentAttachmentSection: React.FC<DocumentAttachmentSectionProps> = ({
   scanning,
   scanProgress,
   scanResult,
+  scanError,
+  liveThumbnails,
   scannerStatus,
   loadingScannerStatus,
   handleStartScan,
@@ -82,6 +86,8 @@ const DocumentAttachmentSection: React.FC<DocumentAttachmentSectionProps> = ({
           scanning={scanning}
           scanProgress={scanProgress}
           scanResult={scanResult}
+          scanError={scanError}
+          liveThumbnails={liveThumbnails}
           scannerStatus={scannerStatus}
           loadingScannerStatus={loadingScannerStatus}
           handleStartScan={handleStartScan}

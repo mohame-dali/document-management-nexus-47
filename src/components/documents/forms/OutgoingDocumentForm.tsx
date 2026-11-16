@@ -43,6 +43,8 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
     scanStage,
     scanPage,
     scanResult,
+    scanError,
+    liveThumbnails,
     isScanAttached,
     scanSettings,
     handleFileSelect,
@@ -127,6 +129,8 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                     scanning={scanning}
                     scanProgress={scanProgress}
                     scanResult={scanResult}
+                    scanError={scanError}
+                    liveThumbnails={liveThumbnails}
                     scannerStatus={scannerStatus as Record<string, unknown> | null}
                     loadingScannerStatus={loadingScannerStatus}
                     handleStartScan={handleStartScan}

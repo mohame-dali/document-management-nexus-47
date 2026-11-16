@@ -1287,6 +1287,12 @@
   "scanner.errors.SCAN_CANCELLED": "تم إلغاء عملية المسح الضوئي.",
   "scanner.errors.INVALID_SCAN_PARAMS": "إعدادات المسح الضوئي غير صالحة.",
   "scanner.errors.CLIENT_TIMEOUT": "انتهت مهلة الانتظار من جهة المتصفح.",
-  "scanner.errors.UNKNOWN": "حدث خطأ غير متوقع أثناء المسح الضوئي."
+  "scanner.errors.UNKNOWN": "حدث خطأ غير متوقع أثناء المسح الضوئي.",
+  "scanner.actions.retry": "إعادة المحاولة",
+  "scanner.actions.showOcr": "عرض النص المستخرج (OCR)",
+  "scanner.actions.hideOcr": "إخفاء النص المستخرج",
+  "scanner.liveThumbnails.title": "الصفحات الممسوحة مباشرة",
+  "scanner.studio.readyTitle": "جاهز للمسح الضوئي",
+  "scanner.studio.readyHint": "ضع المستند في الماسح الضوئي ثم ابدأ عملية المسح."
 }
 

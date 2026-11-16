@@ -12,6 +12,7 @@ import RecentScans from '@/components/scanner/RecentScans';
 
 import {
   ScanStage,
+  LiveThumbnail,
   getScannerStatus,
   listScanners,
   selectScanner,
@@ -20,6 +21,7 @@ import {
   getRecentScans,
   createScanId,
   getScanJobStatus,
+  getScanPageThumbnailBlob,
   cancelScanJob,
   deleteScan,
   getScanStageProgress,
@@ -106,15 +108,37 @@ const ScanDocumentPage: React.FC = () => {
   const [scanStage, setScanStage] = useState<ScanStage | null>(null);
   const [scanPage, setScanPage] = useState(0);
   const [scanResult, setScanResult] = useState<ScanResultData | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [liveThumbnails, setLiveThumbnails] = useState<LiveThumbnail[]>([]);
   const [lastTemporaryMode, setLastTemporaryMode] = useState(true);
 
   const isMountedRef = useRef(true);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scanAbortRef = useRef<AbortController | null>(null);
+  const thumbAbortRef = useRef<AbortController | null>(null);
   const activeScanIdRef = useRef<string | null>(null);
+  const thumbnailUrlsRef = useRef<string[]>([]);
+  const fetchedThumbPagesRef = useRef<Set<number>>(new Set());
   const scanStartTimeRef = useRef<number>(0);
   const maxPagesSeenRef = useRef<number>(1);
   const cancelledByUserRef = useRef<boolean>(false);
+
+  const clearLiveThumbnails = useCallback(() => {
+    if (thumbAbortRef.current) {
+      thumbAbortRef.current.abort();
+      thumbAbortRef.current = null;
+    }
+    fetchedThumbPagesRef.current.clear();
+    if (thumbnailUrlsRef.current.length > 0) {
+      for (const url of thumbnailUrlsRef.current) {
+        URL.revokeObjectURL(url);
+      }
+      thumbnailUrlsRef.current = [];
+    }
+    if (isMountedRef.current) {
+      setLiveThumbnails([]);
+    }
+  }, []);
 
   const stopPolling = useCallback(() => {
     if (pollTimerRef.current) {
@@ -128,6 +152,7 @@ const ScanDocumentPage: React.FC = () => {
     return () => {
       isMountedRef.current = false;
       stopPolling();
+      clearLiveThumbnails();
       if (scanAbortRef.current) {
         scanAbortRef.current.abort();
         scanAbortRef.current = null;
@@ -137,7 +162,7 @@ const ScanDocumentPage: React.FC = () => {
         activeScanIdRef.current = null;
       }
     };
-  }, [stopPolling]);
+  }, [stopPolling, clearLiveThumbnails]);
 
   // Get scanner status
   const { data: statusData, refetch: refetchStatus } = useQuery({
@@ -207,6 +232,7 @@ const ScanDocumentPage: React.FC = () => {
     },
     onSuccess: (response, variables) => {
       stopPolling();
+      clearLiveThumbnails();
       scanAbortRef.current = null;
       activeScanIdRef.current = null;
       if (!isMountedRef.current) return;
@@ -222,6 +248,7 @@ const ScanDocumentPage: React.FC = () => {
       };
 
       setScanning(false);
+      setScanError(null);
       setScanStage('done');
       setScanPage(Number(normalized.pageCount || 1));
       setProgress(100);
@@ -231,6 +258,7 @@ const ScanDocumentPage: React.FC = () => {
     },
     onError: (error: unknown) => {
       stopPolling();
+      clearLiveThumbnails();
       scanAbortRef.current = null;
       activeScanIdRef.current = null;
       if (!isMountedRef.current) return;
@@ -243,14 +271,17 @@ const ScanDocumentPage: React.FC = () => {
 
       if (wasManualCancel || getScannerErrorCode(error) === 'SCAN_CANCELLED') {
         setScanStage(null);
+        setScanError(null);
         if (!wasManualCancel) {
           toast.info(getScannerErrorMessage(error, translate, lang));
         }
         return;
       }
 
+      const errMsg = getScannerErrorMessage(error, translate, lang);
       setScanStage('error');
-      toast.error(getScannerErrorMessage(error, translate, lang));
+      setScanError(errMsg);
+      toast.error(errMsg);
     },
   });
 
@@ -265,6 +296,7 @@ const ScanDocumentPage: React.FC = () => {
     const scanId = activeScanIdRef.current;
     cancelledByUserRef.current = true;
     stopPolling();
+    clearLiveThumbnails();
     if (scanAbortRef.current) {
       scanAbortRef.current.abort();
       scanAbortRef.current = null;
@@ -274,6 +306,7 @@ const ScanDocumentPage: React.FC = () => {
     }
     activeScanIdRef.current = null;
     setScanning(false);
+    setScanError(null);
     setScanStage(null);
     setScanPage(0);
     setProgress(0);
@@ -290,17 +323,21 @@ const ScanDocumentPage: React.FC = () => {
     }
 
     stopPolling();
+    clearLiveThumbnails();
     const scanId = createScanId();
     const controller = new AbortController();
+    const thumbController = new AbortController();
 
     setLastTemporaryMode(temporary);
     activeScanIdRef.current = scanId;
     scanAbortRef.current = controller;
+    thumbAbortRef.current = thumbController;
     scanStartTimeRef.current = Date.now();
     maxPagesSeenRef.current = 1;
     cancelledByUserRef.current = false;
 
     setScanning(true);
+    setScanError(null);
     setScanStage('detecting');
     setScanPage(0);
     setProgress(getScanStageProgress('detecting', 0));
@@ -315,14 +352,17 @@ const ScanDocumentPage: React.FC = () => {
       const maxAllowedMs = BASE_SCAN_TIMEOUT_MS * Math.max(1, maxPagesSeenRef.current);
       if (elapsedMs > maxAllowedMs) {
         stopPolling();
+        clearLiveThumbnails();
         activeScanIdRef.current = null;
         controller.abort();
         cancelScanJob(scanId).catch(() => {});
         if (isMountedRef.current) {
+          const timeoutMsg = getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang);
           setScanning(false);
           setScanStage('error');
+          setScanError(timeoutMsg);
           setProgress(0);
-          toast.error(getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang));
+          toast.error(timeoutMsg);
         }
         return;
       }
@@ -339,6 +379,27 @@ const ScanDocumentPage: React.FC = () => {
         setScanStage(stage);
         setScanPage(page);
         setProgress(getScanStageProgress(stage, page));
+
+        const availablePages = Number(jobStatus.availablePages || page || 0);
+        if (availablePages > 0 && stage !== 'done' && stage !== 'error') {
+          for (let p = 1; p <= availablePages; p++) {
+            if (fetchedThumbPagesRef.current.has(p)) continue;
+            fetchedThumbPagesRef.current.add(p);
+            getScanPageThumbnailBlob(scanId, p, thumbController.signal)
+              .then((blob) => {
+                if (!isMountedRef.current || activeScanIdRef.current !== scanId) return;
+                const thumbUrl = URL.createObjectURL(blob);
+                thumbnailUrlsRef.current.push(thumbUrl);
+                setLiveThumbnails((prev) => {
+                  if (prev.some((item) => item.page === p)) return prev;
+                  return [...prev, { page: p, url: thumbUrl }].sort((a, b) => a.page - b.page);
+                });
+              })
+              .catch(() => {
+                fetchedThumbPagesRef.current.delete(p);
+              });
+          }
+        }
       } catch {
         // Ignore transient 404 before job registers on backend
       }
@@ -357,7 +418,9 @@ const ScanDocumentPage: React.FC = () => {
     if (typeof scanId === 'string' && scanId) {
       deleteScan(scanId).catch(() => {});
     }
+    clearLiveThumbnails();
     setScanResult(null);
+    setScanError(null);
     setScanStage(null);
     setScanPage(0);
     setProgress(0);
@@ -418,6 +481,8 @@ const ScanDocumentPage: React.FC = () => {
             scanStage={scanStage}
             scanPage={scanPage}
             scanResult={scanResult}
+            scanError={scanError}
+            liveThumbnails={liveThumbnails}
             onCreateFromScan={handleCreateFromScan}
             onCancelScan={handleCancelScan}
             onRescan={() => handleScanDocument(lastTemporaryMode)}

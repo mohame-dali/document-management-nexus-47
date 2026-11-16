@@ -17,6 +17,7 @@ const {
   getScanJobStatus,
   cancelScanJob,
   getScanFile,
+  getScanPageThumbnail,
   deleteScanFile,
   getScanMetadata,
 } = require('../controllers/scan');
@@ -38,6 +39,7 @@ router.post('/cancel/:scanId', cancelScanJob);
 router.post('/document', scanForDocument);
 router.post('/temp', scanTemporaryDocument);
 router.get('/file/:scanId', getScanFile);
+router.get('/thumbnail/:scanId/:page', getScanPageThumbnail);
 router.delete('/file/:scanId', deleteScanFile);
 router.get('/download/:scanId', getScanFile);
 router.get('/metadata/:scanId', getScanMetadata);

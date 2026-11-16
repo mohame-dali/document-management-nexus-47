@@ -83,16 +83,44 @@ exports.scanForDocument = async (options) => {
       console.warn('[Scanner] Could not remove temp file:', cleanupErr.message);
     }
 
+    const job = scannerService.getStatusManager().getJob(scanResult.scanId);
+    if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
+      if (fs.existsSync(newFilePath)) {
+        try { fs.unlinkSync(newFilePath); } catch (_) {}
+      }
+      throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+    }
+
     const docTypeFolder = documentType === 'incoming' ? 'Incoming-Doc' : 'Outgoing-Doc';
     const scannedDocumentPath = `courrier/${year}/${docTypeFolder}/${newFilename}`;
 
     let ocrText = '';
     if (fileExt.toLowerCase() === '.pdf') {
       try {
-        ocrText = (await extractTextFromPDF(newFilePath, 'ara+fra+eng')) || '';
+        ocrText =
+          (await extractTextFromPDF(newFilePath, 'ara+fra+eng', {
+            signal: job?.abortController?.signal || null,
+          })) || '';
       } catch (ocrError) {
+        if (
+          ocrError?.name === 'AbortError' ||
+          job?.cancelled ||
+          job?.abortController?.signal?.aborted
+        ) {
+          if (fs.existsSync(newFilePath)) {
+            try { fs.unlinkSync(newFilePath); } catch (_) {}
+          }
+          throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+        }
         console.error('[Scanner] OCR extraction error:', ocrError.message);
       }
+    }
+
+    if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
+      if (fs.existsSync(newFilePath)) {
+        try { fs.unlinkSync(newFilePath); } catch (_) {}
+      }
+      throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
     }
 
     return {
@@ -166,13 +194,41 @@ exports.scanDocument = async (options) => {
       userId: String(userId),
     });
 
+    const job = scannerService.getStatusManager().getJob(scanResult.scanId);
+    if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
+      if (scanResult.filePath && fs.existsSync(scanResult.filePath)) {
+        try { fs.unlinkSync(scanResult.filePath); } catch (_) {}
+      }
+      throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+    }
+
     let ocrText = '';
     if (validated.format === 'pdf' && fs.existsSync(scanResult.filePath)) {
       try {
-        ocrText = (await extractTextFromPDF(scanResult.filePath, 'ara+fra+eng')) || '';
+        ocrText =
+          (await extractTextFromPDF(scanResult.filePath, 'ara+fra+eng', {
+            signal: job?.abortController?.signal || null,
+          })) || '';
       } catch (ocrError) {
+        if (
+          ocrError?.name === 'AbortError' ||
+          job?.cancelled ||
+          job?.abortController?.signal?.aborted
+        ) {
+          if (scanResult.filePath && fs.existsSync(scanResult.filePath)) {
+            try { fs.unlinkSync(scanResult.filePath); } catch (_) {}
+          }
+          throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+        }
         console.error('[Scanner] Temporary OCR error:', ocrError.message);
       }
+    }
+
+    if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
+      if (scanResult.filePath && fs.existsSync(scanResult.filePath)) {
+        try { fs.unlinkSync(scanResult.filePath); } catch (_) {}
+      }
+      throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
     }
 
     return {

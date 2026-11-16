@@ -86,7 +86,13 @@ export interface ScanJobStatus {
   scanId: string;
   stage: ScanStage;
   page: number;
+  availablePages?: number;
   code?: ScannerErrorCode;
+}
+
+export interface LiveThumbnail {
+  page: number;
+  url: string;
 }
 
 const DEFAULT_FALLBACK_MESSAGES: Record<'fr' | 'ar', Record<string, string>> = {
@@ -312,6 +318,20 @@ export const getScanFileBlob = async (scanId: string, signal?: AbortSignal): Pro
     responseType: 'blob',
     signal,
     timeout: 60000,
+  });
+  return response.data;
+};
+
+// Fetch live per-page thumbnail as binary Blob via protected API instance
+export const getScanPageThumbnailBlob = async (
+  scanId: string,
+  page: number,
+  signal?: AbortSignal
+): Promise<Blob> => {
+  const response = await api.get(`/scan/thumbnail/${encodeURIComponent(scanId)}/${page}`, {
+    responseType: 'blob',
+    signal,
+    timeout: 15000,
   });
   return response.data;
 };

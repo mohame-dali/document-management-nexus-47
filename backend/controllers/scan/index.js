@@ -16,6 +16,7 @@ module.exports = {
   getScanJobStatus: documentScanController.getScanJobStatus,
   cancelScanJob: documentScanController.cancelScanJob,
   getScanFile: documentScanController.getScanFile,
+  getScanPageThumbnail: documentScanController.getScanPageThumbnail,
   deleteScanFile: documentScanController.deleteScanFile,
   getScanMetadata: documentScanController.getScanMetadata,
 };

@@ -16,8 +16,10 @@ import { OutgoingScanMutationRunner, OutgoingScanResultData } from '@/hooks/form
 import { useLanguage } from '@/contexts/LanguageProvider';
 import {
   ScanStage,
+  LiveThumbnail,
   createScanId,
   getScanJobStatus,
+  getScanPageThumbnailBlob,
   cancelScanJob,
   deleteScan,
   getScanStageProgress,
@@ -65,6 +67,8 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   const [scanStage, setScanStage] = useState<ScanStage | null>(null);
   const [scanPage, setScanPage] = useState(0);
   const [scanResult, setScanResult] = useState<OutgoingScanResultData | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [liveThumbnails, setLiveThumbnails] = useState<LiveThumbnail[]>([]);
   const [isScanAttached, setIsScanAttached] = useState(false);
   const [scanSettings, setScanSettings] = useState({
     resolution: '600',
@@ -74,10 +78,32 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   const isMountedRef = useRef(true);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scanAbortRef = useRef<AbortController | null>(null);
+  const thumbAbortRef = useRef<AbortController | null>(null);
   const activeScanIdRef = useRef<string | null>(null);
+  const thumbnailUrlsRef = useRef<string[]>([]);
+  const fetchedThumbPagesRef = useRef<Set<number>>(new Set());
+  const localScanIdRef = useRef<string | null>(null);
+  const hasSubmittedRef = useRef<boolean>(false);
   const scanStartTimeRef = useRef<number>(0);
   const maxPagesSeenRef = useRef<number>(1);
   const cancelledByUserRef = useRef<boolean>(false);
+
+  const clearLiveThumbnails = useCallback(() => {
+    if (thumbAbortRef.current) {
+      thumbAbortRef.current.abort();
+      thumbAbortRef.current = null;
+    }
+    fetchedThumbPagesRef.current.clear();
+    if (thumbnailUrlsRef.current.length > 0) {
+      for (const url of thumbnailUrlsRef.current) {
+        URL.revokeObjectURL(url);
+      }
+      thumbnailUrlsRef.current = [];
+    }
+    if (isMountedRef.current) {
+      setLiveThumbnails([]);
+    }
+  }, []);
 
   const stopPolling = useCallback(() => {
     if (pollTimerRef.current) {
@@ -91,13 +117,18 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
     return () => {
       isMountedRef.current = false;
       stopPolling();
+      clearLiveThumbnails();
       scanAbortRef.current?.abort();
       if (activeScanIdRef.current) {
         cancelScanJob(activeScanIdRef.current).catch(() => {});
         activeScanIdRef.current = null;
       }
+      if (!hasSubmittedRef.current && localScanIdRef.current) {
+        deleteScan(localScanIdRef.current).catch(() => {});
+        localScanIdRef.current = null;
+      }
     };
-  }, [stopPolling]);
+  }, [stopPolling, clearLiveThumbnails]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -133,6 +164,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
     const scanId = activeScanIdRef.current;
     cancelledByUserRef.current = true;
     stopPolling();
+    clearLiveThumbnails();
     scanAbortRef.current?.abort();
     scanAbortRef.current = null;
     if (scanId) {
@@ -140,6 +172,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
     }
     activeScanIdRef.current = null;
     setScanning(false);
+    setScanError(null);
     setScanStage(null);
     setScanPage(0);
     setScanProgress(0);
@@ -151,19 +184,24 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
 
     if (scanResult?.scanId && typeof scanResult.scanId === 'string') {
       deleteScan(scanResult.scanId).catch(() => {});
+      localScanIdRef.current = null;
     }
 
     stopPolling();
+    clearLiveThumbnails();
     const scanId = createScanId();
     const controller = new AbortController();
+    const thumbController = new AbortController();
 
     activeScanIdRef.current = scanId;
     scanAbortRef.current = controller;
+    thumbAbortRef.current = thumbController;
     scanStartTimeRef.current = Date.now();
     maxPagesSeenRef.current = 1;
     cancelledByUserRef.current = false;
 
     setScanning(true);
+    setScanError(null);
     setScanStage('detecting');
     setScanPage(0);
     setScanProgress(getScanStageProgress('detecting', 0));
@@ -175,14 +213,17 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
       }
       if (Date.now() - scanStartTimeRef.current > 120000 * Math.max(1, maxPagesSeenRef.current)) {
         stopPolling();
+        clearLiveThumbnails();
         activeScanIdRef.current = null;
         controller.abort();
         cancelScanJob(scanId).catch(() => {});
         if (isMountedRef.current) {
+          const timeoutMsg = getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang);
           setScanning(false);
           setScanStage('error');
+          setScanError(timeoutMsg);
           setScanProgress(0);
-          toast.error(getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang));
+          toast.error(timeoutMsg);
         }
         return;
       }
@@ -195,6 +236,27 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
         setScanStage(stage);
         setScanPage(page);
         setScanProgress(getScanStageProgress(stage, page));
+
+        const availablePages = Number(jobStatus.availablePages || page || 0);
+        if (availablePages > 0 && stage !== 'done' && stage !== 'error') {
+          for (let p = 1; p <= availablePages; p++) {
+            if (fetchedThumbPagesRef.current.has(p)) continue;
+            fetchedThumbPagesRef.current.add(p);
+            getScanPageThumbnailBlob(scanId, p, thumbController.signal)
+              .then((blob) => {
+                if (!isMountedRef.current || activeScanIdRef.current !== scanId) return;
+                const thumbUrl = URL.createObjectURL(blob);
+                thumbnailUrlsRef.current.push(thumbUrl);
+                setLiveThumbnails((prev) => {
+                  if (prev.some((item) => item.page === p)) return prev;
+                  return [...prev, { page: p, url: thumbUrl }].sort((a, b) => a.page - b.page);
+                });
+              })
+              .catch(() => {
+                fetchedThumbPagesRef.current.delete(p);
+              });
+          }
+        }
       } catch {
         // Ignore transient polling 404
       }
@@ -212,12 +274,14 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
     scanTemporaryDocumentMutation.mutate(scanOptions, {
       onSuccess: (response: OutgoingScanResultData) => {
         stopPolling();
+        clearLiveThumbnails();
         scanAbortRef.current = null;
         activeScanIdRef.current = null;
         if (!isMountedRef.current) return;
 
         const raw = ((response?.data && typeof response.data === 'object' ? response.data : response) || {}) as OutgoingScanResultData;
         const resolvedScanId = String(raw.scanId || scanId);
+        localScanIdRef.current = resolvedScanId;
         const normalized: OutgoingScanResultData = {
           ...raw,
           scanId: resolvedScanId,
@@ -227,6 +291,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
         };
 
         setScanning(false);
+        setScanError(null);
         setScanStage('done');
         setScanPage(Number(normalized.pageCount || 1));
         setScanProgress(100);
@@ -254,6 +319,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
       },
       onError: (error: unknown) => {
         stopPolling();
+        clearLiveThumbnails();
         scanAbortRef.current = null;
         activeScanIdRef.current = null;
         if (!isMountedRef.current) return;
@@ -264,10 +330,13 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
         setScanProgress(0);
         if (wasManualCancel || getScannerErrorCode(error) === 'SCAN_CANCELLED') {
           setScanStage(null);
+          setScanError(null);
           return;
         }
+        const errMsg = getScannerErrorMessage(error, translate, lang);
         setScanStage('error');
-        toast.error(getScannerErrorMessage(error, translate, lang));
+        setScanError(errMsg);
+        toast.error(errMsg);
       }
     });
   };
@@ -276,7 +345,10 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
     if (scanResult?.scanId && typeof scanResult.scanId === 'string') {
       deleteScan(scanResult.scanId).catch(() => {});
     }
+    localScanIdRef.current = null;
+    clearLiveThumbnails();
     setScanResult(null);
+    setScanError(null);
     setIsScanAttached(false);
     setScanStage(null);
     setScanPage(0);
@@ -330,6 +402,8 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
       }
       
       await updateOutgoingDocument(document._id, formData);
+      hasSubmittedRef.current = true;
+      localScanIdRef.current = null;
       toast.success('تم تحديث الوثيقة بنجاح');
       navigate('/dashboard/outgoing-documents');
     } catch (error) {
@@ -420,6 +494,8 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
                     scanning={scanning}
                     scanProgress={scanProgress}
                     scanResult={scanResult}
+                    scanError={scanError}
+                    liveThumbnails={liveThumbnails}
                     scannerStatus={scannerStatus as Record<string, unknown> | null}
                     loadingScannerStatus={loadingScannerStatus}
                     handleStartScan={handleStartScan}

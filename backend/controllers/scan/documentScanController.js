@@ -135,15 +135,31 @@ exports.scanTemporaryDocument = async (req, res) => {
       scanId,
     });
 
-    const scanResult = await scanIntegration.scanDocument({
-      documentType: documentType || 'temp',
-      format: validated.format,
-      resolution: validated.resolution,
-      colorMode: validated.colorMode,
-      documentSource: validated.documentSource,
-      scanId: validated.scanId || undefined,
-      userId: getAuthenticatedUserId(req),
-    });
+    const userId = getAuthenticatedUserId(req);
+    const onClose = () => {
+      if (!res.writableFinished && validated.scanId) {
+        const job = scannerService.getStatusManager().getJob(validated.scanId);
+        if (job && job.stage !== 'done' && job.stage !== 'error') {
+          scannerService.getStatusManager().cancelJob(validated.scanId, userId);
+        }
+      }
+    };
+    res.on('close', onClose);
+
+    let scanResult;
+    try {
+      scanResult = await scanIntegration.scanDocument({
+        documentType: documentType || 'temp',
+        format: validated.format,
+        resolution: validated.resolution,
+        colorMode: validated.colorMode,
+        documentSource: validated.documentSource,
+        scanId: validated.scanId || undefined,
+        userId,
+      });
+    } finally {
+      res.removeListener('close', onClose);
+    }
 
     if (!scanResult.success) {
       return res.status(scanResult.statusCode || 500).json({
@@ -308,6 +324,118 @@ exports.getScanFile = async (req, res) => {
     return res.sendFile(resolvedFilePath);
   } catch (err) {
     return sendScannerError(res, err, 'Impossible de récupérer le fichier numérisé.');
+  }
+};
+
+/**
+ * @desc    Serve live per-page thumbnail image during/around scan (owner-only)
+ * @route   GET /api/scan/thumbnail/:scanId/:page
+ * @access  Private/Admin/AdminTuningDesk
+ */
+exports.getScanPageThumbnail = async (req, res) => {
+  try {
+    const scanId = validateScanId(req.params.scanId);
+    const rawPage = String(req.params.page || '').trim();
+    if (!/^\d+$/.test(rawPage)) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_SCAN_PARAMS',
+        message: 'Numéro de page invalide.',
+      });
+    }
+
+    const pageNum = Number(rawPage);
+    if (!Number.isInteger(pageNum) || pageNum < 1 || pageNum > 500) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_SCAN_PARAMS',
+        message: 'Numéro de page hors limites.',
+      });
+    }
+
+    const userId = getAuthenticatedUserId(req);
+    const job = scannerService.getStatusManager().getJob(scanId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        code: 'SCAN_FAILED',
+        message: 'Tâche de numérisation introuvable.',
+      });
+    }
+
+    if (job.ownerId !== userId) {
+      return res.status(403).json({
+        success: false,
+        code: 'SCAN_FAILED',
+        message: 'Accès non autorisé à cette miniature.',
+      });
+    }
+
+    const tempRoot = path.resolve(scannerService.getConfig().tempDir);
+    let resolvedThumbPath = null;
+    let thumbExt = '.png';
+
+    if (job.jobTempDir) {
+      const resolvedJobDir = path.resolve(job.jobTempDir);
+      if (resolvedJobDir.startsWith(tempRoot + path.sep) && fs.existsSync(resolvedJobDir)) {
+        const candidates = [
+          `page_${pageNum}.png`,
+          `page_${pageNum}.jpg`,
+          `page_${pageNum}.jpeg`,
+          `page_${pageNum}.bmp`,
+        ];
+        for (const candidate of candidates) {
+          const full = path.resolve(resolvedJobDir, candidate);
+          if (
+            full.startsWith(resolvedJobDir + path.sep) &&
+            fs.existsSync(full) &&
+            fs.statSync(full).size > 0
+          ) {
+            resolvedThumbPath = full;
+            thumbExt = path.extname(candidate).toLowerCase();
+            break;
+          }
+        }
+      }
+    }
+
+    if (!resolvedThumbPath && pageNum === 1 && job.filePath) {
+      const resolvedFile = path.resolve(job.filePath);
+      const ext = path.extname(resolvedFile).toLowerCase();
+      if (
+        resolvedFile.startsWith(tempRoot + path.sep) &&
+        ['.png', '.jpg', '.jpeg'].includes(ext) &&
+        fs.existsSync(resolvedFile) &&
+        fs.statSync(resolvedFile).size > 0
+      ) {
+        resolvedThumbPath = resolvedFile;
+        thumbExt = ext;
+      }
+    }
+
+    if (!resolvedThumbPath) {
+      return res.status(404).json({
+        success: false,
+        code: 'THUMBNAIL_NOT_READY',
+        message: 'Miniature non disponible.',
+      });
+    }
+
+    const contentType =
+      thumbExt === '.jpg' || thumbExt === '.jpeg'
+        ? 'image/jpeg'
+        : thumbExt === '.bmp'
+          ? 'image/bmp'
+          : 'image/png';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'no-store');
+
+    return res.sendFile(resolvedThumbPath);
+  } catch (err) {
+    return sendScannerError(res, err, 'Impossible de récupérer la miniature.');
   }
 };
 

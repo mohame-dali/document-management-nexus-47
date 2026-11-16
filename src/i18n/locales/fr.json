@@ -1287,6 +1287,12 @@
   "scanner.errors.SCAN_CANCELLED": "Numérisation annulée.",
   "scanner.errors.INVALID_SCAN_PARAMS": "Paramètres de numérisation invalides.",
   "scanner.errors.CLIENT_TIMEOUT": "Délai d'attente dépassé côté navigateur.",
-  "scanner.errors.UNKNOWN": "Une erreur est survenue lors de la numérisation."
+  "scanner.errors.UNKNOWN": "Une erreur est survenue lors de la numérisation.",
+  "scanner.actions.retry": "Réessayer",
+  "scanner.actions.showOcr": "Afficher le texte OCR",
+  "scanner.actions.hideOcr": "Masquer le texte OCR",
+  "scanner.liveThumbnails.title": "Pages numérisées en direct",
+  "scanner.studio.readyTitle": "Prêt pour la numérisation",
+  "scanner.studio.readyHint": "Placez votre document dans le scanner puis lancez la capture."
 }
 

@@ -3,7 +3,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import DocumentUploadWithOcr from '@/components/documents/DocumentUploadWithOcr';
 import ScannerTab from '@/components/documents/forms/ScannerTab';
 import DocumentTypeTabSelector from '@/components/documents/forms/DocumentTypeTabSelector';
-import { ScanStage } from '@/services/scannerService';
+import { ScanStage, LiveThumbnail } from '@/services/scannerService';
 import { ScanPreviewData } from '@/components/documents/forms/ScannedDocumentPreview';
 
 interface AttachmentSectionProps {
@@ -20,6 +20,8 @@ interface AttachmentSectionProps {
   scanning: boolean;
   scanProgress: number;
   scanResult: ScanPreviewData | null;
+  scanError?: string | null;
+  liveThumbnails?: LiveThumbnail[];
   scannerStatus?: Record<string, unknown> | null;
   loadingScannerStatus?: boolean;
   handleStartScan: () => void;
@@ -43,6 +45,8 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   scanning,
   scanProgress,
   scanResult,
+  scanError,
+  liveThumbnails,
   scannerStatus,
   loadingScannerStatus,
   handleStartScan,
@@ -83,6 +87,8 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({
               scanning={scanning}
               scanProgress={scanProgress}
               scanResult={scanResult}
+              scanError={scanError}
+              liveThumbnails={liveThumbnails}
               scannerStatus={scannerStatus}
               loadingScannerStatus={loadingScannerStatus}
               handleStartScan={handleStartScan}

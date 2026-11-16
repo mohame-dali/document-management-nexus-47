@@ -52,6 +52,8 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
     scanStage,
     scanPage,
     scanResult,
+    scanError,
+    liveThumbnails,
     isScanAttached,
     scanSettings,
     handleFileSelect,
@@ -261,6 +263,8 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                     scanning={scanning}
                     scanProgress={scanProgress}
                     scanResult={scanResult}
+                    scanError={scanError}
+                    liveThumbnails={liveThumbnails}
                     scannerStatus={scannerStatus}
                     loadingScannerStatus={loadingScannerStatus}
                     handleStartScan={handleScanStart}

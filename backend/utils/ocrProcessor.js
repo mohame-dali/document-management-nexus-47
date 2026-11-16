@@ -29,14 +29,86 @@ function getAppTempRoot() {
   return tempRoot;
 }
 
+function createAbortError(message = 'OCR operation aborted') {
+  const err = new Error(message);
+  err.name = 'AbortError';
+  err.code = 'ABORT_ERR';
+  return err;
+}
+
+function killOcrChild(child) {
+  if (!child || child.killed || !child.pid) return;
+  try {
+    child.kill('SIGTERM');
+  } catch (_) {}
+  if (process.platform === 'win32') {
+    try {
+      execFile('taskkill', ['/T', '/F', '/PID', String(child.pid)], { windowsHide: true }, () => {});
+    } catch (_) {}
+  }
+  const forceTimer = setTimeout(() => {
+    try {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill('SIGKILL');
+      }
+    } catch (_) {}
+  }, 250);
+  if (typeof forceTimer.unref === 'function') {
+    forceTimer.unref();
+  }
+}
+
 /**
- * Safely execute an external binary without shell interpolation and with strict timeout/memory caps.
+ * Safely execute an external binary without shell interpolation and with strict timeout/memory caps & optional AbortSignal.
  */
-async function runBinary(bin, args, timeoutMs = SUBPROCESS_TIMEOUT_MS) {
-  return execFileAsync(bin, args, {
-    timeout: timeoutMs,
-    maxBuffer: SUBPROCESS_MAX_BUFFER,
-    windowsHide: true,
+async function runBinary(bin, args, timeoutMs = SUBPROCESS_TIMEOUT_MS, signal = null) {
+  if (signal && signal.aborted) {
+    throw createAbortError();
+  }
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let child = null;
+
+    const cleanup = () => {
+      if (signal) {
+        signal.removeEventListener('abort', onAbort);
+      }
+    };
+
+    const onAbort = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      killOcrChild(child);
+      reject(createAbortError());
+    };
+
+    if (signal) {
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+
+    child = execFile(
+      bin,
+      args,
+      {
+        timeout: timeoutMs,
+        maxBuffer: SUBPROCESS_MAX_BUFFER,
+        windowsHide: true,
+      },
+      (error, stdout, stderr) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (signal && signal.aborted) {
+          return reject(createAbortError());
+        }
+        if (error) {
+          return reject(error);
+        }
+        return resolve({ stdout: stdout || '', stderr: stderr || '' });
+      }
+    );
   });
 }
 
@@ -45,10 +117,16 @@ async function runBinary(bin, args, timeoutMs = SUBPROCESS_TIMEOUT_MS) {
  * Uses 300 DPI, processes page by page, enforces memory/time limits, and cleans up temp files.
  * @param {string} filePath - Path to the PDF file
  * @param {string} languages - Language codes for OCR (default: 'ara+fra+eng')
+ * @param {{ signal?: AbortSignal }} options - Optional cancellation signal
  * @returns {Promise<string>} - Extracted text
  */
-const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
+const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng', options = {}) => {
+  const signal = options && options.signal ? options.signal : null;
   try {
+    if (signal && signal.aborted) {
+      throw createAbortError();
+    }
+
     let normalizedPath = path.normalize(filePath);
     const projectRoot = path.dirname(path.dirname(__filename));
     if (normalizedPath.includes(projectRoot + projectRoot)) {
@@ -67,23 +145,34 @@ const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
       throw new ErrorResponse(`File not found: ${normalizedPath}`, 404);
     }
 
-    const availableLanguages = await checkAvailableLanguages();
+    const availableLanguages = await checkAvailableLanguages(signal);
     console.log('Available Tesseract languages:', availableLanguages);
 
     try {
-      await runBinary('tesseract', ['--version'], 10000);
+      await runBinary('tesseract', ['--version'], 10000, signal);
 
       console.log('Using enhanced Tesseract (300 DPI, page-by-page) for Arabic OCR processing');
       const extractedText = await extractTextWithEnhancedTesseract(
         normalizedPath,
         languages,
-        availableLanguages
+        availableLanguages,
+        signal
       );
+      if (signal && signal.aborted) {
+        throw createAbortError();
+      }
       if (extractedText && extractedText.trim().length > 0) {
         return cleanArabicOcrText(extractedText);
       }
     } catch (err) {
+      if (err && (err.name === 'AbortError' || (signal && signal.aborted))) {
+        throw err;
+      }
       console.log('Enhanced Tesseract not available or failed, falling back to pdf-parse:', err.message);
+    }
+
+    if (signal && signal.aborted) {
+      throw createAbortError();
     }
 
     console.log('Using pdf-parse for text extraction');
@@ -93,6 +182,9 @@ const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
 
     return cleanArabicOcrText(cleanedText);
   } catch (error) {
+    if (error && (error.name === 'AbortError' || (signal && signal.aborted))) {
+      throw error;
+    }
     console.error('OCR Processing Error:', error);
     if (error instanceof ErrorResponse) {
       throw error;
@@ -104,15 +196,18 @@ const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
 /**
  * Check available Tesseract languages
  */
-const checkAvailableLanguages = async () => {
+const checkAvailableLanguages = async (signal = null) => {
   try {
-    const { stdout } = await runBinary('tesseract', ['--list-langs'], 10000);
+    const { stdout } = await runBinary('tesseract', ['--list-langs'], 10000, signal);
     return stdout
       .toLowerCase()
       .split('\n')
       .filter((lang) => lang.trim() !== '')
       .slice(1);
   } catch (error) {
+    if (error && (error.name === 'AbortError' || (signal && signal.aborted))) {
+      throw error;
+    }
     console.log('Could not check available languages:', error.message);
     return [];
   }
@@ -121,14 +216,21 @@ const checkAvailableLanguages = async () => {
 /**
  * Determine total number of pages in a PDF using pdfinfo or pdf-parse fallback.
  */
-async function getPdfPageCount(filePath) {
+async function getPdfPageCount(filePath, signal = null) {
+  if (signal && signal.aborted) {
+    throw createAbortError();
+  }
   try {
-    const { stdout } = await runBinary('pdfinfo', [filePath], 10000);
+    const { stdout } = await runBinary('pdfinfo', [filePath], 10000, signal);
     const match = stdout.match(/Pages:\s+(\d+)/i);
     if (match) {
       return Number(match[1]);
     }
-  } catch (_) {}
+  } catch (err) {
+    if (err && (err.name === 'AbortError' || (signal && signal.aborted))) {
+      throw err;
+    }
+  }
 
   try {
     const dataBuffer = fs.readFileSync(filePath);
@@ -144,7 +246,7 @@ async function getPdfPageCount(filePath) {
 /**
  * Convert a single PDF page to PNG at 300 DPI using pdftoppm.
  */
-async function renderPdfPageToPng(filePath, pageNumber, outputPrefix) {
+async function renderPdfPageToPng(filePath, pageNumber, outputPrefix, signal = null) {
   await runBinary(
     'pdftoppm',
     [
@@ -162,7 +264,8 @@ async function renderPdfPageToPng(filePath, pageNumber, outputPrefix) {
       filePath,
       outputPrefix,
     ],
-    SUBPROCESS_TIMEOUT_MS
+    SUBPROCESS_TIMEOUT_MS,
+    signal
   );
 
   const dir = path.dirname(outputPrefix);
@@ -182,13 +285,17 @@ async function renderPdfPageToPng(filePath, pageNumber, outputPrefix) {
 const extractTextWithEnhancedTesseract = async (
   filePath,
   languages = 'ara+fra+eng',
-  availableLanguages = []
+  availableLanguages = [],
+  signal = null
 ) => {
+  if (signal && signal.aborted) {
+    throw createAbortError();
+  }
   const tempDir = path.join(getAppTempRoot(), `ocr-${uuidv4()}`);
   fs.mkdirSync(tempDir, { recursive: true });
 
   try {
-    const detectedPages = await getPdfPageCount(filePath);
+    const detectedPages = await getPdfPageCount(filePath, signal);
     const maxPagesToProcess = Math.min(detectedPages || DEFAULT_MAX_PAGES, DEFAULT_MAX_PAGES);
     const languageConfig = determineBestLanguageConfig(languages, availableLanguages);
     console.log('Using language configuration:', languageConfig);
@@ -196,17 +303,20 @@ const extractTextWithEnhancedTesseract = async (
     let extractedText = '';
 
     for (let pageNumber = 1; pageNumber <= maxPagesToProcess; pageNumber++) {
+      if (signal && signal.aborted) {
+        throw createAbortError();
+      }
       const pagePrefix = path.join(tempDir, `page_${pageNumber}`);
       let imagePath = null;
       let preprocessedImagePath = null;
 
       try {
-        imagePath = await renderPdfPageToPng(filePath, pageNumber, pagePrefix);
+        imagePath = await renderPdfPageToPng(filePath, pageNumber, pagePrefix, signal);
         if (!imagePath) {
           break; // No more pages
         }
 
-        preprocessedImagePath = await preprocessImageForOCR(imagePath);
+        preprocessedImagePath = await preprocessImageForOCR(imagePath, signal);
         const targetImage = preprocessedImagePath || imagePath;
         let pageText = '';
 
@@ -232,11 +342,12 @@ const extractTextWithEnhancedTesseract = async (
               'load_system_dawg=1',
               '-c',
               'load_freq_dawg=1',
-            ]);
+            ], SUBPROCESS_TIMEOUT_MS, signal);
             if (stdout && stdout.trim().length > 5 && containsArabicText(stdout)) {
               pageText = stdout;
             }
           } catch (error) {
+            if (error && (error.name === 'AbortError' || (signal && signal.aborted))) throw error;
             console.log(`Strategy 1 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
         }
@@ -259,11 +370,12 @@ const extractTextWithEnhancedTesseract = async (
               'textord_really_old_xheight=1',
               '-c',
               'textord_min_xheight=8',
-            ]);
+            ], SUBPROCESS_TIMEOUT_MS, signal);
             if (stdout && stdout.trim().length > pageText.trim().length && containsArabicText(stdout)) {
               pageText = stdout;
             }
           } catch (error) {
+            if (error && (error.name === 'AbortError' || (signal && signal.aborted))) throw error;
             console.log(`Strategy 2 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
         }
@@ -282,11 +394,12 @@ const extractTextWithEnhancedTesseract = async (
               '1',
               '-c',
               'preserve_interword_spaces=1',
-            ]);
+            ], SUBPROCESS_TIMEOUT_MS, signal);
             if (stdout && stdout.trim().length > pageText.trim().length && containsArabicText(stdout)) {
               pageText = stdout;
             }
           } catch (error) {
+            if (error && (error.name === 'AbortError' || (signal && signal.aborted))) throw error;
             console.log(`Strategy 3 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
         }
@@ -305,11 +418,12 @@ const extractTextWithEnhancedTesseract = async (
               '1',
               '-c',
               'preserve_interword_spaces=1',
-            ]);
+            ], SUBPROCESS_TIMEOUT_MS, signal);
             if (stdout && stdout.trim().length > pageText.trim().length) {
               pageText = stdout;
             }
           } catch (error) {
+            if (error && (error.name === 'AbortError' || (signal && signal.aborted))) throw error;
             console.log(`Strategy 4 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
         }
@@ -329,11 +443,12 @@ const extractTextWithEnhancedTesseract = async (
               '1',
               '-c',
               'preserve_interword_spaces=1',
-            ]);
+            ], SUBPROCESS_TIMEOUT_MS, signal);
             if (stdout && stdout.trim().length > pageText.trim().length) {
               pageText = stdout;
             }
           } catch (error) {
+            if (error && (error.name === 'AbortError' || (signal && signal.aborted))) throw error;
             console.log(`Strategy 5 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
         }
@@ -359,6 +474,9 @@ const extractTextWithEnhancedTesseract = async (
 
     return extractedText;
   } catch (error) {
+    if (error && (error.name === 'AbortError' || (signal && signal.aborted))) {
+      throw error;
+    }
     console.error('Enhanced Tesseract OCR error:', error);
     return null;
   } finally {
@@ -375,7 +493,7 @@ const extractTextWithEnhancedTesseract = async (
 /**
  * Preprocess image for better OCR results on scanned documents with ImageMagick memory limits.
  */
-const preprocessImageForOCR = async (imagePath) => {
+const preprocessImageForOCR = async (imagePath, signal = null) => {
   try {
     const dir = path.dirname(imagePath);
     const ext = path.extname(imagePath);
@@ -407,14 +525,18 @@ const preprocessImageForOCR = async (imagePath) => {
         '0x1',
         processedPath,
       ],
-      30000
+      30000,
+      signal
     );
 
     if (fs.existsSync(processedPath)) {
       return processedPath;
     }
     return imagePath;
-  } catch (_) {
+  } catch (err) {
+    if (err && (err.name === 'AbortError' || (signal && signal.aborted))) {
+      throw err;
+    }
     return imagePath;
   }
 };
