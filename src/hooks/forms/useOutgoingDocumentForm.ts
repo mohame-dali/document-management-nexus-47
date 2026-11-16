@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,6 +7,20 @@ import { useNavigate } from 'react-router-dom';
 import { createOutgoingDocument } from '@/services/documentService';
 import { getNextSerialNumber, validateSerialNumber } from '@/services/serialNumberService';
 import { getErrorMessage } from '@/utils/errorMessages';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import {
+  ScanStage,
+  createScanId,
+  getScanJobStatus,
+  cancelScanJob,
+  deleteScan,
+  getScanStageProgress,
+  getScanStageLabel,
+  getScannerErrorCode,
+  getScannerErrorMessage,
+} from '@/services/scannerService';
+
+const BASE_SCAN_TIMEOUT_MS = 120000;
 
 export interface OutgoingFormTranslations {
   required?: string;
@@ -15,8 +29,14 @@ export interface OutgoingFormTranslations {
 }
 
 export interface OutgoingScanResultData {
+  scanId?: string;
+  fileName?: string;
   filePath?: string;
   url?: string;
+  format?: string;
+  pageCount?: number;
+  serialNumber?: number | string;
+  year?: number | string;
   ocrText?: string;
   data?: unknown;
   [key: string]: unknown;
@@ -24,9 +44,9 @@ export interface OutgoingScanResultData {
 
 export interface OutgoingScanMutationRunner {
   mutate: (
-    options: { documentType: string; format: string; resolution: number; temporary: boolean },
+    options: Record<string, unknown>,
     callbacks?: {
-      onSuccess?: (response: { data?: OutgoingScanResultData; [key: string]: unknown }) => void;
+      onSuccess?: (response: OutgoingScanResultData) => void;
       onError?: (error: unknown) => void;
     }
   ) => void;
@@ -43,20 +63,60 @@ export interface OutgoingFormValues {
   ocrText?: string;
 }
 
-export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepartmentId?: string, scanData?: OutgoingScanResultData) => {
+export const useOutgoingDocumentForm = (
+  t: OutgoingFormTranslations,
+  currentDepartmentId?: string,
+  scanData?: OutgoingScanResultData | null
+) => {
   const navigate = useNavigate();
+  const { t: translate, language } = useLanguage();
+  const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("upload");
+  const [activeTab, setActiveTab] = useState<string>(scanData ? 'scan' : 'upload');
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [scanResult, setScanResult] = useState<OutgoingScanResultData | null>(null);
+  const [scanStage, setScanStage] = useState<ScanStage | null>(null);
+  const [scanPage, setScanPage] = useState(0);
+  const [scanResult, setScanResult] = useState<OutgoingScanResultData | null>(scanData || null);
+  const [isScanAttached, setIsScanAttached] = useState<boolean>(Boolean(scanData));
   const [scanSettings, setScanSettings] = useState({
     resolution: '300',
-    format: 'pdf'
+    format: 'pdf',
   });
   const [isManualSerialNumber, setIsManualSerialNumber] = useState(false);
-  
-  // Schema using Zod for form validation - updated to support arrays
+
+  const isMountedRef = useRef(true);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scanAbortRef = useRef<AbortController | null>(null);
+  const activeScanIdRef = useRef<string | null>(null);
+  const scanStartTimeRef = useRef<number>(0);
+  const maxPagesSeenRef = useRef<number>(1);
+  const cancelledByUserRef = useRef<boolean>(false);
+
+  const stopPolling = useCallback(() => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      stopPolling();
+      if (scanAbortRef.current) {
+        scanAbortRef.current.abort();
+        scanAbortRef.current = null;
+      }
+      if (activeScanIdRef.current) {
+        cancelScanJob(activeScanIdRef.current).catch(() => {});
+        activeScanIdRef.current = null;
+      }
+    };
+  }, [stopPolling]);
+
   const formSchema = z.object({
     serialNumber: z.string().min(1, t.required),
     subject: z.string().min(1, t.required),
@@ -67,7 +127,6 @@ export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepa
     pourInfo: z.string().array().optional(),
   });
 
-  // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -78,21 +137,55 @@ export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepa
       department: currentDepartmentId || '',
       typeDocument: '',
       pourInfo: [],
-    }
+    },
   });
+
+  const applyOcrAutoFill = useCallback(
+    (data: OutgoingScanResultData | null | undefined) => {
+      if (!data) return;
+      if (data.serialNumber && !isManualSerialNumber) {
+        form.setValue('serialNumber', String(data.serialNumber));
+      }
+      if (data.ocrText) {
+        const lines = data.ocrText.split('\n');
+
+        const subjectLine = lines.find((line) => {
+          const l = line.toLowerCase();
+          return l.includes('subject:') || l.includes('re:') || l.includes('objet:') || line.includes('الموضوع');
+        });
+        if (subjectLine) {
+          const subject = subjectLine.replace(/subject:|re:|objet:|الموضوع\s*:?/i, '').trim();
+          if (subject && !form.getValues('subject')) {
+            form.setValue('subject', subject);
+          }
+        }
+
+        const assignedToLine = lines.find((line) => {
+          const l = line.toLowerCase();
+          return l.includes('to:') || l.includes('recipient:') || l.includes('destinataire:') || line.includes('إلى');
+        });
+        if (assignedToLine) {
+          const assignedTo = assignedToLine.replace(/to:|recipient:|destinataire:|إلى\s*:?/i, '').trim();
+          if (assignedTo && !form.getValues('assignedTo').length) {
+            form.setValue('assignedTo', [assignedTo]);
+          }
+        }
+      }
+    },
+    [form, isManualSerialNumber]
+  );
 
   // Auto-update serial number when issue date changes
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'issueDate' && value.issueDate && !isManualSerialNumber) {
         const year = new Date(value.issueDate).getFullYear();
-        if (!isNaN(year) && year > 1900) { // Basic year validation
+        if (!isNaN(year) && year > 1900) {
           getNextSerialNumber(year, 'outgoing')
-            .then(nextNumber => {
-              // Set as plain number string
+            .then((nextNumber) => {
               form.setValue('serialNumber', nextNumber.toString());
             })
-            .catch(error => {
+            .catch((error) => {
               console.error('Error fetching next serial number:', error);
             });
         }
@@ -107,13 +200,12 @@ export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepa
       const currentDate = form.getValues('issueDate');
       if (currentDate) {
         const year = new Date(currentDate).getFullYear();
-        if (!isNaN(year) && year > 1900) { // Basic year validation
+        if (!isNaN(year) && year > 1900) {
           getNextSerialNumber(year, 'outgoing')
-            .then(nextNumber => {
-              // Set as plain number string
+            .then((nextNumber) => {
               form.setValue('serialNumber', nextNumber.toString());
             })
-            .catch(error => {
+            .catch((error) => {
               console.error('Error fetching initial serial number:', error);
             });
         }
@@ -121,36 +213,43 @@ export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepa
     }
   }, [form, isManualSerialNumber]);
 
-  // Handle manual serial number input
+  useEffect(() => {
+    if (scanData) {
+      setScanResult(scanData);
+      setIsScanAttached(true);
+      setActiveTab('scan');
+      applyOcrAutoFill(scanData);
+    }
+  }, [scanData, applyOcrAutoFill]);
+
   const handleSerialNumberChange = (value: string) => {
-    setIsManualSerialNumber(!!value && value !== '');
+    setIsManualSerialNumber(Boolean(value && value !== ''));
     if (value && value.trim() !== '') {
-      // Check if it's a valid number
       const numericValue = parseInt(value, 10);
       if (isNaN(numericValue) || numericValue <= 0) {
         form.setError('serialNumber', {
           type: 'manual',
-          message: 'يجب أن يكون الرقم التسلسلي رقماً صحيحاً موجباً'
+          message: 'يجب أن يكون الرقم التسلسلي رقماً صحيحاً موجباً',
         });
         return;
       }
-      
+
       const issueDate = form.getValues('issueDate');
       if (issueDate) {
         const year = new Date(issueDate).getFullYear();
-        if (!isNaN(year) && year > 1900) { // Basic year validation
+        if (!isNaN(year) && year > 1900) {
           validateSerialNumber(value, year, 'outgoing')
-            .then(isValid => {
+            .then((isValid) => {
               if (!isValid) {
                 form.setError('serialNumber', {
                   type: 'manual',
-                  message: 'هذا الرقم التسلسلي موجود بالفعل لهذا العام'
+                  message: 'هذا الرقم التسلسلي موجود بالفعل لهذا العام',
                 });
               } else {
                 form.clearErrors('serialNumber');
               }
             })
-            .catch(error => {
+            .catch((error) => {
               console.error('Error validating serial number:', error);
             });
         }
@@ -161,177 +260,248 @@ export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepa
     }
   };
 
-  // Effect to handle scan data
-  useEffect(() => {
-    const dataToUse = scanData || scanResult;
-    
-    if (dataToUse) {
-      console.log('Processing scan data:', dataToUse);
-      setScanResult(dataToUse);
-      
-      // If we have a serial number from the scan, use it
-      if (dataToUse.serialNumber && !isManualSerialNumber) {
-        form.setValue('serialNumber', dataToUse.serialNumber.toString());
-      }
-      
-      if (dataToUse.ocrText) {
-        const text = dataToUse.ocrText.toLowerCase();
-        const lines = text.split('\n');
-        
-        const subjectLine = lines.find(line => line.includes('subject:') || line.includes('re:'));
-        if (subjectLine) {
-          const subject = subjectLine.replace(/subject:|re:/i, '').trim();
-          if (subject && !form.getValues('subject')) {
-            form.setValue('subject', subject);
-          }
-        }
-        
-        const assignedToLine = lines.find(line => line.includes('to:') || line.includes('recipient:'));
-        if (assignedToLine) {
-          const assignedTo = assignedToLine.replace(/to:|recipient:/i, '').trim();
-          if (assignedTo && !form.getValues('assignedTo').length) {
-            form.setValue('assignedTo', [assignedTo]);
-          }
-        }
-      }
-    }
-  }, [scanData, scanResult, form, isManualSerialNumber]);
-
   const handleFileSelect = (files: File[]) => {
     setSelectedFiles(files);
+    if (files.length > 0) {
+      setIsScanAttached(false);
+    } else if (scanResult) {
+      setIsScanAttached(true);
+    }
   };
 
   const handleScanSettingChange = (key: string, value: string) => {
-    setScanSettings({
-      ...scanSettings,
-      [key]: value
-    });
+    setScanSettings((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const handleRemoveScan = () => {
+    const previousScanId = scanResult?.scanId;
+    if (typeof previousScanId === 'string' && previousScanId.trim()) {
+      deleteScan(previousScanId).catch(() => {});
+    }
     setScanResult(null);
+    setIsScanAttached(false);
+    setScanStage(null);
+    setScanPage(0);
+    setScanProgress(0);
+  };
+
+  const handleUseScan = () => {
+    if (!scanResult) return;
+    setSelectedFiles([]);
+    setIsScanAttached(true);
+    const attachedLabel = translate('scanner.actions.scanAttached');
+    toast.success(
+      attachedLabel && attachedLabel !== 'scanner.actions.scanAttached'
+        ? attachedLabel
+        : lang === 'ar'
+          ? 'تم إرفاق المسح بالمراسلة'
+          : 'Scan rattaché au courrier'
+    );
+  };
+
+  const handleCancelScan = () => {
+    const scanId = activeScanIdRef.current;
+    cancelledByUserRef.current = true;
+    stopPolling();
+    if (scanAbortRef.current) {
+      scanAbortRef.current.abort();
+      scanAbortRef.current = null;
+    }
+    if (scanId) {
+      cancelScanJob(scanId).catch(() => {});
+    }
+    activeScanIdRef.current = null;
+    setScanning(false);
+    setScanStage(null);
+    setScanPage(0);
+    setScanProgress(0);
+    toast.info(
+      getScannerErrorMessage({ response: { data: { code: 'SCAN_CANCELLED' } } }, translate, lang)
+    );
   };
 
   const handleStartScan = (scanTemporaryDocumentMutation: OutgoingScanMutationRunner) => {
+    if (scanning) return;
+
+    if (scanResult?.scanId && typeof scanResult.scanId === 'string') {
+      deleteScan(scanResult.scanId).catch(() => {});
+    }
+
+    stopPolling();
+    const scanId = createScanId();
+    const controller = new AbortController();
+
+    activeScanIdRef.current = scanId;
+    scanAbortRef.current = controller;
+    scanStartTimeRef.current = Date.now();
+    maxPagesSeenRef.current = 1;
+    cancelledByUserRef.current = false;
+
     setScanning(true);
-    setScanProgress(10);
-    
+    setScanStage('detecting');
+    setScanPage(0);
+    setScanProgress(getScanStageProgress('detecting', 0));
+
+    pollTimerRef.current = setInterval(async () => {
+      if (!isMountedRef.current || activeScanIdRef.current !== scanId) {
+        stopPolling();
+        return;
+      }
+
+      const elapsedMs = Date.now() - scanStartTimeRef.current;
+      const maxAllowedMs = BASE_SCAN_TIMEOUT_MS * Math.max(1, maxPagesSeenRef.current);
+      if (elapsedMs > maxAllowedMs) {
+        stopPolling();
+        activeScanIdRef.current = null;
+        controller.abort();
+        cancelScanJob(scanId).catch(() => {});
+        if (isMountedRef.current) {
+          setScanning(false);
+          setScanStage('error');
+          setScanProgress(0);
+          toast.error(getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang));
+        }
+        return;
+      }
+
+      try {
+        const jobStatus = await getScanJobStatus(scanId);
+        if (!isMountedRef.current || activeScanIdRef.current !== scanId) return;
+
+        const page = Number(jobStatus.page || 0);
+        if (page > maxPagesSeenRef.current) {
+          maxPagesSeenRef.current = page;
+        }
+        const stage = jobStatus.stage || 'scanning';
+        setScanStage(stage);
+        setScanPage(page);
+        setScanProgress(getScanStageProgress(stage, page));
+      } catch {
+        // Ignore transient polling 404 before backend job registration
+      }
+    }, 1000);
+
     const scanOptions = {
       documentType: 'outgoing',
       format: scanSettings.format,
       resolution: Number(scanSettings.resolution),
-      temporary: true
+      temporary: true,
+      scanId,
+      signal: controller.signal,
     };
-    
-    const progressInterval = setInterval(() => {
-      setScanProgress(prevProgress => {
-        const newProgress = prevProgress + 15;
-        if (newProgress >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return newProgress;
-      });
-    }, 500);
-    
+
     scanTemporaryDocumentMutation.mutate(scanOptions, {
-      onSuccess: (response: { data?: OutgoingScanResultData; [key: string]: unknown }) => {
-        console.log('Scan mutation success:', response);
+      onSuccess: (response: OutgoingScanResultData) => {
+        stopPolling();
+        scanAbortRef.current = null;
+        activeScanIdRef.current = null;
+        if (!isMountedRef.current) return;
+
+        const rawData = (
+          response?.data && typeof response.data === 'object' ? response.data : response
+        ) as OutgoingScanResultData;
+
+        const resolvedScanId = String(rawData?.scanId || scanId);
+        const normalizedScan: OutgoingScanResultData = {
+          ...rawData,
+          scanId: resolvedScanId,
+          filePath: rawData?.filePath || `/api/scan/file/${resolvedScanId}`,
+          format: rawData?.format || scanSettings.format,
+          pageCount: Number(rawData?.pageCount || maxPagesSeenRef.current || 1),
+        };
+
         setScanning(false);
+        setScanStage('done');
+        setScanPage(Number(normalizedScan.pageCount || 1));
         setScanProgress(100);
-        
-        // Handle both direct data and nested data response
-        const scanData = (response.data || response) as OutgoingScanResultData;
-        setScanResult(scanData);
-        toast.success(t.scanComplete);
-        
-        clearInterval(progressInterval);
-        
-        // Auto-fill form from OCR if available
-        if (scanData?.ocrText) {
-          const text = scanData.ocrText.toLowerCase();
-          const lines = text.split('\n');
-          
-          const subjectLine = lines.find(line => line.includes('subject:') || line.includes('re:'));
-          if (subjectLine) {
-            const subject = subjectLine.replace(/subject:|re:/i, '').trim();
-            if (subject && !form.getValues('subject')) {
-              form.setValue('subject', subject);
-            }
-          }
-          
-          const assignedToLine = lines.find(line => line.includes('to:') || line.includes('recipient:'));
-          if (assignedToLine) {
-            const assignedTo = assignedToLine.replace(/to:|recipient:/i, '').trim();
-            if (assignedTo && !form.getValues('assignedTo').length) {
-              form.setValue('assignedTo', [assignedTo]);
-            }
-          }
-        }
+        setScanResult(normalizedScan);
+        setSelectedFiles([]);
+        setIsScanAttached(true);
+        toast.success(t.scanComplete || getScanStageLabel('done', 0, translate, lang));
+
+        applyOcrAutoFill(normalizedScan);
       },
-      onError: (error: Error) => {
-        console.error('Scan mutation error:', error);
+      onError: (error: unknown) => {
+        stopPolling();
+        scanAbortRef.current = null;
+        activeScanIdRef.current = null;
+        if (!isMountedRef.current) return;
+
+        const wasManualCancel = cancelledByUserRef.current;
+        cancelledByUserRef.current = false;
+
         setScanning(false);
         setScanProgress(0);
-        toast.error(`${t.scanFailed}: ${error.message}`);
-        clearInterval(progressInterval);
-      }
+
+        if (wasManualCancel || getScannerErrorCode(error) === 'SCAN_CANCELLED') {
+          setScanStage(null);
+          if (!wasManualCancel) {
+            toast.info(getScannerErrorMessage(error, translate, lang));
+          }
+          return;
+        }
+
+        setScanStage('error');
+        toast.error(getScannerErrorMessage(error, translate, lang));
+      },
     });
   };
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: OutgoingFormValues) => {
     try {
-      console.log('Form data:', data);
       const formData = new FormData();
-      
-      // Add all form fields to FormData - serial number as plain number
+
       formData.append('serialNumber', data.serialNumber);
       formData.append('subject', data.subject);
-      
-      // Handle multiple assignedTo values
+
       if (data.assignedTo && data.assignedTo.length > 0) {
         formData.append('assignedTo', data.assignedTo.join(','));
       }
-      
-      // Handle multiple pourInfo values
+
       if (data.pourInfo && data.pourInfo.length > 0) {
         formData.append('pourInfo', data.pourInfo.join(','));
       }
-      
-      // Format dates
+
       if (data.issueDate) {
         formData.append('issueDate', data.issueDate.toISOString());
       }
-      
-      // Department
+
       formData.append('departmentId', data.department);
-      
-      // Optional fields
+
       if (data.typeDocument) {
         formData.append('typeDocument', data.typeDocument);
       }
-      
-      // Add file from either regular upload or scan (now optional)
+
+      const activeScan = scanResult || scanData || null;
       if (selectedFiles.length > 0) {
         formData.append('document', selectedFiles[0]);
-      } else if (scanResult && scanResult.filePath) {
-        formData.append('scannedDocumentPath', scanResult.filePath);
-        
-        if (scanResult.ocrText) {
-          formData.append('ocrText', scanResult.ocrText);
+      } else if (activeScan && (activeScan.scanId || activeScan.filePath)) {
+        if (activeScan.scanId) {
+          formData.append('scanId', String(activeScan.scanId));
         }
-        
-        // If we have a serial number from the scan result, ensure it's used
-        if (scanResult.serialNumber && !isManualSerialNumber) {
-          formData.set('serialNumber', scanResult.serialNumber.toString());
+        const docPath =
+          activeScan.filePath || (activeScan.scanId ? `/api/scan/file/${activeScan.scanId}` : '');
+        if (docPath) {
+          formData.append('scannedDocumentPath', docPath);
         }
-        
-        // If we have a year from the scan result, add it
-        if (scanResult.year) {
-          formData.append('year', scanResult.year.toString());
+
+        const resolvedOcr = activeScan.ocrText || data.ocrText;
+        if (resolvedOcr) {
+          formData.append('ocrText', resolvedOcr);
+        }
+
+        if (activeScan.serialNumber && !isManualSerialNumber) {
+          formData.set('serialNumber', activeScan.serialNumber.toString());
+        }
+
+        if (activeScan.year) {
+          formData.append('year', activeScan.year.toString());
         }
       }
-      
+
       await createOutgoingDocument(formData);
       toast.success(t.createSuccess);
       navigate('/dashboard/outgoing-documents');
@@ -347,16 +517,21 @@ export const useOutgoingDocumentForm = (t: OutgoingFormTranslations, currentDepa
     activeTab,
     scanning,
     scanProgress,
+    scanStage,
+    scanPage,
     scanResult,
+    isScanAttached,
     scanSettings,
     handleFileSelect,
     handleScanSettingChange,
     handleStartScan,
+    handleCancelScan,
+    handleUseScan,
     setActiveTab,
     onSubmit,
     handleSerialNumberChange,
     isManualSerialNumber,
-    handleRemoveScan
+    handleRemoveScan,
   };
 };
 

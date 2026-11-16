@@ -40,11 +40,16 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
     activeTab,
     scanning,
     scanProgress,
+    scanStage,
+    scanPage,
     scanResult,
+    isScanAttached,
     scanSettings,
     handleFileSelect,
     handleScanSettingChange,
     handleStartScan: startScan,
+    handleCancelScan,
+    handleUseScan,
     setActiveTab,
     onSubmit,
     handleSerialNumberChange,
@@ -112,7 +117,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                 
                 <div className="bg-muted/20 rounded p-6 border border-border/50">
                   <DocumentAttachmentSection
-                    t={t}
+                    t={t as Record<string, string>}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     handleFileSelect={handleFileSelect}
@@ -122,10 +127,16 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                     scanning={scanning}
                     scanProgress={scanProgress}
                     scanResult={scanResult}
-                    scannerStatus={scannerStatus}
+                    scannerStatus={scannerStatus as Record<string, unknown> | null}
                     loadingScannerStatus={loadingScannerStatus}
                     handleStartScan={handleStartScan}
                     onRemoveScan={handleRemoveScan}
+                    scanStage={scanStage}
+                    scanPage={scanPage}
+                    onCancelScan={handleCancelScan}
+                    onRescan={handleStartScan}
+                    onUseScan={handleUseScan}
+                    isScanAttached={isScanAttached}
                   />
                 </div>
               </div>

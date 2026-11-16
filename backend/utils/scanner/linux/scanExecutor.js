@@ -185,7 +185,10 @@ class ScanExecutor {
 
     let highestReportedPage = 0;
     const handleLine = (line) => {
-      const m = line.trim().match(/^(?:PAGE:|Scanned page |Scanning page )(\d+)/i);
+      // scanimage prints "Scanning page N" BEFORE probing the scanner, so on a 1-page
+      // scan it emits "Scanning page 2" right before hitting EOF/no-more-docs.
+      // Only count completed pages ("Scanned page N" or "PAGE:N").
+      const m = line.trim().match(/^(?:PAGE:\s*|Scanned page )(\d+)/i);
       if (m) {
         const pageNum = Number(m[1]);
         if (Number.isFinite(pageNum) && pageNum > highestReportedPage) {

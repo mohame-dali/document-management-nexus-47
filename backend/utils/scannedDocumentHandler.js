@@ -54,8 +54,12 @@ exports.handleScannedDocument = async (userId, serialNumber, finalFolderPath, do
       }
     }
     
-    // Handle temporary file path - need to move to final location
-    const newFilename = `${serialNumber}.pdf`;
+    // Handle temporary file path - preserve real scanned format extension
+    const sourceExt = path.extname(providedScannedDocumentPath).toLowerCase();
+    const normalizedExt = ['.pdf', '.jpg', '.jpeg', '.png'].includes(sourceExt)
+      ? (sourceExt === '.jpeg' ? '.jpg' : sourceExt)
+      : '.pdf';
+    const newFilename = `${serialNumber}${normalizedExt}`;
     const newFilePath = path.join(finalFolderPath, newFilename);
     
     console.log('Target file path:', newFilePath);

@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import DocumentUploadWithOcr from '@/components/documents/DocumentUploadWithOcr';
 import ScannerTab from '@/components/documents/forms/ScannerTab';
 import DocumentTypeTabSelector from '@/components/documents/forms/DocumentTypeTabSelector';
+import { ScanStage } from '@/services/scannerService';
+import { ScanPreviewData } from '@/components/documents/forms/ScannedDocumentPreview';
 
 interface AttachmentSectionProps {
   t: Record<string, string>;
@@ -18,11 +19,17 @@ interface AttachmentSectionProps {
   handleScanSettingChange: (key: string, value: string) => void;
   scanning: boolean;
   scanProgress: number;
-  scanResult: Record<string, unknown> | null;
-  scannerStatus: Record<string, unknown> | null;
-  loadingScannerStatus: boolean;
+  scanResult: ScanPreviewData | null;
+  scannerStatus?: Record<string, unknown> | null;
+  loadingScannerStatus?: boolean;
   handleStartScan: () => void;
   onRemoveScan?: () => void;
+  scanStage?: ScanStage | null;
+  scanPage?: number;
+  onCancelScan?: () => void;
+  onRescan?: () => void;
+  onUseScan?: () => void;
+  isScanAttached?: boolean;
 }
 
 const AttachmentSection: React.FC<AttachmentSectionProps> = ({
@@ -39,29 +46,35 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   scannerStatus,
   loadingScannerStatus,
   handleStartScan,
-  onRemoveScan
+  onRemoveScan,
+  scanStage,
+  scanPage,
+  onCancelScan,
+  onRescan,
+  onUseScan,
+  isScanAttached,
 }) => {
   return (
     <div>
       <h3 className="text-sm font-medium mb-2">{t.attachments}</h3>
-      
+
       <DocumentTypeTabSelector
         activeTab={activeTab}
         onTabChange={onTabChange}
         uploadTabLabel={t.uploadTab}
         scanTabLabel={t.scanTab}
       />
-      
+
       <div className="mt-2">
         <Tabs value={activeTab} onValueChange={onTabChange}>
           <TabsContent value="upload">
-            <DocumentUploadWithOcr 
+            <DocumentUploadWithOcr
               onFileSelect={onFileSelect}
               onOcrComplete={onOcrComplete}
               fieldName="document"
             />
           </TabsContent>
-          
+
           <TabsContent value="scan">
             <ScannerTab
               t={t}
@@ -74,14 +87,18 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({
               loadingScannerStatus={loadingScannerStatus}
               handleStartScan={handleStartScan}
               onRemoveScan={onRemoveScan}
+              scanStage={scanStage}
+              scanPage={scanPage}
+              onCancelScan={onCancelScan}
+              onRescan={onRescan}
+              onUseScan={onUseScan}
+              isScanAttached={isScanAttached}
             />
           </TabsContent>
         </Tabs>
       </div>
-      
-      <p className="text-sm text-muted-foreground mt-2">
-        {t.attachmentsDesc}
-      </p>
+
+      <p className="text-sm text-muted-foreground mt-2">{t.attachmentsDesc}</p>
     </div>
   );
 };

@@ -2,7 +2,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Form } from '@/components/ui/form';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useIncomingDocumentForm } from '@/hooks/forms/useIncomingDocumentForm';
+import {
+  useIncomingDocumentForm,
+  FormTranslations,
+  ScanResultData,
+  ScanMutationRunner,
+} from '@/hooks/forms/useIncomingDocumentForm';
 import FormActions from '@/components/documents/forms/outgoing/FormActions';
 import SerialInfoFields from '@/components/documents/forms/incoming/SerialInfoFields';
 import CorrespondenceFields from '@/components/documents/forms/incoming/CorrespondenceFields';
@@ -16,17 +21,16 @@ import { Badge } from '@/components/ui/badge';
 import { extractFromOcr, getAIErrorCode } from '@/services/aiExtractionService';
 
 import { Department } from '@/types';
-import { UseMutationResult } from '@tanstack/react-query';
 import { FieldValues } from 'react-hook-form';
 
 interface IncomingDocumentFormProps {
-  t: (key: string) => string;
+  t: FormTranslations;
   departments: Department[];
   currentDepartmentId?: string;
-  scanData?: Record<string, unknown> | null;
+  scanData?: ScanResultData | null;
   scannerStatus?: Record<string, unknown> | null;
   loadingScannerStatus: boolean;
-  scanTemporaryDocumentMutation: UseMutationResult<unknown, unknown, unknown, unknown>;
+  scanTemporaryDocumentMutation: ScanMutationRunner;
 }
 
 const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
@@ -42,15 +46,19 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
   
   const {
     form,
-    selectedFiles,
     activeTab,
     scanning,
     scanProgress,
+    scanStage,
+    scanPage,
     scanResult,
+    isScanAttached,
     scanSettings,
     handleFileSelect,
     handleScanSettingChange,
     handleStartScan,
+    handleCancelScan,
+    handleUseScan,
     onSubmit,
     setActiveTab,
     handleSerialNumberChange,
@@ -243,7 +251,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                 
                 <div className="bg-[#f8fafc] rounded p-5 border border-[#e2e8f0]">
                   <AttachmentSection
-                    t={t}
+                    t={t as Record<string, string>}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
                     onFileSelect={handleFileSelect}
@@ -257,6 +265,12 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                     loadingScannerStatus={loadingScannerStatus}
                     handleStartScan={handleScanStart}
                     onRemoveScan={handleRemoveScan}
+                    scanStage={scanStage}
+                    scanPage={scanPage}
+                    onCancelScan={handleCancelScan}
+                    onRescan={handleScanStart}
+                    onUseScan={handleUseScan}
+                    isScanAttached={isScanAttached}
                   />
 
                   {/* ─────────────────────────────────────────────────── */}

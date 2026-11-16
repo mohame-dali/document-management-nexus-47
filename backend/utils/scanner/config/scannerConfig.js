@@ -6,7 +6,11 @@ const path = require('path');
  */
 class ScannerConfig {
   constructor() {
-    this.uploadDir = path.resolve(process.env.UPLOAD_PATH || process.env.UPLOAD_DIR || './uploads');
+    this.uploadDir = path.resolve(
+      process.env.UPLOAD_PATH ||
+        process.env.UPLOAD_DIR ||
+        path.join(__dirname, '..', '..', '..', 'uploads')
+    );
     this.tempDir = path.join(this.uploadDir, 'temp');
 
     // Explicit override flag when updated programmatically at runtime

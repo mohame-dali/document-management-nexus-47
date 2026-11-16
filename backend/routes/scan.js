@@ -43,10 +43,12 @@ router.get('/download/:scanId', getScanFile);
 router.get('/metadata/:scanId', getScanMetadata);
 router.get('/document/:id/:type', getDocumentScan);
 
-// Config Multer pour OCR temporaire
+const scannerService = require('../utils/scanner');
+
+// Config Multer pour OCR temporaire (même dossier temporaire que le reste de l'application)
 const ocrStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    const dir = path.join(__dirname, '../tmp/ocr-uploads');
+    const dir = path.join(scannerService.getConfig().tempDir, 'ocr-uploads');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },

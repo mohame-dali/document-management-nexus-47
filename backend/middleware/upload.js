@@ -2,8 +2,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Create uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, '..', 'uploads');
+// Create uploads directory if it doesn't exist (shared application root)
+const uploadDir = path.resolve(
+  process.env.UPLOAD_PATH || process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads')
+);
 const usersPhotoDir = path.join(uploadDir, 'usersphoto');
 const personnelPhotoDir = path.join(uploadDir, 'personnelphoto');
 const tempDir = path.join(uploadDir, 'temp');
@@ -138,28 +140,75 @@ const templateFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-// Handle scanned document paths with strict Path Traversal protection
+// Handle scanned document IDs & paths with strict owner + Path Traversal protection
 exports.handleScannedDocument = (req, res, next) => {
-  if (req.body && req.body.scannedDocumentPath) {
-    const rawPath = String(req.body.scannedDocumentPath);
-    const UPLOAD_ROOT = path.resolve(process.env.UPLOAD_DIR || uploadDir);
-    const requestedPath = path.isAbsolute(rawPath) ? path.resolve(rawPath) : path.resolve(process.cwd(), rawPath);
+  const rawScanId = req.body?.scanId ? String(req.body.scanId).trim() : '';
+  const rawPath = req.body?.scannedDocumentPath ? String(req.body.scannedDocumentPath).trim() : '';
 
-    // Ensure path stays within allowed uploads root
-    if (!requestedPath.startsWith(UPLOAD_ROOT + path.sep)) {
+  if (!rawScanId && !rawPath) {
+    return next();
+  }
+
+  // Extract scanId from either explicit scanId field or /api/scan/file/<scanId>
+  let resolvedScanId = rawScanId;
+  if (!resolvedScanId && rawPath) {
+    const urlMatch = rawPath.match(/^(?:\/api)?\/scan\/file\/([A-Za-z0-9_-]{8,64})$/);
+    if (urlMatch) {
+      resolvedScanId = urlMatch[1];
+    }
+  }
+
+  if (resolvedScanId) {
+    const scannerService = require('../utils/scanner');
+    const { validateScanId } = require('../utils/scanner/validation');
+    try {
+      const safeScanId = validateScanId(resolvedScanId);
+      const job = scannerService.getStatusManager().getJob(safeScanId);
+      const requestUserId = String(req.user?.id || req.user?._id || '');
+
+      if (!job) {
+        return res.status(400).json({ success: false, message: 'Scanned job not found' });
+      }
+      if (job.ownerId && requestUserId && job.ownerId !== requestUserId) {
+        return res.status(403).json({ success: false, message: 'Forbidden scan access' });
+      }
+      if (job.stage !== 'done' || !job.filePath) {
+        return res.status(400).json({ success: false, message: 'Scanned file not ready' });
+      }
+
+      const allowedTempRoot = path.resolve(scannerService.getConfig().tempDir);
+      const jobFilePath = path.resolve(job.filePath);
+      if (!jobFilePath.startsWith(allowedTempRoot + path.sep) || !fs.existsSync(jobFilePath)) {
+        return res.status(400).json({ success: false, message: 'Scanned file not found' });
+      }
+
+      req.body.scannedDocumentPath = jobFilePath;
+      return next();
+    } catch (_) {
+      return res.status(400).json({ success: false, message: 'Invalid scan identifier' });
+    }
+  }
+
+  // Fallback for courrier/... relative DB paths or direct temp upload paths
+  const courrierRoot = path.resolve(__dirname, '..', 'courrier');
+  if (rawPath.startsWith('courrier/')) {
+    const courrierPath = path.resolve(__dirname, '..', rawPath);
+    if (!courrierPath.startsWith(courrierRoot + path.sep) || !fs.existsSync(courrierPath)) {
       return res.status(400).json({ success: false, message: 'Invalid file path' });
     }
-
-    if (!fs.existsSync(requestedPath) || !fs.statSync(requestedPath).isFile()) {
-      return res.status(400).json({ success: false, message: 'File not found' });
-    }
-
-    req.file = {
-      path: requestedPath,
-      filename: path.basename(requestedPath)
-    };
+    return next();
   }
-  next();
+
+  const requestedPath = path.isAbsolute(rawPath) ? path.resolve(rawPath) : path.resolve(process.cwd(), rawPath);
+  if (!requestedPath.startsWith(uploadDir + path.sep)) {
+    return res.status(400).json({ success: false, message: 'Invalid file path' });
+  }
+  if (!fs.existsSync(requestedPath) || !fs.statSync(requestedPath).isFile()) {
+    return res.status(400).json({ success: false, message: 'File not found' });
+  }
+
+  req.body.scannedDocumentPath = requestedPath;
+  return next();
 };
 
 // Export configured multer instances
@@ -176,13 +225,10 @@ exports.uploadPersonnelPhoto = multer({
 });
 
 exports.uploadDocument = (req, res, next) => {
-  // Vérification sécurisée pour éviter le crash si req.body est undefined
-  // (req.body n'est défini que si Multer a traité le formulaire avant ou via body-parser)
-  if (req.body && req.body.scannedDocumentPath) {
+  if (req.body && (req.body.scanId || req.body.scannedDocumentPath)) {
     return exports.handleScannedDocument(req, res, next);
   }
   
-  // Otherwise, use multer to handle the uploaded file
   multer({
     storage: documentStorage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
@@ -191,8 +237,7 @@ exports.uploadDocument = (req, res, next) => {
     if (err) {
       return next(err);
     }
-    // Si scannedDocumentPath a été fourni dans un champ de formulaire multipart
-    if (req.body && req.body.scannedDocumentPath && !req.file) {
+    if (req.body && (req.body.scanId || req.body.scannedDocumentPath) && !req.file) {
       return exports.handleScannedDocument(req, res, next);
     }
     next();

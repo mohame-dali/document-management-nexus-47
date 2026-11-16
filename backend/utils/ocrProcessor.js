@@ -1,75 +1,96 @@
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 const { promisify } = require('util');
-const execAsync = promisify(exec);
+const { v4: uuidv4 } = require('uuid');
 const ErrorResponse = require('./errorResponse');
-const os = require('os');
+
+const execFileAsync = promisify(execFile);
+
+const OCR_DPI = 300;
+const DEFAULT_MAX_PAGES = Number(process.env.OCR_MAX_PAGES) || 50;
+const SUBPROCESS_TIMEOUT_MS = Number(process.env.OCR_PAGE_TIMEOUT_MS) || 60000;
+const SUBPROCESS_MAX_BUFFER = 10 * 1024 * 1024; // 10 MiB memory cap per subprocess output
 
 /**
- * Extract text from PDF file using OCR with enhanced Arabic support
+ * Resolve the shared application temporary directory (same root as upload & scanner modules).
+ */
+function getAppTempRoot() {
+  const uploadRoot = path.resolve(
+    process.env.UPLOAD_PATH ||
+      process.env.UPLOAD_DIR ||
+      path.join(__dirname, '..', 'uploads')
+  );
+  const tempRoot = path.join(uploadRoot, 'temp');
+  if (!fs.existsSync(tempRoot)) {
+    fs.mkdirSync(tempRoot, { recursive: true });
+  }
+  return tempRoot;
+}
+
+/**
+ * Safely execute an external binary without shell interpolation and with strict timeout/memory caps.
+ */
+async function runBinary(bin, args, timeoutMs = SUBPROCESS_TIMEOUT_MS) {
+  return execFileAsync(bin, args, {
+    timeout: timeoutMs,
+    maxBuffer: SUBPROCESS_MAX_BUFFER,
+    windowsHide: true,
+  });
+}
+
+/**
+ * Extract text from PDF file using OCR with enhanced Arabic support.
+ * Uses 300 DPI, processes page by page, enforces memory/time limits, and cleans up temp files.
  * @param {string} filePath - Path to the PDF file
  * @param {string} languages - Language codes for OCR (default: 'ara+fra+eng')
  * @returns {Promise<string>} - Extracted text
  */
 const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
   try {
-    // Normalize file path to prevent double path issues
     let normalizedPath = path.normalize(filePath);
-    
-    // Fix duplicate path issue - if the path contains the project root twice, remove the duplication
     const projectRoot = path.dirname(path.dirname(__filename));
     if (normalizedPath.includes(projectRoot + projectRoot)) {
       normalizedPath = normalizedPath.replace(projectRoot + projectRoot, projectRoot);
     }
-    
-    // If the path is relative, make it absolute from project root
+
     if (!path.isAbsolute(normalizedPath)) {
       normalizedPath = path.join(projectRoot, normalizedPath);
     }
-    
+
     console.log('OCR Processing file for Arabic text:', normalizedPath);
     console.log('OCR Languages:', languages);
-    
-    // Check if file exists
+
     if (!fs.existsSync(normalizedPath)) {
       console.error(`File not found: ${normalizedPath}`);
       throw new ErrorResponse(`File not found: ${normalizedPath}`, 404);
     }
 
-    // Check language availability first
     const availableLanguages = await checkAvailableLanguages();
     console.log('Available Tesseract languages:', availableLanguages);
-    
-    // Always try using Tesseract for better Arabic OCR results
+
     try {
-      // Check if Tesseract is available
-      if (os.platform() !== 'win32') {
-        await execAsync('which tesseract');
-      } else {
-        await execAsync('tesseract --version');
-      }
-      
-      // Use enhanced Tesseract for Arabic OCR processing
-      console.log('Using enhanced Tesseract for Arabic OCR processing');
-      const extractedText = await extractTextWithEnhancedTesseract(normalizedPath, languages, availableLanguages);
+      await runBinary('tesseract', ['--version'], 10000);
+
+      console.log('Using enhanced Tesseract (300 DPI, page-by-page) for Arabic OCR processing');
+      const extractedText = await extractTextWithEnhancedTesseract(
+        normalizedPath,
+        languages,
+        availableLanguages
+      );
       if (extractedText && extractedText.trim().length > 0) {
         return cleanArabicOcrText(extractedText);
       }
     } catch (err) {
-      console.log('Enhanced Tesseract not available or failed, falling back to pdf-parse');
-      console.log('Error:', err.message);
+      console.log('Enhanced Tesseract not available or failed, falling back to pdf-parse:', err.message);
     }
 
-    // Fallback to pdf-parse for text extraction
     console.log('Using pdf-parse for text extraction');
     const dataBuffer = fs.readFileSync(normalizedPath);
     const data = await pdfParse(dataBuffer);
-    
-    // Apply Arabic text cleanup even to pdf-parse results
-    const cleanedText = enhancedArabicTextCleanup(data.text);
-    
+    const cleanedText = enhancedArabicTextCleanup(data.text || '');
+
     return cleanArabicOcrText(cleanedText);
   } catch (error) {
     console.error('OCR Processing Error:', error);
@@ -82,13 +103,15 @@ const extractTextFromPDF = async (filePath, languages = 'ara+fra+eng') => {
 
 /**
  * Check available Tesseract languages
- * @returns {Promise<string[]>} - Array of available language codes
  */
 const checkAvailableLanguages = async () => {
   try {
-    const { stdout } = await execAsync('tesseract --list-langs');
-    const languages = stdout.toLowerCase().split('\n').filter(lang => lang.trim() !== '').slice(1); // Remove first line "List of available languages"
-    return languages;
+    const { stdout } = await runBinary('tesseract', ['--list-langs'], 10000);
+    return stdout
+      .toLowerCase()
+      .split('\n')
+      .filter((lang) => lang.trim() !== '')
+      .slice(1);
   } catch (error) {
     console.log('Could not check available languages:', error.message);
     return [];
@@ -96,198 +119,261 @@ const checkAvailableLanguages = async () => {
 };
 
 /**
- * Extract text from a PDF using enhanced Tesseract OCR with superior Arabic support
- * @param {string} filePath - Path to the PDF file 
- * @param {string} languages - Language codes for OCR
- * @param {string[]} availableLanguages - Available language codes
- * @returns {Promise<string>} - Extracted text
+ * Determine total number of pages in a PDF using pdfinfo or pdf-parse fallback.
  */
-const extractTextWithEnhancedTesseract = async (filePath, languages = 'ara+fra+eng', availableLanguages = []) => {
+async function getPdfPageCount(filePath) {
   try {
-    // Create temporary directory for image conversion
-    const tempDir = path.join(os.tmpdir(), 'ocr-enhanced-' + Date.now());
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+    const { stdout } = await runBinary('pdfinfo', [filePath], 10000);
+    const match = stdout.match(/Pages:\s+(\d+)/i);
+    if (match) {
+      return Number(match[1]);
     }
+  } catch (_) {}
 
-    // Use pdftoppm to convert PDF to high-resolution images optimized for Arabic text
-    const baseName = path.join(tempDir, 'page');
-    
-    // Use high DPI (600) for better Arabic character recognition - reduced to prevent timeout
-    let convertCommand;
-    if (os.platform() === 'win32') {
-      convertCommand = `pdftoppm -png -r 600 -aa yes -aaVector yes "${filePath}" "${baseName}"`;
-    } else {
-      convertCommand = `pdftoppm -png -r 600 -aa yes -aaVector yes "${filePath}" "${baseName}"`;
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+    const parsed = await pdfParse(dataBuffer, { max: 1 });
+    if (parsed && Number.isInteger(parsed.numpages) && parsed.numpages > 0) {
+      return parsed.numpages;
     }
-    
-    console.log('Converting PDF to images with command:', convertCommand);
-    await execAsync(convertCommand);
-    
-    let extractedText = '';
-    
-    // Process each generated image with Arabic-optimized Tesseract strategies
-    const files = fs.readdirSync(tempDir).filter(f => f.startsWith('page') && f.endsWith('.png'));
-    files.sort(); // Ensure correct page order
-    
-    console.log(`Found ${files.length} pages to process`);
-    
-    // Determine best language configuration based on availability
+  } catch (_) {}
+
+  return null;
+}
+
+/**
+ * Convert a single PDF page to PNG at 300 DPI using pdftoppm.
+ */
+async function renderPdfPageToPng(filePath, pageNumber, outputPrefix) {
+  await runBinary(
+    'pdftoppm',
+    [
+      '-png',
+      '-r',
+      String(OCR_DPI),
+      '-f',
+      String(pageNumber),
+      '-l',
+      String(pageNumber),
+      '-aa',
+      'yes',
+      '-aaVector',
+      'yes',
+      filePath,
+      outputPrefix,
+    ],
+    SUBPROCESS_TIMEOUT_MS
+  );
+
+  const dir = path.dirname(outputPrefix);
+  const base = path.basename(outputPrefix);
+  const generated = fs
+    .readdirSync(dir)
+    .filter((f) => f.startsWith(base) && f.endsWith('.png'))
+    .sort();
+
+  return generated.length > 0 ? path.join(dir, generated[0]) : null;
+}
+
+/**
+ * Extract text from a PDF using enhanced Tesseract OCR at 300 DPI, page by page,
+ * inside the shared application temp folder with guaranteed cleanup on success and failure.
+ */
+const extractTextWithEnhancedTesseract = async (
+  filePath,
+  languages = 'ara+fra+eng',
+  availableLanguages = []
+) => {
+  const tempDir = path.join(getAppTempRoot(), `ocr-${uuidv4()}`);
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  try {
+    const detectedPages = await getPdfPageCount(filePath);
+    const maxPagesToProcess = Math.min(detectedPages || DEFAULT_MAX_PAGES, DEFAULT_MAX_PAGES);
     const languageConfig = determineBestLanguageConfig(languages, availableLanguages);
     console.log('Using language configuration:', languageConfig);
-    
-    for (const file of files) {
-      const imagePath = path.join(tempDir, file);
-      let pageText = '';
-      
-      console.log(`Processing ${file} with enhanced Arabic OCR strategies for scanned documents`);
-      
-      // First, preprocess the image for better OCR results
-      const preprocessedImagePath = await preprocessImageForOCR(imagePath);
-      
-      // Strategy 1: Arabic-only with PSM 3 (auto page segmentation) - best for scanned documents
-      if (languageConfig.hasArabic) {
-        try {
-          const arabicCommand = `tesseract "${preprocessedImagePath}" stdout -l ara --psm 3 --oem 1 -c preserve_interword_spaces=1 -c textord_really_old_xheight=1 -c textord_min_xheight=10 -c load_system_dawg=1 -c load_freq_dawg=1 -c tessedit_char_whitelist=""`;
-          const { stdout: arabicResult } = await execAsync(arabicCommand);
-          
-          if (arabicResult && arabicResult.trim().length > 5 && containsArabicText(arabicResult)) {
-            pageText = arabicResult;
-            console.log(`Strategy 1 successful for ${file} - Arabic-only OCR with PSM 3, extracted ${pageText.length} characters`);
+
+    let extractedText = '';
+
+    for (let pageNumber = 1; pageNumber <= maxPagesToProcess; pageNumber++) {
+      const pagePrefix = path.join(tempDir, `page_${pageNumber}`);
+      let imagePath = null;
+      let preprocessedImagePath = null;
+
+      try {
+        imagePath = await renderPdfPageToPng(filePath, pageNumber, pagePrefix);
+        if (!imagePath) {
+          break; // No more pages
+        }
+
+        preprocessedImagePath = await preprocessImageForOCR(imagePath);
+        const targetImage = preprocessedImagePath || imagePath;
+        let pageText = '';
+
+        // Strategy 1: Arabic-only with PSM 3
+        if (languageConfig.hasArabic) {
+          try {
+            const { stdout } = await runBinary('tesseract', [
+              targetImage,
+              'stdout',
+              '-l',
+              'ara',
+              '--psm',
+              '3',
+              '--oem',
+              '1',
+              '-c',
+              'preserve_interword_spaces=1',
+              '-c',
+              'textord_really_old_xheight=1',
+              '-c',
+              'textord_min_xheight=10',
+              '-c',
+              'load_system_dawg=1',
+              '-c',
+              'load_freq_dawg=1',
+            ]);
+            if (stdout && stdout.trim().length > 5 && containsArabicText(stdout)) {
+              pageText = stdout;
+            }
+          } catch (error) {
+            console.log(`Strategy 1 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
-        } catch (error) {
-          console.log(`Strategy 1 failed for ${file}:`, error.message.substring(0, 100));
         }
-      }
-      
-      // Strategy 2: Arabic with PSM 6 (uniform text block) - good for structured documents
-      if ((!pageText || !containsArabicText(pageText)) && languageConfig.hasArabic) {
-        try {
-          const arabicCommand = `tesseract "${preprocessedImagePath}" stdout -l ara --psm 6 --oem 1 -c preserve_interword_spaces=1 -c textord_really_old_xheight=1 -c textord_min_xheight=8`;
-          const { stdout: arabicResult } = await execAsync(arabicCommand);
-          
-          if (arabicResult && arabicResult.trim().length > pageText.trim().length && containsArabicText(arabicResult)) {
-            pageText = arabicResult;
-            console.log(`Strategy 2 successful for ${file} - Arabic PSM 6, extracted ${pageText.length} characters`);
+
+        // Strategy 2: Arabic with PSM 6
+        if ((!pageText || !containsArabicText(pageText)) && languageConfig.hasArabic) {
+          try {
+            const { stdout } = await runBinary('tesseract', [
+              targetImage,
+              'stdout',
+              '-l',
+              'ara',
+              '--psm',
+              '6',
+              '--oem',
+              '1',
+              '-c',
+              'preserve_interword_spaces=1',
+              '-c',
+              'textord_really_old_xheight=1',
+              '-c',
+              'textord_min_xheight=8',
+            ]);
+            if (stdout && stdout.trim().length > pageText.trim().length && containsArabicText(stdout)) {
+              pageText = stdout;
+            }
+          } catch (error) {
+            console.log(`Strategy 2 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
-        } catch (error) {
-          console.log(`Strategy 2 failed for ${file}:`, error.message.substring(0, 100));
         }
-      }
-      
-      // Strategy 3: Arabic with PSM 4 (single column) - for simple layout scanned documents
-      if ((!pageText || !containsArabicText(pageText)) && languageConfig.hasArabic) {
-        try {
-          const arabicCommand = `tesseract "${preprocessedImagePath}" stdout -l ara --psm 4 --oem 1 -c preserve_interword_spaces=1`;
-          const { stdout: arabicResult } = await execAsync(arabicCommand);
-          
-          if (arabicResult && arabicResult.trim().length > pageText.trim().length && containsArabicText(arabicResult)) {
-            pageText = arabicResult;
-            console.log(`Strategy 3 successful for ${file} - Arabic PSM 4, extracted ${pageText.length} characters`);
+
+        // Strategy 3: Arabic with PSM 4
+        if ((!pageText || !containsArabicText(pageText)) && languageConfig.hasArabic) {
+          try {
+            const { stdout } = await runBinary('tesseract', [
+              targetImage,
+              'stdout',
+              '-l',
+              'ara',
+              '--psm',
+              '4',
+              '--oem',
+              '1',
+              '-c',
+              'preserve_interword_spaces=1',
+            ]);
+            if (stdout && stdout.trim().length > pageText.trim().length && containsArabicText(stdout)) {
+              pageText = stdout;
+            }
+          } catch (error) {
+            console.log(`Strategy 3 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
-        } catch (error) {
-          console.log(`Strategy 3 failed for ${file}:`, error.message.substring(0, 100));
         }
-      }
-      
-      // Strategy 4: Multi-language approach with Arabic priority for mixed content
-      if ((!pageText || !containsArabicText(pageText)) && languageConfig.languages.length > 0) {
-        try {
-          const multiLangCommand = `tesseract "${preprocessedImagePath}" stdout -l ${languageConfig.languages.join('+')} --psm 3 --oem 1 -c preserve_interword_spaces=1`;
-          const { stdout: multiResult } = await execAsync(multiLangCommand);
-          
-          if (multiResult && multiResult.trim().length > pageText.trim().length) {
-            pageText = multiResult;
-            console.log(`Strategy 4 successful for ${file} - Multi-language OCR, extracted ${pageText.length} characters`);
+
+        // Strategy 4: Multi-language
+        if ((!pageText || !containsArabicText(pageText)) && languageConfig.languages.length > 0) {
+          try {
+            const { stdout } = await runBinary('tesseract', [
+              targetImage,
+              'stdout',
+              '-l',
+              languageConfig.languages.join('+'),
+              '--psm',
+              '3',
+              '--oem',
+              '1',
+              '-c',
+              'preserve_interword_spaces=1',
+            ]);
+            if (stdout && stdout.trim().length > pageText.trim().length) {
+              pageText = stdout;
+            }
+          } catch (error) {
+            console.log(`Strategy 4 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
-        } catch (error) {
-          console.log(`Strategy 4 failed for ${file}:`, error.message.substring(0, 100));
         }
-      }
-      
-      // Strategy 5: Try with image enhancement and different PSM modes
-      if ((!pageText || pageText.trim().length < 10) && languageConfig.hasArabic) {
-        try {
-          // Try with PSM 8 (single word) for difficult scanned text
-          const arabicCommand = `tesseract "${preprocessedImagePath}" stdout -l ara --psm 8 --oem 1 -c preserve_interword_spaces=1`;
-          const { stdout: arabicResult } = await execAsync(arabicCommand);
-          
-          if (arabicResult && arabicResult.trim().length > pageText.trim().length) {
-            pageText = arabicResult;
-            console.log(`Strategy 5 successful for ${file} - Arabic PSM 8, extracted ${pageText.length} characters`);
+
+        // Strategy 5: English/French fallback
+        if ((!pageText || pageText.trim().length < 5) && (languageConfig.hasEnglish || languageConfig.hasFrench)) {
+          try {
+            const fallbackLang = languageConfig.hasEnglish ? 'eng' : 'fra';
+            const { stdout } = await runBinary('tesseract', [
+              targetImage,
+              'stdout',
+              '-l',
+              fallbackLang,
+              '--psm',
+              '3',
+              '--oem',
+              '1',
+              '-c',
+              'preserve_interword_spaces=1',
+            ]);
+            if (stdout && stdout.trim().length > pageText.trim().length) {
+              pageText = stdout;
+            }
+          } catch (error) {
+            console.log(`Strategy 5 failed for page ${pageNumber}:`, error.message.substring(0, 100));
           }
-        } catch (error) {
-          console.log(`Strategy 5 failed for ${file}:`, error.message.substring(0, 100));
         }
-      }
-      
-      // Strategy 6: English/French fallback with high accuracy settings
-      if ((!pageText || pageText.trim().length < 5) && (languageConfig.hasEnglish || languageConfig.hasFrench)) {
-        try {
-          const fallbackLang = languageConfig.hasEnglish ? 'eng' : 'fra';
-          const fallbackCommand = `tesseract "${preprocessedImagePath}" stdout -l ${fallbackLang} --psm 3 --oem 1 -c preserve_interword_spaces=1`;
-          const { stdout: fallbackResult } = await execAsync(fallbackCommand);
-          
-          if (fallbackResult && fallbackResult.trim().length > pageText.trim().length) {
-            pageText = fallbackResult;
-            console.log(`Strategy 6 successful for ${file} - ${fallbackLang} fallback, extracted ${pageText.length} characters`);
-          }
-        } catch (error) {
-          console.log(`Strategy 6 failed for ${file}:`, error.message.substring(0, 100));
+
+        if (pageText && pageText.trim().length > 0) {
+          extractedText += pageText + '\n';
         }
-      }
-      
-      // Clean up preprocessed image
-      if (preprocessedImagePath !== imagePath && fs.existsSync(preprocessedImagePath)) {
-        try {
-          fs.unlinkSync(preprocessedImagePath);
-        } catch (cleanupError) {
-          console.warn('Could not clean up preprocessed image:', cleanupError);
+      } finally {
+        // Delete current page's temporary PNGs immediately to keep disk/memory usage minimal
+        if (preprocessedImagePath && preprocessedImagePath !== imagePath && fs.existsSync(preprocessedImagePath)) {
+          try { fs.unlinkSync(preprocessedImagePath); } catch (_) {}
         }
-      }
-      
-      if (pageText && pageText.trim().length > 0) {
-        console.log(`Successfully extracted text from ${file}: "${pageText.substring(0, 100)}..."`);
-        extractedText += pageText + '\n';
-      } else {
-        console.log(`No meaningful text extracted from ${file}`);
+        if (imagePath && fs.existsSync(imagePath)) {
+          try { fs.unlinkSync(imagePath); } catch (_) {}
+        }
       }
     }
-    
-    // Clean up temp files
-    try {
-      for (const file of files) {
-        const filePath = path.join(tempDir, file);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      }
-      if (fs.existsSync(tempDir)) {
-        fs.rmdirSync(tempDir);
-      }
-    } catch (cleanupError) {
-      console.warn('Cleanup error:', cleanupError);
-    }
-    
-    // Enhanced Arabic text cleanup and formatting
+
     if (extractedText) {
-      console.log('Raw extracted text before cleanup:', extractedText.substring(0, 200));
       extractedText = enhancedArabicTextCleanup(extractedText);
       extractedText = cleanArabicOcrText(extractedText);
-      console.log('Text after cleanup:', extractedText.substring(0, 200));
     }
-    
+
     return extractedText;
   } catch (error) {
     console.error('Enhanced Tesseract OCR error:', error);
     return null;
+  } finally {
+    if (fs.existsSync(tempDir)) {
+      try {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      } catch (cleanupError) {
+        console.warn('[OCR] Cleanup error for tempDir:', cleanupError.message);
+      }
+    }
   }
 };
 
 /**
- * Preprocess image for better OCR results on scanned documents
- * @param {string} imagePath - Path to the input image
- * @returns {Promise<string>} - Path to the preprocessed image
+ * Preprocess image for better OCR results on scanned documents with ImageMagick memory limits.
  */
 const preprocessImageForOCR = async (imagePath) => {
   try {
@@ -295,60 +381,64 @@ const preprocessImageForOCR = async (imagePath) => {
     const ext = path.extname(imagePath);
     const base = path.basename(imagePath, ext);
     const processedPath = path.join(dir, `${base}_processed${ext}`);
-    
-    // Use ImageMagick to enhance the image for better OCR
-    // Increase contrast, remove noise, and enhance text clarity
-    const magickCommand = os.platform() === 'win32' 
-      ? `magick "${imagePath}" -density 300 -type Grayscale -contrast-stretch 1%x1% -median 1 -despeckle -enhance -sharpen 0x1 "${processedPath}"`
-      : `convert "${imagePath}" -density 300 -type Grayscale -contrast-stretch 1%x1% -median 1 -despeckle -enhance -sharpen 0x1 "${processedPath}"`;
-    
-    try {
-      await execAsync(magickCommand);
-      console.log('Image preprocessed successfully for OCR');
+    const bin = process.platform === 'win32' ? 'magick' : 'convert';
+
+    await runBinary(
+      bin,
+      [
+        '-limit',
+        'memory',
+        '256MiB',
+        '-limit',
+        'map',
+        '512MiB',
+        imagePath,
+        '-density',
+        String(OCR_DPI),
+        '-type',
+        'Grayscale',
+        '-contrast-stretch',
+        '1%x1%',
+        '-median',
+        '1',
+        '-despeckle',
+        '-enhance',
+        '-sharpen',
+        '0x1',
+        processedPath,
+      ],
+      30000
+    );
+
+    if (fs.existsSync(processedPath)) {
       return processedPath;
-    } catch (magickError) {
-      console.log('ImageMagick preprocessing failed, using original image:', magickError.message);
-      return imagePath;
     }
-  } catch (error) {
-    console.log('Error preprocessing image, using original:', error.message);
+    return imagePath;
+  } catch (_) {
     return imagePath;
   }
 };
 
-/**
- * Check if text contains Arabic characters
- * @param {string} text - Text to check
- * @returns {boolean} - True if text contains Arabic characters
- */
 const containsArabicText = (text) => {
   if (!text) return false;
   const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
   return arabicRegex.test(text);
 };
 
-/**
- * Determine the best language configuration based on availability
- * @param {string} requestedLanguages - Requested language codes
- * @param {string[]} availableLanguages - Available language codes
- * @returns {Object} - Language configuration object
- */
 const determineBestLanguageConfig = (requestedLanguages, availableLanguages) => {
-  const requested = requestedLanguages.split('+').map(lang => lang.trim().toLowerCase());
-  const available = availableLanguages.map(lang => lang.trim().toLowerCase());
-  
+  const requested = requestedLanguages.split('+').map((lang) => lang.trim().toLowerCase());
+  const available = availableLanguages.map((lang) => lang.trim().toLowerCase());
+
   const hasArabic = requested.includes('ara') && available.includes('ara');
   const hasFrench = requested.includes('fra') && available.includes('fra');
   const hasEnglish = requested.includes('eng') && available.includes('eng');
-  
+
   const languages = [];
   if (hasArabic) languages.push('ara');
   if (hasFrench) languages.push('fra');
   if (hasEnglish) languages.push('eng');
-  
-  // If no requested languages are available, try to use any available language
+
   if (languages.length === 0 && available.length > 0) {
-    // Prefer common languages
     const commonLanguages = ['eng', 'fra', 'deu', 'spa', 'ita'];
     for (const lang of commonLanguages) {
       if (available.includes(lang)) {
@@ -356,153 +446,115 @@ const determineBestLanguageConfig = (requestedLanguages, availableLanguages) => 
         break;
       }
     }
-    
-    // If no common languages, use the first available
     if (languages.length === 0) {
       languages.push(available[0]);
     }
   }
-  
+
   return {
     languages,
     hasArabic,
     hasFrench,
     hasEnglish,
-    message: languages.length === 0 ? 'No languages available' : `Using languages: ${languages.join(', ')}`
+    message: languages.length === 0 ? 'No languages available' : `Using languages: ${languages.join(', ')}`,
   };
 };
 
-/**
- * Enhanced cleanup and improvement of Arabic text recognition results
- * @param {string} text - Raw OCR text
- * @returns {string} - Enhanced and cleaned Arabic text
- */
 const enhancedArabicTextCleanup = (text) => {
   if (!text || text.trim().length === 0) return '';
-  
-  console.log('Applying enhanced Arabic text cleanup to text of length:', text.length);
-  
-  // If text is just numbers, symbols, or very short meaningless content, filter it out
+
   if (text.trim().match(/^[\d\s\.\-\|\[\](){}_=+*&%$#@!~`^'"<>?/\\]+$/) && text.trim().length < 20) {
-    console.log('Text appears to be OCR noise (only symbols/numbers):', text.trim());
     return '';
   }
-  
-  // Filter out obvious OCR artifacts and meaningless sequences
-  if (text.trim().match(/^[|lI1\[\](){}\s]+$/) || 
-      text.trim().match(/^[\d\s]{1,5}$/) ||
-      text.trim().length < 3) {
-    console.log('Text appears to be OCR artifacts:', text.trim());
+
+  if (
+    text.trim().match(/^[|lI1\[\](){}\s]+$/) ||
+    text.trim().match(/^[\d\s]{1,5}$/) ||
+    text.trim().length < 3
+  ) {
     return '';
   }
-  
-  let cleanedText = text
-    // First, preserve Arabic text structure and normalize whitespace
+
+  const cleanedText = text
     .replace(/\s{3,}/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .replace(/\r/g, '')
-    
-    // Fix Arabic ligatures and common OCR errors
-    .replace(/ﻻ/g, 'لا') // Fix lam-alef ligature
-    .replace(/ﷲ/g, 'الله') // Fix Allah ligature
-    .replace(/ﱁ/g, 'تع') // Fix common ligature
-    .replace(/ﻵ/g, 'لآ') // Fix lam-alef with hamza
-    .replace(/ﻷ/g, 'لأ') // Fix lam-alef with hamza
-    .replace(/ﻹ/g, 'لإ') // Fix lam-alef with hamza
-    
-    // Fix common Arabic OCR character confusions
-    .replace(/ﻩ/g, 'ه') // Fix heh form
-    .replace(/ﻯ/g, 'ي') // Fix yeh form
-    .replace(/ﻱ/g, 'ي') // Fix yeh form
-    .replace(/ﻙ/g, 'ك') // Fix kaf form
-    .replace(/ﻝ/g, 'ل') // Fix lam form
-    .replace(/ﻡ/g, 'م') // Fix meem form
-    .replace(/ﻥ/g, 'ن') // Fix noon form
-    .replace(/ﻫ/g, 'ه') // Fix heh form
-    .replace(/ﻭ/g, 'و') // Fix waw form
-    .replace(/ﻳ/g, 'ي') // Fix yeh form
-    
-    // Normalize Arabic characters carefully (but preserve meaningful variations)
-    .replace(/[أإآ]/g, 'ا') // Normalize alef variations
-    .replace(/[ى]/g, 'ي') // Normalize yeh variations
-    .replace(/[ة]/g, 'ة') // Keep teh marbuta
-    
-    // Fix Arabic punctuation
+    .replace(/ﻻ/g, 'لا')
+    .replace(/ﷲ/g, 'الله')
+    .replace(/ﱁ/g, 'تع')
+    .replace(/ﻵ/g, 'لآ')
+    .replace(/ﻷ/g, 'لأ')
+    .replace(/ﻹ/g, 'لإ')
+    .replace(/ﻩ/g, 'ه')
+    .replace(/ﻯ/g, 'ي')
+    .replace(/ﻱ/g, 'ي')
+    .replace(/ﻙ/g, 'ك')
+    .replace(/ﻝ/g, 'ل')
+    .replace(/ﻡ/g, 'م')
+    .replace(/ﻥ/g, 'ن')
+    .replace(/ﻫ/g, 'ه')
+    .replace(/ﻭ/g, 'و')
+    .replace(/ﻳ/g, 'ي')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/[ى]/g, 'ي')
+    .replace(/[ة]/g, 'ة')
     .replace(/[،,]{2,}/g, '،')
     .replace(/[؛;]{2,}/g, '؛')
     .replace(/[؟?]{2,}/g, '؟')
     .replace(/[:.]{2,}/g, ':')
-    
-    // Remove excessive character repetition but preserve intentional repetition
     .replace(/(.)\1{4,}/g, '$1$1$1')
-    
-    // Clean up spacing
     .replace(/\s+/g, ' ')
     .trim();
-  
-  // Split into lines and clean each line
-  const lines = cleanedText.split('\n').map(line => {
-    const trimmedLine = line.trim();
-    return trimmedLine;
-  }).filter(line => {
-    if (line.length < 2) return false;
-    // Filter out lines that are just artifacts
-    if (line.match(/^[|lI1\[\](){}\s\d\.\-]+$/)) return false;
-    // Keep lines with Arabic characters, meaningful text, or substantial content
-    return /[\u0600-\u06FF\u0660-\u0669\u06F0-\u06F9]/.test(line) || 
-           (line.length > 5 && /[a-zA-Z]/.test(line));
-  });
-  
+
+  const lines = cleanedText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (line.length < 2) return false;
+      if (line.match(/^[|lI1\[\](){}\s\d\.\-]+$/)) return false;
+      return (
+        /[\u0600-\u06FF\u0660-\u0669\u06F0-\u06F9]/.test(line) ||
+        (line.length > 5 && /[a-zA-Z]/.test(line))
+      );
+    });
+
   const result = lines.join('\n').trim();
-  
-  // Count Arabic characters for debugging
   const arabicCharCount = (result.match(/[\u0600-\u06FF]/g) || []).length;
   const totalCharCount = result.replace(/\s/g, '').length;
-  
-  console.log(`Arabic text cleaned: ${arabicCharCount} Arabic characters, ${totalCharCount} total characters`);
-  
-  // If we have Arabic characters, return the result
+
   if (arabicCharCount > 0) {
-    console.log('Cleaned Arabic text sample:', result.substring(0, 100));
     return result;
   }
-  
-  // If no Arabic characters but we have meaningful text (substantial content), return it
-  if (totalCharCount > 10 && /[a-zA-Z]/.test(result) && !result.match(/^[\d\s\.\-\|\[\](){}_=+*&%$#@!~`^'"<>?/\\]+$/)) {
-    console.log('No Arabic characters found, but returning meaningful text:', result.substring(0, 100));
+
+  if (
+    totalCharCount > 10 &&
+    /[a-zA-Z]/.test(result) &&
+    !result.match(/^[\d\s\.\-\|\[\](){}_=+*&%$#@!~`^'"<>?/\\]+$/)
+  ) {
     return result;
   }
-  
-  console.log('Text appears to be OCR noise, returning empty string');
+
   return '';
 };
 
-/**
- * Check if required language packs are installed for Tesseract with enhanced Arabic support
- * @returns {Promise<Object>} - Status of language pack availability
- */
 const checkLanguageSupport = async () => {
   try {
-    // Check if tesseract is available
-    const checkCmd = process.platform === 'win32' ? 'where tesseract' : 'which tesseract';
-    await execAsync(checkCmd);
-    
-    // Check available languages
+    const checkCmd = process.platform === 'win32' ? 'where' : 'which';
+    await runBinary(checkCmd, ['tesseract'], 10000);
+
     const availableLanguages = await checkAvailableLanguages();
-    
     const hasArabic = availableLanguages.includes('ara');
     const hasFrench = availableLanguages.includes('fra');
     const hasEnglish = availableLanguages.includes('eng');
-    
-    // Check tesseract version for optimal Arabic support
+
     let versionInfo = '';
     try {
-      const { stdout: versionStdout } = await execAsync('tesseract --version');
+      const { stdout: versionStdout } = await runBinary('tesseract', ['--version'], 10000);
       versionInfo = versionStdout.split('\n')[0];
-    } catch (vErr) {
+    } catch (_) {
       versionInfo = 'Version check failed';
     }
-    
+
     return {
       supported: true,
       arabic: hasArabic,
@@ -511,39 +563,32 @@ const checkLanguageSupport = async () => {
       allAvailable: hasArabic && hasFrench && hasEnglish,
       version: versionInfo,
       availableLanguages: availableLanguages.join(', '),
-      installInstructions: !hasArabic || !hasFrench ? 
-        'Install missing language packs: sudo apt-get install tesseract-ocr-ara tesseract-ocr-fra tesseract-ocr-eng' : null,
-      arabicOptimizationTips: hasArabic ? [
-        'Use high resolution (1200-2400 DPI) when scanning Arabic documents',
-        'Ensure good lighting and contrast for better Arabic character recognition',
-        'For handwritten Arabic, consider using PSM 8 (single word) mode',
-        'Clean scanned images work better than photographed documents'
-      ] : null
+      installInstructions:
+        !hasArabic || !hasFrench
+          ? 'Install missing language packs: sudo apt-get install tesseract-ocr-ara tesseract-ocr-fra tesseract-ocr-eng'
+          : null,
+      arabicOptimizationTips: hasArabic
+        ? [
+            'Use 300 DPI for clear Arabic OCR without excessive memory usage',
+            'Ensure good lighting and contrast for better Arabic character recognition',
+            'Clean scanned images work better than photographed documents',
+          ]
+        : null,
     };
-  } catch (error) {
+  } catch (_) {
     return {
       supported: false,
       message: 'Tesseract not available or error checking languages',
-      installInstructions: 'Install Tesseract and language packs: sudo apt-get install tesseract-ocr tesseract-ocr-ara tesseract-ocr-fra tesseract-ocr-eng poppler-utils imagemagick',
-      arabicSupportNotes: 'For optimal Arabic OCR, ensure you have the latest Tesseract version (4.1+) with trained Arabic data'
+      installInstructions:
+        'Install Tesseract and language packs: sudo apt-get install tesseract-ocr tesseract-ocr-ara tesseract-ocr-fra tesseract-ocr-eng poppler-utils imagemagick',
     };
   }
 };
 
-/**
- * NORMALISATION ARABE — Convertit les formes de présentation en 
- * caractères Unicode standards + corrige les ligatures.
- * Résout les problèmes classiques d'OCR arabe.
- */
 function normalizeArabicText(text) {
   if (!text || typeof text !== 'string') return '';
 
-  let normalized = text;
-
-  // 1. Convertir les "Arabic Presentation Forms" (U+FB50-FDFF, U+FE70-FEFF)
-  //    vers les caractères Unicode standards (U+0600-U+06FF)
   const presentationFormsMap = {
-    // Formes isolées
     'ﺀ': 'ء', 'ﺁ': 'آ', 'ﺂ': 'آ', 'ﺃ': 'أ', 'ﺄ': 'أ', 'ﺅ': 'ؤ', 'ﺆ': 'ؤ',
     'ﺇ': 'إ', 'ﺈ': 'إ', 'ﺉ': 'ئ', 'ﺊ': 'ئ', 'ﺋ': 'ئ', 'ﺌ': 'ئ', 'ﺍ': 'ا',
     'ﺎ': 'ا', 'ﺏ': 'ب', 'ﺐ': 'ب', 'ﺑ': 'ب', 'ﺒ': 'ب', 'ﺓ': 'ة', 'ﺔ': 'ة',
@@ -564,110 +609,59 @@ function normalizeArabicText(text) {
     'ﻷ': 'لأ', 'ﻸ': 'لأ', 'ﻹ': 'لإ', 'ﻺ': 'لإ', 'ﻻ': 'لا', 'ﻼ': 'لا',
   };
 
-  // Appliquer la conversion
-  normalized = normalized.replace(/[\uFB50-\uFDFF\uFE70-\uFEFF]/g, (char) => {
-    return presentationFormsMap[char] || char;
-  });
+  let normalized = text.replace(/[\uFB50-\uFDFF\uFE70-\uFEFF]/g, (char) => presentationFormsMap[char] || char);
 
-  // 2. Corriger les Lam-Alef cassés (problème le plus fréquent)
-  //    "األ" → "الأ" (Alef + Alef-hamza + Lam → Alef + Lam + Alef-hamza)
-  normalized = normalized.replace(/األ/g, 'الأ');
-  normalized = normalized.replace(/اإل/g, 'الإ');
-  normalized = normalized.replace(/اآل/g, 'الآ');
-  
-  // Corriger "خالل" → "خلال" (خ + ا + ل + ل → خ + ل + ا + ل)
-  normalized = normalized.replace(/خالل/g, 'خلال');
-  
-  // Corriger "واليات" → "ولايات"
-  normalized = normalized.replace(/واليات/g, 'ولايات');
-  normalized = normalized.replace(/والية/g, 'ولاية');
-
-  // 3. Corriger "اإل" mal encodé (dans "اإلفالت" → "الإفلات")
-  normalized = normalized.replace(/اإلفالت/g, 'الإفلات');
-  normalized = normalized.replace(/اإلذاعة/g, 'الإذاعة');
-
-  // 4. Corriger "ألكن" → "لكن"
-  normalized = normalized.replace(/\bألكن\b/g, 'لكن');
-
-  // 5. Corriger "األ" général
-  normalized = normalized.replace(/األ/g, 'الأ');
-
-  // 6. Corriger "الثالثاء" → "الثلاثاء"
-  normalized = normalized.replace(/الثالثاء/g, 'الثلاثاء');
-
-  // 7. Corriger "الجوالن" → "الجولان"
-  normalized = normalized.replace(/الجوالن/g, 'الجولان');
+  normalized = normalized
+    .replace(/األ/g, 'الأ')
+    .replace(/اإل/g, 'الإ')
+    .replace(/اآل/g, 'الآ')
+    .replace(/خالل/g, 'خلال')
+    .replace(/واليات/g, 'ولايات')
+    .replace(/والية/g, 'ولاية')
+    .replace(/اإلفالت/g, 'الإفلات')
+    .replace(/اإلذاعة/g, 'الإذاعة')
+    .replace(/\bألكن\b/g, 'لكن')
+    .replace(/الثالثاء/g, 'الثلاثاء')
+    .replace(/الجوالن/g, 'الجولان');
 
   return normalized;
 }
 
-/**
- * NETTOYAGE FINAL — Supprime le bruit résiduel
- */
 function cleanOcrNoise(text) {
   if (!text || typeof text !== 'string') return '';
 
-  let cleaned = text;
-
-  // 1. Supprimer les timestamps répétés en début de page
-  cleaned = cleaned.replace(/^\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}(,\s*\d{1,2}:\d{2})?\s*$/gm, '');
-  cleaned = cleaned.replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4},\s*\d{1,2}:\d{2}/g, '');
-  cleaned = cleaned.replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}\b/g, '');
-
-  // 2. Supprimer les URLs
-  cleaned = cleaned.replace(/https?:\/\/[^\s]+/gi, '');
-  cleaned = cleaned.replace(/www\.[^\s]+/gi, '');
-
-  // 3. Supprimer les ponctuations dupliquées (،،،، ou ......)
-  cleaned = cleaned.replace(/([،,.\u060C]){2,}/g, '$1');
-  cleaned = cleaned.replace(/([،,.\u060C\s]){5,}/g, ' ');
-
-  // 4. Supprimer les numéros isolés répétés (10،10،10،10)
-  cleaned = cleaned.replace(/\b(\d+)(,\s*\d+){3,}\b/g, '');
-
-  // 5. Supprimer les séries de symboles parasites
-  cleaned = cleaned.replace(/[^\w\s\u0600-\u06FF،.:!?'"()\-]{3,}/g, '');
-
-  // 6. Supprimer les caractères de remplacement
-  cleaned = cleaned.replace(/[\uFFFD\u25A1\u25A0]/g, '');
-
-  // 7. Normaliser les espaces multiples
-  cleaned = cleaned.replace(/[ \t]+/g, ' ');
-
-  // 8. Normaliser les sauts de ligne (max 2)
-  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-
-  // 9. Trim chaque ligne
-  cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
-
-  // 10. Trim global
-  cleaned = cleaned.trim();
+  let cleaned = text
+    .replace(/^\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}(,\s*\d{1,2}:\d{2})?\s*$/gm, '')
+    .replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4},\s*\d{1,2}:\d{2}/g, '')
+    .replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}\b/g, '')
+    .replace(/https?:\/\/[^\s]+/gi, '')
+    .replace(/www\.[^\s]+/gi, '')
+    .replace(/([،,.\u060C]){2,}/g, '$1')
+    .replace(/([،,.\u060C\s]){5,}/g, ' ')
+    .replace(/\b(\d+)(,\s*\d+){3,}\b/g, '')
+    .replace(/[^\w\s\u0600-\u06FF،.:!?'"()\-]{3,}/g, '')
+    .replace(/[\uFFFD\u25A1\u25A0]/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .join('\n')
+    .trim();
 
   return cleaned;
 }
 
-/**
- * FONCTION PRINCIPALE DE NETTOYAGE OCR ARABE
- * Combine normalisation + nettoyage bruit
- */
 function cleanArabicOcrText(text) {
   if (!text || typeof text !== 'string') return '';
 
   const originalLength = text.length;
-
-  // 1. Normaliser l'arabe (ligatures, présentation forms)
   let cleaned = normalizeArabicText(text);
-
-  // 2. Nettoyer le bruit (timestamps, URLs, ponctuation)
   cleaned = cleanOcrNoise(cleaned);
 
-  // Sécurité : si le nettoyage a trop supprimé (< 20% du texte original)
   if (originalLength > 100 && cleaned.length < originalLength * 0.2) {
-    console.warn('[OCR Clean] Nettoyage trop agressif, retour du texte original');
     return text;
   }
 
-  console.log(`[OCR Arabic Clean] ${originalLength} → ${cleaned.length} chars`);
   return cleaned;
 }
 
@@ -676,5 +670,5 @@ module.exports = {
   checkLanguageSupport,
   normalizeArabicText,
   cleanOcrNoise,
-  cleanArabicOcrText
+  cleanArabicOcrText,
 };
