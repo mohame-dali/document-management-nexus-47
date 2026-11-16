@@ -122,6 +122,9 @@ export const useIncomingDocumentForm = (
       isMountedRef.current = false;
       stopPolling();
       clearLiveThumbnails();
+      if (hasSubmittedRef.current) {
+        return;
+      }
       if (scanAbortRef.current) {
         scanAbortRef.current.abort();
         scanAbortRef.current = null;
@@ -130,7 +133,7 @@ export const useIncomingDocumentForm = (
         cancelScanJob(activeScanIdRef.current).catch(() => {});
         activeScanIdRef.current = null;
       }
-      if (!hasSubmittedRef.current && localScanIdRef.current) {
+      if (localScanIdRef.current) {
         deleteScan(localScanIdRef.current).catch(() => {});
         localScanIdRef.current = null;
       }
@@ -394,6 +397,7 @@ export const useIncomingDocumentForm = (
     scanStartTimeRef.current = Date.now();
     maxPagesSeenRef.current = 1;
     cancelledByUserRef.current = false;
+    hasSubmittedRef.current = false;
 
     setScanning(true);
     setScanError(null);
@@ -447,6 +451,14 @@ export const useIncomingDocumentForm = (
             getScanPageThumbnailBlob(scanId, p, thumbController.signal)
               .then((blob) => {
                 if (!isMountedRef.current || activeScanIdRef.current !== scanId) {
+                  return;
+                }
+                if (
+                  !(blob instanceof Blob) ||
+                  blob.size === 0 ||
+                  (blob.type && !blob.type.startsWith('image/'))
+                ) {
+                  fetchedThumbPagesRef.current.delete(p);
                   return;
                 }
                 const thumbUrl = URL.createObjectURL(blob);
@@ -541,7 +553,19 @@ export const useIncomingDocumentForm = (
     });
   };
 
+  const isScanInProgress =
+    scanning || (scanStage !== null && scanStage !== 'done' && scanStage !== 'error');
+
   const onSubmit = async (data: FormValues & { ocrText?: string }) => {
+    if (isScanInProgress) {
+      toast.warning(
+        lang === 'ar'
+          ? 'يرجى انتظار انتهاء المسح الضوئي ومعالجة النص قبل إرسال المستند.'
+          : 'Veuillez attendre la fin de la numérisation et du traitement OCR avant de soumettre.'
+      );
+      return;
+    }
+
     try {
       const formData = new FormData();
 
@@ -577,15 +601,22 @@ export const useIncomingDocumentForm = (
         formData.append('typeDocument', data.typeDocument);
       }
 
-      const activeScan = scanResult || scanData || null;
+      const activeScan = scanResult;
+      const resolvedScanId =
+        activeScan?.scanId ||
+        (typeof activeScan?.id === 'string' ? activeScan.id : undefined);
+      const resolvedFilePath =
+        activeScan?.filePath ||
+        (typeof activeScan?.fileUrl === 'string' ? activeScan.fileUrl : undefined);
+
       if (selectedFiles.length > 0) {
         formData.append('document', selectedFiles[0]);
-      } else if (activeScan && (activeScan.scanId || activeScan.filePath)) {
-        if (activeScan.scanId) {
-          formData.append('scanId', String(activeScan.scanId));
+      } else if (activeScan && (resolvedScanId || resolvedFilePath)) {
+        if (resolvedScanId) {
+          formData.append('scanId', String(resolvedScanId));
         }
         const docPath =
-          activeScan.filePath || (activeScan.scanId ? `/api/scan/file/${activeScan.scanId}` : '');
+          resolvedFilePath || (resolvedScanId ? `/api/scan/file/${resolvedScanId}` : '');
         if (docPath) {
           formData.append('scannedDocumentPath', docPath);
         }
@@ -606,7 +637,9 @@ export const useIncomingDocumentForm = (
 
       await createIncomingDocument(formData);
       hasSubmittedRef.current = true;
+      activeScanIdRef.current = null;
       localScanIdRef.current = null;
+      scanAbortRef.current = null;
 
       toast.success(t.createSuccess);
       navigate('/dashboard/incoming-documents');
@@ -621,6 +654,7 @@ export const useIncomingDocumentForm = (
     selectedFiles,
     activeTab,
     scanning,
+    isScanInProgress,
     scanProgress,
     scanStage,
     scanPage,

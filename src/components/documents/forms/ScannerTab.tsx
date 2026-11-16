@@ -290,8 +290,8 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
 
         {/* STATE B: SCANNING */}
         {currentState === 'SCANNING' && (
-          <div className="flex-1 flex flex-col justify-between">
-            <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="flex-1 flex flex-col justify-between p-6 gap-6">
+            <div className="flex-1 flex flex-col items-center justify-center">
               <div className="max-w-lg w-full rounded-xl border border-zinc-800 bg-zinc-900/60 p-6 space-y-6">
                 {/* Animated Scanner Status */}
                 <div className="flex items-center justify-between gap-4">
@@ -366,33 +366,33 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
               </div>
             </div>
 
-            {/* Live Multi-Page Thumbnails Strip */}
-            {liveThumbnails.length > 0 && (
-              <div className="bg-zinc-900/90 border-t border-zinc-800 px-4 py-3 space-y-2">
-                <div className="flex items-center justify-between text-xs text-zinc-300">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Images className="h-4 w-4 text-emerald-400" />
-                    {tr(
-                      'scanner.liveThumbnails.title',
-                      'Pages numérisées en direct',
-                      'الصفحات الممسوحة مباشرة'
-                    )}
-                  </span>
-                  <Badge className="bg-zinc-800 border-zinc-700 text-zinc-200">
-                    <bdi dir="ltr">{liveThumbnails.length}</bdi>
-                  </Badge>
-                </div>
+            {/* Live Multi-Page Thumbnails Strip inside Dark Stage */}
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-3 space-y-3">
+              <div className="flex items-center justify-between text-xs text-zinc-300">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Images className="h-4 w-4 text-emerald-400" />
+                  {tr(
+                    'scanner.liveThumbnails.title',
+                    'Pages numérisées en direct',
+                    'الصفحات الممسوحة مباشرة'
+                  )}
+                </span>
+                <Badge className="bg-zinc-800 border-zinc-700 text-zinc-200">
+                  <bdi dir="ltr">{liveThumbnails.length}</bdi>
+                </Badge>
+              </div>
 
+              {liveThumbnails.length > 0 ? (
                 <div className="flex items-center gap-3 overflow-x-auto pb-1">
                   {liveThumbnails.map((thumb) => (
                     <div
                       key={thumb.page}
-                      className="relative flex-shrink-0 w-20 h-28 rounded-md overflow-hidden border border-zinc-700 bg-zinc-950 shadow-sm"
+                      className="relative flex-shrink-0 rounded-md overflow-hidden border border-zinc-700 bg-zinc-950 shadow-sm"
                     >
                       <img
                         src={thumb.url}
                         alt={`Page ${thumb.page}`}
-                        className="w-full h-full object-cover"
+                        className="h-24 w-20 object-cover block"
                       />
                       <span className="absolute bottom-1 end-1 rounded bg-zinc-950/85 border border-zinc-700 px-1.5 py-0.5 text-[10px] font-medium text-zinc-100">
                         <bdi dir="ltr">P.{thumb.page}</bdi>
@@ -400,8 +400,12 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center justify-center h-24 rounded-md border border-dashed border-zinc-800 bg-zinc-950/60 text-xs text-zinc-500">
+                  {stageLabel}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

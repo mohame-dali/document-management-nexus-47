@@ -48,6 +48,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
     form,
     activeTab,
     scanning,
+    isScanInProgress,
     scanProgress,
     scanStage,
     scanPage,
@@ -343,6 +344,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
             cancelText={t.cancel}
             submitText={t.submit}
             cancelRoute="/dashboard/incoming-documents"
+            disabled={isScanInProgress}
           />
         </CardFooter>
       </Card>
