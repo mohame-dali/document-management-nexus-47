@@ -83,6 +83,12 @@ import { usePdfExport } from '@/hooks/usePdfExport';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { exportToCsv } from '@/utils/exportCsv';
 
+const isAnswerDeleted = (doc: IncomingDocument) =>
+  typeof doc.answer === 'object' && doc.answer !== null && Boolean(doc.answer.isDeleted);
+
+const hasActiveAnswer = (doc: IncomingDocument) =>
+  Boolean(doc.answer) && !isAnswerDeleted(doc);
+
 const IncomingDocumentsPage: React.FC = () => {
   const { t } = useTranslation();
   const { currentUser } = useAuth();
@@ -231,8 +237,8 @@ const IncomingDocumentsPage: React.FC = () => {
   const filteredDocuments = useMemo(() => {
     return (documents as IncomingDocument[]).filter((doc: IncomingDocument) => {
       // Status filter
-      if (statusFilter === 'pending' && doc.answer) return false;
-      if (statusFilter === 'answered' && !doc.answer) return false;
+      if (statusFilter === 'pending' && hasActiveAnswer(doc)) return false;
+      if (statusFilter === 'answered' && !hasActiveAnswer(doc)) return false;
       if (statusFilter === 'urgent') {
         const urgency = getActivityUrgency(doc);
         if (!urgency || (urgency.type !== 'overdue' && urgency.type !== 'today' && urgency.type !== 'tomorrow')) {
@@ -260,8 +266,8 @@ const IncomingDocumentsPage: React.FC = () => {
         valA = (a.subject || '').toLowerCase();
         valB = (b.subject || '').toLowerCase();
       } else if (sortField === 'status') {
-        valA = a.answer ? 1 : 0;
-        valB = b.answer ? 1 : 0;
+        valA = hasActiveAnswer(a) ? 1 : 0;
+        valB = hasActiveAnswer(b) ? 1 : 0;
       } else {
         if (sortBy === 'newest-arrival') {
           return new Date(b.arrivalDate || 0).getTime() - new Date(a.arrivalDate || 0).getTime();
@@ -332,7 +338,11 @@ const IncomingDocumentsPage: React.FC = () => {
       subject: doc.subject || '',
       source: doc.source || t('incoming.source.unspecified'),
       typeDocument: doc.typeDocument || t('incoming.type.general'),
-      status: doc.answer ? t('incoming.status.answered') : t('incoming.status.pending'),
+      status: isAnswerDeleted(doc)
+        ? t('incoming.status.answerInTrash')
+        : hasActiveAnswer(doc)
+          ? t('incoming.status.answered')
+          : t('incoming.status.pending'),
     }));
 
     await exportPdf({
@@ -374,7 +384,7 @@ const IncomingDocumentsPage: React.FC = () => {
   };
 
   // Status stats
-  const answeredCount = documents.filter((d: IncomingDocument) => Boolean(d.answer)).length;
+  const answeredCount = documents.filter((d: IncomingDocument) => hasActiveAnswer(d)).length;
   const pendingCount = documents.length - answeredCount;
 
   // Search match highlight
@@ -1005,7 +1015,12 @@ const IncomingDocumentsPage: React.FC = () => {
                       {/* Follow-up / Answer Status */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
-                          {doc.answer ? (
+                          {isAnswerDeleted(doc) ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-300 w-fit">
+                              <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                              {t('incoming.status.answerInTrash')}
+                            </span>
+                          ) : doc.answer ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 w-fit">
                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                               {t('incoming.status.answered')}
@@ -1181,7 +1196,12 @@ const IncomingDocumentsPage: React.FC = () => {
                         <bdi dir="ltr">#{doc.serialNumber} / {doc.year}</bdi>
                       </span>
 
-                      {doc.answer ? (
+                      {isAnswerDeleted(doc) ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-300">
+                          <AlertTriangle className="h-3 w-3 text-amber-600" />
+                          {t('incoming.status.answerInTrash')}
+                        </span>
+                      ) : doc.answer ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                           <CheckCircle2 className="h-3 w-3 text-emerald-600" />
                           {t('incoming.status.answeredBadge')}

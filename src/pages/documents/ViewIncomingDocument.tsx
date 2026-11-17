@@ -97,15 +97,21 @@ const ViewIncomingDocument: React.FC = () => {
     enabled: Boolean(id),
   });
 
-  // 2. Fetch answer document (if exists)
-  const answerId = typeof document?.answer === 'object' ? document?.answer?._id : document?.answer;
+  // 2. Fetch answer document (if exists and not soft-deleted)
+  const populatedAnswer =
+    typeof document?.answer === 'object' && document?.answer ? document.answer : null;
+  const isAnswerDeleted = Boolean(populatedAnswer?.isDeleted);
+  const answerId = !isAnswerDeleted
+    ? (populatedAnswer ? populatedAnswer._id : (document?.answer as string | undefined))
+    : undefined;
   const { 
     data: answerDocument, 
     isLoading: isAnswerLoading 
   } = useQuery<OutgoingDocument>({
     queryKey: ['outgoingDocument', answerId],
     queryFn: () => getOutgoingDocument(answerId as string),
-    enabled: Boolean(answerId),
+    enabled: Boolean(answerId) && !isAnswerDeleted,
+    retry: false,
   });
 
   // 3. Fetch audit/timeline history
@@ -293,7 +299,12 @@ const ViewIncomingDocument: React.FC = () => {
             )}
 
             {/* Answer Status Badge */}
-            {document.answer ? (
+            {isAnswerDeleted ? (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-amber-50 text-amber-900 border border-amber-300">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                {t('documents.viewIncoming.badge.answerInTrash')}
+              </span>
+            ) : document.answer ? (
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 {t('documents.viewIncoming.badge.processedAndReplied')}
@@ -559,7 +570,49 @@ const ViewIncomingDocument: React.FC = () => {
           )}
 
           {/* Section: Linked Answer / Outgoing Document */}
-          {answerDocument && (
+          {isAnswerDeleted && populatedAnswer ? (
+            <div className="bg-amber-50/40 border border-amber-300 rounded p-6 space-y-4">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-amber-200 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-amber-900">
+                      {t('documents.viewIncoming.answer.deletedInTrashTitle')}
+                    </h3>
+                    <p className="text-xs text-amber-800">
+                      {t('documents.viewIncoming.answer.deletedInTrashSubtitle')}
+                    </p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                  {t('documents.viewIncoming.answer.deletedInTrashBadge')}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
+                <div>
+                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
+                  <span className="font-bold text-[#1a202c]">
+                    <bdi dir="ltr">#{populatedAnswer.serialNumber} / {populatedAnswer.year}</bdi>
+                  </span>
+                  {populatedAnswer.issueDate && (
+                    <span className="text-xs text-[#5f6b7d] me-1.5 block">
+                      {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatArabicDate(populatedAnswer.issueDate) })}
+                    </span>
+                  )}
+                </div>
+
+                <div className="sm:col-span-2">
+                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
+                  <p className="font-medium text-[#1a202c] line-clamp-2">
+                    {populatedAnswer.subject}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : answerDocument && (
             <div className="bg-white border border-emerald-200 rounded p-6 space-y-4 bg-emerald-50/20">
               <div className="flex items-center justify-between pb-3 border-b border-emerald-200">
                 <div className="flex items-center gap-2.5">
@@ -699,10 +752,24 @@ const ViewIncomingDocument: React.FC = () => {
               </li>
 
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.answer ? 'text-emerald-600' : 'text-[#a0aec0]'}`} />
+                <CheckCircle2
+                  className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
+                    isAnswerDeleted
+                      ? 'text-amber-500'
+                      : document.answer
+                        ? 'text-emerald-600'
+                        : 'text-[#a0aec0]'
+                  }`}
+                />
                 <div>
                   <span className="font-semibold text-[#1a202c] block">{t('documents.viewIncoming.sidebar.summary.outgoingAnswer')}</span>
-                  <span>{document.answer ? t('documents.viewIncoming.sidebar.summary.answerReady') : t('documents.viewIncoming.sidebar.summary.noAnswerYet')}</span>
+                  <span>
+                    {isAnswerDeleted
+                      ? t('documents.viewIncoming.sidebar.summary.answerInTrash')
+                      : document.answer
+                        ? t('documents.viewIncoming.sidebar.summary.answerReady')
+                        : t('documents.viewIncoming.sidebar.summary.noAnswerYet')}
+                  </span>
                 </div>
               </li>
             </ul>
@@ -1094,23 +1161,37 @@ const ViewIncomingDocument: React.FC = () => {
             {/* Step 5: Answer / Processing Completion */}
             {document.answer && (
               <div className="relative">
-                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white" />
-                <div className="bg-emerald-50/40 border border-emerald-200 rounded p-4 space-y-1">
+                <div
+                  className={`absolute -start-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-white ${
+                    isAnswerDeleted ? 'bg-amber-500' : 'bg-emerald-600'
+                  }`}
+                />
+                <div
+                  className={`rounded p-4 space-y-1 border ${
+                    isAnswerDeleted
+                      ? 'bg-amber-50/40 border-amber-200'
+                      : 'bg-emerald-50/40 border-emerald-200'
+                  }`}
+                >
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-base font-bold text-emerald-900">
-                      {t('documents.viewIncoming.timeline.lifecycle.step5.title')}
+                    <span className={`text-base font-bold ${isAnswerDeleted ? 'text-amber-900' : 'text-emerald-900'}`}>
+                      {isAnswerDeleted
+                        ? t('documents.viewIncoming.answer.deletedInTrashTitle')
+                        : t('documents.viewIncoming.timeline.lifecycle.step5.title')}
                     </span>
-                    {answerDocument?.issueDate && (
+                    {!isAnswerDeleted && answerDocument?.issueDate && (
                       <span className="text-xs text-emerald-700 font-medium">
                         <bdi dir="ltr">{formatArabicDate(answerDocument.issueDate)}</bdi>
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-emerald-800">
-                    {t('documents.viewIncoming.timeline.lifecycle.step5.description', {
-                      serialNumber: answerDocument ? answerDocument.serialNumber : '',
-                      year: answerDocument ? answerDocument.year : ''
-                    })}
+                  <p className={`text-sm ${isAnswerDeleted ? 'text-amber-800' : 'text-emerald-800'}`}>
+                    {isAnswerDeleted
+                      ? t('documents.viewIncoming.answer.deletedInTrashSubtitle')
+                      : t('documents.viewIncoming.timeline.lifecycle.step5.description', {
+                          serialNumber: answerDocument ? answerDocument.serialNumber : (populatedAnswer?.serialNumber || ''),
+                          year: answerDocument ? answerDocument.year : (populatedAnswer?.year || '')
+                        })}
                   </p>
                 </div>
               </div>

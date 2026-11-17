@@ -114,10 +114,13 @@ const ViewOutgoingDocument: React.FC = () => {
     enabled: Boolean(id),
   });
 
-  // 2. Fetch reference incoming document (if linked)
-  const referenceId = typeof document?.reference === 'object' 
-    ? (document?.reference as { _id?: string })?._id 
-    : document?.reference;
+  // 2. Fetch reference incoming document (if linked and not soft-deleted)
+  const populatedReference =
+    typeof document?.reference === 'object' && document?.reference ? document.reference : null;
+  const isReferenceDeleted = Boolean(populatedReference?.isDeleted);
+  const referenceId = !isReferenceDeleted
+    ? (populatedReference ? populatedReference._id : (document?.reference as string | undefined))
+    : undefined;
 
   const { 
     data: referenceDocument, 
@@ -125,7 +128,8 @@ const ViewOutgoingDocument: React.FC = () => {
   } = useQuery<IncomingDocument>({
     queryKey: ['incomingDocument', referenceId],
     queryFn: () => getIncomingDocument(referenceId as string),
-    enabled: Boolean(referenceId),
+    enabled: Boolean(referenceId) && !isReferenceDeleted,
+    retry: false,
   });
 
   // 3. Fetch audit/timeline history
@@ -429,7 +433,12 @@ const ViewOutgoingDocument: React.FC = () => {
             )}
 
             {/* Reference Status Badge */}
-            {referenceDocument ? (
+            {isReferenceDeleted && populatedReference ? (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-amber-50 text-amber-900 border border-amber-300">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                {t('documents.viewOutgoing.badge.referenceInTrash', { serialNumber: populatedReference.serialNumber, year: populatedReference.year })}
+              </span>
+            ) : referenceDocument ? (
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 {t('documents.viewOutgoing.badge.replyToIncoming', { serialNumber: referenceDocument.serialNumber, year: referenceDocument.year })}
@@ -796,14 +805,47 @@ const ViewOutgoingDocument: React.FC = () => {
                 <FileInput className="h-5 w-5 text-[#2c5282]" />
                 <h3 className="text-lg font-bold text-[#1a202c]">الوثيقة الواردة المرجعية</h3>
               </div>
-              {referenceDocument && (
+              {isReferenceDeleted ? (
+                <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
+                  {t('documents.viewOutgoing.referenceCard.inTrashBadge')}
+                </span>
+              ) : referenceDocument && (
                 <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   مرتبط
                 </span>
               )}
             </div>
 
-            {referenceDocument ? (
+            {isReferenceDeleted && populatedReference ? (
+              <div className="space-y-3">
+                <div className="p-3.5 bg-amber-50/50 border border-amber-300 rounded space-y-2">
+                  <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                    <span>{t('documents.viewOutgoing.referenceCard.inTrashTitle')}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-[#5f6b7d] font-semibold">رقم القيد الوارد:</span>
+                    <span className="text-sm font-bold text-[#1a202c]">
+                      <bdi dir="ltr">#{populatedReference.serialNumber} / {populatedReference.year}</bdi>
+                    </span>
+                  </div>
+
+                  {populatedReference.subject && (
+                    <div>
+                      <span className="text-xs text-[#5f6b7d] font-semibold block mb-0.5">موضوع الوارد:</span>
+                      <p className="text-sm font-bold text-[#1a202c] line-clamp-2">
+                        {populatedReference.subject}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-amber-800 leading-relaxed pt-1 border-t border-amber-200">
+                    {t('documents.viewOutgoing.referenceCard.inTrashMessage')}
+                  </p>
+                </div>
+              </div>
+            ) : referenceDocument ? (
               <div className="space-y-3">
                 <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-2">
                   <div className="flex items-center justify-between">
@@ -1335,7 +1377,24 @@ const ViewOutgoingDocument: React.FC = () => {
             )}
 
             {/* Step 5: Reference Incoming Document Link */}
-            {referenceDocument && (
+            {isReferenceDeleted && populatedReference ? (
+              <div className="relative">
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-amber-500 border-2 border-white" />
+                <div className="bg-amber-50/40 border border-amber-200 rounded p-4 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-base font-bold text-amber-900">
+                      {t('documents.viewOutgoing.referenceCard.inTrashTitle')}
+                    </span>
+                    <span className="text-xs text-amber-800 font-medium">
+                      <bdi dir="ltr">#{populatedReference.serialNumber} / {populatedReference.year}</bdi>
+                    </span>
+                  </div>
+                  <p className="text-sm text-amber-800">
+                    {t('documents.viewOutgoing.referenceCard.inTrashMessage')}
+                  </p>
+                </div>
+              </div>
+            ) : referenceDocument && (
               <div className="relative">
                 <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white" />
                 <div className="bg-emerald-50/40 border border-emerald-200 rounded p-4 space-y-1">

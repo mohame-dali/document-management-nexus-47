@@ -52,6 +52,7 @@ export interface IncomingDocument {
   answer?: OutgoingDocument | string | null;
   responsibleUser?: User | string | null;
   folder?: Folder | string | null;
+  isDeleted?: boolean;
   createdAt: string;
 }
 
@@ -72,6 +73,7 @@ export interface OutgoingDocument {
   scannedDocument?: string;
   reference?: IncomingDocument | string | null;
   folder?: Folder | string | null;
+  isDeleted?: boolean;
   createdAt: string;
 }
 

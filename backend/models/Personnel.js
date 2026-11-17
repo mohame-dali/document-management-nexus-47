@@ -27,9 +27,7 @@ const personnelSchema = new mongoose.Schema({
   },
   cin: {
     type: String,
-    trim: true,
-    unique: true,
-    sparse: true
+    trim: true
   },
   adresse: {
     type: String,
@@ -159,7 +157,10 @@ const personnelSchema = new mongoose.Schema({
 
 // Index de recherche textuelle rapide sur nom, prenom, cin
 personnelSchema.index({ nom: 1, prenom: 1 });
-personnelSchema.index({ cin: 1 }, { unique: true, sparse: true });
+personnelSchema.index(
+  { cin: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false, cin: { $type: 'string' } } }
+);
 personnelSchema.index({ statut: 1 });
 personnelSchema.index({ activeDepartment: 1 });
 

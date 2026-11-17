@@ -99,8 +99,11 @@ const incomingDocumentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Ensure unique combination of serialNumber and year
-incomingDocumentSchema.index({ serialNumber: 1, year: 1 }, { unique: true });
+// Ensure unique combination of serialNumber and year for active (non-deleted) documents
+incomingDocumentSchema.index(
+  { serialNumber: 1, year: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+);
 incomingDocumentSchema.index({ "assignedTo.id": 1 });
 incomingDocumentSchema.index({ dateActivity: 1 });
 incomingDocumentSchema.index({ createdAt: -1 });
