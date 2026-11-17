@@ -105,6 +105,9 @@ try {
   const cron = require('node-cron');
   const { checkDailyNotifications } = require('./backend/utils/activityNotificationHelper');
   cron.schedule('0 8 * * *', () => {
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
     console.log('[Cron] Exécution du rattrapage quotidien des notifications d\'activité');
     checkDailyNotifications().catch((e: Error) => console.warn('[Cron Notifications] Error:', e.message));
   });
