@@ -89,7 +89,7 @@ exports.createEcole = async (req, res, next) => {
       isActive
     } = req.body;
 
-    if (!nom || !nomAr) {
+    if (typeof nom !== 'string' || !nom.trim() || typeof nomAr !== 'string' || !nomAr.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Les champs nom et nomAr sont obligatoires'
@@ -108,13 +108,13 @@ exports.createEcole = async (req, res, next) => {
     const newEcole = await RHEcole.create({
       nom: cleanNom,
       nomAr: nomAr.trim(),
-      pays: pays !== undefined ? pays.trim() : 'تونس',
-      ville: ville !== undefined ? ville.trim() : '',
-      adresse: adresse !== undefined ? adresse.trim() : '',
-      telephone: telephone !== undefined ? telephone.trim() : '',
-      email: email !== undefined ? email.trim().toLowerCase() : '',
+      pays: typeof pays === 'string' ? pays.trim() : 'تونس',
+      ville: typeof ville === 'string' ? ville.trim() : '',
+      adresse: typeof adresse === 'string' ? adresse.trim() : '',
+      telephone: typeof telephone === 'string' ? telephone.trim() : '',
+      email: typeof email === 'string' ? email.trim().toLowerCase() : '',
       type: type || 'militaire',
-      description: description !== undefined ? description.trim() : '',
+      description: typeof description === 'string' ? description.trim() : '',
       isActive: isActive !== undefined ? Boolean(isActive) : true,
       createdBy: req.user ? req.user._id : null,
       updatedBy: req.user ? req.user._id : null
@@ -152,7 +152,7 @@ exports.updateEcole = async (req, res, next) => {
     }
 
     // Vérifier unicité du nom si modifié
-    if (req.body.nom && req.body.nom.trim() !== ecole.nom) {
+    if (typeof req.body.nom === 'string' && req.body.nom.trim() && req.body.nom.trim() !== ecole.nom) {
       const cleanNom = req.body.nom.trim();
       const existing = await RHEcole.findOne({ nom: cleanNom, _id: { $ne: id } });
       if (existing) {
@@ -164,9 +164,24 @@ exports.updateEcole = async (req, res, next) => {
     }
 
     const updateData = {
-      ...req.body,
       updatedBy: req.user ? req.user._id : null
     };
+
+    const trimmedStringFields = ['nom', 'nomAr', 'pays', 'ville', 'adresse', 'telephone', 'description'];
+    for (const field of trimmedStringFields) {
+      if (typeof req.body[field] === 'string') {
+        updateData[field] = req.body[field].trim();
+      }
+    }
+    if (typeof req.body.email === 'string') {
+      updateData.email = req.body.email.trim().toLowerCase();
+    }
+    if (typeof req.body.type === 'string') {
+      updateData.type = req.body.type;
+    }
+    if (typeof req.body.isActive === 'boolean') {
+      updateData.isActive = req.body.isActive;
+    }
 
     const updatedEcole = await RHEcole.findByIdAndUpdate(
       id,
@@ -300,7 +315,11 @@ exports.createTypeFormation = async (req, res, next) => {
       isActive
     } = req.body;
 
-    if (!code || !nom || !nomAr) {
+    if (
+      typeof code !== 'string' || !code.trim() ||
+      typeof nom !== 'string' || !nom.trim() ||
+      typeof nomAr !== 'string' || !nomAr.trim()
+    ) {
       return res.status(400).json({
         success: false,
         message: 'Les champs code, nom et nomAr sont obligatoires'
@@ -322,7 +341,7 @@ exports.createTypeFormation = async (req, res, next) => {
       nomAr: nomAr.trim(),
       categorie: categorie || 'autre',
       dureeReference: dureeReference !== undefined ? Number(dureeReference) : 0,
-      description: description !== undefined ? description.trim() : '',
+      description: typeof description === 'string' ? description.trim() : '',
       isActive: isActive !== undefined ? Boolean(isActive) : true,
       createdBy: req.user ? req.user._id : null,
       updatedBy: req.user ? req.user._id : null
@@ -360,7 +379,7 @@ exports.updateTypeFormation = async (req, res, next) => {
     }
 
     // Vérifier unicité du code si modifié
-    if (req.body.code && req.body.code.trim().toUpperCase() !== typeFormation.code) {
+    if (typeof req.body.code === 'string' && req.body.code.trim() && req.body.code.trim().toUpperCase() !== typeFormation.code) {
       const cleanCode = req.body.code.trim().toUpperCase();
       const existing = await RHTypeFormation.findOne({ code: cleanCode, _id: { $ne: id } });
       if (existing) {
@@ -372,11 +391,26 @@ exports.updateTypeFormation = async (req, res, next) => {
     }
 
     const updateData = {
-      ...req.body,
       updatedBy: req.user ? req.user._id : null
     };
-    if (updateData.code) {
-      updateData.code = updateData.code.trim().toUpperCase();
+
+    if (typeof req.body.code === 'string' && req.body.code.trim()) {
+      updateData.code = req.body.code.trim().toUpperCase();
+    }
+    const trimmedStringFields = ['nom', 'nomAr', 'description'];
+    for (const field of trimmedStringFields) {
+      if (typeof req.body[field] === 'string') {
+        updateData[field] = req.body[field].trim();
+      }
+    }
+    if (typeof req.body.categorie === 'string') {
+      updateData.categorie = req.body.categorie;
+    }
+    if (req.body.dureeReference !== undefined) {
+      updateData.dureeReference = Number(req.body.dureeReference) || 0;
+    }
+    if (typeof req.body.isActive === 'boolean') {
+      updateData.isActive = req.body.isActive;
     }
 
     const updatedType = await RHTypeFormation.findByIdAndUpdate(

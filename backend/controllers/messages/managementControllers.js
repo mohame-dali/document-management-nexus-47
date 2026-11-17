@@ -164,9 +164,9 @@ exports.deleteMessage = async (req, res, next) => {
     const isRecipient = message.recipients.some(
       r => r.user && r.user.toString() === userId.toString()
     );
-    const hasAdminAccess = ['Admin', 'AdminTuningDesk'].includes(req.user.role);
-    
-    if (!isSender && !isRecipient && !hasAdminAccess) {
+    // TODO (DÉCISION PROPRIÉTAIRE): L'accès Admin/AdminTuningDesk aux messages privés d'autrui est désactivé par défaut.
+    // Ne pas autoriser sans décision explicite du propriétaire.
+    if (!isSender && !isRecipient) {
       return next(
         new ErrorResponse('غير مصرح لك بحذف هذه الرسالة', 403)
       );
@@ -232,14 +232,11 @@ exports.markAsRead = async (req, res, next) => {
       r => r.user && r.user.toString() === userId.toString()
     );
     
-    const hasAdminAccess = ['Admin', 'AdminTuningDesk'].includes(req.user.role);
-    
+    // TODO (DÉCISION PROPRIÉTAIRE): L'accès Admin/AdminTuningDesk aux messages privés d'autrui est désactivé par défaut.
+    // Ne pas autoriser sans décision explicite du propriétaire.
     if (recipient) {
       recipient.read = true;
       recipient.readAt = new Date();
-      await message.save();
-    } else if (hasAdminAccess) {
-      // Admin preview
       await message.save();
     } else {
       return next(

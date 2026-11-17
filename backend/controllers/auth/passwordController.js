@@ -8,21 +8,27 @@ const { sendTokenResponse } = require('./utils');
 // @access  Private
 exports.updatePassword = async (req, res, next) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword } = req.body || {};
+
+    // Require currentPassword explicitly
+    if (typeof currentPassword !== 'string' || currentPassword.length === 0) {
+      return next(new ErrorResponse('Current password is required', 400));
+    }
 
     // Validate new password
-    if (!newPassword || newPassword.length < 8) {
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
       return next(new ErrorResponse('Password must be at least 8 characters', 400));
     }
 
     const user = await User.findById(req.user.id).select('+password');
+    if (!user) {
+      return next(new ErrorResponse('User not found', 404));
+    }
 
-    // Check current password
-    if (currentPassword) {
-      const isMatch = await user.matchPassword(currentPassword);
-      if (!isMatch) {
-        return next(new ErrorResponse('Current password is incorrect', 401));
-      }
+    // Always verify current password
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return next(new ErrorResponse('Current password is incorrect', 401));
     }
 
     user.password = newPassword;
@@ -39,9 +45,9 @@ exports.updatePassword = async (req, res, next) => {
 // @access  Private/Admin/AdminDepartment
 exports.updateUserPassword = async (req, res, next) => {
   try {
-    const { newPassword } = req.body;
+    const { newPassword } = req.body || {};
     
-    if (!newPassword || newPassword.length < 8) {
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
       return next(new ErrorResponse('Password must be at least 8 characters', 400));
     }
 
@@ -53,8 +59,17 @@ exports.updateUserPassword = async (req, res, next) => {
 
     // Authorization check
     if (req.user.role === 'AdminDepartment') {
-      const userDeptIds = user.departments.map(dept => dept._id.toString());
-      const hasAccess = userDeptIds.includes(req.user.activeDepartment._id.toString());
+      const activeDeptId = req.user.activeDepartment
+        ? (req.user.activeDepartment._id || req.user.activeDepartment).toString()
+        : null;
+      if (!activeDeptId) {
+        return next(new ErrorResponse('No active department selected', 403));
+      }
+
+      const userDeptIds = (user.departments || []).map(dept =>
+        (dept && dept._id ? dept._id : dept).toString()
+      );
+      const hasAccess = userDeptIds.includes(activeDeptId);
       
       if (!hasAccess) {
         return next(new ErrorResponse('Not authorized to update this user password', 403));

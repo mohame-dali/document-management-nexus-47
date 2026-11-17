@@ -144,7 +144,13 @@ exports.createStage = async (req, res, next) => {
     } = req.body;
 
     // Validation des champs requis
-    if (!personnelId || !lieuStage || !sujetStage || !dateDebut || !dateFin) {
+    if (
+      !personnelId ||
+      typeof lieuStage !== 'string' || !lieuStage.trim() ||
+      typeof sujetStage !== 'string' || !sujetStage.trim() ||
+      !dateDebut ||
+      !dateFin
+    ) {
       return res.status(400).json({
         success: false,
         message: 'Les champs personnelId, lieuStage, sujetStage, dateDebut et dateFin sont obligatoires'
@@ -165,20 +171,20 @@ exports.createStage = async (req, res, next) => {
       sessionFormationId: sessionFormationId && mongoose.Types.ObjectId.isValid(sessionFormationId) ? sessionFormationId : null,
       sourceDocumentId: sourceDocumentId && mongoose.Types.ObjectId.isValid(sourceDocumentId) ? sourceDocumentId : null,
       localisation: loc,
-      pays: pays !== undefined ? pays.trim() : (loc === 'tunisie' ? 'تونس' : ''),
+      pays: typeof pays === 'string' ? pays.trim() : (loc === 'tunisie' ? 'تونس' : ''),
       lieuStage: lieuStage.trim(),
       sujetStage: sujetStage.trim(),
       typeFormationId: typeFormationId && mongoose.Types.ObjectId.isValid(typeFormationId) ? typeFormationId : null,
       ecoleId: ecoleId && mongoose.Types.ObjectId.isValid(ecoleId) ? ecoleId : null,
       dateDebut: new Date(dateDebut),
       dateFin: new Date(dateFin),
-      numeroRoute: numeroRoute !== undefined ? numeroRoute.trim() : '',
-      numeroStage: numeroStage !== undefined ? numeroStage.trim() : '',
+      numeroRoute: typeof numeroRoute === 'string' ? numeroRoute.trim() : '',
+      numeroStage: typeof numeroStage === 'string' ? numeroStage.trim() : '',
       statut: statut || 'acheve',
-      resultat: resultat !== undefined ? resultat : '',
-      mention: mention !== undefined ? mention.trim() : '',
+      resultat: typeof resultat === 'string' ? resultat : '',
+      mention: typeof mention === 'string' ? mention.trim() : '',
       documents: Array.isArray(documents) ? documents : [],
-      observations: observations !== undefined ? observations.trim() : '',
+      observations: typeof observations === 'string' ? observations.trim() : '',
       createdBy: req.user ? req.user._id : null,
       updatedBy: req.user ? req.user._id : null
     };
@@ -223,17 +229,58 @@ exports.updateStage = async (req, res, next) => {
     }
 
     const updateData = {
-      ...req.body,
       updatedBy: req.user ? req.user._id : null
     };
 
-    // Protection des champs système
-    delete updateData.isDeleted;
-    delete updateData.createdBy;
+    if (req.body.personnelId !== undefined) {
+      if (!mongoose.Types.ObjectId.isValid(req.body.personnelId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Identifiant personnel invalide'
+        });
+      }
+      updateData.personnelId = req.body.personnelId;
+    }
+
+    const optionalObjectIdFields = ['sessionFormationId', 'sourceDocumentId', 'typeFormationId', 'ecoleId'];
+    for (const field of optionalObjectIdFields) {
+      if (req.body[field] !== undefined) {
+        if (!req.body[field]) {
+          updateData[field] = null;
+        } else if (!mongoose.Types.ObjectId.isValid(req.body[field])) {
+          return res.status(400).json({
+            success: false,
+            message: `Identifiant ${field} invalide`
+          });
+        } else {
+          updateData[field] = req.body[field];
+        }
+      }
+    }
+
+    const trimmedStringFields = ['pays', 'lieuStage', 'sujetStage', 'numeroRoute', 'numeroStage', 'mention', 'observations'];
+    for (const field of trimmedStringFields) {
+      if (typeof req.body[field] === 'string') {
+        updateData[field] = req.body[field].trim();
+      }
+    }
+
+    if (typeof req.body.localisation === 'string') {
+      updateData.localisation = req.body.localisation;
+    }
+    if (typeof req.body.statut === 'string') {
+      updateData.statut = req.body.statut;
+    }
+    if (typeof req.body.resultat === 'string') {
+      updateData.resultat = req.body.resultat;
+    }
+    if (Array.isArray(req.body.documents)) {
+      updateData.documents = req.body.documents;
+    }
 
     // Normalisation des dates si présentes
-    if (updateData.dateDebut) updateData.dateDebut = new Date(updateData.dateDebut);
-    if (updateData.dateFin) updateData.dateFin = new Date(updateData.dateFin);
+    if (req.body.dateDebut) updateData.dateDebut = new Date(req.body.dateDebut);
+    if (req.body.dateFin) updateData.dateFin = new Date(req.body.dateFin);
 
     const updatedStage = await RHStage.findByIdAndUpdate(
       id,
