@@ -428,6 +428,7 @@
   "documents.personnel.toast.deleteError": "فشل في إلغاء ربط الموظف",
   "documents.personnel.toast.editSuccess": "تم تعديل بيانات الربط بنجاح",
   "documents.personnel.toast.editError": "فشل في تعديل بيانات الربط",
+  "documents.personnel.errors.forbidden": "غير مصرح لك بربط أو تعديل ارتباط الموظفين بهذه الوثيقة.",
   "documents.personnel.title": "الموظفون المرتبطون بهذه الوثيقة",
   "documents.personnel.subtitle": "ملفات الموارد البشرية ذات الصلة بهذه المراسلة (شواهد، تكوينات، قرارات)",
   "documents.personnel.addBtn": "ربط موظف",

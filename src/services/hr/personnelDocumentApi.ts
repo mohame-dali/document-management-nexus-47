@@ -22,14 +22,46 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  if (isAxiosError(error) && error.response?.data?.message) {
-    return String(error.response.data.message);
+export class PersonnelDocumentApiError extends Error {
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'PersonnelDocumentApiError';
+    this.status = status;
+  }
+}
+
+export const isForbiddenError = (error: unknown): boolean => {
+  if (error instanceof PersonnelDocumentApiError) {
+    return error.status === 403;
+  }
+  if (isAxiosError(error)) {
+    return error.response?.status === 403;
+  }
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    return (error as { status?: unknown }).status === 403;
+  }
+  return false;
+};
+
+const toApiError = (error: unknown, defaultMessage: string): PersonnelDocumentApiError => {
+  if (isAxiosError(error)) {
+    const status = error.response?.status;
+    const serverMsg = error.response?.data?.message;
+    const message =
+      typeof serverMsg === 'string' && serverMsg.trim()
+        ? serverMsg
+        : defaultMessage;
+    return new PersonnelDocumentApiError(message, status);
+  }
+  if (error instanceof PersonnelDocumentApiError) {
+    return error;
   }
   if (error instanceof Error) {
-    return error.message;
+    return new PersonnelDocumentApiError(error.message || defaultMessage);
   }
-  return defaultMessage;
+  return new PersonnelDocumentApiError(defaultMessage);
 };
 
 // 1. Associer un document à une fiche de personnel
@@ -42,7 +74,7 @@ export const associerDocument = async (
     return response.data.data;
   } catch (error: unknown) {
     console.error('Error associating document to personnel:', error);
-    throw new Error(getErrorMessage(error, 'فشل في ربط الوثيقة بالموظف'));
+    throw toApiError(error, 'فشل في ربط الوثيقة بالموظف');
   }
 };
 
@@ -55,7 +87,7 @@ export const getDocumentsDuPersonnel = async (
     return response.data.data || [];
   } catch (error: unknown) {
     console.error('Error fetching personnel documents:', error);
-    throw new Error(getErrorMessage(error, 'فشل في تحميل وثائق الموظف'));
+    throw toApiError(error, 'فشل في تحميل وثائق الموظف');
   }
 };
 
@@ -69,7 +101,7 @@ export const getPersonnelDuDocument = async (
     return response.data.data || [];
   } catch (error: unknown) {
     console.error('Error fetching document personnel associations:', error);
-    throw new Error(getErrorMessage(error, 'فشل في تحميل الموظفين المرتبطين بالوثيقة'));
+    throw toApiError(error, 'فشل في تحميل الموظفين المرتبطين بالوثيقة');
   }
 };
 
@@ -83,7 +115,7 @@ export const updateAssociation = async (
     return response.data.data;
   } catch (error: unknown) {
     console.error('Error updating association:', error);
-    throw new Error(getErrorMessage(error, 'فشل في تحديث بيانات الربط'));
+    throw toApiError(error, 'فشل في تحديث بيانات الربط');
   }
 };
 
@@ -96,7 +128,7 @@ export const deleteAssociation = async (
     return response.data;
   } catch (error: unknown) {
     console.error('Error deleting association:', error);
-    throw new Error(getErrorMessage(error, 'فشل في إلغاء ربط الوثيقة'));
+    throw toApiError(error, 'فشل في إلغاء ربط الوثيقة');
   }
 };
 
@@ -118,6 +150,6 @@ export const getMyDocuments = async (): Promise<PersonnelDocument[]> => {
     return response.data.data || [];
   } catch (error: unknown) {
     console.error('Error fetching my documents:', error);
-    throw new Error(getErrorMessage(error, 'فشل في تحميل وثائق حسابك'));
+    throw toApiError(error, 'فشل في تحميل وثائق حسابك');
   }
 };

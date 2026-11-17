@@ -971,6 +971,7 @@ const ViewIncomingDocument: React.FC = () => {
         <PersonnelAssociatedToDocument
           documentType="IncomingDocument"
           documentId={document._id}
+          document={document}
         />
       )}
 

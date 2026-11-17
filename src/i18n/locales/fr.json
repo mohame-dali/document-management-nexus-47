@@ -428,6 +428,7 @@
   "documents.personnel.toast.deleteError": "Échec de l'annulation de l'association",
   "documents.personnel.toast.editSuccess": "Données de l'association modifiées avec succès",
   "documents.personnel.toast.editError": "Échec de la modification de l'association",
+  "documents.personnel.errors.forbidden": "Vous n'avez pas l'autorisation d'associer ou de gérer les employés liés à ce document.",
   "documents.personnel.title": "Employés associés à ce document",
   "documents.personnel.subtitle": "Dossiers RH liés à ce courrier (attestations, formations, décisions)",
   "documents.personnel.addBtn": "Associer un employé",

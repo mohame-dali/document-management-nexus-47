@@ -1218,6 +1218,7 @@ const ViewOutgoingDocument: React.FC = () => {
         <PersonnelAssociatedToDocument
           documentType="OutgoingDocument"
           documentId={document._id}
+          document={document}
         />
       )}
 
