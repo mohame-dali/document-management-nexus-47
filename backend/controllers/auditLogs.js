@@ -126,10 +126,9 @@ const exportAuditLogs = asyncHandler(async (req, res) => {
   if (entityType) filter.entityType = entityType;
 
   try {
-    // Get all matching audit logs (capped to 100 for safety)
+    // Get all matching audit logs for complete CSV/PDF export
     const auditLogs = await AuditLog.find(filter)
       .sort({ createdAt: -1 })
-      .limit(100)
       .populate('userId', 'username role')
       .lean();
 

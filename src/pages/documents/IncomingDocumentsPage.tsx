@@ -118,12 +118,16 @@ const IncomingDocumentsPage: React.FC = () => {
   const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('incomingDocs_sortDirection', 'desc');
 
   const handleTableSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
+    const nextDirection: 'asc' | 'desc' =
+      sortField === field ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'asc';
+    setSortField(field);
+    setSortDirection(nextDirection);
+    if (field === 'serialNumber') {
+      setSortBy(nextDirection === 'asc' ? 'serial-asc' : 'serial-desc');
+    } else if (field === 'arrivalDate') {
+      setSortBy(nextDirection === 'asc' ? 'oldest-arrival' : 'newest-arrival');
     }
+    setCurrentPage(1);
   };
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -194,7 +198,7 @@ const IncomingDocumentsPage: React.FC = () => {
     enabled: true,
   });
 
-  // Server-paginated documents query
+  // Server-paginated, server-filtered & server-sorted documents query
   const {
     data: docsResponse,
     isLoading,
@@ -202,11 +206,28 @@ const IncomingDocumentsPage: React.FC = () => {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ['incomingDocuments', selectedYear, selectedDepartment, selectedSource, currentPage, pageSize, debouncedSearch],
+    queryKey: [
+      'incomingDocuments',
+      selectedYear,
+      selectedDepartment,
+      selectedSource,
+      statusFilter,
+      sortBy,
+      sortField,
+      sortDirection,
+      currentPage,
+      pageSize,
+      debouncedSearch,
+    ],
     queryFn: () => getIncomingDocuments({
       year: selectedYear,
       department: selectedDepartment === 'all' ? undefined : selectedDepartment,
       source: selectedSource === 'all_sources' ? undefined : selectedSource,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      urgency: statusFilter === 'urgent' ? 'true' : undefined,
+      sortBy,
+      sortField,
+      sortDirection,
       page: currentPage,
       limit: pageSize,
       q: debouncedSearch,
@@ -233,62 +254,9 @@ const IncomingDocumentsPage: React.FC = () => {
     },
   });
 
-  // Filter documents on current page (status filter)
-  const filteredDocuments = useMemo(() => {
-    return (documents as IncomingDocument[]).filter((doc: IncomingDocument) => {
-      // Status filter
-      if (statusFilter === 'pending' && hasActiveAnswer(doc)) return false;
-      if (statusFilter === 'answered' && !hasActiveAnswer(doc)) return false;
-      if (statusFilter === 'urgent') {
-        const urgency = getActivityUrgency(doc);
-        if (!urgency || (urgency.type !== 'overdue' && urgency.type !== 'today' && urgency.type !== 'tomorrow')) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [documents, statusFilter]);
-
-  // Sort documents on current page
-  const sortedDocuments = useMemo(() => {
-    return [...filteredDocuments].sort((a, b) => {
-      let valA: string | number = '';
-      let valB: string | number = '';
-
-      if (sortField === 'serialNumber') {
-        valA = Number(a.serialNumber) || 0;
-        valB = Number(b.serialNumber) || 0;
-      } else if (sortField === 'arrivalDate') {
-        valA = a.arrivalDate ? new Date(a.arrivalDate).getTime() : 0;
-        valB = b.arrivalDate ? new Date(b.arrivalDate).getTime() : 0;
-      } else if (sortField === 'subject') {
-        valA = (a.subject || '').toLowerCase();
-        valB = (b.subject || '').toLowerCase();
-      } else if (sortField === 'status') {
-        valA = hasActiveAnswer(a) ? 1 : 0;
-        valB = hasActiveAnswer(b) ? 1 : 0;
-      } else {
-        if (sortBy === 'newest-arrival') {
-          return new Date(b.arrivalDate || 0).getTime() - new Date(a.arrivalDate || 0).getTime();
-        }
-        if (sortBy === 'oldest-arrival') {
-          return new Date(a.arrivalDate || 0).getTime() - new Date(b.arrivalDate || 0).getTime();
-        }
-        if (sortBy === 'serial-desc') {
-          return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
-        }
-        if (sortBy === 'serial-asc') {
-          return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
-        }
-        return 0;
-      }
-
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [filteredDocuments, sortField, sortDirection, sortBy]);
+  // Documents are already filtered, sorted and paginated server-side across all pages
+  const filteredDocuments = documents as IncomingDocument[];
+  const sortedDocuments = filteredDocuments;
 
   // Pagination calculation
   const totalFiltered = totalCount;
@@ -306,6 +274,8 @@ const IncomingDocumentsPage: React.FC = () => {
     setSelectedSource('all_sources');
     setStatusFilter('all');
     setSortBy('newest-arrival');
+    setSortField('arrivalDate');
+    setSortDirection('desc');
     setCurrentPage(1);
   };
 
@@ -766,7 +736,26 @@ const IncomingDocumentsPage: React.FC = () => {
                 <ArrowUpDown className="h-4 w-4 text-[#2c5282]" />
                 {t('incoming.sort.label')}
               </span>
-              <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
+              <Select
+                value={sortBy}
+                onValueChange={(val) => {
+                  setSortBy(val);
+                  if (val === 'newest-arrival') {
+                    setSortField('arrivalDate');
+                    setSortDirection('desc');
+                  } else if (val === 'oldest-arrival') {
+                    setSortField('arrivalDate');
+                    setSortDirection('asc');
+                  } else if (val === 'serial-desc') {
+                    setSortField('serialNumber');
+                    setSortDirection('desc');
+                  } else if (val === 'serial-asc') {
+                    setSortField('serialNumber');
+                    setSortDirection('asc');
+                  }
+                  setCurrentPage(1);
+                }}
+              >
                 <SelectTrigger className="h-9 min-w-[170px] text-sm text-start border-[#cbd5e1] rounded bg-white">
                   <SelectValue />
                 </SelectTrigger>

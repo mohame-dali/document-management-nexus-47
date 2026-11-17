@@ -120,12 +120,16 @@ const OutgoingDocumentsPage: React.FC = () => {
   const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('outgoingDocs_sortDirection', 'desc');
 
   const handleTableSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
+    const nextDirection: 'asc' | 'desc' =
+      sortField === field ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'asc';
+    setSortField(field);
+    setSortDirection(nextDirection);
+    if (field === 'serialNumber') {
+      setSortBy(nextDirection === 'asc' ? 'serial-asc' : 'serial-desc');
+    } else if (field === 'issueDate') {
+      setSortBy(nextDirection === 'asc' ? 'oldest-issue' : 'newest-issue');
     }
+    setCurrentPage(1);
   };
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -170,7 +174,7 @@ const OutgoingDocumentsPage: React.FC = () => {
     enabled: true,
   });
 
-  // Server-paginated documents query
+  // Server-paginated, server-filtered & server-sorted documents query
   const {
     data: docsResponse,
     isLoading,
@@ -178,10 +182,27 @@ const OutgoingDocumentsPage: React.FC = () => {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ['outgoingDocuments', selectedYear, selectedDepartment, currentPage, pageSize, debouncedSearch],
+    queryKey: [
+      'outgoingDocuments',
+      selectedYear,
+      selectedDepartment,
+      selectedType,
+      folderFilter,
+      sortBy,
+      sortField,
+      sortDirection,
+      currentPage,
+      pageSize,
+      debouncedSearch,
+    ],
     queryFn: () => getOutgoingDocuments({
       year: selectedYear,
       department: selectedDepartment === 'all' ? undefined : selectedDepartment,
+      typeDocument: selectedType === 'all_types' ? undefined : selectedType,
+      folderFilter: folderFilter === 'all' ? undefined : folderFilter,
+      sortBy,
+      sortField,
+      sortDirection,
       page: currentPage,
       limit: pageSize,
       q: debouncedSearch,
@@ -217,63 +238,9 @@ const OutgoingDocumentsPage: React.FC = () => {
     },
   });
 
-  // Filter documents on current page
-  const filteredDocuments = useMemo(() => {
-    return (documents as OutgoingDocument[]).filter((doc: OutgoingDocument) => {
-      // Document Type filter
-      if (selectedType !== 'all_types') {
-        if (doc.typeDocument !== selectedType) {
-          return false;
-        }
-      }
-
-      // Folder / Categorization filter
-      if (folderFilter === 'categorized' && !doc.folder) return false;
-      if (folderFilter === 'uncategorized' && doc.folder) return false;
-
-      return true;
-    });
-  }, [documents, selectedType, folderFilter]);
-
-  // Sort documents on current page
-  const sortedDocuments = useMemo(() => {
-    return [...filteredDocuments].sort((a, b) => {
-      let valA: string | number = '';
-      let valB: string | number = '';
-
-      if (sortField === 'serialNumber') {
-        valA = Number(a.serialNumber) || 0;
-        valB = Number(b.serialNumber) || 0;
-      } else if (sortField === 'issueDate') {
-        valA = a.issueDate ? new Date(a.issueDate).getTime() : 0;
-        valB = b.issueDate ? new Date(b.issueDate).getTime() : 0;
-      } else if (sortField === 'subject') {
-        valA = (a.subject || '').toLowerCase();
-        valB = (b.subject || '').toLowerCase();
-      } else if (sortField === 'status') {
-        valA = (a.folder || a.status || '').toLowerCase();
-        valB = (b.folder || b.status || '').toLowerCase();
-      } else {
-        if (sortBy === 'newest-issue') {
-          return new Date(b.issueDate || 0).getTime() - new Date(a.issueDate || 0).getTime();
-        }
-        if (sortBy === 'oldest-issue') {
-          return new Date(a.issueDate || 0).getTime() - new Date(b.issueDate || 0).getTime();
-        }
-        if (sortBy === 'serial-desc') {
-          return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
-        }
-        if (sortBy === 'serial-asc') {
-          return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
-        }
-        return 0;
-      }
-
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [filteredDocuments, sortField, sortDirection, sortBy]);
+  // Documents are already filtered, sorted and paginated server-side across all pages
+  const filteredDocuments = documents as OutgoingDocument[];
+  const sortedDocuments = filteredDocuments;
 
   // Pagination calculation
   const totalFiltered = totalCount;
@@ -291,6 +258,8 @@ const OutgoingDocumentsPage: React.FC = () => {
     setSelectedType('all_types');
     setFolderFilter('all');
     setSortBy('newest-issue');
+    setSortField('issueDate');
+    setSortDirection('desc');
     setCurrentPage(1);
   };
 
@@ -634,6 +603,19 @@ const OutgoingDocumentsPage: React.FC = () => {
                 value={sortBy}
                 onValueChange={(val) => {
                   setSortBy(val);
+                  if (val === 'newest-issue') {
+                    setSortField('issueDate');
+                    setSortDirection('desc');
+                  } else if (val === 'oldest-issue') {
+                    setSortField('issueDate');
+                    setSortDirection('asc');
+                  } else if (val === 'serial-desc') {
+                    setSortField('serialNumber');
+                    setSortDirection('desc');
+                  } else if (val === 'serial-asc') {
+                    setSortField('serialNumber');
+                    setSortDirection('asc');
+                  }
                   setCurrentPage(1);
                 }}
               >

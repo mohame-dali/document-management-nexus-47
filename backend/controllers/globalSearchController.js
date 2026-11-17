@@ -70,7 +70,7 @@ exports.globalSearch = async (req, res) => {
 
     // RBAC: Vérification du rôle et des départements
     const currentUser = req.user;
-    const isGlobalAdmin = currentUser && ['Admin', 'Director'].includes(currentUser.role);
+    const isGlobalAdmin = currentUser && ['Admin', 'Director', 'AdminTuningDesk'].includes(currentUser.role);
     const userDeptIds = resolveUserDepartmentIds(currentUser);
 
     // Si non-admin global et aucun département assigné : cloisonnement strict sans crasher
@@ -85,7 +85,8 @@ exports.globalSearch = async (req, res) => {
         isDeleted: { $ne: true },
         $or: [
           { subject: regex },
-          { correspondenceNumber: regex }
+          { correspondenceNumber: regex },
+          { ocrText: regex }
         ]
       };
       if (numVal !== null) {
@@ -106,7 +107,7 @@ exports.globalSearch = async (req, res) => {
     if (!hasDeptAccess) {
       outgoingPromise = Promise.resolve([]);
     } else {
-      const outgoingConditions = [{ subject: regex }, { assignedTo: regex }];
+      const outgoingConditions = [{ subject: regex }, { assignedTo: regex }, { ocrText: regex }];
       if (numVal !== null) {
         outgoingConditions.push({ serialNumber: numVal });
       }

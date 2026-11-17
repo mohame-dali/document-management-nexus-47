@@ -153,7 +153,7 @@ export const advancedSearchDocuments = async (filters: {
   }
 };
 
-// Incoming Documents API calls with pagination
+// Incoming Documents API calls with server-side filters, sort & pagination
 export const getIncomingDocuments = async (filters?: { 
   department?: string; 
   year?: string; 
@@ -161,6 +161,13 @@ export const getIncomingDocuments = async (filters?: {
   limit?: number; 
   q?: string;
   source?: string;
+  status?: string;
+  urgency?: boolean | string;
+  typeDocument?: string;
+  sortBy?: string;
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
+  sort?: string;
 }): Promise<{
   data: IncomingDocument[];
   totalCount: number;
@@ -193,6 +200,34 @@ export const getIncomingDocuments = async (filters?: {
 
     if (filters?.source && filters.source !== 'all_sources') {
       params.append('source', filters.source);
+    }
+
+    if (filters?.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+
+    if (filters?.urgency !== undefined && filters.urgency !== '' && filters.urgency !== false) {
+      params.append('urgency', String(filters.urgency));
+    }
+
+    if (filters?.typeDocument && filters.typeDocument !== 'all_types') {
+      params.append('typeDocument', filters.typeDocument);
+    }
+
+    if (filters?.sortBy) {
+      params.append('sortBy', filters.sortBy);
+    }
+
+    if (filters?.sortField) {
+      params.append('sortField', filters.sortField);
+    }
+
+    if (filters?.sortDirection) {
+      params.append('sortDirection', filters.sortDirection);
+    }
+
+    if (filters?.sort) {
+      params.append('sort', filters.sort);
     }
     
     const url = `/incoming-documents?${params.toString()}`;
@@ -297,13 +332,19 @@ export const assignIncomingToFolder = async (documentId: string, folderId: strin
   }
 };
 
-// Outgoing Documents API calls with pagination
+// Outgoing Documents API calls with server-side filters, sort & pagination
 export const getOutgoingDocuments = async (filters?: { 
   department?: string; 
   year?: string; 
   page?: number; 
   limit?: number; 
   q?: string;
+  typeDocument?: string;
+  folderFilter?: string;
+  sortBy?: string;
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
+  sort?: string;
 }): Promise<{
   data: OutgoingDocument[];
   totalCount: number;
@@ -332,6 +373,30 @@ export const getOutgoingDocuments = async (filters?: {
 
     if (filters?.q && filters.q.trim()) {
       params.append('q', filters.q.trim());
+    }
+
+    if (filters?.typeDocument && filters.typeDocument !== 'all_types') {
+      params.append('typeDocument', filters.typeDocument);
+    }
+
+    if (filters?.folderFilter && filters.folderFilter !== 'all') {
+      params.append('folderFilter', filters.folderFilter);
+    }
+
+    if (filters?.sortBy) {
+      params.append('sortBy', filters.sortBy);
+    }
+
+    if (filters?.sortField) {
+      params.append('sortField', filters.sortField);
+    }
+
+    if (filters?.sortDirection) {
+      params.append('sortDirection', filters.sortDirection);
+    }
+
+    if (filters?.sort) {
+      params.append('sort', filters.sort);
     }
     
     const url = `/outgoing-documents?${params.toString()}`;
