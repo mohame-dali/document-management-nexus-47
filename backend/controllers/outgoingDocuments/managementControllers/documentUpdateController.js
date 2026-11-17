@@ -212,12 +212,16 @@ exports.updateOutgoingDocument = async (req, res, next) => {
       
       let documentPath = null;
       let docOcrText = null;
+      let docOcrStatus = null;
+      let docOcrError = null;
+      const scanId = req.body.scanId ? String(req.body.scanId).trim() : '';
       
       if (req.file) {
         // Handle file upload
         const result = await handleUploadedFile(req.file, docSerialNumber, finalFolderPath, 'outgoing');
         documentPath = result.finalDocumentPath;
         docOcrText = result.ocrText;
+        docOcrStatus = docOcrText ? 'completed' : null;
       } else if (scannedDocumentPath) {
         // Handle scanned document
         const result = await handleScannedDocument(
@@ -226,16 +230,23 @@ exports.updateOutgoingDocument = async (req, res, next) => {
           finalFolderPath, 
           'outgoing', 
           scannedDocumentPath, 
-          ocrText
+          ocrText,
+          { scanId }
         );
         documentPath = result.finalDocumentPath;
         docOcrText = result.ocrText || ocrText;
+        docOcrStatus = result.ocrStatus || (docOcrText ? 'completed' : null);
+        docOcrError = result.ocrError || null;
       }
       
       if (documentPath) {
         updateData.scannedDocument = documentPath;
         if (docOcrText) {
           updateData.ocrText = docOcrText;
+        }
+        if (docOcrStatus) {
+          updateData.ocrStatus = docOcrStatus;
+          updateData.ocrError = docOcrError;
         }
       }
     }
@@ -248,6 +259,30 @@ exports.updateOutgoingDocument = async (req, res, next) => {
     ).populate('folder')
       .populate('reference')
       .populate('createdBy', 'username');
+
+    // ASYNC OCR FIX: Link updated document to background OCR job if still running
+    const updateScanId = req.body.scanId ? String(req.body.scanId).trim() : '';
+    if (updateScanId) {
+      const scannerService = require('../../../utils/scanner');
+      const statusManager = scannerService.getStatusManager();
+      const job = statusManager.getJob(updateScanId);
+      if (job) {
+        if (job.ocrStatus === 'completed' && !updateData.ocrText && job.ocrText) {
+          document = await OutgoingDocument.findByIdAndUpdate(
+            document._id,
+            { ocrText: job.ocrText, ocrStatus: 'completed', ocrError: null },
+            { new: true }
+          ).populate('folder')
+            .populate('reference')
+            .populate('createdBy', 'username');
+        } else if (job.ocrInProgress || job.ocrStatus === 'processing') {
+          statusManager.attachDocumentToJob(updateScanId, {
+            targetDocumentId: document._id,
+            targetDocumentType: 'outgoing',
+          });
+        }
+      }
+    }
     
     // Update the incoming document references if needed
     if (referenceId !== undefined) {

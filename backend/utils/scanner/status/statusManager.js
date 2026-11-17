@@ -68,6 +68,16 @@ class StatusManager {
       jobTempDir: null,
       abortController: new AbortController(),
       cancelled: false,
+      // ASYNC OCR FIX: Separate non-blocking OCR status and document linkage from physical scan stage
+      ocrStatus: 'pending',
+      ocrText: '',
+      ocrError: null,
+      ocrInProgress: false,
+      ocrLanguages: null,
+      targetDocumentId: null,
+      targetDocumentType: null,
+      finalFilePath: null,
+      pendingTempCleanupPath: null,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -80,6 +90,23 @@ class StatusManager {
     return this.jobs.get(scanId) || null;
   }
 
+  // ASYNC OCR FIX: Link a newly created/updated MongoDB document so background OCR updates it when done
+  attachDocumentToJob(scanId, { targetDocumentId, targetDocumentType, finalFilePath = null } = {}) {
+    const job = this.jobs.get(scanId);
+    if (!job) return null;
+    if (targetDocumentId) {
+      job.targetDocumentId = String(targetDocumentId);
+    }
+    if (targetDocumentType) {
+      job.targetDocumentType = targetDocumentType;
+    }
+    if (finalFilePath) {
+      job.finalFilePath = finalFilePath;
+    }
+    job.updatedAt = Date.now();
+    return job;
+  }
+
   getJobStatusForUser(scanId, userId) {
     const job = this.jobs.get(scanId);
     if (!job) return { notFound: true };
@@ -90,6 +117,8 @@ class StatusManager {
       stage: job.stage,
       page: job.page,
       availablePages: job.availablePages || 0,
+      // ASYNC OCR FIX: Expose non-blocking OCR state alongside physical scan stage
+      ocrStatus: job.ocrStatus || 'pending',
     };
     if (job.code) {
       payload.code = job.code;
@@ -135,6 +164,11 @@ class StatusManager {
     job.stage = 'error';
     job.code = 'SCAN_CANCELLED';
     job.errorMessage = 'Numérisation annulée par l’utilisateur';
+    // ASYNC OCR FIX: Reflect cancellation on OCR state as well
+    if (job.ocrInProgress || job.ocrStatus === 'processing') {
+      job.ocrStatus = 'failed';
+      job.ocrError = 'Numérisation annulée par l’utilisateur';
+    }
     job.updatedAt = Date.now();
 
     if (job.abortController && !job.abortController.signal.aborted) {
@@ -160,12 +194,18 @@ class StatusManager {
       job.jobTempDir = null;
     }
     if (job.stage !== 'done' && job.filePath && fs.existsSync(job.filePath)) {
-      try {
-        fs.unlinkSync(job.filePath);
-      } catch (err) {
-        console.warn(`[Scanner] Failed cleaning output file ${job.filePath}:`, err.message);
+      if (job.ocrInProgress) {
+        // ASYNC OCR FIX: Defer temp deletion until background OCR worker finishes reading it
+        job.pendingTempCleanupPath = job.filePath;
+        job.filePath = null;
+      } else {
+        try {
+          fs.unlinkSync(job.filePath);
+        } catch (err) {
+          console.warn(`[Scanner] Failed cleaning output file ${job.filePath}:`, err.message);
+        }
+        job.filePath = null;
       }
-      job.filePath = null;
     }
   }
 
@@ -180,11 +220,20 @@ class StatusManager {
       } catch (_) {}
       job.jobTempDir = null;
     }
+    if (job.ocrInProgress && job.abortController && !job.abortController.signal.aborted) {
+      // ASYNC OCR FIX: Abort in-flight OCR when user explicitly discards the scan
+      job.cancelled = true;
+      job.abortController.abort();
+    }
     if (job.filePath && fs.existsSync(job.filePath)) {
-      try {
-        fs.unlinkSync(job.filePath);
-      } catch (err) {
-        console.warn(`[Scanner] Failed deleting scan file ${job.filePath}:`, err.message);
+      if (job.ocrInProgress) {
+        job.pendingTempCleanupPath = job.filePath;
+      } else {
+        try {
+          fs.unlinkSync(job.filePath);
+        } catch (err) {
+          console.warn(`[Scanner] Failed deleting scan file ${job.filePath}:`, err.message);
+        }
       }
       job.filePath = null;
     }

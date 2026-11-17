@@ -10,6 +10,7 @@ import { getErrorMessage } from '@/utils/errorMessages';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import {
   ScanStage,
+  OcrStatus,
   LiveThumbnail,
   createScanId,
   getScanJobStatus,
@@ -40,6 +41,7 @@ export interface ScanResultData {
   serialNumber?: number | string;
   year?: number | string;
   ocrText?: string;
+  ocrStatus?: OcrStatus;
   data?: unknown;
   [key: string]: unknown;
 }
@@ -443,8 +445,14 @@ export const useIncomingDocumentForm = (
         setScanPage(page);
         setScanProgress(getScanStageProgress(stage, page));
 
+        // ASYNC OCR FIX: Stop polling immediately once physical PDF is ready (do not wait on background OCR)
+        if (stage === 'done' || stage === 'error') {
+          stopPolling();
+          return;
+        }
+
         const availablePages = Number(jobStatus.availablePages || page || 0);
-        if (availablePages > 0 && stage !== 'done' && stage !== 'error') {
+        if (availablePages > 0) {
           for (let p = 1; p <= availablePages; p++) {
             if (fetchedThumbPagesRef.current.has(p)) continue;
             fetchedThumbPagesRef.current.add(p);

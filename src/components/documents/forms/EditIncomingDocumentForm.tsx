@@ -267,8 +267,14 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
         setScanPage(page);
         setScanProgress(getScanStageProgress(stage, page));
 
+        // ASYNC OCR FIX: Stop polling immediately once physical scan reaches done/error
+        if (stage === 'done' || stage === 'error') {
+          stopPolling();
+          return;
+        }
+
         const availablePages = Number(jobStatus.availablePages || page || 0);
-        if (availablePages > 0 && stage !== 'done' && stage !== 'error') {
+        if (availablePages > 0) {
           for (let p = 1; p <= availablePages; p++) {
             if (fetchedThumbPagesRef.current.has(p)) continue;
             fetchedThumbPagesRef.current.add(p);

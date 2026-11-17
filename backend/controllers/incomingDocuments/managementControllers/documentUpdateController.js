@@ -132,12 +132,16 @@ exports.updateIncomingDocument = async (req, res, next) => {
       
       let documentPath = null;
       let ocrText = null;
+      let ocrStatus = null;
+      let ocrError = null;
+      const scanId = req.body.scanId ? String(req.body.scanId).trim() : '';
       
       if (req.file) {
         // Handle file upload
         const result = await handleUploadedFile(req.file, serialNumber, finalFolderPath, 'incoming');
         documentPath = result.finalDocumentPath;
         ocrText = result.ocrText;
+        ocrStatus = ocrText ? 'completed' : null;
       } else if (req.body.scannedDocumentPath) {
         // Handle scanned document
         const result = await handleScannedDocument(
@@ -146,16 +150,23 @@ exports.updateIncomingDocument = async (req, res, next) => {
           finalFolderPath, 
           'incoming', 
           req.body.scannedDocumentPath, 
-          req.body.ocrText
+          req.body.ocrText,
+          { scanId }
         );
         documentPath = result.finalDocumentPath;
         ocrText = result.ocrText || req.body.ocrText;
+        ocrStatus = result.ocrStatus || (ocrText ? 'completed' : null);
+        ocrError = result.ocrError || null;
       }
       
       if (documentPath) {
         updateData.scannedDocument = documentPath;
         if (ocrText) {
           updateData.ocrText = ocrText;
+        }
+        if (ocrStatus) {
+          updateData.ocrStatus = ocrStatus;
+          updateData.ocrError = ocrError;
         }
       }
     }
@@ -169,6 +180,31 @@ exports.updateIncomingDocument = async (req, res, next) => {
       .populate('responsibleUser', 'username photo')
       .populate('answer')
       .populate('folder');
+
+    // ASYNC OCR FIX: Link updated document to background OCR job if still running
+    const updateScanId = req.body.scanId ? String(req.body.scanId).trim() : '';
+    if (updateScanId) {
+      const scannerService = require('../../../utils/scanner');
+      const statusManager = scannerService.getStatusManager();
+      const job = statusManager.getJob(updateScanId);
+      if (job) {
+        if (job.ocrStatus === 'completed' && !updateData.ocrText && job.ocrText) {
+          document = await IncomingDocument.findByIdAndUpdate(
+            document._id,
+            { ocrText: job.ocrText, ocrStatus: 'completed', ocrError: null },
+            { new: true }
+          ).populate('assignedTo.id')
+            .populate('responsibleUser', 'username photo')
+            .populate('answer')
+            .populate('folder');
+        } else if (job.ocrInProgress || job.ocrStatus === 'processing') {
+          statusManager.attachDocumentToJob(updateScanId, {
+            targetDocumentId: document._id,
+            targetDocumentType: 'incoming',
+          });
+        }
+      }
+    }
     
     // Handle activity notifications update
     if (updateData.activity !== undefined || updateData.dateActivity !== undefined) {

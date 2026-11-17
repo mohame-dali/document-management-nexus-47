@@ -30,6 +30,16 @@ const incomingDocumentSchema = new mongoose.Schema({
     required: false, 
     default: null 
   },
+  // ASYNC OCR FIX: Track background OCR lifecycle in MongoDB without blocking scan/save
+  ocrStatus: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'failed'],
+    default: null,
+  },
+  ocrError: {
+    type: String,
+    default: null,
+  },
   assignedTo: [{
     id: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
     name: { type: String }

@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const scannerService = require('../../utils/scanner');
-const { extractTextFromPDF } = require('../../utils/ocrProcessor');
 const { ScannerError, validateScanOptions } = require('../../utils/scanner/validation');
 
 function handleScannerControllerError(res, error, fallbackMessage = 'Erreur du service de numérisation.') {
@@ -65,6 +64,9 @@ exports.startScan = async (req, res) => {
       scanId,
     } = req.body || {};
 
+    const { languages } = req.body || {};
+    const { launchBackgroundOcr } = require('../../utils/scanIntegration');
+
     if (!['incoming', 'outgoing', 'temp'].includes(documentType)) {
       return res.status(400).json({
         success: false,
@@ -99,39 +101,17 @@ exports.startScan = async (req, res) => {
       throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
     }
 
-    let ocrText = '';
-    let ocrProcessed = false;
-
+    // ASYNC OCR FIX: Launch OCR in background without awaiting
+    let ocrStatus = 'completed';
     if (validated.format === 'pdf' && fs.existsSync(scanResult.filePath)) {
-      try {
-        ocrText =
-          (await extractTextFromPDF(scanResult.filePath, 'ara+fra+eng', {
-            signal: job?.abortController?.signal || null,
-          })) || '';
-        ocrProcessed = true;
-      } catch (ocrErr) {
-        if (
-          ocrErr?.name === 'AbortError' ||
-          job?.cancelled ||
-          job?.abortController?.signal?.aborted
-        ) {
-          if (scanResult.filePath && fs.existsSync(scanResult.filePath)) {
-            try { fs.unlinkSync(scanResult.filePath); } catch (_) {}
-          }
-          throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
-        }
-        console.error('[Scanner] OCR processing error:', ocrErr.message);
-      }
+      launchBackgroundOcr({
+        scanId: scanResult.scanId,
+        filePath: scanResult.filePath,
+        documentType,
+        languages: typeof languages === 'string' ? languages.trim() : undefined,
+      });
+      ocrStatus = 'processing';
     }
-
-    if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
-      if (scanResult.filePath && fs.existsSync(scanResult.filePath)) {
-        try { fs.unlinkSync(scanResult.filePath); } catch (_) {}
-      }
-      throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
-    }
-
-    scannerService.getStatusManager().setOcrResult(ocrProcessed);
 
     return res.status(200).json({
       success: true,
@@ -143,8 +123,9 @@ exports.startScan = async (req, res) => {
         format: scanResult.format,
         pageCount: scanResult.pageCount || 1,
         documentType,
-        ocrText,
-        ocrProcessed,
+        ocrText: '',
+        ocrStatus,
+        ocrProcessed: false,
         scannedAt: new Date().toISOString(),
       },
     });

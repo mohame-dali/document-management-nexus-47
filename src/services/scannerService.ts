@@ -2,6 +2,9 @@ import api from './apiService';
 
 export type ScanStage = 'detecting' | 'preparing' | 'scanning' | 'processing' | 'done' | 'error';
 
+// ASYNC OCR FIX: Separate non-blocking OCR status type
+export type OcrStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
 export type ScannerErrorCode =
   | 'SCANNER_NOT_FOUND'
   | 'SCANNER_BUSY'
@@ -19,6 +22,7 @@ export interface ScannerConfig {
   documentSource?: 'Flatbed' | 'Feeder' | 'flatbed' | 'feeder';
   duplex?: boolean;
   scanId?: string;
+  languages?: string;
 }
 
 export interface ScannerDevice {
@@ -64,6 +68,7 @@ export interface ScanResult {
   pageCount?: number;
   pages?: number;
   ocrText?: string;
+  ocrStatus?: OcrStatus;
   createdAt?: string;
   [key: string]: unknown;
 }
@@ -77,6 +82,7 @@ export interface DocumentScanResult {
   year?: number;
   documentType?: string;
   ocrText?: string;
+  ocrStatus?: OcrStatus;
   format?: string;
   pageCount?: number;
   [key: string]: unknown;
@@ -87,6 +93,7 @@ export interface ScanJobStatus {
   stage: ScanStage;
   page: number;
   availablePages?: number;
+  ocrStatus?: OcrStatus;
   code?: ScannerErrorCode;
 }
 
@@ -353,6 +360,9 @@ export const scanDocument = async (options: {
   if (options.scanId) {
     requestData.scanId = options.scanId;
   }
+  if (options.config?.languages) {
+    requestData.languages = options.config.languages;
+  }
 
   const response = await api.post('/scan/document', requestData, {
     signal: options.signal,
@@ -368,6 +378,7 @@ export const scanTemporaryDocument = async (
     documentType?: string;
     temporary?: boolean;
     scanId?: string;
+    languages?: string;
     signal?: AbortSignal;
   }
 ): Promise<DocumentScanResult> => {
@@ -378,6 +389,9 @@ export const scanTemporaryDocument = async (
   };
   if (config?.scanId) {
     requestData.scanId = config.scanId;
+  }
+  if (config?.languages) {
+    requestData.languages = config.languages;
   }
 
   const response = await api.post('/scan/temp', requestData, {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -103,17 +103,31 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
   const cancelLabel = tr('scanner.actions.cancel', 'Annuler', 'إلغاء');
   const effectiveError = scanError || (typeof scannerStatus?.error === 'string' && scannerStatus.error.trim() ? scannerStatus.error : null);
 
+  // ASYNC OCR FIX: Guarantee cleanup of any component-scoped polling timer on unmount
+  const statusPollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (statusPollIntervalRef.current) {
+        clearInterval(statusPollIntervalRef.current);
+        statusPollIntervalRef.current = null;
+      }
+    };
+  }, []);
+
+  // ASYNC OCR FIX: As soon as physical PDF is ready (scanStage === 'done' or scan finished), show PREVIEW immediately without waiting on background OCR
+  const isPhysicalScanReady = Boolean(scanResult && (!scanning || scanStage === 'done'));
+
   // Determine the 4 explicit Dark Studio States:
   // State B: SCANNING
   // State C: ERROR
   // State D: PREVIEW
   // State A: IDLE
-  const currentState: 'SCANNING' | 'ERROR' | 'PREVIEW' | 'IDLE' = scanning
-    ? 'SCANNING'
-    : effectiveError
-      ? 'ERROR'
-      : scanResult
-        ? 'PREVIEW'
+  const currentState: 'SCANNING' | 'ERROR' | 'PREVIEW' | 'IDLE' = isPhysicalScanReady
+    ? 'PREVIEW'
+    : scanning
+      ? 'SCANNING'
+      : effectiveError
+        ? 'ERROR'
         : 'IDLE';
 
   const activeStageIndex = Math.max(

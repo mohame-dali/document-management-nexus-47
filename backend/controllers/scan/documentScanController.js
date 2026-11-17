@@ -39,7 +39,16 @@ function getAuthenticatedUserId(req) {
  */
 exports.scanForDocument = async (req, res) => {
   try {
-    const { documentType, year, format, resolution, colorMode, documentSource, scanId } = req.body || {};
+    const {
+      documentType,
+      year,
+      format,
+      resolution,
+      colorMode,
+      documentSource,
+      scanId,
+      languages, // ASYNC OCR FIX: Allow optional OCR language override
+    } = req.body || {};
 
     if (!documentType || (documentType !== 'incoming' && documentType !== 'outgoing')) {
       return res.status(400).json({
@@ -75,6 +84,7 @@ exports.scanForDocument = async (req, res) => {
       colorMode: validated.colorMode,
       documentSource: validated.documentSource,
       scanId: validated.scanId || undefined,
+      languages: typeof languages === 'string' ? languages.trim() : undefined,
     });
 
     if (!scanResult.success) {
@@ -93,7 +103,9 @@ exports.scanForDocument = async (req, res) => {
         serialNumber: scanResult.serialNumber,
         year: scanResult.year,
         documentType,
-        ocrText: scanResult.ocrText,
+        ocrText: scanResult.ocrText || '',
+        // ASYNC OCR FIX: Expose non-blocking OCR status immediately after file creation
+        ocrStatus: scanResult.ocrStatus || 'completed',
         format: scanResult.format,
         pageCount: scanResult.pageCount || 1,
       },
@@ -104,7 +116,7 @@ exports.scanForDocument = async (req, res) => {
 };
 
 /**
- * @desc    Scan a temporary document and return scanId + protected file endpoint
+ * @desc    Scan a temporary document and return scanId + protected file endpoint immediately (OCR runs asynchronously)
  * @route   POST /api/scan/temp
  * @access  Private/Admin/AdminTuningDesk
  */
@@ -117,6 +129,7 @@ exports.scanTemporaryDocument = async (req, res) => {
       documentSource,
       scanId,
       documentType,
+      languages, // ASYNC OCR FIX: Optional OCR languages override (defaults to 'ara' for incoming)
     } = req.body || {};
 
     if (documentType && !['incoming', 'outgoing', 'temp'].includes(documentType)) {
@@ -148,6 +161,7 @@ exports.scanTemporaryDocument = async (req, res) => {
 
     let scanResult;
     try {
+      // ASYNC OCR FIX: Resolves immediately once physical PDF/image file is saved; Tesseract OCR runs in background
       scanResult = await scanIntegration.scanDocument({
         documentType: documentType || 'temp',
         format: validated.format,
@@ -156,6 +170,7 @@ exports.scanTemporaryDocument = async (req, res) => {
         documentSource: validated.documentSource,
         scanId: validated.scanId || undefined,
         userId,
+        languages: typeof languages === 'string' ? languages.trim() : undefined,
       });
     } finally {
       res.removeListener('close', onClose);
@@ -169,6 +184,7 @@ exports.scanTemporaryDocument = async (req, res) => {
       });
     }
 
+    // ASYNC OCR FIX: Return HTTP 200 immediately so user can preview PDF and save document without waiting on OCR
     return res.status(200).json({
       success: true,
       data: {
@@ -179,6 +195,7 @@ exports.scanTemporaryDocument = async (req, res) => {
         format: scanResult.format,
         pageCount: scanResult.pageCount || 1,
         ocrText: scanResult.ocrText || '',
+        ocrStatus: scanResult.ocrStatus || 'completed',
       },
     });
   } catch (err) {

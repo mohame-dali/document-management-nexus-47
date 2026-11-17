@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useDirection } from '@/i18n/useDirection';
-import { getScanFileBlob } from '@/services/scannerService';
+import { getScanFileBlob, OcrStatus } from '@/services/scannerService';
 import api from '@/services/apiService';
 
 export interface ScanPreviewData {
@@ -32,6 +32,8 @@ export interface ScanPreviewData {
   serialNumber?: string | number;
   documentType?: string;
   ocrText?: string;
+  // ASYNC OCR FIX: Track background OCR status without blocking preview or actions
+  ocrStatus?: OcrStatus;
   [key: string]: unknown;
 }
 
@@ -331,6 +333,20 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
           )
         ) : null}
       </div>
+
+      {/* ASYNC OCR FIX: Non-blocking background OCR status indicator while PDF & action buttons remain usable */}
+      {!scanResult.ocrText && scanResult.ocrStatus === 'processing' && (
+        <div className="border-t border-zinc-800 bg-zinc-900/60 px-4 py-2 flex items-center gap-2 text-xs text-zinc-300">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400 flex-shrink-0" />
+          <span>
+            {tr(
+              'scanner.ocr.backgroundProcessing',
+              'Extraction OCR en cours en arrière-plan (vous pouvez déjà utiliser et enregistrer ce document)...',
+              'جاري استخراج النص (OCR) في الخلفية (يمكنك استخدام المستند وحفظه الآن)...'
+            )}
+          </span>
+        </div>
+      )}
 
       {/* Collapsible Dark OCR Drawer */}
       {scanResult.ocrText && (
