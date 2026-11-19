@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileScan,
   Loader2,
@@ -11,8 +12,10 @@ import {
   RotateCcw,
   CheckCircle2,
   Images,
+  RefreshCw,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useDirection } from '@/i18n/useDirection';
@@ -20,6 +23,7 @@ import {
   ScanStage,
   LiveThumbnail,
   getScanStageLabel,
+  getScannerStatus,
 } from '@/services/scannerService';
 import ScannedDocumentPreview, { ScanPreviewData } from './ScannedDocumentPreview';
 
@@ -80,9 +84,14 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
   isScanAttached = false,
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t: translate, language } = useLanguage();
   const { dir } = useDirection();
   const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
+
+  const [refreshedStatus, setRefreshedStatus] = useState<ScannerStatus | null>(null);
+  const [isCheckingScanner, setIsCheckingScanner] = useState(false);
+  const [noScannerAlertVisible, setNoScannerAlertVisible] = useState(false);
 
   const tr = (key: string, frDefault: string, arDefault: string) => {
     const val = translate(key);
@@ -90,8 +99,43 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
     return lang === 'ar' ? arDefault : frDefault;
   };
 
-  const rawDeviceId = scannerStatus?.data?.deviceId ?? scannerStatus?.deviceId;
+  const effectiveStatus = refreshedStatus ?? scannerStatus;
+  const rawDeviceId = effectiveStatus?.data?.deviceId ?? effectiveStatus?.deviceId;
   const isScannerConfigured = Boolean(rawDeviceId && rawDeviceId !== 'Not selected');
+  const isEffectiveLoading = loadingScannerStatus || isCheckingScanner;
+
+  const refreshScannerState = async (): Promise<boolean> => {
+    setIsCheckingScanner(true);
+    try {
+      const latest = await getScannerStatus();
+      setRefreshedStatus(latest as ScannerStatus);
+      queryClient.setQueryData(['scannerStatus'], latest);
+      await queryClient.invalidateQueries({ queryKey: ['scannerStatus'] });
+
+      const latestDeviceId = latest?.data?.deviceId ?? latest?.deviceId;
+      const ready = Boolean(latestDeviceId && latestDeviceId !== 'Not selected');
+      setNoScannerAlertVisible(!ready);
+      return ready;
+    } catch {
+      setNoScannerAlertVisible(true);
+      return false;
+    } finally {
+      setIsCheckingScanner(false);
+    }
+  };
+
+  const handleConfigureScannerClick = async () => {
+    if (isScannerConfigured) {
+      setNoScannerAlertVisible(false);
+      navigate('/dashboard/scan');
+      return;
+    }
+
+    const ready = await refreshScannerState();
+    if (ready) {
+      navigate('/dashboard/scan');
+    }
+  };
 
   const normalizedSelectFormat =
     scanSettings.format?.toLowerCase() === 'jpeg'
@@ -101,7 +145,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
   const clampedProgress = Math.min(Math.max(scanProgress, 0), 100);
   const stageLabel = getScanStageLabel(scanStage || 'scanning', scanPage || 0, translate, lang);
   const cancelLabel = tr('scanner.actions.cancel', 'Annuler', 'إلغاء');
-  const effectiveError = scanError || (typeof scannerStatus?.error === 'string' && scannerStatus.error.trim() ? scannerStatus.error : null);
+  const effectiveError = scanError || (typeof effectiveStatus?.error === 'string' && effectiveStatus.error.trim() ? effectiveStatus.error : null);
 
   // ASYNC OCR FIX: Guarantee cleanup of any component-scoped polling timer on unmount
   const statusPollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -147,7 +191,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-zinc-950 border border-zinc-800 text-xs">
             <span
               className={`h-2 w-2 rounded-full flex-shrink-0 ${
-                loadingScannerStatus
+                isEffectiveLoading
                   ? 'bg-zinc-400 animate-pulse'
                   : isScannerConfigured
                     ? 'bg-emerald-400'
@@ -155,7 +199,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
               }`}
             />
             <span className="text-zinc-300 truncate max-w-[220px]" title={String(rawDeviceId || '')}>
-              {loadingScannerStatus
+              {isEffectiveLoading
                 ? tr('scanner.checking', 'Vérification du scanner...', 'جاري التحقق من حالة الماسح الضوئي...')
                 : isScannerConfigured
                   ? String(rawDeviceId)
@@ -167,8 +211,8 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/dashboard/scan')}
-            disabled={scanning}
+            onClick={handleConfigureScannerClick}
+            disabled={scanning || isCheckingScanner}
             className="text-zinc-300 hover:text-white hover:bg-zinc-800 h-8 px-2.5 text-xs"
           >
             <Settings className="h-3.5 w-3.5 me-1.5" />
@@ -222,10 +266,32 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
 
       {/* Dark Central Container (min-h-[520px]) */}
       <div className="min-h-[520px] bg-zinc-950 flex flex-col">
+        {noScannerAlertVisible && !isScannerConfigured && (
+          <Alert className="mx-4 mt-4 w-auto border-amber-500/40 bg-amber-950/30 text-amber-100">
+            <AlertTriangle className="h-4 w-4 text-amber-400" />
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm text-amber-100">
+              <span>
+                Aucun scanner détecté. Vérifiez le branchement USB et les permissions, puis cliquez Actualiser.
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={refreshScannerState}
+                disabled={isCheckingScanner}
+                className="border-amber-500/40 bg-zinc-950 text-amber-200 hover:bg-amber-950/60 hover:text-white"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 me-1.5 ${isCheckingScanner ? 'animate-spin' : ''}`} />
+                Actualiser l&apos;état
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* STATE A: IDLE */}
         {currentState === 'IDLE' && (
           <div className="flex-1 flex flex-col items-center justify-center p-6">
-            {loadingScannerStatus ? (
+            {isEffectiveLoading ? (
               <div className="flex flex-col items-center gap-3 text-zinc-400">
                 <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
                 <span className="text-sm">
@@ -250,16 +316,29 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                       : 'Veuillez connecter votre scanner et le sélectionner dans la page de configuration.'}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/dashboard/scan')}
-                  className="border-amber-500/40 bg-zinc-950 text-amber-200 hover:bg-amber-950/60 hover:text-white"
-                >
-                  <Settings className="h-4 w-4 me-2" />
-                  {t.configureScanner ||
-                    (lang === 'ar' ? 'إعداد الماسح الضوئي' : 'Configurer le scanner')}
-                </Button>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleConfigureScannerClick}
+                    disabled={isCheckingScanner}
+                    className="border-amber-500/40 bg-zinc-950 text-amber-200 hover:bg-amber-950/60 hover:text-white"
+                  >
+                    <Settings className="h-4 w-4 me-2" />
+                    {t.configureScanner ||
+                      (lang === 'ar' ? 'إعداد الماسح الضوئي' : 'Configurer le scanner')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={refreshScannerState}
+                    disabled={isCheckingScanner}
+                    className="border-zinc-700 bg-zinc-950 text-zinc-200 hover:bg-zinc-800 hover:text-white"
+                  >
+                    <RefreshCw className={`h-4 w-4 me-2 ${isCheckingScanner ? 'animate-spin' : ''}`} />
+                    Actualiser l&apos;état
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="max-w-md w-full rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900/30 p-8 text-center space-y-5">
@@ -448,7 +527,8 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/dashboard/scan')}
+                  onClick={handleConfigureScannerClick}
+                  disabled={isCheckingScanner}
                   className="border-zinc-700 bg-zinc-950 text-zinc-200 hover:bg-zinc-800 hover:text-white"
                 >
                   <Settings className="h-4 w-4 me-1.5" />

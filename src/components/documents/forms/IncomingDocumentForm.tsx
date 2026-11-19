@@ -14,7 +14,8 @@ import CorrespondenceFields from '@/components/documents/forms/incoming/Correspo
 import DocumentDetailsFields from '@/components/documents/forms/incoming/DocumentDetailsFields';
 import AttachmentSection from '@/components/documents/forms/incoming/AttachmentSection';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, Loader2, X } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Sparkles, Loader2, X, History, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +66,9 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
     onSubmit,
     setActiveTab,
     handleSerialNumberChange,
-    handleRemoveScan
+    handleRemoveScan,
+    restoredDraftAt,
+    clearDraft
   } = useIncomingDocumentForm(t, currentDepartmentId, scanData);
 
   // ───────────────────────────────────────────────────────────
@@ -197,6 +200,31 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
         </CardHeader>
         
         <CardContent className="p-6">
+          {restoredDraftAt !== null && (
+            <Alert className="mb-6 border-blue-200 bg-blue-50/70 text-blue-950">
+              <History className="h-4 w-4 text-[#2c5282]" />
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span>
+                  Brouillon restauré du{' '}
+                  {new Date(restoredDraftAt).toLocaleString('fr-FR', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}{' '}
+                  — vos champs ont été pré-remplis.
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearDraft}
+                  className="h-8 border-blue-300 bg-white text-[#2c5282] hover:bg-blue-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5 me-1.5" />
+                  Effacer le brouillon
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               {/* Serial Information Section */}

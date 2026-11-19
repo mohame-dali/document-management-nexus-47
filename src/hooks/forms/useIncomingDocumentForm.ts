@@ -24,6 +24,25 @@ import {
 } from '@/services/scannerService';
 
 const BASE_SCAN_TIMEOUT_MS = 120000;
+const DRAFT_KEY = 'dms:draft:incoming';
+const DRAFT_TTL_MS = 2 * 60 * 60 * 1000; // 2 heures
+const SENSITIVE_KEYS = new Set(['password', 'token', 'tokens', 'accessToken', 'refreshToken']);
+
+function sanitizeDraftValues<T extends Record<string, unknown>>(raw: T): Partial<T> {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (!SENSITIVE_KEYS.has(key)) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned as Partial<T>;
+}
+
+function parseOptionalDate(value: unknown): Date | undefined {
+  if (!value) return undefined;
+  const parsed = value instanceof Date ? value : new Date(String(value));
+  return isNaN(parsed.getTime()) ? undefined : parsed;
+}
 
 export interface FormTranslations {
   required?: string;
@@ -59,7 +78,8 @@ export interface ScanMutationRunner {
 export const useIncomingDocumentForm = (
   t: FormTranslations,
   currentDepartmentId?: string,
-  scanData?: ScanResultData | null
+  scanData?: ScanResultData | null,
+  isEditMode = false
 ) => {
   const navigate = useNavigate();
   const { t: translate, language } = useLanguage();
@@ -80,6 +100,9 @@ export const useIncomingDocumentForm = (
     format: 'pdf',
   });
   const [isManualSerialNumber, setIsManualSerialNumber] = useState(false);
+  const isManualSerialNumberRef = useRef(false);
+  const [restoredDraftAt, setRestoredDraftAt] = useState<number | null>(null);
+  const hasHydratedDraftRef = useRef<boolean>(false);
 
   const isMountedRef = useRef(true);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -224,6 +247,145 @@ export const useIncomingDocumentForm = (
     [form, isManualSerialNumber]
   );
 
+  // Restaurer le brouillon depuis sessionStorage au montage (hors mode édition, TTL 2h)
+  useEffect(() => {
+    if (isEditMode) {
+      hasHydratedDraftRef.current = true;
+      return;
+    }
+
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw) as {
+          values?: Record<string, unknown>;
+          departments?: string[];
+          isManualSerialNumber?: boolean;
+          savedAt?: number;
+        };
+
+        if (
+          draft &&
+          typeof draft.savedAt === 'number' &&
+          Date.now() - draft.savedAt < DRAFT_TTL_MS &&
+          draft.values &&
+          typeof draft.values === 'object'
+        ) {
+          const sanitized = sanitizeDraftValues(draft.values);
+          const restoredDepartments = Array.isArray(draft.departments)
+            ? draft.departments.filter((d): d is string => typeof d === 'string')
+            : Array.isArray(sanitized.departments)
+              ? sanitized.departments.filter((d): d is string => typeof d === 'string')
+              : currentDepartmentId
+                ? [currentDepartmentId]
+                : [];
+
+          const arrivalDate = parseOptionalDate(sanitized.arrivalDate) || new Date();
+          const correspondenceDate = parseOptionalDate(sanitized.correspondenceDate) || new Date();
+          const dateActivity = parseOptionalDate(sanitized.dateActivity);
+
+          const nextValues: FormValues = {
+            serialNumber: typeof sanitized.serialNumber === 'string' ? sanitized.serialNumber : '',
+            subject: typeof sanitized.subject === 'string' ? sanitized.subject : '',
+            source: typeof sanitized.source === 'string' ? sanitized.source : '',
+            arrivalDate,
+            correspondenceNumber:
+              typeof sanitized.correspondenceNumber === 'string' ? sanitized.correspondenceNumber : '',
+            correspondenceDate,
+            typeDocument: typeof sanitized.typeDocument === 'string' ? sanitized.typeDocument : '',
+            activity: typeof sanitized.activity === 'string' ? sanitized.activity : '',
+            dateActivity,
+            departments: restoredDepartments,
+            description: typeof sanitized.description === 'string' ? sanitized.description : '',
+          };
+
+          const hasMeaningfulContent = Boolean(
+            nextValues.subject.trim() ||
+              nextValues.source.trim() ||
+              nextValues.correspondenceNumber.trim() ||
+              nextValues.description?.trim() ||
+              nextValues.activity?.trim() ||
+              nextValues.typeDocument?.trim() ||
+              draft.isManualSerialNumber
+          );
+
+          if (hasMeaningfulContent) {
+            if (draft.isManualSerialNumber && nextValues.serialNumber) {
+              isManualSerialNumberRef.current = true;
+              setIsManualSerialNumber(true);
+            }
+            form.reset(nextValues);
+            setRestoredDraftAt(draft.savedAt);
+          }
+        } else {
+          sessionStorage.removeItem(DRAFT_KEY);
+        }
+      }
+    } catch {
+      sessionStorage.removeItem(DRAFT_KEY);
+    } finally {
+      hasHydratedDraftRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode]);
+
+  // Auto-save du brouillon dans sessionStorage à chaque modification du formulaire
+  useEffect(() => {
+    if (isEditMode) return;
+
+    const subscription = form.watch((values, { name }) => {
+      if (!hasHydratedDraftRef.current || hasSubmittedRef.current || !name) {
+        return;
+      }
+
+      try {
+        const sanitized = sanitizeDraftValues(values as Record<string, unknown>);
+        const payload = {
+          values: sanitized,
+          personnelId: (sanitized.personnelId as string | undefined) ?? undefined,
+          departments: Array.isArray(sanitized.departments) ? sanitized.departments : [],
+          isManualSerialNumber,
+          savedAt: Date.now(),
+        };
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+      } catch {
+        // Ignorer les erreurs de quota sessionStorage
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, isEditMode, isManualSerialNumber]);
+
+  const clearDraft = useCallback(() => {
+    try {
+      sessionStorage.removeItem(DRAFT_KEY);
+    } catch {
+      // Ignorer
+    }
+    setRestoredDraftAt(null);
+    isManualSerialNumberRef.current = false;
+    setIsManualSerialNumber(false);
+    form.reset({
+      serialNumber: '',
+      subject: '',
+      source: '',
+      arrivalDate: new Date(),
+      correspondenceNumber: '',
+      correspondenceDate: new Date(),
+      typeDocument: '',
+      activity: '',
+      dateActivity: undefined,
+      departments: currentDepartmentId ? [currentDepartmentId] : [],
+      description: '',
+    });
+    const currentYear = new Date().getFullYear();
+    getNextSerialNumber(currentYear, 'incoming')
+      .then((nextNumber) => {
+        form.setValue('serialNumber', nextNumber.toString());
+      })
+      .catch(() => {});
+  }, [form, currentDepartmentId]);
+
   // Auto-update serial number when arrival date changes
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -245,14 +407,16 @@ export const useIncomingDocumentForm = (
 
   // Initial serial number fetch
   useEffect(() => {
-    if (!isManualSerialNumber) {
+    if (!isManualSerialNumber && !isManualSerialNumberRef.current) {
       const currentDate = form.getValues('arrivalDate');
       if (currentDate) {
         const year = new Date(currentDate).getFullYear();
         if (!isNaN(year) && year > 1900) {
           getNextSerialNumber(year, 'incoming')
             .then((nextNumber) => {
-              form.setValue('serialNumber', nextNumber.toString());
+              if (!isManualSerialNumberRef.current) {
+                form.setValue('serialNumber', nextNumber.toString());
+              }
             })
             .catch((error) => {
               console.error('Error fetching initial serial number:', error);
@@ -273,7 +437,9 @@ export const useIncomingDocumentForm = (
   }, [scanData, applyOcrAutoFill]);
 
   const handleSerialNumberChange = (value: string) => {
-    setIsManualSerialNumber(Boolean(value && value !== ''));
+    const isManual = Boolean(value && value !== '');
+    isManualSerialNumberRef.current = isManual;
+    setIsManualSerialNumber(isManual);
     if (value && value.trim() !== '') {
       const numericValue = parseInt(value, 10);
       if (isNaN(numericValue) || numericValue <= 0) {
@@ -305,6 +471,7 @@ export const useIncomingDocumentForm = (
         }
       }
     } else {
+      isManualSerialNumberRef.current = false;
       setIsManualSerialNumber(false);
       form.clearErrors('serialNumber');
     }
@@ -645,6 +812,12 @@ export const useIncomingDocumentForm = (
 
       await createIncomingDocument(formData);
       hasSubmittedRef.current = true;
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // Ignorer
+      }
+      setRestoredDraftAt(null);
       activeScanIdRef.current = null;
       localScanIdRef.current = null;
       scanAbortRef.current = null;
@@ -681,5 +854,7 @@ export const useIncomingDocumentForm = (
     handleSerialNumberChange,
     isManualSerialNumber,
     handleRemoveScan,
+    restoredDraftAt,
+    clearDraft,
   };
 };

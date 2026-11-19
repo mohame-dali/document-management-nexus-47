@@ -13,6 +13,9 @@ import BasicInfoFields from './outgoing/BasicInfoFields';
 import DocumentAttachmentSection from './outgoing/DocumentAttachmentSection';
 import FormActions from './outgoing/FormActions';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { History, Trash2 } from 'lucide-react';
 
 interface OutgoingDocumentFormProps {
   t: OutgoingFormTranslations;
@@ -56,7 +59,9 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
     setActiveTab,
     onSubmit,
     handleSerialNumberChange,
-    handleRemoveScan
+    handleRemoveScan,
+    restoredDraftAt,
+    clearDraft
   } = useOutgoingDocumentForm(t, currentDepartmentId, scanData);
 
   const handleStartScan = () => {
@@ -90,6 +95,31 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
         </CardHeader>
         
         <CardContent className="p-8">
+          {restoredDraftAt !== null && (
+            <Alert className="mb-6 border-blue-200 bg-blue-50/70 text-blue-950">
+              <History className="h-4 w-4 text-[#2c5282]" />
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span>
+                  Brouillon restauré du{' '}
+                  {new Date(restoredDraftAt).toLocaleString('fr-FR', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}{' '}
+                  — vos champs ont été pré-remplis.
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearDraft}
+                  className="h-8 border-blue-300 bg-white text-[#2c5282] hover:bg-blue-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5 me-1.5" />
+                  Effacer le brouillon
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               {/* Basic Information Section */}
