@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useDirection } from '@/i18n/useDirection';
@@ -46,6 +46,7 @@ const ScanDocumentPage: React.FC = () => {
         availableScanners: 'الماسحات الضوئية المتاحة',
         noScannersDetected: 'لم يتم اكتشاف أي ماسح ضوئي',
         refreshScanners: 'تحديث قائمة الماسحات الضوئية',
+        searchingScanners: 'جاري البحث عن الماسحات الضوئية...',
         selectScanner: 'اختر ماسح ضوئي',
         scanSettings: 'إعدادات المسح',
         documentType: 'نوع المستند',
@@ -74,6 +75,7 @@ const ScanDocumentPage: React.FC = () => {
       availableScanners: 'Scanners disponibles',
       noScannersDetected: 'Aucun scanner physique détecté',
       refreshScanners: 'Actualiser la liste des scanners',
+      searchingScanners: 'Recherche de scanners en cours...',
       selectScanner: 'Sélectionner un scanner',
       scanSettings: 'Paramètres de numérisation',
       documentType: 'Type de document',
@@ -97,6 +99,8 @@ const ScanDocumentPage: React.FC = () => {
     };
   }, [lang]);
 
+  const queryClient = useQueryClient();
+  const [isScanning, setIsScanning] = useState(false);
   const [selectedScanner, setSelectedScanner] = useState('');
   const [scanSettings, setScanSettings] = useState({
     documentType: 'incoming',
@@ -177,11 +181,31 @@ const ScanDocumentPage: React.FC = () => {
     }
   }, [statusData]);
 
-  // List available scanners
-  const { data: scannersData, isLoading: isScannersLoading, refetch: refetchScanners } = useQuery({
+  // List available scanners (uses server cache on initial load)
+  const {
+    data: scannersData,
+    isLoading: isScannersLoading,
+    isFetching: isScannersFetching,
+  } = useQuery({
     queryKey: ['scanners'],
-    queryFn: listScanners,
+    queryFn: () => listScanners({ refresh: false }),
   });
+
+  const handleRefreshScanners = async () => {
+    if (isScanning) return;
+    setIsScanning(true);
+    try {
+      const freshScanners = await listScanners({ refresh: true });
+      queryClient.setQueryData(['scanners'], freshScanners);
+    } catch (error: unknown) {
+      queryClient.setQueryData(['scanners'], []);
+      toast.error(getScannerErrorMessage(error, translate, lang));
+    } finally {
+      if (isMountedRef.current) {
+        setIsScanning(false);
+      }
+    }
+  };
 
   // Get recent scans
   const { data: recentScansData, isLoading: isRecentScansLoading, refetch: refetchRecentScans } = useQuery({
@@ -466,9 +490,10 @@ const ScanDocumentPage: React.FC = () => {
               setSelectedScanner(deviceId);
               selectScannerMutation.mutate(deviceId);
             }}
-            onRefreshScanners={() => refetchScanners()}
+            onRefreshScanners={handleRefreshScanners}
             scannersData={scannersData || []}
-            isScannersLoading={isScannersLoading}
+            isScannersLoading={isScannersLoading || isScannersFetching || isScanning}
+            isScanning={isScannersLoading || isScannersFetching || isScanning}
           />
 
           <ScanSettingsComponent

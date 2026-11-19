@@ -341,6 +341,8 @@ function checkAIModels() {
   }
 }
 
+let viteServer: Awaited<ReturnType<typeof createViteServer>> | null = null;
+
 async function start() {
   const isProduction = process.env.NODE_ENV === 'production';
   try {
@@ -363,11 +365,16 @@ async function start() {
     }
 
     if (process.env.NODE_ENV !== 'production') {
-      const vite = await createViteServer({
-        server: { middlewareMode: true },
+      viteServer = await createViteServer({
+        server: {
+          middlewareMode: true,
+          hmr: false,
+          ws: false,
+          proxy: {},
+        },
         appType: 'spa',
       });
-      app.use(vite.middlewares);
+      app.use(viteServer.middlewares);
     } else {
       const distPath = path.join(process.cwd(), 'dist');
       app.use(express.static(distPath));
@@ -397,15 +404,30 @@ async function start() {
 start();
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM reçu, arrêt propre...');
+let isShuttingDown = false;
+async function shutdown(signal: string) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`${signal} reçu, arrêt propre...`);
+  const forceExitTimer = setTimeout(() => process.exit(0), 1500);
+  forceExitTimer.unref();
   try {
+    if (viteServer) {
+      await viteServer.close();
+      viteServer = null;
+    }
+    io.close();
     await mongoose.connection.close();
+    httpServer.closeAllConnections?.();
     httpServer.close(() => process.exit(0));
   } catch (err) {
     console.error('Erreur lors de la fermeture:', err);
     process.exit(1);
   }
+}
+
+process.on('SIGTERM', () => {
+  void shutdown('SIGTERM');
 });
 
 if (process.platform === 'win32') {
@@ -417,13 +439,6 @@ if (process.platform === 'win32') {
   });
 }
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT reçu, arrêt propre...');
-  try {
-    await mongoose.connection.close();
-    httpServer.close(() => process.exit(0));
-  } catch (err) {
-    console.error('Erreur lors de la fermeture:', err);
-    process.exit(1);
-  }
+process.on('SIGINT', () => {
+  void shutdown('SIGINT');
 });

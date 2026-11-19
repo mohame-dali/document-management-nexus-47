@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { Scan, Laptop, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Scan, Laptop, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,9 +15,10 @@ interface ScannerSetupProps {
   t: Record<string, string>;
   selectedScanner: string;
   onSelectScanner: (deviceId: string) => void;
-  onRefreshScanners: () => void;
+  onRefreshScanners: () => void | Promise<unknown>;
   scannersData: ScannerDevice[];
   isScannersLoading: boolean;
+  isScanning?: boolean;
 }
 
 const ScannerSetup: React.FC<ScannerSetupProps> = ({
@@ -27,8 +27,22 @@ const ScannerSetup: React.FC<ScannerSetupProps> = ({
   onSelectScanner,
   onRefreshScanners,
   scannersData,
-  isScannersLoading
+  isScannersLoading,
+  isScanning: isScanningProp,
 }) => {
+  const [isScanningLocal, setIsScanningLocal] = useState(false);
+  const isScanning = Boolean(isScanningProp || isScannersLoading || isScanningLocal);
+
+  const handleRefresh = async () => {
+    if (isScanning) return;
+    setIsScanningLocal(true);
+    try {
+      await Promise.resolve(onRefreshScanners());
+    } finally {
+      setIsScanningLocal(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -40,11 +54,16 @@ const ScannerSetup: React.FC<ScannerSetupProps> = ({
       <CardContent>
         <div className="mb-4">
           <h3 className="font-medium mb-2">{t.availableScanners}</h3>
-          
-          {isScannersLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
+
+          {isScanning ? (
+            <div className="space-y-3" role="status" aria-live="polite">
+              <div className="flex items-center gap-2 rounded-md border border-dashed px-3 py-2.5 text-sm text-muted-foreground bg-muted/30">
+                <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+                <span>{t.searchingScanners || 'Recherche de scanners en cours...'}</span>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+              </div>
             </div>
           ) : (
             <>
@@ -74,15 +93,17 @@ const ScannerSetup: React.FC<ScannerSetupProps> = ({
           )}
         </div>
 
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onRefreshScanners} 
-          disabled={isScannersLoading}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isScanning}
           className="w-full"
         >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          {t.refreshScanners}
+          <RefreshCw className={`w-4 h-4 mr-2 ${isScanning ? 'animate-spin' : ''}`} />
+          {isScanning
+            ? (t.searchingScanners || 'Recherche de scanners en cours...')
+            : t.refreshScanners}
         </Button>
       </CardContent>
     </Card>

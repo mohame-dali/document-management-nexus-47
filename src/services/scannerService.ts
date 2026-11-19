@@ -284,9 +284,18 @@ export const getScannerStatus = async (): Promise<ScannerStatusResponse> => {
   };
 };
 
+export interface ListScannersOptions {
+  refresh?: boolean;
+}
+
 // List available scanners - Admin and AdminTuningDesk only
-export const listScanners = async (): Promise<ScannerDevice[]> => {
-  const response = await api.get('/scan/devices');
+export const listScanners = async (
+  options?: ListScannersOptions | boolean
+): Promise<ScannerDevice[]> => {
+  const refresh = typeof options === 'boolean' ? options : Boolean(options?.refresh);
+  const response = await api.get('/scan/devices', {
+    params: refresh ? { refresh: true } : undefined,
+  });
   return response.data?.data || response.data || [];
 };
 

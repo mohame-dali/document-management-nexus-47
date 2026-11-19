@@ -166,7 +166,7 @@ exports.getScannerStatus = async (_req, res) => {
 // @desc    List available physical scanners (returns 503 SCANNER_NOT_FOUND when none/unavailable)
 // @route   GET /api/scan/devices
 // @access  Private/AdminTuningDesk/Admin
-exports.listScanners = async (_req, res) => {
+exports.listScanners = async (req, res) => {
   try {
     if (!scannerService.getConfig().scannerEnabled) {
       return res.status(503).json({
@@ -176,7 +176,8 @@ exports.listScanners = async (_req, res) => {
       });
     }
 
-    const scanners = await scannerService.listScanners();
+    const forceRefresh = req.query?.refresh === 'true' || req.query?.refresh === true;
+    const scanners = await scannerService.listScanners(forceRefresh);
 
     if (!Array.isArray(scanners) || scanners.length === 0) {
       return res.status(503).json({

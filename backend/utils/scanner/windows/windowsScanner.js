@@ -206,7 +206,7 @@ class WindowsScanner extends ScannerBase {
     }
   }
 
-  async listScanners() {
+  async _performListScanners() {
     await this.init();
     if (!this.hasWindowsScanTools) {
       throw new ScannerError(
@@ -216,9 +216,7 @@ class WindowsScanner extends ScannerBase {
       );
     }
 
-    const scanners = await ScannerDetection.listScanners();
-    this.emit('devicesListed', { count: scanners.length });
-    return scanners;
+    return ScannerDetection.listScanners();
   }
 
   async testScanner() {

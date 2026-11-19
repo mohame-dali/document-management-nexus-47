@@ -16,6 +16,10 @@ class ScannerBase extends EventEmitter {
     this.deviceManager = new DeviceManager();
     this.statusManager = new StatusManager();
     this._initPromise = null;
+    this._cachedDevices = null;
+    this._cacheTimestamp = 0;
+    this._cacheTTL = 60000;
+    this._listPromise = null;
 
     if (this.config.scannerDeviceId) {
       if (isValidDeviceIdForPlatform(this.config.scannerDeviceId)) {
@@ -180,8 +184,39 @@ class ScannerBase extends EventEmitter {
     throw new Error('startScan method must be implemented by subclasses');
   }
 
-  async listScanners() {
-    throw new Error('listScanners method must be implemented by subclasses');
+  async listScanners(forceRefresh = false) {
+    if (
+      !forceRefresh &&
+      this._cachedDevices !== null &&
+      Date.now() - this._cacheTimestamp < this._cacheTTL
+    ) {
+      return this._cachedDevices;
+    }
+
+    if (!forceRefresh && this._listPromise) {
+      return this._listPromise;
+    }
+
+    const detectPromise = this._performListScanners()
+      .then((scanners) => {
+        const normalized = Array.isArray(scanners) ? scanners : [];
+        this._cachedDevices = normalized;
+        this._cacheTimestamp = Date.now();
+        this.emit('devicesListed', { count: normalized.length });
+        return normalized;
+      })
+      .finally(() => {
+        if (this._listPromise === detectPromise) {
+          this._listPromise = null;
+        }
+      });
+
+    this._listPromise = detectPromise;
+    return detectPromise;
+  }
+
+  async _performListScanners() {
+    throw new Error('_performListScanners method must be implemented by subclasses');
   }
 
   getDeviceManager() {

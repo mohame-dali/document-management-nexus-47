@@ -199,7 +199,7 @@ class LinuxScanner extends ScannerBase {
     }
   }
 
-  async listScanners() {
+  async _performListScanners() {
     await this.init();
     if (!this.hasScanimageCmd) {
       throw new ScannerError(
@@ -209,9 +209,7 @@ class LinuxScanner extends ScannerBase {
       );
     }
 
-    const scanners = await ScannerDetection.listScanners();
-    this.emit('devicesListed', { count: scanners.length });
-    return scanners;
+    return ScannerDetection.listScanners();
   }
 
   async testScanner() {
