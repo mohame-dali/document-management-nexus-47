@@ -128,6 +128,12 @@ userSchema.pre('save', function(next) {
   next();
 });
 
+// Un seul compte utilisateur par fiche Personnel (comptes techniques sans personnelId non concernés)
+userSchema.index(
+  { personnelId: 1 },
+  { unique: true, partialFilterExpression: { personnelId: { $type: 'objectId' } }, name: 'unique_personnel_account' }
+);
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

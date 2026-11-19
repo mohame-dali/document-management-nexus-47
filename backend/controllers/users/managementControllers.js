@@ -140,6 +140,18 @@ exports.createUser = async (req, res, next) => {
       createdBy: userPayload.createdBy
     });
 
+    if (userPayload.personnelId) {
+      const existingPersonnelAccount = await User.findOne({ personnelId: userPayload.personnelId });
+      if (existingPersonnelAccount) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
+    }
+
     // Create user with explicit whitelist
     const user = await User.create(userPayload);
 
@@ -160,8 +172,16 @@ exports.createUser = async (req, res, next) => {
     });
   } catch (err) {
     console.error('Error creating user:', err);
-    // Handle duplicate username
+    // Handle duplicate key (personnelId or username)
     if (err.code === 11000) {
+      if (err.keyPattern?.personnelId) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
       return next(new ErrorResponse('Username already exists', 400));
     }
     next(err);
@@ -341,6 +361,21 @@ exports.updateUser = async (req, res, next) => {
 
     console.log('Update data (whitelisted fields only):', Object.keys(updateData));
 
+    if (updateData.personnelId) {
+      const existingPersonnelAccount = await User.findOne({
+        personnelId: updateData.personnelId,
+        _id: { $ne: user._id }
+      });
+      if (existingPersonnelAccount) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
+    }
+
     // Appliquer les modifications et sauvegarder avec user.save() pour déclencher les hooks
     Object.assign(user, updateData);
     await user.save();
@@ -359,8 +394,16 @@ exports.updateUser = async (req, res, next) => {
     });
   } catch (err) {
     console.error('Error updating user:', err);
-    // Handle duplicate username
+    // Handle duplicate key (personnelId or username)
     if (err.code === 11000) {
+      if (err.keyPattern?.personnelId) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
       return next(new ErrorResponse('Username already exists', 400));
     }
     next(err);

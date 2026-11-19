@@ -26,8 +26,10 @@ import { RefreshCw, ArrowRight, User, Shield, Building, Check, AlertCircle, User
 import { Badge } from '@/components/ui/badge';
 import { Department, User as UserType } from '@/types';
 import { getPersonnelList, getOrganizationSettings } from '@/services/hr/personnelApi';
+import { getUsers } from '@/services/userService';
 import { Personnel } from '@/types/hr';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export interface UserFormData {
   username: string;
@@ -40,7 +42,7 @@ export interface UserFormData {
 
 interface UserFormProps {
   user?: UserType | null;
-  onSubmit: (data: UserFormData) => void;
+  onSubmit: (data: UserFormData) => void | Promise<unknown>;
   isSubmitting: boolean;
   departments: Department[];
   currentUserRole: string;
@@ -140,6 +142,46 @@ const UserForm: React.FC<UserFormProps> = ({
     () => (Array.isArray(personnelData) ? personnelData : []),
     [personnelData]
   );
+
+  // Récupération des utilisateurs existants pour exclure les personnels déjà liés à un compte
+  const { data: usersData } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    staleTime: 1000 * 30,
+  });
+
+  const takenPersonnelIds = useMemo(() => {
+    const ids = new Set<string>();
+    const existingUsers = Array.isArray(usersData) ? usersData : [];
+    const currentUserId = user?._id ? String(user._id) : null;
+
+    existingUsers.forEach((existingUser) => {
+      if (currentUserId && String(existingUser._id) === currentUserId) {
+        return;
+      }
+      const rawPersonnelId = existingUser.personnelId as
+        | string
+        | { _id?: string }
+        | null
+        | undefined;
+      const normalizedId =
+        typeof rawPersonnelId === 'object' && rawPersonnelId !== null
+          ? rawPersonnelId._id
+          : rawPersonnelId;
+      if (normalizedId) {
+        ids.add(String(normalizedId));
+      }
+    });
+
+    return ids;
+  }, [usersData, user?._id]);
+
+  const availablePersonnels: Personnel[] = useMemo(
+    () => personnels.filter((p) => !takenPersonnelIds.has(String(p._id))),
+    [personnels, takenPersonnelIds]
+  );
+
+  const hiddenPersonnelsCount = personnels.length - availablePersonnels.length;
 
   // LOT B: Fonction pour détecter si un département est fonctionnel (Bureau Directeur ou Bureau d'Ordre)
   const isFunctionalDepartment = (departmentId?: string | { _id: string; name?: string } | null) => {
@@ -334,7 +376,7 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   };
   
-  const handleSubmit = (data: UserFormData) => {
+  const handleSubmit = async (data: UserFormData) => {
     if (data.role === 'AdminTuningDesk') {
       data.departments = [];
     } else if (currentUserRole === 'AdminDepartment' && data.role === 'User') {
@@ -351,12 +393,48 @@ const UserForm: React.FC<UserFormProps> = ({
       return;
     }
 
+    // Vérification préventive d'unicité du compte par personnel
+    if (!isEditMode && data.personnelId && takenPersonnelIds.has(String(data.personnelId))) {
+      const duplicateMsg = 'Ce personnel possède déjà un compte utilisateur';
+      form.setError('personnelId', {
+        type: 'manual',
+        message: duplicateMsg
+      });
+      toast.error(duplicateMsg);
+      return;
+    }
+
     // Nettoyage de l'ID si vide pour les comptes techniques / optionnels
     if (!data.personnelId) {
       delete data.personnelId;
     }
-    
-    onSubmit(data);
+
+    try {
+      await onSubmit(data);
+    } catch (err: unknown) {
+      const errorObj = err as {
+        response?: {
+          status?: number;
+          data?: { code?: string; error?: string; message?: string };
+        };
+      };
+      if (
+        errorObj?.response?.status === 409 ||
+        errorObj?.response?.data?.code === 'PERSONNEL_ALREADY_HAS_ACCOUNT'
+      ) {
+        const message =
+          errorObj?.response?.data?.message ||
+          errorObj?.response?.data?.error ||
+          'Ce personnel possède déjà un compte utilisateur';
+        form.setError('personnelId', {
+          type: 'manual',
+          message
+        });
+        toast.error(message);
+        return;
+      }
+      throw err;
+    }
   };
   
   return (
@@ -469,7 +547,7 @@ const UserForm: React.FC<UserFormProps> = ({
                         {isPersonnelRequired && <span className="text-red-500 font-bold">*</span>}
                       </span>
                       <span className="text-xs font-normal text-gray-500">
-                        {personnels.length} بطاقة متاحة
+                        {availablePersonnels.length} بطاقة متاحة
                       </span>
                     </FormLabel>
                     <FormControl>
@@ -485,12 +563,14 @@ const UserForm: React.FC<UserFormProps> = ({
                             <div className="p-3 text-center text-sm text-[#5f6b7d]">
                               جاري تحميل القائمة...
                             </div>
-                          ) : personnels.length === 0 ? (
+                          ) : availablePersonnels.length === 0 ? (
                             <div className="p-3 text-center text-sm text-[#5f6b7d]">
-                              لا يوجد موظفون في قسمك
+                              {personnels.length > 0
+                                ? 'جميع الموظفين يمتلكون حسابات مستخدمين مسبقاً'
+                                : 'لا يوجد موظفون في قسمك'}
                             </div>
                           ) : (
-                            personnels.map((p) => (
+                            availablePersonnels.map((p) => (
                               <SelectItem key={p._id} value={p._id}>
                                 {p.nom} {p.prenom} — {p.cin || 'بدون رقم ب.ت.و'}
                               </SelectItem>
@@ -499,6 +579,11 @@ const UserForm: React.FC<UserFormProps> = ({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {hiddenPersonnelsCount > 0 && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
+                        تم إخفاء {hiddenPersonnelsCount} {hiddenPersonnelsCount === 1 ? 'موظف يمتلك' : 'موظفين يمتلكون'} حساب مستخدم مسبقاً (حساب واحد لكل موظف).
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
