@@ -720,11 +720,30 @@ const IncomingDocumentsPage: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="text-sm">{t('incoming.filters.allDepartments')}</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept._id} value={dept._id} className="text-sm">
-                        {dept.name}
-                      </SelectItem>
-                    ))}
+                    {departments
+                      .filter((dept) => {
+                        const rawName = dept.name || '';
+                        const normalized = rawName
+                          .toLowerCase()
+                          .normalize('NFD')
+                          .replace(/[\u0300-\u036f]/g, '')
+                          .replace(/[’']/g, "'")
+                          .trim();
+                        return !(
+                          /\bbo\b/.test(normalized) ||
+                          normalized.includes("bureau d'ordre") ||
+                          normalized.includes('bureau ordre') ||
+                          normalized.includes('bureau directeur') ||
+                          normalized.includes('direction') ||
+                          rawName.includes('مكتب الضبط') ||
+                          rawName.includes('مكتب المدير')
+                        );
+                      })
+                      .map((dept) => (
+                        <SelectItem key={dept._id} value={dept._id} className="text-sm">
+                          {dept.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
