@@ -507,10 +507,13 @@ exports.restoreUser = async (req, res, next) => {
       );
     }
 
-    user.isDeleted = false;
-    user.deletedAt = null;
-    user.deletedBy = null;
-    await user.save();
+    const updateResult = await User.updateOne(
+      { _id: user._id, isDeleted: true },
+      { $set: { isDeleted: false, deletedAt: null, deletedBy: null } }
+    );
+    if (updateResult.modifiedCount !== 1) {
+      return next(new ErrorResponse('Échec de la restauration (aucune modification en base)', 500));
+    }
 
     const populatedUser = await User.findById(user._id)
       .populate('departments')
