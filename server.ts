@@ -229,6 +229,7 @@ try {
   app.use('/api/attendance', require('./backend/routes/attendanceRoutes'));
   app.use('/api/attendance', require('./backend/routes/attendanceDeclarationRoutes'));
   app.use('/api/hr/leave-reasons', require('./backend/routes/leaveReasonRoutes'));
+  app.use('/api/hr/attendance/monthly-report', require('./backend/routes/hr/monthlyReportRoutes'));
   app.use('/api/trash', require('./backend/routes/trashRoutes'));
   app.use('/api/organization-chart', require('./backend/routes/organizationChartRoutes'));
   app.use('/api/ai', require('./backend/routes/aiRoutes'));

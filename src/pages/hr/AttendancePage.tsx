@@ -31,6 +31,7 @@ import {
   Briefcase,
   HelpCircle,
   Check,
+  Printer,
 } from 'lucide-react';
 import {
   getDailyAttendance,
@@ -433,6 +434,17 @@ export const AttendancePage: React.FC = () => {
 
           {/* Bouton Enregistrer en haut */}
           <div className="flex items-center gap-2">
+            <Button
+              asChild
+              variant="outline"
+              className="border-[#2c5282] text-[#2c5282] hover:bg-[#ebf4ff] rounded font-medium gap-2 h-11 px-4 transition-colors duration-200"
+            >
+              <Link to="/dashboard/hr/attendance/report">
+                <Printer className="h-4 w-4" />
+                <span>Imprimer la fiche mensuelle</span>
+              </Link>
+            </Button>
+
             <Button
               onClick={handleSaveAttendance}
               disabled={saving || loading || attendanceRows.length === 0}

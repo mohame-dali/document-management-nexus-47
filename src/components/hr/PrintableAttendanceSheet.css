@@ -1,0 +1,101 @@
+@page {
+  size: A4 landscape;
+  margin: 7mm 8mm;
+}
+
+.printable-attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.printable-attendance-table th,
+.printable-attendance-table td {
+  border: 1px solid #334155;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.printable-attendance-table thead {
+  display: table-header-group;
+}
+
+.printable-attendance-table tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body.monthly-attendance-print-active {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Cacher la Sidebar, le Header, les onglets HubLayout, les overlays et boutons */
+  body.monthly-attendance-print-active aside,
+  body.monthly-attendance-print-active header,
+  body.monthly-attendance-print-active nav[role="tablist"],
+  body.monthly-attendance-print-active [aria-label="Breadcrumb"],
+  body.monthly-attendance-print-active div:has(> div > nav[role="tablist"]),
+  body.monthly-attendance-print-active .fixed,
+  body.monthly-attendance-print-active [data-sonner-toaster],
+  body.monthly-attendance-print-active .no-print {
+    display: none !important;
+  }
+
+  /* Déplier les conteneurs flex/scroll du layout pour impression multi-pages */
+  body.monthly-attendance-print-active .h-screen,
+  body.monthly-attendance-print-active .min-h-screen,
+  body.monthly-attendance-print-active .overflow-hidden,
+  body.monthly-attendance-print-active main,
+  body.monthly-attendance-print-active main > div,
+  body.monthly-attendance-print-active .container-responsive,
+  body.monthly-attendance-print-active .padding-responsive,
+  body.monthly-attendance-print-active .animate-fade-slide-in {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* Forcer la fiche et le tableau à occuper 100% de la page A4 paysage */
+  body.monthly-attendance-print-active .printable-attendance-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  body.monthly-attendance-print-active .printable-attendance-scroll {
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  body.monthly-attendance-print-active .printable-attendance-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    font-size: 9px !important;
+  }
+
+  body.monthly-attendance-print-active .printable-attendance-table th,
+  body.monthly-attendance-print-active .printable-attendance-table td {
+    border: 1px solid #0f172a !important;
+    padding: 2px 1px !important;
+  }
+}
