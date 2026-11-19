@@ -41,10 +41,14 @@ exports.getUsers = async (req, res, next) => {
       
       console.log(`AdminDepartment ${req.user.username} requesting users for department: ${req.user.activeDepartment.name}`);
     } 
-    // If Director or Admin, get all non-deleted users (both active and inactive)
+    // If Director or Admin, get all non-deleted users (or include deleted for Admin when requested)
     else if (req.user.role === 'Director' || req.user.role === 'Admin') {
-      query = User.find({ isDeleted: { $ne: true } });
-      console.log(`${req.user.role} ${req.user.username} requesting all users`);
+      const includeDeleted = req.user.role === 'Admin' && req.query.includeDeleted === 'true';
+      const filter = includeDeleted ? {} : { isDeleted: { $ne: true } };
+      query = User.find(filter);
+      console.log(
+        `${req.user.role} ${req.user.username} requesting ${includeDeleted ? 'all users (including deleted)' : 'all non-deleted users'}`
+      );
     }
     // If AdminTuningDesk, they can see all users except Admin (both active and inactive, not deleted)
     else if (req.user.role === 'AdminTuningDesk') {

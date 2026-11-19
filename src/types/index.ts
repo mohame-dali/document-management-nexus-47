@@ -7,6 +7,8 @@ export interface User {
   activeDepartment: Department | null;
   photo: string;
   isActive: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
   createdAt: string;
   personnelId?: string | null;
 }

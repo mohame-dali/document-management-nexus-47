@@ -54,11 +54,17 @@ router.route('/:id')
   );
 
 // Additional routes
-router.put('/:id/restore',
-  authorize('Admin'),
-  auditDocumentActivity('user_update'),
-  restoreUser
-);
+router.route('/:id/restore')
+  .patch(
+    authorize('Admin'),
+    auditDocumentActivity('user_update'),
+    restoreUser
+  )
+  .put(
+    authorize('Admin'),
+    auditDocumentActivity('user_update'),
+    restoreUser
+  );
 
 router.put('/:id/deactivate', 
   authorize('Admin'),
