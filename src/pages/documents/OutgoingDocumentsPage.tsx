@@ -535,11 +535,30 @@ const OutgoingDocumentsPage: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent className="rounded border-[#cbd5e1] text-base">
                     <SelectItem value="all">{t('outgoing.filters.allDepartments')}</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept._id} value={dept._id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
+                    {departments
+                      .filter((dept) => {
+                        const rawName = dept.name || '';
+                        const normalized = rawName
+                          .toLowerCase()
+                          .normalize('NFD')
+                          .replace(/[\u0300-\u036f]/g, '')
+                          .replace(/[’']/g, "'")
+                          .trim();
+                        return !(
+                          /\bbo\b/.test(normalized) ||
+                          normalized.includes("bureau d'ordre") ||
+                          normalized.includes('bureau ordre') ||
+                          normalized.includes('bureau directeur') ||
+                          normalized.includes('direction') ||
+                          rawName.includes('مكتب الضبط') ||
+                          rawName.includes('مكتب المدير')
+                        );
+                      })
+                      .map((dept) => (
+                        <SelectItem key={dept._id} value={dept._id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
