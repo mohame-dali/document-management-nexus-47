@@ -447,10 +447,14 @@ exports.deleteUser = async (req, res, next) => {
       }
     }
     
-    user.isDeleted = true;
-    user.deletedAt = new Date();
-    user.deletedBy = req.user ? (req.user.id || req.user._id) : null;
-    await user.save();
+    const updateResult = await User.updateOne(
+      { _id: user._id, isDeleted: { $ne: true } },
+      { $set: { isDeleted: true, deletedAt: new Date(), deletedBy: req.user ? (req.user.id || req.user._id) : null } }
+    );
+
+    if (updateResult.modifiedCount !== 1) {
+      return next(new ErrorResponse('Échec de la suppression (aucune modification en base)', 500));
+    }
 
     // Dissocier la fiche Personnel liée s'il y en a une pour éviter un userId orphelin
     try {

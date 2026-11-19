@@ -125,10 +125,18 @@ const UsersPage: React.FC = () => {
     },
     onError: (error: unknown) => {
       console.error('Error deleting user:', error);
-      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
-        ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
-        : t('users.delete.error');
+      const errData =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { data?: { message?: string; error?: string } } }).response?.data
+          : undefined;
+      const errorMsg =
+        errData?.message ||
+        errData?.error ||
+        t('users.delete.error') ||
+        'Erreur lors de la suppression';
       toast.error(errorMsg);
+      setShowDeleteDialog(false);
+      setUserToDelete(null);
     }
   });
 
