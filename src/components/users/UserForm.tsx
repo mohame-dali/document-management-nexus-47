@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -136,7 +136,10 @@ const UserForm: React.FC<UserFormProps> = ({
     staleTime: 1000 * 30,
   });
 
-  const personnels: Personnel[] = Array.isArray(personnelData) ? personnelData : [];
+  const personnels: Personnel[] = useMemo(
+    () => (Array.isArray(personnelData) ? personnelData : []),
+    [personnelData]
+  );
 
   // LOT B: Fonction pour détecter si un département est fonctionnel (Bureau Directeur ou Bureau d'Ordre)
   const isFunctionalDepartment = (departmentId?: string | { _id: string; name?: string } | null) => {
@@ -157,18 +160,138 @@ const UserForm: React.FC<UserFormProps> = ({
       (bureauOrdreId !== '' && bureauOrdreId === deptId)
     );
   };
-  
+
+  type PersonnelDeptCategory = 'BO' | 'DIRECTION' | 'OTHER';
+
+  // Détecter la catégorie du département du personnel sélectionné (BO, Bureau Directeur ou Autre)
+  const getPersonnelDepartmentCategory = (person?: Personnel): PersonnelDeptCategory | null => {
+    if (!person) return null;
+
+    const personWithDept = person as Personnel & { department?: Department | string | null };
+    const rawDept = person.activeDepartment || personWithDept.department || person.departments?.[0];
+    if (!rawDept) return 'OTHER';
+
+    const deptId = typeof rawDept === 'object' ? String(rawDept._id || '') : String(rawDept);
+    const matchedDept = departments.find((d) => String(d._id) === deptId);
+    const deptName = (
+      (typeof rawDept === 'object' && rawDept.name) ||
+      matchedDept?.name ||
+      ''
+    ).trim();
+
+    const bureauOrdreId =
+      typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings.bureauOrdreDepartmentId
+        ? String(orgSettings.bureauOrdreDepartmentId._id)
+        : String(orgSettings?.bureauOrdreDepartmentId || '');
+
+    const bureauDirecteurId =
+      typeof orgSettings?.bureauDirecteurDepartmentId === 'object' && orgSettings.bureauDirecteurDepartmentId
+        ? String(orgSettings.bureauDirecteurDepartmentId._id)
+        : String(orgSettings?.bureauDirecteurDepartmentId || '');
+
+    if (deptId && bureauOrdreId && deptId === bureauOrdreId) {
+      return 'BO';
+    }
+    if (deptId && bureauDirecteurId && deptId === bureauDirecteurId) {
+      return 'DIRECTION';
+    }
+
+    const normalizedName = deptName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[’']/g, "'");
+
+    if (
+      normalizedName.includes("bureau d'ordre") ||
+      normalizedName.includes('bureau ordre') ||
+      normalizedName === 'bo' ||
+      /\bbo\b/.test(normalizedName) ||
+      deptName.includes('مكتب الضبط')
+    ) {
+      return 'BO';
+    }
+
+    if (
+      normalizedName.includes('bureau directeur') ||
+      normalizedName === 'direction' ||
+      normalizedName.includes('direction generale') ||
+      deptName.includes('مكتب المدير') ||
+      deptName.includes('الإدارة العامة')
+    ) {
+      return 'DIRECTION';
+    }
+
+    return 'OTHER';
+  };
+
+  const selectedRole = form.watch('role');
+  const selectedDepartments = form.watch('departments') || [];
+  const selectedPersonnelId = form.watch('personnelId');
+  const selectedPersonnel = useMemo(
+    () => personnels.find((p: Personnel) => p._id === selectedPersonnelId),
+    [personnels, selectedPersonnelId]
+  );
+
+  const selectedPersonnelDeptCategory = getPersonnelDepartmentCategory(selectedPersonnel);
+  const lastAutoFilledPersonnelIdRef = useRef<string | null>(null);
+
+  // Auto-sélection du rôle à chaque changement de selectedPersonnel selon son département
+  useEffect(() => {
+    if (isEditMode || !selectedPersonnel) {
+      lastAutoFilledPersonnelIdRef.current = null;
+      return;
+    }
+
+    const category = getPersonnelDepartmentCategory(selectedPersonnel);
+    let targetRole: UserFormData['role'] = 'User';
+    let allowedValues: UserFormData['role'][] = ['User', 'AdminDepartment'];
+
+    if (category === 'BO') {
+      targetRole = 'AdminTuningDesk';
+      allowedValues = ['AdminTuningDesk'];
+    } else if (category === 'DIRECTION') {
+      targetRole = 'Director';
+      allowedValues = ['Director'];
+    } else {
+      targetRole = 'User';
+      allowedValues = ['User', 'AdminDepartment'];
+    }
+
+    const currentRole = form.getValues('role');
+    const isNewSelection = lastAutoFilledPersonnelIdRef.current !== selectedPersonnel._id;
+
+    if (isNewSelection || !allowedValues.includes(currentRole)) {
+      form.setValue('role', targetRole, { shouldValidate: true, shouldDirty: true });
+      lastAutoFilledPersonnelIdRef.current = selectedPersonnel._id;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPersonnel, isEditMode, departments, orgSettings]);
+
   const availableRoles = () => {
     if (currentUserRole !== 'Admin') {
       return []; // Non-Admin: no roles available
     }
-    return [
+
+    const allRoles = [
       { value: 'Director', label: 'مدير الإدارة', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
       { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
       { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
       { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
       { value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }
     ];
+
+    if (!isEditMode && selectedPersonnel) {
+      if (selectedPersonnelDeptCategory === 'BO') {
+        return allRoles.filter((r) => r.value === 'AdminTuningDesk');
+      }
+      if (selectedPersonnelDeptCategory === 'DIRECTION') {
+        return allRoles.filter((r) => r.value === 'Director');
+      }
+      return allRoles.filter((r) => r.value === 'User' || r.value === 'AdminDepartment');
+    }
+
+    return allRoles;
   };
   
   const availableDepartments = () => {
@@ -179,11 +302,6 @@ const UserForm: React.FC<UserFormProps> = ({
     }
     return [];
   };
-  
-  const selectedRole = form.watch('role');
-  const selectedDepartments = form.watch('departments') || [];
-  const selectedPersonnelId = form.watch('personnelId');
-  const selectedPersonnel = personnels.find((p: Personnel) => p._id === selectedPersonnelId);
 
   // Obligatoire pour Director, AdminDepartment, AdminTuningDesk, User
   const isPersonnelRequired = ['Director', 'AdminDepartment', 'AdminTuningDesk', 'User'].includes(selectedRole);
@@ -494,7 +612,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   <FormLabel className="text-base font-bold text-[#1a202c]">الدور الوظيفي في النظام</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    value={field.value}
                     disabled={currentUserRole === 'AdminDepartment'}
                   >
                     <FormControl>
