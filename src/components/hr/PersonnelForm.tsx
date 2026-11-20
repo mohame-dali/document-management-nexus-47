@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -6,6 +6,7 @@ import { getDepartments } from '@/services/departmentService';
 import { Department } from '@/types';
 import { Personnel, PersonnelSexe } from '@/types/hr';
 import { uploadPersonnelPhoto, getPhotoUrl } from '@/services/hr/personnelApi';
+import { useDirection } from '@/i18n/useDirection';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -42,36 +43,6 @@ const getTodayLocalIso = () => {
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
-
-const personnelStep1Schema = z.object({
-  nom: z.string().trim().min(1, 'اللقب إجباري'),
-  prenom: z.string().trim().min(1, 'الاسم إجباري'),
-  cin: z
-    .string()
-    .trim()
-    .regex(/^\d{8}$/, 'رقم بطاقة التعريف الوطنية (CIN) يجب أن يتكون من 8 أرقام بالضبط'),
-  telephone: z
-    .string()
-    .trim()
-    .regex(/^\d{8}$/, 'رقم الهاتف يجب أن يتكون من 8 أرقام بالضبط'),
-  emailPersonnel: z
-    .string()
-    .trim()
-    .refine(
-      (val) => val === '' || z.string().email().safeParse(val).success,
-      'صيغة البريد الإلكتروني غير صالحة'
-    ),
-});
-
-const personnelFullSchema = personnelStep1Schema.extend({
-  dateEmbauche: z
-    .string()
-    .trim()
-    .refine(
-      (val) => !val || val <= getTodayLocalIso(),
-      'تاريخ التعيين أو الالتحاق لا يمكن أن يكون في المستقبل'
-    ),
-});
 
 export interface ContactUrgenceItem {
   nom: string;
@@ -121,8 +92,42 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar' || document.dir === 'rtl';
+  const { t } = useTranslation();
+  const { isRTL: isRtl } = useDirection();
+
+  const { personnelStep1Schema, personnelFullSchema } = useMemo(() => {
+    const step1 = z.object({
+      nom: z.string().trim().min(1, t('hr.form.validation.nomRequired')),
+      prenom: z.string().trim().min(1, t('hr.form.validation.prenomRequired')),
+      cin: z
+        .string()
+        .trim()
+        .regex(/^\d{8}$/, t('hr.form.validation.cinLength')),
+      telephone: z
+        .string()
+        .trim()
+        .regex(/^\d{8}$/, t('hr.form.validation.telephoneLength')),
+      emailPersonnel: z
+        .string()
+        .trim()
+        .refine(
+          (val) => val === '' || z.string().email().safeParse(val).success,
+          t('hr.form.validation.emailInvalid')
+        ),
+    });
+
+    const full = step1.extend({
+      dateEmbauche: z
+        .string()
+        .trim()
+        .refine(
+          (val) => !val || val <= getTodayLocalIso(),
+          t('hr.form.validation.hireDateFuture')
+        ),
+    });
+
+    return { personnelStep1Schema: step1, personnelFullSchema: full };
+  }, [t]);
 
   // État du wizard multi-étapes
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -348,7 +353,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
 
     // Validation du type de fichier
     if (!file.type.startsWith('image/')) {
-      setPhotoError('يرجى اختيار ملف صورة صالح (JPG, PNG, WEBP)');
+      setPhotoError(t('hr.form.photo.invalidType'));
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -356,7 +361,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
     // Validation de la taille (2 Mo max)
     const MAX_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      setPhotoError('حجم الصورة يتجاوز الحد الأقصى المسموح به (2 ميغابايت)');
+      setPhotoError(t('hr.form.photo.maxSize'));
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -387,11 +392,11 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       setPhoto(res.photo);
       setPreviewUrl(getPhotoUrl(res.photo));
       setPhotoFile(null);
-      toast.success('تم تحديث صورة الموظف بنجاح');
+      toast.success(t('hr.form.photo.uploadSuccess'));
     } catch (err: unknown) {
       console.error('Error uploading photo:', err);
-      setPhotoError('حدث خطأ أثناء رفع الصورة، يرجى المحاولة مرة أخرى');
-      toast.error('تعذر رفع الصورة');
+      setPhotoError(t('hr.form.photo.uploadError'));
+      toast.error(t('hr.form.photo.uploadFailed'));
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -479,7 +484,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       return;
     }
     if (currentStep === 3 && dateEmbauche && dateEmbauche > getTodayLocalIso()) {
-      const msg = 'تاريخ التعيين أو الالتحاق لا يمكن أن يكون في المستقبل';
+      const msg = t('hr.form.validation.hireDateFuture');
       setErrors((prev) => ({ ...prev, dateEmbauche: msg }));
       toast.error(msg);
       return;

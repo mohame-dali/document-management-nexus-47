@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { AlertCircle, Shield } from 'lucide-react';
 import { Department } from '@/types';
+import { useDirection } from '@/i18n/useDirection';
 import { PersonnelFormErrors } from '../PersonnelForm';
 
 export interface Step3AdminProps {
@@ -81,18 +83,21 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
   errors,
   setErrors,
 }) => {
+  const { t } = useTranslation();
+  const { dir } = useDirection();
+
   return (
     <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
       <h2 className="text-xl font-bold text-[#1a202c] border-b border-[#e2e8f0] pb-3 mb-6 flex items-center gap-2">
         <Shield className="w-5 h-5 text-[#2c5282]" />
-        <span>المعلومات المهنية والإدارية (Situation administrative)</span>
+        <span>{t('hr.form.admin.sectionTitle')}</span>
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Poste actuel (الخطة) */}
+        {/* Poste actuel */}
         <div className="space-y-2">
           <Label htmlFor="posteActuel" className="text-base font-semibold text-gray-700">
-            الخطة / المنصب الحالي (Poste actuel)
+            {t('hr.form.admin.posteActuel.label')}
           </Label>
           <Input
             id="posteActuel"
@@ -101,7 +106,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
               setPosteActuel(e.target.value);
               setPoste(e.target.value);
             }}
-            placeholder="مثال: رئيس مصلحة / متصرف..."
+            placeholder={t('hr.form.admin.posteActuel.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
@@ -109,7 +114,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Département principal */}
         <div className="space-y-2">
           <Label htmlFor="activeDepartment" className="text-base font-semibold text-gray-700">
-            القسم الرئيسي (Département)
+            {t('hr.form.admin.department.label')}
           </Label>
           <Select
             value={activeDepartment}
@@ -117,10 +122,10 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             disabled={isLoadingDepartments}
           >
             <SelectTrigger id="activeDepartment" className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
-              <SelectValue placeholder="اختر القسم" />
+              <SelectValue placeholder={t('hr.form.admin.department.placeholder')} />
             </SelectTrigger>
-            <SelectContent dir="rtl">
-              <SelectItem value="NONE" className="text-base py-2 font-medium">غير محدد</SelectItem>
+            <SelectContent dir={dir}>
+              <SelectItem value="NONE" className="text-base py-2 font-medium">{t('hr.form.admin.department.none')}</SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
                   {dept.name}
@@ -133,7 +138,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Date d'embauche */}
         <div className="space-y-2">
           <Label htmlFor="dateEmbauche" className="text-base font-semibold text-gray-700">
-            تاريخ التعيين أو الالتحاق (Date d'embauche)
+            {t('hr.form.admin.dateEmbauche.label')}
           </Label>
           <Input
             id="dateEmbauche"
@@ -160,13 +165,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Numéro d'unité */}
         <div className="space-y-2">
           <Label htmlFor="numeroUnite" className="text-base font-semibold text-gray-700">
-            رقم الوحدة (Numéro d'unité)
+            {t('hr.form.admin.numeroUnite.label')}
           </Label>
           <Input
             id="numeroUnite"
             value={numeroUnite}
             onChange={(e) => setNumeroUnite(e.target.value)}
-            placeholder="مثال: 104"
+            placeholder={t('hr.form.admin.numeroUnite.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
@@ -174,13 +179,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Numéro d'armée */}
         <div className="space-y-2">
           <Label htmlFor="numeroArmee" className="text-base font-semibold text-gray-700">
-            الرقم العسكري (Numéro d'armée)
+            {t('hr.form.admin.numeroArmee.label')}
           </Label>
           <Input
             id="numeroArmee"
             value={numeroArmee}
             onChange={(e) => setNumeroArmee(e.target.value)}
-            placeholder="مثال: 12345/A"
+            placeholder={t('hr.form.admin.numeroArmee.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
@@ -188,7 +193,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Date d'engagement */}
         <div className="space-y-2">
           <Label htmlFor="dateEngagement" className="text-base font-semibold text-gray-700">
-            تاريخ الانخراط (Date d'engagement)
+            {t('hr.form.admin.dateEngagement.label')}
           </Label>
           <Input
             id="dateEngagement"
@@ -202,13 +207,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Type d'engagement */}
         <div className="space-y-2">
           <Label htmlFor="typeEngagement" className="text-base font-semibold text-gray-700">
-            نوع الانخراط (Type d'engagement)
+            {t('hr.form.admin.typeEngagement.label')}
           </Label>
           <Input
             id="typeEngagement"
             value={typeEngagement}
             onChange={(e) => setTypeEngagement(e.target.value)}
-            placeholder="مثال: مباشر / متعاقد / تطوع..."
+            placeholder={t('hr.form.admin.typeEngagement.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
@@ -216,13 +221,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Origine d'engagement */}
         <div className="space-y-2">
           <Label htmlFor="origineEngagement" className="text-base font-semibold text-gray-700">
-            أصل الانخراط (Origine d'engagement)
+            {t('hr.form.admin.origineEngagement.label')}
           </Label>
           <Input
             id="origineEngagement"
             value={origineEngagement}
             onChange={(e) => setOrigineEngagement(e.target.value)}
-            placeholder="مثال: الأكاديمية العسكرية / مدرسة الرقباء..."
+            placeholder={t('hr.form.admin.origineEngagement.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
@@ -230,55 +235,55 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
         {/* Niveau d'étude */}
         <div className="space-y-2">
           <Label htmlFor="niveauEtude" className="text-base font-semibold text-gray-700">
-            المستوى الدراسي (Niveau d'étude)
+            {t('hr.form.admin.niveauEtude.label')}
           </Label>
           <Input
             id="niveauEtude"
             value={niveauEtude}
             onChange={(e) => setNiveauEtude(e.target.value)}
-            placeholder="مثال: تعليم عالي / باكالوريا..."
+            placeholder={t('hr.form.admin.niveauEtude.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
-        {/* Diplôme de base (المؤهل) */}
+        {/* Diplôme de base */}
         <div className="space-y-2">
           <Label htmlFor="diplomeBase" className="text-base font-semibold text-gray-700">
-            المؤهل / الشهادة الأساسية (المؤهل)
+            {t('hr.form.admin.diplomeBase.label')}
           </Label>
           <Input
             id="diplomeBase"
             value={diplomeBase}
             onChange={(e) => setDiplomeBase(e.target.value)}
-            placeholder="مثال: إجازة تطبيقية / ماجستير / مؤهل ضابط..."
+            placeholder={t('hr.form.admin.diplomeBase.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
-        {/* Spécialité (الإختصاص) */}
+        {/* Spécialité */}
         <div className="space-y-2">
           <Label htmlFor="specialite" className="text-base font-semibold text-gray-700">
-            الإختصاص (Spécialité)
+            {t('hr.form.admin.specialite.label')}
           </Label>
           <Input
             id="specialite"
             value={specialite}
             onChange={(e) => setSpecialite(e.target.value)}
-            placeholder="مثال: إعلامية / اتصالات / لوجستيك..."
+            placeholder={t('hr.form.admin.specialite.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
-        {/* Arme (السلاح) */}
+        {/* Arme */}
         <div className="space-y-2">
           <Label htmlFor="arme" className="text-base font-semibold text-gray-700">
-            السلاح (Arme)
+            {t('hr.form.admin.arme.label')}
           </Label>
           <Input
             id="arme"
             value={arme}
             onChange={(e) => setArme(e.target.value)}
-            placeholder="مثال: الإشارة / المشاة / النقل..."
+            placeholder={t('hr.form.admin.arme.placeholder')}
             className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
@@ -287,14 +292,14 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
       {/* Notes */}
       <div className="space-y-2 mt-6 pt-6 border-t border-[#e2e8f0]">
         <Label htmlFor="notes" className="text-base font-semibold text-gray-700">
-          ملاحظات إضافية (Notes)
+          {t('hr.form.admin.notes.label')}
         </Label>
         <Textarea
           id="notes"
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="ملاحظات أو تعليقات تخص ملف الموظف..."
+          placeholder={t('hr.form.admin.notes.placeholder')}
           className="text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
         />
       </div>
