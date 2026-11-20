@@ -56,16 +56,63 @@ const BACKEND_MESSAGE_MAP: Record<string, string> = {
   'Timeout': 'انتهت مدة الطلب. يرجى المحاولة مرة أخرى',
 };
 
+const BACKEND_MESSAGE_MAP_FR: Record<string, string> = {
+  'Unauthorized': 'Veuillez vous reconnecter',
+  'Non autorisé': 'Veuillez vous reconnecter',
+  'Invalid credentials': 'Identifiants incorrects',
+  'Email ou mot de passe incorrect': 'E-mail ou mot de passe incorrect',
+  'User not found': 'Utilisateur introuvable',
+  'Utilisateur introuvable': 'Utilisateur introuvable',
+  'Token expired': 'Session expirée. Veuillez vous reconnecter',
+  'Token invalid': 'Session invalide',
+  'Access denied': "Vous n'avez pas l'autorisation d'effectuer cette action",
+  'Accès refusé': "Vous n'avez pas l'autorisation d'effectuer cette action",
+  'Forbidden': 'Accès refusé',
+  'Insufficient permissions': 'Permissions insuffisantes',
+  'Not found': 'Élément introuvable',
+  'Document non trouvé': 'Document introuvable',
+  'Personnel introuvable': 'Personnel introuvable',
+  'Département introuvable': 'Département introuvable',
+  'Department not found': 'Département introuvable',
+  'Invalid date': 'Date invalide',
+  'Date invalide': 'Date invalide',
+  'Invalid ID': 'Identifiant invalide',
+  'Required field missing': 'Champ obligatoire manquant',
+  'Champ obligatoire': 'Ce champ est obligatoire',
+  'Invalid format': 'Format invalide',
+  'Already exists': 'Cet élément existe déjà',
+  'Déjà existe': 'Cet élément existe déjà',
+  'Duplicate entry': 'Valeur en double',
+  'Cannot delete': 'Suppression impossible',
+  'Cannot update': 'Mise à jour impossible',
+  'Director cannot': 'Le directeur ne peut pas effectuer cette action',
+  'Only one Director allowed': 'Un seul directeur est autorisé',
+  'Fichier trop volumineux. Maximum 10 Mo.': 'Fichier trop volumineux. Maximum 10 Mo.',
+  'Fichier trop volumineux': 'Fichier trop volumineux. Maximum 10 Mo.',
+  'File too large': 'Fichier trop volumineux. Maximum 10 Mo.',
+  'LIMIT_FILE_SIZE': 'Fichier trop volumineux. Maximum 10 Mo.',
+  'Network Error': 'Erreur de connexion réseau',
+  'Timeout': 'Délai de requête dépassé. Veuillez réessayer',
+};
+
 /**
- * Extract the best Arabic error message from an error object.
+ * Extract the best localized error message from an error object.
  * Priority:
- *   1. Translated backend message (from BACKEND_MESSAGE_MAP)
+ *   1. Translated backend message
  *   2. Raw backend message if no translation found
  *   3. HTTP status code message
  *   4. Fallback generic message
  */
-export function getErrorMessage(error: unknown, fallbackMessage?: string): string {
-  if (!error) return fallbackMessage || 'حدث خطأ غير متوقع';
+export function getErrorMessage(
+  error: unknown,
+  fallbackMessage?: string,
+  language: 'ar' | 'fr' = 'ar'
+): string {
+  const defaultFallback =
+    language === 'fr' ? 'Une erreur inattendue est survenue' : 'حدث خطأ غير متوقع';
+  if (!error) return fallbackMessage || defaultFallback;
+
+  const messageMap = language === 'fr' ? BACKEND_MESSAGE_MAP_FR : BACKEND_MESSAGE_MAP;
 
   const err = error as {
     response?: {
@@ -86,20 +133,20 @@ export function getErrorMessage(error: unknown, fallbackMessage?: string): strin
 
   if (backendMsg && typeof backendMsg === 'string') {
     // Try exact translation
-    if (BACKEND_MESSAGE_MAP[backendMsg]) {
-      return BACKEND_MESSAGE_MAP[backendMsg];
+    if (messageMap[backendMsg]) {
+      return messageMap[backendMsg];
     }
 
     // Try partial match (case-insensitive)
     const lowerMsg = backendMsg.toLowerCase();
-    for (const [key, translation] of Object.entries(BACKEND_MESSAGE_MAP)) {
+    for (const [key, translation] of Object.entries(messageMap)) {
       if (lowerMsg.includes(key.toLowerCase())) {
         return translation;
       }
     }
 
-    // If already Arabic (contains Arabic chars) → return as-is
-    if (/[\u0600-\u06FF]/.test(backendMsg)) {
+    // If already matches target language script, return as-is
+    if (language === 'ar' && /[\u0600-\u06FF]/.test(backendMsg)) {
       return backendMsg;
     }
 
@@ -109,6 +156,23 @@ export function getErrorMessage(error: unknown, fallbackMessage?: string): strin
 
   // 2. Fallback to HTTP status code
   const status = err?.response?.status;
+  if (language === 'fr') {
+    switch (status) {
+      case 400: return 'Données saisies invalides';
+      case 401: return 'Veuillez vous reconnecter';
+      case 403: return "Vous n'avez pas l'autorisation d'effectuer cette action";
+      case 404: return 'Élément introuvable';
+      case 409: return 'Cet élément existe déjà';
+      case 413: return 'Fichier trop volumineux. Maximum 10 Mo.';
+      case 422: return 'Données saisies incomplètes';
+      case 429: return 'Trop de requêtes. Veuillez réessayer dans un moment';
+      case 500: return 'Erreur interne du système';
+      case 502: return 'Erreur de connexion au service';
+      case 503: return 'Service actuellement indisponible';
+      default: return fallbackMessage || defaultFallback;
+    }
+  }
+
   switch (status) {
     case 400: return 'البيانات المدخلة غير صحيحة';
     case 401: return 'يجب تسجيل الدخول مرة أخرى';
@@ -121,6 +185,6 @@ export function getErrorMessage(error: unknown, fallbackMessage?: string): strin
     case 500: return 'خطأ داخلي في النظام';
     case 502: return 'خطأ في الاتصال بالخدمة';
     case 503: return 'الخدمة غير متوفرة حالياً';
-    default: return fallbackMessage || 'حدث خطأ غير متوقع';
+    default: return fallbackMessage || defaultFallback;
   }
 }

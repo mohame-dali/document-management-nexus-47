@@ -3,6 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery } from '@tanstack/react-query';
 import { getDocumentOptions, DocumentOption } from '@/services/documentOptionsService';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentOptionSelectProps {
   category: 'activity' | 'source' | 'typeDocument' | 'assignedTo' | 'pourInfo';
@@ -19,10 +21,13 @@ const DocumentOptionSelect: React.FC<DocumentOptionSelectProps> = ({
   documentType,
   value,
   onValueChange,
-  placeholder = 'Select an option',
+  placeholder,
   disabled = false,
   allowCustom = false,
 }) => {
+  const { t } = useLanguage();
+  const { dir } = useDirection();
+  const resolvedPlaceholder = placeholder || t('documents.options.selectPlaceholder');
   const { data: options = [], isLoading } = useQuery({
     queryKey: ['documentOptions', category, documentType],
     queryFn: () => getDocumentOptions({ category, documentType }),
@@ -53,19 +58,19 @@ const DocumentOptionSelect: React.FC<DocumentOptionSelectProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm text-muted-foreground">Loading options...</span>
+        <span className="text-sm text-muted-foreground">{t('documents.options.loading')}</span>
       </div>
     );
   }
 
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+    <Select value={value} onValueChange={onValueChange} disabled={disabled} dir={dir}>
       <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={resolvedPlaceholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent dir={dir}>
         {uniqueOptions.map((option: DocumentOption, index: number) => {
           const itemKey = option._id
             ? String(option._id)
@@ -78,7 +83,7 @@ const DocumentOptionSelect: React.FC<DocumentOptionSelectProps> = ({
         })}
         {allowCustom && (
           <SelectItem key="__custom__" value="__custom__">
-            + Add custom value
+            {t('documents.options.addCustom')}
           </SelectItem>
         )}
       </SelectContent>

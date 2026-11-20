@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { UseFormReturn, FieldValues } from 'react-hook-form';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface CorrespondenceFieldsProps<TFieldValues extends FieldValues = FieldValues> {
   form: UseFormReturn<TFieldValues>;
@@ -19,6 +20,8 @@ interface CorrespondenceFieldsProps<TFieldValues extends FieldValues = FieldValu
 const CorrespondenceFields: React.FC<CorrespondenceFieldsProps> = ({
   form
 }) => {
+  const { t } = useLanguage();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <FormField
@@ -26,11 +29,11 @@ const CorrespondenceFields: React.FC<CorrespondenceFieldsProps> = ({
         name="correspondenceNumber"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Correspondence Number</FormLabel>
+            <FormLabel>{t('documents.forms.correspondenceNumber')}</FormLabel>
             <FormControl>
-              <Input placeholder="REF-2025-001" {...field} />
+              <Input placeholder={t('documents.forms.correspondenceNumberPlaceholder')} {...field} />
             </FormControl>
-            <FormDescription>Reference number of the document</FormDescription>
+            <FormDescription>{t('documents.forms.correspondenceNumberDesc')}</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -42,9 +45,9 @@ const CorrespondenceFields: React.FC<CorrespondenceFieldsProps> = ({
         render={({ field }) => (
           <DatePickerField 
             field={field}
-            label="Correspondence Date"
-            description="Date of the correspondence"
-            selectDateText="Select date"
+            label={t('documents.forms.correspondenceDate')}
+            description={t('documents.forms.correspondenceDateDesc')}
+            selectDateText={t('documents.createIncoming.selectDate')}
           />
         )}
       />

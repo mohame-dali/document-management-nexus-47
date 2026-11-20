@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { ControllerRenderProps, FieldValues } from 'react-hook-form';
 import { Department } from '@/types';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DepartmentSelectFieldProps<TFieldValues extends FieldValues = FieldValues> {
   field: ControllerRenderProps<TFieldValues>;
@@ -32,6 +33,7 @@ const DepartmentSelectField: React.FC<DepartmentSelectFieldProps> = ({
   departments,
   placeholder
 }) => {
+  const { dir } = useDirection();
   // Filter only active departments
   const activeDepartments = departments.filter(dept => dept.isActive);
 
@@ -47,7 +49,7 @@ const DepartmentSelectField: React.FC<DepartmentSelectFieldProps> = ({
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
         </FormControl>
-        <SelectContent>
+        <SelectContent dir={dir}>
           {activeDepartments.map(dept => (
             <SelectItem key={dept._id} value={dept._id}>
               {dept.name}

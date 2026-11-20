@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import DocumentAttachmentSection from './outgoing/DocumentAttachmentSection';
 import { OutgoingDocument, Department } from '@/types';
 import { OutgoingScanMutationRunner, OutgoingScanResultData } from '@/hooks/forms/useOutgoingDocumentForm';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { getErrorMessage } from '@/utils/errorMessages';
 import {
   ScanStage,
   LiveThumbnail,
@@ -36,18 +37,19 @@ interface EditOutgoingDocumentFormProps {
   scanTemporaryDocumentMutation?: OutgoingScanMutationRunner;
 }
 
-const formSchema = z.object({
-  serialNumber: z.string().min(1, 'Required'),
-  year: z.string().min(1, 'Required'),
-  subject: z.string().min(1, 'Required'),
-  assignedTo: z.string().array().min(1, 'At least one destination is required'),
-  issueDate: z.date(),
-  department: z.string().min(1, 'Required'),
-  typeDocument: z.string().optional(),
-  pourInfo: z.string().array().optional(),
-});
+const createFormSchema = (requiredMsg: string, minDestinationMsg: string) =>
+  z.object({
+    serialNumber: z.string().min(1, requiredMsg),
+    year: z.string().min(1, requiredMsg),
+    subject: z.string().min(1, requiredMsg),
+    assignedTo: z.string().array().min(1, minDestinationMsg),
+    issueDate: z.date(),
+    department: z.string().min(1, requiredMsg),
+    typeDocument: z.string().optional(),
+    pourInfo: z.string().array().optional(),
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   document,
@@ -59,6 +61,15 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   const navigate = useNavigate();
   const { t: translate, language } = useLanguage();
   const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
+
+  const formSchema = useMemo(
+    () =>
+      createFormSchema(
+        translate('documents.forms.validation.required'),
+        translate('documents.forms.validation.minOneDestination')
+      ),
+    [translate]
+  );
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<string>("upload");
@@ -410,11 +421,11 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
       await updateOutgoingDocument(document._id, formData);
       hasSubmittedRef.current = true;
       localScanIdRef.current = null;
-      toast.success('تم تحديث الوثيقة بنجاح');
+      toast.success(translate('documents.editOutgoing.updateSuccess'));
       navigate('/dashboard/outgoing-documents');
     } catch (error) {
       console.error('Error updating document:', error);
-      toast.error('فشل في تحديث الوثيقة');
+      toast.error(getErrorMessage(error, translate('documents.editOutgoing.updateError'), lang));
     }
   };
 
@@ -423,29 +434,38 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   };
 
   const t = {
-    title: 'تعديل الوثيقة الصادرة',
-    subject: 'الموضوع',
-    subjectDesc: 'موضوع الوثيقة',
-    destination: 'الوجهة',
-    cancel: 'إلغاء',
-    submit: 'تحديث الوثيقة',
-    attachments: 'مرفق الوثيقة',
-    attachmentsDesc: 'رفع وثيقة جديدة أو إعادة مسح ضوئي لاستبدال الموجودة',
-    uploadTab: 'رفع ملف',
-    scanTab: 'مسح ضوئي',
-    scanComplete: 'تم المسح بنجاح',
-    scanFailed: 'فشل في المسح',
-    required: 'مطلوب',
-    serialNumber: 'الرقم التسلسلي',
-    serialNumberDesc: 'الرقم التسلسلي للوثيقة',
-    year: 'السنة',
-    yearDesc: 'سنة الوثيقة',
-    issueDate: 'تاريخ الإصدار',
-    issueDateDesc: 'تاريخ إصدار الوثيقة',
-    department: 'القسم',
-    departmentDesc: 'القسم المصدر',
-    selectDepartment: 'اختر القسم',
-    selectDate: 'اختر التاريخ'
+    title: translate('documents.editOutgoing.title'),
+    subject: translate('documents.createOutgoing.subject'),
+    subjectDesc: translate('documents.createOutgoing.subjectDesc'),
+    destination: translate('documents.forms.outgoingDestination'),
+    destinationDesc: translate('documents.forms.outgoingDestinationDesc'),
+    cancel: translate('documents.createOutgoing.cancel'),
+    submit: translate('documents.editOutgoing.submit'),
+    attachments: translate('documents.forms.sections.attachments'),
+    attachmentsDesc: translate('documents.editOutgoing.attachmentsDesc'),
+    uploadTab: translate('documents.createOutgoing.uploadTab'),
+    scanTab: translate('documents.createOutgoing.scanTab'),
+    scanComplete: translate('documents.createOutgoing.scanComplete'),
+    scanFailed: translate('documents.createOutgoing.scanFailed'),
+    scanDocument: translate('documents.createOutgoing.scanDocument'),
+    scannerNotConfigured: translate('documents.createOutgoing.scannerNotConfigured'),
+    configureScanner: translate('documents.createOutgoing.configureScanner'),
+    resolution: translate('documents.createOutgoing.resolution'),
+    format: translate('documents.createOutgoing.format'),
+    pdfFormat: 'PDF',
+    jpegFormat: 'JPEG',
+    pngFormat: 'PNG',
+    required: translate('documents.forms.validation.required'),
+    serialNumber: translate('documents.createOutgoing.serialNumber'),
+    serialNumberDesc: translate('documents.createOutgoing.serialNumberDesc'),
+    year: translate('documents.forms.year'),
+    yearDesc: translate('documents.forms.yearDesc'),
+    issueDate: translate('documents.createOutgoing.issueDate'),
+    issueDateDesc: translate('documents.createOutgoing.issueDateDesc'),
+    department: translate('documents.createOutgoing.department'),
+    departmentDesc: translate('documents.editOutgoing.departmentDesc'),
+    selectDepartment: translate('documents.createOutgoing.selectDepartment'),
+    selectDate: translate('documents.createOutgoing.selectDate')
   };
 
   return (
@@ -465,7 +485,9 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">المعلومات الأساسية</h3>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {translate('documents.forms.sections.basicInfo')}
+                  </h3>
                 </div>
                 
                 <div className="bg-muted/30 rounded p-6 border border-border/50">
@@ -483,7 +505,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">مرفقات الوثيقة</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{t.attachments}</h3>
                   <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
                     {t.attachmentsDesc}
                   </span>

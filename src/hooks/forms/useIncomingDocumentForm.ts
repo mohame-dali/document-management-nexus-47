@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -165,32 +165,46 @@ export const useIncomingDocumentForm = (
     };
   }, [stopPolling, clearLiveThumbnails]);
 
-  const formSchema = z
-    .object({
-      serialNumber: z.string().min(1, t.required),
-      subject: z.string().min(1, t.required),
-      source: z.string().min(1, t.required),
-      arrivalDate: z.date(),
-      correspondenceNumber: z.string().min(1, t.required),
-      correspondenceDate: z.date(),
-      typeDocument: z.string().optional(),
-      activity: z.string().optional().or(z.literal('')),
-      dateActivity: z.date().optional(),
-      departments: z.array(z.string()).min(1, t.required || 'Un courrier doit être affecté à au moins un département.'),
-      description: z.string().optional(),
-    })
-    .refine(
-      (data) => {
-        if (data.activity && data.activity.trim() !== '' && !data.dateActivity) {
-          return false;
-        }
-        return true;
-      },
-      {
-        message: 'تاريخ النشاط مطلوب عند تحديد نشاط',
-        path: ['dateActivity'],
-      }
-    );
+  const formSchema = useMemo(
+    () =>
+      z
+        .object({
+          serialNumber: z
+            .string()
+            .min(1, t.required || translate('documents.forms.validation.required')),
+          subject: z
+            .string()
+            .min(1, t.required || translate('documents.forms.validation.required')),
+          source: z
+            .string()
+            .min(1, t.required || translate('documents.forms.validation.required')),
+          arrivalDate: z.date(),
+          correspondenceNumber: z
+            .string()
+            .min(1, t.required || translate('documents.forms.validation.required')),
+          correspondenceDate: z.date(),
+          typeDocument: z.string().optional(),
+          activity: z.string().optional().or(z.literal('')),
+          dateActivity: z.date().optional(),
+          departments: z
+            .array(z.string())
+            .min(1, translate('documents.forms.validation.minOneDepartment')),
+          description: z.string().optional(),
+        })
+        .refine(
+          (data) => {
+            if (data.activity && data.activity.trim() !== '' && !data.dateActivity) {
+              return false;
+            }
+            return true;
+          },
+          {
+            message: translate('documents.forms.validation.activityDateRequired'),
+            path: ['dateActivity'],
+          }
+        ),
+    [t.required, translate]
+  );
 
   type FormValues = z.infer<typeof formSchema>;
 
@@ -445,7 +459,7 @@ export const useIncomingDocumentForm = (
       if (isNaN(numericValue) || numericValue <= 0) {
         form.setError('serialNumber', {
           type: 'manual',
-          message: 'يجب أن يكون الرقم التسلسلي رقماً صحيحاً موجباً',
+          message: translate('documents.forms.validation.serialNumberPositive'),
         });
         return;
       }
@@ -459,7 +473,7 @@ export const useIncomingDocumentForm = (
               if (!isValid) {
                 form.setError('serialNumber', {
                   type: 'manual',
-                  message: 'هذا الرقم التسلسلي موجود بالفعل لهذا العام',
+                  message: translate('documents.forms.validation.serialNumberExists'),
                 });
               } else {
                 form.clearErrors('serialNumber');
@@ -733,11 +747,7 @@ export const useIncomingDocumentForm = (
 
   const onSubmit = async (data: FormValues & { ocrText?: string }) => {
     if (isScanInProgress) {
-      toast.warning(
-        lang === 'ar'
-          ? 'يرجى انتظار انتهاء المسح الضوئي ومعالجة النص قبل إرسال المستند.'
-          : 'Veuillez attendre la fin de la numérisation et du traitement OCR avant de soumettre.'
-      );
+      toast.warning(translate('documents.forms.validation.waitScanFinish'));
       return;
     }
 
@@ -826,7 +836,7 @@ export const useIncomingDocumentForm = (
       navigate('/dashboard/incoming-documents');
     } catch (error) {
       console.error('Error creating document:', error);
-      toast.error(getErrorMessage(error, t.createError));
+      toast.error(getErrorMessage(error, t.createError, lang));
     }
   };
 

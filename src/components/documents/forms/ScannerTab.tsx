@@ -271,7 +271,11 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
             <AlertTriangle className="h-4 w-4 text-amber-400" />
             <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm text-amber-100">
               <span>
-                Aucun scanner détecté. Vérifiez le branchement USB et les permissions, puis cliquez Actualiser.
+                {tr(
+                  'scanner.noScannerDetected',
+                  'Aucun scanner détecté. Vérifiez le branchement USB et les permissions, puis cliquez sur Actualiser.',
+                  'لم يتم العثور على أي ماسح ضوئي. يرجى التحقق من توصيل كابل USB والصلاحيات ثم النقر على تحديث الحالة.'
+                )}
               </span>
               <Button
                 type="button"
@@ -282,7 +286,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                 className="border-amber-500/40 bg-zinc-950 text-amber-200 hover:bg-amber-950/60 hover:text-white"
               >
                 <RefreshCw className={`h-3.5 w-3.5 me-1.5 ${isCheckingScanner ? 'animate-spin' : ''}`} />
-                Actualiser l&apos;état
+                {tr('scanner.refreshStatus', "Actualiser l'état", 'تحديث الحالة')}
               </Button>
             </AlertDescription>
           </Alert>
@@ -308,12 +312,14 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                 <div className="space-y-1.5">
                   <p className="text-base font-semibold text-amber-200">
                     {t.scannerNotConfigured ||
-                      (lang === 'ar' ? 'الماسح الضوئي غير مهيأ' : 'Scanner non configuré')}
+                      tr('scanner.notConfigured', 'Scanner non configuré', 'الماسح الضوئي غير مهيأ')}
                   </p>
                   <p className="text-sm text-amber-300/80">
-                    {lang === 'ar'
-                      ? 'يرجى توصيل الماسح الضوئي وتحديده في صفحة الإعداد أولاً.'
-                      : 'Veuillez connecter votre scanner et le sélectionner dans la page de configuration.'}
+                    {tr(
+                      'scanner.notConfiguredHint',
+                      'Veuillez connecter votre scanner et le sélectionner dans la page de configuration.',
+                      'يرجى توصيل الماسح الضوئي وتحديده في صفحة الإعداد أولاً.'
+                    )}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2">
@@ -326,7 +332,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                   >
                     <Settings className="h-4 w-4 me-2" />
                     {t.configureScanner ||
-                      (lang === 'ar' ? 'إعداد الماسح الضوئي' : 'Configurer le scanner')}
+                      tr('scanner.configure', 'Configurer le scanner', 'إعداد الماسح الضوئي')}
                   </Button>
                   <Button
                     type="button"
@@ -336,7 +342,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                     className="border-zinc-700 bg-zinc-950 text-zinc-200 hover:bg-zinc-800 hover:text-white"
                   >
                     <RefreshCw className={`h-4 w-4 me-2 ${isCheckingScanner ? 'animate-spin' : ''}`} />
-                    Actualiser l&apos;état
+                    {tr('scanner.refreshStatus', "Actualiser l'état", 'تحديث الحالة')}
                   </Button>
                 </div>
               </div>

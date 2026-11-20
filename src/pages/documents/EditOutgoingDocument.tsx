@@ -11,11 +11,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
 import EditOutgoingDocumentForm from '@/components/documents/forms/EditOutgoingDocumentForm';
 import { useDirection } from '@/i18n/useDirection';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 const EditOutgoingDocument = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { dir } = useDirection();
+  const { t } = useLanguage();
 
   const { data: document, isLoading } = useQuery({
     queryKey: ['outgoingDocument', id],
@@ -67,10 +69,10 @@ const EditOutgoingDocument = () => {
       <div className="p-6" dir={dir}>
         <div className="flex flex-col items-center justify-center h-64">
           <FileText className="h-16 w-16 text-gray-300 mb-4" />
-          <h2 className="text-xl font-medium text-gray-600">الوثيقة غير موجودة</h2>
-          <p className="text-gray-500 mb-4">الوثيقة التي تبحث عنها غير موجودة أو ليس لديك صلاحية لتعديلها.</p>
+          <h2 className="text-xl font-medium text-gray-600">{t('documents.editOutgoing.notFoundTitle')}</h2>
+          <p className="text-gray-500 mb-4">{t('documents.editOutgoing.notFoundDesc')}</p>
           <Button onClick={() => navigate('/dashboard/outgoing-documents')}>
-            العودة للوثائق الصادرة
+            {t('documents.editOutgoing.backToList')}
           </Button>
         </div>
       </div>
@@ -88,9 +90,9 @@ const EditOutgoingDocument = () => {
             className="me-2"
           >
             <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" />
-            رجوع
+            {t('documents.editOutgoing.back')}
           </Button>
-          <h1 className="text-2xl font-bold">تعديل الوثيقة الصادرة</h1>
+          <h1 className="text-2xl font-bold">{t('documents.editOutgoing.title')}</h1>
         </div>
       </div>
 

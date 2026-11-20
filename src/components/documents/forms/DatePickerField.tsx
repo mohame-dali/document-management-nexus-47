@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLocalizedDate } from '@/utils/arabicDateFormatter';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
@@ -16,6 +16,8 @@ import { ControllerRenderProps, FieldValues } from 'react-hook-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { useDirection } from '@/i18n/useDirection';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { arTN, fr } from 'date-fns/locale';
 
 interface DatePickerFieldProps<TFieldValues extends FieldValues = FieldValues> {
   field: ControllerRenderProps<TFieldValues>;
@@ -32,6 +34,8 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { dir } = useDirection();
+  const { language } = useLanguage();
+  const lang: 'ar' | 'fr' = language === 'ar' ? 'ar' : 'fr';
 
   return (
     <FormItem className="space-y-2">
@@ -50,7 +54,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
               <Calendar className="me-2 icon-responsive" />
               <span className="flex-1 text-start">
                 {field.value ? (
-                  <bdi dir="ltr">{formatArabicDate(field.value)}</bdi>
+                  <bdi dir="auto">{formatLocalizedDate(field.value, lang)}</bdi>
                 ) : (
                   <span className="text-muted-foreground">{selectDateText}</span>
                 )}
@@ -70,6 +74,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
               selected={field.value}
               onSelect={(date) => field.onChange(date)}
               initialFocus
+              locale={lang === 'ar' ? arTN : fr}
               className={cn(
                 "p-3 pointer-events-auto",
                 isMobile ? "scale-95" : ""

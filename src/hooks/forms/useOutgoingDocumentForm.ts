@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -176,15 +176,28 @@ export const useOutgoingDocumentForm = (
     };
   }, [stopPolling, clearLiveThumbnails]);
 
-  const formSchema = z.object({
-    serialNumber: z.string().min(1, t.required),
-    subject: z.string().min(1, t.required),
-    assignedTo: z.string().array().min(1, t.required),
-    issueDate: z.date(),
-    department: z.string().min(1, t.required),
-    typeDocument: z.string().optional(),
-    pourInfo: z.string().array().optional(),
-  });
+  const formSchema = useMemo(
+    () =>
+      z.object({
+        serialNumber: z
+          .string()
+          .min(1, t.required || translate('documents.forms.validation.required')),
+        subject: z
+          .string()
+          .min(1, t.required || translate('documents.forms.validation.required')),
+        assignedTo: z
+          .string()
+          .array()
+          .min(1, translate('documents.forms.validation.minOneDestination')),
+        issueDate: z.date(),
+        department: z
+          .string()
+          .min(1, t.required || translate('documents.forms.validation.required')),
+        typeDocument: z.string().optional(),
+        pourInfo: z.string().array().optional(),
+      }),
+    [t.required, translate]
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -420,7 +433,7 @@ export const useOutgoingDocumentForm = (
       if (isNaN(numericValue) || numericValue <= 0) {
         form.setError('serialNumber', {
           type: 'manual',
-          message: 'يجب أن يكون الرقم التسلسلي رقماً صحيحاً موجباً',
+          message: translate('documents.forms.validation.serialNumberPositive'),
         });
         return;
       }
@@ -434,7 +447,7 @@ export const useOutgoingDocumentForm = (
               if (!isValid) {
                 form.setError('serialNumber', {
                   type: 'manual',
-                  message: 'هذا الرقم التسلسلي موجود بالفعل لهذا العام',
+                  message: translate('documents.forms.validation.serialNumberExists'),
                 });
               } else {
                 form.clearErrors('serialNumber');
@@ -707,11 +720,7 @@ export const useOutgoingDocumentForm = (
 
   const onSubmit = async (data: OutgoingFormValues) => {
     if (isScanInProgress) {
-      toast.warning(
-        lang === 'ar'
-          ? 'يرجى انتظار انتهاء المسح الضوئي ومعالجة النص قبل إرسال المستند.'
-          : 'Veuillez attendre la fin de la numérisation et du traitement OCR avant de soumettre.'
-      );
+      toast.warning(translate('documents.forms.validation.waitScanFinish'));
       return;
     }
 
@@ -788,7 +797,7 @@ export const useOutgoingDocumentForm = (
       navigate('/dashboard/outgoing-documents');
     } catch (error) {
       console.error('Error creating document:', error);
-      toast.error(getErrorMessage(error, t.createError));
+      toast.error(getErrorMessage(error, t.createError, lang));
     }
   };
 

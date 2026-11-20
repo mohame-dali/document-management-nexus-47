@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { History, Trash2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface OutgoingDocumentFormProps {
   t: OutgoingFormTranslations;
@@ -36,6 +37,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
   scanData,
   scanTemporaryDocumentMutation
 }) => {
+  const { t: translate, language } = useLanguage();
   const [ocrText, setOcrText] = useState<string>('');
   
   const {
@@ -100,12 +102,15 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
               <History className="h-4 w-4 text-[#2c5282]" />
               <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm">
                 <span>
-                  Brouillon restauré du{' '}
-                  {new Date(restoredDraftAt).toLocaleString('fr-FR', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}{' '}
-                  — vos champs ont été pré-remplis.
+                  {translate('documents.forms.draftRestored', {
+                    date: new Date(restoredDraftAt).toLocaleString(
+                      language === 'ar' ? 'ar-TN' : 'fr-FR',
+                      {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      }
+                    ),
+                  })}
                 </span>
                 <Button
                   type="button"
@@ -115,7 +120,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                   className="h-8 border-blue-300 bg-white text-[#2c5282] hover:bg-blue-100"
                 >
                   <Trash2 className="h-3.5 w-3.5 me-1.5" />
-                  Effacer le brouillon
+                  {translate('documents.forms.clearDraft')}
                 </Button>
               </AlertDescription>
             </Alert>
@@ -126,7 +131,9 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">المعلومات الأساسية</h3>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {translate('documents.forms.sections.basicInfo')}
+                  </h3>
                 </div>
                 
                 <div className="bg-muted/30 rounded p-6 border border-border/50">
@@ -145,7 +152,9 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">مرفقات الوثيقة</h3>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {translate('documents.forms.sections.attachments')}
+                  </h3>
                 </div>
                 
                 <div className="bg-muted/20 rounded p-6 border border-border/50">

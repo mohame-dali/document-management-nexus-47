@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +16,7 @@ import DocumentDetailsFields from './incoming/DocumentDetailsFields';
 import AttachmentSection from './incoming/AttachmentSection';
 import { IncomingDocument, Department } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { getErrorMessage } from '@/utils/errorMessages';
 import {
   ScanStage,
   LiveThumbnail,
@@ -48,21 +49,22 @@ interface EditIncomingDocumentFormProps {
   scanTemporaryDocumentMutation?: ScanMutationRunner;
 }
 
-const formSchema = z.object({
-  serialNumber: z.string().min(1, 'Required'),
-  year: z.string().min(1, 'Required'),
-  subject: z.string().min(1, 'Required'),
-  source: z.string().min(1, 'Required'),
-  arrivalDate: z.date(),
-  correspondenceNumber: z.string().min(1, 'Required'),
-  correspondenceDate: z.date(),
-  typeDocument: z.string().optional(),
-  activity: z.string().optional(),
-  dateActivity: z.date().optional().nullable(),
-  departments: z.string().array().optional()
-});
+const createFormSchema = (requiredMsg: string) =>
+  z.object({
+    serialNumber: z.string().min(1, requiredMsg),
+    year: z.string().min(1, requiredMsg),
+    subject: z.string().min(1, requiredMsg),
+    source: z.string().min(1, requiredMsg),
+    arrivalDate: z.date(),
+    correspondenceNumber: z.string().min(1, requiredMsg),
+    correspondenceDate: z.date(),
+    typeDocument: z.string().optional(),
+    activity: z.string().optional(),
+    dateActivity: z.date().optional().nullable(),
+    departments: z.string().array().optional()
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({ 
   document, 
@@ -84,6 +86,11 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
   const navigate = useNavigate();
   const { t: translate, language } = useLanguage();
   const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
+
+  const formSchema = useMemo(
+    () => createFormSchema(translate('documents.forms.validation.required')),
+    [translate]
+  );
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<string>("upload");
@@ -461,11 +468,11 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
       await updateIncomingDocument(document._id, formData);
       hasSubmittedRef.current = true;
       localScanIdRef.current = null;
-      toast.success('تم تحديث الوثيقة بنجاح');
+      toast.success(translate('documents.editIncoming.updateSuccess'));
       navigate('/dashboard/incoming-documents');
     } catch (error) {
       console.error('Error updating document:', error);
-      toast.error('فشل في تحديث الوثيقة');
+      toast.error(getErrorMessage(error, translate('documents.editIncoming.updateError'), lang));
     }
   };
 
@@ -474,26 +481,39 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
   };
 
   const t = {
-    title: 'تعديل الوثيقة الواردة',
-    serialInfo: 'معلومات الرقم التسلسلي',
-    correspondence: 'معلومات المراسلة',
-    documentDetails: 'تفاصيل الوثيقة',
-    attachments: 'مرفقات الوثيقة',
-    attachmentsDesc: 'رفع وثيقة جديدة أو إعادة مسح ضوئي لاستبدال الموجودة',
-    cancel: 'إلغاء',
-    submit: 'تحديث الوثيقة',
-    uploadTab: 'رفع ملف',
-    scanTab: 'مسح ضوئي',
-    scanComplete: 'تم المسح بنجاح',
-    scanFailed: 'فشل في المسح',
-    subject: 'الموضوع',
-    subjectDesc: 'موضوع الوثيقة',
-    source: 'المصدر',
-    sourceDesc: 'مصدر الوثيقة',
-    serialNumber: 'الرقم التسلسلي',
-    serialNumberDesc: 'الرقم التسلسلي للوثيقة',
-    year: 'السنة',
-    yearDesc: 'سنة الوثيقة'
+    title: translate('documents.editIncoming.title'),
+    serialInfo: translate('documents.forms.sections.serialInfo'),
+    correspondence: translate('documents.forms.sections.correspondence'),
+    documentDetails: translate('documents.forms.sections.details'),
+    attachments: translate('documents.forms.sections.attachments'),
+    attachmentsDesc: translate('documents.editIncoming.attachmentsDesc'),
+    cancel: translate('documents.createIncoming.cancel'),
+    submit: translate('documents.editIncoming.submit'),
+    uploadTab: translate('documents.createIncoming.uploadTab'),
+    scanTab: translate('documents.createIncoming.scanTab'),
+    scanComplete: translate('documents.createIncoming.scanComplete'),
+    scanFailed: translate('documents.createIncoming.scanFailed'),
+    scanDocument: translate('documents.createIncoming.scanDocument'),
+    scannerNotConfigured: translate('documents.createIncoming.scannerNotConfigured'),
+    configureScanner: translate('documents.createIncoming.configureScanner'),
+    resolution: translate('documents.createIncoming.resolution'),
+    format: translate('documents.createIncoming.format'),
+    pdfFormat: 'PDF',
+    jpegFormat: 'JPEG',
+    pngFormat: 'PNG',
+    subject: translate('documents.createIncoming.subject'),
+    subjectDesc: translate('documents.createIncoming.subjectDesc'),
+    source: translate('documents.createIncoming.source'),
+    sourceDesc: translate('documents.createIncoming.sourceDesc'),
+    serialNumber: translate('documents.createIncoming.serialNumber'),
+    serialNumberDesc: translate('documents.createIncoming.serialNumberDesc'),
+    arrivalDate: translate('documents.createIncoming.arrivalDate'),
+    arrivalDateDesc: translate('documents.createIncoming.arrivalDateDesc'),
+    selectDate: translate('documents.createIncoming.selectDate'),
+    assignedTo: translate('documents.forms.assignedDepartments'),
+    assignedToDesc: translate('documents.forms.assignedDepartmentsDesc'),
+    year: translate('documents.forms.year'),
+    yearDesc: translate('documents.forms.yearDesc')
   };
 
   return (

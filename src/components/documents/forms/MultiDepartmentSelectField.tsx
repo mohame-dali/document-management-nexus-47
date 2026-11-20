@@ -26,6 +26,8 @@ import { ControllerRenderProps, FieldValues } from 'react-hook-form';
 import { Department } from '@/types';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 
 interface MultiDepartmentSelectFieldProps<TFieldValues extends FieldValues = FieldValues> {
   field: ControllerRenderProps<TFieldValues>;
@@ -43,6 +45,8 @@ const MultiDepartmentSelectField: React.FC<MultiDepartmentSelectFieldProps> = ({
   placeholder
 }) => {
   const [open, setOpen] = React.useState(false);
+  const { t } = useLanguage();
+  const { dir } = useDirection();
   
   // Filter only active departments
   const activeDepartments = departments.filter(dept => dept.isActive);
@@ -122,17 +126,17 @@ const MultiDepartmentSelectField: React.FC<MultiDepartmentSelectFieldProps> = ({
             >
               {selectedDepartments.length === 0 
                 ? placeholder 
-                : `${selectedDepartments.length} قسم محدد`
+                : t('documents.multiSelect.selectedCount', { count: selectedDepartments.length })
               }
               <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </FormControl>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
+        <PopoverContent className="w-full p-0" dir={dir}>
           <Command>
-            <CommandInput placeholder="البحث في الأقسام..." />
+            <CommandInput placeholder={t('documents.multiSelect.searchPlaceholder')} />
             <CommandList>
-              <CommandEmpty>لا توجد أقسام.</CommandEmpty>
+              <CommandEmpty>{t('documents.multiSelect.empty')}</CommandEmpty>
               <CommandGroup>
                 {/* Select All / Clear All buttons */}
                 <div className="flex gap-2 p-2 border-b">
@@ -143,7 +147,7 @@ const MultiDepartmentSelectField: React.FC<MultiDepartmentSelectFieldProps> = ({
                     onClick={selectAllDepartments}
                     className="flex-1"
                   >
-                    تحديد الكل
+                    {t('documents.multiSelect.selectAll')}
                   </Button>
                   <Button
                     type="button"
@@ -152,7 +156,7 @@ const MultiDepartmentSelectField: React.FC<MultiDepartmentSelectFieldProps> = ({
                     onClick={clearAll}
                     className="flex-1"
                   >
-                    إلغاء التحديد
+                    {t('documents.multiSelect.clearAll')}
                   </Button>
                 </div>
                 
