@@ -52,7 +52,7 @@ exports.createPromotion = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -227,7 +227,7 @@ exports.createPoste = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -405,7 +405,7 @@ exports.createDiplome = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -586,7 +586,7 @@ exports.createSanction = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -777,14 +777,17 @@ exports.getMyFullHistory = async (req, res, next) => {
     let personnel = null;
 
     if (req.user && req.user.personnelId) {
-      personnel = await Personnel.findById(req.user.personnelId)
+      personnel = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }
 
     if (!personnel && req.user) {
       const userId = req.user._id || req.user.id;
-      personnel = await Personnel.findOne({ userId })
+      personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }

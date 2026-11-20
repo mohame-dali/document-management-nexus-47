@@ -1,5 +1,22 @@
 const mongoose = require('mongoose');
 
+const SYSTEM_MOTIFS = [
+  'conge_annuel',
+  'absence_injustifiee',
+  'recuperation',
+  'conge_exceptionnel',
+  'conge_maladie',
+  'conge_maternite',
+  'conge_paternite',
+  'formation',
+  'mission',
+  'service',
+  'detachement_externe',
+  'disponibilite',
+  'greve',
+  'sans_solde'
+];
+
 const attendanceSchema = new mongoose.Schema({
   personnelId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -24,25 +41,27 @@ const attendanceSchema = new mongoose.Schema({
     required: true,
     default: 'present'
   },
+  // Validation dynamique : accepte les 14 motifs système ainsi que les motifs personnalisés créés dans LeaveReason
   motif: {
     type: String,
-    enum: [
-      'conge_annuel',
-      'absence_injustifiee',
-      'recuperation',
-      'conge_exceptionnel',
-      'conge_maladie',
-      'conge_maternite',
-      'conge_paternite',
-      'formation',
-      'mission',
-      'service',
-      'detachement_externe',
-      'disponibilite',
-      'greve',
-      'sans_solde'
-    ],
-    default: null
+    trim: true,
+    lowercase: true,
+    default: null,
+    validate: {
+      validator: async function (value) {
+        if (value === null || value === undefined || value === '') {
+          return true;
+        }
+        const normalized = String(value).trim().toLowerCase();
+        if (SYSTEM_MOTIFS.includes(normalized)) {
+          return true;
+        }
+        const LeaveReason = mongoose.models.LeaveReason || mongoose.model('LeaveReason');
+        const exists = await LeaveReason.exists({ code: normalized });
+        return Boolean(exists);
+      },
+      message: "Motif d'absence invalide ou inexistant dans les motifs de congé"
+    }
   },
   leaveReasonId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -53,6 +72,7 @@ const attendanceSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Clés canoniques alignées avec attendanceService.ts / AttendancePage.tsx (correspondance legacy nomService/lieuMission/... gérée par le contrôleur)
   detailsMotif: {
     serviceNom: {
       type: String,

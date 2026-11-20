@@ -1,18 +1,26 @@
 import axios from 'axios';
 
 export interface AttendanceEntryDetails {
+  serviceNom?: string;
+  missionLieu?: string;
+  missionObjet?: string;
+  formationIntitule?: string;
+  formationOrganisme?: string;
+  formationDuree?: string;
+  formationDocumentId?: string;
+  commentaire?: string;
+  // Alias hérités en lecture pour rétrocompatibilité
   nomService?: string;
   lieuMission?: string;
   objetMission?: string;
   intituleFormation?: string;
   organismeFormation?: string;
   dureeFormation?: string;
-  formationDocumentId?: string;
-  commentaire?: string;
 }
 
 export interface AttendanceEntry {
   personnelId: string;
+  date?: string;
   statut: 'present' | 'absent';
   motif?: string | null;
   leaveReasonId?: string | null;

@@ -168,7 +168,7 @@ exports.createPersonnel = async (req, res, next) => {
     // Synchronisation du département vers le User s'il est lié à la création
     if (personnel.userId && personnel.activeDepartment) {
       try {
-        const user = await User.findById(personnel.userId);
+        const user = await User.findOne({ _id: personnel.userId, isDeleted: { $ne: true } });
         if (user) {
           if (user.role !== 'AdminTuningDesk') {
             user.activeDepartment = personnel.activeDepartment;
@@ -462,7 +462,7 @@ exports.updatePersonnel = async (req, res, next) => {
     // Synchronisation du département (Personnel → User)
     if (personnel.userId && personnel.activeDepartment) {
       try {
-        const user = await User.findById(personnel.userId);
+        const user = await User.findOne({ _id: personnel.userId, isDeleted: { $ne: true } });
         if (user) {
           if (user.role !== 'AdminTuningDesk') {
             user.activeDepartment = personnel.activeDepartment;
@@ -485,7 +485,7 @@ exports.updatePersonnel = async (req, res, next) => {
       }
     }
 
-    const updatedPersonnel = await Personnel.findById(id)
+    const updatedPersonnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } })
       .populate('activeDepartment', 'name description')
       .populate('departments', 'name');
 
@@ -651,7 +651,10 @@ exports.getMyProfile = async (req, res, next) => {
 
     // 1. Recherche par personnelId présent sur le modèle User connecté
     if (req.user && req.user.personnelId) {
-      personnel = await Personnel.findById(req.user.personnelId)
+      personnel = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }
@@ -659,7 +662,7 @@ exports.getMyProfile = async (req, res, next) => {
     // 2. Recherche par userId au cas où personnelId n'est pas encore synchronisé sur req.user
     if (!personnel && req.user) {
       const userId = req.user._id || req.user.id;
-      personnel = await Personnel.findOne({ userId })
+      personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }
@@ -689,13 +692,16 @@ exports.getMyDocuments = async (req, res, next) => {
 
     // 1. Recherche par personnelId
     if (req.user && req.user.personnelId) {
-      personnel = await Personnel.findById(req.user.personnelId);
+      personnel = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      });
     }
 
     // 2. Recherche par userId en fallback
     if (!personnel && req.user) {
       const userId = req.user._id || req.user.id;
-      personnel = await Personnel.findOne({ userId });
+      personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } });
     }
 
     if (!personnel) {
@@ -793,7 +799,7 @@ exports.linkUserToPersonnel = async (req, res, next) => {
     }
 
     // c. Récupérer le User → si introuvable → 404
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: userId, isDeleted: { $ne: true } });
     if (!user) {
       return res.status(404).json({
         success: false,

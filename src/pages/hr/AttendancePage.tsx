@@ -187,7 +187,19 @@ export const AttendancePage: React.FC = () => {
         const leaveReasonId = att && att.leaveReasonId ? att.leaveReasonId : null;
         const impacteSolde = att ? Boolean(att.impacteSolde) : false;
         const heureArrivee = att && att.heureArrivee ? att.heureArrivee : '';
-        const detailsMotif: AttendanceEntryDetails = att && att.detailsMotif ? att.detailsMotif : {};
+        const rawDetails = att?.detailsMotif;
+        const detailsMotif: AttendanceEntryDetails = rawDetails
+          ? {
+              serviceNom: rawDetails.serviceNom ?? rawDetails.nomService ?? '',
+              missionLieu: rawDetails.missionLieu ?? rawDetails.lieuMission ?? '',
+              missionObjet: rawDetails.missionObjet ?? rawDetails.objetMission ?? '',
+              formationIntitule: rawDetails.formationIntitule ?? rawDetails.intituleFormation ?? '',
+              formationOrganisme: rawDetails.formationOrganisme ?? rawDetails.organismeFormation ?? '',
+              formationDuree: rawDetails.formationDuree ?? rawDetails.dureeFormation ?? '',
+              formationDocumentId: rawDetails.formationDocumentId,
+              commentaire: rawDetails.commentaire ?? '',
+            }
+          : {};
 
         return {
           personnel: item.personnel,
@@ -259,16 +271,16 @@ export const AttendancePage: React.FC = () => {
 
       // Nettoyer les détails si le motif ne correspond plus
       if (motifCode !== 'service') {
-        delete row.detailsMotif.nomService;
+        delete row.detailsMotif.serviceNom;
       }
       if (motifCode !== 'mission') {
-        delete row.detailsMotif.lieuMission;
-        delete row.detailsMotif.objetMission;
+        delete row.detailsMotif.missionLieu;
+        delete row.detailsMotif.missionObjet;
       }
       if (motifCode !== 'formation') {
-        delete row.detailsMotif.intituleFormation;
-        delete row.detailsMotif.organismeFormation;
-        delete row.detailsMotif.dureeFormation;
+        delete row.detailsMotif.formationIntitule;
+        delete row.detailsMotif.formationOrganisme;
+        delete row.detailsMotif.formationDuree;
       }
 
       updated[index] = row;
@@ -330,7 +342,19 @@ export const AttendancePage: React.FC = () => {
         motif: r.statut === 'present' ? null : r.motif || null,
         leaveReasonId: r.statut === 'present' ? null : r.leaveReasonId || null,
         impacteSolde: r.statut === 'present' ? false : r.impacteSolde,
-        detailsMotif: r.statut === 'present' ? {} : r.detailsMotif,
+        detailsMotif:
+          r.statut === 'present'
+            ? {}
+            : {
+                serviceNom: r.detailsMotif.serviceNom || '',
+                missionLieu: r.detailsMotif.missionLieu || '',
+                missionObjet: r.detailsMotif.missionObjet || '',
+                formationIntitule: r.detailsMotif.formationIntitule || '',
+                formationOrganisme: r.detailsMotif.formationOrganisme || '',
+                formationDuree: r.detailsMotif.formationDuree || '',
+                formationDocumentId: r.detailsMotif.formationDocumentId,
+                commentaire: r.detailsMotif.commentaire || '',
+              },
         heureArrivee: r.statut === 'present' ? r.heureArrivee || null : null,
       }));
 
@@ -819,9 +843,9 @@ export const AttendancePage: React.FC = () => {
                           <Input
                             type="text"
                             placeholder="حدد اسم المصلحة المكلف بها..."
-                            value={row.detailsMotif.nomService || ''}
+                            value={row.detailsMotif.serviceNom || ''}
                             onChange={(e) =>
-                              handleDetailChange(originalIndex, 'nomService', e.target.value)
+                              handleDetailChange(originalIndex, 'serviceNom', e.target.value)
                             }
                             className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                           />
@@ -838,9 +862,9 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="المدينة / المؤسسة..."
-                              value={row.detailsMotif.lieuMission || ''}
+                              value={row.detailsMotif.missionLieu || ''}
                               onChange={(e) =>
-                                handleDetailChange(originalIndex, 'lieuMission', e.target.value)
+                                handleDetailChange(originalIndex, 'missionLieu', e.target.value)
                               }
                               className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
@@ -852,9 +876,9 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="الهدف من المهمة..."
-                              value={row.detailsMotif.objetMission || ''}
+                              value={row.detailsMotif.missionObjet || ''}
                               onChange={(e) =>
-                                handleDetailChange(originalIndex, 'objetMission', e.target.value)
+                                handleDetailChange(originalIndex, 'missionObjet', e.target.value)
                               }
                               className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
@@ -872,11 +896,11 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="موضوع الدورة التكوينية..."
-                              value={row.detailsMotif.intituleFormation || ''}
+                              value={row.detailsMotif.formationIntitule || ''}
                               onChange={(e) =>
                                 handleDetailChange(
                                   originalIndex,
-                                  'intituleFormation',
+                                  'formationIntitule',
                                   e.target.value
                                 )
                               }
@@ -890,11 +914,11 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="الجهة أو المركز المنظم..."
-                              value={row.detailsMotif.organismeFormation || ''}
+                              value={row.detailsMotif.formationOrganisme || ''}
                               onChange={(e) =>
                                 handleDetailChange(
                                   originalIndex,
-                                  'organismeFormation',
+                                  'formationOrganisme',
                                   e.target.value
                                 )
                               }
@@ -908,9 +932,9 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="مثال: 3 أيام، أسبوع..."
-                              value={row.detailsMotif.dureeFormation || ''}
+                              value={row.detailsMotif.formationDuree || ''}
                               onChange={(e) =>
-                                handleDetailChange(originalIndex, 'dureeFormation', e.target.value)
+                                handleDetailChange(originalIndex, 'formationDuree', e.target.value)
                               }
                               className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />

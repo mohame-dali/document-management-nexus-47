@@ -12,11 +12,37 @@ const BackupPolicy = require('../models/BackupPolicy');
 const BackupHistory = require('../models/BackupHistory');
 const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
+const Personnel = require('../models/Personnel');
+const Attendance = require('../models/Attendance');
+const RHStage = require('../models/RHStage');
+const RHPromotion = require('../models/rh/RHPromotion');
+const RHPoste = require('../models/rh/RHPoste');
+const RHDiplome = require('../models/rh/RHDiplome');
+const RHSanction = require('../models/rh/RHSanction');
+const AttendanceDeclaration = require('../models/AttendanceDeclaration');
+const PersonnelDocument = require('../models/PersonnelDocument');
+const LeaveReason = require('../models/LeaveReason');
 
 const execFileAsync = util.promisify(execFile);
 
 const BACKEND_ROOT = path.resolve(__dirname, '..');
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
+
+// Définition symétrique sauvegarde <-> restauration des collections RH (ordre respectant les dépendances)
+const HR_COLLECTIONS = [
+  { key: 'LeaveReason', fileName: 'leave-reasons.json', model: LeaveReason },
+  { key: 'Personnel', fileName: 'personnel.json', model: Personnel },
+  { key: 'Attendance', fileName: 'attendance.json', model: Attendance },
+  { key: 'AttendanceDeclaration', fileName: 'attendance-declarations.json', model: AttendanceDeclaration },
+  { key: 'RHStage', fileName: 'rh-stages.json', model: RHStage },
+  { key: 'RHPromotion', fileName: 'rh-promotions.json', model: RHPromotion },
+  { key: 'RHPoste', fileName: 'rh-postes.json', model: RHPoste },
+  { key: 'RHDiplome', fileName: 'rh-diplomes.json', model: RHDiplome },
+  { key: 'RHSanction', fileName: 'rh-sanctions.json', model: RHSanction },
+  { key: 'PersonnelDocument', fileName: 'personnel-documents.json', model: PersonnelDocument },
+];
+
+const HR_PHOTO_UPLOAD_SUBDIRS = ['personnelphoto', 'usersphoto'];
 
 function getDefaultBackupDir() {
   return path.resolve(process.env.BACKUP_PATH || process.env.BACKUP_DIR || path.join(process.cwd(), 'backups'));
@@ -207,6 +233,26 @@ async function runBackupArchive(backupId, includeAttachments, compressionLevel, 
     const incomingDocs = await IncomingDocument.find(incomingQuery).populate('createdBy folder');
     const outgoingDocs = await OutgoingDocument.find(outgoingQuery).populate('createdBy');
 
+    // Export JSON structuré de toutes les collections RH
+    const hrSnapshots = await Promise.all(
+      HR_COLLECTIONS.map(async ({ key, fileName, model }) => {
+        const docs = await model.find({}).lean();
+        return { key, fileName, docs };
+      })
+    );
+
+    const hrManifest = {
+      exportedAt: new Date().toISOString(),
+      year: year || null,
+      collections: hrSnapshots.reduce((acc, item) => {
+        acc[item.key] = {
+          fileName: `hr/${item.fileName}`,
+          count: item.docs.length,
+        };
+        return acc;
+      }, {}),
+    };
+
     await new Promise((resolve, reject) => {
       const output = fsSync.createWriteStream(backup.filePath);
       const archive = archiver('zip', {
@@ -239,6 +285,20 @@ async function runBackupArchive(backupId, includeAttachments, compressionLevel, 
       // Inclure le dump MongoDB dans l'archive si mongodump a réussi
       if (dumpResult && dumpResult.success && dumpResult.dir && fsSync.existsSync(dumpResult.dir)) {
         archive.directory(dumpResult.dir, 'mongodb-dump');
+      }
+
+      // Inclure les exports JSON structurés de toutes les collections RH
+      archive.append(JSON.stringify(hrManifest, null, 2), { name: 'hr/manifest.json' });
+      for (const item of hrSnapshots) {
+        archive.append(JSON.stringify(item.docs, null, 2), { name: `hr/${item.fileName}` });
+      }
+
+      // Inclure la copie physique des dossiers photos RH (/backend/uploads/personnelphoto et usersphoto)
+      for (const subDir of HR_PHOTO_UPLOAD_SUBDIRS) {
+        const absPhotoDir = path.join(BACKEND_ROOT, 'uploads', subDir);
+        if (fsSync.existsSync(absPhotoDir) && fsSync.statSync(absPhotoDir).isDirectory()) {
+          archive.directory(absPhotoDir, `uploads/${subDir}`);
+        }
       }
 
       if (year) {
@@ -385,7 +445,8 @@ async function findBsonDumpRoot(tempRestoreDir) {
 
 async function copyDirectorySafe(sourceDir, targetDir) {
   if (!fsSync.existsSync(sourceDir)) return 0;
-  await fs.mkdir(targetDir, { recursive: true });
+  await fs.mkdir(targetDir, { recursive: true, mode: 0o755 });
+  await fs.chmod(targetDir, 0o755).catch(() => {});
   const resolvedTarget = path.resolve(targetDir);
   const entries = await fs.readdir(sourceDir, { withFileTypes: true });
   let copiedFiles = 0;
@@ -400,13 +461,54 @@ async function copyDirectorySafe(sourceDir, targetDir) {
     if (entry.isDirectory()) {
       copiedFiles += await copyDirectorySafe(srcPath, dstPath);
     } else if (entry.isFile()) {
-      await fs.mkdir(path.dirname(dstPath), { recursive: true });
+      await fs.mkdir(path.dirname(dstPath), { recursive: true, mode: 0o755 });
+      await fs.chmod(path.dirname(dstPath), 0o755).catch(() => {});
       await fs.copyFile(srcPath, dstPath);
+      await fs.chmod(dstPath, 0o644).catch(() => {});
       copiedFiles++;
     }
   }
 
   return copiedFiles;
+}
+
+function findHrJsonFilePath(tempRestoreDir, fileName) {
+  const hrNestedPath = path.join(tempRestoreDir, 'hr', fileName);
+  if (fsSync.existsSync(hrNestedPath)) return hrNestedPath;
+  const rootPath = path.join(tempRestoreDir, fileName);
+  if (fsSync.existsSync(rootPath)) return rootPath;
+  return null;
+}
+
+function hasAnyHrJsonFile(tempRestoreDir) {
+  return HR_COLLECTIONS.some(({ fileName }) => Boolean(findHrJsonFilePath(tempRestoreDir, fileName)));
+}
+
+/**
+ * Réinsère dans MongoDB les collections RH exportées au format JSON dans l'archive.
+ * Garantit une restauration symétrique à runBackupArchive.
+ */
+async function restoreHrCollectionsFromJson(tempRestoreDir) {
+  const restoredCounts = {};
+
+  for (const { key, fileName, model } of HR_COLLECTIONS) {
+    const jsonPath = findHrJsonFilePath(tempRestoreDir, fileName);
+    if (!jsonPath) continue;
+
+    const rawContent = await fs.readFile(jsonPath, 'utf8');
+    const parsed = JSON.parse(rawContent);
+    if (!Array.isArray(parsed)) {
+      throw new Error(`Format JSON invalide pour la collection RH ${key} (${fileName})`);
+    }
+
+    await model.deleteMany({});
+    if (parsed.length > 0) {
+      await model.insertMany(parsed, { ordered: true });
+    }
+    restoredCounts[key] = parsed.length;
+  }
+
+  return restoredCounts;
 }
 
 // @desc    Get backup statistics (avec taille réelle mesurée sur disque)
@@ -794,40 +896,67 @@ exports.restoreBackup = async (req, res) => {
       throw new Error('L\'archive extraite est vide');
     }
 
-    // 3. Restauration MongoDB vérifiée (mongorestore obligatoire)
+    // 3. Restauration MongoDB vérifiée (mongorestore si BSON présent + réinsertion des collections RH JSON)
     const dumpRoot = await findBsonDumpRoot(tempRestoreDir);
-    if (!dumpRoot) {
-      throw new Error('Archive incomplète : aucun dump BSON (mongodb-dump) trouvé pour mongorestore');
+    const archiveHasHrJson = hasAnyHrJsonFile(tempRestoreDir);
+
+    if (!dumpRoot && !archiveHasHrJson) {
+      throw new Error('Archive incomplète : aucun dump BSON (mongodb-dump) ni export JSON RH trouvé pour la restauration');
     }
 
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/document-management';
-    let restoreTargetDir = dumpRoot;
-    const dumpEntries = await fs.readdir(dumpRoot, { withFileTypes: true });
-    const hasTopLevelBson = dumpEntries.some(e => e.isFile() && e.name.endsWith('.bson'));
-    const dbSubdirs = dumpEntries.filter(e => e.isDirectory());
+    if (dumpRoot) {
+      const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/document-management';
+      let restoreTargetDir = dumpRoot;
+      const dumpEntries = await fs.readdir(dumpRoot, { withFileTypes: true });
+      const hasTopLevelBson = dumpEntries.some(e => e.isFile() && e.name.endsWith('.bson'));
+      const dbSubdirs = dumpEntries.filter(e => e.isDirectory());
 
-    // Si mongodump a produit <outDir>/<dbName>/*.bson et qu'une seule base est ciblée par l'URI,
-    // passer directement ce sous-répertoire à mongorestore pour éviter toute ambiguïté de namespace.
-    if (!hasTopLevelBson && dbSubdirs.length === 1) {
-      const dbNameMatch = mongoUri.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^?]+)/);
-      if (dbNameMatch && dbNameMatch[1]) {
-        restoreTargetDir = path.join(dumpRoot, dbSubdirs[0].name);
+      // Si mongodump a produit <outDir>/<dbName>/*.bson et qu'une seule base est ciblée par l'URI,
+      // passer directement ce sous-répertoire à mongorestore pour éviter toute ambiguïté de namespace.
+      if (!hasTopLevelBson && dbSubdirs.length === 1) {
+        const dbNameMatch = mongoUri.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^?]+)/);
+        if (dbNameMatch && dbNameMatch[1]) {
+          restoreTargetDir = path.join(dumpRoot, dbSubdirs[0].name);
+        }
       }
+
+      await execFileAsync('mongorestore', [`--uri=${mongoUri}`, '--drop', restoreTargetDir], {
+        timeout: 300000,
+      });
     }
 
-    await execFileAsync('mongorestore', [`--uri=${mongoUri}`, '--drop', restoreTargetDir], {
-      timeout: 300000,
-    });
+    // Réinsertion explicite des collections RH depuis leurs exports JSON structurés
+    const hrRestoredCounts = archiveHasHrJson
+      ? await restoreHrCollectionsFromJson(tempRestoreDir)
+      : {};
 
-    // 4. Restauration des fichiers physiques (courrier & uploads) vers backend/
+    // 4. Restauration des fichiers physiques (courrier & uploads dont personnelphoto / usersphoto) vers backend/
     const extractedCourrierDir = path.join(tempRestoreDir, 'courrier');
     if (fsSync.existsSync(extractedCourrierDir)) {
       await copyDirectorySafe(extractedCourrierDir, path.join(BACKEND_ROOT, 'courrier'));
     }
 
+    const backendUploadsDir = path.join(BACKEND_ROOT, 'uploads');
     const extractedUploadsDir = path.join(tempRestoreDir, 'uploads');
     if (fsSync.existsSync(extractedUploadsDir)) {
-      await copyDirectorySafe(extractedUploadsDir, path.join(BACKEND_ROOT, 'uploads'));
+      await copyDirectorySafe(extractedUploadsDir, backendUploadsDir);
+    }
+
+    // S'assurer explicitement que personnelphoto et usersphoto existent et ont les bonnes permissions (0755 dossiers, 0644 fichiers)
+    let restoredPhotoFilesCount = 0;
+    for (const subDir of HR_PHOTO_UPLOAD_SUBDIRS) {
+      const targetPhotoDir = path.join(backendUploadsDir, subDir);
+      await fs.mkdir(targetPhotoDir, { recursive: true, mode: 0o755 });
+      await fs.chmod(targetPhotoDir, 0o755).catch(() => {});
+
+      const nestedSourceDir = path.join(tempRestoreDir, 'uploads', subDir);
+      const rootSourceDir = path.join(tempRestoreDir, subDir);
+
+      if (fsSync.existsSync(nestedSourceDir)) {
+        restoredPhotoFilesCount += await copyDirectorySafe(nestedSourceDir, targetPhotoDir);
+      } else if (fsSync.existsSync(rootSourceDir)) {
+        restoredPhotoFilesCount += await copyDirectorySafe(rootSourceDir, targetPhotoDir);
+      }
     }
 
     backup.restoredAt = new Date();
@@ -841,6 +970,8 @@ exports.restoreBackup = async (req, res) => {
         backupId,
         safetyBackupId: safetyBackupRecord._id,
         restoredAt: backup.restoredAt,
+        hrRestoredCounts,
+        restoredPhotoFilesCount,
       },
     });
   } catch (error) {
@@ -984,3 +1115,6 @@ exports.deleteBackup = async (req, res) => {
     });
   }
 };
+
+exports.runBackupArchive = runBackupArchive;
+exports.HR_COLLECTIONS = HR_COLLECTIONS;
