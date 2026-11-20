@@ -48,8 +48,10 @@ export interface CarteInstructionPersonnel {
   matricule?: string;
   grade?: string;
   poste?: string;
+  arme?: string;
   armee?: string;
   army?: string;
+  numeroUnite?: string;
   unite?: string;
   unit?: string;
   activeDepartment?: unknown;
@@ -381,9 +383,10 @@ export async function generateCarteInstruction(
   const cinVal = safeVal(p.cin);
   const matriculeVal = safeVal(p.matricule);
   const gradeVal = safeVal(p.grade);
-  const armeeVal = safeVal(p.armee || p.army);
+  const armeeVal = safeVal(p.arme || p.armee || p.army);
 
   const uniteVal = safeVal(
+    p.numeroUnite ||
     p.unite ||
     p.unit ||
     (typeof p.activeDepartment === 'object' && p.activeDepartment !== null

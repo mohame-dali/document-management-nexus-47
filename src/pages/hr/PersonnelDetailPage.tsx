@@ -87,6 +87,8 @@ export const PersonnelDetailPage: React.FC = () => {
   const canManageStages = ['Admin', 'AdminDepartment'].includes(
     currentUser?.role || ''
   );
+  const canEditPersonnel =
+    currentUser?.role === 'Admin' || currentUser?.role === 'AdminDepartment';
 
   // Dialog stage
   const [showStageDialog, setShowStageDialog] = useState(false);
@@ -256,7 +258,7 @@ export const PersonnelDetailPage: React.FC = () => {
               <h1 className="text-2xl font-bold text-[#1a202c]">
                 {personnel.prenom} {personnel.nom}
               </h1>
-              <PersonnelStatusBadge status={personnel.status} />
+              <PersonnelStatusBadge statut={personnel.statut} />
             </div>
 
             <div className="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -308,13 +310,15 @@ export const PersonnelDetailPage: React.FC = () => {
             <span>بطاقة إرشادات</span>
           </Button>
 
-          <Button
-            onClick={() => navigate(`/dashboard/hr/personnel/${personnel._id}/edit`)}
-            className="h-11 px-5 text-base font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 shadow-sm"
-          >
-            <Edit className="w-5 h-5" />
-            <span>تعديل البطاقة</span>
-          </Button>
+          {canEditPersonnel && (
+            <Button
+              onClick={() => navigate(`/dashboard/hr/personnel/${personnel._id}/edit`)}
+              className="h-11 px-5 text-base font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 shadow-sm"
+            >
+              <Edit className="w-5 h-5" />
+              <span>تعديل البطاقة</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -353,7 +357,7 @@ export const PersonnelDetailPage: React.FC = () => {
             <div>
               <span className="text-sm font-semibold text-gray-500 block">الجنس</span>
               <span className="font-bold text-gray-900">
-                {personnel.sexe === 'M' ? 'ذكر' : personnel.sexe === 'F' ? 'أنثى' : '—'}
+                {personnel.sexe === 'Homme' ? 'ذكر' : personnel.sexe === 'Femme' ? 'أنثى' : '—'}
               </span>
             </div>
 
@@ -402,7 +406,7 @@ export const PersonnelDetailPage: React.FC = () => {
               <span className="text-sm font-semibold text-gray-500 block">البريد الإلكتروني</span>
               <span className="font-bold text-gray-900 flex items-center gap-1.5 mt-0.5" dir="ltr">
                 <Mail className="w-4 h-4 text-gray-400 shrink-0" />
-                <span>{personnel.email || '—'}</span>
+                <span>{personnel.emailPersonnel || '—'}</span>
               </span>
             </div>
           </div>
@@ -451,7 +455,7 @@ export const PersonnelDetailPage: React.FC = () => {
             <div>
               <span className="text-sm font-semibold text-gray-500 block">تاريخ الانتداب</span>
               <span className="font-bold text-gray-900">
-                {personnel.dateRecrutement ? formatArabicDate(personnel.dateRecrutement) : '—'}
+                {personnel.dateEmbauche ? formatArabicDate(personnel.dateEmbauche) : '—'}
               </span>
             </div>
 
@@ -472,7 +476,7 @@ export const PersonnelDetailPage: React.FC = () => {
             <div>
               <span className="text-sm font-semibold text-gray-500 block">الحالة المهنية</span>
               <div className="mt-1">
-                <PersonnelStatusBadge status={personnel.status} />
+                <PersonnelStatusBadge statut={personnel.statut} />
               </div>
             </div>
 

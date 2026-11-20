@@ -111,6 +111,44 @@ const getUTCDayRange = (dateInput) => {
 };
 
 /**
+ * Construit un Set de dates ISO (YYYY-MM-DD) pour les jours fériés configurés
+ */
+const getHolidayDateStringsSet = (joursFeries = []) => {
+  const set = new Set();
+  if (!Array.isArray(joursFeries)) return set;
+  for (const jf of joursFeries) {
+    const rawDate = jf && typeof jf === 'object' && jf.date ? jf.date : jf;
+    if (!rawDate) continue;
+    try {
+      const utcStart = parseDateToUTCStartOfDay(rawDate);
+      set.add(utcStart.toISOString().split('T')[0]);
+    } catch {
+      // Ignorer les dates fériées invalides
+    }
+  }
+  return set;
+};
+
+/**
+ * Vérifie si une date tombe un jour de week-end (joursWeekend) ou un jour férié (joursFeries)
+ */
+const isWeekendOrHoliday = (dateInput, joursWeekend = [0, 6], holidayDatesSet = new Set()) => {
+  if (!dateInput) return false;
+  let utcStart;
+  try {
+    utcStart = parseDateToUTCStartOfDay(dateInput);
+  } catch {
+    return false;
+  }
+  const weekendDays = Array.isArray(joursWeekend) && joursWeekend.length > 0 ? joursWeekend : [0, 6];
+  if (weekendDays.includes(utcStart.getUTCDay())) {
+    return true;
+  }
+  const isoDay = utcStart.toISOString().split('T')[0];
+  return holidayDatesSet.has(isoDay);
+};
+
+/**
  * Détermine si l'utilisateur peut voir/gérer tous les départements :
  * - Admin ou Director
  * - AdminDepartment du département RH (via req.isAdminRH ou validation dynamique OrganizationSettings.rhDepartmentId)
@@ -546,9 +584,16 @@ const getPersonnelBalance = async (req, res, next) => {
     if (!settings) {
       settings = {
         soldeAnnuelDefaut: 45,
-        motifsDeductibles: DEFAULT_DEDUCTIBLE_MOTIFS
+        motifsDeductibles: DEFAULT_DEDUCTIBLE_MOTIFS,
+        joursWeekend: [0, 6],
+        joursFeries: []
       };
     }
+
+    const weekendDays = Array.isArray(settings.joursWeekend) && settings.joursWeekend.length > 0
+      ? settings.joursWeekend
+      : [0, 6];
+    const holidayDatesSet = getHolidayDateStringsSet(settings.joursFeries);
 
     const start = new Date(Date.UTC(targetYear, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
@@ -568,13 +613,18 @@ const getPersonnelBalance = async (req, res, next) => {
     const codesDeductibles = Array.from(deductibleCodesSet);
 
     // 4. Compter les Attendance avec : statut = 'absent', impacteSolde = true, motif dans la liste des codes déductibles
-    const deductedAttendances = await Attendance.find({
+    //    en excluant les jours tombant un week-end ou un jour férié
+    const rawDeductedAttendances = await Attendance.find({
       personnelId,
       date: { $gte: start, $lte: end },
       statut: 'absent',
       impacteSolde: true,
       motif: { $in: codesDeductibles }
     }).lean();
+
+    const deductedAttendances = rawDeductedAttendances.filter(
+      (a) => !isWeekendOrHoliday(a.date, weekendDays, holidayDatesSet)
+    );
 
     const totalDays = settings.soldeAnnuelDefaut || 45;
     const usedDays = deductedAttendances.length;
@@ -803,6 +853,10 @@ const getYearlyReport = async (req, res, next) => {
 
     let settings = await PresenceSettings.findOne({ annee: targetYear }).lean();
     const soldeAnnuelDefaut = settings?.soldeAnnuelDefaut || 45;
+    const weekendDays = Array.isArray(settings?.joursWeekend) && settings.joursWeekend.length > 0
+      ? settings.joursWeekend
+      : [0, 6];
+    const holidayDatesSet = getHolidayDateStringsSet(settings?.joursFeries);
 
     const start = new Date(Date.UTC(targetYear, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
@@ -859,7 +913,7 @@ const getYearlyReport = async (req, res, next) => {
           joursPresents++;
         } else {
           joursAbsents++;
-          if (a.impacteSolde) {
+          if (a.impacteSolde && !isWeekendOrHoliday(a.date, weekendDays, holidayDatesSet)) {
             joursDeduits++;
           }
           if (a.motif) {
