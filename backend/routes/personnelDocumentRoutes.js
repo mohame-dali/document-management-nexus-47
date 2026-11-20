@@ -7,7 +7,7 @@ const {
   supprimerAssociation
 } = require('../controllers/personnelDocumentController');
 
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, checkRHAccess } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.use(protect);
 // Routes pour associer un document à une fiche de personnel et lister ses documents
 router.route('/personnel/:personnelId/documents')
   .post(authorize('Admin', 'AdminDepartment', 'AdminTuningDesk'), associerDocument)
-  .get(authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), listerDocumentsDuPersonnel);
+  .get(authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), checkRHAccess, listerDocumentsDuPersonnel);
 
 // Routes pour modifier ou supprimer une association existante
 router.route('/personnel-documents/:associationId')
@@ -25,6 +25,6 @@ router.route('/personnel-documents/:associationId')
   .delete(authorize('Admin', 'AdminDepartment', 'AdminTuningDesk'), supprimerAssociation);
 
 // Route pour lister le personnel associé à un document (recherche inverse)
-router.get('/documents/:documentType/:documentId/personnel', authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), listerPersonnelDuDocument);
+router.get('/documents/:documentType/:documentId/personnel', authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), checkRHAccess, listerPersonnelDuDocument);
 
 module.exports = router;

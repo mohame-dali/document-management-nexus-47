@@ -22,13 +22,43 @@ const AuditLogSchema = new mongoose.Schema({
       'user_login',
       'user_logout',
       'PERMANENT_DELETE',
-      'EMPTY_TRASH'
+      'EMPTY_TRASH',
+      'attendance_batch_save',
+      'presence_settings_balance_change',
+      'personnel_create',
+      'personnel_update',
+      'personnel_delete',
+      'personnel_restore',
+      'personnel_link_user',
+      'personnel_photo_upload',
+      'personnel_document_link',
+      'personnel_document_unlink',
+      'attendance_declaration_create',
+      'attendance_declaration_approve',
+      'attendance_declaration_reject',
+      'rh_stage_create',
+      'rh_stage_update',
+      'rh_stage_delete'
     ]
   },
   entityType: {
     type: String,
     required: true,
-    enum: ['document', 'folder', 'user', 'trash', 'personnel', 'incoming', 'outgoing', 'message']
+    enum: [
+      'document',
+      'folder',
+      'user',
+      'trash',
+      'personnel',
+      'incoming',
+      'outgoing',
+      'message',
+      'Attendance',
+      'PresenceSettings',
+      'Personnel',
+      'RHStage',
+      'AttendanceDeclaration'
+    ]
   },
   entityId: {
     type: String,

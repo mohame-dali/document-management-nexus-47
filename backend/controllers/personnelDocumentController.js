@@ -23,6 +23,89 @@ const isRHDepartment = async (dept) => {
   return settings.rhDepartmentId.toString() === deptId;
 };
 
+// Helpers d'extraction et de vérification d'accès départemental
+const extractId = (val) => {
+  if (!val) return null;
+  if (typeof val === 'string') return val;
+  if (val._id) return val._id.toString();
+  if (val.id) return typeof val.id === 'string' ? val.id : (val.id._id ? val.id._id.toString() : val.id.toString());
+  return typeof val.toString === 'function' ? val.toString() : null;
+};
+
+const getUserDepartmentIds = (user) => {
+  const ids = new Set();
+  if (Array.isArray(user?.departments)) {
+    for (const d of user.departments) {
+      const id = extractId(d);
+      if (id) ids.add(id);
+    }
+  }
+  const activeId = extractId(user?.activeDepartment);
+  if (activeId) ids.add(activeId);
+  return Array.from(ids);
+};
+
+const hasGlobalHRAccess = async (user) => {
+  if (!user) return false;
+  if (['Admin', 'Director'].includes(user.role)) return true;
+  if (user.role === 'AdminDepartment') {
+    return isRHDepartment(user.activeDepartment);
+  }
+  return false;
+};
+
+const getDocumentDepartmentIds = async (doc, documentType) => {
+  const docDepts = new Set();
+  if (!doc) return [];
+
+  if (documentType === 'IncomingDocument') {
+    for (const entry of doc.assignedTo || []) {
+      const id = extractId(entry?.departmentId || entry?.id || entry);
+      if (id) docDepts.add(id);
+    }
+    const singleDept = extractId(doc.departmentId);
+    if (singleDept) docDepts.add(singleDept);
+  } else if (documentType === 'OutgoingDocument') {
+    const sourceDept = extractId(doc.source?.id);
+    if (sourceDept) docDepts.add(sourceDept);
+    const singleDept = extractId(doc.departmentId);
+    if (singleDept) docDepts.add(singleDept);
+
+    if (doc.reference) {
+      const refId = extractId(doc.reference);
+      if (refId && mongoose.Types.ObjectId.isValid(refId)) {
+        const refIncoming = await IncomingDocument.findOne({ _id: refId, isDeleted: { $ne: true } })
+          .select('assignedTo departmentId')
+          .lean();
+        if (refIncoming) {
+          for (const entry of refIncoming.assignedTo || []) {
+            const id = extractId(entry?.departmentId || entry?.id || entry);
+            if (id) docDepts.add(id);
+          }
+          const refSingle = extractId(refIncoming.departmentId);
+          if (refSingle) docDepts.add(refSingle);
+        }
+      }
+    }
+  }
+
+  return Array.from(docDepts);
+};
+
+const canUserAccessDocument = async (user, doc, documentType) => {
+  if (!user || !doc) return false;
+  if (await hasGlobalHRAccess(user)) return true;
+  if (!['AdminDepartment', 'AdminTuningDesk', 'User'].includes(user.role)) return false;
+
+  const userDepts = getUserDepartmentIds(user);
+  if (userDepts.length === 0) return false;
+
+  const docDepts = await getDocumentDepartmentIds(doc, documentType);
+  if (docDepts.length === 0) return false;
+
+  return docDepts.some((d) => userDepts.includes(d));
+};
+
 // Helper pour vérifier si l'utilisateur connecté a le droit de lier/gérer ce personnel
 async function canUserLinkPersonnel(req, personnelId) {
   const user = req.user;
@@ -33,7 +116,7 @@ async function canUserLinkPersonnel(req, personnelId) {
     const isRH = await isRHDepartment(user.activeDepartment);
     if (isRH) return true;
     // Vérifier si le personnel ciblé est dans son département
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) return false;
     const personnelDept = (personnel.activeDepartment?._id || personnel.activeDepartment)?.toString();
     const userDept = (user.activeDepartment?._id || user.activeDepartment)?.toString();
@@ -180,12 +263,24 @@ exports.listerDocumentsDuPersonnel = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
         message: 'Fiche de personnel introuvable'
       });
+    }
+
+    const isGlobalHR = await hasGlobalHRAccess(req.user);
+    if (!isGlobalHR) {
+      const userDepts = getUserDepartmentIds(req.user);
+      const personnelDept = extractId(personnel.activeDepartment);
+      if (!personnelDept || !userDepts.includes(personnelDept)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Accès refusé : vous n\'avez pas accès au département de ce personnel'
+        });
+      }
     }
 
     const associations = await PersonnelDocument.find({ personnelId })
@@ -206,32 +301,42 @@ exports.listerDocumentsDuPersonnel = async (req, res, next) => {
 
     const [incomingDocs, outgoingDocs] = await Promise.all([
       incomingIds.length > 0
-        ? IncomingDocument.find({ _id: { $in: incomingIds } }).lean()
+        ? IncomingDocument.find({ _id: { $in: incomingIds }, isDeleted: { $ne: true } }).lean()
         : [],
       outgoingIds.length > 0
-        ? OutgoingDocument.find({ _id: { $in: outgoingIds } }).lean()
+        ? OutgoingDocument.find({ _id: { $in: outgoingIds }, isDeleted: { $ne: true } }).lean()
         : []
     ]);
 
     const docsMap = new Map();
-    incomingDocs.forEach((doc) => docsMap.set(doc._id.toString(), doc));
-    outgoingDocs.forEach((doc) => docsMap.set(doc._id.toString(), doc));
+    for (const doc of incomingDocs) {
+      if (isGlobalHR || (await canUserAccessDocument(req.user, doc, 'IncomingDocument'))) {
+        docsMap.set(doc._id.toString(), doc);
+      }
+    }
+    for (const doc of outgoingDocs) {
+      if (isGlobalHR || (await canUserAccessDocument(req.user, doc, 'OutgoingDocument'))) {
+        docsMap.set(doc._id.toString(), doc);
+      }
+    }
 
-    const formattedData = associations.map((assoc) => {
-      const doc = docsMap.get(assoc.documentId.toString()) || null;
-      return {
-        _id: assoc._id,
-        personnelId: assoc.personnelId,
-        typeAssociation: assoc.typeAssociation,
-        documentType: assoc.documentType,
-        documentId: assoc.documentId,
-        document: doc,
-        commentaire: assoc.commentaire,
-        dateAssociation: assoc.dateAssociation,
-        associePar: assoc.associePar,
-        createdAt: assoc.createdAt
-      };
-    });
+    const formattedData = associations
+      .filter((assoc) => isGlobalHR || docsMap.has(assoc.documentId.toString()))
+      .map((assoc) => {
+        const doc = docsMap.get(assoc.documentId.toString()) || null;
+        return {
+          _id: assoc._id,
+          personnelId: assoc.personnelId,
+          typeAssociation: assoc.typeAssociation,
+          documentType: assoc.documentType,
+          documentId: assoc.documentId,
+          document: doc,
+          commentaire: assoc.commentaire,
+          dateAssociation: assoc.dateAssociation,
+          associePar: assoc.associePar,
+          createdAt: assoc.createdAt
+        };
+      });
 
     res.status(200).json({
       success: true,
@@ -264,8 +369,30 @@ exports.listerPersonnelDuDocument = async (req, res, next) => {
       });
     }
 
+    const TargetModel = mongoose.model(documentType);
+    const doc = await TargetModel.findOne({ _id: documentId, isDeleted: { $ne: true } }).lean();
+    if (!doc) {
+      return res.status(404).json({
+        success: false,
+        message: `Document introuvable dans ${documentType}`
+      });
+    }
+
+    const isGlobalHR = await hasGlobalHRAccess(req.user);
+    const canAccessDoc = isGlobalHR || (await canUserAccessDocument(req.user, doc, documentType));
+    if (!canAccessDoc) {
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé : vous n\'avez pas accès au département de ce document'
+      });
+    }
+
+    const personnelProjection = isGlobalHR
+      ? 'nom prenom cin poste activeDepartment statut emailPersonnel telephone'
+      : 'nom prenom poste activeDepartment statut';
+
     const associations = await PersonnelDocument.find({ documentType, documentId })
-      .populate('personnelId', 'nom prenom cin poste activeDepartment statut emailPersonnel telephone')
+      .populate('personnelId', personnelProjection)
       .populate('associePar', 'username email')
       .sort({ dateAssociation: -1 });
 

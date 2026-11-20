@@ -171,11 +171,9 @@ app.get('/api/files/:type/:id/:filename', protect, fileController.serveProtected
 // Protect /courrier against unauthenticated access
 app.use('/courrier', protect, fileController.serveCourrierStatic);
 
-// Public profile photos (avatars)
-app.use('/uploads/usersphoto', express.static(path.join(backendDir, 'uploads/usersphoto')));
-app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads/personnelphoto')));
-
-// Protect sensitive uploads and templates
+// Protect profile photos (avatars), sensitive uploads and templates
+app.use('/uploads/usersphoto', protect, express.static(path.join(backendDir, 'uploads/usersphoto')));
+app.use('/uploads/personnelphoto', protect, express.static(path.join(backendDir, 'uploads/personnelphoto')));
 app.use('/uploads', protect, express.static(path.join(backendDir, 'uploads')));
 
 // Swagger API Documentation
