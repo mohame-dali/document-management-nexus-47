@@ -172,6 +172,463 @@
 
 ---
 
+# PRÉPARATION D'UNE VM UBUNTU SOUS VIRTUAL MACHINE MANAGER (QEMU/KVM) (`[NON TESTÉ EN RÉEL]`)
+
+> **Statut global de cette section** : **`[NON TESTÉ EN RÉEL]`** (aucune commande hyperviseur ni création de VM n'a été exécutée sur l'hôte cible).  
+> **Rappel sécurité bloquant** : le déploiement dans une VM isolée ne dispense pas de corriger et prouver les défauts bloquants inventoriés dans `docs/ARCHITECTURE_DMS.md` (section 0) avant toute exposition réseau (`docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md:4`).  
+> **Convention** : chaque affirmation sur le projet est marquée **`FAIT`** avec `fichier:ligne`, **`HYPOTHÈSE`** ou **`DÉCISION DU PROPRIÉTAIRE`**. Les commandes d'exploitation portent la mention **`[À TESTER EN LOCAL]`**.
+
+---
+
+## 1. Prérequis sur l'hôte Linux (Virtualisation QEMU/KVM)
+
+### 1.1 Vérifier la virtualisation matérielle (`vmx` / `svm`)
+- **Action (Commande hôte — `[À TESTER EN LOCAL]`)** :
+  ```bash
+  lscpu | grep -E 'Virtualization|vmx|svm'
+  ```
+- **Résultat attendu** : présence de `VT-x` (`vmx` sur Intel) ou `AMD-V` (`svm` sur AMD) dans la sortie.
+- **Vérification complémentaire (`[À TESTER EN LOCAL]`)** :
+  ```bash
+  sudo apt-get update && sudo apt-get install -y cpu-checker
+  sudo kvm-ok
+  ```
+  Attendu : `INFO: /dev/kvm exists` et `KVM acceleration can be used`.
+- **Si ça échoue** :
+  - `KVM acceleration can NOT be used` ou absence de `vmx`/`svm` : activer **Intel VT-x** / **AMD-V (SVM Mode)** dans le BIOS/UEFI de la machine physique hôte, puis redémarrer l'hôte.
+  - Si l'hôte est lui-même une VM (virtualisation imbriquée), activer le *nested virtualization* sur l'hyperviseur parent (`[NON VÉRIFIÉ]` selon hyperviseur).
+
+### 1.2 Installer les paquets QEMU/KVM, Libvirt et Virtual Machine Manager
+- **Action (Commande hôte Ubuntu/Debian — `[À TESTER EN LOCAL]`)** :
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y qemu-kvm libvirt-daemon-system virt-manager bridge-utils
+  ```
+- **Résultat attendu** : installation sans erreur de l'hyperviseur KVM, du démon `libvirtd`, de l'interface graphique `virt-manager` et des utilitaires de pont réseau.
+- **Vérification** :
+  ```bash
+  virsh --version && virt-manager --version
+  ```
+- **Si ça échoue** : vérifier les dépôts APT de l'hôte (`universe` activé sur Ubuntu) et la connexion réseau / proxy de l'hôte.
+
+### 1.3 Ajouter l'utilisateur hôte aux groupes `libvirt` et `kvm` et activer `libvirtd`
+- **Action (Commande hôte — `[À TESTER EN LOCAL]`)** :
+  ```bash
+  sudo usermod -aG libvirt,kvm "$USER"
+  sudo systemctl enable --now libvirtd
+  ```
+  Puis fermer la session utilisateur (ou redémarrer) pour recharger l'appartenance aux groupes.
+- **Résultat attendu** : l'utilisateur courant peut piloter `virt-manager` et `virsh` sans élévation permanente en `root`, et le service `libvirtd` démarre automatiquement au boot de l'hôte.
+- **Vérification** :
+  ```bash
+  groups "$USER" | grep -E 'libvirt|kvm'
+  systemctl is-active libvirtd
+  virsh list --all
+  ```
+  Attendu : `libvirt` et `kvm` présents dans `groups`, `active` pour `libvirtd`, tableau `Id / Name / State` affiché par `virsh list --all`.
+- **Si ça échoue** :
+  - `Permission denied` sur `/var/run/libvirt/libvirt-sock` : reconnecter la session (`su - "$USER"` ou déconnexion/reconnexion complète).
+  - `libvirtd` inactif : consulter `sudo journalctl -u libvirtd -n 50 --no-pager`.
+
+---
+
+## 2. Dimensionnement de la VM déduit du projet (`[À CONFIRMER]`)
+
+### 2.1 Éléments factuels lus dans le code (`FAIT`)
+- **Modèles IA locaux `.gguf` (`FAIT`)** :
+  - `.env.production.example:68,71` configure deux modèles :
+    - Chat : `LLAMA_CHAT_MODEL_PATH=/var/www/dms/models/ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf`
+    - Embedding : `LLAMA_EMBEDDING_MODEL_PATH=/var/www/dms/models/bge-m3-q4_k_m.gguf`
+  - `backend/services/ollamaService.js:17-25` résout ces deux mêmes fichiers par défaut et les charge simultanément en singleton mémoire (`chatModel`, `chatContext` `contextSize: 2048`, `embeddingModel`, `embeddingContext`, `backend/services/ollamaService.js:43-46,90-108`).
+  - `scripts/download-models.js:55-56,65-66` indique les tailles : `ALLaM 7B Instruct` (`~4.26 Go`, seuil min `3.0 Go`) et `BGE-M3` (`~417 Mo`, seuil min `300 Mo`), soit **~4,7 Go** pour les deux fichiers `.gguf` (note : `MODELS.md:11-12` documente aussi la paire alternative `qwen2.5-7b-instruct-q4_k_m.gguf` `~4.68 Go` / RAM `~4.5 - 5.5 Go` + `nomic-embed-text-v1.5.Q8_0.gguf` `~274 Mo` / RAM `~400 Mo`).
+  - `server.ts:80` confirme un préchargement d'environ `5 Go` (« `avant de charger les 5 Go` »), et `ecosystem.config.cjs:34` limite le processus Node à `max_memory_restart: '6G'`.
+- **CPU IA (`FAIT`)** : `server.ts:44` calcule `os.cpus().length / 2` si `LLAMA_THREADS` est absent, `.env.production.example:74` et `backend/services/ollamaService.js:27` fixent `LLAMA_THREADS=4` par défaut, et `LLAMA_GPU_LAYERS=0` (`.env.production.example:77`, `backend/services/ollamaService.js:28,86`) = exécution **100 % CPU sans GPU**.
+- **Stockage données & sauvegardes (`FAIT`)** :
+  - Courriers et pièces jointes : `DOCUMENT_PATH` (`backend/courrier/`) et `UPLOAD_DIR` (`backend/uploads/`, `.env.production.example:52,57`).
+  - Sauvegardes : `BACKUP_DIR=/var/backups/dms` (`.env.production.example:62`). `deploy/scripts/backup-all.sh:25,57,75,83,96` archive `mongodump --gzip` + copie complète de `courrier/` et `uploads/` avec rétention de **14 jours** par défaut (sans dupliquer les `.gguf` de ~5 Go).
+- **Système de fichiers VM (`HYPOTHÈSE` / `DÉCISION DU PROPRIÉTAIRE`)** :
+  - Format **`qcow2`** recommandé pour bénéficier des instantanés (`virsh snapshot-*`) et de la gestion souple de l'image.
+  - **Préallocation** : `off` / dynamique en environnement pilote (économie d'espace) ; **`metadata`** (recommandée en production pour limiter la fragmentation lors des écritures MongoDB/logs tout en conservant la compatibilité instantanés, `[À CONFIRMER]` selon capacité disque de l'hôte).
+
+### 2.2 Tableau de dimensionnement Pilote vs Production (`[À CONFIRMER]` / `DÉCISION DU PROPRIÉTAIRE`)
+
+> **`HYPOTHÈSE`** : en plus des ~5 Go réservés par `node-llama-cpp` (`server.ts:80`, `ecosystem.config.cjs:34`), il faut compter la RAM de l'OS Ubuntu, de MongoDB (cache WiredTiger), de Node.js/PM2/Nginx et des pics OCR (`tesseract` + `pdftoppm`). Les chiffres ci-dessous restent **`[À CONFIRMER]`** selon le nombre d'utilisateurs simultanés et la volumétrie documentaire.
+
+| Ressource | Pilote / Recette (Minimale) | Pilote / Recette (Recommandée) | Production (Minimale) | Production (Recommandée) | Base de calcul (`fichier:ligne`) |
+|---|---|---|---|---|---|
+| **RAM VM** | **12 Go** *(ou 8 Go si modèles allégés/désactivés, `MODELS.md:100`)* | **16 Go** | **16 Go** | **24 à 32 Go** | `ecosystem.config.cjs:34` (`6G`) + `server.ts:80` (~5 Go) + MongoDB + OCR |
+| **vCPU** | **4 vCPU** | **6 vCPU** | **4 vCPU** | **8 à 12 vCPU** | `.env.production.example:74` (`LLAMA_THREADS=4`), `server.ts:44` |
+| **Disque (total `qcow2`)** | **60 Go** | **80 Go** | **120 Go** | **250 Go+** *(selon volume PDF/an)* | OS (~20 Go) + app/build (~5 Go) + `.gguf` (~5 Go, `download-models.js:56,66`) + MongoDB + `courrier/` + `uploads/` + `backups/` (14 j, `backup-all.sh:25`) |
+| **Préallocation `qcow2`** | Dynamique (`off`) | `metadata` | `metadata` | `metadata` *(ou `falloc` si espace hôte garanti)* | `DÉCISION DU PROPRIÉTAIRE` |
+
+- **Vérification de l'espace hôte avant création (`[À TESTER EN LOCAL]`)** :
+  ```bash
+  df -h /var/lib/libvirt/images
+  free -h
+  ```
+- **Si ça échoue** (espace insuffisant dans `/var/lib/libvirt/images`) : créer un pool de stockage Libvirt sur une partition hôte dédiée disposant d'au moins 1,5× la taille du disque VM (pour laisser de la marge aux instantanés).
+
+---
+
+## 3. Création pas à pas de la VM dans Virtual Machine Manager (`[NON TESTÉ EN RÉEL]`)
+
+> **Préalable (`DÉCISION DU PROPRIÉTAIRE`)** : choisir la version exacte d'**Ubuntu Server LTS** (`22.04 LTS` ou `24.04 LTS`, ciblées par `deploy/ubuntu/setup-system.sh:4`) et vérifier l'empreinte SHA256 de l'ISO officielle avant montage.
+
+### Étape 3.1 — Assistant de création et choix de l'ISO
+- **Action (Clics dans `virt-manager`)** :
+  1. Ouvrir **Virtual Machine Manager** (`virt-manager` depuis le bureau ou le terminal hôte).
+  2. Cliquer sur **Fichier → Nouvelle machine virtuelle** (icône `+`), choisir **Média d'installation local (image ISO ou CD-ROM)** → **Avancer**.
+  3. Cliquer sur **Parcourir... → Parcourir local** et sélectionner l'image ISO Ubuntu Server LTS (`DÉCISION DU PROPRIÉTAIRE`).
+  4. Vérifier le champ **Choisir le système d'exploitation installé** : décocher la détection auto si besoin et sélectionner `Ubuntu 22.04` ou `Ubuntu 24.04` selon l'ISO retenue.
+- **Résultat attendu** : l'assistant passe à l'écran Mémoire / CPU.
+- **Vérification** : si une popup demande l'autorisation de parcours pour l'utilisateur `libvirt-qemu` sur le dossier de l'ISO, valider ou placer l'ISO dans `/var/lib/libvirt/images/`.
+- **Si ça échoue** : vérifier les permissions de lecture de l'ISO (`chmod 644` et droit `x` sur les dossiers parents ou copie dans `/var/lib/libvirt/images/`).
+
+### Étape 3.2 — Mémoire, CPU et Disque (`qcow2` / VirtIO)
+- **Action (Clics dans `virt-manager`)** :
+  1. **Mémoire et CPU** : saisir la RAM (ex. `16384` Mio) et les vCPU (ex. `4` ou `8`) selon le tableau de la section 2.2 → **Avancer**.
+  2. **Stockage** : cocher **Activer le stockage pour cette machine virtuelle** ; pour la production, créer au préalable ou sélectionner un volume `qcow2` avec `preallocation=metadata`, sinon saisir la taille cible (ex. `120` Gio).
+  3. **Nom et personnalisation** : nommer la VM (ex. `dms-ubuntu-prod`), **cocher impérativement « Personnaliser la configuration avant l'installation »**, choisir le réseau (section 4) → **Terminer** (ouvre la fenêtre de configuration matérielle avant boot).
+- **Résultat attendu** : la fenêtre de détail matériel s'ouvre sans démarrer l'installation.
+- **Vérification** : si un volume préalloué est souhaité, vérifier sur l'hôte (`[À TESTER EN LOCAL]`) :
+  ```bash
+  sudo qemu-img create -f qcow2 -o preallocation=metadata /var/lib/libvirt/images/dms-ubuntu.qcow2 120G
+  ```
+- **Si ça échoue** : vérifier qu'aucun autre processus ne verrouille l'image disque et que le pool `default` de Libvirt est actif (`virsh pool-list --all`).
+
+### Étape 3.3 — Firmware UEFI, CPU `host-passthrough`, Bus VirtIO et Réseau
+- **Action (Clics dans l'écran « Personnaliser la configuration »)** :
+  1. **Vue d'ensemble (Overview)** → **Firmware** : sélectionner **UEFI x86_64** (`OVMF_CODE_4M.fd` ou équivalent, pas SeaBIOS) → **Appliquer**.
+  2. **CPU** → décocher *Copier la configuration du CPU hôte* si présent et définir **Modèle** sur **`host-passthrough`** (expose AVX/AVX2/AVX-512 du CPU physique à `node-llama-cpp`) → **Appliquer**.
+  3. **Disque SATA/IDE → VirtIO** : sélectionner le disque principal → **Options avancées → Bus du disque : VirtIO** (et mode cache `none` ou `writeback` selon politique de stockage hôte, `[À CONFIRMER]`) → **Appliquer**.
+  4. **NIC (Carte réseau)** : vérifier **Modèle de périphérique : `virtio`** → **Appliquer**.
+  5. **Mémoire (Memory)** : se reporter à la section 9 pour la désactivation du *memory ballooning*.
+  6. Cliquer sur **Commencer l'installation** (en haut à gauche).
+- **Résultat attendu** : la VM démarre sur le menu GRUB UEFI d'Ubuntu Server.
+- **Vérification** : après installation, dans la VM (`[À TESTER EN LOCAL]`), `ls /sys/firmware/efi` existe (confirme UEFI) et `lsblk` affiche `/dev/vda` (confirme VirtIO).
+- **Si ça échoue** :
+  - Option `UEFI` absente dans `virt-manager` : installer le paquet **`ovmf`** sur l'hôte (`sudo apt-get install -y ovmf`) et redémarrer `virt-manager`.
+  - Échec démarrage `host-passthrough` lors d'une migration live future : utiliser uniquement sur hôte fixe (le DMS mono-instance ne requiert pas de migration hétérogène).
+
+### Étape 3.4 — Installation d'Ubuntu Server et activation d'OpenSSH
+- **Action (Assistant installateur Ubuntu dans la console VM)** :
+  1. Choisir la langue d'installation et la disposition clavier.
+  2. Choisir **Ubuntu Server** (installation standard, pas *minimized* si l'on souhaite garder les outils manuels/locales complets).
+  3. Configurer le réseau (DHCP provisoire ou IP fixe selon section 4).
+  4. Stockage : utiliser tout le disque `/dev/vda` (LVM recommandé pour faciliter l'extension ultérieure du volume `/var`).
+  5. Profil : créer un utilisateur d'administration dédié (ex. `dmsadmin` — **ne jamais utiliser de mot de passe trivial ou par défaut**).
+  6. Écran **SSH Setup** : **cocher impérativement `Install OpenSSH server`**.
+  7. Ne pas sélectionner de snaps inutiles (ni `docker`/`mongodb` via snap : MongoDB est installé via dépôt officiel APT en Partie 3/4, `deploy/ubuntu/install-mongodb.sh:31-38`).
+  8. Laisser terminer l'installation, retirer l'ISO si demandé puis **Reboot Now**.
+- **Résultat attendu** : la VM redémarre sur le disque dur et affiche l'invite `login:`.
+- **Vérification (`[À TESTER EN LOCAL]` dans la console VM)** :
+  ```bash
+  systemctl is-active ssh
+  ```
+  Attendu : `active`.
+- **Si ça échoue** : si la VM boucle sur l'ISO au redémarrage, ouvrir **Détails → Options de démarrage** dans `virt-manager`, déconnecter l'ISO du lecteur CD-ROM et placer `VirtIO Disk 1` en premier.
+
+---
+
+## 4. Réseau de la VM (`[NON TESTÉ EN RÉEL]`)
+
+### 4.1 NAT par défaut (`virbr0`) vs Pont réseau (Bridge)
+- **NAT par défaut (`default` / `virbr0`)** : la VM reçoit une IP privée (souvent `192.168.122.x`). L'hôte peut joindre la VM, la VM accède au réseau externe, **mais les autres postes du réseau administratif ne peuvent pas joindre la VM** sans redirection de ports complexe. Utilisable uniquement pour des tests strictement locaux sur l'hôte.
+- **Pont réseau (Bridge, ex. `br0`) (`DÉCISION DU PROPRIÉTAIRE`)** : la VM obtient une adresse directement sur le réseau local (LAN) physique de l'établissement, ce qui permet aux postes utilisateurs et au reverse proxy/DNS d'accéder à la VM sur HTTPS (`443`).
+
+### 4.2 Configuration d'un pont réseau sur l'hôte (exemple Netplan Ubuntu hôte — `[NON TESTÉ EN RÉEL]`)
+- **Action (Commande sur l'hôte — adapter `<INTERFACE_PHYSIQUE>`, `<IP_HOTE/MASK>`, `<PASSERELLE>`, `<DNS>`)** :
+  1. Identifier l'interface physique de l'hôte : `ip -br link` (ex. `eno1` ou `enp3s0`).
+  2. Sauvegarder le fichier `/etc/netplan/*.yaml` existant, puis créer une configuration pont (exemple Netplan, `[À TESTER EN LOCAL]` avec accès console physique en cas d'erreur réseau) :
+     ```yaml
+     network:
+       version: 2
+       renderer: networkd
+       ethernets:
+         <INTERFACE_PHYSIQUE>:
+           dhcp4: false
+       bridges:
+         br0:
+           interfaces: [<INTERFACE_PHYSIQUE>]
+           addresses: [<IP_HOTE/MASK>]
+           routes:
+             - to: default
+               via: <PASSERELLE>
+           nameservers:
+             addresses: [<DNS_1>, <DNS_2>]
+           parameters:
+             stp: false
+             forward-delay: 0
+     ```
+  3. Tester avant application définitive :
+     ```bash
+     sudo netplan try
+     ```
+  4. Dans `virt-manager` → **NIC de la VM** → **Source réseau** : choisir **Spécifier un nom de périphérique partagé** et saisir `br0` (ou définir un réseau bridge dans Libvirt).
+- **Résultat attendu** : `br0` porte l'IP de l'hôte et l'interface physique est rattachée à `br0`.
+- **Vérification (`[À TESTER EN LOCAL]`)** :
+  ```bash
+  bridge link show
+  ip -br addr show br0
+  ```
+- **Si ça échoue** : `netplan try` annule automatiquement après 120s en cas de perte de contrôle ; sur environnement Desktop utilisant `NetworkManager`, préférer `nmcli connection add type bridge` pour éviter les conflits avec `networkd`.
+
+### 4.3 IP fixe dans la VM et ports à ouvrir
+- **IP fixe de la VM (`DÉCISION DU PROPRIÉTAIRE`, dans `/etc/netplan/50-cloud-init.yaml` ou `00-installer-config.yaml` de la VM — `[À TESTER EN LOCAL]`)** :
+  ```yaml
+  network:
+    version: 2
+    ethernets:
+      enp1s0: # adapter selon sortie de `ip -br link` dans la VM
+        dhcp4: false
+        addresses: [<IP_FIXE_VM/MASK>]
+        routes:
+          - to: default
+            via: <PASSERELLE>
+        nameservers:
+          addresses: [<DNS_1>]
+  ```
+  Appliquer avec `sudo netplan try` puis `sudo netplan apply`.
+- **Ports à ouvrir sur le pare-feu UFW de la VM (`FAIT` dans `deploy/ubuntu/setup-system.sh:102-104`)** :
+  - `22/tcp` : administration SSH (à restreindre idéalement aux IP d'administration).
+  - `80/tcp` : redirection HTTP → HTTPS via Nginx (`deploy/ubuntu/dms.nginx.conf:18,28`).
+  - `443/tcp` : accès applicatif HTTPS via Nginx (`deploy/ubuntu/dms.nginx.conf:34`).
+- **Pourquoi MongoDB (`27017`) et le port interne de l'application (`${PORT}`) ne doivent PAS être exposés (`FAIT`)** :
+  - **MongoDB (`27017`)** : `deploy/ubuntu/install-mongodb.sh:86` lie `mongod` à `127.0.0.1` et `deploy/ubuntu/setup-system.sh:107` bloque `27017/tcp`. Exposer MongoDB sur le réseau ouvrirait l'accès direct aux collections (courriers, comptes, dossiers RH) sans passer par le contrôle d'accès applicatif ni par TLS.
+  - **Port interne Express (`${PORT}`, `3000` par défaut dans `server.ts:320` / `5000` dans `.env.production.example:15`, `ecosystem.config.cjs:42`, `deploy/ubuntu/dms.nginx.conf:7`)** : `setup-system.sh:106` bloque `3000/tcp` (et le guide Partie 3/4 impose de bloquer `${PORT}/tcp`). Exposer `${PORT}` en HTTP clair permettrait de contourner Nginx (terminaison TLS HTTPS, en-têtes de sécurité `deploy/ubuntu/dms.nginx.conf:50-53`, limite `client_max_body_size 50M` `:56`), ferait échouer l'envoi des cookies `Secure` imposés en production (`backend/controllers/auth/utils.js:17-19`), et exposerait directement Node.js qui écoute sur `0.0.0.0:${PORT}` (`server.ts:395`).
+
+---
+
+## 5. Configuration post-installation dans la VM (`[NON TESTÉ EN RÉEL]`)
+
+### 5.1 Agent invité QEMU (`qemu-guest-agent`)
+- **Action (dans la VM — `[À TESTER EN LOCAL]`)** :
+  ```bash
+  sudo apt-get update && sudo apt-get install -y qemu-guest-agent
+  sudo systemctl enable --now qemu-guest-agent
+  ```
+- **Résultat attendu** : permet à l'hôte de connaître l'IP de la VM, d'effectuer des arrêts propres et de figer les systèmes de fichiers (`fsfreeze`) lors des sauvegardes par snapshot.
+- **Vérification (sur l'hôte — `[À TESTER EN LOCAL]`)** :
+  ```bash
+  virsh qemu-agent-command <NOM_VM> '{"execute":"guest-ping"}'
+  ```
+  Attendu : `{"return":{}}`.
+- **Si ça échoue** : vérifier dans `virt-manager` → **Détails** la présence du périphérique **Channel (`org.qemu.guest_agent.0`)** de type `unix` (ajouter ce matériel si absent puis redémarrer la VM).
+
+### 5.2 Mises à jour système, fuseau horaire, NTP et locales (`fr` / `ar`)
+- **Action (dans la VM — `[À TESTER EN LOCAL]`)** :
+  ```bash
+  # 1) Mises à jour OS
+  sudo apt-get update && sudo apt-get upgrade -y
+
+  # 2) Fuseau horaire & NTP (Africa/Tunis selon deploy/ubuntu/setup-system.sh:33, DÉCISION DU PROPRIÉTAIRE)
+  sudo timedatectl set-timezone Africa/Tunis
+  sudo timedatectl set-ntp true
+
+  # 3) Locales françaises et arabes (interface bilingue fr/ar et OCR ara+fra)
+  sudo apt-get install -y locales
+  sudo locale-gen fr_FR.UTF-8 ar_TN.UTF-8
+  sudo update-locale LANG=fr_FR.UTF-8
+  ```
+- **Résultat attendu** : système à jour, heure synchronisée NTP (`System clock synchronized: yes`), locales `fr_FR.UTF-8` et `ar_TN.UTF-8` disponibles.
+- **Vérification (`[À TESTER EN LOCAL]`)** :
+  ```bash
+  timedatectl status
+  locale -a | grep -E 'fr_FR|ar_TN'
+  ```
+- **Si ça échoue** : si `NTP service: inactive`, installer/activer `systemd-timesyncd` (`sudo apt-get install -y systemd-timesyncd && sudo systemctl enable --now systemd-timesyncd`) et vérifier que le flux UDP/123 sortant n'est pas bloqué (ou configurer un serveur NTP interne d'entreprise dans `/etc/systemd/timesyncd.conf`).
+
+### 5.3 Compte d'administration, clés SSH et désactivation de `root`
+- **Action (sur le poste d'administration puis dans la VM — `[À TESTER EN LOCAL]`)** :
+  1. Sur le poste d'administration (si aucune clé n'existe encore) :
+     ```bash
+     ssh-keygen -t ed25519 -C "admin-dms"
+     ssh-copy-id <ADMIN_VM>@<IP_VM>
+     ```
+  2. Vérifier que le compte `<ADMIN_VM>` dispose bien de `sudo` et peut se connecter **par clé SSH** dans un nouveau terminal.
+  3. **Seulement après validation de la connexion par clé**, durcir SSH dans la VM :
+     ```bash
+     sudo tee /etc/ssh/sshd_config.d/99-dms-hardening.conf > /dev/null <<'EOF'
+     PermitRootLogin no
+     PasswordAuthentication no
+     PubkeyAuthentication yes
+     EOF
+     sudo sshd -t && sudo systemctl reload ssh
+     ```
+     *(Note : le compte système non privilégié `dms` sans droits sudo applicatifs sera ensuite créé par `deploy/ubuntu/setup-system.sh:70`.)*
+- **Résultat attendu** : connexion SSH acceptée uniquement par clé sur `<ADMIN_VM>`, refusée pour `root` et par mot de passe.
+- **Vérification (`[À TESTER EN LOCAL]` depuis un second terminal avant de fermer le premier)** :
+  ```bash
+  ssh -o PubkeyAuthentication=no <ADMIN_VM>@<IP_VM>   # Doit être refusé (Permission denied)
+  ssh root@<IP_VM>                                   # Doit être refusé
+  ssh <ADMIN_VM>@<IP_VM>                             # Doit réussir par clé
+  ```
+- **Si ça échoue** : si verrouillé hors SSH, ouvrir la console graphique dans `virt-manager`, corriger `/etc/ssh/sshd_config.d/99-dms-hardening.conf` et relancer `sudo sshd -t && sudo systemctl reload ssh`.
+
+### 5.4 Démarrage automatique de la VM avec l'hôte (`autostart`)
+- **Action (sur l'hôte — `[À TESTER EN LOCAL]`)** :
+  ```bash
+  sudo virsh autostart <NOM_VM>
+  ```
+- **Résultat attendu** : la VM redémarre automatiquement après tout redémarrage du serveur physique hôte.
+- **Vérification (`[À TESTER EN LOCAL]`)** :
+  ```bash
+  virsh dominfo <NOM_VM> | grep -i Autostart
+  ```
+  Attendu : `Autostart:      enable`.
+- **Si ça échoue** : vérifier l'existence du lien symbolique dans `/etc/libvirt/qemu/autostart/` et l'activation de `libvirtd` au démarrage (`systemctl is-enabled libvirtd`).
+
+---
+
+## 6. Instantanés (`snapshots`) avant chaque étape critique (`[NON TESTÉ EN RÉEL]`)
+
+- **Quand créer obligatoirement un instantané** :
+  1. VM fraîchement préparée (juste après la section 5, avant d'exécuter `setup-system.sh` / `install-mongodb.sh`).
+  2. Avant toute **migration d'index** MongoDB ou mise à jour applicative majeure.
+  3. Avant tout test de **restauration** (`deploy/scripts/restore-all.sh --target-prod`).
+- **Commandes (`[À TESTER EN LOCAL]` sur l'hôte — de préférence VM éteinte `virsh shutdown <NOM_VM>` pour garantir la cohérence disque MongoDB)** :
+  ```bash
+  # Créer un instantané nommé et daté
+  sudo virsh snapshot-create-as --domain <NOM_VM> \
+    --name "pre-install-$(date +%Y%m%d-%H%M)" \
+    --description "Avant installation DMS"
+
+  # Lister les instantanés existants
+  sudo virsh snapshot-list <NOM_VM>
+
+  # Revenir à un instantané en cas d'échec
+  sudo virsh snapshot-revert <NOM_VM> --snapshotname "pre-install-YYYYMMDD-HHMM"
+  ```
+- **Résultat attendu** : création et restauration rapides de l'état disque/configuration de la VM.
+- **Vérification (`[À TESTER EN LOCAL]`)** : `sudo virsh snapshot-info <NOM_VM> --snapshotname <NOM_SNAPSHOT>`.
+- **Si ça échoue** :
+  - Erreur `internal snapshots not supported` : vérifier que le disque est bien au format **`qcow2`** (`virsh domblklist <NOM_VM>` + `qemu-img info ...`) et que le firmware NVRAM UEFI ne bloque pas les snapshots internes (le cas échéant, utiliser des snapshots `--disk-only` avec VM arrêtée ou une copie à froid).
+- **AVERTISSEMENT CRITIQUE — Un instantané n'est PAS une sauvegarde** :
+  - Les instantanés internes résident dans le **même fichier `.qcow2`**, sur le **même disque physique** et le **même hôte** que la VM active. En cas de panne matérielle du disque hôte, de suppression de l'image ou de rançongiciel sur l'hôte, la VM et tous ses instantanés sont perdus simultanément.
+  - Ne pas conserver d'anciens instantanés indéfiniment : les purger après validation (`sudo virsh snapshot-delete <NOM_VM> --snapshotname <NOM_SNAPSHOT>`) pour éviter la dégradation des performances d'E/S MongoDB et la saturation disque.
+
+---
+
+## 7. Sauvegarde complète de la VM et articulation avec les scripts DMS (`[NON TESTÉ EN RÉEL]`)
+
+### 7.1 Sauvegarde de l'image VM (hôte)
+- **Méthode A — VM éteinte (recommandée pour cohérence absolue MongoDB, `[À TESTER EN LOCAL]`)** :
+  ```bash
+  sudo virsh shutdown <NOM_VM>
+  # Attendre l'état 'shut off' (virsh domstate <NOM_VM>)
+  sudo virsh dumpxml <NOM_VM> > /mnt/backup_externe/<NOM_VM>-$(date +%Y%m%d).xml
+  sudo cp --sparse=always /var/lib/libvirt/images/<IMAGE>.qcow2 /mnt/backup_externe/
+  sudo virsh start <NOM_VM>
+  ```
+- **Méthode B — À chaud via snapshot externe (sans coupure, nécessite `qemu-guest-agent` actif, `[À TESTER EN LOCAL]`)** :
+  ```bash
+  # 1) Créer un overlay temporaire en gelant le FS invité (--quiesce)
+  sudo virsh snapshot-create-as --domain <NOM_VM> snap-backup --disk-only --atomic --quiesce --no-metadata
+  # 2) Copier la base qcow2 devenue lecture seule vers le support externe
+  sudo cp --sparse=always /var/lib/libvirt/images/<IMAGE>.qcow2 /mnt/backup_externe/
+  # 3) Fusionner l'overlay dans la base (blockcommit) puis supprimer le fichier overlay
+  sudo virsh blockcommit <NOM_VM> vda --active --pivot --wait
+  sudo rm -f /var/lib/libvirt/images/<IMAGE>.snap-backup
+  ```
+- **Vérification** : contrôler la taille et l'intégrité de l'image copiée (`qemu-img check /mnt/backup_externe/<IMAGE>.qcow2`).
+- **Si ça échoue** : si `--quiesce` échoue, vérifier `qemu-guest-agent` (section 5.1) ; si l'overlay reste bloqué après échec, inspecter `virsh domblklist <NOM_VM>` avant toute suppression manuelle de fichier.
+
+### 7.2 Articulation avec `backup-all.sh` et `restore-all.sh` + copie hors hôte
+- **`FAIT`** : le projet fournit `deploy/scripts/backup-all.sh` (qui produit `dms_full_backup_<TIMESTAMP>.tar.gz` contenant `mongodump --gzip` `:57`, `courrier/` et `uploads/` `:75,83`, un manifeste SHA256 des `.gguf` `:100-104`, avec rétention par défaut de 14 jours `:25` et protection de la dernière archive `:128-140`) et `deploy/scripts/restore-all.sh` (qui vérifie `tar -tzf` `:52`, restaure par défaut vers `document-management-test` `:69-77` et exige `--target-prod` + confirmation `'OUI'` pour écraser `document-management` `:89-97`).
+- **Règle d'exploitation (`DÉCISION DU PROPRIÉTAIRE`)** :
+  - Les sauvegardes applicatives générées dans `/var/backups/dms` restent **à l'intérieur de la VM** (même disque virtuel). Il est **impératif** de répliquer régulièrement ces archives `.tar.gz` **et** les sauvegardes d'image `.qcow2` vers un stockage **hors de l'hôte KVM** (NAS dédié, disque externe chiffré, serveur distant via `rsync`/SSH).
+
+---
+
+## 8. Scanner USB (Passthrough vers la VM) (`[NON TESTÉ EN RÉEL]`)
+
+### 8.1 Attacher le scanner USB à la VM
+- **Action via `virt-manager` (Clics)** :
+  1. Brancher le scanner USB sur un port USB de l'hôte physique et l'allumer.
+  2. Dans `virt-manager` → **Détails de la VM → Ajouter un matériel → Périphérique hôte USB**.
+  3. Sélectionner le scanner dans la liste et cliquer sur **Terminer**.
+  4. Vérifier dans **Contrôleur USB** que le modèle est en **USB 3 (`nec-xhci`)** ou **USB 2 (`ich9-ehci`)** plutôt qu'USB 1.1.
+- **Alternative en ligne de commande (`[À TESTER EN LOCAL]` sur l'hôte)** :
+  ```bash
+  lsusb   # Noter idVendor (ex: 04a9) et idProduct (ex: 190f)
+  cat <<'EOF' > /tmp/scanner-usb.xml
+  <hostdev mode='subsystem' type='usb' managed='yes'>
+    <source>
+      <vendor id='0x<VENDOR>'/>
+      <product id='0x<PRODUCT>'/>
+    </source>
+  </hostdev>
+  EOF
+  sudo virsh attach-device <NOM_VM> /tmp/scanner-usb.xml --live --config
+  ```
+- **Résultat attendu** : le périphérique USB est transféré à l'invité Ubuntu.
+- **Vérification dans la VM (`[À TESTER EN LOCAL]`)** :
+  ```bash
+  lsusb
+  sudo scanimage -L
+  # Puis avec le compte applicatif 'dms' (après exécution de setup-system.sh) :
+  sudo -u dms scanimage -L
+  ```
+  Attendu : `scanimage -L` retourne une ligne du type ``device `<SCANNER_DEVICE_ID>' is a ...`` exploitable par `backend/utils/scanner/linux/scannerDetection.js:61`.
+- **Si ça échoue** :
+  - Visible en `root` (`sudo scanimage -L`) mais pas sous `dms` (`sudo -u dms scanimage -L`) : ajouter l'utilisateur `dms` aux groupes `scanner` et `lp` (`sudo usermod -aG scanner,lp dms`, puis redémarrer PM2) et vérifier les règles `udev` SANE du constructeur.
+  - Pilote absent pour le modèle exact : installer le paquet SANE constructeur ou `libsane-extras` (`[NON VÉRIFIÉ]` selon modèle matériel).
+
+### 8.2 Limites du passthrough et conséquence pour le module scan du DMS
+- **Limites matérielles** :
+  - Le passthrough USB donne un accès **exclusif** à la VM (le scanner n'est plus visible par l'hôte).
+  - En cas de débranchement/rebranchement ou mise en veille prolongée, certains scanners changent d'adresse de bus/port ou d'ID produit, imposant un ré-attachement (`virsh attach-device` par `vendor/product` résiste mieux qu'une attache par `bus/device`).
+- **Conséquence pour le module scan (`FAIT`)** :
+  - Dans ce projet, la détection SANE (`backend/utils/scanner/linux/scannerDetection.js:27-89`) et la configuration (`backend/utils/scanner/config/scannerConfig.js:18-20,37`, `.env.production.example:89-93`) s'exécutent **côté serveur** lorsque `SCANNER_ENABLED=true`.
+  - Par conséquent, un scanner branché sur un **poste client distant** ne sera pas détecté par le serveur VM via USB passthrough : le passthrough ne concerne qu'un scanner physiquement relié à l'hôte KVM (ou un scanner réseau SANE compatible). Pour des postes distants sans scanner serveur, conserver `SCANNER_ENABLED=false` et téléverser les PDF scannés depuis le navigateur client.
+
+---
+
+## 9. Performance et IA (`node-llama-cpp`) dans la VM (`[NON TESTÉ EN RÉEL]`)
+
+- **Désactivation du *Memory Ballooning* (recommandé pour `node-llama-cpp`)** :
+  - **FAIT** : `server.ts:80` et `backend/services/ollamaService.js:43-46,90-108` conservent en RAM un singleton permanent pour les deux modèles `.gguf` (~5 Go).
+  - La récupération dynamique de RAM (*VirtIO Memory Balloon*) par l'hôte KVM peut entrer en conflit avec cette allocation persistante et déclencher le tueur OOM Linux dans la VM.
+  - **Action (dans `virt-manager` ou `virsh edit <NOM_VM>`)** : dans **Détails → Mémoire**, vérifier l'absence de surallocation mémoire sur l'hôte ; si un périphérique **VirtIO Balloon** est présent dans la configuration XML, le passer à `model='none'` (`<memballoon model='none'/>`) via `sudo virsh edit <NOM_VM>` (`[À TESTER EN LOCAL]`).
+- **Exécution 100 % CPU sans GPU (`FAIT`)** :
+  - `backend/services/ollamaService.js:28,86` et `.env.production.example:77` utilisent `LLAMA_GPU_LAYERS=0` par défaut (`gpu: false`).
+  - **Sans GPU physique dédié transféré par PCI Passthrough (VFIO)** (le passthrough GPU requiert IOMMU sur la carte mère hôte et un GPU dédié exclusif à la VM, non configuré par défaut), toute l'inférence GGUF s'exécute **uniquement sur les vCPU**.
+  - Conserver CPU en mode **`host-passthrough`** (section 3.3) et aligner `LLAMA_THREADS` (`.env.production.example:74`) sur le nombre de cœurs physiques alloués à la VM (ne pas surallouer plus de vCPU que de cœurs physiques disponibles sur l'hôte). Attendre une latence de plusieurs secondes à plusieurs dizaines de secondes par requête IA en CPU pur (d'où `proxy_read_timeout 300s` dans `deploy/ubuntu/dms.nginx.conf:104`).
+- **Risque d'OOM (*Out-Of-Memory*)** :
+  - `ecosystem.config.cjs:34` fixe `max_memory_restart: '6G'` pour `dms-backend`, mais ce seuil redémarre le processus Node en cas de dépassement sans protéger contre un pic global avec MongoDB + Tesseract/Poppler (`600 DPI`). Garantir au moins **16 Go de RAM dédiée** à la VM en production et prévoir un espace swap de secours modéré (ex. `2–4 Go`) pour éviter les arrêts brutaux.
+- **Hugepages optionnelles (`[À TESTER EN LOCAL]`)** :
+  - Sur un hôte dédié à la production avec RAM fixe suffisante, les *hugepages* de `2 Mio` sur l'hôte réduisent le coût de traduction mémoire EPT/NPT pour une VM à forte empreinte RAM, au prix d'une réservation mémoire statique permanente sur l'hôte (`DÉCISION DU PROPRIÉTAIRE`).
+
+---
+
+## 10. Points de vérification Hôte & VM (`[À TESTER EN LOCAL]`)
+
+| Commande | Où l'exécuter | Résultat attendu | Statut |
+|---|---|---|---|
+| `lscpu \| grep -E 'Virtualization\|vmx\|svm\|avx'` | Hôte & VM | `vmx` ou `svm` sur l'hôte ; flags `avx`/`avx2` exposés dans la VM (`host-passthrough`) | `[À TESTER EN LOCAL]` |
+| `free -h` | Hôte & VM | RAM VM conforme au palier choisi (≥ 16 Go reco. prod) ; marge libre suffisante sur l'hôte | `[À TESTER EN LOCAL]` |
+| `df -h` | Hôte & VM | Espace libre confortable sur `/var/lib/libvirt/images` (hôte) et `/`, `/var` (VM) | `[À TESTER EN LOCAL]` |
+| `ip a` | Hôte & VM | `br0` (ou `virbr0`) actif sur l'hôte ; IP fixe attendue configurée sur l'interface `enp*` de la VM | `[À TESTER EN LOCAL]` |
+| `systemctl is-active libvirtd` | Hôte | `active` | `[À TESTER EN LOCAL]` |
+| `virsh list --all` | Hôte | La VM cible apparaît à l'état `running` | `[À TESTER EN LOCAL]` |
+| `ping -c 3 <IP_VM>` | Hôte / poste LAN | `0% packet loss` (en mode pont sur le LAN) | `[À TESTER EN LOCAL]` |
+| `ssh <ADMIN_VM>@<IP_VM>` | Poste d'admin | Connexion réussie par clé SSH ; `root` et mot de passe refusés | `[À TESTER EN LOCAL]` |
+
+---
+
+## 11. Dépannage VM QEMU/KVM (`[NON TESTÉ EN RÉEL]`)
+
+| Symptôme | Cause probable | Diagnostic et action |
+|---|---|---|
+| **VM très lente** (démarrage long, inférence bloquée) | Accélération KVM inactive (émulation QEMU logicielle pure), CPU générique `qemu64` au lieu de `host-passthrough`, ou surallocation vCPU / swap massif sur l'hôte | Sur l'hôte : `kvm-ok` et `virsh dumpxml <NOM_VM> \| grep -E "domain type\|cpu mode"` (attendu `type='kvm'` et `mode='host-passthrough'`). Vérifier `free -h` et `iostat` sur l'hôte ; réduire la charge concurrente ou désactiver le ballooning. |
+| **Pas de réseau dans la VM** | Pont `br0` mal configuré sur l'hôte, réseau Libvirt `default` inactif (`virbr0`), erreur YAML Netplan dans la VM, ou pare-feu bloquant | Sur l'hôte : `ip -br link`, `bridge link show`, `virsh net-list --all` (`virsh net-start default` si NAT). Dans la VM : `ip a`, `ip route`, `sudo netplan status`. |
+| **ISO non bootable** | Image ISO incomplète/corrompue, lecteur CD-ROM non coché dans l'ordre de boot, ou incompatibilité BIOS/UEFI | Vérifier le SHA256 de l'ISO ; dans `virt-manager` → **Options de démarrage**, placer le CD-ROM en premier et vérifier que le firmware correspond à une ISO x86_64 UEFI standard. |
+| **Disque plein** (hôte ou VM) | Disque virtuel sous-dimensionné, accumulation d'instantanés non purgés, archives `/var/backups/dms` non externalisées ou logs PM2/Nginx non tournés | Dans la VM : `df -h`, `du -sh /var/backups/dms /var/www/dms/* /var/log/*`. Sur l'hôte : `virsh snapshot-list <NOM_VM>` et purger les anciens snapshots validés (`snapshot-delete`), ou étendre le `.qcow2` (`qemu-img resize` + `lvextend`/`resize2fs`). |
+| **Scanner USB non vu dans la VM** | Périphérique non attaché en passthrough, câble/veille USB, contrôleur USB émulé inadapté, ou utilisateur `dms` hors groupes `scanner`/`lp` | Sur l'hôte : `lsusb` et `virsh dumpxml <NOM_VM> \| grep -A6 hostdev`. Dans la VM : `lsusb`, `sudo scanimage -L`, `sudo -u dms scanimage -L`. |
+| **`Permission denied` sur l'image `.qcow2` ou `.iso`** | L'utilisateur système `libvirt-qemu` (ou AppArmor) n'a pas le droit de traverser le répertoire personnel (`/home/...`) où est stocké le fichier | Déplacer l'ISO et les images dans `/var/lib/libvirt/images/`, vérifier les droits (`chmod 755` sur le dossier parent si nécessaire, `chown libvirt-qemu:kvm` sur l'image) et inspecter `sudo dmesg \| grep -i apparmor`. |
+
+---
+
 # PARTIE 3/4 : DÉPLOIEMENT SUR UBUNTU SERVER (`[NON TESTÉ EN RÉEL]`)
 
 > **Statut global de la Partie 3/4** : **`[NON TESTÉ EN RÉEL]`** (aucune commande n'a été exécutée sur un serveur Ubuntu cible).  
