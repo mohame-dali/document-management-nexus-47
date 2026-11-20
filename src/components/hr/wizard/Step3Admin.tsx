@@ -9,8 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shield } from 'lucide-react';
+import { AlertCircle, Shield } from 'lucide-react';
 import { Department } from '@/types';
+import { PersonnelFormErrors } from '../PersonnelForm';
 
 export interface Step3AdminProps {
   posteActuel: string;
@@ -43,6 +44,8 @@ export interface Step3AdminProps {
   setArme: (val: string) => void;
   notes: string;
   setNotes: (val: string) => void;
+  errors?: PersonnelFormErrors;
+  setErrors?: React.Dispatch<React.SetStateAction<PersonnelFormErrors>>;
 }
 
 export const Step3Admin: React.FC<Step3AdminProps> = ({
@@ -75,6 +78,8 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
   setArme,
   notes,
   setNotes,
+  errors,
+  setErrors,
 }) => {
   return (
     <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
@@ -134,9 +139,22 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             id="dateEmbauche"
             type="date"
             value={dateEmbauche}
-            onChange={(e) => setDateEmbauche(e.target.value)}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            onChange={(e) => {
+              setDateEmbauche(e.target.value);
+              if (errors?.dateEmbauche && setErrors) {
+                setErrors((prev) => ({ ...prev, dateEmbauche: undefined }));
+              }
+            }}
+            className={`h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] ${
+              errors?.dateEmbauche ? 'border-red-500' : ''
+            }`}
           />
+          {errors?.dateEmbauche && (
+            <p className="text-sm text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errors.dateEmbauche}</span>
+            </p>
+          )}
         </div>
 
         {/* Numéro d'unité */}

@@ -11,6 +11,7 @@ import {
   Building2,
   RefreshCw,
   ChevronRight,
+  ChevronLeft,
   ShieldCheck,
   FileDown,
   Loader2,
@@ -50,6 +51,11 @@ export const AllPersonnelSituationPage: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [reportPage, setReportPage] = useState<number>(1);
+
+  useEffect(() => {
+    setReportPage(1);
+  }, [viewMode, selectedDepartment, currentYear, currentMonth]);
 
   // Hook d'export PDF
   const {
@@ -129,12 +135,13 @@ export const AllPersonnelSituationPage: React.FC = () => {
     isLoading: isLoadingMonth,
     refetch: refetchMonth,
   } = useQuery({
-    queryKey: ['attendance-all-monthly-report', currentYear, currentMonth, selectedDepartment],
+    queryKey: ['attendance-all-monthly-report', currentYear, currentMonth, selectedDepartment, reportPage],
     queryFn: () =>
       getMonthlyReport(
         currentYear,
         currentMonth,
-        selectedDepartment === 'all' ? undefined : selectedDepartment
+        selectedDepartment === 'all' ? undefined : selectedDepartment,
+        reportPage
       ),
     enabled: viewMode === 'month',
     staleTime: 2 * 60 * 1000,
@@ -146,11 +153,12 @@ export const AllPersonnelSituationPage: React.FC = () => {
     isLoading: isLoadingYear,
     refetch: refetchYear,
   } = useQuery({
-    queryKey: ['attendance-all-yearly-report', currentYear, selectedDepartment],
+    queryKey: ['attendance-all-yearly-report', currentYear, selectedDepartment, reportPage],
     queryFn: () =>
       getYearlyReport(
         currentYear,
-        selectedDepartment === 'all' ? undefined : selectedDepartment
+        selectedDepartment === 'all' ? undefined : selectedDepartment,
+        reportPage
       ),
     enabled: viewMode === 'year',
     staleTime: 5 * 60 * 1000,
@@ -670,39 +678,131 @@ export const AllPersonnelSituationPage: React.FC = () => {
         />
       )}
 
-      {viewMode === 'month' && (
-        <AllPersonnelMonthView
-          year={currentYear}
-          month={currentMonth}
-          onYearMonthChange={(y, m) => {
-            setCurrentYear(y);
-            setCurrentMonth(m);
-          }}
-          records={filteredMonthRecords}
-          leaveReasons={leaveReasons}
-          isLoading={isLoadingMonth}
-          departments={departments}
-          selectedDepartment={selectedDepartment}
-          onDepartmentChange={setSelectedDepartment}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      )}
+      {viewMode === 'month' && (() => {
+        const monthMeta = (monthReportData as {
+          data?: {
+            totalPersonnel?: number;
+            page?: number;
+            totalPages?: number;
+            paginated?: boolean;
+          };
+        })?.data;
+        const monthTotalPages = monthMeta?.totalPages || 1;
+        const monthTotal = monthMeta?.totalPersonnel || filteredMonthRecords.length;
+        return (
+          <>
+            <AllPersonnelMonthView
+              year={currentYear}
+              month={currentMonth}
+              onYearMonthChange={(y, m) => {
+                setCurrentYear(y);
+                setCurrentMonth(m);
+              }}
+              records={filteredMonthRecords}
+              leaveReasons={leaveReasons}
+              isLoading={isLoadingMonth}
+              departments={departments}
+              selectedDepartment={selectedDepartment}
+              onDepartmentChange={setSelectedDepartment}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+            {monthTotalPages > 1 && (
+              <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs text-[#4a5568]">
+                  المجموع: <strong>{monthTotal}</strong> موظف — صفحة <strong>{reportPage}</strong> من{' '}
+                  <strong>{monthTotalPages}</strong>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setReportPage((p) => Math.max(1, p - 1))}
+                    disabled={reportPage <= 1 || isLoadingMonth}
+                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                    <span>السابق</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setReportPage((p) => Math.min(monthTotalPages, p + 1))}
+                    disabled={reportPage >= monthTotalPages || isLoadingMonth}
+                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                  >
+                    <span>التالي</span>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
-      {viewMode === 'year' && (
-        <AllPersonnelYearView
-          year={currentYear}
-          onYearChange={setCurrentYear}
-          records={filteredYearRecords}
-          leaveReasons={leaveReasons}
-          isLoading={isLoadingYear}
-          departments={departments}
-          selectedDepartment={selectedDepartment}
-          onDepartmentChange={setSelectedDepartment}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      )}
+      {viewMode === 'year' && (() => {
+        const yearMeta = (yearReportData as {
+          data?: {
+            totalPersonnel?: number;
+            page?: number;
+            totalPages?: number;
+            paginated?: boolean;
+          };
+        })?.data;
+        const yearTotalPages = yearMeta?.totalPages || 1;
+        const yearTotal = yearMeta?.totalPersonnel || filteredYearRecords.length;
+        return (
+          <>
+            <AllPersonnelYearView
+              year={currentYear}
+              onYearChange={setCurrentYear}
+              records={filteredYearRecords}
+              leaveReasons={leaveReasons}
+              isLoading={isLoadingYear}
+              departments={departments}
+              selectedDepartment={selectedDepartment}
+              onDepartmentChange={setSelectedDepartment}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+            {yearTotalPages > 1 && (
+              <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs text-[#4a5568]">
+                  المجموع: <strong>{yearTotal}</strong> موظف — صفحة <strong>{reportPage}</strong> من{' '}
+                  <strong>{yearTotalPages}</strong>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setReportPage((p) => Math.max(1, p - 1))}
+                    disabled={reportPage <= 1 || isLoadingYear}
+                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                    <span>السابق</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setReportPage((p) => Math.min(yearTotalPages, p + 1))}
+                    disabled={reportPage >= yearTotalPages || isLoadingYear}
+                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                  >
+                    <span>التالي</span>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* 5. Légende des couleurs */}
       <MyAttendanceLegend />

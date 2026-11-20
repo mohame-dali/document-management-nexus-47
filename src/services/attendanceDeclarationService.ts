@@ -74,6 +74,8 @@ export interface DeclarationFilters {
   to?: string;
   departmentId?: string;
   validationStatus?: 'all' | 'en_attente' | 'approuvee' | 'rejetee' | 'modifiee';
+  page?: number;
+  limit?: number;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -116,7 +118,21 @@ export const getMyDeclarations = async (
  */
 export const getAllDeclarations = async (
   filters?: DeclarationFilters
-): Promise<{ success: boolean; count: number; data: AttendanceDeclaration[] }> => {
+): Promise<{
+  success: boolean;
+  count: number;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  data: AttendanceDeclaration[];
+}> => {
   const response = await api.get('/declarations', { params: filters });
   return response.data;
 };

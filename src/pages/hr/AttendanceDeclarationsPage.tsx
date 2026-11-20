@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/contexts/AuthContext';
 import {
   getAllDeclarations,
   approveDeclaration,
@@ -40,29 +39,28 @@ import {
   Clock,
   Edit3,
   Search,
-  Filter,
   RotateCcw,
   Calendar,
-  Building,
   UserCheck,
   UserX,
-  AlertCircle,
-  FileText,
   Loader2,
-  MessageSquare,
   MapPin,
   GraduationCap,
-  Sparkles,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
 import { getErrorMessage } from '@/utils/errorMessages';
 
 export const AttendanceDeclarationsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
 
   // Liste des déclarations & chargement
   const [declarations, setDeclarations] = useState<AttendanceDeclaration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const limit = 20;
 
   // Données de référence
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -118,7 +116,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
   const fetchDeclarations = useCallback(async () => {
     try {
       setLoading(true);
-      const filters: DeclarationFilters = {};
+      const filters: DeclarationFilters = {
+        page,
+        limit,
+      };
       if (statusFilter !== 'all') {
         filters.validationStatus = statusFilter;
       } else {
@@ -134,8 +135,14 @@ export const AttendanceDeclarationsPage: React.FC = () => {
       const res = await getAllDeclarations(filters);
       if (res.success && Array.isArray(res.data)) {
         setDeclarations(res.data);
+        const totalCount = res.total ?? res.pagination?.total ?? res.data.length;
+        const pagesCount = res.totalPages ?? res.pagination?.totalPages ?? Math.ceil(totalCount / limit);
+        setTotal(totalCount);
+        setTotalPages(pagesCount);
       } else {
         setDeclarations([]);
+        setTotal(0);
+        setTotalPages(0);
       }
     } catch (error: unknown) {
       console.error('Erreur récupération déclarations:', error);
@@ -143,7 +150,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, departmentFilter, dateFilter]);
+  }, [statusFilter, departmentFilter, dateFilter, page]);
 
   useEffect(() => {
     fetchDeclarations();
@@ -379,7 +386,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* KPI 1 : En attente */}
         <div
-          onClick={() => setStatusFilter('en_attente')}
+          onClick={() => {
+            setStatusFilter('en_attente');
+            setPage(1);
+          }}
           className={`cursor-pointer p-4 rounded-lg border transition-all ${
             statusFilter === 'en_attente'
               ? 'bg-amber-50/70 border-amber-300 ring-2 ring-amber-400/50 shadow-sm'
@@ -400,7 +410,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
         {/* KPI 2 : Approuvées */}
         <div
-          onClick={() => setStatusFilter('approuvee')}
+          onClick={() => {
+            setStatusFilter('approuvee');
+            setPage(1);
+          }}
           className={`cursor-pointer p-4 rounded-lg border transition-all ${
             statusFilter === 'approuvee'
               ? 'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-400/50 shadow-sm'
@@ -421,7 +434,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
         {/* KPI 3 : Rejetées */}
         <div
-          onClick={() => setStatusFilter('rejetee')}
+          onClick={() => {
+            setStatusFilter('rejetee');
+            setPage(1);
+          }}
           className={`cursor-pointer p-4 rounded-lg border transition-all ${
             statusFilter === 'rejetee'
               ? 'bg-red-50/70 border-red-300 ring-2 ring-red-400/50 shadow-sm'
@@ -459,13 +475,16 @@ export const AttendanceDeclarationsPage: React.FC = () => {
           <div>
             <Select
               value={statusFilter}
-              onValueChange={(val: 'all' | 'en_attente' | 'approuvee' | 'rejetee' | 'modifiee') => setStatusFilter(val)}
+              onValueChange={(val: 'all' | 'en_attente' | 'approuvee' | 'rejetee' | 'modifiee') => {
+                setStatusFilter(val);
+                setPage(1);
+              }}
             >
               <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
                 <SelectValue placeholder="تصفية حسب الحالة" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">كل الحالات ({declarations.length})</SelectItem>
+                <SelectItem value="all">كل الحالات ({total || declarations.length})</SelectItem>
                 <SelectItem value="en_attente">قيد المراجعة فقط</SelectItem>
                 <SelectItem value="approuvee">المقبولة</SelectItem>
                 <SelectItem value="rejetee">المرفوضة</SelectItem>
@@ -478,7 +497,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
           <div>
             <Select
               value={departmentFilter}
-              onValueChange={setDepartmentFilter}
+              onValueChange={(val) => {
+                setDepartmentFilter(val);
+                setPage(1);
+              }}
             >
               <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
                 <SelectValue placeholder="كل الأقسام / المصالح" />
@@ -499,14 +521,20 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             <Input
               type="date"
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setPage(1);
+              }}
               className="h-10 border-[#e2e8f0] text-sm"
             />
             {dateFilter && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setDateFilter('')}
+                onClick={() => {
+                  setDateFilter('');
+                  setPage(1);
+                }}
                 className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-gray-500 hover:text-gray-700"
                 aria-label={t('attendance.declarations.clearDateAria')}
                 title={t('attendance.declarations.clearDateAria')}
@@ -696,6 +724,40 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && total > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-[#e2e8f0] bg-gray-50/70">
+            <div className="text-xs text-gray-600">
+              عرض <strong>{declarations.length}</strong> من أصل <strong>{total}</strong> تصريح — صفحة{' '}
+              <strong>{page}</strong> من <strong>{Math.max(totalPages, 1)}</strong>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1 || loading}
+                className="h-9 px-3 border-[#e2e8f0] text-gray-700 gap-1"
+              >
+                <ChevronRight className="w-4 h-4" />
+                <span>السابق</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => (totalPages > 0 ? Math.min(totalPages, p + 1) : p + 1))}
+                disabled={page >= totalPages || loading}
+                className="h-9 px-3 border-[#e2e8f0] text-gray-700 gap-1"
+              >
+                <span>التالي</span>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         )}
       </div>

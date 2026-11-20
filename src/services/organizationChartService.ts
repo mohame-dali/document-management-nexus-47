@@ -7,6 +7,7 @@ export interface ChartPersonnel {
   poste?: string;
   photo?: string;
   cin?: string;
+  emailPersonnel?: string;
 }
 
 export interface ChartDepartment {
@@ -24,6 +25,7 @@ export interface Director {
   poste?: string;
   photo?: string;
   cin?: string;
+  emailPersonnel?: string;
 }
 
 export interface OrganizationChartData {

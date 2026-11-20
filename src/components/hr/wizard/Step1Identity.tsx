@@ -19,7 +19,7 @@ import {
   Save,
 } from 'lucide-react';
 import { PersonnelSexe } from '@/types/hr';
-import { PersonnelExtendedData } from '../PersonnelForm';
+import { PersonnelExtendedData, PersonnelFormErrors } from '../PersonnelForm';
 
 export interface Step1IdentityProps {
   nom: string;
@@ -65,8 +65,8 @@ export interface Step1IdentityProps {
   handleRemovePhoto: () => void;
   handleDirectPhotoUpload: () => void;
   initialData?: PersonnelExtendedData;
-  errors: { nom?: string; prenom?: string };
-  setErrors: React.Dispatch<React.SetStateAction<{ nom?: string; prenom?: string }>>;
+  errors: PersonnelFormErrors;
+  setErrors: React.Dispatch<React.SetStateAction<PersonnelFormErrors>>;
 }
 
 export const Step1Identity: React.FC<Step1IdentityProps> = ({
@@ -413,16 +413,29 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* CIN */}
         <div className="space-y-2">
-          <Label htmlFor="cin" className="text-base font-semibold text-gray-700">
-            رقم بطاقة التعريف الوطنية (CIN)
+          <Label htmlFor="cin" className="text-base font-semibold text-gray-700 flex items-center gap-1">
+            <span>رقم بطاقة التعريف الوطنية (CIN)</span>
+            <span className="text-red-500">*</span>
           </Label>
           <Input
             id="cin"
             value={cin}
-            onChange={(e) => setCin(e.target.value)}
+            maxLength={8}
+            onChange={(e) => {
+              setCin(e.target.value);
+              if (errors.cin) setErrors((prev) => ({ ...prev, cin: undefined }));
+            }}
             placeholder="مثال: 08123456"
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className={`h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] ${
+              errors.cin ? 'border-red-500' : ''
+            }`}
           />
+          {errors.cin && (
+            <p className="text-sm text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errors.cin}</span>
+            </p>
+          )}
         </div>
 
         {/* Groupe B : Date d'émission CIN */}
@@ -471,17 +484,30 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
       {/* Coordonnées */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 pt-6 border-t border-[#e2e8f0]">
         <div className="space-y-2">
-          <Label htmlFor="telephone" className="text-base font-semibold text-gray-700">
-            الهاتف (Téléphone)
+          <Label htmlFor="telephone" className="text-base font-semibold text-gray-700 flex items-center gap-1">
+            <span>الهاتف (Téléphone)</span>
+            <span className="text-red-500">*</span>
           </Label>
           <Input
             id="telephone"
             value={telephone}
-            onChange={(e) => setTelephone(e.target.value)}
+            maxLength={8}
+            onChange={(e) => {
+              setTelephone(e.target.value);
+              if (errors.telephone) setErrors((prev) => ({ ...prev, telephone: undefined }));
+            }}
             placeholder="مثال: 98123456"
             dir="ltr"
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right"
+            className={`h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right ${
+              errors.telephone ? 'border-red-500' : ''
+            }`}
           />
+          {errors.telephone && (
+            <p className="text-sm text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errors.telephone}</span>
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -492,11 +518,22 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
             id="emailPersonnel"
             type="email"
             value={emailPersonnel}
-            onChange={(e) => setEmailPersonnel(e.target.value)}
+            onChange={(e) => {
+              setEmailPersonnel(e.target.value);
+              if (errors.emailPersonnel) setErrors((prev) => ({ ...prev, emailPersonnel: undefined }));
+            }}
             placeholder="exemple@domaine.com"
             dir="ltr"
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right"
+            className={`h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] text-right ${
+              errors.emailPersonnel ? 'border-red-500' : ''
+            }`}
           />
+          {errors.emailPersonnel && (
+            <p className="text-sm text-red-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errors.emailPersonnel}</span>
+            </p>
+          )}
         </div>
 
         <div className="space-y-2 md:col-span-2 lg:col-span-1">

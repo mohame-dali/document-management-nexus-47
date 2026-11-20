@@ -312,30 +312,60 @@ exports.getAllDeclarations = async (req, res) => {
       if (req.query.to) query.date.$lte = getUTCDayRange(req.query.to).end;
     }
 
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+    const skip = (page - 1) * limit;
+
     // Filtrage par département
     const canSeeAll = await canUserSeeAllDepartments(req);
     if (!canSeeAll) {
       // AdminDepartment non-RH : restreint strictement à son département
       const userDeptId = req.user.activeDepartment?._id || req.user.activeDepartment;
       if (!userDeptId) {
-        return res.status(200).json({ success: true, count: 0, data: [] });
+        return res.status(200).json({
+          success: true,
+          count: 0,
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+          pagination: { total: 0, page, limit, totalPages: 0 },
+          data: []
+        });
       }
       query.departmentId = userDeptId;
     } else if (req.query.departmentId && req.query.departmentId !== 'all') {
       query.departmentId = req.query.departmentId;
     }
 
-    const declarations = await AttendanceDeclaration.find(query)
-      .populate('personnelId', 'nom prenom matricule activeDepartment telephone photo')
-      .populate('leaveReasonId', 'nom code categorie impacteSolde')
-      .populate('userId', 'username photo')
-      .populate('departmentId', 'name code')
-      .populate('validatedBy', 'username')
-      .sort({ date: -1, createdAt: -1 });
+    const [total, declarations] = await Promise.all([
+      AttendanceDeclaration.countDocuments(query),
+      AttendanceDeclaration.find(query)
+        .populate('personnelId', 'nom prenom matricule activeDepartment telephone photo')
+        .populate('leaveReasonId', 'nom code categorie impacteSolde')
+        .populate('userId', 'username photo')
+        .populate('departmentId', 'name code')
+        .populate('validatedBy', 'username')
+        .sort({ date: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       count: declarations.length,
+      total,
+      page,
+      limit,
+      totalPages,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages
+      },
       data: declarations
     });
   } catch (error) {

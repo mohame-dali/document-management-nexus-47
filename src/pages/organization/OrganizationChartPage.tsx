@@ -11,12 +11,20 @@ import ReactFlow, {
   BackgroundVariant
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { ArrowRight, RotateCcw, AlertCircle, Loader2, Building2, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowRight, RotateCcw, AlertCircle, Loader2, Building2, Info, ChevronDown, ChevronUp, Briefcase, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getOrganizationChart } from '@/services/organizationChartService';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { ChartPersonnel, Director, getOrganizationChart } from '@/services/organizationChartService';
 import AdministrationNode from '@/components/organization/AdministrationNode';
 import DirectorNode from '@/components/organization/DirectorNode';
 import DepartmentNode from '@/components/organization/DepartmentNode';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 
 const NODE_WIDTH = 280;
 const NODE_HEIGHT = 110;
@@ -25,7 +33,16 @@ const LEVEL_Y_STEP = 190;
 
 const OrganizationChartPage: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [showLegend, setShowLegend] = useState(true);
+  const [selectedContact, setSelectedContact] = useState<{
+    person: ChartPersonnel | Director;
+    departmentName?: string;
+  } | null>(null);
+
+  const canViewPersonnelProfile = ['Admin', 'Director', 'AdminDepartment'].includes(
+    currentUser?.role || ''
+  );
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['organization-chart'],
@@ -38,9 +55,39 @@ const OrganizationChartPage: React.FC = () => {
 
   const handlePersonnelClick = useCallback(
     (personnelId: string) => {
-      navigate(`/dashboard/hr/personnel/${personnelId}`);
+      if (canViewPersonnelProfile) {
+        navigate(`/dashboard/hr/personnel/${personnelId}`);
+        return;
+      }
+
+      if (!data) return;
+
+      if (data.director && String(data.director._id) === String(personnelId)) {
+        setSelectedContact({
+          person: data.director,
+          departmentName: 'الإدارة العامة',
+        });
+        return;
+      }
+
+      const allDepts = [
+        ...(data.regalienDepartments || []),
+        ...(data.operationalDepartments || []),
+      ];
+      for (const dept of allDepts) {
+        const found = (dept.personnel || []).find(
+          (p) => String(p._id) === String(personnelId)
+        );
+        if (found) {
+          setSelectedContact({
+            person: found,
+            departmentName: dept.name,
+          });
+          return;
+        }
+      }
     },
-    [navigate]
+    [canViewPersonnelProfile, data, navigate]
   );
 
   const nodeTypes = useMemo(
@@ -324,6 +371,58 @@ const OrganizationChartPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* بطاقة تواصل مبسطة للمستخدمين غير المخولين بفتح الملف الإداري الكامل */}
+      <Dialog
+        open={Boolean(selectedContact)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedContact(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[420px] text-right" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-[#1a202c]">
+              بطاقة التواصل المهنية
+            </DialogTitle>
+          </DialogHeader>
+          {selectedContact && (
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center gap-3 pb-3 border-b border-[#edf2f7]">
+                <PersonnelAvatar
+                  photo={selectedContact.person.photo}
+                  nom={selectedContact.person.nom}
+                  prenom={selectedContact.person.prenom}
+                  size="md"
+                />
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-[#1a202c] truncate">
+                    {selectedContact.person.prenom} {selectedContact.person.nom}
+                  </p>
+                  {selectedContact.departmentName && (
+                    <p className="text-xs text-[#5f6b7d] flex items-center gap-1 mt-0.5">
+                      <Building2 className="w-3.5 h-3.5 text-[#2c5282]" />
+                      <span>{selectedContact.departmentName}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2.5 text-sm">
+                <div className="flex items-center gap-2 text-[#4a5568]">
+                  <Briefcase className="w-4 h-4 text-[#2c5282] shrink-0" />
+                  <span className="font-medium text-[#1a202c]">الخطة:</span>
+                  <span>{selectedContact.person.poste || 'غير محددة'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[#4a5568]">
+                  <Mail className="w-4 h-4 text-[#2c5282] shrink-0" />
+                  <span className="font-medium text-[#1a202c]">البريد الإلكتروني:</span>
+                  <span dir="ltr">{selectedContact.person.emailPersonnel || 'غير متوفر'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

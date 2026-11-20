@@ -13,7 +13,7 @@ exports.getOrganizationChart = async (req, res, next) => {
       statut: { $in: ['actif', 'en_attente'] },
       isDeleted: { $ne: true }
     })
-      .select('nom prenom poste photo cin activeDepartment departments')
+      .select('nom prenom poste photo cin emailPersonnel activeDepartment departments')
       .populate('activeDepartment', 'name').lean();
 
     // Deduplicate by cin or nom+prenom
@@ -48,7 +48,8 @@ exports.getOrganizationChart = async (req, res, next) => {
           prenom: directorPersonnel.prenom,
           poste: directorPersonnel.poste || 'Directeur',
           photo: directorPersonnel.photo || '',
-          cin: directorPersonnel.cin || ''
+          cin: directorPersonnel.cin || '',
+          emailPersonnel: directorPersonnel.emailPersonnel || ''
         };
       }
     }
@@ -64,7 +65,8 @@ exports.getOrganizationChart = async (req, res, next) => {
             prenom: directorUser.personnelId.prenom,
             poste: directorUser.personnelId.poste || 'Directeur',
             photo: directorUser.personnelId.photo || directorUser.photo || '',
-            cin: directorUser.personnelId.cin || ''
+            cin: directorUser.personnelId.cin || '',
+            emailPersonnel: directorUser.personnelId.emailPersonnel || directorUser.email || ''
           };
         } else {
           director = {
@@ -73,7 +75,8 @@ exports.getOrganizationChart = async (req, res, next) => {
             prenom: '',
             poste: 'Directeur',
             photo: directorUser.photo || '',
-            cin: ''
+            cin: '',
+            emailPersonnel: directorUser.email || ''
           };
         }
       }
@@ -93,7 +96,8 @@ exports.getOrganizationChart = async (req, res, next) => {
         prenom: p.prenom,
         poste: p.poste || '',
         photo: p.photo || '',
-        cin: p.cin || ''
+        cin: p.cin || '',
+        emailPersonnel: p.emailPersonnel || ''
       });
     });
 
@@ -110,7 +114,6 @@ exports.getOrganizationChart = async (req, res, next) => {
 
       const allDeptPersonnel = personnelByDept[id] || [];
       const totalPersonnel = allDeptPersonnel.length;
-      const deptPersonnelSlice = allDeptPersonnel.slice(0, 10);
 
       if (isBureauOrdre(id)) {
         regalienDepartments.push({
@@ -118,7 +121,7 @@ exports.getOrganizationChart = async (req, res, next) => {
           name: dept.name,
           unitType: 'bureau_ordre',
           totalPersonnel,
-          personnel: deptPersonnelSlice
+          personnel: allDeptPersonnel
         });
       } else if (isRH(id)) {
         regalienDepartments.push({
@@ -126,7 +129,7 @@ exports.getOrganizationChart = async (req, res, next) => {
           name: dept.name,
           unitType: 'rh',
           totalPersonnel,
-          personnel: deptPersonnelSlice
+          personnel: allDeptPersonnel
         });
       } else {
         operationalDepartments.push({
@@ -134,7 +137,7 @@ exports.getOrganizationChart = async (req, res, next) => {
           name: dept.name,
           unitType: 'service',
           totalPersonnel,
-          personnel: deptPersonnelSlice
+          personnel: allDeptPersonnel
         });
       }
     });

@@ -779,11 +779,26 @@ const getMonthlyReport = async (req, res, next) => {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
 
-    const personnels = await Personnel.find(personnelFilter)
+    const totalPersonnel = await Personnel.countDocuments(personnelFilter);
+    const hasPaginationParams = req.query.page !== undefined || req.query.limit !== undefined;
+    const shouldPaginate = totalPersonnel > 100 || hasPaginationParams;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = shouldPaginate
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100)
+      : Math.max(totalPersonnel, 1);
+    const skip = shouldPaginate ? (page - 1) * limit : 0;
+    const totalPages = shouldPaginate ? Math.ceil(totalPersonnel / limit) : (totalPersonnel > 0 ? 1 : 0);
+
+    let personnelQuery = Personnel.find(personnelFilter)
       .select('nom prenom cin poste activeDepartment')
       .populate('activeDepartment', 'name code')
-      .sort({ nom: 1, prenom: 1 })
-      .lean();
+      .sort({ nom: 1, prenom: 1 });
+
+    if (shouldPaginate) {
+      personnelQuery = personnelQuery.skip(skip).limit(limit);
+    }
+
+    const personnels = await personnelQuery.lean();
 
     const personnelIds = personnels.map(p => p._id);
 
@@ -833,7 +848,17 @@ const getMonthlyReport = async (req, res, next) => {
         year: targetYear,
         month: targetMonth,
         departmentId: effectiveDepartmentId || null,
-        totalPersonnel: personnels.length,
+        totalPersonnel,
+        page,
+        limit,
+        totalPages,
+        paginated: shouldPaginate,
+        pagination: {
+          total: totalPersonnel,
+          page,
+          limit,
+          totalPages
+        },
         records
       }
     });
@@ -879,11 +904,26 @@ const getYearlyReport = async (req, res, next) => {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
 
-    const personnels = await Personnel.find(personnelFilter)
+    const totalPersonnel = await Personnel.countDocuments(personnelFilter);
+    const hasPaginationParams = req.query.page !== undefined || req.query.limit !== undefined;
+    const shouldPaginate = totalPersonnel > 100 || hasPaginationParams;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = shouldPaginate
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100)
+      : Math.max(totalPersonnel, 1);
+    const skip = shouldPaginate ? (page - 1) * limit : 0;
+    const totalPages = shouldPaginate ? Math.ceil(totalPersonnel / limit) : (totalPersonnel > 0 ? 1 : 0);
+
+    let personnelQuery = Personnel.find(personnelFilter)
       .select('nom prenom cin poste activeDepartment')
       .populate('activeDepartment', 'name code')
-      .sort({ nom: 1, prenom: 1 })
-      .lean();
+      .sort({ nom: 1, prenom: 1 });
+
+    if (shouldPaginate) {
+      personnelQuery = personnelQuery.skip(skip).limit(limit);
+    }
+
+    const personnels = await personnelQuery.lean();
 
     const personnelIds = personnels.map(p => p._id);
 
@@ -942,7 +982,17 @@ const getYearlyReport = async (req, res, next) => {
         year: targetYear,
         departmentId: effectiveDepartmentId || null,
         soldeAnnuelDefaut,
-        totalPersonnel: personnels.length,
+        totalPersonnel,
+        page,
+        limit,
+        totalPages,
+        paginated: shouldPaginate,
+        pagination: {
+          total: totalPersonnel,
+          page,
+          limit,
+          totalPages
+        },
         records
       }
     });
