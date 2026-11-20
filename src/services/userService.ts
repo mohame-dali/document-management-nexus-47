@@ -93,6 +93,15 @@ export const restoreUser = async (id: string): Promise<User> => {
   }
 };
 
+export const permanentDeleteUser = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/users/${id}/permanent`);
+  } catch (error) {
+    console.error('Error permanently deleting user:', error);
+    throw error;
+  }
+};
+
 // Enhanced function to get users available for cross-department messaging
 export const getMessagingUsers = async (): Promise<User[]> => {
   try {

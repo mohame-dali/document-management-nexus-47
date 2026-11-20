@@ -7,6 +7,7 @@ const {
   updateUser, 
   deleteUser,
   restoreUser,
+  permanentDeleteUser,
   deactivateUser,
   resetPassword,
   uploadPhoto
@@ -65,6 +66,12 @@ router.route('/:id/restore')
     auditDocumentActivity('user_update'),
     restoreUser
   );
+
+router.delete('/:id/permanent',
+  authorize('Admin'),
+  auditDocumentActivity('user_delete'),
+  permanentDeleteUser
+);
 
 router.put('/:id/deactivate', 
   authorize('Admin'),

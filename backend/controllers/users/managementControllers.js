@@ -1,4 +1,5 @@
 
+const mongoose = require('mongoose');
 const User = require('../../models/User');
 const Personnel = require('../../models/Personnel');
 const ErrorResponse = require('../../utils/errorResponse');
@@ -529,6 +530,78 @@ exports.restoreUser = async (req, res, next) => {
     });
   } catch (err) {
     console.error('Error restoring user:', err);
+    next(err);
+  }
+};
+
+// @desc    Permanently delete a soft-deleted user (Hard delete)
+// @route   DELETE /api/users/:id/permanent
+// @access  Private/Admin
+exports.permanentDeleteUser = async (req, res, next) => {
+  try {
+    // Only Admin can permanently delete users
+    if (!req.user || req.user.role !== 'Admin') {
+      return next(
+        new ErrorResponse('Not authorized to permanently delete users. Only Admin can permanently delete users.', 403)
+      );
+    }
+
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new ErrorResponse(`Invalid user id: ${id}`, 400));
+    }
+
+    const currentUserId = (req.user._id || req.user.id || '').toString();
+    if (currentUserId && currentUserId === id.toString()) {
+      return next(
+        new ErrorResponse('Vous ne pouvez pas supprimer définitivement votre propre compte', 400)
+      );
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      return next(
+        new ErrorResponse(`User not found with id of ${id}`, 404)
+      );
+    }
+
+    // Isolate permanent deletion strictly to already soft-deleted users
+    if (user.isDeleted !== true) {
+      return next(
+        new ErrorResponse('Seuls les utilisateurs déjà supprimés peuvent être supprimés définitivement', 400)
+      );
+    }
+
+    // Safety guard: never permanently delete Director
+    if (user.role === 'Director') {
+      return next(
+        new ErrorResponse('Impossible de supprimer définitivement le compte Directeur', 400)
+      );
+    }
+
+    // Clean up any linked Personnel references if present
+    try {
+      await Personnel.updateMany(
+        { userId: user._id },
+        { $set: { userId: null } }
+      );
+    } catch (unlinkErr) {
+      console.warn('Erreur lors du nettoyage des références Personnel avant suppression définitive:', unlinkErr.message);
+    }
+
+    // Physically delete the user document from MongoDB
+    await User.findByIdAndDelete(user._id);
+
+    console.log(`User permanently deleted: ${user.username} (${user._id})`);
+
+    res.status(200).json({
+      success: true,
+      data: {},
+      message: 'Utilisateur supprimé définitivement avec succès'
+    });
+  } catch (err) {
+    console.error('Error permanently deleting user:', err);
     next(err);
   }
 };

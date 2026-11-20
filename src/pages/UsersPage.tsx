@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUsers, deleteUser, deactivateUser, restoreUser } from '@/services/userService';
+import { getUsers, deleteUser, deactivateUser, restoreUser, permanentDeleteUser } from '@/services/userService';
 import { getDepartments } from '@/services/departmentService';
 import { 
   Table, 
@@ -81,6 +81,8 @@ const UsersPage: React.FC = () => {
   // Dialog states
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [userToPermanentDelete, setUserToPermanentDelete] = useState<string | null>(null);
+  const [showPermanentDeleteDialog, setShowPermanentDeleteDialog] = useState(false);
   const [passwordDialogUser, setPasswordDialogUser] = useState<User | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
 
@@ -167,6 +169,32 @@ const UsersPage: React.FC = () => {
     }
   });
 
+  const permanentDeleteMutation = useMutation({
+    mutationFn: permanentDeleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(
+        t('users.permanentDelete.success', 'Utilisateur supprimé définitivement avec succès')
+      );
+      setShowPermanentDeleteDialog(false);
+      setUserToPermanentDelete(null);
+    },
+    onError: (error: unknown) => {
+      console.error('Error permanently deleting user:', error);
+      const errData =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { data?: { message?: string; error?: string } } }).response?.data
+          : undefined;
+      toast.error(
+        errData?.message ||
+          errData?.error ||
+          t('users.permanentDelete.error', 'Erreur lors de la suppression définitive')
+      );
+      setShowPermanentDeleteDialog(false);
+      setUserToPermanentDelete(null);
+    }
+  });
+
   const toggleActivationMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string, isActive: boolean }) => 
       deactivateUser(id, isActive),
@@ -191,6 +219,17 @@ const UsersPage: React.FC = () => {
   const handleDeleteConfirm = () => {
     if (userToDelete) {
       deleteMutation.mutate(userToDelete);
+    }
+  };
+
+  const handlePermanentDeleteClick = (id: string) => {
+    setUserToPermanentDelete(id);
+    setShowPermanentDeleteDialog(true);
+  };
+
+  const handlePermanentDeleteConfirm = () => {
+    if (userToPermanentDelete) {
+      permanentDeleteMutation.mutate(userToPermanentDelete);
     }
   };
 
@@ -758,23 +797,44 @@ const UsersPage: React.FC = () => {
                       <div className="flex items-center justify-center gap-1.5">
                         {user.isDeleted ? (
                           isAdmin && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => restoreMutation.mutate(user._id)}
-                              disabled={restoreMutation.isPending}
-                              aria-label={t('users.restore.button', 'Restaurer')}
-                              title={t('users.restore.button', 'Restaurer')}
-                              className="h-11 min-h-[44px] px-3.5 border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:border-emerald-400 rounded font-semibold inline-flex items-center gap-1.5"
-                            >
-                              {restoreMutation.isPending && restoreMutation.variables === user._id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <RotateCcw className="h-4 w-4" />
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => restoreMutation.mutate(user._id)}
+                                disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
+                                aria-label={t('users.restore.button', 'Restaurer')}
+                                title={t('users.restore.button', 'Restaurer')}
+                                className="h-11 min-h-[44px] px-3.5 border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:border-emerald-400 rounded font-semibold inline-flex items-center gap-1.5"
+                              >
+                                {restoreMutation.isPending && restoreMutation.variables === user._id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-4 w-4" />
+                                )}
+                                <span>{t('users.restore.button', 'Restaurer')}</span>
+                              </Button>
+                              {currentUser?._id !== user._id && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePermanentDeleteClick(user._id)}
+                                  disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
+                                  aria-label={t('users.permanentDelete.button', 'حذف نهائي')}
+                                  title={t('users.permanentDelete.button', 'حذف نهائي')}
+                                  className="h-11 min-h-[44px] px-3.5 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400 rounded font-semibold inline-flex items-center gap-1.5"
+                                >
+                                  {permanentDeleteMutation.isPending && userToPermanentDelete === user._id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                  )}
+                                  <span>{t('users.permanentDelete.button', 'حذف نهائي')}</span>
+                                </Button>
                               )}
-                              <span>{t('users.restore.button', 'Restaurer')}</span>
-                            </Button>
+                            </div>
                           )
                         ) : (
                           <>
@@ -962,6 +1022,56 @@ const UsersPage: React.FC = () => {
               )}
             </AlertDialogAction>
             <AlertDialogCancel 
+              className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 mt-0"
+            >
+              {t('common.cancel')}
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation Modal */}
+      <AlertDialog
+        open={showPermanentDeleteDialog}
+        onOpenChange={(open) => {
+          setShowPermanentDeleteDialog(open);
+          if (!open) setUserToPermanentDelete(null);
+        }}
+      >
+        <AlertDialogContent
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-red-200 rounded shadow-sm"
+        >
+          <AlertDialogHeader className="text-right pb-4 border-b border-[#e2e8f0]">
+            <AlertDialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-red-600">
+              <div className="w-11 h-11 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <span>{t('users.permanentDelete.confirmTitle', 'Supprimer définitivement')}</span>
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-gray-700 text-right mt-3 leading-relaxed font-medium">
+              {t(
+                'users.permanentDelete.confirmDescription',
+                '⚠️ Attention : Cette action est irréversible. Toutes les données liées à cet utilisateur seront définitivement perdues. Voulez-vous continuer ?'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="pt-4 border-t border-[#e2e8f0] flex-row-reverse justify-start gap-3">
+            <AlertDialogAction
+              onClick={handlePermanentDeleteConfirm}
+              disabled={permanentDeleteMutation.isPending}
+              className="h-11 px-7 bg-red-600 hover:bg-red-700 text-white text-base font-semibold rounded shadow-none inline-flex items-center gap-2"
+            >
+              {permanentDeleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{t('users.delete.deleting', 'Suppression en cours...')}</span>
+                </>
+              ) : (
+                <span>{t('users.permanentDelete.confirmButton', 'حذف نهائي')}</span>
+              )}
+            </AlertDialogAction>
+            <AlertDialogCancel
+              disabled={permanentDeleteMutation.isPending}
               className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 mt-0"
             >
               {t('common.cancel')}
