@@ -84,7 +84,6 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
         className="w-[95vw] sm:w-[90vw] sm:max-w-4xl bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-sm"
-        dir="rtl"
       >
         <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
           <div className="flex items-center justify-between gap-4">
@@ -97,7 +96,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                   معاينة الوثيقة
                 </DialogTitle>
                 <p className="text-base text-[#4a5568] leading-relaxed mt-1">
-                  الرقم التسلسلي: <strong className="text-[#1a202c]">#{document.serialNumber} / {document.year}</strong>
+                  الرقم التسلسلي: <strong className="text-[#1a202c]"><bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi></strong>
                 </p>
               </div>
             </div>
@@ -122,7 +121,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               <div className="flex items-center gap-2 text-base text-[#2d3748]">
                 <Calendar className="h-4 w-4 text-[#2c5282]" />
                 <span className="text-sm font-medium text-[#4a5568]">التاريخ:</span>
-                <span>{docDate ? new Date(docDate).toLocaleDateString('ar-TN') : '-'}</span>
+                <span><bdi dir="ltr">{docDate ? new Date(docDate).toLocaleDateString('ar-TN') : '-'}</bdi></span>
               </div>
 
               {sourceName && (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,6 +13,21 @@ import BasicInfoFields from './outgoing/BasicInfoFields';
 import DocumentAttachmentSection from './outgoing/DocumentAttachmentSection';
 import { OutgoingDocument, Department } from '@/types';
 import { OutgoingScanMutationRunner, OutgoingScanResultData } from '@/hooks/forms/useOutgoingDocumentForm';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { getErrorMessage } from '@/utils/errorMessages';
+import {
+  ScanStage,
+  LiveThumbnail,
+  createScanId,
+  getScanJobStatus,
+  getScanPageThumbnailBlob,
+  cancelScanJob,
+  deleteScan,
+  getScanStageProgress,
+  getScanStageLabel,
+  getScannerErrorCode,
+  getScannerErrorMessage,
+} from '@/services/scannerService';
 
 interface EditOutgoingDocumentFormProps {
   document: OutgoingDocument;
@@ -22,18 +37,19 @@ interface EditOutgoingDocumentFormProps {
   scanTemporaryDocumentMutation?: OutgoingScanMutationRunner;
 }
 
-const formSchema = z.object({
-  serialNumber: z.string().min(1, 'Required'),
-  year: z.string().min(1, 'Required'),
-  subject: z.string().min(1, 'Required'),
-  assignedTo: z.string().array().min(1, 'At least one destination is required'),
-  issueDate: z.date(),
-  department: z.string().min(1, 'Required'),
-  typeDocument: z.string().optional(),
-  pourInfo: z.string().array().optional(),
-});
+const createFormSchema = (requiredMsg: string, minDestinationMsg: string) =>
+  z.object({
+    serialNumber: z.string().min(1, requiredMsg),
+    year: z.string().min(1, requiredMsg),
+    subject: z.string().min(1, requiredMsg),
+    assignedTo: z.string().array().min(1, minDestinationMsg),
+    issueDate: z.date(),
+    department: z.string().min(1, requiredMsg),
+    typeDocument: z.string().optional(),
+    pourInfo: z.string().array().optional(),
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   document,
@@ -43,15 +59,87 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   scanTemporaryDocumentMutation
 }) => {
   const navigate = useNavigate();
+  const { t: translate, language } = useLanguage();
+  const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
+
+  const formSchema = useMemo(
+    () =>
+      createFormSchema(
+        translate('documents.forms.validation.required'),
+        translate('documents.forms.validation.minOneDestination')
+      ),
+    [translate]
+  );
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
+  const [scanStage, setScanStage] = useState<ScanStage | null>(null);
+  const [scanPage, setScanPage] = useState(0);
   const [scanResult, setScanResult] = useState<OutgoingScanResultData | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [liveThumbnails, setLiveThumbnails] = useState<LiveThumbnail[]>([]);
+  const [isScanAttached, setIsScanAttached] = useState(false);
   const [scanSettings, setScanSettings] = useState({
     resolution: '600',
     format: 'pdf'
   });
+
+  const isMountedRef = useRef(true);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scanAbortRef = useRef<AbortController | null>(null);
+  const thumbAbortRef = useRef<AbortController | null>(null);
+  const activeScanIdRef = useRef<string | null>(null);
+  const thumbnailUrlsRef = useRef<string[]>([]);
+  const fetchedThumbPagesRef = useRef<Set<number>>(new Set());
+  const localScanIdRef = useRef<string | null>(null);
+  const hasSubmittedRef = useRef<boolean>(false);
+  const scanStartTimeRef = useRef<number>(0);
+  const maxPagesSeenRef = useRef<number>(1);
+  const cancelledByUserRef = useRef<boolean>(false);
+
+  const clearLiveThumbnails = useCallback(() => {
+    if (thumbAbortRef.current) {
+      thumbAbortRef.current.abort();
+      thumbAbortRef.current = null;
+    }
+    fetchedThumbPagesRef.current.clear();
+    if (thumbnailUrlsRef.current.length > 0) {
+      for (const url of thumbnailUrlsRef.current) {
+        URL.revokeObjectURL(url);
+      }
+      thumbnailUrlsRef.current = [];
+    }
+    if (isMountedRef.current) {
+      setLiveThumbnails([]);
+    }
+  }, []);
+
+  const stopPolling = useCallback(() => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      stopPolling();
+      clearLiveThumbnails();
+      scanAbortRef.current?.abort();
+      if (activeScanIdRef.current) {
+        cancelScanJob(activeScanIdRef.current).catch(() => {});
+        activeScanIdRef.current = null;
+      }
+      if (!hasSubmittedRef.current && localScanIdRef.current) {
+        deleteScan(localScanIdRef.current).catch(() => {});
+        localScanIdRef.current = null;
+      }
+    };
+  }, [stopPolling, clearLiveThumbnails]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -69,7 +157,11 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
 
   const handleFileSelect = (files: File[]) => {
     setSelectedFiles(files);
-    setScanResult(null);
+    if (files.length > 0) {
+      setIsScanAttached(false);
+    } else if (scanResult) {
+      setIsScanAttached(true);
+    }
   };
 
   const handleScanSettingChange = (key: string, value: string) => {
@@ -79,55 +171,160 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
     });
   };
 
+  const handleCancelScan = () => {
+    const scanId = activeScanIdRef.current;
+    cancelledByUserRef.current = true;
+    stopPolling();
+    clearLiveThumbnails();
+    scanAbortRef.current?.abort();
+    scanAbortRef.current = null;
+    if (scanId) {
+      cancelScanJob(scanId).catch(() => {});
+    }
+    activeScanIdRef.current = null;
+    setScanning(false);
+    setScanError(null);
+    setScanStage(null);
+    setScanPage(0);
+    setScanProgress(0);
+    toast.info(getScannerErrorMessage({ response: { data: { code: 'SCAN_CANCELLED' } } }, translate, lang));
+  };
+
   const handleStartScan = () => {
-    if (!scanTemporaryDocumentMutation) return;
-    
+    if (!scanTemporaryDocumentMutation || scanning) return;
+
+    if (scanResult?.scanId && typeof scanResult.scanId === 'string') {
+      deleteScan(scanResult.scanId).catch(() => {});
+      localScanIdRef.current = null;
+    }
+
+    stopPolling();
+    clearLiveThumbnails();
+    const scanId = createScanId();
+    const controller = new AbortController();
+    const thumbController = new AbortController();
+
+    activeScanIdRef.current = scanId;
+    scanAbortRef.current = controller;
+    thumbAbortRef.current = thumbController;
+    scanStartTimeRef.current = Date.now();
+    maxPagesSeenRef.current = 1;
+    cancelledByUserRef.current = false;
+
     setScanning(true);
-    setScanProgress(10);
-    
+    setScanError(null);
+    setScanStage('detecting');
+    setScanPage(0);
+    setScanProgress(getScanStageProgress('detecting', 0));
+
+    pollTimerRef.current = setInterval(async () => {
+      if (!isMountedRef.current || activeScanIdRef.current !== scanId) {
+        stopPolling();
+        return;
+      }
+      if (Date.now() - scanStartTimeRef.current > 120000 * Math.max(1, maxPagesSeenRef.current)) {
+        stopPolling();
+        clearLiveThumbnails();
+        activeScanIdRef.current = null;
+        controller.abort();
+        cancelScanJob(scanId).catch(() => {});
+        if (isMountedRef.current) {
+          const timeoutMsg = getScannerErrorMessage({ code: 'CLIENT_TIMEOUT' }, translate, lang);
+          setScanning(false);
+          setScanStage('error');
+          setScanError(timeoutMsg);
+          setScanProgress(0);
+          toast.error(timeoutMsg);
+        }
+        return;
+      }
+      try {
+        const jobStatus = await getScanJobStatus(scanId);
+        if (!isMountedRef.current || activeScanIdRef.current !== scanId) return;
+        const page = Number(jobStatus.page || 0);
+        if (page > maxPagesSeenRef.current) maxPagesSeenRef.current = page;
+        const stage = jobStatus.stage || 'scanning';
+        setScanStage(stage);
+        setScanPage(page);
+        setScanProgress(getScanStageProgress(stage, page));
+
+        // ASYNC OCR FIX: Stop polling immediately once physical scan reaches done/error
+        if (stage === 'done' || stage === 'error') {
+          stopPolling();
+          return;
+        }
+
+        const availablePages = Number(jobStatus.availablePages || page || 0);
+        if (availablePages > 0) {
+          for (let p = 1; p <= availablePages; p++) {
+            if (fetchedThumbPagesRef.current.has(p)) continue;
+            fetchedThumbPagesRef.current.add(p);
+            getScanPageThumbnailBlob(scanId, p, thumbController.signal)
+              .then((blob) => {
+                if (!isMountedRef.current || activeScanIdRef.current !== scanId) return;
+                const thumbUrl = URL.createObjectURL(blob);
+                thumbnailUrlsRef.current.push(thumbUrl);
+                setLiveThumbnails((prev) => {
+                  if (prev.some((item) => item.page === p)) return prev;
+                  return [...prev, { page: p, url: thumbUrl }].sort((a, b) => a.page - b.page);
+                });
+              })
+              .catch(() => {
+                fetchedThumbPagesRef.current.delete(p);
+              });
+          }
+        }
+      } catch {
+        // Ignore transient polling 404
+      }
+    }, 1000);
+
     const scanOptions = {
       documentType: 'outgoing',
       format: scanSettings.format,
       resolution: Number(scanSettings.resolution),
-      temporary: true
+      temporary: true,
+      scanId,
+      signal: controller.signal,
     };
-    
-    const progressInterval = setInterval(() => {
-      setScanProgress(prevProgress => {
-        const newProgress = prevProgress + 15;
-        if (newProgress >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return newProgress;
-      });
-    }, 500);
-    
+
     scanTemporaryDocumentMutation.mutate(scanOptions, {
-      onSuccess: (response: { data?: OutgoingScanResultData }) => {
+      onSuccess: (response: OutgoingScanResultData) => {
+        stopPolling();
+        clearLiveThumbnails();
+        scanAbortRef.current = null;
+        activeScanIdRef.current = null;
+        if (!isMountedRef.current) return;
+
+        const raw = ((response?.data && typeof response.data === 'object' ? response.data : response) || {}) as OutgoingScanResultData;
+        const resolvedScanId = String(raw.scanId || scanId);
+        localScanIdRef.current = resolvedScanId;
+        const normalized: OutgoingScanResultData = {
+          ...raw,
+          scanId: resolvedScanId,
+          filePath: raw.filePath || `/api/scan/file/${resolvedScanId}`,
+          format: raw.format || scanSettings.format,
+          pageCount: Number(raw.pageCount || maxPagesSeenRef.current || 1),
+        };
+
         setScanning(false);
+        setScanError(null);
+        setScanStage('done');
+        setScanPage(Number(normalized.pageCount || 1));
         setScanProgress(100);
-        setScanResult(response.data);
-        toast.success('تم المسح بنجاح');
+        setScanResult(normalized);
+        setIsScanAttached(true);
         setSelectedFiles([]);
-        clearInterval(progressInterval);
-        
-        // Auto-populate form fields from OCR text
-        if (response.data?.ocrText) {
-          const text = response.data.ocrText;
-          console.log('OCR Text extracted:', text);
-          
-          // Try to extract Arabic text patterns
-          const lines = text.split('\n').filter(line => line.trim());
-          
-          // Look for subject patterns in both Arabic and other languages
+        toast.success(getScanStageLabel('done', 0, translate, lang));
+
+        if (normalized.ocrText) {
+          const text = normalized.ocrText;
           const subjectPatterns = [
             /الموضوع\s*:?\s*(.+)/i,
             /subject\s*:?\s*(.+)/i,
             /objet\s*:?\s*(.+)/i,
             /re\s*:?\s*(.+)/i
           ];
-          
           for (const pattern of subjectPatterns) {
             const match = text.match(pattern);
             if (match && match[1]?.trim()) {
@@ -137,18 +334,48 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
           }
         }
       },
-      onError: (error: Error) => {
+      onError: (error: unknown) => {
+        stopPolling();
+        clearLiveThumbnails();
+        scanAbortRef.current = null;
+        activeScanIdRef.current = null;
+        if (!isMountedRef.current) return;
+
+        const wasManualCancel = cancelledByUserRef.current;
+        cancelledByUserRef.current = false;
         setScanning(false);
         setScanProgress(0);
-        toast.error(`فشل في المسح: ${error.message}`);
-        clearInterval(progressInterval);
+        if (wasManualCancel || getScannerErrorCode(error) === 'SCAN_CANCELLED') {
+          setScanStage(null);
+          setScanError(null);
+          return;
+        }
+        const errMsg = getScannerErrorMessage(error, translate, lang);
+        setScanStage('error');
+        setScanError(errMsg);
+        toast.error(errMsg);
       }
     });
   };
 
   const handleRemoveScan = () => {
+    if (scanResult?.scanId && typeof scanResult.scanId === 'string') {
+      deleteScan(scanResult.scanId).catch(() => {});
+    }
+    localScanIdRef.current = null;
+    clearLiveThumbnails();
     setScanResult(null);
-    setActiveTab("upload");
+    setScanError(null);
+    setIsScanAttached(false);
+    setScanStage(null);
+    setScanPage(0);
+    setScanProgress(0);
+  };
+
+  const handleUseScan = () => {
+    if (!scanResult) return;
+    setSelectedFiles([]);
+    setIsScanAttached(true);
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -177,25 +404,28 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
         formData.append('typeDocument', data.typeDocument);
       }
       
-      // Handle file upload or scan result
       if (selectedFiles.length > 0) {
         formData.append('document', selectedFiles[0]);
-      } else if (scanResult?.filePath) {
-        // Clean the file path for backend processing
-        const relativePath = scanResult.filePath.replace(/^[/\\]+/, '');
-        formData.append('scannedDocumentPath', relativePath);
-        
+      } else if (scanResult && (scanResult.scanId || scanResult.filePath)) {
+        if (scanResult.scanId) {
+          formData.append('scanId', String(scanResult.scanId));
+        }
+        if (scanResult.filePath) {
+          formData.append('scannedDocumentPath', scanResult.filePath);
+        }
         if (scanResult.ocrText) {
           formData.append('ocrText', scanResult.ocrText);
         }
       }
       
       await updateOutgoingDocument(document._id, formData);
-      toast.success('تم تحديث الوثيقة بنجاح');
+      hasSubmittedRef.current = true;
+      localScanIdRef.current = null;
+      toast.success(translate('documents.editOutgoing.updateSuccess'));
       navigate('/dashboard/outgoing-documents');
     } catch (error) {
       console.error('Error updating document:', error);
-      toast.error('فشل في تحديث الوثيقة');
+      toast.error(getErrorMessage(error, translate('documents.editOutgoing.updateError'), lang));
     }
   };
 
@@ -204,29 +434,38 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
   };
 
   const t = {
-    title: 'تعديل الوثيقة الصادرة',
-    subject: 'الموضوع',
-    subjectDesc: 'موضوع الوثيقة',
-    destination: 'الوجهة',
-    cancel: 'إلغاء',
-    submit: 'تحديث الوثيقة',
-    attachments: 'مرفق الوثيقة',
-    attachmentsDesc: 'رفع وثيقة جديدة أو إعادة مسح ضوئي لاستبدال الموجودة',
-    uploadTab: 'رفع ملف',
-    scanTab: 'مسح ضوئي',
-    scanComplete: 'تم المسح بنجاح',
-    scanFailed: 'فشل في المسح',
-    required: 'مطلوب',
-    serialNumber: 'الرقم التسلسلي',
-    serialNumberDesc: 'الرقم التسلسلي للوثيقة',
-    year: 'السنة',
-    yearDesc: 'سنة الوثيقة',
-    issueDate: 'تاريخ الإصدار',
-    issueDateDesc: 'تاريخ إصدار الوثيقة',
-    department: 'القسم',
-    departmentDesc: 'القسم المصدر',
-    selectDepartment: 'اختر القسم',
-    selectDate: 'اختر التاريخ'
+    title: translate('documents.editOutgoing.title'),
+    subject: translate('documents.createOutgoing.subject'),
+    subjectDesc: translate('documents.createOutgoing.subjectDesc'),
+    destination: translate('documents.forms.outgoingDestination'),
+    destinationDesc: translate('documents.forms.outgoingDestinationDesc'),
+    cancel: translate('documents.createOutgoing.cancel'),
+    submit: translate('documents.editOutgoing.submit'),
+    attachments: translate('documents.forms.sections.attachments'),
+    attachmentsDesc: translate('documents.editOutgoing.attachmentsDesc'),
+    uploadTab: translate('documents.createOutgoing.uploadTab'),
+    scanTab: translate('documents.createOutgoing.scanTab'),
+    scanComplete: translate('documents.createOutgoing.scanComplete'),
+    scanFailed: translate('documents.createOutgoing.scanFailed'),
+    scanDocument: translate('documents.createOutgoing.scanDocument'),
+    scannerNotConfigured: translate('documents.createOutgoing.scannerNotConfigured'),
+    configureScanner: translate('documents.createOutgoing.configureScanner'),
+    resolution: translate('documents.createOutgoing.resolution'),
+    format: translate('documents.createOutgoing.format'),
+    pdfFormat: 'PDF',
+    jpegFormat: 'JPEG',
+    pngFormat: 'PNG',
+    required: translate('documents.forms.validation.required'),
+    serialNumber: translate('documents.createOutgoing.serialNumber'),
+    serialNumberDesc: translate('documents.createOutgoing.serialNumberDesc'),
+    year: translate('documents.forms.year'),
+    yearDesc: translate('documents.forms.yearDesc'),
+    issueDate: translate('documents.createOutgoing.issueDate'),
+    issueDateDesc: translate('documents.createOutgoing.issueDateDesc'),
+    department: translate('documents.createOutgoing.department'),
+    departmentDesc: translate('documents.editOutgoing.departmentDesc'),
+    selectDepartment: translate('documents.createOutgoing.selectDepartment'),
+    selectDate: translate('documents.createOutgoing.selectDate')
   };
 
   return (
@@ -246,7 +485,9 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">المعلومات الأساسية</h3>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {translate('documents.forms.sections.basicInfo')}
+                  </h3>
                 </div>
                 
                 <div className="bg-muted/30 rounded p-6 border border-border/50">
@@ -264,7 +505,7 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">مرفقات الوثيقة</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{t.attachments}</h3>
                   <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
                     {t.attachmentsDesc}
                   </span>
@@ -281,10 +522,18 @@ const EditOutgoingDocumentForm: React.FC<EditOutgoingDocumentFormProps> = ({
                     scanning={scanning}
                     scanProgress={scanProgress}
                     scanResult={scanResult}
-                    scannerStatus={scannerStatus}
+                    scanError={scanError}
+                    liveThumbnails={liveThumbnails}
+                    scannerStatus={scannerStatus as Record<string, unknown> | null}
                     loadingScannerStatus={loadingScannerStatus}
                     handleStartScan={handleStartScan}
                     onRemoveScan={handleRemoveScan}
+                    scanStage={scanStage}
+                    scanPage={scanPage}
+                    onCancelScan={handleCancelScan}
+                    onRescan={handleStartScan}
+                    onUseScan={handleUseScan}
+                    isScanAttached={isScanAttached}
                   />
                 </div>
               </div>

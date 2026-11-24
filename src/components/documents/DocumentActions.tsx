@@ -128,27 +128,27 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleViewDetails}>
-            <Eye className="ml-2 h-4 w-4" />
+            <Eye className="me-2 h-4 w-4" />
             {translations.viewFullDetails}
           </DropdownMenuItem>
           
           {doc.scannedDocument && (
             <DropdownMenuItem onClick={handleDownload}>
-              <Download className="ml-2 h-4 w-4" />
+              <Download className="me-2 h-4 w-4" />
               {translations.downloadPDF}
             </DropdownMenuItem>
           )}
           
           {canEdit && (
             <DropdownMenuItem onClick={handleEdit}>
-              <Edit className="ml-2 h-4 w-4" />
+              <Edit className="me-2 h-4 w-4" />
               تعديل
             </DropdownMenuItem>
           )}
 
           {canDelete && (
             <DropdownMenuItem onClick={handleDelete} className="text-red-600 focus:text-red-600">
-              <Trash2 className="ml-2 h-4 w-4" />
+              <Trash2 className="me-2 h-4 w-4" />
               حذف
             </DropdownMenuItem>
           )}
@@ -158,7 +158,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
           {/* Folder categorization - available to view for all, organize only for AdminDepartment */}
           {canViewCategorization && (
             <DropdownMenuItem onClick={() => setShowFolderDialog(true)}>
-              <FolderOpen className="ml-2 h-4 w-4" />
+              <FolderOpen className="me-2 h-4 w-4" />
               {getFolderActionText()}
             </DropdownMenuItem>
           )}
@@ -169,12 +169,12 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
               <DropdownMenuSeparator />
               
               <DropdownMenuItem onClick={() => setShowResponseDialog(true)}>
-                <MessageSquare className="ml-2 h-4 w-4" />
+                <MessageSquare className="me-2 h-4 w-4" />
                 إضافة رد
               </DropdownMenuItem>
               
               <DropdownMenuItem onClick={() => setShowResponsibleDialog(true)}>
-                <UserPlus className="ml-2 h-4 w-4" />
+                <UserPlus className="me-2 h-4 w-4" />
                 تعيين مسؤول
               </DropdownMenuItem>
             </>
@@ -184,10 +184,10 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 text-right">تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-gray-600 mt-2 text-right">
+            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 text-start">تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-gray-600 mt-2 text-start">
               هل أنت متأكد من أنك تريد حذف هذا المستند؟ هذا الإجراء لا يمكن التراجع عنه.
             </AlertDialogDescription>
           </AlertDialogHeader>

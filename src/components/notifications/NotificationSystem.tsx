@@ -8,9 +8,11 @@ import { getUnreadCount } from '@/services/messageService';
 import { formatArabicDateTime } from '@/utils/arabicDateFormatter';
 import { useAuth } from '@/contexts/AuthContext';
 import { ActivityNotification } from '@/types';
+import { useDirection } from '@/i18n/useDirection';
 
 const NotificationSystem: React.FC = () => {
   const { currentUser } = useAuth();
+  const { dir } = useDirection();
   const queryClient = useQueryClient();
   const [lastNotificationCheck, setLastNotificationCheck] = useState(Date.now());
   const [shownNotifications, setShownNotifications] = useState<Set<string>>(new Set());
@@ -79,11 +81,11 @@ const NotificationSystem: React.FC = () => {
           label: 'تم قراءته',
           onClick: () => handleMarkAsRead(notification._id)
         } : undefined,
-        className: 'text-right',
-        style: { direction: 'rtl' }
+        className: 'text-start',
+        style: { direction: dir }
       }
     );
-  }, [handleMarkAsRead]);
+  }, [handleMarkAsRead, dir]);
 
   // Check for new notifications and show instant pop-ups
   useEffect(() => {
@@ -120,14 +122,14 @@ const NotificationSystem: React.FC = () => {
           description: `${messageCount.count} رسالة غير مقروءة`,
           icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
           duration: 5000,
-          className: 'text-right',
-          style: { direction: 'rtl' }
+          className: 'text-start',
+          style: { direction: dir }
         });
       }, 30000); // Show every 30 seconds if there are unread messages
 
       return () => clearInterval(interval);
     }
-  }, [messageCount?.count]);
+  }, [messageCount?.count, dir]);
 
   return null; // This component only manages notifications, doesn't render anything
 };

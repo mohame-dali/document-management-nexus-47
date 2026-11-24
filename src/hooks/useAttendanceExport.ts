@@ -225,16 +225,39 @@ export function useAttendanceExport(): UseAttendanceExportReturn {
       const toastId = toast.loading('جاري استرجاع تقرير الشهر وتوليد ملف PDF...');
 
       try {
-        const res = (await getMonthlyReport(year, month, departmentId)) as {
+        const res = (await getMonthlyReport(year, month, departmentId, 1, 100)) as {
           success: boolean;
-          data: MonthlyReportData;
+          data: MonthlyReportData & {
+            paginated?: boolean;
+            totalPages?: number;
+            limit?: number;
+          };
         };
 
         if (!res?.data) {
           throw new Error('بيانات التقرير غير متوفرة');
         }
 
-        await exportMonthlyReportToPdf(res.data, options);
+        const combinedData: MonthlyReportData = {
+          ...res.data,
+          records: [...(res.data.records || [])],
+        };
+
+        if (res.data.paginated && (res.data.totalPages || 1) > 1) {
+          const totalPages = res.data.totalPages || 1;
+          const pageLimit = res.data.limit || 100;
+          for (let p = 2; p <= totalPages; p++) {
+            const pageRes = (await getMonthlyReport(year, month, departmentId, p, pageLimit)) as {
+              success: boolean;
+              data?: MonthlyReportData;
+            };
+            if (pageRes?.data?.records?.length) {
+              combinedData.records.push(...pageRes.data.records);
+            }
+          }
+        }
+
+        await exportMonthlyReportToPdf(combinedData, options);
         toast.success('تم تصدير تقرير الحضور الشهري بنجاح', { id: toastId });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'فشل في تحميل أو تصدير التقرير الشهري';
@@ -260,16 +283,39 @@ export function useAttendanceExport(): UseAttendanceExportReturn {
       const toastId = toast.loading('جاري استرجاع حصيلة السنة وتوليد ملف PDF...');
 
       try {
-        const res = (await getYearlyReport(year, departmentId)) as {
+        const res = (await getYearlyReport(year, departmentId, 1, 100)) as {
           success: boolean;
-          data: YearlyReportData;
+          data: YearlyReportData & {
+            paginated?: boolean;
+            totalPages?: number;
+            limit?: number;
+          };
         };
 
         if (!res?.data) {
           throw new Error('بيانات التقرير غير متوفرة');
         }
 
-        await exportYearlyReportToPdf(res.data, options);
+        const combinedData: YearlyReportData = {
+          ...res.data,
+          records: [...(res.data.records || [])],
+        };
+
+        if (res.data.paginated && (res.data.totalPages || 1) > 1) {
+          const totalPages = res.data.totalPages || 1;
+          const pageLimit = res.data.limit || 100;
+          for (let p = 2; p <= totalPages; p++) {
+            const pageRes = (await getYearlyReport(year, departmentId, p, pageLimit)) as {
+              success: boolean;
+              data?: YearlyReportData;
+            };
+            if (pageRes?.data?.records?.length) {
+              combinedData.records.push(...pageRes.data.records);
+            }
+          }
+        }
+
+        await exportYearlyReportToPdf(combinedData, options);
         toast.success('تم تصدير حصيلة الحضور السنوية بنجاح', { id: toastId });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'فشل في تحميل أو تصدير الحصيلة السنوية';

@@ -105,6 +105,9 @@ try {
   const cron = require('node-cron');
   const { checkDailyNotifications } = require('./backend/utils/activityNotificationHelper');
   cron.schedule('0 8 * * *', () => {
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
     console.log('[Cron] Exécution du rattrapage quotidien des notifications d\'activité');
     checkDailyNotifications().catch((e: Error) => console.warn('[Cron Notifications] Error:', e.message));
   });
@@ -168,11 +171,9 @@ app.get('/api/files/:type/:id/:filename', protect, fileController.serveProtected
 // Protect /courrier against unauthenticated access
 app.use('/courrier', protect, fileController.serveCourrierStatic);
 
-// Public profile photos (avatars)
-app.use('/uploads/usersphoto', express.static(path.join(backendDir, 'uploads/usersphoto')));
-app.use('/uploads/personnelphoto', express.static(path.join(backendDir, 'uploads/personnelphoto')));
-
-// Protect sensitive uploads and templates
+// Protect profile photos (avatars), sensitive uploads and templates
+app.use('/uploads/usersphoto', protect, express.static(path.join(backendDir, 'uploads/usersphoto')));
+app.use('/uploads/personnelphoto', protect, express.static(path.join(backendDir, 'uploads/personnelphoto')));
 app.use('/uploads', protect, express.static(path.join(backendDir, 'uploads')));
 
 // Swagger API Documentation
@@ -226,6 +227,7 @@ try {
   app.use('/api/attendance', require('./backend/routes/attendanceRoutes'));
   app.use('/api/attendance', require('./backend/routes/attendanceDeclarationRoutes'));
   app.use('/api/hr/leave-reasons', require('./backend/routes/leaveReasonRoutes'));
+  app.use('/api/hr/attendance/monthly-report', require('./backend/routes/hr/monthlyReportRoutes'));
   app.use('/api/trash', require('./backend/routes/trashRoutes'));
   app.use('/api/organization-chart', require('./backend/routes/organizationChartRoutes'));
   app.use('/api/ai', require('./backend/routes/aiRoutes'));
@@ -338,25 +340,40 @@ function checkAIModels() {
   }
 }
 
+let viteServer: Awaited<ReturnType<typeof createViteServer>> | null = null;
+
 async function start() {
+  const isProduction = process.env.NODE_ENV === 'production';
   try {
     try {
       const conn = await connectDB();
       if (conn && conn.connection.readyState === 1) {
         console.log('[Database] ✅ Connexion MongoDB établie (readyState: 1), démarrage du serveur HTTP...');
+      } else if (isProduction) {
+        console.error('🔴 FATAL: Impossible de démarrer le serveur HTTP en production sans connexion MongoDB active.');
+        process.exit(1);
       } else {
-        console.log('[Database] ⚠️ Démarrage HTTP en mode dégradé (MongoDB hors ligne, readyState: ' + mongoose.connection.readyState + ')...');
+        console.log('[Database] ⚠️ Démarrage HTTP hors production sans MongoDB (readyState: ' + mongoose.connection.readyState + ')...');
       }
     } catch (err: unknown) {
+      if (isProduction) {
+        console.error('🔴 FATAL: Échec de connexion MongoDB en production. Arrêt du serveur HTTP.');
+        process.exit(1);
+      }
       console.warn('[Database] Avertissement initialisation MongoDB:', (err as Error).message);
     }
 
     if (process.env.NODE_ENV !== 'production') {
-      const vite = await createViteServer({
-        server: { middlewareMode: true },
+      viteServer = await createViteServer({
+        server: {
+          middlewareMode: true,
+          hmr: false,
+          ws: false,
+          proxy: {},
+        },
         appType: 'spa',
       });
-      app.use(vite.middlewares);
+      app.use(viteServer.middlewares);
     } else {
       const distPath = path.join(process.cwd(), 'dist');
       app.use(express.static(distPath));
@@ -386,15 +403,30 @@ async function start() {
 start();
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM reçu, arrêt propre...');
+let isShuttingDown = false;
+async function shutdown(signal: string) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`${signal} reçu, arrêt propre...`);
+  const forceExitTimer = setTimeout(() => process.exit(0), 1500);
+  forceExitTimer.unref();
   try {
+    if (viteServer) {
+      await viteServer.close();
+      viteServer = null;
+    }
+    io.close();
     await mongoose.connection.close();
+    httpServer.closeAllConnections?.();
     httpServer.close(() => process.exit(0));
   } catch (err) {
     console.error('Erreur lors de la fermeture:', err);
     process.exit(1);
   }
+}
+
+process.on('SIGTERM', () => {
+  void shutdown('SIGTERM');
 });
 
 if (process.platform === 'win32') {
@@ -406,13 +438,6 @@ if (process.platform === 'win32') {
   });
 }
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT reçu, arrêt propre...');
-  try {
-    await mongoose.connection.close();
-    httpServer.close(() => process.exit(0));
-  } catch (err) {
-    console.error('Erreur lors de la fermeture:', err);
-    process.exit(1);
-  }
+process.on('SIGINT', () => {
+  void shutdown('SIGINT');
 });

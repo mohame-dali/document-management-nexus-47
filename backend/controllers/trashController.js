@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
 const Folder = require('../models/Folder');
@@ -16,6 +17,20 @@ const MODEL_MAP = {
   'message': Message,
   'personnel': Personnel,
 };
+
+function extractId(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return value.trim() || null;
+  if (typeof value === 'object') {
+    if (value._id) return value._id.toString();
+    if (value.id) return String(value.id);
+    if (typeof value.toString === 'function') {
+      const str = value.toString();
+      return str === '[object Object]' ? null : str;
+    }
+  }
+  return String(value);
+}
 
 // Helper to resolve absolute or relative file path on disk
 function resolveFilePath(filePath) {
@@ -86,6 +101,27 @@ const normalizeType = (type) => {
   return lower;
 };
 
+function isMessageDeletedByAllParties(message) {
+  const deletedBySet = new Set(
+    (message.deletedBy || []).map(dId => dId.toString())
+  );
+  const partyIds = new Set();
+  if (message.sender) {
+    partyIds.add(message.sender.toString());
+  }
+  (message.recipients || []).forEach((r) => {
+    const recipientId = r && r.user ? r.user.toString() : (r ? r.toString() : null);
+    if (recipientId) partyIds.add(recipientId);
+  });
+  if (partyIds.size === 0) return false;
+  for (const pId of partyIds) {
+    if (!deletedBySet.has(pId)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // @desc    Get all trashed items (incoming, outgoing, folders)
 // @route   GET /api/trash
 // @access  Private
@@ -104,10 +140,10 @@ exports.getTrash = async (req, res, next) => {
     let personnelQuery = { isDeleted: true };
 
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
-      if (!req.user.activeDepartment) {
+      const deptId = extractId(req.user.activeDepartment);
+      if (!deptId) {
         return next(new ErrorResponse('لم يتم تحديد قسم نشط', 403));
       }
-      const deptId = req.user.activeDepartment._id || req.user.activeDepartment;
       incomingQuery['assignedTo.id'] = deptId;
       outgoingQuery['source.id'] = deptId;
       folderQuery.department = deptId;
@@ -169,7 +205,7 @@ exports.getTrash = async (req, res, next) => {
         .sort({ deletedAt: -1 })
         .skip(skip)
         .limit(limitNum);
-      
+
       items = docs.map(doc => ({
         ...doc.toObject(),
         itemType: 'incoming'
@@ -323,6 +359,10 @@ exports.restoreItem = async (req, res, next) => {
       return next(new ErrorResponse('نوع العنصر غير صالح (incoming, outgoing, folder, message, personnel)', 400));
     }
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new ErrorResponse(`معرّف غير صالح: ${id}`, 400));
+    }
+
     if (resolvedType === 'message') {
       const message = await Message.findOne({ _id: id, deletedBy: req.user._id });
       if (!message) {
@@ -352,30 +392,34 @@ exports.restoreItem = async (req, res, next) => {
       return next(new ErrorResponse(`العنصر غير موجود في سلة المهملات برمز ${id}`, 404));
     }
 
-    // Permission check for AdminDepartment
+    // Permission check for AdminDepartment / User
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
-      const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
+      const activeDeptId = extractId(req.user.activeDepartment);
+      if (!activeDeptId) {
+        return next(new ErrorResponse('لم يتم تحديد قسم نشط', 403));
+      }
+
       if (resolvedType === 'incoming') {
         const isAssigned = item.assignedTo?.some(dept => {
-          const dId = dept.id?._id ? dept.id._id.toString() : (dept.id ? dept.id.toString() : dept.toString());
+          const dId = extractId(dept.id !== undefined ? dept.id : dept);
           return dId === activeDeptId;
         });
         if (!isAssigned) {
           return next(new ErrorResponse('غير مصرح لك باسترجاع هذا المستند', 403));
         }
       } else if (resolvedType === 'outgoing') {
-        const sourceId = item.source?.id?._id ? item.source.id._id.toString() : item.source?.id?.toString();
-        if (sourceId !== activeDeptId) {
+        const sourceId = item.source ? extractId(item.source.id) : null;
+        if (!sourceId || sourceId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك باسترجاع هذا المستند', 403));
         }
       } else if (resolvedType === 'folder') {
-        const folderDeptId = item.department?._id ? item.department._id.toString() : item.department?.toString();
-        if (folderDeptId !== activeDeptId) {
+        const folderDeptId = extractId(item.department);
+        if (!folderDeptId || folderDeptId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك باسترجاع هذا المجلد', 403));
         }
       } else if (resolvedType === 'personnel') {
-        const persDeptId = item.activeDepartment?._id ? item.activeDepartment._id.toString() : item.activeDepartment?.toString();
-        if (persDeptId !== activeDeptId) {
+        const persDeptId = extractId(item.activeDepartment);
+        if (!persDeptId || persDeptId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك باسترجاع هذا الموظف', 403));
         }
       }
@@ -409,6 +453,11 @@ exports.restoreItem = async (req, res, next) => {
       data: item
     });
   } catch (err) {
+    if (err && err.code === 11000) {
+      return next(
+        new ErrorResponse('تعذر الاسترجاع لوجود عنصر نشط مسبقاً بنفس المعرف الفريد (الرقم التسلسلي أو ب.ت.و)', 409)
+      );
+    }
     next(err);
   }
 };
@@ -426,29 +475,37 @@ exports.permanentDelete = async (req, res, next) => {
       return next(new ErrorResponse('نوع العنصر غير صالح (incoming, outgoing, folder, message, personnel)', 400));
     }
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new ErrorResponse(`معرّف غير صالح: ${id}`, 400));
+    }
+
     if (resolvedType === 'message') {
-      const message = await Message.findOne({ _id: id, deletedBy: req.user._id });
+      const message = await Message.findById(id);
       if (!message) {
-        return next(new ErrorResponse(`الرسالة غير موجودة في سلة المهملات برمز ${id}`, 404));
+        return next(new ErrorResponse(`الرسالة غير موجودة برمز ${id}`, 404));
       }
 
-      // Check if all parties have deleted it
-      const allPartyIds = [
-        message.sender.toString(),
-        ...message.recipients.map(r => (r.user ? r.user.toString() : r.toString()))
-      ];
-      const deletedByAll = allPartyIds.every(pId =>
-        message.deletedBy.some(dId => dId.toString() === pId)
+      const currentUserId = req.user._id.toString();
+      const isInUserTrash = (message.deletedBy || []).some(
+        dId => dId.toString() === currentUserId
       );
+      if (!isInUserTrash) {
+        return next(new ErrorResponse('الرسالة غير موجودة في سلة المهملات الخاصة بك', 400));
+      }
+
+      const deletedByAll = isMessageDeletedByAllParties(message);
+      if (!deletedByAll) {
+        return next(
+          new ErrorResponse('لا يمكن الحذف النهائي للرسالة قبل حذفها من سلة المهملات لدى جميع الأطراف', 409)
+        );
+      }
 
       let deletedFilesCount = 0;
-      if (deletedByAll) {
-        const files = collectItemFiles(message);
-        files.forEach(f => {
-          if (deleteFileFromDisk(f)) deletedFilesCount++;
-        });
-        await message.deleteOne();
-      }
+      const files = collectItemFiles(message);
+      files.forEach(f => {
+        if (deleteFileFromDisk(f)) deletedFilesCount++;
+      });
+      await message.deleteOne();
 
       // Audit trail SÉCURISÉ
       try {
@@ -483,30 +540,34 @@ exports.permanentDelete = async (req, res, next) => {
       return next(new ErrorResponse('العنصر غير موجود في سلة المهملات', 400));
     }
 
-    // Permission check for AdminDepartment
+    // Permission check for AdminDepartment / User
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
-      const activeDeptId = req.user.activeDepartment?._id ? req.user.activeDepartment._id.toString() : req.user.activeDepartment?.toString();
+      const activeDeptId = extractId(req.user.activeDepartment);
+      if (!activeDeptId) {
+        return next(new ErrorResponse('لم يتم تحديد قسم نشط', 403));
+      }
+
       if (resolvedType === 'incoming') {
         const isAssigned = item.assignedTo?.some(dept => {
-          const dId = dept.id?._id ? dept.id._id.toString() : (dept.id ? dept.id.toString() : dept.toString());
+          const dId = extractId(dept.id !== undefined ? dept.id : dept);
           return dId === activeDeptId;
         });
         if (!isAssigned) {
           return next(new ErrorResponse('غير مصرح لك بحذف هذا المستند', 403));
         }
       } else if (resolvedType === 'outgoing') {
-        const sourceId = item.source?.id?._id ? item.source.id._id.toString() : item.source?.id?.toString();
-        if (sourceId !== activeDeptId) {
+        const sourceId = item.source ? extractId(item.source.id) : null;
+        if (!sourceId || sourceId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك بحذف هذا المستند', 403));
         }
       } else if (resolvedType === 'folder') {
-        const folderDeptId = item.department?._id ? item.department._id.toString() : item.department?.toString();
-        if (folderDeptId !== activeDeptId) {
+        const folderDeptId = extractId(item.department);
+        if (!folderDeptId || folderDeptId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك بحذف هذا المجلد', 403));
         }
       } else if (resolvedType === 'personnel') {
-        const persDeptId = item.activeDepartment?._id ? item.activeDepartment._id.toString() : item.activeDepartment?.toString();
-        if (persDeptId !== activeDeptId) {
+        const persDeptId = extractId(item.activeDepartment);
+        if (!persDeptId || persDeptId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك بحذف هذا الموظف', 403));
         }
       }
@@ -590,6 +651,7 @@ exports.emptyTrash = async (req, res, next) => {
       folder: 0,
       message: 0,
       personnel: 0,
+      skippedMessages: 0,
       totalFilesDeleted: 0,
       errors: []
     };
@@ -602,9 +664,36 @@ exports.emptyTrash = async (req, res, next) => {
       return next(new ErrorResponse('نوع العنصر غير صالح', 400));
     }
 
-    const deptId = req.user.role === 'AdminDepartment'
-      ? (req.user.activeDepartment?._id || req.user.activeDepartment)
-      : null;
+    let deptId = null;
+    if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
+      deptId = extractId(req.user.activeDepartment);
+      if (!deptId) {
+        return next(new ErrorResponse('لم يتم تحديد قسم نشط', 403));
+      }
+    }
+
+    // Vérifier AVANT toute suppression si un dossier dans la corbeille contient des éléments actifs (aligné sur permanentDelete)
+    if (typesToEmpty.includes('folder')) {
+      const folderFilter = { isDeleted: true };
+      if (deptId) {
+        folderFilter.department = deptId;
+      }
+      const trashedFolders = await Folder.find(folderFilter).select('_id').lean();
+      if (trashedFolders.length > 0) {
+        const folderIds = trashedFolders.map(f => f._id);
+        const [activeSubfolders, activeIncoming, activeOutgoing] = await Promise.all([
+          Folder.countDocuments({ parent: { $in: folderIds }, isDeleted: false }),
+          IncomingDocument.countDocuments({ folder: { $in: folderIds }, isDeleted: false }),
+          OutgoingDocument.countDocuments({ folder: { $in: folderIds }, isDeleted: false })
+        ]);
+
+        if (activeSubfolders > 0 || activeIncoming > 0 || activeOutgoing > 0) {
+          return next(
+            new ErrorResponse('لا يمكن الحذف النهائي للمجلد لأنه يحتوي على عناصر نشطة غير محذوفة', 400)
+          );
+        }
+      }
+    }
 
     for (const t of typesToEmpty) {
       try {
@@ -624,7 +713,12 @@ exports.emptyTrash = async (req, res, next) => {
 
         const items = await Model.find(filter);
         for (const item of items) {
-          if (t === 'incoming') {
+          if (t === 'message') {
+            if (!isMessageDeletedByAllParties(item)) {
+              results.skippedMessages++;
+              continue;
+            }
+          } else if (t === 'incoming') {
             await OutgoingDocument.updateMany({ reference: item._id }, { reference: null });
           } else if (t === 'outgoing') {
             await IncomingDocument.updateMany({ answer: item._id }, { answer: null });

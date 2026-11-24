@@ -5,26 +5,26 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2c5282] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-[#234269] shadow-xs",
+        default: "bg-[#2c5282] text-white hover:bg-[#1e3a5f] active:bg-[#172c48] shadow-subtle",
         destructive:
-          "bg-[#c53030] text-white hover:bg-[#9b2c2c] shadow-xs",
+          "bg-[#b91c1c] text-white hover:bg-[#991b1b] active:bg-[#7f1d1d] shadow-subtle",
         success:
-          "bg-[#2f855a] text-white hover:bg-[#22543d] shadow-xs",
+          "bg-[#166534] text-white hover:bg-[#14532d] active:bg-[#052e16] shadow-subtle",
         outline:
-          "border border-[#e2e8f0] bg-white text-[#2d3748] hover:bg-[#f7fafc] hover:text-[#1a202c] shadow-xs",
+          "border-[1.5px] border-[#94a3b8] bg-white text-[#0f172a] hover:bg-[#f1f5f9] hover:border-[#475569] shadow-subtle",
         secondary:
-          "bg-[#edf2f7] text-[#2d3748] hover:bg-[#e2e8f0]",
-        ghost: "text-[#4a5568] hover:bg-gray-200 hover:text-[#1a202c]",
-        link: "text-[#2c5282] underline-offset-4 hover:underline",
+          "border border-[#cbd5e1] bg-[#f1f5f9] text-[#0f172a] hover:bg-[#e2e8f0]",
+        ghost: "text-[#1e293b] hover:bg-[#e2e8f0]/75 hover:text-[#0f172a]",
+        link: "text-[#1e3a5f] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-11 px-4 py-2",
         sm: "h-11 rounded px-4 text-sm",
-        lg: "h-12 rounded px-6",
+        lg: "h-12 rounded px-6 text-base",
         icon: "h-11 w-11 rounded",
       },
     },

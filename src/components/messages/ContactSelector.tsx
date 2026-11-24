@@ -97,10 +97,12 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
               </Badge>
               <button
                 type="button"
-                className="h-4 w-4 inline-flex items-center justify-center text-slate-400 hover:text-red-600 rounded"
+                aria-label={t('messages.removeRecipientAria', { username: contact.username })}
+                title={t('messages.removeRecipientAria', { username: contact.username })}
+                className="min-w-[28px] min-h-[28px] inline-flex items-center justify-center text-slate-500 hover:text-red-600 rounded"
                 onClick={() => removeContact(contact._id)}
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </span>
           ))}

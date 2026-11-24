@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import { getDepartments } from '@/services/departmentService';
 import { Department } from '@/types';
 import { Personnel, PersonnelSexe } from '@/types/hr';
 import { uploadPersonnelPhoto, getPhotoUrl } from '@/services/hr/personnelApi';
+import { useDirection } from '@/i18n/useDirection';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -24,6 +26,23 @@ import { Step1Identity } from './wizard/Step1Identity';
 import { Step2Family } from './wizard/Step2Family';
 import { Step3Admin } from './wizard/Step3Admin';
 import { Step4Contacts } from './wizard/Step4Contacts';
+
+export interface PersonnelFormErrors {
+  nom?: string;
+  prenom?: string;
+  cin?: string;
+  telephone?: string;
+  emailPersonnel?: string;
+  dateEmbauche?: string;
+}
+
+const getTodayLocalIso = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export interface ContactUrgenceItem {
   nom: string;
@@ -73,8 +92,42 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar' || document.dir === 'rtl';
+  const { t } = useTranslation();
+  const { isRTL: isRtl } = useDirection();
+
+  const { personnelStep1Schema, personnelFullSchema } = useMemo(() => {
+    const step1 = z.object({
+      nom: z.string().trim().min(1, t('hr.form.validation.nomRequired')),
+      prenom: z.string().trim().min(1, t('hr.form.validation.prenomRequired')),
+      cin: z
+        .string()
+        .trim()
+        .regex(/^\d{8}$/, t('hr.form.validation.cinLength')),
+      telephone: z
+        .string()
+        .trim()
+        .regex(/^\d{8}$/, t('hr.form.validation.telephoneLength')),
+      emailPersonnel: z
+        .string()
+        .trim()
+        .refine(
+          (val) => val === '' || z.string().email().safeParse(val).success,
+          t('hr.form.validation.emailInvalid')
+        ),
+    });
+
+    const full = step1.extend({
+      dateEmbauche: z
+        .string()
+        .trim()
+        .refine(
+          (val) => !val || val <= getTodayLocalIso(),
+          t('hr.form.validation.hireDateFuture')
+        ),
+    });
+
+    return { personnelStep1Schema: step1, personnelFullSchema: full };
+  }, [t]);
 
   // État du wizard multi-étapes
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -180,7 +233,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [errors, setErrors] = useState<{ nom?: string; prenom?: string }>({});
+  const [errors, setErrors] = useState<PersonnelFormErrors>({});
 
   useEffect(() => {
     if (initialData) {
@@ -300,7 +353,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
 
     // Validation du type de fichier
     if (!file.type.startsWith('image/')) {
-      setPhotoError('يرجى اختيار ملف صورة صالح (JPG, PNG, WEBP)');
+      setPhotoError(t('hr.form.photo.invalidType'));
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -308,7 +361,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
     // Validation de la taille (2 Mo max)
     const MAX_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      setPhotoError('حجم الصورة يتجاوز الحد الأقصى المسموح به (2 ميغابايت)');
+      setPhotoError(t('hr.form.photo.maxSize'));
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -339,35 +392,102 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       setPhoto(res.photo);
       setPreviewUrl(getPhotoUrl(res.photo));
       setPhotoFile(null);
-      toast.success('تم تحديث صورة الموظف بنجاح');
+      toast.success(t('hr.form.photo.uploadSuccess'));
     } catch (err: unknown) {
       console.error('Error uploading photo:', err);
-      setPhotoError('حدث خطأ أثناء رفع الصورة، يرجى المحاولة مرة أخرى');
-      toast.error('تعذر رفع الصورة');
+      setPhotoError(t('hr.form.photo.uploadError'));
+      toast.error(t('hr.form.photo.uploadFailed'));
     } finally {
       setIsUploadingPhoto(false);
     }
   };
 
+  const mapZodIssuesToErrors = (issues: z.ZodIssue[]): PersonnelFormErrors => {
+    const mapped: PersonnelFormErrors = {};
+    for (const issue of issues) {
+      const field = issue.path[0] as keyof PersonnelFormErrors | undefined;
+      if (field && !mapped[field]) {
+        mapped[field] = issue.message;
+      }
+    }
+    return mapped;
+  };
+
+  const validateStep1 = () => {
+    const result = personnelStep1Schema.safeParse({
+      nom,
+      prenom,
+      cin,
+      telephone,
+      emailPersonnel,
+    });
+    if (!result.success) {
+      const fieldErrors = mapZodIssuesToErrors(result.error.issues);
+      setErrors((prev) => ({
+        ...prev,
+        nom: undefined,
+        prenom: undefined,
+        cin: undefined,
+        telephone: undefined,
+        emailPersonnel: undefined,
+        ...fieldErrors,
+      }));
+      const firstMessage = result.error.issues[0]?.message || t('hr.form.validation.requiredStep1');
+      toast.error(firstMessage);
+      return false;
+    }
+    setErrors((prev) => ({
+      ...prev,
+      nom: undefined,
+      prenom: undefined,
+      cin: undefined,
+      telephone: undefined,
+      emailPersonnel: undefined,
+    }));
+    return true;
+  };
+
   const validate = () => {
-    const newErrors: { nom?: string; prenom?: string } = {};
-    if (!nom.trim()) {
-      newErrors.nom = 'اللقب إجباري';
+    const result = personnelFullSchema.safeParse({
+      nom,
+      prenom,
+      cin,
+      telephone,
+      emailPersonnel,
+      dateEmbauche,
+    });
+    if (!result.success) {
+      const fieldErrors = mapZodIssuesToErrors(result.error.issues);
+      setErrors(fieldErrors);
+      const hasStep1Errors = Boolean(
+        fieldErrors.nom ||
+          fieldErrors.prenom ||
+          fieldErrors.cin ||
+          fieldErrors.telephone ||
+          fieldErrors.emailPersonnel
+      );
+      if (hasStep1Errors) {
+        setCurrentStep(1);
+      } else if (fieldErrors.dateEmbauche) {
+        setCurrentStep(3);
+      }
+      const firstMessage = result.error.issues[0]?.message || t('hr.form.validation.requiredStep1');
+      toast.error(firstMessage);
+      return false;
     }
-    if (!prenom.trim()) {
-      newErrors.prenom = 'الاسم إجباري';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const handleNextStep = () => {
-    if (currentStep === 1) {
-      const isValid = validate();
-      if (!isValid) {
-        toast.error(t('hr.form.validation.requiredStep1'));
-        return;
-      }
+    if (currentStep === 1 && !validateStep1()) {
+      return;
+    }
+    if (currentStep === 3 && dateEmbauche && dateEmbauche > getTodayLocalIso()) {
+      const msg = t('hr.form.validation.hireDateFuture');
+      setErrors((prev) => ({ ...prev, dateEmbauche: msg }));
+      toast.error(msg);
+      return;
     }
     setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
@@ -377,12 +497,8 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   };
 
   const handleStepClick = (stepIndex: number) => {
-    if (stepIndex > currentStep && currentStep === 1) {
-      const isValid = validate();
-      if (!isValid) {
-        toast.error(t('hr.form.validation.requiredStep1'));
-        return;
-      }
+    if (stepIndex > currentStep && currentStep === 1 && !validateStep1()) {
+      return;
     }
     setCurrentStep(stepIndex);
   };
@@ -390,8 +506,6 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
-      setCurrentStep(1);
-      toast.error(t('hr.form.validation.requiredStep1'));
       return;
     }
 
@@ -625,6 +739,8 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
             setArme={setArme}
             notes={notes}
             setNotes={setNotes}
+            errors={errors}
+            setErrors={setErrors}
           />
         )}
 

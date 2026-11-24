@@ -1,30 +1,34 @@
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const { ScannerError } = require('../validation');
+
+const JOB_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 /**
- * Scanner status management functionality
+ * Scanner status, per-device locking, and per-scanId job lifecycle management
  */
 class StatusManager {
   constructor() {
     this.isScanning = false;
-    this.platform = require('os').platform(); // 'win32', 'darwin', 'linux', etc.
+    this.platform = process.platform;
     this.lastScanTime = null;
     this.errorState = null;
     this.scanCount = 0;
-    this.supportedFormats = ['pdf', 'jpeg', 'png'];
-    this.currentDocumentType = null; // 'incoming' or 'outgoing'
-    this.lastOcrSuccess = null; // Track if OCR was successful
-    this.scanHistory = []; // Store last 10 scan operations
+    this.supportedFormats = ['pdf', 'jpg', 'png'];
+    this.currentDocumentType = null;
+    this.lastOcrSuccess = null;
+    this.scanHistory = [];
+
+    // Active device locks: Map<deviceId, scanId>
+    this.deviceLocks = new Map();
+    // Job registry: Map<scanId, jobObject>
+    this.jobs = new Map();
   }
-  
-  /**
-   * Get scanner status
-   * @param {Object} config - Scanner configuration
-   * @param {string} deviceId - Current device ID
-   * @returns {Object} Scanner status
-   */
+
   getStatus(config, deviceId) {
     return {
-      enabled: config.enabled,
-      isScanning: this.isScanning,
+      enabled: Boolean(config.enabled),
+      isScanning: this.deviceLocks.size > 0 || this.isScanning,
       deviceId: deviceId || 'Not selected',
       resolution: config.resolution,
       format: config.format,
@@ -33,120 +37,294 @@ class StatusManager {
       errorState: this.errorState,
       scanCount: this.scanCount,
       supportedFormats: this.supportedFormats,
-      simulateMode: config.simulate || false,
-      debugMode: config.debug || false,
-      ocrEnabled: config.ocrEnabled,
       currentDocumentType: this.currentDocumentType,
       lastOcrSuccess: this.lastOcrSuccess,
-      recentScans: this.scanHistory.slice(0, 5) // Return the 5 most recent scans
+      recentScans: this.scanHistory.slice(0, 5),
     };
   }
-  
-  /**
-   * Set scanning state
-   * @param {boolean} isScanning - Whether scanner is scanning
-   * @param {string} documentType - Type of document being scanned ('incoming' or 'outgoing')
-   */
+
+  createJob({ scanId = null, ownerId, documentType = 'temp', format = 'pdf', resolution = 300 }) {
+    this.pruneExpiredJobs();
+
+    const id = scanId || uuidv4();
+    if (this.jobs.has(id)) {
+      throw new ScannerError('SCAN_FAILED', 'Identifiant de numérisation déjà utilisé', 409);
+    }
+
+    const job = {
+      scanId: id,
+      ownerId: String(ownerId),
+      deviceId: null,
+      documentType,
+      format,
+      resolution,
+      stage: 'detecting',
+      page: 0,
+      availablePages: 0,
+      code: undefined,
+      errorMessage: undefined,
+      filePath: null,
+      mimeType: null,
+      jobTempDir: null,
+      abortController: new AbortController(),
+      cancelled: false,
+      // ASYNC OCR FIX: Separate non-blocking OCR status and document linkage from physical scan stage
+      ocrStatus: 'pending',
+      ocrText: '',
+      ocrError: null,
+      ocrInProgress: false,
+      ocrLanguages: null,
+      targetDocumentId: null,
+      targetDocumentType: null,
+      finalFilePath: null,
+      pendingTempCleanupPath: null,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    this.jobs.set(id, job);
+    return job;
+  }
+
+  getJob(scanId) {
+    return this.jobs.get(scanId) || null;
+  }
+
+  // ASYNC OCR FIX: Link a newly created/updated MongoDB document so background OCR updates it when done
+  attachDocumentToJob(scanId, { targetDocumentId, targetDocumentType, finalFilePath = null } = {}) {
+    const job = this.jobs.get(scanId);
+    if (!job) return null;
+    if (targetDocumentId) {
+      job.targetDocumentId = String(targetDocumentId);
+    }
+    if (targetDocumentType) {
+      job.targetDocumentType = targetDocumentType;
+    }
+    if (finalFilePath) {
+      job.finalFilePath = finalFilePath;
+    }
+    job.updatedAt = Date.now();
+    return job;
+  }
+
+  getJobStatusForUser(scanId, userId) {
+    const job = this.jobs.get(scanId);
+    if (!job) return { notFound: true };
+    if (job.ownerId !== String(userId)) return { forbidden: true };
+
+    const payload = {
+      scanId: job.scanId,
+      stage: job.stage,
+      page: job.page,
+      availablePages: job.availablePages || 0,
+      // ASYNC OCR FIX: Expose non-blocking OCR state alongside physical scan stage
+      ocrStatus: job.ocrStatus || 'pending',
+    };
+    if (job.code) {
+      payload.code = job.code;
+    }
+    return { job: payload };
+  }
+
+  updateJob(scanId, patch = {}) {
+    const job = this.jobs.get(scanId);
+    if (!job) return null;
+    Object.assign(job, patch, { updatedAt: Date.now() });
+    return job;
+  }
+
+  acquireDeviceLock(deviceId, scanId) {
+    const key = deviceId || '__default__';
+    const holder = this.deviceLocks.get(key);
+    if (holder && holder !== scanId) {
+      throw new ScannerError(
+        'SCANNER_BUSY',
+        'Le scanner est actuellement occupé par une autre numérisation',
+        503
+      );
+    }
+    this.deviceLocks.set(key, scanId);
+    this.isScanning = true;
+  }
+
+  releaseDeviceLock(deviceId, scanId) {
+    const key = deviceId || '__default__';
+    if (this.deviceLocks.get(key) === scanId) {
+      this.deviceLocks.delete(key);
+    }
+    this.isScanning = this.deviceLocks.size > 0;
+  }
+
+  cancelJob(scanId, userId) {
+    const job = this.jobs.get(scanId);
+    if (!job) return { notFound: true };
+    if (job.ownerId !== String(userId)) return { forbidden: true };
+
+    job.cancelled = true;
+    job.stage = 'error';
+    job.code = 'SCAN_CANCELLED';
+    job.errorMessage = 'Numérisation annulée par l’utilisateur';
+    // ASYNC OCR FIX: Reflect cancellation on OCR state as well
+    if (job.ocrInProgress || job.ocrStatus === 'processing') {
+      job.ocrStatus = 'failed';
+      job.ocrError = 'Numérisation annulée par l’utilisateur';
+    }
+    job.updatedAt = Date.now();
+
+    if (job.abortController && !job.abortController.signal.aborted) {
+      job.abortController.abort();
+    }
+
+    this.cleanupJobTempFiles(job);
+    if (job.deviceId) {
+      this.releaseDeviceLock(job.deviceId, job.scanId);
+    }
+
+    return { cancelled: true, job };
+  }
+
+  cleanupJobTempFiles(job) {
+    if (!job) return;
+    if (job.jobTempDir && fs.existsSync(job.jobTempDir)) {
+      try {
+        fs.rmSync(job.jobTempDir, { recursive: true, force: true });
+      } catch (err) {
+        console.warn(`[Scanner] Failed cleaning jobTempDir ${job.jobTempDir}:`, err.message);
+      }
+      job.jobTempDir = null;
+    }
+    if (job.stage !== 'done' && job.filePath && fs.existsSync(job.filePath)) {
+      if (job.ocrInProgress) {
+        // ASYNC OCR FIX: Defer temp deletion until background OCR worker finishes reading it
+        job.pendingTempCleanupPath = job.filePath;
+        job.filePath = null;
+      } else {
+        try {
+          fs.unlinkSync(job.filePath);
+        } catch (err) {
+          console.warn(`[Scanner] Failed cleaning output file ${job.filePath}:`, err.message);
+        }
+        job.filePath = null;
+      }
+    }
+  }
+
+  deleteJobFile(scanId, userId) {
+    const job = this.jobs.get(scanId);
+    if (!job) return { notFound: true };
+    if (job.ownerId !== String(userId)) return { forbidden: true };
+
+    if (job.jobTempDir && fs.existsSync(job.jobTempDir)) {
+      try {
+        fs.rmSync(job.jobTempDir, { recursive: true, force: true });
+      } catch (_) {}
+      job.jobTempDir = null;
+    }
+    if (job.ocrInProgress && job.abortController && !job.abortController.signal.aborted) {
+      // ASYNC OCR FIX: Abort in-flight OCR when user explicitly discards the scan
+      job.cancelled = true;
+      job.abortController.abort();
+    }
+    if (job.filePath && fs.existsSync(job.filePath)) {
+      if (job.ocrInProgress) {
+        job.pendingTempCleanupPath = job.filePath;
+      } else {
+        try {
+          fs.unlinkSync(job.filePath);
+        } catch (err) {
+          console.warn(`[Scanner] Failed deleting scan file ${job.filePath}:`, err.message);
+        }
+      }
+      job.filePath = null;
+    }
+    return { deleted: true };
+  }
+
+  pruneExpiredJobs() {
+    const cutoff = Date.now() - JOB_TTL_MS;
+    for (const [id, job] of this.jobs.entries()) {
+      const isTerminal = job.stage === 'done' || job.stage === 'error';
+      if (isTerminal && job.updatedAt < cutoff) {
+        if (job.jobTempDir && fs.existsSync(job.jobTempDir)) {
+          try { fs.rmSync(job.jobTempDir, { recursive: true, force: true }); } catch (_) {}
+          job.jobTempDir = null;
+        }
+        if (job.filePath && fs.existsSync(job.filePath)) {
+          try { fs.unlinkSync(job.filePath); } catch (_) {}
+          job.filePath = null;
+        }
+        this.jobs.delete(id);
+      }
+    }
+  }
+
   setScanning(isScanning, documentType = null) {
     this.isScanning = isScanning;
-    
     if (documentType) {
       this.currentDocumentType = documentType;
     }
-    
     if (isScanning) {
       this.errorState = null;
     } else if (!isScanning && !this.errorState) {
       this.lastScanTime = new Date();
       this.scanCount++;
-      
-      // Add to scan history
-      if (this.currentDocumentType) {
-        this.scanHistory.unshift({
-          timestamp: new Date(),
-          documentType: this.currentDocumentType,
-          success: true
-        });
-        
-        // Limit history to last 10 items
-        if (this.scanHistory.length > 10) {
-          this.scanHistory.pop();
-        }
-      }
     }
   }
-  
-  /**
-   * Record a scan error
-   * @param {Error} error - Error object 
-   */
-  setError(error) {
-    this.errorState = {
-      message: error.message,
-      timestamp: new Date(),
-      code: error.code || 'SCAN_ERROR'
-    };
-    this.isScanning = false;
-    
-    // Add to scan history
+
+  addScanToHistory(entry) {
+    if (!entry) return;
     this.scanHistory.unshift({
-      timestamp: new Date(),
-      documentType: this.currentDocumentType,
-      success: false,
-      error: error.message
+      ...entry,
+      timestamp: entry.timestamp || new Date(),
+      success: entry.success !== false,
     });
-    
-    // Limit history to last 10 items
     if (this.scanHistory.length > 10) {
       this.scanHistory.pop();
     }
   }
-  
-  /**
-   * Set OCR processing result
-   * @param {boolean} success - Whether OCR processing was successful
-   */
+
+  setError(error) {
+    this.errorState = {
+      message: error.message,
+      timestamp: new Date(),
+      code: error.code || 'SCAN_FAILED',
+    };
+    this.isScanning = this.deviceLocks.size > 0;
+    this.scanHistory.unshift({
+      timestamp: new Date(),
+      documentType: this.currentDocumentType,
+      success: false,
+      code: error.code || 'SCAN_FAILED',
+      error: error.message,
+    });
+    if (this.scanHistory.length > 10) {
+      this.scanHistory.pop();
+    }
+  }
+
   setOcrResult(success) {
     this.lastOcrSuccess = {
-      success: success,
-      timestamp: new Date()
+      success,
+      timestamp: new Date(),
     };
   }
-  
-  /**
-   * Clear the error state
-   */
+
   clearError() {
     this.errorState = null;
   }
-  
-  /**
-   * Get scanning state
-   * @returns {boolean} Current scanning state
-   */
+
   getScanning() {
-    return this.isScanning;
+    return this.deviceLocks.size > 0 || this.isScanning;
   }
-  
-  /**
-   * Get platform information
-   * @returns {string} Platform identifier
-   */
+
   getPlatform() {
     return this.platform;
   }
-  
-  /**
-   * Reset scan count
-   */
+
   resetScanCount() {
     this.scanCount = 0;
   }
-  
-  /**
-   * Get scan history
-   * @returns {Array} Recent scan operations
-   */
+
   getScanHistory() {
     return this.scanHistory;
   }

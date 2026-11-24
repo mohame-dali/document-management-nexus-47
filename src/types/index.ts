@@ -7,6 +7,8 @@ export interface User {
   activeDepartment: Department | null;
   photo: string;
   isActive: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
   createdAt: string;
   personnelId?: string | null;
 }
@@ -52,6 +54,7 @@ export interface IncomingDocument {
   answer?: OutgoingDocument | string | null;
   responsibleUser?: User | string | null;
   folder?: Folder | string | null;
+  isDeleted?: boolean;
   createdAt: string;
 }
 
@@ -72,6 +75,7 @@ export interface OutgoingDocument {
   scannedDocument?: string;
   reference?: IncomingDocument | string | null;
   folder?: Folder | string | null;
+  isDeleted?: boolean;
   createdAt: string;
 }
 

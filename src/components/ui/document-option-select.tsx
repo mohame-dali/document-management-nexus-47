@@ -1,9 +1,10 @@
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
 import { getDocumentOptions, DocumentOption } from '@/services/documentOptionsService';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentOptionSelectProps {
   category: 'activity' | 'source' | 'typeDocument' | 'assignedTo' | 'pourInfo';
@@ -20,38 +21,69 @@ const DocumentOptionSelect: React.FC<DocumentOptionSelectProps> = ({
   documentType,
   value,
   onValueChange,
-  placeholder = "Select an option",
+  placeholder,
   disabled = false,
-  allowCustom = false
+  allowCustom = false,
 }) => {
+  const { t } = useLanguage();
+  const { dir } = useDirection();
+  const resolvedPlaceholder = placeholder || t('documents.options.selectPlaceholder');
   const { data: options = [], isLoading } = useQuery({
     queryKey: ['documentOptions', category, documentType],
     queryFn: () => getDocumentOptions({ category, documentType }),
   });
 
+  // Deduplicate options sharing identical _id or value (e.g., an option created both for
+  // documentType='incoming' and documentType='both' matching the backend $or filter).
+  const uniqueOptions = useMemo(() => {
+    const seenIds = new Set<string>();
+    const seenValues = new Set<string>();
+    const result: DocumentOption[] = [];
+
+    for (const option of options) {
+      if (!option || typeof option.value !== 'string') continue;
+      const optId = option._id ? String(option._id) : '';
+      const normalizedValue = option.value.trim();
+      if (!normalizedValue) continue;
+      if (optId && seenIds.has(optId)) continue;
+      if (seenValues.has(normalizedValue)) continue;
+
+      if (optId) seenIds.add(optId);
+      seenValues.add(normalizedValue);
+      result.push(option);
+    }
+
+    return result;
+  }, [options]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm text-muted-foreground">Loading options...</span>
+        <span className="text-sm text-muted-foreground">{t('documents.options.loading')}</span>
       </div>
     );
   }
 
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+    <Select value={value} onValueChange={onValueChange} disabled={disabled} dir={dir}>
       <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={resolvedPlaceholder} />
       </SelectTrigger>
-      <SelectContent>
-        {options.map((option: DocumentOption) => (
-          <SelectItem key={option._id} value={option.value}>
-            {option.value}
-          </SelectItem>
-        ))}
+      <SelectContent dir={dir}>
+        {uniqueOptions.map((option: DocumentOption, index: number) => {
+          const itemKey = option._id
+            ? String(option._id)
+            : `${option.category || category}-${option.documentType || documentType}-${index}`;
+          return (
+            <SelectItem key={itemKey} value={option.value}>
+              {option.value}
+            </SelectItem>
+          );
+        })}
         {allowCustom && (
-          <SelectItem value="__custom__">
-            + Add custom value
+          <SelectItem key="__custom__" value="__custom__">
+            {t('documents.options.addCustom')}
           </SelectItem>
         )}
       </SelectContent>

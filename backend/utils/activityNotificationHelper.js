@@ -1,4 +1,5 @@
 
+const mongoose = require('mongoose');
 const ActivityNotification = require('../models/ActivityNotification');
 const User = require('../models/User');
 
@@ -146,6 +147,11 @@ const markNotificationAsRead = async (notificationId, userId) => {
 // Daily notification check (to be run via cron job)
 const checkDailyNotifications = async () => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      console.log('[Cron Notifications] MongoDB non connecté (readyState=' + mongoose.connection.readyState + '), rattrapage ignoré.');
+      return;
+    }
+
     const IncomingDocument = require('../models/IncomingDocument');
     
     // Find all documents with activity and dateActivity to catch up notifications

@@ -59,12 +59,16 @@ exports.createOutgoingDocument = async (req, res, next) => {
     // Handle document upload or use scanned document
     let finalDocumentPath = null;
     let ocrText = providedOcrText || null;
+    let ocrStatus = ocrText ? 'completed' : null;
+    let ocrError = null;
+    const scanId = req.body.scanId ? String(req.body.scanId).trim() : '';
     
     if (req.file) {
       // Handle file upload
       const result = await handleUploadedFile(req.file, serialNumber, finalFolderPath, 'outgoing');
       finalDocumentPath = result.finalDocumentPath;
       ocrText = result.ocrText || ocrText;
+      ocrStatus = ocrText ? 'completed' : null;
       console.log('Handled uploaded file, path:', finalDocumentPath);
     } else if (providedScannedDocumentPath) {
       // Handle scanned document
@@ -75,10 +79,13 @@ exports.createOutgoingDocument = async (req, res, next) => {
         finalFolderPath, 
         'outgoing', 
         providedScannedDocumentPath, 
-        providedOcrText
+        providedOcrText,
+        { scanId }
       );
       finalDocumentPath = result.finalDocumentPath;
       ocrText = result.ocrText || ocrText;
+      ocrStatus = result.ocrStatus || (ocrText ? 'completed' : null);
+      ocrError = result.ocrError || null;
       console.log('Handled scanned document, path:', finalDocumentPath);
     }
 
@@ -113,6 +120,8 @@ exports.createOutgoingDocument = async (req, res, next) => {
       subject,
       scannedDocument: finalDocumentPath,
       ocrText,
+      ocrStatus,
+      ocrError,
       createdBy: req.user._id
     };
 
@@ -127,7 +136,28 @@ exports.createOutgoingDocument = async (req, res, next) => {
       documentData.reference = referenceId;
     }
 
-    const document = await OutgoingDocument.create(documentData);
+    let document = await OutgoingDocument.create(documentData);
+
+    // ASYNC OCR FIX: Link newly created document to active scanId so background OCR persists ocrText to DB when finished
+    if (scanId) {
+      const scannerService = require('../../../utils/scanner');
+      const statusManager = scannerService.getStatusManager();
+      const job = statusManager.getJob(scanId);
+      if (job) {
+        if (job.ocrStatus === 'completed' && !document.ocrText && job.ocrText) {
+          document = await OutgoingDocument.findByIdAndUpdate(
+            document._id,
+            { ocrText: job.ocrText, ocrStatus: 'completed', ocrError: null },
+            { new: true }
+          );
+        } else if (job.ocrInProgress || job.ocrStatus === 'processing') {
+          statusManager.attachDocumentToJob(scanId, {
+            targetDocumentId: document._id,
+            targetDocumentType: 'outgoing',
+          });
+        }
+      }
+    }
 
     // Update the incoming document if reference was set
     if (referenceId) {

@@ -148,7 +148,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                     maxLength={4}
                   />
                   {searchYear && searchYear.length > 0 && searchYear.length < 4 && (
-                    <div className="absolute -bottom-6 right-0 left-0">
+                    <div className="absolute -bottom-6 inset-x-0">
                       <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded text-center border border-amber-200">
                         {t('documents.assignResponse.searchSection.yearWarning')}
                       </p>
@@ -277,10 +277,10 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <span className="px-2.5 py-1 rounded text-xs sm:text-sm font-bold bg-[#f1f5f9] text-[#2c5282] border border-[#cbd5e1]">
-                              #{doc.serialNumber}/{doc.year}
+                              <bdi dir="ltr">#{doc.serialNumber}/{doc.year}</bdi>
                             </span>
                             <span className="text-sm text-gray-600">
-                              {formatArabicDate(doc.issueDate)}
+                              <bdi dir="ltr">{formatArabicDate(doc.issueDate)}</bdi>
                             </span>
                           </div>
                           <h4 className="text-base font-bold text-[#1a202c] mb-1.5 line-clamp-2 leading-relaxed">

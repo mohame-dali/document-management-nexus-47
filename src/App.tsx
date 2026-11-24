@@ -2,7 +2,7 @@
 import { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -58,6 +58,7 @@ import PersonnelDetailPage from './pages/hr/PersonnelDetailPage';
 import MyProfilePage from './pages/hr/MyProfilePage';
 import LeaveReasonsManagementPage from './pages/hr/LeaveReasonsManagementPage';
 import AttendancePage from './pages/hr/AttendancePage';
+import MonthlyAttendanceReport from './pages/hr/MonthlyAttendanceReport';
 import AttendanceDeclarationsPage from './pages/hr/AttendanceDeclarationsPage';
 import MyAttendanceCalendarPage from './pages/hr/MyAttendanceCalendarPage';
 import AllPersonnelSituationPage from './pages/hr/AllPersonnelSituationPage';
@@ -207,6 +208,7 @@ function App() {
                             </ProtectedRoute>
                           } />
                           <Route path="attendance" element={<AttendancePage />} />
+                          <Route path="attendance/report" element={<MonthlyAttendanceReport />} />
                           <Route path="all-personnel-situation" element={<AllPersonnelSituationPage />} />
                           <Route path="situation" element={<AllPersonnelSituationPage />} />
                           <Route path="attendance-declarations" element={<AttendanceDeclarationsPage />} />
@@ -593,7 +595,7 @@ function App() {
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
-                  <Toaster position="top-right" />
+                  <Toaster />
                 </div>
               </DepartmentProvider>
             </AuthProvider>

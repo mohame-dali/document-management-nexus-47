@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -26,8 +26,10 @@ import { RefreshCw, ArrowRight, User, Shield, Building, Check, AlertCircle, User
 import { Badge } from '@/components/ui/badge';
 import { Department, User as UserType } from '@/types';
 import { getPersonnelList, getOrganizationSettings } from '@/services/hr/personnelApi';
+import { getUsers } from '@/services/userService';
 import { Personnel } from '@/types/hr';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export interface UserFormData {
   username: string;
@@ -40,7 +42,7 @@ export interface UserFormData {
 
 interface UserFormProps {
   user?: UserType | null;
-  onSubmit: (data: UserFormData) => void;
+  onSubmit: (data: UserFormData) => void | Promise<unknown>;
   isSubmitting: boolean;
   departments: Department[];
   currentUserRole: string;
@@ -136,7 +138,50 @@ const UserForm: React.FC<UserFormProps> = ({
     staleTime: 1000 * 30,
   });
 
-  const personnels: Personnel[] = Array.isArray(personnelData) ? personnelData : [];
+  const personnels: Personnel[] = useMemo(
+    () => (Array.isArray(personnelData) ? personnelData : []),
+    [personnelData]
+  );
+
+  // Récupération des utilisateurs existants pour exclure les personnels déjà liés à un compte
+  const { data: usersData } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    staleTime: 1000 * 30,
+  });
+
+  const takenPersonnelIds = useMemo(() => {
+    const ids = new Set<string>();
+    const existingUsers = Array.isArray(usersData) ? usersData : [];
+    const currentUserId = user?._id ? String(user._id) : null;
+
+    existingUsers.forEach((existingUser) => {
+      if (currentUserId && String(existingUser._id) === currentUserId) {
+        return;
+      }
+      const rawPersonnelId = existingUser.personnelId as
+        | string
+        | { _id?: string }
+        | null
+        | undefined;
+      const normalizedId =
+        typeof rawPersonnelId === 'object' && rawPersonnelId !== null
+          ? rawPersonnelId._id
+          : rawPersonnelId;
+      if (normalizedId) {
+        ids.add(String(normalizedId));
+      }
+    });
+
+    return ids;
+  }, [usersData, user?._id]);
+
+  const availablePersonnels: Personnel[] = useMemo(
+    () => personnels.filter((p) => !takenPersonnelIds.has(String(p._id))),
+    [personnels, takenPersonnelIds]
+  );
+
+  const hiddenPersonnelsCount = personnels.length - availablePersonnels.length;
 
   // LOT B: Fonction pour détecter si un département est fonctionnel (Bureau Directeur ou Bureau d'Ordre)
   const isFunctionalDepartment = (departmentId?: string | { _id: string; name?: string } | null) => {
@@ -157,18 +202,138 @@ const UserForm: React.FC<UserFormProps> = ({
       (bureauOrdreId !== '' && bureauOrdreId === deptId)
     );
   };
-  
+
+  type PersonnelDeptCategory = 'BO' | 'DIRECTION' | 'OTHER';
+
+  // Détecter la catégorie du département du personnel sélectionné (BO, Bureau Directeur ou Autre)
+  const getPersonnelDepartmentCategory = (person?: Personnel): PersonnelDeptCategory | null => {
+    if (!person) return null;
+
+    const personWithDept = person as Personnel & { department?: Department | string | null };
+    const rawDept = person.activeDepartment || personWithDept.department || person.departments?.[0];
+    if (!rawDept) return 'OTHER';
+
+    const deptId = typeof rawDept === 'object' ? String(rawDept._id || '') : String(rawDept);
+    const matchedDept = departments.find((d) => String(d._id) === deptId);
+    const deptName = (
+      (typeof rawDept === 'object' && rawDept.name) ||
+      matchedDept?.name ||
+      ''
+    ).trim();
+
+    const bureauOrdreId =
+      typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings.bureauOrdreDepartmentId
+        ? String(orgSettings.bureauOrdreDepartmentId._id)
+        : String(orgSettings?.bureauOrdreDepartmentId || '');
+
+    const bureauDirecteurId =
+      typeof orgSettings?.bureauDirecteurDepartmentId === 'object' && orgSettings.bureauDirecteurDepartmentId
+        ? String(orgSettings.bureauDirecteurDepartmentId._id)
+        : String(orgSettings?.bureauDirecteurDepartmentId || '');
+
+    if (deptId && bureauOrdreId && deptId === bureauOrdreId) {
+      return 'BO';
+    }
+    if (deptId && bureauDirecteurId && deptId === bureauDirecteurId) {
+      return 'DIRECTION';
+    }
+
+    const normalizedName = deptName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[’']/g, "'");
+
+    if (
+      normalizedName.includes("bureau d'ordre") ||
+      normalizedName.includes('bureau ordre') ||
+      normalizedName === 'bo' ||
+      /\bbo\b/.test(normalizedName) ||
+      deptName.includes('مكتب الضبط')
+    ) {
+      return 'BO';
+    }
+
+    if (
+      normalizedName.includes('bureau directeur') ||
+      normalizedName === 'direction' ||
+      normalizedName.includes('direction generale') ||
+      deptName.includes('مكتب المدير') ||
+      deptName.includes('الإدارة العامة')
+    ) {
+      return 'DIRECTION';
+    }
+
+    return 'OTHER';
+  };
+
+  const selectedRole = form.watch('role');
+  const selectedDepartments = form.watch('departments') || [];
+  const selectedPersonnelId = form.watch('personnelId');
+  const selectedPersonnel = useMemo(
+    () => personnels.find((p: Personnel) => p._id === selectedPersonnelId),
+    [personnels, selectedPersonnelId]
+  );
+
+  const selectedPersonnelDeptCategory = getPersonnelDepartmentCategory(selectedPersonnel);
+  const lastAutoFilledPersonnelIdRef = useRef<string | null>(null);
+
+  // Auto-sélection du rôle à chaque changement de selectedPersonnel selon son département
+  useEffect(() => {
+    if (isEditMode || !selectedPersonnel) {
+      lastAutoFilledPersonnelIdRef.current = null;
+      return;
+    }
+
+    const category = getPersonnelDepartmentCategory(selectedPersonnel);
+    let targetRole: UserFormData['role'] = 'User';
+    let allowedValues: UserFormData['role'][] = ['User', 'AdminDepartment'];
+
+    if (category === 'BO') {
+      targetRole = 'AdminTuningDesk';
+      allowedValues = ['AdminTuningDesk'];
+    } else if (category === 'DIRECTION') {
+      targetRole = 'Director';
+      allowedValues = ['Director'];
+    } else {
+      targetRole = 'User';
+      allowedValues = ['User', 'AdminDepartment'];
+    }
+
+    const currentRole = form.getValues('role');
+    const isNewSelection = lastAutoFilledPersonnelIdRef.current !== selectedPersonnel._id;
+
+    if (isNewSelection || !allowedValues.includes(currentRole)) {
+      form.setValue('role', targetRole, { shouldValidate: true, shouldDirty: true });
+      lastAutoFilledPersonnelIdRef.current = selectedPersonnel._id;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPersonnel, isEditMode, departments, orgSettings]);
+
   const availableRoles = () => {
     if (currentUserRole !== 'Admin') {
       return []; // Non-Admin: no roles available
     }
-    return [
+
+    const allRoles = [
       { value: 'Director', label: 'مدير الإدارة', icon: Shield, badgeClass: 'bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold' },
       { value: 'Admin', label: 'مدير', icon: Shield, badgeClass: 'bg-[#FFCB56] text-[#1a202c] border border-[#e2be40] font-bold' },
       { value: 'AdminDepartment', label: 'مدير قسم', icon: Building, badgeClass: 'bg-[#2c5282] text-white font-medium' },
       { value: 'AdminTuningDesk', label: 'مدير المكتب', icon: Building, badgeClass: 'bg-purple-100 text-purple-900 border border-purple-200 font-semibold' },
       { value: 'User', label: 'مستخدم', icon: User, badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-200 font-semibold' }
     ];
+
+    if (!isEditMode && selectedPersonnel) {
+      if (selectedPersonnelDeptCategory === 'BO') {
+        return allRoles.filter((r) => r.value === 'AdminTuningDesk');
+      }
+      if (selectedPersonnelDeptCategory === 'DIRECTION') {
+        return allRoles.filter((r) => r.value === 'Director');
+      }
+      return allRoles.filter((r) => r.value === 'User' || r.value === 'AdminDepartment');
+    }
+
+    return allRoles;
   };
   
   const availableDepartments = () => {
@@ -179,11 +344,6 @@ const UserForm: React.FC<UserFormProps> = ({
     }
     return [];
   };
-  
-  const selectedRole = form.watch('role');
-  const selectedDepartments = form.watch('departments') || [];
-  const selectedPersonnelId = form.watch('personnelId');
-  const selectedPersonnel = personnels.find((p: Personnel) => p._id === selectedPersonnelId);
 
   // Obligatoire pour Director, AdminDepartment, AdminTuningDesk, User
   const isPersonnelRequired = ['Director', 'AdminDepartment', 'AdminTuningDesk', 'User'].includes(selectedRole);
@@ -216,7 +376,7 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   };
   
-  const handleSubmit = (data: UserFormData) => {
+  const handleSubmit = async (data: UserFormData) => {
     if (data.role === 'AdminTuningDesk') {
       data.departments = [];
     } else if (currentUserRole === 'AdminDepartment' && data.role === 'User') {
@@ -233,12 +393,48 @@ const UserForm: React.FC<UserFormProps> = ({
       return;
     }
 
+    // Vérification préventive d'unicité du compte par personnel
+    if (!isEditMode && data.personnelId && takenPersonnelIds.has(String(data.personnelId))) {
+      const duplicateMsg = 'Ce personnel possède déjà un compte utilisateur';
+      form.setError('personnelId', {
+        type: 'manual',
+        message: duplicateMsg
+      });
+      toast.error(duplicateMsg);
+      return;
+    }
+
     // Nettoyage de l'ID si vide pour les comptes techniques / optionnels
     if (!data.personnelId) {
       delete data.personnelId;
     }
-    
-    onSubmit(data);
+
+    try {
+      await onSubmit(data);
+    } catch (err: unknown) {
+      const errorObj = err as {
+        response?: {
+          status?: number;
+          data?: { code?: string; error?: string; message?: string };
+        };
+      };
+      if (
+        errorObj?.response?.status === 409 ||
+        errorObj?.response?.data?.code === 'PERSONNEL_ALREADY_HAS_ACCOUNT'
+      ) {
+        const message =
+          errorObj?.response?.data?.message ||
+          errorObj?.response?.data?.error ||
+          'Ce personnel possède déjà un compte utilisateur';
+        form.setError('personnelId', {
+          type: 'manual',
+          message
+        });
+        toast.error(message);
+        return;
+      }
+      throw err;
+    }
   };
   
   return (
@@ -351,7 +547,7 @@ const UserForm: React.FC<UserFormProps> = ({
                         {isPersonnelRequired && <span className="text-red-500 font-bold">*</span>}
                       </span>
                       <span className="text-xs font-normal text-gray-500">
-                        {personnels.length} بطاقة متاحة
+                        {availablePersonnels.length} بطاقة متاحة
                       </span>
                     </FormLabel>
                     <FormControl>
@@ -367,12 +563,14 @@ const UserForm: React.FC<UserFormProps> = ({
                             <div className="p-3 text-center text-sm text-[#5f6b7d]">
                               جاري تحميل القائمة...
                             </div>
-                          ) : personnels.length === 0 ? (
+                          ) : availablePersonnels.length === 0 ? (
                             <div className="p-3 text-center text-sm text-[#5f6b7d]">
-                              لا يوجد موظفون في قسمك
+                              {personnels.length > 0
+                                ? 'جميع الموظفين يمتلكون حسابات مستخدمين مسبقاً'
+                                : 'لا يوجد موظفون في قسمك'}
                             </div>
                           ) : (
-                            personnels.map((p) => (
+                            availablePersonnels.map((p) => (
                               <SelectItem key={p._id} value={p._id}>
                                 {p.nom} {p.prenom} — {p.cin || 'بدون رقم ب.ت.و'}
                               </SelectItem>
@@ -381,6 +579,11 @@ const UserForm: React.FC<UserFormProps> = ({
                         </SelectContent>
                       </Select>
                     </FormControl>
+                    {hiddenPersonnelsCount > 0 && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
+                        تم إخفاء {hiddenPersonnelsCount} {hiddenPersonnelsCount === 1 ? 'موظف يمتلك' : 'موظفين يمتلكون'} حساب مستخدم مسبقاً (حساب واحد لكل موظف).
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -494,7 +697,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   <FormLabel className="text-base font-bold text-[#1a202c]">الدور الوظيفي في النظام</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    value={field.value}
                     disabled={currentUserRole === 'AdminDepartment'}
                   >
                     <FormControl>

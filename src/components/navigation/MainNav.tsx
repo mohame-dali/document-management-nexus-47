@@ -27,10 +27,12 @@ import {
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useDirection } from "@/i18n/useDirection";
 
 const MainNav = () => {
   const location = useLocation();
   const { currentUser } = useAuth();
+  const { dir } = useDirection();
   
   // Define navigation items based on user role
   const navItems = [
@@ -115,11 +117,11 @@ const MainNav = () => {
                       isActive(item.href) && "bg-accent text-accent-foreground"
                     )}
                   >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       {item.icon}
                       <span>{item.title}</span>
                       {item.badge === "new" && (
-                        <span className="ml-2 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
+                        <span className="ms-2 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
                           new
                         </span>
                       )}
@@ -141,7 +143,7 @@ const MainNav = () => {
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[250px] sm:w-[300px]">
+          <SheetContent side={dir === 'rtl' ? 'right' : 'left'} dir={dir} className="w-[250px] sm:w-[300px]">
             <nav className="flex flex-col gap-4 mt-8">
               {filteredNavItems.map((item) => (
                 <Link
@@ -155,7 +157,7 @@ const MainNav = () => {
                   {item.icon}
                   <span>{item.title}</span>
                   {item.badge === "new" && (
-                    <span className="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
+                    <span className="ms-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
                       new
                     </span>
                   )}

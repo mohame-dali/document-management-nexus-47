@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { useOfflineOcr } from '@/hooks/useOfflineOcr';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface DocumentUploadWithOcrProps {
   onFileSelect: (files: File[]) => void;
@@ -25,6 +26,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
   maxSize = 50 * 1024 * 1024, // 50MB
   multiple = false
 }) => {
+  const { t } = useLanguage();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [ocrResults, setOcrResults] = useState<Map<string, string>>(new Map());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
@@ -48,7 +50,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
       try {
         setProcessingFiles(prev => new Set(prev).add(file.name));
         
-        toast.info(`بدء معالجة النص من ${file.name}...`, {
+        toast.info(t('documents.upload.ocrStartToast', { fileName: file.name }), {
           duration: 3000
         });
         
@@ -60,12 +62,12 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
           onOcrComplete(ocrText, file);
         }
         
-        toast.success(`تم استخراج النص من ${file.name} بنجاح`, {
+        toast.success(t('documents.upload.ocrSuccessToast', { fileName: file.name }), {
           duration: 3000
         });
       } catch (err) {
         console.error('OCR failed for file:', file.name, err);
-        toast.error(`فشل في استخراج النص من ${file.name}`, {
+        toast.error(t('documents.upload.ocrErrorToast', { fileName: file.name }), {
           duration: 5000
         });
       } finally {
@@ -76,7 +78,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
         });
       }
     }
-  }, [extractText, onFileSelect, onOcrComplete]);
+  }, [extractText, onFileSelect, onOcrComplete, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -118,10 +120,10 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
         <input {...getInputProps()} name={fieldName} />
         <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
         <p className="text-lg font-medium mb-2">
-          {isDragActive ? 'أفلت الملفات هنا' : 'اسحب الملفات أو انقر للتحديد'}
+          {isDragActive ? t('documents.upload.dropActive') : t('documents.upload.dropPrompt')}
         </p>
         <p className="text-sm text-muted-foreground">
-          يدعم ملفات PDF والصور (JPG, PNG) حتى {maxSize / (1024 * 1024)}MB
+          {t('documents.upload.supportedFormats')} <bdi dir="ltr">{maxSize / (1024 * 1024)}MB</bdi>
         </p>
       </div>
 
@@ -131,10 +133,12 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-2">
               <FileText className="h-5 w-5 text-primary animate-pulse" />
-              <span className="font-medium">جاري استخراج النص...</span>
+              <span className="font-medium">{t('documents.upload.extractingText')}</span>
             </div>
             <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground mt-1">{progress}% مكتمل</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              <bdi dir="ltr">{progress}%</bdi> {t('documents.upload.progressCompleted')}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -145,7 +149,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">خطأ في معالجة النص</span>
+              <span className="font-medium">{t('documents.upload.ocrErrorTitle')}</span>
             </div>
             <p className="text-sm mt-1">{error}</p>
           </CardContent>
@@ -155,7 +159,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
       {/* Selected Files Display */}
       {selectedFiles.length > 0 && (
         <div className="space-y-2">
-          <h4 className="font-medium text-sm">الملفات المحددة:</h4>
+          <h4 className="font-medium text-sm">{t('documents.upload.selectedFiles')}</h4>
           {selectedFiles.map((file) => (
             <Card key={file.name}>
               <CardContent className="py-3">
@@ -165,13 +169,13 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
                     <div>
                       <p className="font-medium text-sm">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        <bdi dir="ltr">{(file.size / (1024 * 1024)).toFixed(2)} MB</bdi>
                       </p>
                     </div>
                     {processingFiles.has(file.name) && (
                       <div className="flex items-center gap-1">
                         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
-                        <span className="text-xs text-muted-foreground">معالجة...</span>
+                        <span className="text-xs text-muted-foreground">{t('documents.upload.processing')}</span>
                       </div>
                     )}
                     {ocrResults.has(file.name) && !processingFiles.has(file.name) && (
@@ -192,7 +196,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
                 {ocrResults.has(file.name) && !processingFiles.has(file.name) && (
                   <div className="mt-3 p-3 bg-muted rounded">
                     <p className="text-xs font-medium text-muted-foreground mb-1">
-                      النص المستخرج:
+                      {t('documents.upload.extractedText')}
                     </p>
                     <div className="text-sm max-h-20 overflow-y-auto">
                       {ocrResults.get(file.name)?.substring(0, 200)}

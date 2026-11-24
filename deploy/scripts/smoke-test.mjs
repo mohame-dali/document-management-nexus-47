@@ -35,7 +35,7 @@
 const args = process.argv.slice(2);
 const strictSecurity = args.includes('--strict-security');
 const targetUrlArg = args.find(a => !a.startsWith('--'));
-const baseUrl = (targetUrlArg || process.env.TEST_URL || 'http://127.0.0.1:3000').replace(/\/+$/, '');
+const baseUrl = (targetUrlArg || process.env.TEST_URL || 'http://127.0.0.1:5000').replace(/\/+$/, '');
 
 console.log('═'.repeat(88));
 console.log(`🧪 DMS — SUITE DE VALIDATION POST-DÉPLOIEMENT & AUDIT DE SÉCURITÉ`);

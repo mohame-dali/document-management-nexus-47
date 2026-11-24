@@ -1,4 +1,5 @@
 
+const mongoose = require('mongoose');
 const User = require('../../models/User');
 const Personnel = require('../../models/Personnel');
 const ErrorResponse = require('../../utils/errorResponse');
@@ -10,7 +11,11 @@ const bcrypt = require('bcryptjs');
 exports.createUser = async (req, res, next) => {
   try {
     console.log(`User creation request from ${req.user.role} user: ${req.user.username}`);
-    
+
+    let targetRole = req.body.role;
+    let targetDepartments = Array.isArray(req.body.departments) ? req.body.departments : [];
+    let targetActiveDepartment = req.body.activeDepartment;
+
     // Handle departments based on role
     if (req.user.role === 'AdminDepartment') {
       // AdminDepartment can only create users for their active department
@@ -18,13 +23,15 @@ exports.createUser = async (req, res, next) => {
         console.log('AdminDepartment has no active department');
         return next(new ErrorResponse('No active department selected. Please select an active department.', 400));
       }
-      
+
+      const activeDeptId = req.user.activeDepartment._id || req.user.activeDepartment;
       console.log(`AdminDepartment active department: ${req.user.activeDepartment.name}`);
-      
+
       // Force departments to be the AdminDepartment's active department
-      req.body.departments = [req.user.activeDepartment._id];
-      console.log('Forced departments to active department:', req.body.departments);
-      
+      targetDepartments = [activeDeptId];
+      targetActiveDepartment = activeDeptId;
+      console.log('Forced departments to active department:', targetDepartments);
+
       // AdminDepartment can only create User accounts
       if (req.body.role && req.body.role !== 'User') {
         console.log(`AdminDepartment attempting to create ${req.body.role} role - not allowed`);
@@ -32,20 +39,17 @@ exports.createUser = async (req, res, next) => {
           new ErrorResponse('AdminDepartment can only create User accounts within their department', 403)
         );
       }
-      
+
       // Force role to be User
-      req.body.role = 'User';
-    }
-    
-    // Admin role validations
-    if (req.user.role === 'Admin') {
+      targetRole = 'User';
+    } else if (req.user.role === 'Admin') {
       const validRoles = ['Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'];
-      if (!validRoles.includes(req.body.role)) {
+      if (!validRoles.includes(targetRole)) {
         return next(new ErrorResponse('Rôle spécifié invalide', 400));
       }
 
       // Director : only 1 allowed per system
-      if (req.body.role === 'Director') {
+      if (targetRole === 'Director') {
         const existingDirector = await User.findOne({ role: 'Director', isDeleted: { $ne: true } });
         if (existingDirector) {
           return next(new ErrorResponse('Un seul Directeur est autorisé dans le système', 400));
@@ -53,33 +57,35 @@ exports.createUser = async (req, res, next) => {
       }
 
       // AdminTuningDesk : no departments
-      if (req.body.role === 'AdminTuningDesk') {
-        req.body.departments = [];
-        req.body.activeDepartment = null;
-        console.log(`${req.body.role} role - clearing departments and activeDepartment`);
+      if (targetRole === 'AdminTuningDesk') {
+        targetDepartments = [];
+        targetActiveDepartment = null;
+        console.log(`${targetRole} role - clearing departments and activeDepartment`);
       }
 
       // AdminDepartment : at least one department required
-      if (req.body.role === 'AdminDepartment') {
-        if (!req.body.departments || req.body.departments.length === 0) {
+      if (targetRole === 'AdminDepartment') {
+        if (!targetDepartments || targetDepartments.length === 0) {
           return next(new ErrorResponse('Chef de département : au moins un département requis', 400));
         }
         // activeDepartment must be within departments[]
-        if (req.body.activeDepartment) {
-          const activeId = req.body.activeDepartment.toString();
-          const deptIds = req.body.departments.map(d => d.toString());
+        if (targetActiveDepartment) {
+          const activeId = (targetActiveDepartment._id || targetActiveDepartment).toString();
+          const deptIds = targetDepartments.map(d => (d && d._id ? d._id.toString() : String(d)));
           if (!deptIds.includes(activeId)) {
             return next(new ErrorResponse('activeDepartment doit être dans les départements assignés', 400));
           }
         } else {
           // Default to first department
-          req.body.activeDepartment = req.body.departments[0];
+          targetActiveDepartment = targetDepartments[0];
         }
       }
+    } else {
+      return next(new ErrorResponse('Not authorized to create users', 403));
     }
-    
+
     // Validate required fields
-    if (!req.body.username || !req.body.password) {
+    if (typeof req.body.username !== 'string' || !req.body.username.trim() || typeof req.body.password !== 'string' || !req.body.password) {
       return next(new ErrorResponse('Username and password are required', 400));
     }
 
@@ -101,39 +107,82 @@ exports.createUser = async (req, res, next) => {
         message: "Ce nom d'utilisateur correspond déjà au CIN d'un agent existant. Veuillez d'abord lier ce compte."
       });
     }
-    
-    // Add createdBy field
-    req.body.createdBy = req.user.id;
-    
+
+    const userPayload = {
+      username: trimmedUsername,
+      password: req.body.password,
+      role: targetRole,
+      departments: targetDepartments,
+      createdBy: req.user.id || req.user._id
+    };
+
+    if (targetActiveDepartment !== undefined) {
+      userPayload.activeDepartment = targetActiveDepartment;
+    }
+    if (req.body.personnelId !== undefined) {
+      userPayload.personnelId = req.body.personnelId || null;
+    }
+    if (typeof req.body.photo === 'string' || req.body.photo === null) {
+      userPayload.photo = req.body.photo;
+    }
+    if (req.user.role === 'Admin') {
+      if (typeof req.body.isActive === 'boolean') {
+        userPayload.isActive = req.body.isActive;
+      }
+      if (typeof req.body.mustChangePassword === 'boolean') {
+        userPayload.mustChangePassword = req.body.mustChangePassword;
+      }
+    }
+
     console.log('Final user data before creation:', {
-      username: req.body.username,
-      role: req.body.role,
-      departments: req.body.departments,
-      createdBy: req.body.createdBy
+      username: userPayload.username,
+      role: userPayload.role,
+      departments: userPayload.departments,
+      createdBy: userPayload.createdBy
     });
-    
-    // Create user
-    const user = await User.create(req.body);
-    
+
+    if (userPayload.personnelId) {
+      const existingPersonnelAccount = await User.findOne({ personnelId: userPayload.personnelId });
+      if (existingPersonnelAccount) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
+    }
+
+    // Create user with explicit whitelist
+    const user = await User.create(userPayload);
+
     // Populate the created user
     const populatedUser = await User.findById(user._id)
       .populate('departments')
       .populate('activeDepartment')
       .populate('createdBy', 'username');
-    
+
     // Remove password from response
     populatedUser.password = undefined;
-    
+
     console.log(`User created successfully: ${user.username} with role: ${user.role}`);
-    
+
     res.status(201).json({
       success: true,
       data: populatedUser
     });
   } catch (err) {
     console.error('Error creating user:', err);
-    // Handle duplicate username
+    // Handle duplicate key (personnelId or username)
     if (err.code === 11000) {
+      if (err.keyPattern?.personnelId) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
       return next(new ErrorResponse('Username already exists', 400));
     }
     next(err);
@@ -146,29 +195,30 @@ exports.createUser = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
   try {
     console.log(`User update request from ${req.user.role} user: ${req.user.username} for user ID: ${req.params.id}`);
-    
+
     let user = await User.findOne({ _id: req.params.id, isDeleted: { $ne: true } }).populate('departments');
-    
+
     if (!user) {
       return next(
         new ErrorResponse(`User not found with id of ${req.params.id}`, 404)
       );
     }
-    
+
     console.log(`Found user to update: ${user.username} with role: ${user.role}`);
-    
+
+    const updateData = {};
+
     // Enhanced authorization for Admin - can edit any user
     if (req.user.role === 'Admin') {
       console.log(`Admin user - can edit any user`);
-      // Admin can edit any user without restrictions
 
-      // Validate role and department constraints if role or departments are updated
       const targetRole = req.body.role || user.role;
-      if (req.body.role) {
+      if (req.body.role !== undefined) {
         const validRoles = ['Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk', 'User'];
         if (!validRoles.includes(req.body.role)) {
           return next(new ErrorResponse('Rôle spécifié invalide', 400));
         }
+        updateData.role = req.body.role;
       }
 
       // If changing role to Director, verify only 1 exists
@@ -180,81 +230,121 @@ exports.updateUser = async (req, res, next) => {
       }
 
       if (targetRole === 'AdminTuningDesk') {
-        req.body.departments = [];
-        req.body.activeDepartment = null;
-      } else if (targetRole === 'AdminDepartment' && req.body.departments) {
-        if (!Array.isArray(req.body.departments) || req.body.departments.length === 0) {
-          return next(new ErrorResponse('Chef de département : au moins un département requis', 400));
-        }
-        if (req.body.activeDepartment) {
-          const activeId = req.body.activeDepartment.toString();
-          const deptIds = req.body.departments.map(d => d.toString());
-          if (!deptIds.includes(activeId)) {
-            return next(new ErrorResponse('activeDepartment doit être dans les départements assignés', 400));
+        updateData.departments = [];
+        updateData.activeDepartment = null;
+      } else {
+        if (req.body.departments !== undefined) {
+          if (!Array.isArray(req.body.departments)) {
+            return next(new ErrorResponse('departments doit être un tableau', 400));
           }
-        } else {
-          req.body.activeDepartment = req.body.departments[0];
+          if (targetRole === 'AdminDepartment' && req.body.departments.length === 0) {
+            return next(new ErrorResponse('Chef de département : au moins un département requis', 400));
+          }
+          updateData.departments = req.body.departments;
         }
+
+        if (req.body.activeDepartment !== undefined) {
+          if (targetRole === 'AdminDepartment' && updateData.departments) {
+            const activeId = (req.body.activeDepartment?._id || req.body.activeDepartment || '').toString();
+            const deptIds = updateData.departments.map(d => (d && d._id ? d._id.toString() : String(d)));
+            if (!activeId || !deptIds.includes(activeId)) {
+              return next(new ErrorResponse('activeDepartment doit être dans les départements assignés', 400));
+            }
+          }
+          updateData.activeDepartment = req.body.activeDepartment;
+        } else if (targetRole === 'AdminDepartment' && updateData.departments && updateData.departments.length > 0) {
+          updateData.activeDepartment = updateData.departments[0];
+        }
+      }
+
+      if (typeof req.body.mustChangePassword === 'boolean') {
+        updateData.mustChangePassword = req.body.mustChangePassword;
       }
     } else if (req.user.role === 'AdminDepartment') {
       // Verify the user belongs to the AdminDepartment's active department
       if (!req.user.activeDepartment) {
         return next(new ErrorResponse('No active department selected', 400));
       }
-      
-      const userDeptIds = user.departments.map(dept => dept._id.toString());
-      const hasAccess = userDeptIds.includes(req.user.activeDepartment._id.toString());
-      
+
+      const activeDeptId = (req.user.activeDepartment._id || req.user.activeDepartment).toString();
+      const userDeptIds = user.departments.map(dept => (dept._id || dept).toString());
+      const hasAccess = userDeptIds.includes(activeDeptId);
+
       console.log('User departments:', userDeptIds);
-      console.log('AdminDepartment active department:', req.user.activeDepartment._id.toString());
+      console.log('AdminDepartment active department:', activeDeptId);
       console.log('Has access:', hasAccess);
-      
+
       if (!hasAccess) {
         return next(
           new ErrorResponse(`Not authorized to update this user. User does not belong to your active department.`, 403)
         );
       }
-      
+
       // AdminDepartment cannot change user role
-      if (req.body.role && req.body.role !== user.role) {
+      if (req.body.role !== undefined && req.body.role !== user.role) {
         return next(
           new ErrorResponse('AdminDepartment cannot change user role', 403)
         );
       }
-      
+
       // AdminDepartment can only assign their active department
-      if (req.body.departments) {
-        const requestedDepts = Array.isArray(req.body.departments) 
-          ? req.body.departments 
+      if (req.body.departments !== undefined) {
+        const requestedDepts = Array.isArray(req.body.departments)
+          ? req.body.departments
           : [req.body.departments];
-        
+
         const hasValidDepts = requestedDepts.every(
-          deptId => deptId.toString() === req.user.activeDepartment._id.toString()
+          deptId => (deptId && deptId._id ? deptId._id.toString() : String(deptId)) === activeDeptId
         );
-        
+
         if (!hasValidDepts) {
           return next(
             new ErrorResponse('Not authorized to assign departments outside your active department', 403)
           );
         }
+
+        updateData.departments = requestedDepts;
+      }
+
+      if (req.body.activeDepartment !== undefined) {
+        const reqActive = req.body.activeDepartment
+          ? (req.body.activeDepartment._id || req.body.activeDepartment).toString()
+          : null;
+        if (reqActive && reqActive !== activeDeptId) {
+          return next(
+            new ErrorResponse('Not authorized to assign activeDepartment outside your active department', 403)
+          );
+        }
+        updateData.activeDepartment = req.body.activeDepartment;
       }
     } else {
       return next(
         new ErrorResponse('Not authorized to update users', 403)
       );
     }
-    
-    // IMPORTANT: Remove password from update data - password should be updated separately
-    const updateData = { ...req.body };
-    delete updateData.password;
-    delete updateData.isDeleted;
-    delete updateData.deletedAt;
-    delete updateData.deletedBy;
-    
+
+    // Explicit whitelist for shared editable fields (never password, isDeleted, deletedAt, deletedBy, createdBy, lastSeen)
+    if (typeof req.body.username === 'string') {
+      const trimmedUsername = req.body.username.trim();
+      if (!trimmedUsername) {
+        return next(new ErrorResponse('Username cannot be empty', 400));
+      }
+      updateData.username = trimmedUsername;
+    }
+    if (req.body.personnelId !== undefined) {
+      updateData.personnelId = req.body.personnelId || null;
+    }
+    if (typeof req.body.photo === 'string' || req.body.photo === null) {
+      updateData.photo = req.body.photo;
+    }
+    if (typeof req.body.isActive === 'boolean') {
+      updateData.isActive = req.body.isActive;
+    }
+
     // Synchronisation activeDepartment si departments est mis à jour
     if (updateData.departments !== undefined) {
       const newDeptIds = Array.isArray(updateData.departments)
-        ? updateData.departments.map(d => (d && d._id ? d._id.toString() : d.toString()))
+        ? updateData.departments.map(d => (d && d._id ? d._id.toString() : String(d)))
         : [];
 
       const currentActiveId = updateData.activeDepartment !== undefined
@@ -269,19 +359,34 @@ exports.updateUser = async (req, res, next) => {
         }
       }
     }
-    
-    console.log('Update data (password and soft delete protected):', updateData);
-    
+
+    console.log('Update data (whitelisted fields only):', Object.keys(updateData));
+
+    if (updateData.personnelId) {
+      const existingPersonnelAccount = await User.findOne({
+        personnelId: updateData.personnelId,
+        _id: { $ne: user._id }
+      });
+      if (existingPersonnelAccount) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
+    }
+
     // Appliquer les modifications et sauvegarder avec user.save() pour déclencher les hooks
     Object.assign(user, updateData);
     await user.save();
-    
+
     // Recharger avec les relations peuplées
     user = await User.findById(user._id)
       .populate('departments')
       .populate('activeDepartment')
       .populate('createdBy', 'username');
-    
+
     console.log(`User updated successfully: ${user.username}`);
     
     res.status(200).json({
@@ -290,8 +395,16 @@ exports.updateUser = async (req, res, next) => {
     });
   } catch (err) {
     console.error('Error updating user:', err);
-    // Handle duplicate username
+    // Handle duplicate key (personnelId or username)
     if (err.code === 11000) {
+      if (err.keyPattern?.personnelId) {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_HAS_ACCOUNT',
+          error: 'Ce personnel possède déjà un compte utilisateur',
+          message: 'Ce personnel possède déjà un compte utilisateur'
+        });
+      }
       return next(new ErrorResponse('Username already exists', 400));
     }
     next(err);
@@ -335,10 +448,14 @@ exports.deleteUser = async (req, res, next) => {
       }
     }
     
-    user.isDeleted = true;
-    user.deletedAt = new Date();
-    user.deletedBy = req.user ? (req.user.id || req.user._id) : null;
-    await user.save();
+    const updateResult = await User.updateOne(
+      { _id: user._id, isDeleted: { $ne: true } },
+      { $set: { isDeleted: true, deletedAt: new Date(), deletedBy: req.user ? (req.user.id || req.user._id) : null } }
+    );
+
+    if (updateResult.modifiedCount !== 1) {
+      return next(new ErrorResponse('Échec de la suppression (aucune modification en base)', 500));
+    }
 
     // Dissocier la fiche Personnel liée s'il y en a une pour éviter un userId orphelin
     try {
@@ -391,10 +508,13 @@ exports.restoreUser = async (req, res, next) => {
       );
     }
 
-    user.isDeleted = false;
-    user.deletedAt = null;
-    user.deletedBy = null;
-    await user.save();
+    const updateResult = await User.updateOne(
+      { _id: user._id, isDeleted: true },
+      { $set: { isDeleted: false, deletedAt: null, deletedBy: null } }
+    );
+    if (updateResult.modifiedCount !== 1) {
+      return next(new ErrorResponse('Échec de la restauration (aucune modification en base)', 500));
+    }
 
     const populatedUser = await User.findById(user._id)
       .populate('departments')
@@ -410,6 +530,78 @@ exports.restoreUser = async (req, res, next) => {
     });
   } catch (err) {
     console.error('Error restoring user:', err);
+    next(err);
+  }
+};
+
+// @desc    Permanently delete a soft-deleted user (Hard delete)
+// @route   DELETE /api/users/:id/permanent
+// @access  Private/Admin
+exports.permanentDeleteUser = async (req, res, next) => {
+  try {
+    // Only Admin can permanently delete users
+    if (!req.user || req.user.role !== 'Admin') {
+      return next(
+        new ErrorResponse('Not authorized to permanently delete users. Only Admin can permanently delete users.', 403)
+      );
+    }
+
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new ErrorResponse(`Invalid user id: ${id}`, 400));
+    }
+
+    const currentUserId = (req.user._id || req.user.id || '').toString();
+    if (currentUserId && currentUserId === id.toString()) {
+      return next(
+        new ErrorResponse('Vous ne pouvez pas supprimer définitivement votre propre compte', 400)
+      );
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      return next(
+        new ErrorResponse(`User not found with id of ${id}`, 404)
+      );
+    }
+
+    // Isolate permanent deletion strictly to already soft-deleted users
+    if (user.isDeleted !== true) {
+      return next(
+        new ErrorResponse('Seuls les utilisateurs déjà supprimés peuvent être supprimés définitivement', 400)
+      );
+    }
+
+    // Safety guard: never permanently delete Director
+    if (user.role === 'Director') {
+      return next(
+        new ErrorResponse('Impossible de supprimer définitivement le compte Directeur', 400)
+      );
+    }
+
+    // Clean up any linked Personnel references if present
+    try {
+      await Personnel.updateMany(
+        { userId: user._id },
+        { $set: { userId: null } }
+      );
+    } catch (unlinkErr) {
+      console.warn('Erreur lors du nettoyage des références Personnel avant suppression définitive:', unlinkErr.message);
+    }
+
+    // Physically delete the user document from MongoDB
+    await User.findByIdAndDelete(user._id);
+
+    console.log(`User permanently deleted: ${user.username} (${user._id})`);
+
+    res.status(200).json({
+      success: true,
+      data: {},
+      message: 'Utilisateur supprimé définitivement avec succès'
+    });
+  } catch (err) {
+    console.error('Error permanently deleting user:', err);
     next(err);
   }
 };

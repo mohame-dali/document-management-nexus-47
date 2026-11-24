@@ -28,6 +28,16 @@ const outgoingDocumentSchema = new mongoose.Schema({
     required: false, 
     default: null 
   },
+  // ASYNC OCR FIX: Track background OCR lifecycle in MongoDB without blocking scan/save
+  ocrStatus: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'failed'],
+    default: null,
+  },
+  ocrError: {
+    type: String,
+    default: null,
+  },
   scannedDocument: { type: String, required: false, default: null },
   reference: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -78,8 +88,11 @@ const outgoingDocumentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Ensure unique combination of serialNumber and year
-outgoingDocumentSchema.index({ serialNumber: 1, year: 1 }, { unique: true });
+// Ensure unique combination of serialNumber and year for active (non-deleted) documents
+outgoingDocumentSchema.index(
+  { serialNumber: 1, year: 1 },
+  { unique: true, partialFilterExpression: { isDeleted: false } }
+);
 outgoingDocumentSchema.index({ "source.id": 1 });
 outgoingDocumentSchema.index({ createdAt: -1 });
 

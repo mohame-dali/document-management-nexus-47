@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUsers, deleteUser, deactivateUser } from '@/services/userService';
+import { getUsers, deleteUser, deactivateUser, restoreUser, permanentDeleteUser } from '@/services/userService';
 import { getDepartments } from '@/services/departmentService';
 import { 
   Table, 
@@ -20,6 +20,9 @@ import {
   ToggleLeft, 
   ToggleRight, 
   RefreshCw, 
+  RotateCcw,
+  Eye,
+  EyeOff,
   Key, 
   Users, 
   Search, 
@@ -35,10 +38,12 @@ import {
   UserCheck,
   UserX,
   MoreHorizontal,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { getPaginationItems } from '@/utils/pagination';
 import { User, Department } from '@/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -64,17 +69,22 @@ import { formatArabicDate } from '@/utils/arabicDateFormatter';
 import ChangePasswordDialog from '@/components/users/ChangePasswordDialog';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const UsersPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
+  const isAdmin = currentUser?.role === 'Admin';
   
   // Dialog states
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [userToPermanentDelete, setUserToPermanentDelete] = useState<string | null>(null);
+  const [showPermanentDeleteDialog, setShowPermanentDeleteDialog] = useState(false);
   const [passwordDialogUser, setPasswordDialogUser] = useState<User | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   // Filter & Search states with persistence
   const [searchTerm, setSearchTerm] = useState('');
@@ -96,11 +106,13 @@ const UsersPage: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const includeDeleted = isAdmin && showDeleted;
   
   // Data queries
-  const { data: users = [], isLoading, refetch } = useQuery<User[]>({
-    queryKey: ['users'],
-    queryFn: getUsers,
+  const { data: users = [], isLoading, isError, refetch } = useQuery<User[]>({
+    queryKey: ['users', includeDeleted],
+    queryFn: () => getUsers({ includeDeleted }),
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
   });
@@ -122,10 +134,64 @@ const UsersPage: React.FC = () => {
     },
     onError: (error: unknown) => {
       console.error('Error deleting user:', error);
-      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
-        ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
-        : t('users.delete.error');
+      const errData =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { data?: { message?: string; error?: string } } }).response?.data
+          : undefined;
+      const errorMsg =
+        errData?.message ||
+        errData?.error ||
+        t('users.delete.error') ||
+        'Erreur lors de la suppression';
       toast.error(errorMsg);
+      setShowDeleteDialog(false);
+      setUserToDelete(null);
+    }
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: restoreUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(t('users.restore.success', 'Utilisateur restauré avec succès'));
+    },
+    onError: (error: unknown) => {
+      console.error('Error restoring user:', error);
+      const errData =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { data?: { message?: string; error?: string } } }).response?.data
+          : undefined;
+      toast.error(
+        errData?.message ||
+          errData?.error ||
+          t('users.restore.error', "Échec de la restauration de l'utilisateur")
+      );
+    }
+  });
+
+  const permanentDeleteMutation = useMutation({
+    mutationFn: permanentDeleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(
+        t('users.permanentDelete.success', 'Utilisateur supprimé définitivement avec succès')
+      );
+      setShowPermanentDeleteDialog(false);
+      setUserToPermanentDelete(null);
+    },
+    onError: (error: unknown) => {
+      console.error('Error permanently deleting user:', error);
+      const errData =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { data?: { message?: string; error?: string } } }).response?.data
+          : undefined;
+      toast.error(
+        errData?.message ||
+          errData?.error ||
+          t('users.permanentDelete.error', 'Erreur lors de la suppression définitive')
+      );
+      setShowPermanentDeleteDialog(false);
+      setUserToPermanentDelete(null);
     }
   });
 
@@ -153,6 +219,17 @@ const UsersPage: React.FC = () => {
   const handleDeleteConfirm = () => {
     if (userToDelete) {
       deleteMutation.mutate(userToDelete);
+    }
+  };
+
+  const handlePermanentDeleteClick = (id: string) => {
+    setUserToPermanentDelete(id);
+    setShowPermanentDeleteDialog(true);
+  };
+
+  const handlePermanentDeleteConfirm = () => {
+    if (userToPermanentDelete) {
+      permanentDeleteMutation.mutate(userToPermanentDelete);
     }
   };
 
@@ -184,12 +261,13 @@ const UsersPage: React.FC = () => {
     return `${baseUrl}${cleanPath}`;
   };
 
-  // Metrics summary
+  // Metrics summary (compute on non-deleted accounts)
   const metrics = useMemo(() => {
-    const total = users.length;
-    const active = users.filter(u => u.isActive).length;
+    const activeAccounts = users.filter(u => !u.isDeleted);
+    const total = activeAccounts.length;
+    const active = activeAccounts.filter(u => u.isActive).length;
     const inactive = total - active;
-    const admins = users.filter(u => u.role === 'Admin' || u.role === 'Director').length;
+    const admins = activeAccounts.filter(u => u.role === 'Admin' || u.role === 'Director').length;
     return { total, active, inactive, admins };
   }, [users]);
 
@@ -270,7 +348,7 @@ const UsersPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8" dir="rtl">
+      <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8">
         <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
           <TableSkeleton columns={7} rows={8} />
         </div>
@@ -279,7 +357,7 @@ const UsersPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
         <div>
@@ -318,6 +396,25 @@ const UsersPage: React.FC = () => {
         </div>
       </div>
 
+      {isError ? (
+        <EmptyState
+          icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+          title={t('users.error.title')}
+          description={t('users.error.description')}
+          className="border-red-200 bg-red-50/40"
+          action={
+            <Button
+              type="button"
+              onClick={() => refetch()}
+              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>{t('common.retry')}</span>
+            </Button>
+          }
+        />
+      ) : (
+        <>
       {/* Metric Summary Indicators (Calm AdminLTE Cards, no gradients) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
@@ -364,22 +461,44 @@ const UsersPage: React.FC = () => {
 
       {/* 2. Filters & Search Section */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-base font-bold text-[#1a202c]">
             <Filter className="h-5 w-5 text-[#2c5282]" />
             <span>{t('users.filters.title')}</span>
           </div>
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetFilters}
-              className="h-11 px-3 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
-            >
-              <X className="h-4 w-4" />
-              <span>{t('users.filters.reset')}</span>
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && (
+              <Button
+                type="button"
+                variant={showDeleted ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setShowDeleted(prev => !prev);
+                  setCurrentPage(1);
+                }}
+                aria-pressed={showDeleted}
+                className={`h-11 px-3.5 text-sm font-semibold rounded flex items-center gap-2 transition-colors ${
+                  showDeleted
+                    ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+                    : 'border-[#cbd5e1] text-[#2d3748] hover:bg-slate-50'
+                }`}
+              >
+                {showDeleted ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <span>{t('users.filters.showDeleted', 'Afficher les utilisateurs supprimés')}</span>
+              </Button>
+            )}
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetFilters}
+                className="h-11 px-3 text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
+              >
+                <X className="h-4 w-4" />
+                <span>{t('users.filters.reset')}</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -471,61 +590,81 @@ const UsersPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] w-16">{t('users.table.photo')}</TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('username')}
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-[#2d3748] w-16">{t('users.table.photo')}</TableHead>
+                <TableHead
+                  aria-sort={sortField === 'username' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[160px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('username')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.username')}</span>
                     {sortField === 'username' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'username' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'username' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('role')}
+                <TableHead
+                  aria-sort={sortField === 'role' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[130px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('role')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.role')}</span>
                     {sortField === 'role' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'role' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'role' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('departments')}
+                <TableHead
+                  aria-sort={sortField === 'departments' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[180px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('departments')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.departments')}</span>
                     {sortField === 'departments' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'departments' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'departments' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('createdAt')}
+                <TableHead
+                  aria-sort={sortField === 'createdAt' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[140px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('createdAt')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.createdAt')}</span>
                     {sortField === 'createdAt' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'createdAt' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'createdAt' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
-                <TableHead 
-                  className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[120px] cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
-                  onClick={() => handleSort('isActive')}
+                <TableHead
+                  aria-sort={sortField === 'isActive' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[120px]"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('isActive')}
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                  >
                     <span>{t('users.table.status')}</span>
                     {sortField === 'isActive' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
                     {sortField === 'isActive' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
                     {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
-                  </div>
+                  </button>
                 </TableHead>
                 <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px]">{t('users.table.actions')}</TableHead>
               </TableRow>
@@ -533,28 +672,35 @@ const UsersPage: React.FC = () => {
             <TableBody>
               {paginatedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-40 text-center text-base text-gray-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Users className="h-8 w-8 text-gray-400" />
-                      <span>{t('users.filters.noResults')}</span>
-                      {hasActiveFilters && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={resetFilters}
-                          className="mt-2 h-11 border-[#cbd5e1] text-sm"
-                        >
-                          {t('users.filters.reset')}
-                        </Button>
-                      )}
-                    </div>
+                  <TableCell colSpan={7} className="p-6">
+                    <EmptyState
+                      icon={<Users className="h-6 w-6 text-[#2c5282]" />}
+                      title={t('users.filters.noResults')}
+                      className="border-0 bg-transparent py-4"
+                      action={
+                        hasActiveFilters ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={resetFilters}
+                            className="h-11 border-[#cbd5e1] text-sm"
+                          >
+                            {t('users.filters.reset')}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
                 paginatedUsers.map((user) => (
                   <TableRow 
                     key={user._id} 
-                    className="hover:bg-[#f7fafc] transition-colors border-b border-[#e2e8f0]"
+                    className={
+                      user.isDeleted
+                        ? 'bg-red-50/80 hover:bg-red-100/70 transition-colors border-b border-red-200 opacity-85'
+                        : 'hover:bg-[#f7fafc] transition-colors border-b border-[#e2e8f0]'
+                    }
                   >
                     {/* Photo */}
                     <TableCell className="text-right py-3 px-4 align-middle text-sm">
@@ -629,86 +775,138 @@ const UsersPage: React.FC = () => {
 
                     {/* Status */}
                     <TableCell className="text-right py-3 px-4 align-middle text-sm">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        user.isActive 
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
-                          : 'bg-red-50 text-red-800 border border-red-200'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
-                        <span>{user.isActive ? t('users.status.active') : t('users.status.inactive')}</span>
-                      </span>
+                      {user.isDeleted ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                          <span>{t('users.status.deleted', 'Supprimé')}</span>
+                        </span>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                          user.isActive 
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                            : 'bg-red-50 text-red-800 border border-red-200'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
+                          <span>{user.isActive ? t('users.status.active') : t('users.status.inactive')}</span>
+                        </span>
+                      )}
                     </TableCell>
 
                     {/* Actions */}
                     <TableCell className="py-3 px-4 align-middle text-sm">
                       <div className="flex items-center justify-center gap-1.5">
-                        {/* Edit & Password options */}
-                        {canEditUser(user) && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                        {user.isDeleted ? (
+                          isAdmin && (
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => restoreMutation.mutate(user._id)}
+                                disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
+                                aria-label={t('users.restore.button', 'Restaurer')}
+                                title={t('users.restore.button', 'Restaurer')}
+                                className="h-11 min-h-[44px] px-3.5 border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:border-emerald-400 rounded font-semibold inline-flex items-center gap-1.5"
+                              >
+                                {restoreMutation.isPending && restoreMutation.variables === user._id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-4 w-4" />
+                                )}
+                                <span>{t('users.restore.button', 'Restaurer')}</span>
+                              </Button>
+                              {currentUser?._id !== user._id && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePermanentDeleteClick(user._id)}
+                                  disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
+                                  aria-label={t('users.permanentDelete.button', 'حذف نهائي')}
+                                  title={t('users.permanentDelete.button', 'حذف نهائي')}
+                                  className="h-11 min-h-[44px] px-3.5 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-400 rounded font-semibold inline-flex items-center gap-1.5"
+                                >
+                                  {permanentDeleteMutation.isPending && userToPermanentDelete === user._id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                  )}
+                                  <span>{t('users.permanentDelete.button', 'حذف نهائي')}</span>
+                                </Button>
+                              )}
+                            </div>
+                          )
+                        ) : (
+                          <>
+                            {/* Edit & Password options */}
+                            {canEditUser(user) && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="outline" 
+                                    size="icon"
+                                    aria-label={t('users.menu.editOptions')}
+                                    className="h-11 w-11 min-w-[44px] min-h-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
+                                    title={t('users.menu.editOptions')}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48 text-start">
+                                  <DropdownMenuItem 
+                                    onClick={() => navigate(`/dashboard/users/edit/${user._id}`)}
+                                    className="text-sm py-2 cursor-pointer flex items-center gap-2"
+                                  >
+                                    <Edit className="h-4 w-4 text-[#2c5282]" />
+                                    <span>{t('users.menu.edit')}</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => handlePasswordChange(user)}
+                                    className="text-sm py-2 cursor-pointer flex items-center gap-2 text-amber-700"
+                                  >
+                                    <Key className="h-4 w-4" />
+                                    <span>{t('users.menu.changePassword')}</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                            
+                            {/* Toggle active status */}
+                            {isAdmin && (
                               <Button 
                                 variant="outline" 
                                 size="icon"
-                                aria-label={t('users.menu.editOptions')}
-                                className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] hover:bg-gray-100 text-gray-700 rounded"
-                                title={t('users.menu.editOptions')}
+                                onClick={() => handleToggleActivation(user)}
+                                disabled={toggleActivationMutation.isPending}
+                                aria-label={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
+                                className={`h-11 w-11 min-w-[44px] min-h-[44px] border-[#cbd5e1] rounded transition-colors ${
+                                  user.isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
+                                }`}
+                                title={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
                               >
-                                <Edit className="h-4 w-4" />
+                                {user.isActive ? 
+                                  <ToggleRight className="h-5 w-5" /> : 
+                                  <ToggleLeft className="h-5 w-5" />
+                                }
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 text-right" dir="rtl">
-                              <DropdownMenuItem 
-                                onClick={() => navigate(`/dashboard/users/edit/${user._id}`)}
-                                className="text-sm py-2 cursor-pointer flex items-center gap-2"
+                            )}
+                            
+                            {/* Delete user */}
+                            {isAdmin && currentUser._id !== user._id && (
+                              <Button 
+                                variant="outline" 
+                                size="icon"
+                                onClick={() => handleDeleteClick(user._id)}
+                                disabled={deleteMutation.isPending}
+                                aria-label={t('users.delete.userLabel')}
+                                className="h-11 w-11 min-w-[44px] min-h-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
+                                title={t('users.delete.userLabel')}
                               >
-                                <Edit className="h-4 w-4 text-[#2c5282]" />
-                                <span>{t('users.menu.edit')}</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                onClick={() => handlePasswordChange(user)}
-                                className="text-sm py-2 cursor-pointer flex items-center gap-2 text-amber-700"
-                              >
-                                <Key className="h-4 w-4" />
-                                <span>{t('users.menu.changePassword')}</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                        
-                        {/* Toggle active status */}
-                        {currentUser?.role === 'Admin' && (
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => handleToggleActivation(user)}
-                            disabled={toggleActivationMutation.isPending}
-                            aria-label={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
-                            className={`h-9 w-9 min-w-[36px] sm:min-w-[44px] border-[#cbd5e1] rounded transition-colors ${
-                              user.isActive ? 'hover:bg-amber-50 text-emerald-600' : 'hover:bg-emerald-50 text-red-500'
-                            }`}
-                            title={user.isActive ? t('users.status.deactivate') : t('users.status.activate')}
-                          >
-                            {user.isActive ? 
-                              <ToggleRight className="h-5 w-5" /> : 
-                              <ToggleLeft className="h-5 w-5" />
-                            }
-                          </Button>
-                        )}
-                        
-                        {/* Delete user */}
-                        {currentUser?.role === 'Admin' && currentUser._id !== user._id && (
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => handleDeleteClick(user._id)}
-                            disabled={deleteMutation.isPending}
-                            aria-label={t('users.delete.userLabel')}
-                            className="h-9 w-9 min-w-[36px] sm:min-w-[44px] border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded"
-                            title={t('users.delete.userLabel')}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </>
                         )}
                       </div>
                     </TableCell>
@@ -731,55 +929,71 @@ const UsersPage: React.FC = () => {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center gap-1.5">
+              <nav aria-label={t('common.pagination')} className="flex items-center gap-1.5 flex-wrap justify-center">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronLeft className="h-4 w-4 me-1 rtl-mirror" />
                   <span>{t('common.previous')}</span>
                 </Button>
 
-                <div className="flex items-center gap-1 px-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`h-11 w-11 text-base font-bold rounded transition-colors ${
-                        currentPage === pageNum
-                          ? 'bg-[#2c5282] text-white'
-                          : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1 px-1">
+                  {getPaginationItems(currentPage, totalPages).map((item, idx) =>
+                    item === 'ellipsis' ? (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        aria-hidden="true"
+                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-gray-500 font-bold select-none"
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setCurrentPage(item)}
+                        aria-current={currentPage === item ? 'page' : undefined}
+                        aria-label={t('common.pageNumber', { page: item })}
+                        className={`h-11 min-w-[44px] px-2 text-base font-bold rounded transition-colors ${
+                          currentPage === item
+                            ? 'bg-[#2c5282] text-white'
+                            : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="h-11 px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
                 >
                   <span>{t('common.next')}</span>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <ChevronRight className="h-4 w-4 ms-1 rtl-mirror" />
                 </Button>
-              </div>
+              </nav>
             )}
           </div>
         )}
       </div>
+        </>
+      )}
 
       {/* Delete Confirmation Modal (Minimum 700px on desktop, 95% on mobile, padding >= 1.5rem) */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent 
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-sm" 
-          dir="rtl"
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-sm"
         >
           <AlertDialogHeader className="text-right pb-4 border-b border-[#e2e8f0]">
             <AlertDialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-red-600">
@@ -808,6 +1022,56 @@ const UsersPage: React.FC = () => {
               )}
             </AlertDialogAction>
             <AlertDialogCancel 
+              className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 mt-0"
+            >
+              {t('common.cancel')}
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Permanent Delete Confirmation Modal */}
+      <AlertDialog
+        open={showPermanentDeleteDialog}
+        onOpenChange={(open) => {
+          setShowPermanentDeleteDialog(open);
+          if (!open) setUserToPermanentDelete(null);
+        }}
+      >
+        <AlertDialogContent
+          className="w-[95vw] sm:w-[90vw] sm:max-w-[700px] p-6 sm:p-7 bg-white border border-red-200 rounded shadow-sm"
+        >
+          <AlertDialogHeader className="text-right pb-4 border-b border-[#e2e8f0]">
+            <AlertDialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-red-600">
+              <div className="w-11 h-11 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <span>{t('users.permanentDelete.confirmTitle', 'Supprimer définitivement')}</span>
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-gray-700 text-right mt-3 leading-relaxed font-medium">
+              {t(
+                'users.permanentDelete.confirmDescription',
+                '⚠️ Attention : Cette action est irréversible. Toutes les données liées à cet utilisateur seront définitivement perdues. Voulez-vous continuer ?'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="pt-4 border-t border-[#e2e8f0] flex-row-reverse justify-start gap-3">
+            <AlertDialogAction
+              onClick={handlePermanentDeleteConfirm}
+              disabled={permanentDeleteMutation.isPending}
+              className="h-11 px-7 bg-red-600 hover:bg-red-700 text-white text-base font-semibold rounded shadow-none inline-flex items-center gap-2"
+            >
+              {permanentDeleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{t('users.delete.deleting', 'Suppression en cours...')}</span>
+                </>
+              ) : (
+                <span>{t('users.permanentDelete.confirmButton', 'حذف نهائي')}</span>
+              )}
+            </AlertDialogAction>
+            <AlertDialogCancel
+              disabled={permanentDeleteMutation.isPending}
               className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700 mt-0"
             >
               {t('common.cancel')}

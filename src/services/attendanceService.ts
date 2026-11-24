@@ -1,18 +1,26 @@
 import axios from 'axios';
 
 export interface AttendanceEntryDetails {
+  serviceNom?: string;
+  missionLieu?: string;
+  missionObjet?: string;
+  formationIntitule?: string;
+  formationOrganisme?: string;
+  formationDuree?: string;
+  formationDocumentId?: string;
+  commentaire?: string;
+  // Alias hérités en lecture pour rétrocompatibilité
   nomService?: string;
   lieuMission?: string;
   objetMission?: string;
   intituleFormation?: string;
   organismeFormation?: string;
   dureeFormation?: string;
-  formationDocumentId?: string;
-  commentaire?: string;
 }
 
 export interface AttendanceEntry {
   personnelId: string;
+  date?: string;
   statut: 'present' | 'absent';
   motif?: string | null;
   leaveReasonId?: string | null;
@@ -198,13 +206,17 @@ export const getDailyReport = async (
 export const getMonthlyReport = async (
   year: number | string,
   month: number | string,
-  departmentId?: string
+  departmentId?: string,
+  page?: number,
+  limit?: number
 ): Promise<unknown> => {
   try {
     const params: Record<string, string | number> = { year, month };
     if (departmentId && departmentId !== 'all') {
       params.departmentId = departmentId;
     }
+    if (page !== undefined) params.page = page;
+    if (limit !== undefined) params.limit = limit;
     const response = await api.get('/report/monthly', { params });
     return response.data;
   } catch (error) {
@@ -216,13 +228,17 @@ export const getMonthlyReport = async (
 // 7. Obtenir le rapport annuel
 export const getYearlyReport = async (
   year: number | string,
-  departmentId?: string
+  departmentId?: string,
+  page?: number,
+  limit?: number
 ): Promise<unknown> => {
   try {
     const params: Record<string, string | number> = { year };
     if (departmentId && departmentId !== 'all') {
       params.departmentId = departmentId;
     }
+    if (page !== undefined) params.page = page;
+    if (limit !== undefined) params.limit = limit;
     const response = await api.get('/report/yearly', { params });
     return response.data;
   } catch (error) {

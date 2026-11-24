@@ -38,6 +38,8 @@ const CreateIncomingDocument = () => {
     statusDesc: t('documents.createIncoming.statusDesc'),
     department: t('documents.createIncoming.department'),
     departmentDesc: t('documents.createIncoming.departmentDesc'),
+    assignedTo: t('documents.forms.assignedDepartments'),
+    assignedToDesc: t('documents.forms.assignedDepartmentsDesc'),
     priority: t('documents.createIncoming.priority'),
     priorityDesc: t('documents.createIncoming.priorityDesc'),
     description: t('documents.createIncoming.description'),

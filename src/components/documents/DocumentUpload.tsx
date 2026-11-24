@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Upload, X } from 'lucide-react';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentUploadProps {
   onFileSelect: (files: File[]) => void;
@@ -20,6 +21,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png',
   fieldName = 'document'
 }) => {
+  const { dir } = useDirection();
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -84,7 +86,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   };
 
   return (
-    <div className="space-y-4" dir="rtl">
+    <div className="space-y-4" dir={dir}>
       <div
         className={`border-2 border-dashed rounded p-6 text-center ${
           isDragging ? 'border-primary bg-primary/10' : 'border-gray-300'
@@ -128,7 +130,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
               >
                 <div className="flex items-center">
                   {getFileIcon(file.name)}
-                  <span className="mr-2 text-sm truncate max-w-xs">{file.name}</span>
+                  <span className="ms-2 text-sm truncate max-w-xs">{file.name}</span>
                 </div>
                 <Button 
                   variant="ghost" 
@@ -158,7 +160,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                 >
                   <div className="flex items-center">
                     {getFileIcon(fileName)}
-                    <span className="mr-2 text-sm truncate max-w-xs">{fileName}</span>
+                    <span className="ms-2 text-sm truncate max-w-xs">{fileName}</span>
                   </div>
                   {onRemoveExisting && (
                     <Button 

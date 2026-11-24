@@ -50,6 +50,7 @@ import {
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 import { 
   getOutgoingDocument, 
   getIncomingDocument, 
@@ -73,6 +74,7 @@ const ViewOutgoingDocument: React.FC = () => {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
   const { t } = useLanguage();
+  const { dir } = useDirection();
   const listSeparator = t('documents.viewOutgoing.listSeparator');
   
   // Section refs for smooth navigation
@@ -112,10 +114,13 @@ const ViewOutgoingDocument: React.FC = () => {
     enabled: Boolean(id),
   });
 
-  // 2. Fetch reference incoming document (if linked)
-  const referenceId = typeof document?.reference === 'object' 
-    ? (document?.reference as { _id?: string })?._id 
-    : document?.reference;
+  // 2. Fetch reference incoming document (if linked and not soft-deleted)
+  const populatedReference =
+    typeof document?.reference === 'object' && document?.reference ? document.reference : null;
+  const isReferenceDeleted = Boolean(populatedReference?.isDeleted);
+  const referenceId = !isReferenceDeleted
+    ? (populatedReference ? populatedReference._id : (document?.reference as string | undefined))
+    : undefined;
 
   const { 
     data: referenceDocument, 
@@ -123,7 +128,8 @@ const ViewOutgoingDocument: React.FC = () => {
   } = useQuery<IncomingDocument>({
     queryKey: ['incomingDocument', referenceId],
     queryFn: () => getIncomingDocument(referenceId as string),
-    enabled: Boolean(referenceId),
+    enabled: Boolean(referenceId) && !isReferenceDeleted,
+    retry: false,
   });
 
   // 3. Fetch audit/timeline history
@@ -271,9 +277,9 @@ const ViewOutgoingDocument: React.FC = () => {
       {/* Fil d'Ariane (Breadcrumbs) */}
       <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500 print:hidden">
         <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">{t('documents.viewOutgoing.breadcrumb.home')}</Link>
-        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <ChevronLeft className="w-4 h-4 text-gray-400 rtl:rotate-0 ltr:rotate-180" />
         <Link to="/dashboard/outgoing-documents" className="hover:text-[#2c5282] transition-colors">{t('documents.viewOutgoing.breadcrumb.outgoingDocuments')}</Link>
-        <ChevronLeft className="w-4 h-4 text-gray-400" />
+        <ChevronLeft className="w-4 h-4 text-gray-400 rtl:rotate-0 ltr:rotate-180" />
         <span className="text-[#1a202c] font-medium truncate max-w-md">
           {document.subject || t('documents.viewOutgoing.fallback.untitled', { serialNumber: document.serialNumber })}
         </span>
@@ -289,10 +295,10 @@ const ViewOutgoingDocument: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-4 text-sm mb-6 border p-4">
           <div>
-            <span className="font-bold">{t('documents.viewOutgoing.print.outgoingNumber')}</span> #{document.serialNumber} / {document.year}
+            <span className="font-bold">{t('documents.viewOutgoing.print.outgoingNumber')}</span> <bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi>
           </div>
           <div>
-            <span className="font-bold">{t('documents.viewOutgoing.print.issueDate')}</span> {formatArabicDate(document.issueDate)}
+            <span className="font-bold">{t('documents.viewOutgoing.print.issueDate')}</span> <bdi dir="ltr">{formatArabicDate(document.issueDate)}</bdi>
           </div>
           <div>
             <span className="font-bold">{t('documents.viewOutgoing.print.issuingService')}</span> {sourceName}
@@ -313,7 +319,7 @@ const ViewOutgoingDocument: React.FC = () => {
           )}
           {referenceDocument && (
             <div className="col-span-2">
-              <span className="font-bold">{t('documents.viewOutgoing.print.replyToIncoming')}</span> #{referenceDocument.serialNumber} / {referenceDocument.year} - {referenceDocument.subject}
+              <span className="font-bold">{t('documents.viewOutgoing.print.replyToIncoming')}</span> <bdi dir="ltr">#{referenceDocument.serialNumber} / {referenceDocument.year}</bdi> - {referenceDocument.subject}
             </div>
           )}
         </div>
@@ -341,7 +347,7 @@ const ViewOutgoingDocument: React.FC = () => {
             onClick={() => navigate('/dashboard/outgoing-documents')}
             className="h-10 px-4 text-base font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200"
           >
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
             <span>{t('documents.viewOutgoing.button.backToList')}</span>
           </Button>
 
@@ -427,7 +433,12 @@ const ViewOutgoingDocument: React.FC = () => {
             )}
 
             {/* Reference Status Badge */}
-            {referenceDocument ? (
+            {isReferenceDeleted && populatedReference ? (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-amber-50 text-amber-900 border border-amber-300">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                {t('documents.viewOutgoing.badge.referenceInTrash', { serialNumber: populatedReference.serialNumber, year: populatedReference.year })}
+              </span>
+            ) : referenceDocument ? (
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 {t('documents.viewOutgoing.badge.replyToIncoming', { serialNumber: referenceDocument.serialNumber, year: referenceDocument.year })}
@@ -449,7 +460,7 @@ const ViewOutgoingDocument: React.FC = () => {
           {/* Issue Date Pill */}
           <div className="inline-flex items-center gap-2 text-base font-semibold text-[#2c5282] bg-[#f8fafc] px-3.5 py-1.5 rounded border border-[#e2e8f0]">
             <Calendar className="h-4 w-4 text-[#2c5282]" />
-            <span>{t('documents.viewOutgoing.badge.issueDate')} {formatArabicDate(document.issueDate)}</span>
+            <span>{t('documents.viewOutgoing.badge.issueDate')} <bdi dir="ltr">{formatArabicDate(document.issueDate)}</bdi></span>
           </div>
         </div>
 
@@ -531,7 +542,7 @@ const ViewOutgoingDocument: React.FC = () => {
             <div className="min-w-0">
               <span className="text-xs text-[#5f6b7d] font-medium block">{t('documents.viewOutgoing.metric.actualIssueDate')}</span>
               <span className="text-base font-bold text-[#1a202c] block">
-                {formatArabicDate(document.issueDate)}
+                <bdi dir="ltr">{formatArabicDate(document.issueDate)}</bdi>
               </span>
             </div>
           </div>
@@ -585,14 +596,14 @@ const ViewOutgoingDocument: React.FC = () => {
               <div>
                 <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">رقم القيد الصادر:</span>
                 <span className="text-base font-bold text-[#2c5282]">
-                  #{document.serialNumber} لسنة {document.year}
+                  <bdi dir="ltr">#{document.serialNumber}</bdi> لسنة <bdi dir="ltr">{document.year}</bdi>
                 </span>
               </div>
 
               <div>
                 <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">تاريخ الإصدار / الإرسال:</span>
                 <span className="text-base font-medium text-[#1a202c]">
-                  {formatArabicDate(document.issueDate)}
+                  <bdi dir="ltr">{formatArabicDate(document.issueDate)}</bdi>
                 </span>
               </div>
 
@@ -606,7 +617,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <div>
                 <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">تاريخ الإنشاء والتسجيل بالمنظومة:</span>
                 <span className="text-base font-medium text-[#1a202c]">
-                  {formatArabicDateTime(document.createdAt)}
+                  <bdi dir="ltr">{formatArabicDateTime(document.createdAt)}</bdi>
                 </span>
               </div>
 
@@ -615,7 +626,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center justify-between">
                   <span className="text-base font-bold text-[#1a202c]">{sourceName}</span>
                   {sourceId && (
-                    <span className="text-xs text-[#5f6b7d]">معرّف المصلحة: {String(sourceId)}</span>
+                    <span className="text-xs text-[#5f6b7d]">معرّف المصلحة: <bdi dir="ltr">{String(sourceId)}</bdi></span>
                   )}
                 </div>
               </div>
@@ -642,7 +653,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     الجهات الموجه إليها (المستلمون الأساسيون):
                   </span>
                   <span className="text-xs text-[#5f6b7d] font-semibold">
-                    {assignedCount} جهة
+                    <bdi dir="ltr">{assignedCount}</bdi> جهة
                   </span>
                 </div>
 
@@ -675,7 +686,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     نسخ للإعلام والإطلاع (Pour Information):
                   </span>
                   <span className="text-xs text-[#5f6b7d] font-semibold">
-                    {pourInfoCount} جهة
+                    <bdi dir="ltr">{pourInfoCount}</bdi> جهة
                   </span>
                 </div>
 
@@ -746,14 +757,14 @@ const ViewOutgoingDocument: React.FC = () => {
                   value={ocrSearchQuery}
                   onChange={(e) => setOcrSearchQuery(e.target.value)}
                   placeholder="بحث داخل النص المستخرج..."
-                  className="w-full h-10 px-3 pr-9 text-sm border border-[#cbd5e1] focus:border-[#2c5282] rounded bg-[#f8fafc] text-[#1a202c] outline-none"
+                  className="w-full h-10 px-3 ps-9 text-sm border border-[#cbd5e1] focus:border-[#2c5282] rounded bg-[#f8fafc] text-[#1a202c] outline-none"
                 />
-                <FileSearch className="h-4 w-4 text-[#718096] absolute top-3 right-3" />
+                <FileSearch className="h-4 w-4 text-[#718096] absolute top-3 start-3" />
                 {ocrSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setOcrSearchQuery('')}
-                    className="text-xs text-[#5f6b7d] hover:text-[#1a202c] absolute top-2.5 left-3 font-semibold"
+                    className="text-xs text-[#5f6b7d] hover:text-[#1a202c] absolute top-2.5 end-3 font-semibold"
                   >
                     مسح
                   </button>
@@ -767,8 +778,8 @@ const ViewOutgoingDocument: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between text-xs text-[#5f6b7d] pt-1">
-                <span>عدد الكلمات التقريبي: {document.ocrText.trim().split(/\s+/).length} كلمة</span>
-                <span>الحروف: {document.ocrText.length} حرف</span>
+                <span>عدد الكلمات التقريبي: <bdi dir="ltr">{document.ocrText.trim().split(/\s+/).length}</bdi> كلمة</span>
+                <span>الحروف: <bdi dir="ltr">{document.ocrText.length}</bdi> حرف</span>
               </div>
             </div>
           )}
@@ -794,20 +805,53 @@ const ViewOutgoingDocument: React.FC = () => {
                 <FileInput className="h-5 w-5 text-[#2c5282]" />
                 <h3 className="text-lg font-bold text-[#1a202c]">الوثيقة الواردة المرجعية</h3>
               </div>
-              {referenceDocument && (
+              {isReferenceDeleted ? (
+                <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
+                  {t('documents.viewOutgoing.referenceCard.inTrashBadge')}
+                </span>
+              ) : referenceDocument && (
                 <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   مرتبط
                 </span>
               )}
             </div>
 
-            {referenceDocument ? (
+            {isReferenceDeleted && populatedReference ? (
+              <div className="space-y-3">
+                <div className="p-3.5 bg-amber-50/50 border border-amber-300 rounded space-y-2">
+                  <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                    <span>{t('documents.viewOutgoing.referenceCard.inTrashTitle')}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-[#5f6b7d] font-semibold">رقم القيد الوارد:</span>
+                    <span className="text-sm font-bold text-[#1a202c]">
+                      <bdi dir="ltr">#{populatedReference.serialNumber} / {populatedReference.year}</bdi>
+                    </span>
+                  </div>
+
+                  {populatedReference.subject && (
+                    <div>
+                      <span className="text-xs text-[#5f6b7d] font-semibold block mb-0.5">موضوع الوارد:</span>
+                      <p className="text-sm font-bold text-[#1a202c] line-clamp-2">
+                        {populatedReference.subject}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-amber-800 leading-relaxed pt-1 border-t border-amber-200">
+                    {t('documents.viewOutgoing.referenceCard.inTrashMessage')}
+                  </p>
+                </div>
+              </div>
+            ) : referenceDocument ? (
               <div className="space-y-3">
                 <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-[#5f6b7d] font-semibold">رقم القيد الوارد:</span>
                     <span className="text-sm font-bold text-[#2c5282]">
-                      #{referenceDocument.serialNumber} / {referenceDocument.year}
+                      <bdi dir="ltr">#{referenceDocument.serialNumber} / {referenceDocument.year}</bdi>
                     </span>
                   </div>
 
@@ -820,7 +864,7 @@ const ViewOutgoingDocument: React.FC = () => {
 
                   <div className="flex items-center justify-between text-xs text-[#5f6b7d] pt-1 border-t border-[#e2e8f0]">
                     <span>تاريخ الوصول:</span>
-                    <span className="font-semibold text-[#1a202c]">{formatArabicDate(referenceDocument.arrivalDate)}</span>
+                    <span className="font-semibold text-[#1a202c]"><bdi dir="ltr">{formatArabicDate(referenceDocument.arrivalDate)}</bdi></span>
                   </div>
                 </div>
 
@@ -890,7 +934,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <div>
                   <span className="font-semibold text-[#1a202c] block">تسجيل الإصدار:</span>
-                  <span>{formatArabicDate(document.issueDate)}</span>
+                  <span><bdi dir="ltr">{formatArabicDate(document.issueDate)}</bdi></span>
                 </div>
               </li>
 
@@ -898,7 +942,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${assignedCount > 0 ? 'text-emerald-600' : 'text-[#5f6b7d]'}`} />
                 <div>
                   <span className="font-semibold text-[#1a202c] block">تحديد الموجه إليهم:</span>
-                  <span>{assignedCount > 0 ? `${assignedCount} جهة` : 'غير محدد'}</span>
+                  <span>{assignedCount > 0 ? <><bdi dir="ltr">{assignedCount}</bdi> جهة</> : 'غير محدد'}</span>
                 </div>
               </li>
 
@@ -956,7 +1000,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPreviewTab('reference')}
-                className={`h-9 px-3 text-sm font-semibold border-r border-[#cbd5e1] transition-colors duration-200 ${
+                className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] transition-colors duration-200 ${
                   previewTab === 'reference' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
                 }`}
               >
@@ -965,7 +1009,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setPreviewTab('split')}
-                className={`h-9 px-3 text-sm font-semibold border-r border-[#cbd5e1] transition-colors duration-200 ${
+                className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] transition-colors duration-200 ${
                   previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
                 }`}
               >
@@ -995,7 +1039,7 @@ const ViewOutgoingDocument: React.FC = () => {
                       onClick={handleDownloadPDF}
                       className="h-11 px-3 text-xs font-semibold text-[#2c5282] border-[#cbd5e1]"
                     >
-                      <Download className="h-3.5 w-3.5 ml-1" />
+                      <Download className="h-3.5 w-3.5 me-1" />
                       تحميل
                     </Button>
                   </div>
@@ -1010,7 +1054,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <FileInput className="h-4 w-4 text-emerald-700" />
                       <span className="text-base font-bold text-[#1a202c]">
-                        الوارد المرجعي (#{referenceDocument.serialNumber})
+                        الوارد المرجعي (<bdi dir="ltr">#{referenceDocument.serialNumber}</bdi>)
                       </span>
                     </div>
                     <Button
@@ -1036,7 +1080,7 @@ const ViewOutgoingDocument: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <FileInput className="h-4 w-4 text-emerald-700" />
                     <span className="text-base font-bold text-[#1a202c]">
-                      ملف الوثيقة الواردة المرجعية (#{referenceDocument.serialNumber}/{referenceDocument.year})
+                      ملف الوثيقة الواردة المرجعية (<bdi dir="ltr">#{referenceDocument.serialNumber}/{referenceDocument.year}</bdi>)
                     </span>
                   </div>
                   <Button
@@ -1061,7 +1105,7 @@ const ViewOutgoingDocument: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <FileOutput className="h-4 w-4 text-[#2c5282]" />
                     <span className="text-base font-bold text-[#1a202c]">
-                      ملف الوثيقة الصادرة (#{document.serialNumber}/{document.year})
+                      ملف الوثيقة الصادرة (<bdi dir="ltr">#{document.serialNumber}/{document.year}</bdi>)
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1203,9 +1247,9 @@ const ViewOutgoingDocument: React.FC = () => {
             type="button"
             variant="outline"
             onClick={() => navigate('/dashboard/outgoing-documents')}
-            className="h-11 px-5 text-base font-medium text-[#2d3748] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200 mr-auto"
+            className="h-11 px-5 text-base font-medium text-[#2d3748] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200 ms-auto"
           >
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
             <span>العودة إلى قائمة الوثائق</span>
           </Button>
         </div>
@@ -1216,6 +1260,7 @@ const ViewOutgoingDocument: React.FC = () => {
         <PersonnelAssociatedToDocument
           documentType="OutgoingDocument"
           documentId={document._id}
+          document={document}
         />
       )}
 
@@ -1239,17 +1284,17 @@ const ViewOutgoingDocument: React.FC = () => {
 
         {/* Timeline Content */}
         {auditTimeline.length > 0 ? (
-          <div className="relative border-r border-[#cbd5e1] pr-6 mr-3 space-y-6">
+          <div className="relative border-s border-[#cbd5e1] ps-6 ms-3 space-y-6">
             {auditTimeline.map((item, index) => (
               <div key={item._id || index} className="relative group">
-                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
                 <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="text-base font-bold text-[#1a202c]">
                       {item.action || 'إجراء إداري'}
                     </span>
                     <span className="text-xs text-[#5f6b7d] font-medium">
-                      {formatArabicDateTime(item.createdAt)}
+                      <bdi dir="ltr">{formatArabicDateTime(item.createdAt)}</bdi>
                     </span>
                   </div>
                   <p className="text-sm text-[#4a5568]">
@@ -1261,21 +1306,21 @@ const ViewOutgoingDocument: React.FC = () => {
           </div>
         ) : (
           /* Institutional Lifecycle Fallback Timeline */
-          <div className="relative border-r border-[#cbd5e1] pr-6 mr-3 space-y-6">
+          <div className="relative border-s border-[#cbd5e1] ps-6 ms-3 space-y-6">
             {/* Step 1: Document Issue / Registration */}
             <div className="relative">
-              <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+              <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
               <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="text-base font-bold text-[#1a202c]">
                     تسجيل وقيد الوثيقة في سجل الصادر
                   </span>
                   <span className="text-xs text-[#5f6b7d] font-medium">
-                    {formatArabicDateTime(document.createdAt || document.issueDate)}
+                    <bdi dir="ltr">{formatArabicDateTime(document.createdAt || document.issueDate)}</bdi>
                   </span>
                 </div>
                 <p className="text-sm text-[#4a5568]">
-                  تم تسجيل المراسلة تحت رقم صادر <span className="font-bold text-[#1a202c]">#{document.serialNumber}</span> لسنة {document.year} من المصلحة المصدرة: <span className="font-semibold text-[#1a202c]">{sourceName}</span>.
+                  تم تسجيل المراسلة تحت رقم صادر <span className="font-bold text-[#1a202c]"><bdi dir="ltr">#{document.serialNumber}</bdi></span> لسنة <bdi dir="ltr">{document.year}</bdi> من المصلحة المصدرة: <span className="font-semibold text-[#1a202c]">{sourceName}</span>.
                 </p>
               </div>
             </div>
@@ -1283,7 +1328,7 @@ const ViewOutgoingDocument: React.FC = () => {
             {/* Step 2: Destinations Assigned */}
             {document.assignedTo && document.assignedTo.length > 0 && (
               <div className="relative">
-                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
                 <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
                   <span className="text-base font-bold text-[#1a202c] block">
                     توجيه وإرسال المراسلة إلى الجهات المعنية
@@ -1301,7 +1346,7 @@ const ViewOutgoingDocument: React.FC = () => {
             {/* Step 3: Pour Info Notifications */}
             {document.pourInfo && document.pourInfo.length > 0 && (
               <div className="relative">
-                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-amber-500 border-2 border-white" />
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-amber-500 border-2 border-white" />
                 <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
                   <span className="text-base font-bold text-[#1a202c] block">
                     إرسال نسخ للإعلام والإطلاع (Pour Info)
@@ -1319,7 +1364,7 @@ const ViewOutgoingDocument: React.FC = () => {
             {/* Step 4: Folder Categorization */}
             {document.folder && (
               <div className="relative">
-                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
                 <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
                   <span className="text-base font-bold text-[#1a202c] block">
                     أرشفة وتصنيف المراسلة في مجلد
@@ -1332,16 +1377,33 @@ const ViewOutgoingDocument: React.FC = () => {
             )}
 
             {/* Step 5: Reference Incoming Document Link */}
-            {referenceDocument && (
+            {isReferenceDeleted && populatedReference ? (
               <div className="relative">
-                <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white" />
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-amber-500 border-2 border-white" />
+                <div className="bg-amber-50/40 border border-amber-200 rounded p-4 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-base font-bold text-amber-900">
+                      {t('documents.viewOutgoing.referenceCard.inTrashTitle')}
+                    </span>
+                    <span className="text-xs text-amber-800 font-medium">
+                      <bdi dir="ltr">#{populatedReference.serialNumber} / {populatedReference.year}</bdi>
+                    </span>
+                  </div>
+                  <p className="text-sm text-amber-800">
+                    {t('documents.viewOutgoing.referenceCard.inTrashMessage')}
+                  </p>
+                </div>
+              </div>
+            ) : referenceDocument && (
+              <div className="relative">
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-emerald-600 border-2 border-white" />
                 <div className="bg-emerald-50/40 border border-emerald-200 rounded p-4 space-y-1">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="text-base font-bold text-emerald-900">
                       الربط كإجابة ورد رسمي على مراسلة واردة
                     </span>
                     <span className="text-xs text-emerald-700 font-medium">
-                      وارد رقم #{referenceDocument.serialNumber} / {referenceDocument.year}
+                      وارد رقم <bdi dir="ltr">#{referenceDocument.serialNumber} / {referenceDocument.year}</bdi>
                     </span>
                   </div>
                   <p className="text-sm text-emerald-800">
@@ -1369,7 +1431,7 @@ const ViewOutgoingDocument: React.FC = () => {
 
       {/* 2. Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 rounded bg-white text-right border border-[#e2e8f0] shadow-sm" dir="rtl">
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 rounded bg-white text-start border border-[#e2e8f0] shadow-sm" dir={dir}>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -1377,8 +1439,8 @@ const ViewOutgoingDocument: React.FC = () => {
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base text-[#4a5568] leading-relaxed pt-2">
               هل أنت متأكد من رغبتك في حذف الوثيقة الصادرة رقم{' '}
-              <span className="font-bold text-[#1a202c]">#{document.serialNumber}</span> لسنة{' '}
-              <span className="font-bold text-[#1a202c]">{document.year}</span>؟ هذا الإجراء نهائي ولا يمكن التراجع عنه.
+              <span className="font-bold text-[#1a202c]"><bdi dir="ltr">#{document.serialNumber}</bdi></span> لسنة{' '}
+              <span className="font-bold text-[#1a202c]"><bdi dir="ltr">{document.year}</bdi></span>؟ هذا الإجراء نهائي ولا يمكن التراجع عنه.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2 sm:justify-start pt-4">

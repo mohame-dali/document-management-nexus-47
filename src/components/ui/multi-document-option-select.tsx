@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery } from '@tanstack/react-query';
 import { getDocumentOptions, DocumentOption } from '@/services/documentOptionsService';
 import { Loader2, X } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 
 interface MultiDocumentOptionSelectProps {
   category: 'activity' | 'source' | 'typeDocument' | 'assignedTo' | 'pourInfo';
@@ -21,9 +23,12 @@ const MultiDocumentOptionSelect: React.FC<MultiDocumentOptionSelectProps> = ({
   documentType,
   values,
   onValuesChange,
-  placeholder = "اختر الخيارات",
+  placeholder,
   disabled = false
 }) => {
+  const { t } = useLanguage();
+  const { dir } = useDirection();
+  const resolvedPlaceholder = placeholder || t('documents.options.selectMultiPlaceholder');
   const [selectedValue, setSelectedValue] = useState<string>('');
 
   const { data: options = [], isLoading } = useQuery({
@@ -44,9 +49,9 @@ const MultiDocumentOptionSelect: React.FC<MultiDocumentOptionSelectProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm text-muted-foreground">جاري تحميل الخيارات...</span>
+        <span className="text-sm text-muted-foreground">{t('documents.options.loading')}</span>
       </div>
     );
   }
@@ -57,11 +62,11 @@ const MultiDocumentOptionSelect: React.FC<MultiDocumentOptionSelectProps> = ({
 
   return (
     <div className="space-y-3">
-      <Select value={selectedValue} onValueChange={handleAddValue} disabled={disabled}>
+      <Select value={selectedValue} onValueChange={handleAddValue} disabled={disabled} dir={dir}>
         <SelectTrigger>
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={resolvedPlaceholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent dir={dir}>
           {availableOptions.map((option: DocumentOption) => (
             <SelectItem key={option._id} value={option.value}>
               {option.value}

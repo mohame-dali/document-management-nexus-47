@@ -15,6 +15,77 @@ const DEFAULT_DEDUCTIBLE_MOTIFS = [
   'conge_exceptionnel'
 ];
 
+const SYSTEM_MOTIFS = [
+  'conge_annuel',
+  'absence_injustifiee',
+  'recuperation',
+  'conge_exceptionnel',
+  'conge_maladie',
+  'conge_maternite',
+  'conge_paternite',
+  'formation',
+  'mission',
+  'service',
+  'detachement_externe',
+  'disponibilite',
+  'greve',
+  'sans_solde'
+];
+
+const toTrimmedString = (value) => (typeof value === 'string' ? value.trim() : '');
+
+/**
+ * Table de correspondance detailsMotif (entrée frontend canonique ou alias legacy -> schéma canonique Attendance)
+ */
+const normalizeDetailsMotif = (raw) => {
+  if (!raw || typeof raw !== 'object') return {};
+  return {
+    serviceNom: toTrimmedString(raw.serviceNom ?? raw.nomService),
+    missionLieu: toTrimmedString(raw.missionLieu ?? raw.lieuMission),
+    missionObjet: toTrimmedString(raw.missionObjet ?? raw.objetMission),
+    formationIntitule: toTrimmedString(raw.formationIntitule ?? raw.intituleFormation),
+    formationOrganisme: toTrimmedString(raw.formationOrganisme ?? raw.organismeFormation),
+    formationDuree: toTrimmedString(raw.formationDuree ?? raw.dureeFormation),
+    formationDocumentId: raw.formationDocumentId || null,
+    commentaire: toTrimmedString(raw.commentaire)
+  };
+};
+
+/**
+ * Enrichit detailsMotif en lecture avec les alias attendus par les vues calendrier / rapports
+ */
+const withDetailsMotifAliases = (attendance) => {
+  if (!attendance || !attendance.detailsMotif || typeof attendance.detailsMotif !== 'object') {
+    return attendance;
+  }
+  const d = attendance.detailsMotif;
+  const serviceNom = d.serviceNom ?? d.nomService ?? '';
+  const missionLieu = d.missionLieu ?? d.lieuMission ?? '';
+  const missionObjet = d.missionObjet ?? d.objetMission ?? '';
+  const formationIntitule = d.formationIntitule ?? d.intituleFormation ?? '';
+  const formationOrganisme = d.formationOrganisme ?? d.organismeFormation ?? '';
+  const formationDuree = d.formationDuree ?? d.dureeFormation ?? '';
+
+  return {
+    ...attendance,
+    detailsMotif: {
+      ...d,
+      serviceNom,
+      missionLieu,
+      missionObjet,
+      formationIntitule,
+      formationOrganisme,
+      formationDuree,
+      nomService: serviceNom,
+      lieuMission: missionLieu,
+      objetMission: missionObjet,
+      intituleFormation: formationIntitule,
+      organismeFormation: formationOrganisme,
+      dureeFormation: formationDuree
+    }
+  };
+};
+
 /**
  * Normalise une date au début de journée UTC (00:00:00.000)
  */
@@ -37,6 +108,44 @@ const getUTCDayRange = (dateInput) => {
   const start = parseDateToUTCStartOfDay(dateInput);
   const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 23, 59, 59, 999));
   return { start, end };
+};
+
+/**
+ * Construit un Set de dates ISO (YYYY-MM-DD) pour les jours fériés configurés
+ */
+const getHolidayDateStringsSet = (joursFeries = []) => {
+  const set = new Set();
+  if (!Array.isArray(joursFeries)) return set;
+  for (const jf of joursFeries) {
+    const rawDate = jf && typeof jf === 'object' && jf.date ? jf.date : jf;
+    if (!rawDate) continue;
+    try {
+      const utcStart = parseDateToUTCStartOfDay(rawDate);
+      set.add(utcStart.toISOString().split('T')[0]);
+    } catch {
+      // Ignorer les dates fériées invalides
+    }
+  }
+  return set;
+};
+
+/**
+ * Vérifie si une date tombe un jour de week-end (joursWeekend) ou un jour férié (joursFeries)
+ */
+const isWeekendOrHoliday = (dateInput, joursWeekend = [0, 6], holidayDatesSet = new Set()) => {
+  if (!dateInput) return false;
+  let utcStart;
+  try {
+    utcStart = parseDateToUTCStartOfDay(dateInput);
+  } catch {
+    return false;
+  }
+  const weekendDays = Array.isArray(joursWeekend) && joursWeekend.length > 0 ? joursWeekend : [0, 6];
+  if (weekendDays.includes(utcStart.getUTCDay())) {
+    return true;
+  }
+  const isoDay = utcStart.toISOString().split('T')[0];
+  return holidayDatesSet.has(isoDay);
 };
 
 /**
@@ -97,8 +206,8 @@ const getDailyAttendance = async (req, res, next) => {
       effectiveDepartmentId = departmentId;
     }
 
-    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
-    const personnelFilter = {};
+    // Filtre des personnels : tous les personnels actifs (non supprimés)
+    const personnelFilter = { isDeleted: { $ne: true } };
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
@@ -119,7 +228,7 @@ const getDailyAttendance = async (req, res, next) => {
 
     const attendanceMap = new Map();
     attendances.forEach(a => {
-      attendanceMap.set(a.personnelId.toString(), a);
+      attendanceMap.set(a.personnelId.toString(), withDetailsMotifAliases(a));
     });
 
     // Associer chaque personnel à sa présence du jour (ou null si non encore saisie)
@@ -155,33 +264,51 @@ const saveBatchAttendance = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'La liste des entrées est requise' });
     }
 
-    let targetDate;
-    try {
-      targetDate = parseDateToUTCStartOfDay(date);
-    } catch (err) {
-      return res.status(400).json({ success: false, message: 'Date invalide' });
+    let targetDate = null;
+    if (date) {
+      try {
+        targetDate = parseDateToUTCStartOfDay(date);
+      } catch (err) {
+        return res.status(400).json({ success: false, message: 'Date invalide' });
+      }
+    } else if (entries.some(e => !e.date)) {
+      return res.status(400).json({ success: false, message: 'La date est requise' });
     }
 
-    const year = targetDate.getUTCFullYear();
-    const settings = await PresenceSettings.findOne({ annee: year }).lean();
-    const motifsDeductibles = settings?.motifsDeductibles || DEFAULT_DEDUCTIBLE_MOTIFS;
-
-    // Vérification des autorisations de saisie temporelle (autoriserSaisieFuture et autoriserSaisieRetroactive)
-    const autoriserSaisieFuture = settings ? settings.autoriserSaisieFuture !== false : true;
-    const autoriserSaisieRetroactive = settings ? settings.autoriserSaisieRetroactive !== false : true;
+    const settingsByYear = new Map();
+    const getSettingsForYear = async (yr) => {
+      if (!settingsByYear.has(yr)) {
+        const s = await PresenceSettings.findOne({ annee: yr }).lean();
+        settingsByYear.set(yr, s || null);
+      }
+      return settingsByYear.get(yr);
+    };
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const defaultDateStr = targetDate.toISOString().split('T')[0];
+    const resolvedEntryDates = [];
 
     for (const entry of entries) {
-      let entryDateStr = defaultDateStr;
-      if (entry.date) {
-        try {
-          entryDateStr = parseDateToUTCStartOfDay(entry.date).toISOString().split('T')[0];
-        } catch (err) {
-          entryDateStr = defaultDateStr;
-        }
+      let entryDate;
+      try {
+        entryDate = entry.date ? parseDateToUTCStartOfDay(entry.date) : targetDate;
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: `Date invalide pour l'entrée (${entry.date})`
+        });
       }
+
+      if (!entryDate) {
+        return res.status(400).json({ success: false, message: 'La date est requise' });
+      }
+
+      resolvedEntryDates.push(entryDate);
+
+      const entryYear = entryDate.getUTCFullYear();
+      const settings = await getSettingsForYear(entryYear);
+      const autoriserSaisieFuture = settings ? settings.autoriserSaisieFuture !== false : true;
+      const autoriserSaisieRetroactive = settings ? settings.autoriserSaisieRetroactive !== false : true;
+      const entryDateStr = entryDate.toISOString().split('T')[0];
 
       if (!autoriserSaisieFuture && entryDateStr > todayStr) {
         return res.status(403).json({
@@ -198,14 +325,21 @@ const saveBatchAttendance = async (req, res, next) => {
       }
     }
 
-    // Charger les types de motifs pour correspondance dynamique par code
+    // Charger les types de motifs pour correspondance dynamique par code (système + personnalisés)
     const leaveReasons = await LeaveReason.find().lean();
     const leaveReasonMap = new Map();
-    leaveReasons.forEach(lr => leaveReasonMap.set(lr.code, lr));
+    leaveReasons.forEach(lr => {
+      if (lr.code) {
+        leaveReasonMap.set(String(lr.code).trim().toLowerCase(), lr);
+      }
+    });
 
-    // Récupérer les fiches de personnel pour vérification des départements
+    // Récupérer les fiches de personnel actives (non supprimées) pour vérification des départements
     const personnelIds = entries.map(e => e.personnelId);
-    const personnels = await Personnel.find({ _id: { $in: personnelIds } }).lean();
+    const personnels = await Personnel.find({
+      _id: { $in: personnelIds },
+      isDeleted: { $ne: true }
+    }).lean();
     const personnelMap = new Map();
     personnels.forEach(p => personnelMap.set(p._id.toString(), p));
 
@@ -231,42 +365,57 @@ const saveBatchAttendance = async (req, res, next) => {
     }
 
     let savedCount = 0;
-    for (const entry of entries) {
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const entryDate = resolvedEntryDates[i];
       const agent = personnelMap.get(entry.personnelId.toString());
       if (!agent) continue;
 
       const isPresent = entry.statut === 'present';
-      const motif = isPresent ? null : (entry.motif || null);
-      
+      const normalizedMotif = !isPresent && entry.motif
+        ? String(entry.motif).trim().toLowerCase()
+        : null;
+
+      if (!isPresent && normalizedMotif) {
+        const isKnownReason = leaveReasonMap.has(normalizedMotif) || SYSTEM_MOTIFS.includes(normalizedMotif);
+        if (!isKnownReason) {
+          return res.status(400).json({
+            success: false,
+            message: `Motif d'absence inconnu : ${normalizedMotif}`
+          });
+        }
+      }
+
       let impacteSolde = false;
       let leaveReasonId = null;
 
-      if (!isPresent && motif) {
-        const foundReason = leaveReasonMap.get(motif);
+      if (!isPresent && normalizedMotif) {
+        const foundReason = leaveReasonMap.get(normalizedMotif);
         if (foundReason) {
           impacteSolde = Boolean(foundReason.impacteSolde);
           leaveReasonId = foundReason._id;
         } else {
-          // Fallback rétrocompatibilité
-          impacteSolde = motifsDeductibles.includes(motif);
+          const settings = await getSettingsForYear(entryDate.getUTCFullYear());
+          const motifsDeductibles = settings?.motifsDeductibles || DEFAULT_DEDUCTIBLE_MOTIFS;
+          impacteSolde = motifsDeductibles.includes(normalizedMotif);
           leaveReasonId = null;
         }
       }
 
       const heureArrivee = isPresent ? (entry.heureArrivee || null) : null;
-      const detailsMotif = isPresent ? {} : (entry.detailsMotif || {});
+      const detailsMotif = isPresent ? {} : normalizeDetailsMotif(entry.detailsMotif);
       const departmentId = agent.activeDepartment || req.userRestrictedToDepartment;
 
       await Attendance.findOneAndUpdate(
         {
           personnelId: entry.personnelId,
-          date: targetDate
+          date: entryDate
         },
         {
           $set: {
             departmentId,
             statut: isPresent ? 'present' : 'absent',
-            motif,
+            motif: normalizedMotif,
             leaveReasonId,
             impacteSolde,
             detailsMotif,
@@ -280,21 +429,24 @@ const saveBatchAttendance = async (req, res, next) => {
         {
           upsert: true,
           new: true,
-          setDefaultsOnInsert: true
+          setDefaultsOnInsert: true,
+          runValidators: true
         }
       );
       savedCount++;
     }
 
+    const auditDateStr = (targetDate || resolvedEntryDates[0]).toISOString().split('T')[0];
+
     // Journalisation dans AuditLog
     await logAuditAction(
       'attendance_batch_save',
       'Attendance',
-      targetDate.toISOString().split('T')[0],
+      auditDateStr,
       req.user._id,
       req.user,
       {
-        date: targetDate.toISOString().split('T')[0],
+        date: auditDateStr,
         count: savedCount,
         departmentId: req.userRestrictedToDepartment || null
       }
@@ -318,7 +470,14 @@ const getPersonnelCalendar = async (req, res, next) => {
     const { personnelId } = req.params;
     const { year, month } = req.query;
 
-    const personnel = await Personnel.findById(personnelId).lean();
+    if (!mongoose.Types.ObjectId.isValid(personnelId)) {
+      return res.status(400).json({ success: false, message: 'Identifiant de personnel invalide' });
+    }
+
+    const personnel = await Personnel.findOne({
+      _id: personnelId,
+      isDeleted: { $ne: true }
+    }).lean();
     if (!personnel) {
       return res.status(404).json({ success: false, message: 'Personnel introuvable' });
     }
@@ -365,13 +524,15 @@ const getPersonnelCalendar = async (req, res, next) => {
       .populate('detailsMotif.formationDocumentId', 'label reference dateDocument')
       .lean();
 
+    const formattedAttendances = attendances.map(withDetailsMotifAliases);
+
     return res.json({
       success: true,
       personnelId,
       year: targetYear,
       month: month ? parseInt(month, 10) : null,
-      count: attendances.length,
-      data: attendances
+      count: formattedAttendances.length,
+      data: formattedAttendances
     });
   } catch (error) {
     next(error);
@@ -386,7 +547,14 @@ const getPersonnelBalance = async (req, res, next) => {
     const { personnelId } = req.params;
     const { year } = req.query;
 
-    const personnel = await Personnel.findById(personnelId).lean();
+    if (!mongoose.Types.ObjectId.isValid(personnelId)) {
+      return res.status(400).json({ success: false, message: 'Identifiant de personnel invalide' });
+    }
+
+    const personnel = await Personnel.findOne({
+      _id: personnelId,
+      isDeleted: { $ne: true }
+    }).lean();
     if (!personnel) {
       return res.status(404).json({ success: false, message: 'Personnel introuvable' });
     }
@@ -416,9 +584,16 @@ const getPersonnelBalance = async (req, res, next) => {
     if (!settings) {
       settings = {
         soldeAnnuelDefaut: 45,
-        motifsDeductibles: DEFAULT_DEDUCTIBLE_MOTIFS
+        motifsDeductibles: DEFAULT_DEDUCTIBLE_MOTIFS,
+        joursWeekend: [0, 6],
+        joursFeries: []
       };
     }
+
+    const weekendDays = Array.isArray(settings.joursWeekend) && settings.joursWeekend.length > 0
+      ? settings.joursWeekend
+      : [0, 6];
+    const holidayDatesSet = getHolidayDateStringsSet(settings.joursFeries);
 
     const start = new Date(Date.UTC(targetYear, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
@@ -438,13 +613,18 @@ const getPersonnelBalance = async (req, res, next) => {
     const codesDeductibles = Array.from(deductibleCodesSet);
 
     // 4. Compter les Attendance avec : statut = 'absent', impacteSolde = true, motif dans la liste des codes déductibles
-    const deductedAttendances = await Attendance.find({
+    //    en excluant les jours tombant un week-end ou un jour férié
+    const rawDeductedAttendances = await Attendance.find({
       personnelId,
       date: { $gte: start, $lte: end },
       statut: 'absent',
       impacteSolde: true,
       motif: { $in: codesDeductibles }
     }).lean();
+
+    const deductedAttendances = rawDeductedAttendances.filter(
+      (a) => !isWeekendOrHoliday(a.date, weekendDays, holidayDatesSet)
+    );
 
     const totalDays = settings.soldeAnnuelDefaut || 45;
     const usedDays = deductedAttendances.length;
@@ -508,8 +688,8 @@ const getDailyReport = async (req, res, next) => {
       effectiveDepartmentId = departmentId;
     }
 
-    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
-    const personnelFilter = {};
+    // Filtre des personnels : tous les personnels actifs (non supprimés)
+    const personnelFilter = { isDeleted: { $ne: true } };
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
@@ -528,7 +708,7 @@ const getDailyReport = async (req, res, next) => {
     }).lean();
 
     const attendanceMap = new Map();
-    attendances.forEach(a => attendanceMap.set(a.personnelId.toString(), a));
+    attendances.forEach(a => attendanceMap.set(a.personnelId.toString(), withDetailsMotifAliases(a)));
 
     const presents = [];
     const absents = [];
@@ -593,17 +773,32 @@ const getMonthlyReport = async (req, res, next) => {
       effectiveDepartmentId = departmentId;
     }
 
-    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
-    const personnelFilter = {};
+    // Filtre des personnels : tous les personnels actifs (non supprimés)
+    const personnelFilter = { isDeleted: { $ne: true } };
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
 
-    const personnels = await Personnel.find(personnelFilter)
+    const totalPersonnel = await Personnel.countDocuments(personnelFilter);
+    const hasPaginationParams = req.query.page !== undefined || req.query.limit !== undefined;
+    const shouldPaginate = totalPersonnel > 100 || hasPaginationParams;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = shouldPaginate
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100)
+      : Math.max(totalPersonnel, 1);
+    const skip = shouldPaginate ? (page - 1) * limit : 0;
+    const totalPages = shouldPaginate ? Math.ceil(totalPersonnel / limit) : (totalPersonnel > 0 ? 1 : 0);
+
+    let personnelQuery = Personnel.find(personnelFilter)
       .select('nom prenom cin poste activeDepartment')
       .populate('activeDepartment', 'name code')
-      .sort({ nom: 1, prenom: 1 })
-      .lean();
+      .sort({ nom: 1, prenom: 1 });
+
+    if (shouldPaginate) {
+      personnelQuery = personnelQuery.skip(skip).limit(limit);
+    }
+
+    const personnels = await personnelQuery.lean();
 
     const personnelIds = personnels.map(p => p._id);
 
@@ -653,7 +848,17 @@ const getMonthlyReport = async (req, res, next) => {
         year: targetYear,
         month: targetMonth,
         departmentId: effectiveDepartmentId || null,
-        totalPersonnel: personnels.length,
+        totalPersonnel,
+        page,
+        limit,
+        totalPages,
+        paginated: shouldPaginate,
+        pagination: {
+          total: totalPersonnel,
+          page,
+          limit,
+          totalPages
+        },
         records
       }
     });
@@ -673,6 +878,10 @@ const getYearlyReport = async (req, res, next) => {
 
     let settings = await PresenceSettings.findOne({ annee: targetYear }).lean();
     const soldeAnnuelDefaut = settings?.soldeAnnuelDefaut || 45;
+    const weekendDays = Array.isArray(settings?.joursWeekend) && settings.joursWeekend.length > 0
+      ? settings.joursWeekend
+      : [0, 6];
+    const holidayDatesSet = getHolidayDateStringsSet(settings?.joursFeries);
 
     const start = new Date(Date.UTC(targetYear, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
@@ -689,17 +898,32 @@ const getYearlyReport = async (req, res, next) => {
       effectiveDepartmentId = departmentId;
     }
 
-    // Filtre des personnels : tous les personnels (les inactifs doivent également apparaître)
-    const personnelFilter = {};
+    // Filtre des personnels : tous les personnels actifs (non supprimés)
+    const personnelFilter = { isDeleted: { $ne: true } };
     if (effectiveDepartmentId) {
       personnelFilter.activeDepartment = effectiveDepartmentId;
     }
 
-    const personnels = await Personnel.find(personnelFilter)
+    const totalPersonnel = await Personnel.countDocuments(personnelFilter);
+    const hasPaginationParams = req.query.page !== undefined || req.query.limit !== undefined;
+    const shouldPaginate = totalPersonnel > 100 || hasPaginationParams;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = shouldPaginate
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100)
+      : Math.max(totalPersonnel, 1);
+    const skip = shouldPaginate ? (page - 1) * limit : 0;
+    const totalPages = shouldPaginate ? Math.ceil(totalPersonnel / limit) : (totalPersonnel > 0 ? 1 : 0);
+
+    let personnelQuery = Personnel.find(personnelFilter)
       .select('nom prenom cin poste activeDepartment')
       .populate('activeDepartment', 'name code')
-      .sort({ nom: 1, prenom: 1 })
-      .lean();
+      .sort({ nom: 1, prenom: 1 });
+
+    if (shouldPaginate) {
+      personnelQuery = personnelQuery.skip(skip).limit(limit);
+    }
+
+    const personnels = await personnelQuery.lean();
 
     const personnelIds = personnels.map(p => p._id);
 
@@ -729,7 +953,7 @@ const getYearlyReport = async (req, res, next) => {
           joursPresents++;
         } else {
           joursAbsents++;
-          if (a.impacteSolde) {
+          if (a.impacteSolde && !isWeekendOrHoliday(a.date, weekendDays, holidayDatesSet)) {
             joursDeduits++;
           }
           if (a.motif) {
@@ -758,7 +982,17 @@ const getYearlyReport = async (req, res, next) => {
         year: targetYear,
         departmentId: effectiveDepartmentId || null,
         soldeAnnuelDefaut,
-        totalPersonnel: personnels.length,
+        totalPersonnel,
+        page,
+        limit,
+        totalPages,
+        paginated: shouldPaginate,
+        pagination: {
+          total: totalPersonnel,
+          page,
+          limit,
+          totalPages
+        },
         records
       }
     });

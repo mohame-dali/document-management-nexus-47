@@ -119,7 +119,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
               <div>
                 <p className="text-sm text-gray-500 font-medium">{t('documents.assignResponsible.serialNumber')}</p>
-                <p className="font-bold text-[#2c5282] mt-0.5">#{document.serialNumber}/{document.year}</p>
+                <p className="font-bold text-[#2c5282] mt-0.5"><bdi dir="ltr">#{document.serialNumber}/{document.year}</bdi></p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 font-medium">{t('documents.assignResponsible.subject')}</p>

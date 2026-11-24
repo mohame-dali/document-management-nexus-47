@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import {
   getAllDeclarations,
   approveDeclaration,
@@ -39,28 +39,28 @@ import {
   Clock,
   Edit3,
   Search,
-  Filter,
   RotateCcw,
   Calendar,
-  Building,
   UserCheck,
   UserX,
-  AlertCircle,
-  FileText,
   Loader2,
-  MessageSquare,
   MapPin,
   GraduationCap,
-  Sparkles,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
 import { getErrorMessage } from '@/utils/errorMessages';
 
 export const AttendanceDeclarationsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Liste des déclarations & chargement
   const [declarations, setDeclarations] = useState<AttendanceDeclaration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const limit = 20;
 
   // Données de référence
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -116,7 +116,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
   const fetchDeclarations = useCallback(async () => {
     try {
       setLoading(true);
-      const filters: DeclarationFilters = {};
+      const filters: DeclarationFilters = {
+        page,
+        limit,
+      };
       if (statusFilter !== 'all') {
         filters.validationStatus = statusFilter;
       } else {
@@ -132,8 +135,14 @@ export const AttendanceDeclarationsPage: React.FC = () => {
       const res = await getAllDeclarations(filters);
       if (res.success && Array.isArray(res.data)) {
         setDeclarations(res.data);
+        const totalCount = res.total ?? res.pagination?.total ?? res.data.length;
+        const pagesCount = res.totalPages ?? res.pagination?.totalPages ?? Math.ceil(totalCount / limit);
+        setTotal(totalCount);
+        setTotalPages(pagesCount);
       } else {
         setDeclarations([]);
+        setTotal(0);
+        setTotalPages(0);
       }
     } catch (error: unknown) {
       console.error('Erreur récupération déclarations:', error);
@@ -141,7 +150,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, departmentFilter, dateFilter]);
+  }, [statusFilter, departmentFilter, dateFilter, page]);
 
   useEffect(() => {
     fetchDeclarations();
@@ -336,7 +345,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto" dir="rtl">
+    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
       {/* En-tête de la page */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
         <div>
@@ -348,7 +357,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                 الإعلانات والتصاريح في انتظار الموافقة
                 {kpis.pending > 0 && (
-                  <span className="text-xs bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">
+                  <span className="text-xs bg-[#FFCB56] text-[#111827] border border-[#d97706] font-bold px-2 py-0.5 rounded animate-pulse">
                     {kpis.pending} معلقة
                   </span>
                 )}
@@ -365,7 +374,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             variant="outline"
             onClick={fetchDeclarations}
             disabled={loading}
-            className="h-10 border-[#e2e8f0] text-gray-700 hover:bg-gray-100 gap-2"
+            className="h-11 min-h-[44px] border-[#e2e8f0] text-gray-700 hover:bg-gray-100 gap-2"
           >
             <RotateCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             تحديث
@@ -377,7 +386,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* KPI 1 : En attente */}
         <div
-          onClick={() => setStatusFilter('en_attente')}
+          onClick={() => {
+            setStatusFilter('en_attente');
+            setPage(1);
+          }}
           className={`cursor-pointer p-4 rounded-lg border transition-all ${
             statusFilter === 'en_attente'
               ? 'bg-amber-50/70 border-amber-300 ring-2 ring-amber-400/50 shadow-sm'
@@ -398,7 +410,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
         {/* KPI 2 : Approuvées */}
         <div
-          onClick={() => setStatusFilter('approuvee')}
+          onClick={() => {
+            setStatusFilter('approuvee');
+            setPage(1);
+          }}
           className={`cursor-pointer p-4 rounded-lg border transition-all ${
             statusFilter === 'approuvee'
               ? 'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-400/50 shadow-sm'
@@ -419,7 +434,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
         {/* KPI 3 : Rejetées */}
         <div
-          onClick={() => setStatusFilter('rejetee')}
+          onClick={() => {
+            setStatusFilter('rejetee');
+            setPage(1);
+          }}
           className={`cursor-pointer p-4 rounded-lg border transition-all ${
             statusFilter === 'rejetee'
               ? 'bg-red-50/70 border-red-300 ring-2 ring-red-400/50 shadow-sm'
@@ -457,13 +475,16 @@ export const AttendanceDeclarationsPage: React.FC = () => {
           <div>
             <Select
               value={statusFilter}
-              onValueChange={(val: 'all' | 'en_attente' | 'approuvee' | 'rejetee' | 'modifiee') => setStatusFilter(val)}
+              onValueChange={(val: 'all' | 'en_attente' | 'approuvee' | 'rejetee' | 'modifiee') => {
+                setStatusFilter(val);
+                setPage(1);
+              }}
             >
               <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
                 <SelectValue placeholder="تصفية حسب الحالة" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
-                <SelectItem value="all">كل الحالات ({declarations.length})</SelectItem>
+              <SelectContent>
+                <SelectItem value="all">كل الحالات ({total || declarations.length})</SelectItem>
                 <SelectItem value="en_attente">قيد المراجعة فقط</SelectItem>
                 <SelectItem value="approuvee">المقبولة</SelectItem>
                 <SelectItem value="rejetee">المرفوضة</SelectItem>
@@ -476,12 +497,15 @@ export const AttendanceDeclarationsPage: React.FC = () => {
           <div>
             <Select
               value={departmentFilter}
-              onValueChange={setDepartmentFilter}
+              onValueChange={(val) => {
+                setDepartmentFilter(val);
+                setPage(1);
+              }}
             >
               <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
                 <SelectValue placeholder="كل الأقسام / المصالح" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent>
                 <SelectItem value="all">كل الأقسام والمصالح</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept._id} value={dept._id}>
@@ -497,15 +521,23 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             <Input
               type="date"
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setPage(1);
+              }}
               className="h-10 border-[#e2e8f0] text-sm"
             />
             {dateFilter && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setDateFilter('')}
-                className="h-10 px-2 text-gray-400 hover:text-gray-600"
+                onClick={() => {
+                  setDateFilter('');
+                  setPage(1);
+                }}
+                className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-gray-500 hover:text-gray-700"
+                aria-label={t('attendance.declarations.clearDateAria')}
+                title={t('attendance.declarations.clearDateAria')}
               >
                 ✕
               </Button>
@@ -645,7 +677,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                               <Button
                                 size="sm"
                                 onClick={() => handleOpenApprove(decl)}
-                                className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 shadow-sm"
+                                className="h-11 min-h-[44px] px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 shadow-sm"
                                 title="موافقة واعتماد"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -656,7 +688,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleOpenReject(decl)}
-                                className="h-8 px-2.5 border-red-200 text-red-600 hover:bg-red-50 text-xs gap-1"
+                                className="h-11 min-h-[44px] px-3.5 border-red-200 text-red-600 hover:bg-red-50 text-xs gap-1"
                                 title="رفض التصريح"
                               >
                                 <XCircle className="w-3.5 h-3.5" />
@@ -667,10 +699,11 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleOpenEdit(decl)}
-                                className="h-8 px-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-                                title="تعديل"
+                                className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                title={t('attendance.declarations.editAria')}
+                                aria-label={t('attendance.declarations.editAria')}
                               >
-                                <Edit3 className="w-3.5 h-3.5" />
+                                <Edit3 className="w-4 h-4" />
                               </Button>
                             </>
                           ) : (
@@ -678,7 +711,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => handleOpenEdit(decl)}
-                              className="h-8 px-2.5 border-[#e2e8f0] text-gray-600 hover:bg-gray-100 text-xs gap-1"
+                              className="h-11 min-h-[44px] px-3.5 border-[#e2e8f0] text-gray-600 hover:bg-gray-100 text-xs gap-1"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                               <span>مراجعة / تعديل</span>
@@ -693,11 +726,45 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             </table>
           </div>
         )}
+
+        {/* Pagination */}
+        {!loading && total > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-[#e2e8f0] bg-gray-50/70">
+            <div className="text-xs text-gray-600">
+              عرض <strong>{declarations.length}</strong> من أصل <strong>{total}</strong> تصريح — صفحة{' '}
+              <strong>{page}</strong> من <strong>{Math.max(totalPages, 1)}</strong>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1 || loading}
+                className="h-9 px-3 border-[#e2e8f0] text-gray-700 gap-1"
+              >
+                <ChevronRight className="w-4 h-4" />
+                <span>السابق</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => (totalPages > 0 ? Math.min(totalPages, p + 1) : p + 1))}
+                disabled={page >= totalPages || loading}
+                className="h-9 px-3 border-[#e2e8f0] text-gray-700 gap-1"
+              >
+                <span>التالي</span>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal d'approbation avec commentaire optionnel */}
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
-        <DialogContent className="sm:max-w-[460px] text-right" dir="rtl">
+        <DialogContent className="sm:max-w-[460px] text-right">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2 text-emerald-700">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -750,7 +817,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal de Rejet avec motif obligatoire */}
       <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
-        <DialogContent className="sm:max-w-[460px] text-right" dir="rtl">
+        <DialogContent className="sm:max-w-[460px] text-right">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
               <XCircle className="w-5 h-5 text-red-600" />
@@ -809,7 +876,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal d'Édition Admin */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="sm:max-w-[520px] text-right" dir="rtl">
+        <DialogContent className="sm:max-w-[520px] text-right">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Edit3 className="w-5 h-5 text-[#2c5282]" />
@@ -827,7 +894,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                   <SelectTrigger className="h-10 border-[#e2e8f0]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent dir="rtl">
+                  <SelectContent>
                     <SelectItem value="present">حاضر</SelectItem>
                     <SelectItem value="absent">غائب / مصلحة</SelectItem>
                   </SelectContent>
@@ -854,7 +921,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                     <SelectTrigger className="h-10 border-[#e2e8f0]">
                       <SelectValue placeholder="اختر السبب" />
                     </SelectTrigger>
-                    <SelectContent dir="rtl">
+                    <SelectContent>
                       {leaveReasons.map((r) => (
                         <SelectItem key={r._id} value={r.code}>
                           {r.labelAr}

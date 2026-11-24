@@ -6,6 +6,7 @@ import { FileInput } from 'lucide-react';
 import DocumentTableHeader from './DocumentTableHeader';
 import DocumentTableRow from './DocumentTableRow';
 import DocumentPreview from './DocumentPreview';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentDataGridProps {
   documents: (IncomingDocument | OutgoingDocument)[];
@@ -13,6 +14,7 @@ interface DocumentDataGridProps {
 }
 
 const DocumentDataGrid: React.FC<DocumentDataGridProps> = ({ documents, type }) => {
+  const { dir } = useDirection();
   const [hoveredDoc, setHoveredDoc] = useState<string | null>(null);
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,7 +83,7 @@ const DocumentDataGrid: React.FC<DocumentDataGridProps> = ({ documents, type }) 
 
   if (!documents || documents.length === 0) {
     return (
-      <div className="text-center py-12 text-[#5f6b7d]" dir="rtl">
+      <div className="text-center py-12 text-[#5f6b7d]" dir={dir}>
         <FileInput className="h-10 w-10 mx-auto mb-3 text-[#a0aec0]" />
         <p className="text-sm">{translations.noDocuments}</p>
       </div>
@@ -89,7 +91,7 @@ const DocumentDataGrid: React.FC<DocumentDataGridProps> = ({ documents, type }) 
   }
 
   return (
-    <div className="relative" dir="rtl">
+    <div className="relative" dir={dir}>
       <div className="rounded border border-[#e2e8f0] bg-white shadow-xs overflow-hidden">
         <Table>
           <DocumentTableHeader type={type} translations={translations} />

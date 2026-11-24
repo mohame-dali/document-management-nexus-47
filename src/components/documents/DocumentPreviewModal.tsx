@@ -36,7 +36,6 @@ const DocumentPreviewModal = ({
       <DialogContent 
         className="max-w-4xl w-[95vw] p-0 overflow-hidden bg-white 
                    max-h-[92vh] flex flex-col rounded-lg"
-        dir="rtl"
       >
         {/* HEADER */}
         <DialogHeader className="p-4 bg-slate-50 border-b border-slate-200">
@@ -46,21 +45,21 @@ const DocumentPreviewModal = ({
               {document && (
                 <span className="text-xs font-semibold px-2.5 py-0.5 
                                  rounded bg-blue-100 text-[#2c5282]">
-                  #{document.serialNumber} / {document.year}
+                  <bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi>
                 </span>
               )}
             </DialogTitle>
           </div>
           {document?.subject && (
             <DialogDescription className="text-sm text-slate-700 
-                                         font-medium text-right 
+                                         font-medium text-start 
                                          line-clamp-2 mt-1">
               {document.subject}
             </DialogDescription>
           )}
           {docDate && (
             <p className="text-xs text-slate-500 mt-1">
-              📅 {new Date(docDate).toLocaleDateString('ar-TN')}
+              📅 <bdi dir="ltr">{new Date(docDate).toLocaleDateString('ar-TN')}</bdi>
             </p>
           )}
         </DialogHeader>

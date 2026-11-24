@@ -30,6 +30,25 @@ export const formatArabicDate = (date: string | Date): string => {
   return `${day} ${month} ${year}`;
 };
 
+export const formatLocalizedDate = (
+  date: string | Date,
+  language: 'ar' | 'fr' = 'ar'
+): string => {
+  if (language === 'ar') {
+    return formatArabicDate(date);
+  }
+  if (!date) return 'Date non définie';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) {
+    return 'Date invalide';
+  }
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(dateObj);
+};
+
 // Format with time
 export const formatArabicDateTime = (date: string | Date): string => {
   if (!date) return 'تاريخ غير محدد';

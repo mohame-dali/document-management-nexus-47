@@ -60,6 +60,9 @@ exports.createIncomingDocument = async (req, res, next) => {
     // Handle document upload or use scanned document
     let finalDocumentPath = null;
     let ocrText = providedOcrText || null;
+    let ocrStatus = ocrText ? 'completed' : null;
+    let ocrError = null;
+    const scanId = req.body.scanId ? String(req.body.scanId).trim() : '';
     
     if (req.file) {
       // Handle file upload
@@ -67,6 +70,7 @@ exports.createIncomingDocument = async (req, res, next) => {
       const result = await handleUploadedFile(req.file, serialNumber, finalFolderPath, 'incoming');
       finalDocumentPath = result.finalDocumentPath;
       ocrText = result.ocrText || ocrText;
+      ocrStatus = ocrText ? 'completed' : null;
       console.log('Handled uploaded file, path:', finalDocumentPath);
     } else if (providedScannedDocumentPath && providedScannedDocumentPath.trim() !== '') {
       // Handle scanned document - pass the full details
@@ -78,10 +82,13 @@ exports.createIncomingDocument = async (req, res, next) => {
           finalFolderPath, 
           'incoming', 
           providedScannedDocumentPath, 
-          providedOcrText
+          providedOcrText,
+          { scanId }
         );
         finalDocumentPath = result.finalDocumentPath;
         ocrText = result.ocrText || ocrText;
+        ocrStatus = result.ocrStatus || (ocrText ? 'completed' : null);
+        ocrError = result.ocrError || null;
         console.log('Handled scanned document successfully, final path:', finalDocumentPath);
       } catch (scanError) {
         console.error('Error processing scanned document:', scanError);
@@ -109,6 +116,8 @@ exports.createIncomingDocument = async (req, res, next) => {
       subject,
       scannedDocument: finalDocumentPath,
       ocrText,
+      ocrStatus,
+      ocrError,
       assignedTo,
       createdBy: req.user._id
     };
@@ -118,7 +127,28 @@ exports.createIncomingDocument = async (req, res, next) => {
       documentData.dateActivity = new Date(dateActivity);
     }
 
-    const document = await IncomingDocument.create(documentData);
+    let document = await IncomingDocument.create(documentData);
+
+    // ASYNC OCR FIX: Link newly created document to active scanId so background OCR persists ocrText to DB when finished
+    if (scanId) {
+      const scannerService = require('../../../utils/scanner');
+      const statusManager = scannerService.getStatusManager();
+      const job = statusManager.getJob(scanId);
+      if (job) {
+        if (job.ocrStatus === 'completed' && !document.ocrText && job.ocrText) {
+          document = await IncomingDocument.findByIdAndUpdate(
+            document._id,
+            { ocrText: job.ocrText, ocrStatus: 'completed', ocrError: null },
+            { new: true }
+          );
+        } else if (job.ocrInProgress || job.ocrStatus === 'processing') {
+          statusManager.attachDocumentToJob(scanId, {
+            targetDocumentId: document._id,
+            targetDocumentType: 'incoming',
+          });
+        }
+      }
+    }
     
     // Create activity notifications if both activity and dateActivity are provided
     if (activity && dateActivity) {

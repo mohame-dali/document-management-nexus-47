@@ -1,269 +1,457 @@
-
-const scannerService = require('./scanner');
 const fs = require('fs');
 const path = require('path');
-const { promisify } = require('util');
-const mkdirAsync = promisify(fs.mkdir);
-const existsAsync = promisify(fs.exists);
+const scannerService = require('./scanner');
 const { getNextSerialNumber, createYearFolder, getDocumentPath } = require('./documentHelper');
 const { extractTextFromPDF } = require('./ocrProcessor');
+const { ScannerError, validateScanOptions } = require('./scanner/validation');
+
+// ASYNC OCR FIX: Allow explicit language override while defaulting incoming mail to Arabic-only ('ara') for faster OCR
+function resolveOcrLanguages(documentType, explicitLanguages) {
+  if (typeof explicitLanguages === 'string') {
+    const trimmed = explicitLanguages.trim();
+    if (/^[a-z]{2,4}(\+[a-z]{2,4})*$/i.test(trimmed)) {
+      return trimmed.toLowerCase();
+    }
+  }
+  return documentType === 'incoming' ? 'ara' : 'ara+fra+eng';
+}
+
+// ASYNC OCR FIX: Resolve Mongoose model lazily only when updating a linked document after background OCR
+function getDocumentModelByType(documentType) {
+  if (documentType === 'incoming') {
+    return require('../models/IncomingDocument');
+  }
+  if (documentType === 'outgoing') {
+    return require('../models/OutgoingDocument');
+  }
+  return null;
+}
+
+// ASYNC OCR FIX: Non-blocking background OCR runner executed via setImmediate (never awaited by HTTP request)
+function launchBackgroundOcr({ scanId, filePath, documentType = 'temp', languages }) {
+  const statusManager = scannerService.getStatusManager();
+  const ocrLanguages = resolveOcrLanguages(documentType, languages);
+
+  statusManager.updateJob(scanId, {
+    ocrStatus: 'processing',
+    ocrText: '',
+    ocrError: null,
+    ocrInProgress: true,
+    ocrLanguages,
+  });
+
+  setImmediate(async () => {
+    const job = statusManager.getJob(scanId);
+    try {
+      if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
+        statusManager.updateJob(scanId, {
+          ocrStatus: 'failed',
+          ocrError: 'Numérisation annulée.',
+          ocrInProgress: false,
+        });
+        return;
+      }
+
+      const targetPath =
+        filePath && fs.existsSync(filePath)
+          ? filePath
+          : job?.finalFilePath && fs.existsSync(job.finalFilePath)
+            ? job.finalFilePath
+            : null;
+
+      if (!targetPath) {
+        const missingMsg = 'Fichier introuvable pour le traitement OCR en arrière-plan.';
+        console.warn(`[Scanner Async OCR] ${missingMsg} (scanId=${scanId})`);
+        statusManager.updateJob(scanId, {
+          ocrStatus: 'failed',
+          ocrError: missingMsg,
+          ocrInProgress: false,
+        });
+        statusManager.setOcrResult(false);
+        return;
+      }
+
+      console.log(
+        `[Scanner Async OCR] Démarrage OCR en arrière-plan (scanId=${scanId}, lang=${ocrLanguages})`
+      );
+
+      const ocrText =
+        (await extractTextFromPDF(targetPath, ocrLanguages, {
+          signal: job?.abortController?.signal || null,
+        })) || '';
+
+      const latestJob = statusManager.getJob(scanId);
+      if (latestJob && (latestJob.cancelled || latestJob.abortController?.signal?.aborted)) {
+        statusManager.updateJob(scanId, {
+          ocrStatus: 'failed',
+          ocrError: 'Numérisation annulée.',
+          ocrInProgress: false,
+        });
+        return;
+      }
+
+      statusManager.updateJob(scanId, {
+        ocrStatus: 'completed',
+        ocrText,
+        ocrError: null,
+        ocrInProgress: false,
+      });
+      statusManager.setOcrResult(true);
+
+      console.log(
+        `[Scanner Async OCR] ✅ OCR terminé (scanId=${scanId}, chars=${ocrText.length})`
+      );
+
+      // ASYNC OCR FIX: If the user already saved the document while OCR was running, persist OCR text to MongoDB
+      if (latestJob?.targetDocumentId && latestJob?.targetDocumentType) {
+        const Model = getDocumentModelByType(latestJob.targetDocumentType);
+        if (Model) {
+          try {
+            await Model.findByIdAndUpdate(
+              latestJob.targetDocumentId,
+              {
+                ocrText,
+                ocrStatus: 'completed',
+                ocrError: null,
+              },
+              { new: true }
+            );
+            console.log(
+              `[Scanner Async OCR] ✅ Document ${latestJob.targetDocumentType}#${latestJob.targetDocumentId} mis à jour avec le texte OCR`
+            );
+          } catch (dbErr) {
+            console.error(
+              `[Scanner Async OCR] Échec mise à jour DB (${latestJob.targetDocumentType}#${latestJob.targetDocumentId}):`,
+              dbErr.message
+            );
+          }
+        }
+      }
+    } catch (ocrError) {
+      const latestJob = statusManager.getJob(scanId);
+      const isAborted =
+        ocrError?.name === 'AbortError' ||
+        latestJob?.cancelled ||
+        latestJob?.abortController?.signal?.aborted;
+      const errMessage = isAborted
+        ? 'Traitement OCR annulé.'
+        : ocrError?.message || 'Erreur OCR inconnue.';
+
+      if (isAborted) {
+        console.log(`[Scanner Async OCR] Traitement OCR annulé (scanId=${scanId})`);
+      } else {
+        console.error(`[Scanner Async OCR] Échec OCR (scanId=${scanId}):`, errMessage);
+      }
+
+      statusManager.updateJob(scanId, {
+        ocrStatus: 'failed',
+        ocrError: errMessage,
+        ocrInProgress: false,
+      });
+      statusManager.setOcrResult(false);
+
+      if (latestJob?.targetDocumentId && latestJob?.targetDocumentType) {
+        const Model = getDocumentModelByType(latestJob.targetDocumentType);
+        if (Model) {
+          try {
+            await Model.findByIdAndUpdate(latestJob.targetDocumentId, {
+              ocrStatus: 'failed',
+              ocrError: errMessage,
+            });
+          } catch (dbErr) {
+            console.error(
+              `[Scanner Async OCR] Échec mise à jour erreur OCR en DB (${latestJob.targetDocumentType}#${latestJob.targetDocumentId}):`,
+              dbErr.message
+            );
+          }
+        }
+      }
+    } finally {
+      const latestJob = statusManager.getJob(scanId);
+      if (latestJob) {
+        latestJob.ocrInProgress = false;
+        const pendingPath = latestJob.pendingTempCleanupPath;
+        latestJob.pendingTempCleanupPath = null;
+        if (
+          pendingPath &&
+          pendingPath !== latestJob.filePath &&
+          pendingPath !== latestJob.finalFilePath &&
+          fs.existsSync(pendingPath)
+        ) {
+          try {
+            fs.unlinkSync(pendingPath);
+            console.log(`[Scanner Async OCR] Fichier temporaire différé supprimé: ${pendingPath}`);
+          } catch (cleanupErr) {
+            console.warn(
+              `[Scanner Async OCR] Impossible de supprimer le fichier différé ${pendingPath}:`,
+              cleanupErr.message
+            );
+          }
+        }
+      }
+    }
+  });
+}
+
+exports.launchBackgroundOcr = launchBackgroundOcr;
+exports.resolveOcrLanguages = resolveOcrLanguages;
 
 /**
- * Handles document scanning and preparation for document creation
- * @param {Object} options - Scanning options
- * @param {string} options.documentType - 'incoming' or 'outgoing'
- * @param {number} options.year - Document year
- * @param {Object} options.user - User object
- * @param {string} options.format - Output format (pdf, jpeg, png)
- * @param {number} options.resolution - Scan resolution
- * @returns {Promise<Object>} Scan result with file path and OCR text
+ * Handles document scanning and preparation for persistent document creation
  */
 exports.scanForDocument = async (options) => {
+  let tempFilePath = null;
   try {
-    const { documentType, year, user, format = 'pdf', resolution = 300 } = options;
-    
-    console.log(`Starting scan for document type: ${documentType}, format: ${format}, year: ${year}`);
-    
-    // Validate inputs
-    if (!documentType || !['incoming', 'outgoing'].includes(documentType)) {
-      throw new Error('Invalid document type. Must be "incoming" or "outgoing"');
-    }
-    
-    if (!user || !user.id) {
-      throw new Error('Valid user object is required');
-    }
-    
-    // Auto-detect scanner if needed
-    const status = scannerService.getStatus();
-    if (!status.deviceId || status.deviceId === 'Not selected') {
-      console.log('No scanner selected, attempting auto-detection');
-      const detected = await scannerService.autoDetectScanner();
-      if (!detected) {
-        throw new Error('No physical scanner detected. Please connect a scanner and install proper drivers.');
-      }
-    }
-    
-    // Start scan job to temporary location first
-    const scanOptions = {
+    const {
       documentType,
+      year,
+      user,
+      format = 'pdf',
+      resolution = 300,
+      colorMode,
+      documentSource,
+      scanId,
+      languages,
+    } = options;
+
+    if (!documentType || !['incoming', 'outgoing'].includes(documentType)) {
+      throw new ScannerError(
+        'INVALID_SCAN_PARAMS',
+        'Type de document invalide (incoming ou outgoing requis).',
+        400
+      );
+    }
+
+    if (!user || (!user.id && !user._id)) {
+      throw new ScannerError('INVALID_SCAN_PARAMS', 'Utilisateur authentifié requis.', 400);
+    }
+
+    const validated = validateScanOptions({
       format,
       resolution,
-      userId: user.id
-    };
-    
-    let tempFilePath;
-    try {
-      tempFilePath = await scannerService.startScan(scanOptions);
-      console.log('Temporary scan file created at:', tempFilePath);
-    } catch (scanError) {
-      console.error('Scan operation failed:', scanError);
-      throw new Error(`Scan operation failed: ${scanError.message}`);
-    }
-    
-    // Get next serial number for the document type and year
+      colorMode,
+      documentSource,
+      scanId,
+    });
+
+    const scanResult = await scannerService.startScan({
+      documentType,
+      format: validated.format,
+      resolution: validated.resolution,
+      colorMode: validated.colorMode,
+      documentSource: validated.documentSource,
+      scanId: validated.scanId || undefined,
+      userId: String(user.id || user._id),
+    });
+
+    tempFilePath = scanResult.filePath;
+
     const serialNumber = await getNextSerialNumber(year, documentType);
-    console.log('Generated serial number:', serialNumber, 'for year:', year);
-    
-    // Define the final folder path based on document type and year
     const finalFolderPath = getDocumentPath(documentType, year);
     await createYearFolder(finalFolderPath);
-    console.log('Final folder path:', finalFolderPath);
-    
-    // Create a new filename based on serial number and format
-    const fileExt = format === 'pdf' ? '.pdf' : `.${format.toLowerCase()}`;
+
+    const fileExt = `.${validated.format === 'jpg' ? 'jpg' : validated.format}`;
     const newFilename = `${serialNumber}${fileExt}`;
     const newFilePath = path.join(finalFolderPath, newFilename);
-    console.log('Target file path:', newFilePath);
-    
-    // Ensure the source file exists before moving
+
     if (!fs.existsSync(tempFilePath)) {
-      throw new Error(`Source scan file does not exist: ${tempFilePath}`);
+      throw new ScannerError('SCAN_FAILED', 'Fichier numérisé introuvable après capture.', 500);
     }
-    
-    // Ensure the destination directory exists
+
     if (!fs.existsSync(path.dirname(newFilePath))) {
       fs.mkdirSync(path.dirname(newFilePath), { recursive: true });
-      console.log('Created destination directory:', path.dirname(newFilePath));
     }
-    
-    // Copy the file to the final location with error handling
-    try {
-      fs.copyFileSync(tempFilePath, newFilePath);
-      console.log('Copied scan file from', tempFilePath, 'to', newFilePath);
-    } catch (copyError) {
-      console.error('Error copying scan file:', copyError);
-      throw new Error(`Failed to copy scan file: ${copyError.message}`);
-    }
-    
-    // Verify the copy was successful
+
+    fs.copyFileSync(tempFilePath, newFilePath);
+
     if (!fs.existsSync(newFilePath)) {
-      throw new Error('Failed to copy scan file to final location');
+      throw new ScannerError('SCAN_FAILED', 'Échec de copie du document numérisé.', 500);
     }
-    
-    const stats = fs.statSync(newFilePath);
-    console.log('File copied successfully, size:', stats.size, 'bytes');
-    
-    // Clean up the temporary file
+
     try {
-      if (fs.existsSync(tempFilePath)) {
-        fs.unlinkSync(tempFilePath);
-        console.log('Cleaned up temporary file:', tempFilePath);
-      }
-    } catch (cleanupError) {
-      console.warn('Could not clean up temporary file:', cleanupError.message);
+      fs.unlinkSync(tempFilePath);
+      tempFilePath = null;
+    } catch (cleanupErr) {
+      console.warn('[Scanner] Could not remove temp file:', cleanupErr.message);
     }
-    
-    // Create relative path for the database - ensure consistent format
+
+    const job = scannerService.getStatusManager().getJob(scanResult.scanId);
+    if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
+      if (fs.existsSync(newFilePath)) {
+        try { fs.unlinkSync(newFilePath); } catch (_) {}
+      }
+      throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
+    }
+
     const docTypeFolder = documentType === 'incoming' ? 'Incoming-Doc' : 'Outgoing-Doc';
     const scannedDocumentPath = `courrier/${year}/${docTypeFolder}/${newFilename}`;
-    console.log('Generated relative path for database:', scannedDocumentPath);
-    
-    // Extract OCR text if it's a PDF
-    let ocrText = null;
-    if (fileExt.toLowerCase() === '.pdf') {
-      console.log('Extracting Arabic text from PDF with enhanced OCR');
-      try {
-        ocrText = await extractTextFromPDF(newFilePath, 'ara+fra+eng');
-        console.log('OCR extraction completed, text length:', ocrText ? ocrText.length : 0);
-        
-        if (ocrText && ocrText.length > 0) {
-          console.log('OCR text sample:', ocrText.substring(0, 200));
-        } else {
-          console.log('No OCR text extracted from the document');
-        }
-      } catch (ocrError) {
-        console.error('OCR extraction error:', ocrError);
-        // Don't fail the entire operation if OCR fails
-      }
+
+    // ASYNC OCR FIX: Trigger OCR in background without awaiting so response returns immediately
+    let ocrStatus = 'completed';
+    if (fileExt.toLowerCase() === '.pdf' && fs.existsSync(newFilePath)) {
+      scannerService.getStatusManager().updateJob(scanResult.scanId, {
+        finalFilePath: newFilePath,
+      });
+      launchBackgroundOcr({
+        scanId: scanResult.scanId,
+        filePath: newFilePath,
+        documentType,
+        languages,
+      });
+      ocrStatus = 'processing';
+    } else {
+      scannerService.getStatusManager().updateJob(scanResult.scanId, {
+        ocrStatus: 'completed',
+        ocrText: '',
+        ocrInProgress: false,
+        finalFilePath: newFilePath,
+      });
     }
-    
+
     return {
       success: true,
+      scanId: scanResult.scanId,
       serialNumber,
       filePath: scannedDocumentPath,
       year,
-      ocrText: ocrText || '',
-      format: fileExt.replace('.', '')
+      ocrText: '',
+      ocrStatus,
+      format: validated.format,
+      pageCount: scanResult.pageCount || 1,
     };
   } catch (error) {
-    console.error('Scan integration error:', error);
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      try { fs.unlinkSync(tempFilePath); } catch (_) {}
+    }
+
+    if (error instanceof ScannerError) {
+      return {
+        success: false,
+        code: error.code,
+        statusCode: error.statusCode,
+        error: error.message,
+      };
+    }
+
+    console.error('[Scanner] scanForDocument unexpected error:', error);
     return {
       success: false,
-      error: error.message
+      code: 'SCAN_FAILED',
+      statusCode: 500,
+      error: 'Erreur interne lors de la numérisation du document.',
     };
   }
 };
 
 /**
- * Scans a document and returns the temporary file path
- * Useful for scanning without immediately creating a document
- * @param {Object} options - Scanning options
- * @returns {Promise<Object>} Scan result
+ * Scans a temporary document and exposes scanId for secure /status/:scanId and /file/:scanId
  */
 exports.scanDocument = async (options) => {
   try {
-    const { documentType, format = 'pdf', resolution = 300, userId } = options;
-    
-    console.log(`Starting temporary scan for document type: ${documentType}, format: ${format}`);
-    
-    // Validate inputs
+    const {
+      documentType = 'temp',
+      format = 'pdf',
+      resolution = 300,
+      colorMode,
+      documentSource,
+      scanId,
+      userId,
+      languages,
+    } = options;
+
     if (!userId) {
-      throw new Error('User ID is required');
+      throw new ScannerError('INVALID_SCAN_PARAMS', 'Identifiant utilisateur requis.', 400);
     }
-    
-    // Auto-detect scanner if needed
-    const status = scannerService.getStatus();
-    if (!status.deviceId || status.deviceId === 'Not selected') {
-      console.log('No scanner selected for temporary document, attempting auto-detection');
-      try {
-        const detected = await scannerService.autoDetectScanner();
-        if (!detected) {
-          throw new Error('No physical scanner detected. Please connect a scanner, install proper drivers, and refresh the scanner list.');
-        }
-      } catch (detectionError) {
-        throw new Error(`Scanner detection failed: ${detectionError.message}. Please check scanner connection and drivers.`);
+
+    const validated = validateScanOptions({
+      format,
+      resolution,
+      colorMode,
+      documentSource,
+      scanId,
+    });
+
+    const scanResult = await scannerService.startScan({
+      documentType,
+      format: validated.format,
+      resolution: validated.resolution,
+      colorMode: validated.colorMode,
+      documentSource: validated.documentSource,
+      scanId: validated.scanId || undefined,
+      userId: String(userId),
+    });
+
+    const job = scannerService.getStatusManager().getJob(scanResult.scanId);
+    if (job && (job.cancelled || job.abortController?.signal?.aborted)) {
+      if (scanResult.filePath && fs.existsSync(scanResult.filePath)) {
+        try { fs.unlinkSync(scanResult.filePath); } catch (_) {}
       }
+      throw new ScannerError('SCAN_CANCELLED', 'Numérisation annulée.', 409);
     }
-    
-    // Start scan job with timeout
-    let tempFilePath;
-    try {
-      const scanPromise = scannerService.startScan({
+
+    // ASYNC OCR FIX: Do NOT await extractTextFromPDF here — return physical scan immediately and launch OCR in background
+    let ocrStatus = 'completed';
+    if (validated.format === 'pdf' && scanResult.filePath && fs.existsSync(scanResult.filePath)) {
+      launchBackgroundOcr({
+        scanId: scanResult.scanId,
+        filePath: scanResult.filePath,
         documentType,
-        format,
-        resolution,
-        userId
+        languages,
       });
-      
-      // Add timeout to prevent hanging - increased for slow scanners
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Scan operation timed out')), 180000); // 3 minutes
+      ocrStatus = 'processing';
+    } else {
+      scannerService.getStatusManager().updateJob(scanResult.scanId, {
+        ocrStatus: 'completed',
+        ocrText: '',
+        ocrInProgress: false,
       });
-      
-      tempFilePath = await Promise.race([scanPromise, timeoutPromise]);
-      console.log('Temporary scan completed:', tempFilePath);
-    } catch (scanError) {
-      console.error('Temporary scan operation failed:', scanError);
-      throw new Error(`Scan operation failed: ${scanError.message}`);
     }
-    
-    // Extract OCR text if it's a PDF
-    let ocrText = null;
-    if (format.toLowerCase() === 'pdf' && fs.existsSync(tempFilePath)) {
-      try {
-        console.log('Extracting Arabic text from temporary PDF with enhanced OCR');
-        ocrText = await extractTextFromPDF(tempFilePath, 'ara+fra+eng');
-        console.log('OCR extraction completed for temporary scan, text length:', ocrText ? ocrText.length : 0);
-        
-        if (ocrText && ocrText.length > 0) {
-          console.log('OCR text sample from temporary scan:', ocrText.substring(0, 200));
-        } else {
-          console.log('No OCR text extracted from temporary scan');
-        }
-      } catch (ocrError) {
-        console.error('OCR extraction error for temporary document:', ocrError);
-        // Don't fail the entire operation if OCR fails
-      }
-    }
-    
+
     return {
       success: true,
-      filePath: tempFilePath,
-      format,
-      ocrText: ocrText || ''
+      scanId: scanResult.scanId,
+      filePath: scanResult.filePath,
+      format: validated.format,
+      pageCount: scanResult.pageCount || 1,
+      ocrText: '',
+      ocrStatus,
     };
   } catch (error) {
-    console.error('Document scan error:', error);
+    if (error instanceof ScannerError) {
+      return {
+        success: false,
+        code: error.code,
+        statusCode: error.statusCode,
+        error: error.message,
+      };
+    }
+
+    console.error('[Scanner] scanDocument unexpected error:', error);
     return {
       success: false,
-      error: error.message
+      code: 'SCAN_FAILED',
+      statusCode: 500,
+      error: 'Erreur interne lors de la numérisation.',
     };
   }
 };
 
-/**
- * Check if scanner integration is working
- * @returns {Promise<Object>} Status of scanner integration
- */
 exports.checkScannerStatus = async () => {
   try {
-    // Get scanner status
     const status = scannerService.getStatus();
-    
-    // Try to list scanners
     const scanners = await scannerService.listScanners();
-    
     return {
       success: true,
       status,
       scanners,
-      scannersDetected: scanners.length > 0
+      scannersDetected: scanners.length > 0,
     };
   } catch (error) {
-    console.error('Scanner status check error:', error);
     return {
       success: false,
-      error: error.message
+      code: error.code || 'SCANNER_NOT_FOUND',
+      statusCode: error.statusCode || 503,
+      error: error.message,
     };
   }
 };

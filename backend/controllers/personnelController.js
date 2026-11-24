@@ -9,6 +9,7 @@ const OutgoingDocument = require('../models/OutgoingDocument');
 const User = require('../models/User');
 const OrganizationSettings = require('../models/OrganizationSettings');
 const { sanitizeSearchQuery } = require('../utils/regexUtils');
+const { logAuditAction } = require('../utils/auditLogger');
 
 // Helper pour vérifier si l'utilisateur est un chef de département non-RH
 const isNonRHAdminDepartment = async (user) => {
@@ -167,7 +168,7 @@ exports.createPersonnel = async (req, res, next) => {
     // Synchronisation du département vers le User s'il est lié à la création
     if (personnel.userId && personnel.activeDepartment) {
       try {
-        const user = await User.findById(personnel.userId);
+        const user = await User.findOne({ _id: personnel.userId, isDeleted: { $ne: true } });
         if (user) {
           if (user.role !== 'AdminTuningDesk') {
             user.activeDepartment = personnel.activeDepartment;
@@ -189,6 +190,16 @@ exports.createPersonnel = async (req, res, next) => {
         console.warn('Erreur lors de la synchronisation département à la création du personnel:', syncErr.message);
       }
     }
+
+    await logAuditAction(
+      'personnel_create',
+      'Personnel',
+      personnel._id.toString(),
+      req.user?._id || req.user?.id,
+      req.user,
+      { nom: personnel.nom, prenom: personnel.prenom, activeDepartment: personnel.activeDepartment },
+      req.ip
+    );
 
     res.status(201).json({
       success: true,
@@ -216,37 +227,46 @@ exports.getPersonnelList = async (req, res, next) => {
 
     const query = { isDeleted: { $ne: true } };
 
-    // Filtrer par département si l'utilisateur est AdminDept non-RH
+    const isAdminOrDirector = Boolean(req.user && ['Admin', 'Director'].includes(req.user.role));
+    let isRH = false;
+
     if (req.user && req.user.role === 'AdminDepartment') {
-      // Vérifier si RH
       const settings = await OrganizationSettings.findOne();
       const rhDeptId = settings?.rhDepartmentId?.toString();
       const userDeptId = (req.user.activeDepartment?._id || req.user.activeDepartment)?.toString();
+      isRH = Boolean(rhDeptId && userDeptId && userDeptId === rhDeptId);
+    }
 
-      const isRH = Boolean(rhDeptId && userDeptId && userDeptId === rhDeptId);
+    const hasFullHRAccess = isAdminOrDirector || isRH;
 
-      if (!isRH) {
-        // AdminDept non-RH : filtrer par SON département
-        query.activeDepartment = req.user.activeDepartment?._id || req.user.activeDepartment;
-      } else if (req.query.activeDepartment) {
-        // Si RH avec filtre spécifique
-        query.activeDepartment = req.query.activeDepartment;
+    // Si l'utilisateur n'est pas Admin/Director/RH : restreindre à son département actif
+    if (!hasFullHRAccess) {
+      const userActiveDept = req.user?.activeDepartment?._id || req.user?.activeDepartment;
+      if (userActiveDept) {
+        query.activeDepartment = userActiveDept;
+      } else {
+        // Aucun département rattaché (ex: AdminTuningDesk) : aucun accès aux fiches personnelles
+        query._id = null;
       }
     } else if (req.query.activeDepartment) {
-      // Admin et Director : pas de filtre par défaut → voit tout, sauf si req.query.activeDepartment
       query.activeDepartment = req.query.activeDepartment;
     }
 
-    // Filtre de recherche textuelle (nom, prenom, cin)
+    // Filtre de recherche textuelle (CIN réservé aux utilisateurs Admin/Director/RH)
     if (req.query.search) {
       const safeSearch = sanitizeSearchQuery(req.query.search);
       if (safeSearch) {
         const searchRegex = new RegExp(safeSearch, 'i');
-        query.$or = [
-          { nom: searchRegex },
-          { prenom: searchRegex },
-          { cin: searchRegex }
-        ];
+        query.$or = hasFullHRAccess
+          ? [
+              { nom: searchRegex },
+              { prenom: searchRegex },
+              { cin: searchRegex }
+            ]
+          : [
+              { nom: searchRegex },
+              { prenom: searchRegex }
+            ];
       }
     }
 
@@ -258,8 +278,13 @@ exports.getPersonnelList = async (req, res, next) => {
     const total = await Personnel.countDocuments(query);
     const pages = Math.ceil(total / limit) || 1;
 
-    // Pas de populate sur userId ici pour préserver les performances
-    const personnelList = await Personnel.find(query)
+    // Projection minimale hors Admin/Director/RH : masquer strictement cin, groupeSanguin, numeroPasseport, personnesAPrevenir et autres PII
+    const personnelQuery = Personnel.find(query);
+    if (!hasFullHRAccess) {
+      personnelQuery.select('_id nom prenom activeDepartment poste posteActuel');
+    }
+
+    const personnelList = await personnelQuery
       .populate('activeDepartment', 'name code description')
       .populate('departments', 'name code')
       .sort({ createdAt: -1 })
@@ -437,7 +462,7 @@ exports.updatePersonnel = async (req, res, next) => {
     // Synchronisation du département (Personnel → User)
     if (personnel.userId && personnel.activeDepartment) {
       try {
-        const user = await User.findById(personnel.userId);
+        const user = await User.findOne({ _id: personnel.userId, isDeleted: { $ne: true } });
         if (user) {
           if (user.role !== 'AdminTuningDesk') {
             user.activeDepartment = personnel.activeDepartment;
@@ -460,9 +485,19 @@ exports.updatePersonnel = async (req, res, next) => {
       }
     }
 
-    const updatedPersonnel = await Personnel.findById(id)
+    const updatedPersonnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } })
       .populate('activeDepartment', 'name description')
       .populate('departments', 'name');
+
+    await logAuditAction(
+      'personnel_update',
+      'Personnel',
+      personnel._id.toString(),
+      req.user?._id || req.user?.id,
+      req.user,
+      { nom: personnel.nom, prenom: personnel.prenom },
+      req.ip
+    );
 
     res.status(200).json({
       success: true,
@@ -515,6 +550,16 @@ exports.deletePersonnel = async (req, res, next) => {
     personnel.deletedBy = req.user ? (req.user._id || req.user.id) : null;
     await personnel.save();
 
+    await logAuditAction(
+      'personnel_delete',
+      'Personnel',
+      personnel._id.toString(),
+      req.user?._id || req.user?.id,
+      req.user,
+      { nom: personnel.nom, prenom: personnel.prenom },
+      req.ip
+    );
+
     res.status(200).json({
       success: true,
       data: {},
@@ -552,6 +597,16 @@ exports.restorePersonnel = async (req, res, next) => {
     personnel.deletedAt = null;
     personnel.deletedBy = null;
     await personnel.save();
+
+    await logAuditAction(
+      'personnel_restore',
+      'Personnel',
+      personnel._id.toString(),
+      req.user?._id || req.user?.id,
+      req.user,
+      { nom: personnel.nom, prenom: personnel.prenom },
+      req.ip
+    );
 
     res.status(200).json({
       success: true,
@@ -596,7 +651,10 @@ exports.getMyProfile = async (req, res, next) => {
 
     // 1. Recherche par personnelId présent sur le modèle User connecté
     if (req.user && req.user.personnelId) {
-      personnel = await Personnel.findById(req.user.personnelId)
+      personnel = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }
@@ -604,7 +662,7 @@ exports.getMyProfile = async (req, res, next) => {
     // 2. Recherche par userId au cas où personnelId n'est pas encore synchronisé sur req.user
     if (!personnel && req.user) {
       const userId = req.user._id || req.user.id;
-      personnel = await Personnel.findOne({ userId })
+      personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }
@@ -634,13 +692,16 @@ exports.getMyDocuments = async (req, res, next) => {
 
     // 1. Recherche par personnelId
     if (req.user && req.user.personnelId) {
-      personnel = await Personnel.findById(req.user.personnelId);
+      personnel = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      });
     }
 
     // 2. Recherche par userId en fallback
     if (!personnel && req.user) {
       const userId = req.user._id || req.user.id;
-      personnel = await Personnel.findOne({ userId });
+      personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } });
     }
 
     if (!personnel) {
@@ -738,7 +799,7 @@ exports.linkUserToPersonnel = async (req, res, next) => {
     }
 
     // c. Récupérer le User → si introuvable → 404
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: userId, isDeleted: { $ne: true } });
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -829,6 +890,16 @@ exports.linkUserToPersonnel = async (req, res, next) => {
       }
     }
 
+    await logAuditAction(
+      'personnel_link_user',
+      'Personnel',
+      personnel._id.toString(),
+      req.user?._id || req.user?.id,
+      req.user,
+      { linkedUserId: user._id.toString(), username: user.username },
+      req.ip
+    );
+
     // h. Retourner { success: true, data: { personnel, user } }
     res.status(200).json({
       success: true,
@@ -902,6 +973,16 @@ exports.uploadPersonnelPhotoFile = async (req, res, next) => {
     const photoPath = `/uploads/personnelphoto/${req.file.filename}`;
     personnel.photo = photoPath;
     await personnel.save();
+
+    await logAuditAction(
+      'personnel_photo_upload',
+      'Personnel',
+      personnel._id.toString(),
+      req.user?._id || req.user?.id,
+      req.user,
+      { photo: personnel.photo },
+      req.ip
+    );
 
     res.status(200).json({
       success: true,

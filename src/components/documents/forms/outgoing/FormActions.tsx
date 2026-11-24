@@ -11,6 +11,7 @@ interface FormActionsProps<TFieldValues extends FieldValues = FieldValues> {
   cancelText: string;
   submitText: string;
   cancelRoute: string;
+  disabled?: boolean;
 }
 
 const FormActions: React.FC<FormActionsProps> = ({
@@ -18,9 +19,11 @@ const FormActions: React.FC<FormActionsProps> = ({
   onSubmit,
   cancelText,
   submitText,
-  cancelRoute
+  cancelRoute,
+  disabled = false,
 }) => {
   const navigate = useNavigate();
+  const isDisabled = disabled || form.formState.isSubmitting;
   
   return (
     <div className="flex justify-between">
@@ -32,11 +35,11 @@ const FormActions: React.FC<FormActionsProps> = ({
       </Button>
       <Button 
         onClick={form.handleSubmit(onSubmit)}
-        disabled={form.formState.isSubmitting}
+        disabled={isDisabled}
       >
         {form.formState.isSubmitting ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
             {submitText}
           </>
         ) : (

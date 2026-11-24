@@ -52,7 +52,7 @@ router.put(
 
 // Routes CRUD du personnel
 router.route('/personnel')
-  .get(authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), getPersonnelList)
+  .get(authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), checkRHAccess, getPersonnelList)
   .post(authorize('Admin', 'AdminDepartment'), checkRHAccess, createPersonnel);
 
 router.route('/personnel/:id')

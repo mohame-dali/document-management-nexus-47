@@ -52,7 +52,7 @@ exports.createPromotion = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -69,7 +69,7 @@ exports.createPromotion = async (req, res, next) => {
       observations
     } = req.body;
 
-    if (!gradeNouveau || !datePromotion) {
+    if (typeof gradeNouveau !== 'string' || !gradeNouveau.trim() || !datePromotion) {
       return res.status(400).json({
         success: false,
         message: 'Les champs gradeNouveau et datePromotion sont obligatoires'
@@ -78,12 +78,12 @@ exports.createPromotion = async (req, res, next) => {
 
     const newPromotion = await RHPromotion.create({
       personnelId,
-      gradePrecedent: gradePrecedent || '',
+      gradePrecedent: typeof gradePrecedent === 'string' ? gradePrecedent.trim() : '',
       gradeNouveau: gradeNouveau.trim(),
       datePromotion,
-      reference: reference || '',
-      motif: motif || '',
-      observations: observations || '',
+      reference: typeof reference === 'string' ? reference.trim() : '',
+      motif: typeof motif === 'string' ? motif.trim() : '',
+      observations: typeof observations === 'string' ? observations.trim() : '',
       createdBy: req.user ? req.user._id : null,
       updatedBy: req.user ? req.user._id : null
     });
@@ -112,7 +112,16 @@ exports.updatePromotion = async (req, res, next) => {
       });
     }
 
-    const updateData = { ...req.body };
+    const updateData = {};
+    const stringFields = ['gradePrecedent', 'gradeNouveau', 'reference', 'motif', 'observations'];
+    for (const field of stringFields) {
+      if (typeof req.body[field] === 'string') {
+        updateData[field] = req.body[field].trim();
+      }
+    }
+    if (req.body.datePromotion !== undefined) {
+      updateData.datePromotion = req.body.datePromotion;
+    }
     if (req.user) {
       updateData.updatedBy = req.user._id;
     }
@@ -218,7 +227,7 @@ exports.createPoste = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -235,7 +244,7 @@ exports.createPoste = async (req, res, next) => {
       observations
     } = req.body;
 
-    if (!poste || !dateDebut) {
+    if (typeof poste !== 'string' || !poste.trim() || !dateDebut) {
       return res.status(400).json({
         success: false,
         message: 'Les champs poste et dateDebut sont obligatoires'
@@ -247,9 +256,9 @@ exports.createPoste = async (req, res, next) => {
       poste: poste.trim(),
       dateDebut,
       dateFin: dateFin || null,
-      reference: reference || '',
-      lieu: lieu || '',
-      observations: observations || '',
+      reference: typeof reference === 'string' ? reference.trim() : '',
+      lieu: typeof lieu === 'string' ? lieu.trim() : '',
+      observations: typeof observations === 'string' ? observations.trim() : '',
       createdBy: req.user ? req.user._id : null,
       updatedBy: req.user ? req.user._id : null
     });
@@ -278,7 +287,19 @@ exports.updatePoste = async (req, res, next) => {
       });
     }
 
-    const updateData = { ...req.body };
+    const updateData = {};
+    const stringFields = ['poste', 'reference', 'lieu', 'observations'];
+    for (const field of stringFields) {
+      if (typeof req.body[field] === 'string') {
+        updateData[field] = req.body[field].trim();
+      }
+    }
+    if (req.body.dateDebut !== undefined) {
+      updateData.dateDebut = req.body.dateDebut;
+    }
+    if (req.body.dateFin !== undefined) {
+      updateData.dateFin = req.body.dateFin || null;
+    }
     if (req.user) {
       updateData.updatedBy = req.user._id;
     }
@@ -384,7 +405,7 @@ exports.createDiplome = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -402,7 +423,11 @@ exports.createDiplome = async (req, res, next) => {
       observations
     } = req.body;
 
-    if (!typeDiplome || !sujetDiplome || !dateObtention) {
+    if (
+      typeof typeDiplome !== 'string' || !typeDiplome.trim() ||
+      typeof sujetDiplome !== 'string' || !sujetDiplome.trim() ||
+      !dateObtention
+    ) {
       return res.status(400).json({
         success: false,
         message: 'Les champs typeDiplome, sujetDiplome et dateObtention sont obligatoires'
@@ -414,10 +439,10 @@ exports.createDiplome = async (req, res, next) => {
       typeDiplome: typeDiplome.trim(),
       sujetDiplome: sujetDiplome.trim(),
       dateObtention,
-      etablissement: etablissement || '',
-      reference: reference || '',
-      niveau: niveau || '',
-      observations: observations || '',
+      etablissement: typeof etablissement === 'string' ? etablissement.trim() : '',
+      reference: typeof reference === 'string' ? reference.trim() : '',
+      niveau: typeof niveau === 'string' ? niveau.trim() : '',
+      observations: typeof observations === 'string' ? observations.trim() : '',
       createdBy: req.user ? req.user._id : null,
       updatedBy: req.user ? req.user._id : null
     });
@@ -446,7 +471,16 @@ exports.updateDiplome = async (req, res, next) => {
       });
     }
 
-    const updateData = { ...req.body };
+    const updateData = {};
+    const stringFields = ['typeDiplome', 'sujetDiplome', 'etablissement', 'reference', 'niveau', 'observations'];
+    for (const field of stringFields) {
+      if (typeof req.body[field] === 'string') {
+        updateData[field] = req.body[field].trim();
+      }
+    }
+    if (req.body.dateObtention !== undefined) {
+      updateData.dateObtention = req.body.dateObtention;
+    }
     if (req.user) {
       updateData.updatedBy = req.user._id;
     }
@@ -552,7 +586,7 @@ exports.createSanction = async (req, res, next) => {
       });
     }
 
-    const personnel = await Personnel.findById(personnelId);
+    const personnel = await Personnel.findOne({ _id: personnelId, isDeleted: { $ne: true } });
     if (!personnel) {
       return res.status(404).json({
         success: false,
@@ -569,7 +603,7 @@ exports.createSanction = async (req, res, next) => {
       observations
     } = req.body;
 
-    if (!dateSanction || !raison) {
+    if (!dateSanction || typeof raison !== 'string' || !raison.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Les champs dateSanction et raison sont obligatoires'
@@ -581,9 +615,9 @@ exports.createSanction = async (req, res, next) => {
       dateSanction,
       nombreJours: Number(nombreJours) || 0,
       raison: raison.trim(),
-      typeSanction: typeSanction || '',
-      reference: reference || '',
-      observations: observations || '',
+      typeSanction: typeof typeSanction === 'string' ? typeSanction.trim() : '',
+      reference: typeof reference === 'string' ? reference.trim() : '',
+      observations: typeof observations === 'string' ? observations.trim() : '',
       createdBy: req.user ? req.user._id : null,
       updatedBy: req.user ? req.user._id : null
     });
@@ -612,9 +646,18 @@ exports.updateSanction = async (req, res, next) => {
       });
     }
 
-    const updateData = { ...req.body };
-    if (updateData.nombreJours !== undefined) {
-      updateData.nombreJours = Number(updateData.nombreJours) || 0;
+    const updateData = {};
+    const stringFields = ['raison', 'typeSanction', 'reference', 'observations'];
+    for (const field of stringFields) {
+      if (typeof req.body[field] === 'string') {
+        updateData[field] = req.body[field].trim();
+      }
+    }
+    if (req.body.dateSanction !== undefined) {
+      updateData.dateSanction = req.body.dateSanction;
+    }
+    if (req.body.nombreJours !== undefined) {
+      updateData.nombreJours = Number(req.body.nombreJours) || 0;
     }
     if (req.user) {
       updateData.updatedBy = req.user._id;
@@ -734,14 +777,17 @@ exports.getMyFullHistory = async (req, res, next) => {
     let personnel = null;
 
     if (req.user && req.user.personnelId) {
-      personnel = await Personnel.findById(req.user.personnelId)
+      personnel = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }
 
     if (!personnel && req.user) {
       const userId = req.user._id || req.user.id;
-      personnel = await Personnel.findOne({ userId })
+      personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } })
         .populate('activeDepartment', 'name description')
         .populate('departments', 'name');
     }

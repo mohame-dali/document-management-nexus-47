@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 import { FileInput, AlertCircle, Calendar, Building, User, FileText, Hash, Mail, MapPin } from 'lucide-react';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentPreviewProps {
   hoveredDoc: string | null;
@@ -18,6 +19,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
   previewPosition,
   translations
 }) => {
+  const { dir } = useDirection();
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const getDocumentUrl = (documentPath: string) => {
@@ -51,7 +53,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           height: '500px'
         }}
       >
-        <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir="rtl">
+        <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir={dir}>
           <FileInput className="h-8 w-8 mb-2" />
           <p className="text-sm text-center text-[#5f6b7d]">{translations.noPreview}</p>
         </div>
@@ -73,33 +75,33 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
       }}
     >
       {/* Header with document title */}
-      <div className="bg-[#f7fafc] px-3.5 py-2.5 border-b border-[#e2e8f0]" dir="rtl">
+      <div className="bg-[#f7fafc] px-3.5 py-2.5 border-b border-[#e2e8f0]" dir={dir}>
         <h3 className="text-xs font-semibold text-[#1a202c] truncate">{document.subject}</h3>
-        <p className="text-[11px] text-[#5f6b7d]">#{document.serialNumber} - {document.year}</p>
+        <p className="text-[11px] text-[#5f6b7d]"><bdi dir="ltr">#{document.serialNumber} - {document.year}</bdi></p>
       </div>
 
       <div className="flex flex-col h-full">
         {/* Document Details Table */}
-        <div className="p-3 border-b border-[#e2e8f0] bg-[#f7fafc]/50 max-h-48 overflow-y-auto" dir="rtl">
+        <div className="p-3 border-b border-[#e2e8f0] bg-[#f7fafc]/50 max-h-48 overflow-y-auto" dir={dir}>
           <table className="w-full text-xs">
             <tbody className="space-y-1">
               {/* Serial Number and Year */}
               <tr>
                 <td className="font-medium text-[#4a5568] py-1 w-24">
-                  <Hash className="h-3 w-3 inline ml-1 text-[#718096]" />
+                  <Hash className="h-3 w-3 inline me-1 text-[#718096]" />
                   الرقم:
                 </td>
-                <td className="text-[#1a202c] py-1 font-medium">#{document.serialNumber}/{document.year}</td>
+                <td className="text-[#1a202c] py-1 font-medium"><bdi dir="ltr">#{document.serialNumber}/{document.year}</bdi></td>
               </tr>
 
               {/* Date */}
               <tr>
                 <td className="font-medium text-[#4a5568] py-1">
-                  <Calendar className="h-3 w-3 inline ml-1 text-[#718096]" />
+                  <Calendar className="h-3 w-3 inline me-1 text-[#718096]" />
                   التاريخ:
                 </td>
                 <td className="text-[#2d3748] py-1">
-                  {formatDate(isIncomingDocument(document) ? document.arrivalDate : document.issueDate)}
+                  <bdi dir="ltr">{formatDate(isIncomingDocument(document) ? document.arrivalDate : document.issueDate)}</bdi>
                 </td>
               </tr>
 
@@ -107,7 +109,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {document.typeDocument && (
                 <tr>
                   <td className="font-medium text-[#4a5568] py-1">
-                    <FileText className="h-3 w-3 inline ml-1 text-[#718096]" />
+                    <FileText className="h-3 w-3 inline me-1 text-[#718096]" />
                     النوع:
                   </td>
                   <td className="text-[#2d3748] py-1">{document.typeDocument}</td>
@@ -117,7 +119,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {/* Source */}
               <tr>
                 <td className="font-medium text-[#4a5568] py-1">
-                  <Building className="h-3 w-3 inline ml-1 text-[#718096]" />
+                  <Building className="h-3 w-3 inline me-1 text-[#718096]" />
                   المصدر:
                 </td>
                 <td className="text-[#2d3748] py-1">
@@ -132,7 +134,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {isIncomingDocument(document) && document.activity && (
                 <tr>
                   <td className="font-medium text-[#4a5568] py-1">
-                    <MapPin className="h-3 w-3 inline ml-1 text-[#718096]" />
+                    <MapPin className="h-3 w-3 inline me-1 text-[#718096]" />
                     النشاط:
                   </td>
                   <td className="text-[#2d3748] py-1">{document.activity}</td>
@@ -145,19 +147,19 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                   {document.correspondenceNumber && (
                     <tr>
                       <td className="font-medium text-[#4a5568] py-1">
-                        <Mail className="h-3 w-3 inline ml-1 text-[#718096]" />
+                        <Mail className="h-3 w-3 inline me-1 text-[#718096]" />
                         رقم المراسلة:
                       </td>
-                      <td className="text-[#2d3748] py-1">{document.correspondenceNumber}</td>
+                      <td className="text-[#2d3748] py-1"><bdi dir="ltr">{document.correspondenceNumber}</bdi></td>
                     </tr>
                   )}
                   {document.correspondenceDate && (
                     <tr>
                       <td className="font-medium text-[#4a5568] py-1">
-                        <Calendar className="h-3 w-3 inline ml-1 text-[#718096]" />
+                        <Calendar className="h-3 w-3 inline me-1 text-[#718096]" />
                         تاريخ المراسلة:
                       </td>
-                      <td className="text-[#2d3748] py-1">{formatDate(document.correspondenceDate)}</td>
+                      <td className="text-[#2d3748] py-1"><bdi dir="ltr">{formatDate(document.correspondenceDate)}</bdi></td>
                     </tr>
                   )}
                 </>
@@ -167,7 +169,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {!isIncomingDocument(document) && (document as OutgoingDocument).assignedTo && (document as OutgoingDocument).assignedTo.length > 0 && (
                 <tr>
                   <td className="font-medium text-[#4a5568] py-1 align-top">
-                    <User className="h-3 w-3 inline ml-1 text-[#718096]" />
+                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
                     مُوجه إلى:
                   </td>
                   <td className="text-[#2d3748] py-1">
@@ -180,7 +182,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {!isIncomingDocument(document) && (document as OutgoingDocument).pourInfo && (document as OutgoingDocument).pourInfo.length > 0 && (
                 <tr>
                   <td className="font-medium text-[#4a5568] py-1 align-top">
-                    <User className="h-3 w-3 inline ml-1 text-[#718096]" />
+                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
                     للعلم:
                   </td>
                   <td className="text-[#2d3748] py-1">
@@ -193,7 +195,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {isIncomingDocument(document) && document.assignedTo && document.assignedTo.length > 0 && (
                 <tr>
                   <td className="font-medium text-[#4a5568] py-1 align-top">
-                    <User className="h-3 w-3 inline ml-1 text-[#718096]" />
+                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
                     مُعيّن إلى:
                   </td>
                   <td className="text-[#2d3748] py-1">
@@ -206,7 +208,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {isIncomingDocument(document) && document.responsibleUser && typeof document.responsibleUser === 'object' && (
                 <tr>
                   <td className="font-medium text-[#4a5568] py-1">
-                    <User className="h-3 w-3 inline ml-1 text-[#718096]" />
+                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
                     المسؤول:
                   </td>
                   <td className="text-[#2d3748] py-1">{document.responsibleUser.username}</td>
@@ -221,7 +223,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           {hasValidPDF ? (
             <>
               {loadError ? (
-                <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir="rtl">
+                <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir={dir}>
                   <AlertCircle className="h-6 w-6 mb-2 text-[#e53e3e]" />
                   <p className="text-xs text-center text-[#e53e3e]">فشل في تحميل المعاينة</p>
                 </div>
@@ -240,14 +242,14 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                       height: '111%'
                     }}
                   />
-                  <div className="absolute bottom-2 left-2 bg-[#1a202c]/80 text-white text-xs px-2 py-1 rounded shadow-xs" dir="rtl">
+                  <div className="absolute bottom-2 end-2 bg-[#1a202c]/80 text-white text-xs px-2 py-1 rounded shadow-xs" dir={dir}>
                     معاينة سريعة
                   </div>
                 </div>
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir="rtl">
+            <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir={dir}>
               <FileInput className="h-6 w-6 mb-2" />
               <p className="text-xs text-center text-[#5f6b7d]">{translations.noPreview}</p>
             </div>

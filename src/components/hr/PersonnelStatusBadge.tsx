@@ -11,8 +11,7 @@ export const PersonnelStatusBadge: React.FC<PersonnelStatusBadgeProps> = ({ stat
     case 'actif':
       return (
         <span
-          className={`inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold rounded text-white ${className}`}
-          style={{ backgroundColor: '#38a169' }}
+          className={`inline-flex items-center justify-center px-2.5 py-0.5 text-xs font-semibold rounded border border-[#86efac] bg-[#ecfdf5] text-[#14532d] ${className}`}
         >
           نشط
         </span>
@@ -20,8 +19,7 @@ export const PersonnelStatusBadge: React.FC<PersonnelStatusBadgeProps> = ({ stat
     case 'inactif':
       return (
         <span
-          className={`inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold rounded text-white ${className}`}
-          style={{ backgroundColor: '#a0aec0' }}
+          className={`inline-flex items-center justify-center px-2.5 py-0.5 text-xs font-semibold rounded border border-[#cbd5e1] bg-[#f1f5f9] text-[#1e293b] ${className}`}
         >
           غير نشط
         </span>
@@ -30,8 +28,7 @@ export const PersonnelStatusBadge: React.FC<PersonnelStatusBadgeProps> = ({ stat
     default:
       return (
         <span
-          className={`inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold rounded ${className}`}
-          style={{ backgroundColor: '#FFCB56', color: '#1a202c' }}
+          className={`inline-flex items-center justify-center px-2.5 py-0.5 text-xs font-bold rounded border border-[#d97706] bg-[#FFCB56] text-[#111827] ${className}`}
         >
           في الانتظار
         </span>

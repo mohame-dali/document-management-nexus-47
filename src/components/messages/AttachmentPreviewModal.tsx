@@ -174,7 +174,8 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handleOpenExternal}
-                  className="h-8 px-2.5 text-xs gap-1.5"
+                  aria-label={t('common.view')}
+                  className="h-11 min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5"
                   title={t('common.view')}
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -184,7 +185,8 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
                   type="button"
                   size="sm"
                   onClick={handleDownload}
-                  className="h-8 px-3 text-xs gap-1.5 bg-[#2c5282] hover:bg-[#234269] text-white"
+                  aria-label={t('common.download')}
+                  className="h-11 min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 bg-[#2c5282] hover:bg-[#234269] text-white"
                   title={t('common.download')}
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -245,7 +247,7 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
                     type="button"
                     size="sm"
                     onClick={handleDownload}
-                    className="mt-2 h-9 px-4 text-xs gap-2 bg-[#2c5282] hover:bg-[#234269] text-white"
+                    className="mt-2 h-11 min-h-[44px] px-4 text-xs gap-2 bg-[#2c5282] hover:bg-[#234269] text-white"
                   >
                     <Download className="h-4 w-4" />
                     <span>{t('common.download')} ({filename})</span>

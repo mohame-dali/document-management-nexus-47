@@ -15,13 +15,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Folder as FolderType } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useDirection } from '@/i18n/useDirection';
 
 interface FolderSidebarProps {
   className?: string;
+  onNavigate?: () => void;
 }
 
-const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
+const FolderSidebar: React.FC<FolderSidebarProps> = ({ className, onNavigate }) => {
   const { currentUser } = useAuth();
+  const { dir } = useDirection();
   const navigate = useNavigate();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
@@ -57,6 +60,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
 
   const handleViewFolder = (folderId: string) => {
     navigate(`/dashboard/folders?folder=${folderId}`);
+    onNavigate?.();
   };
 
   const renderFolder = (folder: FolderType, level: number = 0) => {
@@ -67,7 +71,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
       <div key={folder._id}>
         <div
           className="flex items-center gap-2 p-1.5 rounded hover:bg-[#2d3748] cursor-pointer transition-colors duration-200 text-slate-200"
-          style={{ paddingRight: `${level * 14 + 6}px` }}
+          style={{ paddingInlineStart: `${level * 14 + 6}px` }}
         >
           {hasChildren ? (
             <button
@@ -80,7 +84,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
               {isExpanded ? (
                 <ChevronDown className="h-3 w-3" />
               ) : (
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3 w-3 rtl:rotate-180" />
               )}
             </button>
           ) : (
@@ -127,7 +131,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
   }
 
   return (
-    <Card className={cn("bg-[#242d3d] border border-slate-700/60 rounded text-slate-100 shadow-sm", className)} dir="rtl">
+    <Card className={cn("bg-[#242d3d] border border-slate-700/60 rounded text-slate-100 shadow-sm", className)} dir={dir}>
       <CardHeader className="p-3 pb-2 border-b border-slate-700/40">
         <CardTitle className="text-xs font-semibold flex items-center gap-2 text-slate-200">
           <FolderOpen className="h-3.5 w-3.5 text-[#90cdf4]" />
@@ -161,7 +165,10 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className }) => {
             variant="outline"
             size="sm"
             className="w-full h-11 text-xs flex items-center justify-center gap-1.5 bg-[#1a202c] hover:bg-[#2d3748] text-slate-200 hover:text-white border-slate-700 rounded transition-colors duration-200"
-            onClick={() => navigate('/dashboard/folders')}
+            onClick={() => {
+              navigate('/dashboard/folders');
+              onNavigate?.();
+            }}
           >
             <Eye className="h-3.5 w-3.5" />
             عرض جميع المجلدات

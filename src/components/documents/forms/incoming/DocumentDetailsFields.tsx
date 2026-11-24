@@ -14,6 +14,7 @@ import MultiDepartmentSelectField from '@/components/documents/forms/MultiDepart
 import DocumentOptionSelect from '@/components/ui/document-option-select';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
 import { Department } from '@/types';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface DocumentDetailsFieldsProps<TFieldValues extends FieldValues = FieldValues> {
   form: UseFormReturn<TFieldValues>;
@@ -26,6 +27,7 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
   t,
   departments
 }) => {
+  const { t: translate } = useLanguage();
   const watchActivity = form.watch('activity');
 
   return (
@@ -58,7 +60,7 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
                   documentType="incoming"
                   value={field.value || ''}
                   onValueChange={field.onChange}
-                  placeholder="اختر المصدر..."
+                  placeholder={translate('documents.forms.sourcePlaceholder')}
                 />
               </FormControl>
               <FormDescription>{t.sourceDesc}</FormDescription>
@@ -74,17 +76,17 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
           name="typeDocument"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>نوع الوثيقة</FormLabel>
+              <FormLabel>{translate('documents.forms.typeDocument')}</FormLabel>
               <FormControl>
                 <DocumentOptionSelect
                   category="typeDocument"
                   documentType="incoming"
                   value={field.value || ''}
                   onValueChange={field.onChange}
-                  placeholder="اختر نوع الوثيقة..."
+                  placeholder={translate('documents.forms.typeDocumentPlaceholder')}
                 />
               </FormControl>
-              <FormDescription>نوع الوثيقة (رسالة، تقرير، الخ.)</FormDescription>
+              <FormDescription>{translate('documents.forms.typeDocumentDesc')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -95,7 +97,7 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
           name="activity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>النشاط (اختياري)</FormLabel>
+              <FormLabel>{translate('documents.forms.activity')}</FormLabel>
               <FormControl>
                 <DocumentOptionSelect
                   category="activity"
@@ -108,10 +110,10 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
                       form.setValue('dateActivity', undefined);
                     }
                   }}
-                  placeholder="اختر النشاط (اختياري)..."
+                  placeholder={translate('documents.forms.activityPlaceholder')}
                 />
               </FormControl>
-              <FormDescription>النشاط المتعلق بالوثيقة (يمكن تركه فارغاً)</FormDescription>
+              <FormDescription>{translate('documents.forms.activityDesc')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -126,9 +128,9 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
           render={({ field }) => (
             <DatePickerField
               field={field}
-              label="تاريخ النشاط"
-              description="تاريخ تنفيذ النشاط المحدد"
-              selectDateText="اختر تاريخ النشاط"
+              label={translate('documents.forms.dateActivity')}
+              description={translate('documents.forms.dateActivityDesc')}
+              selectDateText={translate('documents.forms.selectActivityDate')}
             />
           )}
         />
@@ -141,10 +143,10 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
           render={({ field }) => (
             <MultiDepartmentSelectField
               field={field}
-              label={t.assignedTo}
-              description={t.assignedToDesc}
+              label={t.assignedTo || translate('documents.forms.assignedDepartments')}
+              description={t.assignedToDesc || translate('documents.forms.assignedDepartmentsDesc')}
               departments={departments}
-              placeholder="اختر الأقسام..."
+              placeholder={translate('documents.forms.assignedDepartmentsPlaceholder')}
             />
           )}
         />

@@ -1,116 +1,138 @@
-
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { protect, authorize } = require('../middleware/auth');
+const { extractTextFromPDF, cleanArabicOcrText } = require('../utils/ocrProcessor');
 const {
   startScan,
   getScannerStatus,
   listScanners,
   getRecentScans,
+  selectScanner,
   scanForDocument,
   scanTemporaryDocument,
-  selectScanner,
-  getDocumentScan
+  getDocumentScan,
+  getScanJobStatus,
+  cancelScanJob,
+  getScanFile,
+  getScanPageThumbnail,
+  deleteScanFile,
+  getScanMetadata,
 } = require('../controllers/scan');
 
-// Protect all routes
+// Enforce authentication and Admin / AdminTuningDesk role on ALL scan routes
 router.use(protect);
+router.use(authorize('Admin', 'AdminTuningDesk'));
 
-// Routes for AdminTuningDesk and Admin
-router.get('/status', authorize('Admin', 'AdminTuningDesk'), getScannerStatus);
-router.get('/devices', authorize('Admin', 'AdminTuningDesk'), listScanners);
-router.get('/recent', authorize('Admin', 'AdminTuningDesk'), getRecentScans);
-router.post('/start', authorize('Admin', 'AdminTuningDesk'), startScan);
-router.post('/select-device', authorize('Admin', 'AdminTuningDesk'), selectScanner);
+// Scanner status & device management
+router.get('/status', getScannerStatus);
+router.get('/status/:scanId', getScanJobStatus);
+router.get('/devices', listScanners);
+router.get('/recent', getRecentScans);
+router.post('/start', startScan);
+router.post('/select-device', selectScanner);
+router.post('/cancel/:scanId', cancelScanJob);
 
-// Document scanning routes (restricted to AdminTuningDesk and Admin)
-router.post('/document', authorize('Admin', 'AdminTuningDesk'), scanForDocument);
-router.post('/temp', authorize('Admin', 'AdminTuningDesk'), scanTemporaryDocument);
-
-// Document scan retrieval (accessible to all authenticated users)
+// Document scanning & secure blob retrieval/cleanup
+router.post('/document', scanForDocument);
+router.post('/temp', scanTemporaryDocument);
+router.get('/file/:scanId', getScanFile);
+router.get('/thumbnail/:scanId/:page', getScanPageThumbnail);
+router.delete('/file/:scanId', deleteScanFile);
+router.get('/download/:scanId', getScanFile);
+router.get('/metadata/:scanId', getScanMetadata);
 router.get('/document/:id/:type', getDocumentScan);
 
-// Import Multer & OCR utils
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const { extractTextFromPDF, cleanArabicOcrText } = require('../utils/ocrProcessor');
+const scannerService = require('../utils/scanner');
 
-// Config Multer pour OCR temporaire
+// Config Multer pour OCR temporaire (même dossier temporaire que le reste de l'application)
 const ocrStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../tmp/ocr-uploads');
+  destination: (_req, _file, cb) => {
+    const dir = path.join(scannerService.getConfig().tempDir, 'ocr-uploads');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `ocr-${unique}${ext}`);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `ocr-${unique}${ext === '.pdf' ? '.pdf' : ''}`);
   },
 });
 
 const ocrUpload = multer({
   storage: ocrStorage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
-  fileFilter: (req, file, cb) => {
-    const allowed = ['application/pdf'];
-    if (allowed.includes(file.mimetype)) cb(null, true);
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
     else cb(new Error('Type de fichier non supporté (PDF uniquement)'));
   },
 });
 
 /**
  * POST /api/scan/ocr-upload
- * Reçoit un fichier PDF, retourne le texte OCR
- * SANS créer de document en base.
+ * Reçoit un fichier PDF, retourne le texte OCR SANS créer de document en base.
  */
 router.post(
   '/ocr-upload',
-  ocrUpload.single('file'),
-  async (req, res) => {
-    let filePath = null;
-    try {
-      if (!req.file) {
-        return res.status(400).json({
+  (req, res, next) => {
+    ocrUpload.single('file')(req, res, (err) => {
+      if (err) {
+        const status = err.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+        return res.status(status).json({
           success: false,
-          message: 'Aucun fichier fourni',
+          code: 'INVALID_SCAN_PARAMS',
+          message: err.message || 'Fichier OCR invalide.',
         });
       }
-
-      filePath = req.file.path;
-
-      // Utiliser la fonction existante (avec normalisation arabe)
-      let ocrText = await extractTextFromPDF(filePath, 'ara+fra+eng');
-
-      // Nettoyage du texte (fonctions existantes dans ocrProcessor)
-      if (cleanArabicOcrText) {
-        ocrText = cleanArabicOcrText(ocrText);
-      }
-
-      console.log(`[OCR Upload] ${req.file.originalname} → ${ocrText.length} chars`);
-
-      return res.json({
-        success: true,
-        data: {
-          ocrText,
-          length: ocrText.length,
-          filename: req.file.originalname,
-        },
-      });
-    } catch (error) {
-      console.error('[OCR Upload] Erreur:', error.message);
-      return res.status(500).json({
+      return next();
+    });
+  },
+  async (req, res) => {
+  let filePath = null;
+  try {
+    if (!req.file) {
+      return res.status(400).json({
         success: false,
-        message: error.message || 'Erreur lors de l\'extraction OCR',
+        code: 'INVALID_SCAN_PARAMS',
+        message: 'Aucun fichier fourni.',
       });
-    } finally {
-      // Nettoyer le fichier temporaire
-      if (filePath && fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath); } catch (e) {}
-      }
+    }
+
+    filePath = req.file.path;
+    let ocrText = (await extractTextFromPDF(filePath, 'ara+fra+eng')) || '';
+    if (cleanArabicOcrText) {
+      ocrText = cleanArabicOcrText(ocrText);
+    }
+
+    console.log(`[OCR Upload] ${req.file.originalname} -> ${ocrText.length} chars`);
+
+    return res.json({
+      success: true,
+      data: {
+        ocrText,
+        length: ocrText.length,
+        filename: req.file.originalname,
+      },
+    });
+  } catch (error) {
+    console.error('[OCR Upload] Error:', error.message);
+    return res.status(500).json({
+      success: false,
+      code: 'SCAN_FAILED',
+      message: 'Erreur lors de l’extraction OCR.',
+    });
+  } finally {
+    if (filePath && fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (_) {}
     }
   }
-);
+});
+
+// Keep generic DELETE /:scanId at the end after named routes
+router.delete('/:scanId', deleteScanFile);
 
 module.exports = router;

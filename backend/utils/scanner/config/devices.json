@@ -1,6 +1,10 @@
 {
-  "currentDeviceId": "panamfs:libusb:003:003",
+  "currentDeviceId": "",
   "lastUsedDevices": [
-    "panamfs:libusb:003:003"
+    "panamfs:libusb:001:113",
+    "panamfs:libusb:001:105",
+    "panamfs:libusb:001:074",
+    "panamfs:libusb:001:065",
+    "panamfs:libusb:001:064"
   ]
 }

@@ -178,7 +178,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
   };
 
   return (
-    <div className="bg-white border border-[#cbd5e1] rounded-lg shadow-sm overflow-hidden text-right font-sans" dir="rtl">
+    <div className="bg-white border border-[#cbd5e1] rounded-lg shadow-sm overflow-hidden text-right font-sans">
       {/* En-tête AdminLTE Sobre */}
       <div className="bg-[#2c5282] text-white px-5 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">

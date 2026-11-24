@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const ActivityNotification = require('../models/ActivityNotification');
 const ErrorResponse = require('../utils/errorResponse');
 const { 
@@ -69,15 +70,39 @@ exports.getNotificationCount = async (req, res, next) => {
   }
 };
 
-// @desc    Delete notification
+// @desc    Delete notification (recipient only)
 // @route   DELETE /api/activity-notifications/:id
 // @access  Private
 exports.deleteNotification = async (req, res, next) => {
   try {
-    const result = await ActivityNotification.findByIdAndDelete(req.params.id);
-    
-    if (!result) {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return next(new ErrorResponse('Invalid notification ID', 400));
+    }
+
+    const notification = await ActivityNotification.findById(id);
+    if (!notification) {
       return next(new ErrorResponse('Notification not found', 404));
+    }
+
+    const userIdStr = req.user._id.toString();
+    const isRecipient = Array.isArray(notification.recipients) && notification.recipients.some(
+      (r) => r.userId && r.userId.toString() === userIdStr
+    );
+
+    if (!isRecipient) {
+      return next(new ErrorResponse('Not authorized to delete this notification', 403));
+    }
+
+    // Retirer uniquement le destinataire courant pour ne pas supprimer l'alerte des autres destinataires
+    notification.recipients = notification.recipients.filter(
+      (r) => r.userId && r.userId.toString() !== userIdStr
+    );
+
+    if (notification.recipients.length === 0) {
+      await notification.deleteOne();
+    } else {
+      await notification.save();
     }
     
     res.status(200).json({

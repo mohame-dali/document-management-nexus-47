@@ -14,6 +14,7 @@ import DatePickerField from '@/components/documents/forms/DatePickerField';
 import DocumentOptionSelect from '@/components/ui/document-option-select';
 import MultiDocumentOptionSelect from '@/components/ui/multi-document-option-select';
 import { Department } from '@/types';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface BasicInfoFieldsProps<TFieldValues extends FieldValues = FieldValues> {
   form: UseFormReturn<TFieldValues>;
@@ -28,6 +29,8 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
   departments,
   onSerialNumberChange
 }) => {
+  const { t: translate } = useLanguage();
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -89,17 +92,19 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
         name="assignedTo"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>الوجهة</FormLabel>
+            <FormLabel>{t.destination || translate('documents.forms.outgoingDestination')}</FormLabel>
             <FormControl>
               <MultiDocumentOptionSelect
                 category="assignedTo"
                 documentType="outgoing"
                 values={field.value || []}
                 onValuesChange={field.onChange}
-                placeholder="اختر الوجهات..."
+                placeholder={translate('documents.forms.outgoingDestinationPlaceholder')}
               />
             </FormControl>
-            <FormDescription>الجهات المستلمة للوثيقة</FormDescription>
+            <FormDescription>
+              {t.destinationDesc || translate('documents.forms.outgoingDestinationDesc')}
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -111,17 +116,17 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
           name="typeDocument"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>نوع الوثيقة</FormLabel>
+              <FormLabel>{translate('documents.forms.typeDocument')}</FormLabel>
               <FormControl>
                 <DocumentOptionSelect
                   category="typeDocument"
                   documentType="outgoing"
                   value={field.value || ''}
                   onValueChange={field.onChange}
-                  placeholder="اختر نوع الوثيقة..."
+                  placeholder={translate('documents.forms.typeDocumentPlaceholder')}
                 />
               </FormControl>
-              <FormDescription>نوع الوثيقة (رسالة، تقرير، الخ.)</FormDescription>
+              <FormDescription>{translate('documents.forms.typeDocumentDesc')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -132,17 +137,17 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
           name="pourInfo"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>للإعلام</FormLabel>
+              <FormLabel>{translate('documents.forms.pourInfo')}</FormLabel>
               <FormControl>
                 <MultiDocumentOptionSelect
                   category="pourInfo"
                   documentType="outgoing"
                   values={field.value || []}
                   onValuesChange={field.onChange}
-                  placeholder="اختر للإعلام..."
+                  placeholder={translate('documents.forms.pourInfoPlaceholder')}
                 />
               </FormControl>
-              <FormDescription>معلومات إضافية للإعلام</FormDescription>
+              <FormDescription>{translate('documents.forms.pourInfoDesc')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

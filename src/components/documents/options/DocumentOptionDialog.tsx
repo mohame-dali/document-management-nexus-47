@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { DocumentOption } from '@/services/documentOptionsService';
 import { Sliders, Info, Check, X } from 'lucide-react';
+import { useDirection } from '@/i18n/useDirection';
 
 const formSchema = z.object({
   category: z.enum(['activity', 'source', 'typeDocument', 'assignedTo', 'pourInfo']),
@@ -55,6 +56,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
   isLoading = false,
   onClose,
 }) => {
+  const { dir } = useDirection();
   const form = useForm<DocumentOptionFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -107,7 +109,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm"
-        dir="rtl"
+        dir={dir}
       >
         <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
           <div className="flex items-center gap-3">
@@ -149,14 +151,14 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
+                      <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
                         <SelectValue placeholder="اختر الفئة الإدارية" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent dir="rtl">
+                    <SelectContent dir={dir}>
                       {Object.entries(categoryLabels).map(([value, item]) => (
                         <SelectItem key={value} value={value} className="text-base py-2">
-                          <div className="flex flex-col text-right">
+                          <div className="flex flex-col text-start">
                             <span className="font-semibold text-[#1a202c]">{item.label}</span>
                             <span className="text-xs text-[#5f6b7d]">{item.desc}</span>
                           </div>
@@ -180,11 +182,11 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
+                      <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
                         <SelectValue placeholder="اختر نوع المراسلة" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent dir="rtl">
+                    <SelectContent dir={dir}>
                       {Object.entries(documentTypeLabels).map(([value, label]) => (
                         <SelectItem key={value} value={value} className="text-base py-2">
                           {label}
@@ -211,7 +213,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                       placeholder="أدخل نص الخيار كما سيظهر بالقائمة..." 
                       {...field} 
                       disabled={isLoading}
-                      className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                      className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
                     />
                   </FormControl>
                   <FormMessage className="text-sm text-red-600" />

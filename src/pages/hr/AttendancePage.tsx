@@ -31,6 +31,7 @@ import {
   Briefcase,
   HelpCircle,
   Check,
+  Printer,
 } from 'lucide-react';
 import {
   getDailyAttendance,
@@ -186,7 +187,19 @@ export const AttendancePage: React.FC = () => {
         const leaveReasonId = att && att.leaveReasonId ? att.leaveReasonId : null;
         const impacteSolde = att ? Boolean(att.impacteSolde) : false;
         const heureArrivee = att && att.heureArrivee ? att.heureArrivee : '';
-        const detailsMotif: AttendanceEntryDetails = att && att.detailsMotif ? att.detailsMotif : {};
+        const rawDetails = att?.detailsMotif;
+        const detailsMotif: AttendanceEntryDetails = rawDetails
+          ? {
+              serviceNom: rawDetails.serviceNom ?? rawDetails.nomService ?? '',
+              missionLieu: rawDetails.missionLieu ?? rawDetails.lieuMission ?? '',
+              missionObjet: rawDetails.missionObjet ?? rawDetails.objetMission ?? '',
+              formationIntitule: rawDetails.formationIntitule ?? rawDetails.intituleFormation ?? '',
+              formationOrganisme: rawDetails.formationOrganisme ?? rawDetails.organismeFormation ?? '',
+              formationDuree: rawDetails.formationDuree ?? rawDetails.dureeFormation ?? '',
+              formationDocumentId: rawDetails.formationDocumentId,
+              commentaire: rawDetails.commentaire ?? '',
+            }
+          : {};
 
         return {
           personnel: item.personnel,
@@ -258,16 +271,16 @@ export const AttendancePage: React.FC = () => {
 
       // Nettoyer les détails si le motif ne correspond plus
       if (motifCode !== 'service') {
-        delete row.detailsMotif.nomService;
+        delete row.detailsMotif.serviceNom;
       }
       if (motifCode !== 'mission') {
-        delete row.detailsMotif.lieuMission;
-        delete row.detailsMotif.objetMission;
+        delete row.detailsMotif.missionLieu;
+        delete row.detailsMotif.missionObjet;
       }
       if (motifCode !== 'formation') {
-        delete row.detailsMotif.intituleFormation;
-        delete row.detailsMotif.organismeFormation;
-        delete row.detailsMotif.dureeFormation;
+        delete row.detailsMotif.formationIntitule;
+        delete row.detailsMotif.formationOrganisme;
+        delete row.detailsMotif.formationDuree;
       }
 
       updated[index] = row;
@@ -329,7 +342,19 @@ export const AttendancePage: React.FC = () => {
         motif: r.statut === 'present' ? null : r.motif || null,
         leaveReasonId: r.statut === 'present' ? null : r.leaveReasonId || null,
         impacteSolde: r.statut === 'present' ? false : r.impacteSolde,
-        detailsMotif: r.statut === 'present' ? {} : r.detailsMotif,
+        detailsMotif:
+          r.statut === 'present'
+            ? {}
+            : {
+                serviceNom: r.detailsMotif.serviceNom || '',
+                missionLieu: r.detailsMotif.missionLieu || '',
+                missionObjet: r.detailsMotif.missionObjet || '',
+                formationIntitule: r.detailsMotif.formationIntitule || '',
+                formationOrganisme: r.detailsMotif.formationOrganisme || '',
+                formationDuree: r.detailsMotif.formationDuree || '',
+                formationDocumentId: r.detailsMotif.formationDocumentId,
+                commentaire: r.detailsMotif.commentaire || '',
+              },
         heureArrivee: r.statut === 'present' ? r.heureArrivee || null : null,
       }));
 
@@ -397,7 +422,7 @@ export const AttendancePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 space-y-5" dir="rtl">
+    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 pb-24 space-y-5">
       {/* 1. En-tête sobre */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -433,6 +458,17 @@ export const AttendancePage: React.FC = () => {
 
           {/* Bouton Enregistrer en haut */}
           <div className="flex items-center gap-2">
+            <Button
+              asChild
+              variant="outline"
+              className="border-[#2c5282] text-[#2c5282] hover:bg-[#ebf4ff] rounded font-medium gap-2 h-11 px-4 transition-colors duration-200"
+            >
+              <Link to="/dashboard/hr/attendance/report">
+                <Printer className="h-4 w-4" />
+                <span>Imprimer la fiche mensuelle</span>
+              </Link>
+            </Button>
+
             <Button
               onClick={handleSaveAttendance}
               disabled={saving || loading || attendanceRows.length === 0}
@@ -491,7 +527,7 @@ export const AttendancePage: React.FC = () => {
                 <SelectTrigger className="h-11 border-[#e2e8f0] rounded text-sm bg-white">
                   <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
-                <SelectContent dir="rtl">
+                <SelectContent>
                   <SelectItem value="all">جميع الأقسام</SelectItem>
                   {departments.map((d) => (
                     <SelectItem key={d._id} value={d._id}>
@@ -561,13 +597,13 @@ export const AttendancePage: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[#5f6b7d]">تصفية العرض:</span>
             <Button
               size="sm"
               variant={statusFilter === 'all' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('all')}
-              className={`h-7 text-xs px-2.5 rounded ${
+              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
                 statusFilter === 'all' ? 'bg-[#2c5282] text-white' : 'text-gray-600'
               }`}
             >
@@ -577,7 +613,7 @@ export const AttendancePage: React.FC = () => {
               size="sm"
               variant={statusFilter === 'present' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('present')}
-              className={`h-7 text-xs px-2.5 rounded ${
+              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
                 statusFilter === 'present'
                   ? 'bg-green-700 text-white'
                   : 'text-gray-600 hover:text-green-700'
@@ -589,7 +625,7 @@ export const AttendancePage: React.FC = () => {
               size="sm"
               variant={statusFilter === 'absent' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('absent')}
-              className={`h-7 text-xs px-2.5 rounded ${
+              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
                 statusFilter === 'absent'
                   ? 'bg-red-700 text-white'
                   : 'text-gray-600 hover:text-red-700'
@@ -753,7 +789,7 @@ export const AttendancePage: React.FC = () => {
                             <SelectTrigger className="h-10 border-[#cbd5e0] rounded text-sm bg-white">
                               <SelectValue placeholder="اختر سبب الغياب" />
                             </SelectTrigger>
-                            <SelectContent dir="rtl" className="max-h-60">
+                            <SelectContent className="max-h-60">
                               {leaveReasons.map((lr) => (
                                 <SelectItem key={lr._id} value={lr.code} className="text-sm py-2">
                                   <div className="flex items-center justify-between gap-3 w-full">
@@ -807,9 +843,9 @@ export const AttendancePage: React.FC = () => {
                           <Input
                             type="text"
                             placeholder="حدد اسم المصلحة المكلف بها..."
-                            value={row.detailsMotif.nomService || ''}
+                            value={row.detailsMotif.serviceNom || ''}
                             onChange={(e) =>
-                              handleDetailChange(originalIndex, 'nomService', e.target.value)
+                              handleDetailChange(originalIndex, 'serviceNom', e.target.value)
                             }
                             className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                           />
@@ -826,9 +862,9 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="المدينة / المؤسسة..."
-                              value={row.detailsMotif.lieuMission || ''}
+                              value={row.detailsMotif.missionLieu || ''}
                               onChange={(e) =>
-                                handleDetailChange(originalIndex, 'lieuMission', e.target.value)
+                                handleDetailChange(originalIndex, 'missionLieu', e.target.value)
                               }
                               className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
@@ -840,9 +876,9 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="الهدف من المهمة..."
-                              value={row.detailsMotif.objetMission || ''}
+                              value={row.detailsMotif.missionObjet || ''}
                               onChange={(e) =>
-                                handleDetailChange(originalIndex, 'objetMission', e.target.value)
+                                handleDetailChange(originalIndex, 'missionObjet', e.target.value)
                               }
                               className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
@@ -860,11 +896,11 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="موضوع الدورة التكوينية..."
-                              value={row.detailsMotif.intituleFormation || ''}
+                              value={row.detailsMotif.formationIntitule || ''}
                               onChange={(e) =>
                                 handleDetailChange(
                                   originalIndex,
-                                  'intituleFormation',
+                                  'formationIntitule',
                                   e.target.value
                                 )
                               }
@@ -878,11 +914,11 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="الجهة أو المركز المنظم..."
-                              value={row.detailsMotif.organismeFormation || ''}
+                              value={row.detailsMotif.formationOrganisme || ''}
                               onChange={(e) =>
                                 handleDetailChange(
                                   originalIndex,
-                                  'organismeFormation',
+                                  'formationOrganisme',
                                   e.target.value
                                 )
                               }
@@ -896,9 +932,9 @@ export const AttendancePage: React.FC = () => {
                             <Input
                               type="text"
                               placeholder="مثال: 3 أيام، أسبوع..."
-                              value={row.detailsMotif.dureeFormation || ''}
+                              value={row.detailsMotif.formationDuree || ''}
                               onChange={(e) =>
-                                handleDetailChange(originalIndex, 'dureeFormation', e.target.value)
+                                handleDetailChange(originalIndex, 'formationDuree', e.target.value)
                               }
                               className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
                             />
@@ -916,7 +952,10 @@ export const AttendancePage: React.FC = () => {
 
       {/* 4. Bouton "Enregistrer" en bas */}
       {filteredRows.length > 0 && (
-        <div className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <div
+          data-sticky-validation-bar="true"
+          className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+        >
           <div className="text-xs text-[#5f6b7d]">
             <span>التاريخ المحدد: </span>
             <span className="font-bold text-[#1a202c] ml-3">{selectedDate}</span>

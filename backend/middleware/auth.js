@@ -39,38 +39,32 @@ exports.protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Find the user and populate departments
-    let user = null;
+    // Refuse access with 503 if MongoDB is unavailable
     const mongoose = require('mongoose');
-    if (mongoose.connection.readyState === 1) {
-      try {
-        user = await User.findById(decoded.id).populate('departments activeDepartment');
-      } catch (dbErr) {
-        console.warn('[Auth] Database lookup error:', dbErr.message);
-      }
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Service temporairement indisponible (base de données hors ligne)'
+      });
     }
 
-    // Mock fallback when database is offline or not found
-    if (!user && (decoded.id === '65f000000000000000000001' || mongoose.connection.readyState !== 1)) {
-      user = {
-        _id: decoded.id || '65f000000000000000000001',
-        id: decoded.id || '65f000000000000000000001',
-        username: decoded.username || 'admin',
-        role: decoded.role || 'Admin',
-        isActive: true,
-        departments: [
-          { _id: '65f000000000000000000010', id: '65f000000000000000000010', name: 'Direction Générale' }
-        ],
-        activeDepartment: { _id: '65f000000000000000000010', id: '65f000000000000000000010', name: 'Direction Générale' }
-      };
+    // Find the user and populate departments
+    let user = null;
+    try {
+      user = await User.findById(decoded.id).populate('departments activeDepartment');
+    } catch (_dbErr) {
+      return res.status(503).json({
+        success: false,
+        message: 'Service temporairement indisponible (base de données hors ligne)'
+      });
     }
 
     if (!user) {
-      return next(new ErrorResponse('User not found', 404));
+      return next(new ErrorResponse('Not authorized - user not found', 401));
     }
 
-    if (!user.isActive) {
-      return next(new ErrorResponse('Your account has been deactivated', 403));
+    if (!user.isActive || user.isDeleted) {
+      return next(new ErrorResponse('Your account has been deactivated', 401));
     }
 
     // Set the user on the request object

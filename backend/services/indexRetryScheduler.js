@@ -1,4 +1,5 @@
 const cron = require('node-cron');
+const mongoose = require('mongoose');
 const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
 const { indexDocument } = require('./semanticIndexer');
@@ -18,6 +19,13 @@ async function retryFailedIndexes(options = {}) {
   const maxAttempts = options.maxAttempts !== undefined ? options.maxAttempts : 3;
   const force = Boolean(options.force);
   const limit = options.limit || 100;
+
+  if (mongoose.connection.readyState !== 1) {
+    return {
+      status: 'db_disconnected',
+      message: 'MongoDB is not connected.',
+    };
+  }
 
   if (isJobRunning) {
     console.warn('[RAG Retry] ⚠️ Une tâche de rattrapage est déjà en cours. Requête ignorée.');

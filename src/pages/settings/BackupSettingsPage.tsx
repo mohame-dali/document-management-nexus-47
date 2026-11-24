@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,8 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { toast as sonnerToast } from 'sonner';
+import { toast } from 'sonner';
 import { 
   backupService, 
   BackupStats, 
@@ -63,7 +63,7 @@ import {
 
 const BackupSettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<BackupStats | null>(null);
   const [policy, setPolicy] = useState<BackupPolicy>({
     enabled: false,
@@ -88,6 +88,8 @@ const BackupSettingsPage: React.FC = () => {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<BackupHistoryItem | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [backupToDelete, setBackupToDelete] = useState<BackupHistoryItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | 'manual' | 'automatic'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'in_progress' | 'failed'>('all');
 
@@ -96,7 +98,6 @@ const BackupSettingsPage: React.FC = () => {
     loadData();
     loadSavedPath();
     loadBackupHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadBackupHistory = async () => {
@@ -120,9 +121,9 @@ const BackupSettingsPage: React.FC = () => {
   const handleReloadScheduler = async () => {
     try {
       await reloadBackupScheduler();
-      sonnerToast.success('✅ تم إعادة تحميل الجدول الزمني');
+      toast.success('✅ تم إعادة تحميل الجدول الزمني');
     } catch (error) {
-      sonnerToast.error('❌ خطأ', { description: getErrorMessage(error) });
+      toast.error('❌ خطأ', { description: getErrorMessage(error) });
     }
   };
 
@@ -136,13 +137,13 @@ const BackupSettingsPage: React.FC = () => {
     setIsRestoring(true);
     try {
       await restoreBackup(selectedBackup._id);
-      sonnerToast.success('✅ تمت الاستعادة بنجاح');
+      toast.success('✅ تمت الاستعادة بنجاح');
       setRestoreDialogOpen(false);
       setSelectedBackup(null);
       loadBackupHistory();
       loadData();
     } catch (error) {
-      sonnerToast.error('❌ فشل الاستعادة', { description: getErrorMessage(error) });
+      toast.error('❌ فشل الاستعادة', { description: getErrorMessage(error) });
     } finally {
       setIsRestoring(false);
     }
@@ -151,25 +152,32 @@ const BackupSettingsPage: React.FC = () => {
   const handleDownloadClick = async (backup: BackupHistoryItem) => {
     try {
       await downloadBackup(backup._id, backup.fileName);
-      sonnerToast.success('✅ بدأ التحميل');
+      toast.success('✅ بدأ التحميل');
     } catch (error) {
-      sonnerToast.error('❌ فشل التحميل', {
+      toast.error('❌ فشل التحميل', {
         description: getErrorMessage(error),
       });
     }
   };
 
-  const handleDeleteClick = async (backup: BackupHistoryItem) => {
-    if (!window.confirm(`حذف النسخة "${backup.fileName}" نهائياً؟`)) return;
+  const handleDeleteClick = (backup: BackupHistoryItem) => {
+    setBackupToDelete(backup);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!backupToDelete?._id) return;
+    setIsDeleting(true);
     try {
-      await deleteBackup(backup._id);
-      sonnerToast.success('✅ تم الحذف');
+      await deleteBackup(backupToDelete._id);
+      toast.success('✅ تم الحذف');
+      setBackupToDelete(null);
       loadBackupHistory();
     } catch (error) {
-      sonnerToast.error('❌ فشل الحذف', {
+      toast.error('❌ فشل الحذف', {
         description: getErrorMessage(error),
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -210,10 +218,8 @@ const BackupSettingsPage: React.FC = () => {
       setStats(statsData);
       setPolicy(policyData);
     } catch (error) {
-      toast({
-        title: "خطأ",
+      toast.error("خطأ", {
         description: "خطأ في تحميل بيانات النسخ الاحتياطي",
-        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -232,8 +238,7 @@ const BackupSettingsPage: React.FC = () => {
     if (path) {
       localStorage.setItem('backup_default_path', path);
       setSavedBackupPath(path);
-      toast({
-        title: "نجح",
+      toast.success("نجح", {
         description: "تم حفظ المسار الافتراضي بنجاح",
       });
     }
@@ -243,15 +248,12 @@ const BackupSettingsPage: React.FC = () => {
     try {
       setLoading(true);
       await backupService.updateBackupPolicy(policy);
-      toast({
-        title: "نجح",
+      toast.success("نجح", {
         description: "تم حفظ إعدادات النسخ الاحتياطي بنجاح",
       });
     } catch (error) {
-      toast({
-        title: "خطأ",
+      toast.error("خطأ", {
         description: "خطأ في حفظ الإعدادات",
-        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -290,8 +292,7 @@ const BackupSettingsPage: React.FC = () => {
             const fullMessage = `${successMessage} - المحفوظة في: ${actualPath}`;
             setLastBackupInfo(fullMessage);
             
-            toast({
-              title: "نجح",
+            toast.success("نجح", {
               description: fullMessage,
             });
             loadData();
@@ -299,10 +300,8 @@ const BackupSettingsPage: React.FC = () => {
           } else if (status.status === 'failed') {
             setIsBackingUp(false);
             setCurrentBackupId(null);
-            toast({
-              title: "خطأ",
+            toast.error("خطأ", {
               description: `خطأ في إنشاء النسخة الاحتياطية: ${status.errorMessage || 'خطأ غير معروف'}`,
-              variant: "destructive",
             });
           } else {
             setBackupProgress(prev => Math.min(prev + 10, 90));
@@ -311,20 +310,16 @@ const BackupSettingsPage: React.FC = () => {
         } catch (error) {
           setIsBackingUp(false);
           setCurrentBackupId(null);
-          toast({
-            title: "خطأ",
+          toast.error("خطأ", {
             description: "خطأ في متابعة حالة النسخة الاحتياطية",
-            variant: "destructive",
           });
         }
       };
       
       setTimeout(pollStatus, 2000);
     } catch (error) {
-      toast({
-        title: "خطأ",
+      toast.error("خطأ", {
         description: "خطأ في إنشاء النسخة الاحتياطية",
-        variant: "destructive",
       });
       setIsBackingUp(false);
       setCurrentBackupId(null);
@@ -352,7 +347,7 @@ const BackupSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6" dir="rtl">
+    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -360,8 +355,9 @@ const BackupSettingsPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate('/dashboard/settings')}
-            className="h-11 w-11 p-0 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 shrink-0"
-            title="العودة للإعدادات"
+            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 shrink-0"
+            title={t('backup.backToSettingsAria')}
+            aria-label={t('backup.backToSettingsAria')}
           >
             <ChevronLeft className="h-6 w-6 rtl-mirror" />
           </Button>
@@ -544,8 +540,9 @@ const BackupSettingsPage: React.FC = () => {
                       variant="outline"
                       onClick={() => saveDefaultPath(exportPath)}
                       disabled={!exportPath}
-                      className="h-11 px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
-                      title="حفظ كمسار افتراضي"
+                      className="h-11 min-h-[44px] min-w-[44px] px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
+                      title={t('backup.actions.savePathAria')}
+                      aria-label={t('backup.actions.savePathAria')}
                     >
                       <FolderOpen className="h-5 w-5" />
                     </Button>
@@ -575,8 +572,9 @@ const BackupSettingsPage: React.FC = () => {
                     variant="outline"
                     onClick={() => saveDefaultPath(exportPath)}
                     disabled={!exportPath}
-                    className="h-11 px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
-                    title="حفظ كمسار افتراضي"
+                    className="h-11 min-h-[44px] min-w-[44px] px-4 border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded shrink-0"
+                    title={t('backup.actions.savePathAria')}
+                    aria-label={t('backup.actions.savePathAria')}
                   >
                     <FolderOpen className="h-5 w-5" />
                   </Button>
@@ -622,7 +620,6 @@ const BackupSettingsPage: React.FC = () => {
             </AlertDialogTrigger>
             <AlertDialogContent
               className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xl"
-              dir="rtl"
             >
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] text-right">
@@ -782,7 +779,7 @@ const BackupSettingsPage: React.FC = () => {
       </Card>
 
       {/* 5. Backup History Section */}
-      <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm" dir="rtl">
+      <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
         <CardHeader className="p-6 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-3">
@@ -800,7 +797,7 @@ const BackupSettingsPage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleReloadScheduler}
-              className="h-10 px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
+              className="h-11 min-h-[44px] px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
               title="إعادة تحميل المجدول الزمني للنسخ التلقائي"
             >
               <RefreshCw className="w-4 h-4 ml-1.5" />
@@ -811,7 +808,7 @@ const BackupSettingsPage: React.FC = () => {
               size="sm"
               onClick={loadBackupHistory}
               disabled={historyLoading}
-              className="h-10 px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
+              className="h-11 min-h-[44px] px-4 rounded border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 font-semibold gap-1.5"
             >
               <RefreshCw className={`w-4 h-4 ml-1.5 ${historyLoading ? 'animate-spin' : ''}`} />
               تحديث السجل
@@ -901,8 +898,9 @@ const BackupSettingsPage: React.FC = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded"
-                              title="استعادة هذه النسخة"
+                              className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-amber-600 hover:bg-amber-50 hover:text-amber-700 rounded"
+                              title={t('backup.actions.restoreAria')}
+                              aria-label={t('backup.actions.restoreAria')}
                               onClick={() => handleRestoreClick(backup)}
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -911,8 +909,9 @@ const BackupSettingsPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-[#2c5282] hover:bg-blue-50 rounded"
-                            title="تحميل النسخة الاحتياطية"
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-[#2c5282] hover:bg-blue-50 rounded"
+                            title={t('backup.actions.downloadAria')}
+                            aria-label={t('backup.actions.downloadAria')}
                             onClick={() => handleDownloadClick(backup)}
                           >
                             <Download className="w-4 h-4" />
@@ -920,8 +919,9 @@ const BackupSettingsPage: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 rounded"
-                            title="حذف النسخة نهائياً"
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-red-600 hover:bg-red-50 rounded"
+                            title={t('backup.actions.deleteAria')}
+                            aria-label={t('backup.actions.deleteAria')}
                             onClick={() => handleDeleteClick(backup)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -949,6 +949,38 @@ const BackupSettingsPage: React.FC = () => {
         } : undefined}
         isLoading={isRestoring}
       />
+
+      {/* Delete Backup Confirmation AlertDialog */}
+      <AlertDialog
+        open={!!backupToDelete}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setBackupToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف النسخة الاحتياطية</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف النسخة &ldquo;{backupToDelete?.fileName}&rdquo; نهائياً؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteConfirm();
+              }}
+              disabled={isDeleting}
+              className="bg-[#b91c1c] hover:bg-[#991b1b] text-white"
+            >
+              {isDeleting ? 'جاري الحذف...' : 'حذف نهائياً'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

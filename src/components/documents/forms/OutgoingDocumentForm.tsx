@@ -13,6 +13,10 @@ import BasicInfoFields from './outgoing/BasicInfoFields';
 import DocumentAttachmentSection from './outgoing/DocumentAttachmentSection';
 import FormActions from './outgoing/FormActions';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { History, Trash2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 interface OutgoingDocumentFormProps {
   t: OutgoingFormTranslations;
@@ -33,22 +37,33 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
   scanData,
   scanTemporaryDocumentMutation
 }) => {
+  const { t: translate, language } = useLanguage();
   const [ocrText, setOcrText] = useState<string>('');
   
   const {
     form,
     activeTab,
     scanning,
+    isScanInProgress,
     scanProgress,
+    scanStage,
+    scanPage,
     scanResult,
+    scanError,
+    liveThumbnails,
+    isScanAttached,
     scanSettings,
     handleFileSelect,
     handleScanSettingChange,
     handleStartScan: startScan,
+    handleCancelScan,
+    handleUseScan,
     setActiveTab,
     onSubmit,
     handleSerialNumberChange,
-    handleRemoveScan
+    handleRemoveScan,
+    restoredDraftAt,
+    clearDraft
   } = useOutgoingDocumentForm(t, currentDepartmentId, scanData);
 
   const handleStartScan = () => {
@@ -82,13 +97,43 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
         </CardHeader>
         
         <CardContent className="p-8">
+          {restoredDraftAt !== null && (
+            <Alert className="mb-6 border-blue-200 bg-blue-50/70 text-blue-950">
+              <History className="h-4 w-4 text-[#2c5282]" />
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span>
+                  {translate('documents.forms.draftRestored', {
+                    date: new Date(restoredDraftAt).toLocaleString(
+                      language === 'ar' ? 'ar-TN' : 'fr-FR',
+                      {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      }
+                    ),
+                  })}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearDraft}
+                  className="h-8 border-blue-300 bg-white text-[#2c5282] hover:bg-blue-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5 me-1.5" />
+                  {translate('documents.forms.clearDraft')}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               {/* Basic Information Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">المعلومات الأساسية</h3>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {translate('documents.forms.sections.basicInfo')}
+                  </h3>
                 </div>
                 
                 <div className="bg-muted/30 rounded p-6 border border-border/50">
@@ -107,12 +152,14 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">مرفقات الوثيقة</h3>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {translate('documents.forms.sections.attachments')}
+                  </h3>
                 </div>
                 
                 <div className="bg-muted/20 rounded p-6 border border-border/50">
                   <DocumentAttachmentSection
-                    t={t}
+                    t={t as Record<string, string>}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     handleFileSelect={handleFileSelect}
@@ -122,10 +169,18 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                     scanning={scanning}
                     scanProgress={scanProgress}
                     scanResult={scanResult}
-                    scannerStatus={scannerStatus}
+                    scanError={scanError}
+                    liveThumbnails={liveThumbnails}
+                    scannerStatus={scannerStatus as Record<string, unknown> | null}
                     loadingScannerStatus={loadingScannerStatus}
                     handleStartScan={handleStartScan}
                     onRemoveScan={handleRemoveScan}
+                    scanStage={scanStage}
+                    scanPage={scanPage}
+                    onCancelScan={handleCancelScan}
+                    onRescan={handleStartScan}
+                    onUseScan={handleUseScan}
+                    isScanAttached={isScanAttached}
                   />
                 </div>
               </div>
@@ -140,6 +195,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
             cancelText={t.cancel}
             submitText={t.submit}
             cancelRoute="/dashboard/outgoing-documents"
+            disabled={isScanInProgress}
           />
         </CardFooter>
       </Card>

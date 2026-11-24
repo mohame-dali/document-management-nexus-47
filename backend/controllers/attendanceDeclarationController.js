@@ -3,11 +3,10 @@ const AttendanceDeclaration = require('../models/AttendanceDeclaration');
 const Attendance = require('../models/Attendance');
 const Personnel = require('../models/Personnel');
 const LeaveReason = require('../models/LeaveReason');
+const PresenceSettings = require('../models/PresenceSettings');
 const OrganizationSettings = require('../models/OrganizationSettings');
 
-// Whitelist des motifs valides pour le modèle Attendance
-// Doit rester synchronisée avec l'enum de backend/models/Attendance.js
-const VALID_ATTENDANCE_MOTIFS = [
+const SYSTEM_MOTIFS = [
   'conge_annuel',
   'absence_injustifiee',
   'recuperation',
@@ -23,6 +22,67 @@ const VALID_ATTENDANCE_MOTIFS = [
   'greve',
   'sans_solde'
 ];
+
+const DEFAULT_DEDUCTIBLE_MOTIFS = [
+  'conge_annuel',
+  'absence_injustifiee',
+  'recuperation',
+  'conge_exceptionnel'
+];
+
+/**
+ * Résout dynamiquement un motif d'absence (système ou personnalisé LeaveReason)
+ * pour enregistrer le code exact du motif et savoir s'il impacte le solde.
+ */
+const resolveMotifForAttendance = async (rawMotif, rawLeaveReasonId, dateObj) => {
+  const normalizedMotif = rawMotif ? String(rawMotif).trim().toLowerCase() : '';
+  let leaveReasonId = rawLeaveReasonId || null;
+  let foundReason = null;
+
+  if (normalizedMotif) {
+    foundReason = await LeaveReason.findOne({ code: normalizedMotif }).lean();
+  }
+  if (!foundReason && leaveReasonId && mongoose.Types.ObjectId.isValid(leaveReasonId)) {
+    foundReason = await LeaveReason.findById(leaveReasonId).lean();
+  }
+
+  if (foundReason) {
+    return {
+      motif: foundReason.code,
+      leaveReasonId: foundReason._id,
+      impacteSolde: Boolean(foundReason.impacteSolde)
+    };
+  }
+
+  if (normalizedMotif && SYSTEM_MOTIFS.includes(normalizedMotif)) {
+    const targetYear = dateObj ? new Date(dateObj).getUTCFullYear() : new Date().getUTCFullYear();
+    const settings = await PresenceSettings.findOne({ annee: targetYear }).lean();
+    const deductibles = settings?.motifsDeductibles || DEFAULT_DEDUCTIBLE_MOTIFS;
+    return {
+      motif: normalizedMotif,
+      leaveReasonId: null,
+      impacteSolde: deductibles.includes(normalizedMotif)
+    };
+  }
+
+  if (normalizedMotif) {
+    const err = new Error(`Motif d'absence inconnu : ${normalizedMotif}`);
+    err.statusCode = 400;
+    throw err;
+  }
+
+  return { motif: null, leaveReasonId: null, impacteSolde: false };
+};
+
+const mapDeclarationDetailsToAttendance = (details = {}) => ({
+  serviceNom: details?.serviceNom || details?.nomService || '',
+  missionLieu: details?.missionLieu || details?.lieuMission || '',
+  missionObjet: details?.missionObjet || details?.objetMission || '',
+  formationIntitule: details?.formationIntitule || details?.intituleFormation || '',
+  formationOrganisme: details?.formationOrganisme || details?.organismeFormation || '',
+  formationDuree: details?.formationDuree || details?.dureeFormation || '',
+  commentaire: details?.commentaire || ''
+});
 
 /**
  * Normalise une date au début de journée UTC (00:00:00.000)
@@ -99,10 +159,16 @@ exports.declareAttendance = async (req, res) => {
     // Récupérer le personnelId via req.user.personnelId OU Personnel.findOne({ userId: req.user._id })
     let personnel = null;
     if (req.user.personnelId) {
-      personnel = await Personnel.findById(req.user.personnelId);
+      personnel = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      });
     }
     if (!personnel) {
-      personnel = await Personnel.findOne({ userId: req.user._id });
+      personnel = await Personnel.findOne({
+        userId: req.user._id,
+        isDeleted: { $ne: true }
+      });
     }
 
     if (!personnel) {
@@ -164,9 +230,19 @@ exports.declareAttendance = async (req, res) => {
 // @access  Private (Personnel connecté)
 exports.getMyDeclarations = async (req, res) => {
   try {
-    let personnelId = req.user.personnelId;
+    let personnelId = null;
+    if (req.user.personnelId) {
+      const pById = await Personnel.findOne({
+        _id: req.user.personnelId,
+        isDeleted: { $ne: true }
+      }).select('_id');
+      if (pById) personnelId = pById._id;
+    }
     if (!personnelId) {
-      const p = await Personnel.findOne({ userId: req.user._id }).select('_id');
+      const p = await Personnel.findOne({
+        userId: req.user._id,
+        isDeleted: { $ne: true }
+      }).select('_id');
       if (p) personnelId = p._id;
     }
 
@@ -236,30 +312,60 @@ exports.getAllDeclarations = async (req, res) => {
       if (req.query.to) query.date.$lte = getUTCDayRange(req.query.to).end;
     }
 
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+    const skip = (page - 1) * limit;
+
     // Filtrage par département
     const canSeeAll = await canUserSeeAllDepartments(req);
     if (!canSeeAll) {
       // AdminDepartment non-RH : restreint strictement à son département
       const userDeptId = req.user.activeDepartment?._id || req.user.activeDepartment;
       if (!userDeptId) {
-        return res.status(200).json({ success: true, count: 0, data: [] });
+        return res.status(200).json({
+          success: true,
+          count: 0,
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+          pagination: { total: 0, page, limit, totalPages: 0 },
+          data: []
+        });
       }
       query.departmentId = userDeptId;
     } else if (req.query.departmentId && req.query.departmentId !== 'all') {
       query.departmentId = req.query.departmentId;
     }
 
-    const declarations = await AttendanceDeclaration.find(query)
-      .populate('personnelId', 'nom prenom matricule activeDepartment telephone photo')
-      .populate('leaveReasonId', 'nom code categorie impacteSolde')
-      .populate('userId', 'username photo')
-      .populate('departmentId', 'name code')
-      .populate('validatedBy', 'username')
-      .sort({ date: -1, createdAt: -1 });
+    const [total, declarations] = await Promise.all([
+      AttendanceDeclaration.countDocuments(query),
+      AttendanceDeclaration.find(query)
+        .populate('personnelId', 'nom prenom matricule activeDepartment telephone photo')
+        .populate('leaveReasonId', 'nom code categorie impacteSolde')
+        .populate('userId', 'username photo')
+        .populate('departmentId', 'name code')
+        .populate('validatedBy', 'username')
+        .sort({ date: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       count: declarations.length,
+      total,
+      page,
+      limit,
+      totalPages,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages
+      },
       data: declarations
     });
   } catch (error) {
@@ -305,36 +411,27 @@ exports.approveDeclaration = async (req, res) => {
     }
 
     const isPresent = declaration.statut === 'present';
-    let impacteSolde = false;
-    let leaveReasonId = declaration.leaveReasonId || null;
-
-    if (!isPresent && declaration.motif) {
-      if (leaveReasonId) {
-        const found = await LeaveReason.findById(leaveReasonId).lean();
-        if (found) {
-          impacteSolde = Boolean(found.impacteSolde);
-        }
-      } else {
-        const foundByCode = await LeaveReason.findOne({ code: declaration.motif }).lean();
-        if (foundByCode) {
-          impacteSolde = Boolean(foundByCode.impacteSolde);
-          leaveReasonId = foundByCode._id;
-        }
-      }
-    }
-
     const { start } = getUTCDayRange(declaration.date);
 
-    // Sécuriser la valeur de motif pour respecter l'enum strict du modèle Attendance
     let safeMotif = null;
+    let leaveReasonId = null;
+    let impacteSolde = false;
+
     if (!isPresent) {
-      if (declaration.motif && VALID_ATTENDANCE_MOTIFS.includes(declaration.motif)) {
-        safeMotif = declaration.motif;
-      } else if (leaveReasonId) {
-        const lr = await LeaveReason.findById(leaveReasonId).lean();
-        if (lr && VALID_ATTENDANCE_MOTIFS.includes(lr.code)) {
-          safeMotif = lr.code;
-        }
+      try {
+        const resolved = await resolveMotifForAttendance(
+          declaration.motif,
+          declaration.leaveReasonId,
+          start
+        );
+        safeMotif = resolved.motif;
+        leaveReasonId = resolved.leaveReasonId;
+        impacteSolde = resolved.impacteSolde;
+      } catch (motifErr) {
+        return res.status(motifErr.statusCode || 400).json({
+          success: false,
+          message: motifErr.message
+        });
       }
     }
 
@@ -351,21 +448,17 @@ exports.approveDeclaration = async (req, res) => {
       });
     }
 
+    const mappedDetails = isPresent ? {} : mapDeclarationDetailsToAttendance(declaration.detailsMotif);
+
     // Créer ou enregistrer la présence issue de la déclaration
     let attendanceRecord;
     if (existingAttendance) {
       existingAttendance.departmentId = declaration.departmentId;
       existingAttendance.statut = declaration.statut;
       existingAttendance.motif = safeMotif;
-      existingAttendance.leaveReasonId = isPresent ? null : leaveReasonId;
-      existingAttendance.impacteSolde = isPresent ? false : impacteSolde;
-      existingAttendance.detailsMotif = {
-        serviceNom: declaration.detailsMotif?.nomService || '',
-        missionLieu: declaration.detailsMotif?.lieuMission || '',
-        missionObjet: declaration.detailsMotif?.objetMission || '',
-        formationIntitule: declaration.detailsMotif?.intituleFormation || '',
-        commentaire: declaration.detailsMotif?.commentaire || ''
-      };
+      existingAttendance.leaveReasonId = leaveReasonId;
+      existingAttendance.impacteSolde = impacteSolde;
+      existingAttendance.detailsMotif = mappedDetails;
       existingAttendance.heureArrivee = isPresent ? (declaration.heureArrivee || null) : null;
       existingAttendance.saisiPar = req.user._id;
       existingAttendance.modifiePar = req.user._id;
@@ -377,15 +470,9 @@ exports.approveDeclaration = async (req, res) => {
         date: start,
         statut: declaration.statut,
         motif: safeMotif,
-        leaveReasonId: isPresent ? null : leaveReasonId,
-        impacteSolde: isPresent ? false : impacteSolde,
-        detailsMotif: {
-          serviceNom: declaration.detailsMotif?.nomService || '',
-          missionLieu: declaration.detailsMotif?.lieuMission || '',
-          missionObjet: declaration.detailsMotif?.objetMission || '',
-          formationIntitule: declaration.detailsMotif?.intituleFormation || '',
-          commentaire: declaration.detailsMotif?.commentaire || ''
-        },
+        leaveReasonId,
+        impacteSolde,
+        detailsMotif: mappedDetails,
         heureArrivee: isPresent ? (declaration.heureArrivee || null) : null,
         saisiPar: req.user._id,
         modifiePar: req.user._id
@@ -393,6 +480,10 @@ exports.approveDeclaration = async (req, res) => {
     }
 
     // Mettre à jour la déclaration
+    if (!isPresent && safeMotif) {
+      declaration.motif = safeMotif;
+      declaration.leaveReasonId = leaveReasonId;
+    }
     declaration.validationStatus = 'approuvee';
     declaration.validatedBy = req.user._id;
     declaration.validatedAt = new Date();
@@ -539,11 +630,41 @@ exports.updateDeclaration = async (req, res) => {
       declaration.attendanceId = null;
     } else if (oldAttendanceId && newValidationStatus === 'approuvee') {
       const isPresent = declaration.statut === 'present';
-      await Attendance.findByIdAndUpdate(oldAttendanceId, {
-        statut: declaration.statut,
-        motif: isPresent ? null : declaration.motif,
-        modifiePar: req.user._id
-      });
+      let safeMotif = null;
+      let resolvedLeaveReasonId = null;
+      let impacteSolde = false;
+
+      if (!isPresent) {
+        try {
+          const resolved = await resolveMotifForAttendance(
+            declaration.motif,
+            declaration.leaveReasonId,
+            declaration.date
+          );
+          safeMotif = resolved.motif;
+          resolvedLeaveReasonId = resolved.leaveReasonId;
+          impacteSolde = resolved.impacteSolde;
+        } catch (motifErr) {
+          return res.status(motifErr.statusCode || 400).json({
+            success: false,
+            message: motifErr.message
+          });
+        }
+      }
+
+      await Attendance.findByIdAndUpdate(
+        oldAttendanceId,
+        {
+          statut: declaration.statut,
+          motif: safeMotif,
+          leaveReasonId: resolvedLeaveReasonId,
+          impacteSolde,
+          detailsMotif: isPresent ? {} : mapDeclarationDetailsToAttendance(declaration.detailsMotif),
+          heureArrivee: isPresent ? (declaration.heureArrivee || null) : null,
+          modifiePar: req.user._id
+        },
+        { runValidators: true }
+      );
     }
 
     await declaration.save();

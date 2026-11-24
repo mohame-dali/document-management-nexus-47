@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { DocumentOption } from '@/services/documentOptionsService';
 import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentOptionsListProps {
   options: DocumentOption[];
@@ -53,6 +54,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
   selectedCategoryFilter = 'all',
   onSelectCategoryFilter,
 }) => {
+  const { dir } = useDirection();
   const [searchTerm, setSearchTerm] = useState('');
   const [internalCategoryFilter, setInternalCategoryFilter] = useState<string>(selectedCategoryFilter);
   const [documentTypeFilter, setDocumentTypeFilter] = useState<string>('all');
@@ -209,7 +211,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
   };
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6" dir="rtl">
+    <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6" dir={dir}>
       {/* 1. List Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
         <div>
@@ -224,7 +226,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
 
         <div className="flex items-center gap-3 flex-wrap">
           <span className="inline-flex items-center px-3 py-1 rounded text-base font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
-            {totalFiltered} خيار متاح
+            <bdi dir="ltr">{totalFiltered}</bdi>&nbsp;خيار متاح
           </span>
 
           {/* View Toggle */}
@@ -247,7 +249,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
               type="button"
               onClick={() => setViewMode('grid')}
               aria-label="عرض كبطاقات"
-              className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
+              className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-s border-[#cbd5e1] transition-colors duration-200 ${
                 viewMode === 'grid'
                   ? 'bg-[#2c5282] text-white'
                   : 'text-[#4a5568] hover:bg-gray-50'
@@ -266,7 +268,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search Input */}
           <div className="relative lg:col-span-2">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-[#718096] h-4 w-4 pointer-events-none" />
             <Input
               placeholder="ابحث بقيمة الخيار..."
               value={searchTerm}
@@ -274,17 +276,17 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-11 pr-10 text-base text-right border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+              className="h-11 ps-10 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
             />
           </div>
 
           {/* Category Filter */}
           <div>
             <Select value={internalCategoryFilter} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
+              <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white">
                 <SelectValue placeholder="الفئة" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent dir={dir}>
                 <SelectItem value="all" className="text-base">جميع الفئات</SelectItem>
                 <SelectItem value="activity" className="text-base">النشاط</SelectItem>
                 <SelectItem value="source" className="text-base">المصدر</SelectItem>
@@ -304,10 +306,10 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
+              <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white">
                 <SelectValue placeholder="نوع الوثيقة" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent dir={dir}>
                 <SelectItem value="all" className="text-base">جميع أنواع المراسلات</SelectItem>
                 <SelectItem value="incoming" className="text-base">واردة فقط</SelectItem>
                 <SelectItem value="outgoing" className="text-base">صادرة فقط</SelectItem>
@@ -325,10 +327,10 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base text-right border-[#cbd5e1] rounded bg-white">
+              <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white">
                 <SelectValue placeholder="الحالة" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent dir={dir}>
                 <SelectItem value="all" className="text-base">جميع الحالات</SelectItem>
                 <SelectItem value="active" className="text-base">نشط فقط</SelectItem>
                 <SelectItem value="inactive" className="text-base">غير نشط فقط</SelectItem>
@@ -345,10 +347,10 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
               الترتيب:
             </span>
             <Select value={sortBy} onValueChange={(val) => setSortBy(val)}>
-              <SelectTrigger className="h-9 min-w-[170px] text-sm text-right border-[#cbd5e1] rounded bg-white">
+              <SelectTrigger className="h-9 min-w-[170px] text-sm text-start border-[#cbd5e1] rounded bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent dir={dir}>
                 <SelectItem value="newest" className="text-sm">الأحدث تاريخاً</SelectItem>
                 <SelectItem value="oldest" className="text-sm">الأقدم تاريخاً</SelectItem>
                 <SelectItem value="alpha-asc" className="text-sm">أبجدياً (أ إلى ي)</SelectItem>
@@ -400,7 +402,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
       ) : viewMode === 'table' ? (
         /* TABULAR DATA VIEW (AdminLTE style) */
         <div className="overflow-x-auto border border-[#e2e8f0] rounded">
-          <table className="w-full text-right border-collapse text-base">
+          <table className="w-full text-start border-collapse text-base">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#1a202c]">
                 <th className="py-3.5 px-4 font-semibold text-sm">قيمة الخيار</th>
@@ -466,7 +468,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                     <div className="flex flex-col gap-0.5">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5 text-[#718096]" />
-                        {formatArabicDate(option.createdAt)}
+                        <bdi dir="ltr">{formatArabicDate(option.createdAt)}</bdi>
                       </span>
                       {option.createdBy?.username && (
                         <span className="flex items-center gap-1 text-xs text-[#5f6b7d]">
@@ -496,12 +498,12 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                       >
                         {option.isActive ? (
                           <>
-                            <EyeOff className="h-3.5 w-3.5 ml-1" />
+                            <EyeOff className="h-3.5 w-3.5 me-1" />
                             تعطيل
                           </>
                         ) : (
                           <>
-                            <Eye className="h-3.5 w-3.5 ml-1" />
+                            <Eye className="h-3.5 w-3.5 me-1" />
                             تفعيل
                           </>
                         )}
@@ -517,7 +519,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                         title="تعديل هذا الخيار"
                         className="h-11 px-3 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
                       >
-                        <Edit3 className="h-3.5 w-3.5 ml-1" />
+                        <Edit3 className="h-3.5 w-3.5 me-1" />
                         تعديل
                       </Button>
 
@@ -532,7 +534,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                         aria-label="حذف هذا الخيار"
                         className="h-11 px-3 text-xs font-semibold border-red-200 text-red-700 hover:bg-red-50 rounded transition-colors duration-200"
                       >
-                        <Trash2 className="h-3.5 w-3.5 ml-1" />
+                        <Trash2 className="h-3.5 w-3.5 me-1" />
                         حذف
                       </Button>
                     </div>
@@ -594,7 +596,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
               <div className="text-xs text-[#4a5568] pt-3 border-t border-[#f1f5f9] flex items-center justify-between">
                 <span className="flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5 text-[#718096]" />
-                  {formatArabicDate(option.createdAt)}
+                  <bdi dir="ltr">{formatArabicDate(option.createdAt)}</bdi>
                 </span>
                 {option.createdBy?.username && (
                   <span className="flex items-center gap-1 text-[#5f6b7d]">
@@ -620,12 +622,12 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 >
                   {option.isActive ? (
                     <>
-                      <EyeOff className="h-3.5 w-3.5 ml-1" />
+                      <EyeOff className="h-3.5 w-3.5 me-1" />
                       تعطيل
                     </>
                   ) : (
                     <>
-                      <Eye className="h-3.5 w-3.5 ml-1" />
+                      <Eye className="h-3.5 w-3.5 me-1" />
                       تفعيل
                     </>
                   )}
@@ -639,7 +641,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                   disabled={isLoading}
                   className="flex-1 h-11 text-xs font-semibold border-[#FFCB56] bg-amber-50 text-[#78350f] hover:bg-[#FFCB56] rounded transition-colors duration-200"
                 >
-                  <Edit3 className="h-3.5 w-3.5 ml-1" />
+                  <Edit3 className="h-3.5 w-3.5 me-1" />
                   تعديل
                 </Button>
 
@@ -665,9 +667,9 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
         <div className="pt-4 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-base text-[#4a5568]">
             عرض{' '}
-            <span className="font-semibold text-[#1a202c]">{startIndex + 1}</span> إلى{' '}
-            <span className="font-semibold text-[#1a202c]">{endIndex}</span> من أصل{' '}
-            <span className="font-semibold text-[#1a202c]">{totalFiltered}</span> خيار
+            <span className="font-semibold text-[#1a202c]"><bdi dir="ltr">{startIndex + 1}</bdi></span> إلى{' '}
+            <span className="font-semibold text-[#1a202c]"><bdi dir="ltr">{endIndex}</bdi></span> من أصل{' '}
+            <span className="font-semibold text-[#1a202c]"><bdi dir="ltr">{totalFiltered}</bdi></span> خيار
           </div>
 
           <div className="flex items-center gap-3">
@@ -681,10 +683,10 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="h-9 w-20 text-sm text-right border-[#cbd5e1] rounded bg-white">
+                <SelectTrigger className="h-9 w-20 text-sm text-start border-[#cbd5e1] rounded bg-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent dir="rtl">
+                <SelectContent dir={dir}>
                   <SelectItem value="10" className="text-sm">10</SelectItem>
                   <SelectItem value="25" className="text-sm">25</SelectItem>
                   <SelectItem value="50" className="text-sm">50</SelectItem>
@@ -702,12 +704,12 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 disabled={clampedPage <= 1}
                 className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
               >
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="h-4 w-4 me-1 rtl:rotate-0 ltr:rotate-180" />
                 السابق
               </Button>
 
               <span className="text-sm font-medium text-[#1a202c] px-2">
-                {clampedPage} / {totalPages}
+                <bdi dir="ltr">{clampedPage} / {totalPages}</bdi>
               </span>
 
               <Button
@@ -719,7 +721,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 className="h-11 px-3 text-sm font-medium border-[#cbd5e1] rounded hover:bg-gray-50 disabled:opacity-50"
               >
                 التالي
-                <ChevronLeft className="h-4 w-4 mr-1" />
+                <ChevronLeft className="h-4 w-4 ms-1 rtl:rotate-0 ltr:rotate-180" />
               </Button>
             </div>
           </div>

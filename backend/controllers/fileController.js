@@ -1,7 +1,83 @@
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
+
+const GLOBAL_FILE_ROLES = ['Admin', 'Director', 'AdminTuningDesk'];
+
+function extractId(val) {
+  if (!val) return null;
+  if (typeof val === 'string') return val;
+  if (val._id) return val._id.toString();
+  if (val.id) return typeof val.id === 'string' ? val.id : (val.id._id ? val.id._id.toString() : val.id.toString());
+  return typeof val.toString === 'function' ? val.toString() : null;
+}
+
+function getUserDepartmentIds(user) {
+  const ids = new Set();
+  if (Array.isArray(user?.departments)) {
+    for (const d of user.departments) {
+      const id = extractId(d);
+      if (id) ids.add(id);
+    }
+  }
+  const activeId = extractId(user?.activeDepartment);
+  if (activeId) ids.add(activeId);
+  return Array.from(ids);
+}
+
+async function getDocumentDepartmentIds(doc, type) {
+  const docDepts = new Set();
+
+  if (type === 'incoming') {
+    for (const entry of doc.assignedTo || []) {
+      const id = extractId(entry?.departmentId || entry?.id || entry);
+      if (id) docDepts.add(id);
+    }
+    const singleDept = extractId(doc.departmentId);
+    if (singleDept) docDepts.add(singleDept);
+  } else if (type === 'outgoing') {
+    const sourceDept = extractId(doc.source?.id);
+    if (sourceDept) docDepts.add(sourceDept);
+
+    const singleDept = extractId(doc.departmentId);
+    if (singleDept) docDepts.add(singleDept);
+
+    // Un sortant en réponse à un entrant est également accessible au département destinataire de l'entrant
+    if (doc.reference) {
+      const refId = extractId(doc.reference);
+      if (refId && mongoose.Types.ObjectId.isValid(refId)) {
+        const refIncoming = await IncomingDocument.findOne({ _id: refId, isDeleted: { $ne: true } })
+          .select('assignedTo departmentId')
+          .lean();
+        if (refIncoming) {
+          for (const entry of refIncoming.assignedTo || []) {
+            const id = extractId(entry?.departmentId || entry?.id || entry);
+            if (id) docDepts.add(id);
+          }
+        }
+      }
+    }
+  }
+
+  return Array.from(docDepts);
+}
+
+async function canUserAccessDocument(user, doc, type) {
+  if (!user || !doc) return false;
+  if (GLOBAL_FILE_ROLES.includes(user.role)) return true;
+  if (!['AdminDepartment', 'User'].includes(user.role)) return false;
+
+  const userDepts = getUserDepartmentIds(user);
+  if (userDepts.length === 0) return false;
+
+  const docDepts = await getDocumentDepartmentIds(doc, type);
+  // Aucun département déterminable sur le document => accès strictement refusé
+  if (docDepts.length === 0) return false;
+
+  return docDepts.some((d) => userDepts.includes(d));
+}
 
 /**
  * Serves a protected document file with RBAC validation and Path Traversal protection
@@ -12,31 +88,24 @@ exports.serveProtectedFile = async (req, res) => {
   try {
     const { type, id, filename } = req.params;
 
-    if (!type || !id || !filename) {
-      return res.status(400).json({ success: false, message: 'Paramètres manquants' });
+    if (!type || !id || !filename || !['incoming', 'outgoing'].includes(type)) {
+      return res.status(400).json({ success: false, message: 'Paramètres invalides ou manquants' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Identifiant de document invalide' });
     }
 
     const Model = type === 'incoming' ? IncomingDocument : OutgoingDocument;
-    const doc = await Model.findById(id);
+    const doc = await Model.findOne({ _id: id, isDeleted: { $ne: true } });
     if (!doc) {
       return res.status(404).json({ success: false, message: 'Document non trouvé' });
     }
 
-    // Vérification RBAC
-    const userRole = req.user?.role;
-    const isAdmin = ['Admin', 'Director', 'AdminTuningDesk'].includes(userRole);
-
-    if (!isAdmin) {
-      const userDepts = req.user?.departments?.map((d) => (d._id || d).toString()) || [];
-      const docDepts = (doc.assignedTo || []).map((d) => (d.departmentId?._id || d.departmentId || d.id || d).toString());
-      if (doc.departmentId) {
-        docDepts.push((doc.departmentId._id || doc.departmentId).toString());
-      }
-      
-      const hasAccess = docDepts.length === 0 || docDepts.some((d) => userDepts.includes(d));
-      if (!hasAccess) {
-        return res.status(403).json({ success: false, message: 'Accès refusé' });
-      }
+    // Vérification RBAC stricte
+    const hasAccess = await canUserAccessDocument(req.user, doc, type);
+    if (!hasAccess) {
+      return res.status(403).json({ success: false, message: 'Accès refusé' });
     }
 
     const safeFilename = path.basename(filename);
@@ -53,7 +122,7 @@ exports.serveProtectedFile = async (req, res) => {
       doc.scannedDocument ? path.resolve(process.cwd(), doc.scannedDocument) : null,
     ].filter(Boolean);
 
-    let targetFile = possiblePaths.find((p) => {
+    const targetFile = possiblePaths.find((p) => {
       try {
         return fs.existsSync(p) && fs.statSync(p).isFile();
       } catch (_) {
@@ -65,11 +134,12 @@ exports.serveProtectedFile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Fichier introuvable' });
     }
 
-    if (!targetFile.startsWith(ALLOWED_ROOT)) {
-      return res.status(403).json({ message: 'Accès refusé' });
+    const resolvedTarget = path.resolve(targetFile);
+    if (!resolvedTarget.startsWith(ALLOWED_ROOT + path.sep) && !resolvedTarget.startsWith(ROOT + path.sep)) {
+      return res.status(403).json({ success: false, message: 'Accès refusé' });
     }
 
-    res.sendFile(targetFile);
+    res.sendFile(resolvedTarget);
   } catch (err) {
     console.error('[FileController] Error:', err.message);
     res.status(500).json({ success: false, message: err.message });
@@ -79,40 +149,103 @@ exports.serveProtectedFile = async (req, res) => {
 /**
  * Middleware de protection pour les accès directs aux fichiers de courrier
  * Route: /courrier/*
- * Vérifie que l'utilisateur est authentifié et empêche le Path Traversal
+ * Vérifie que l'utilisateur est authentifié, contrôle l'accès RBAC par département/rôle et empêche le Path Traversal
  */
-exports.serveCourrierStatic = (req, res, next) => {
-  const ROOT = path.resolve(
-    process.env.DOCUMENT_PATH || path.join(__dirname, '../../backend/courrier')
-  );
-  const relativePath = req.path.replace(/^\/courrier/, '');
-  const safePath = path.resolve(ROOT, '.' + relativePath);
+exports.serveCourrierStatic = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Non autorisé' });
+    }
 
-  if (!safePath.startsWith(ROOT + path.sep) && safePath !== ROOT) {
-    return res.status(400).json({ success: false, message: 'Invalid path' });
-  }
+    const ROOT = path.resolve(
+      process.env.DOCUMENT_PATH || path.join(__dirname, '../../backend/courrier')
+    );
+    const relativePath = req.path.replace(/^\/courrier/, '');
+    const safePath = path.resolve(ROOT, '.' + relativePath);
 
-  let targetFile = safePath;
-  if (!fs.existsSync(targetFile) || !fs.statSync(targetFile).isFile()) {
-    const filename = path.basename(safePath);
-    const fallbacks = [
-      path.resolve(ROOT, filename),
-      path.resolve(process.cwd(), 'backend', 'courrier', '.' + relativePath),
-      path.resolve(process.cwd(), 'backend', 'uploads', filename),
-      path.resolve(process.cwd(), 'uploads', filename),
-    ];
-    targetFile = fallbacks.find((p) => {
-      try {
-        return fs.existsSync(p) && fs.statSync(p).isFile();
-      } catch (_) {
-        return false;
+    if (!safePath.startsWith(ROOT + path.sep) && safePath !== ROOT) {
+      return res.status(400).json({ success: false, message: 'Invalid path' });
+    }
+
+    // Contrôle RBAC par rôle et département sur /courrier/*
+    if (!GLOBAL_FILE_ROLES.includes(req.user.role)) {
+      if (!['AdminDepartment', 'User'].includes(req.user.role)) {
+        return res.status(403).json({ success: false, message: 'Accès refusé' });
       }
-    });
-  }
 
-  if (!targetFile || !fs.existsSync(targetFile) || !fs.statSync(targetFile).isFile()) {
-    return res.status(404).json({ success: false, message: 'Fichier introuvable' });
-  }
+      const normalizedRel = relativePath.replace(/\\/g, '/').replace(/^\/+/, '');
+      const candidateScannedPaths = [
+        `courrier/${normalizedRel}`,
+        `/courrier/${normalizedRel}`,
+        `backend/courrier/${normalizedRel}`,
+        normalizedRel,
+      ];
 
-  res.sendFile(targetFile);
+      let matchedDoc = null;
+      let matchedType = null;
+
+      const parsedMatch = normalizedRel.match(/^(\d{4})\/(Incoming-Doc|Outgoing-Doc)\/(\d+)\.[a-z0-9]+$/i);
+      if (parsedMatch) {
+        const yearNum = Number(parsedMatch[1]);
+        const folderKind = parsedMatch[2].toLowerCase();
+        const serialNum = Number(parsedMatch[3]);
+        matchedType = folderKind === 'incoming-doc' ? 'incoming' : 'outgoing';
+        const TargetModel = matchedType === 'incoming' ? IncomingDocument : OutgoingDocument;
+        matchedDoc = await TargetModel.findOne({
+          isDeleted: { $ne: true },
+          $or: [
+            { scannedDocument: { $in: candidateScannedPaths } },
+            { year: yearNum, serialNumber: serialNum },
+          ],
+        }).lean();
+      } else {
+        matchedDoc = await IncomingDocument.findOne({
+          isDeleted: { $ne: true },
+          scannedDocument: { $in: candidateScannedPaths },
+        }).lean();
+        if (matchedDoc) {
+          matchedType = 'incoming';
+        } else {
+          matchedDoc = await OutgoingDocument.findOne({
+            isDeleted: { $ne: true },
+            scannedDocument: { $in: candidateScannedPaths },
+          }).lean();
+          if (matchedDoc) {
+            matchedType = 'outgoing';
+          }
+        }
+      }
+
+      if (!matchedDoc || !(await canUserAccessDocument(req.user, matchedDoc, matchedType))) {
+        return res.status(403).json({ success: false, message: 'Accès refusé' });
+      }
+    }
+
+    let targetFile = safePath;
+    if (!fs.existsSync(targetFile) || !fs.statSync(targetFile).isFile()) {
+      const filename = path.basename(safePath);
+      const fallbacks = [
+        path.resolve(ROOT, filename),
+        path.resolve(process.cwd(), 'backend', 'courrier', '.' + relativePath),
+        path.resolve(process.cwd(), 'backend', 'uploads', filename),
+        path.resolve(process.cwd(), 'uploads', filename),
+      ];
+      targetFile = fallbacks.find((p) => {
+        try {
+          return fs.existsSync(p) && fs.statSync(p).isFile();
+        } catch (_) {
+          return false;
+        }
+      });
+    }
+
+    if (!targetFile || !fs.existsSync(targetFile) || !fs.statSync(targetFile).isFile()) {
+      return res.status(404).json({ success: false, message: 'Fichier introuvable' });
+    }
+
+    return res.sendFile(targetFile);
+  } catch (err) {
+    console.error('[FileController] Static Error:', err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
 };

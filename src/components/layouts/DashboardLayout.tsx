@@ -9,12 +9,10 @@ import NotificationSystem from '../notifications/NotificationSystem';
 import ResponsibleNotificationOverlay from '../notifications/ResponsibleNotificationOverlay';
 import { FloatingAIChat } from '@/components/ai/FloatingAIChat';
 import { Department } from '@/types';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useDirection } from '@/i18n/useDirection';
 
 const DashboardLayout = () => {
   const { currentUser } = useAuth();
-  const isMobile = useIsMobile();
   const { dir } = useDirection();
 
   const getActiveDepartmentName = (): string => {
@@ -41,7 +39,7 @@ const DashboardLayout = () => {
           <Sidebar />
           
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* Header - Fixed */}
             <Header />
             

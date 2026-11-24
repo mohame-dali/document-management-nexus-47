@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { getNotificationCount } from '@/services/activityNotificationService';
 import ActivityNotifications from './ActivityNotifications';
+import { useDirection } from '@/i18n/useDirection';
 
 const NotificationBell: React.FC = () => {
   const [open, setOpen] = useState(false);
+  const { dir } = useDirection();
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ['activityNotificationCount'],
     queryFn: getNotificationCount,
@@ -32,7 +34,7 @@ const NotificationBell: React.FC = () => {
               <span className="absolute -top-0.5 -end-0.5 flex h-[18px] min-w-[18px]">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white px-1 leading-none">
-                  {notificationCount > 9 ? '9+' : notificationCount}
+                  <bdi dir="ltr">{notificationCount > 9 ? '9+' : notificationCount}</bdi>
                 </span>
               </span>
             )}
@@ -43,7 +45,7 @@ const NotificationBell: React.FC = () => {
         className="w-80 sm:w-96 p-0 bg-white border border-[#e2e8f0] rounded shadow-sm" 
         align="end" 
         sideOffset={5}
-        dir="rtl"
+        dir={dir}
       >
         <ActivityNotifications />
       </PopoverContent>

@@ -145,7 +145,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
             variant={roleFilter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setRoleFilter('all')}
-            className={`h-7 px-2.5 text-xs rounded transition-colors duration-200 ${
+            className={`h-11 min-h-[44px] px-3 text-xs rounded transition-colors duration-200 ${
               roleFilter === 'all' 
                 ? 'bg-[#2c5282] hover:bg-[#234269] text-white border-transparent' 
                 : 'border-[#cbd5e1] text-slate-600 hover:bg-slate-50'
@@ -160,7 +160,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
               variant={roleFilter === role ? 'default' : 'outline'}
               size="sm"
               onClick={() => setRoleFilter(role)}
-              className={`h-7 px-2.5 text-xs rounded transition-colors duration-200 flex items-center gap-1 ${
+              className={`h-11 min-h-[44px] px-3 text-xs rounded transition-colors duration-200 flex items-center gap-1 ${
                 roleFilter === role
                   ? 'bg-[#2c5282] hover:bg-[#234269] text-white border-transparent'
                   : 'border-[#cbd5e1] text-slate-600 hover:bg-slate-50'
@@ -189,8 +189,8 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
                   <button 
                     type="button" 
                     onClick={() => toggleUserSelection(user)}
-                    aria-label={`إلغاء تحديد ${user.username}`}
-                    className="text-slate-400 hover:text-red-600"
+                    aria-label={t('messages.deselectUserAria', { username: user.username })}
+                    className="min-w-[32px] min-h-[32px] inline-flex items-center justify-center text-slate-500 hover:text-red-600 rounded"
                   >
                     ×
                   </button>
@@ -270,7 +270,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
                       e.stopPropagation();
                       onSelectUser(user);
                     }}
-                    className="h-7 px-2 text-xs text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
+                    className="h-11 min-h-[44px] px-3 text-xs text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
                     title="مراسلة فورية"
                   >
                     <Mail className="h-3.5 w-3.5" />

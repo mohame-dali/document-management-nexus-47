@@ -19,9 +19,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const getUsers = async (): Promise<User[]> => {
+export interface GetUsersOptions {
+  includeDeleted?: boolean;
+}
+
+export const getUsers = async (options?: GetUsersOptions | boolean): Promise<User[]> => {
   try {
-    const response = await api.get('/users');
+    const includeDeleted =
+      typeof options === 'boolean'
+        ? options
+        : Boolean(options && 'includeDeleted' in options && options.includeDeleted);
+    const response = await api.get('/users', {
+      params: includeDeleted ? { includeDeleted: true } : undefined,
+    });
     
     // Return all users (both active and inactive) for the users management page
     const users = response.data.data || response.data;
@@ -69,6 +79,25 @@ export const deleteUser = async (id: string): Promise<void> => {
     await api.delete(`/users/${id}`);
   } catch (error) {
     console.error('Error deleting user:', error);
+    throw error;
+  }
+};
+
+export const restoreUser = async (id: string): Promise<User> => {
+  try {
+    const response = await api.patch(`/users/${id}/restore`);
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error('Error restoring user:', error);
+    throw error;
+  }
+};
+
+export const permanentDeleteUser = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/users/${id}/permanent`);
+  } catch (error) {
+    console.error('Error permanently deleting user:', error);
     throw error;
   }
 };

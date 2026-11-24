@@ -22,6 +22,7 @@ import {
 } from '@/services/activityNotificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { getRelativeTime, getDateGroup } from '@/utils/relativeTime';
+import { useDirection } from '@/i18n/useDirection';
 
 interface TransformedNotification extends ActivityNotification {
   isRead: boolean;
@@ -31,6 +32,7 @@ interface TransformedNotification extends ActivityNotification {
 
 const ActivityNotifications: React.FC = () => {
   const { currentUser } = useAuth();
+  const { dir } = useDirection();
   const queryClient = useQueryClient();
   
   const { data: notifications = [], isLoading, refetch } = useQuery({
@@ -147,14 +149,14 @@ const ActivityNotifications: React.FC = () => {
     return (
       <div className="mb-2">
         <div className="px-3 py-1 bg-[#f8fafc] border-y border-[#edf2f7] text-[11px] font-bold text-[#5f6b7d]">
-          {title} ({items.length})
+          {title} (<bdi dir="ltr">{items.length}</bdi>)
         </div>
         <div className="divide-y divide-[#f1f5f9]">
           {items.map((notification) => (
             <div
               key={notification._id}
               onClick={() => !notification.isRead && handleMarkAsRead(notification._id)}
-              className={`p-3 transition-colors cursor-pointer flex items-start gap-2.5 text-right relative ${
+              className={`p-3 transition-colors cursor-pointer flex items-start gap-2.5 text-start relative ${
                 !notification.isRead ? 'bg-[#f0f9ff]/70 hover:bg-[#e0f2fe]/70' : 'hover:bg-[#f8fafc]'
               }`}
             >
@@ -179,14 +181,14 @@ const ActivityNotifications: React.FC = () => {
                     {notification.activity ? `نشاط: ${notification.activity}` : notification.title}
                   </p>
                   <span className="text-[10px] text-[#5f6b7d] shrink-0 font-medium">
-                    {getRelativeTime(notification.createdAt)}
+                    <bdi>{getRelativeTime(notification.createdAt)}</bdi>
                   </span>
                 </div>
 
                 {notification.documentId && typeof notification.documentId === 'object' && (
                   <div className="flex items-center gap-1 text-[11px] text-[#2c5282] font-semibold mt-1">
                     <FileText className="w-3 h-3 shrink-0" />
-                    <span>الوثيقة {notification.documentId.serialNumber}/{notification.documentId.year}</span>
+                    <span>الوثيقة <bdi dir="ltr">{notification.documentId.serialNumber}/{notification.documentId.year}</bdi></span>
                   </div>
                 )}
 
@@ -240,7 +242,7 @@ const ActivityNotifications: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white rounded-md shadow-lg border border-[#e2e8f0] overflow-hidden" dir="rtl">
+    <div className="w-full bg-white rounded-md shadow-lg border border-[#e2e8f0] overflow-hidden" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
         <div className="flex items-center gap-2">
@@ -248,7 +250,7 @@ const ActivityNotifications: React.FC = () => {
           <span className="text-sm font-bold text-[#1a202c]">الإشعارات والتنبيهات</span>
           {unreadCount > 0 ? (
             <span className="inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-red-100 text-red-700 border border-red-200">
-              {unreadCount} جديد
+              <bdi dir="ltr">{unreadCount}</bdi> جديد
             </span>
           ) : (
             <span className="inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-medium rounded-full bg-slate-100 text-slate-600">
