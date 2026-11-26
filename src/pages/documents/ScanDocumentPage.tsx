@@ -624,7 +624,7 @@ const ScanDocumentPage: React.FC = () => {
                   : 'Configuration du Scanner et de l’OCR'}
               </span>
             </DialogTitle>
-            <DialogDescription className="text-sm text-[#5f6b7d]">
+            <DialogDescription className="text-sm text-slate-700 dark:text-slate-300">
               {lang === 'ar'
                 ? 'اضبط الدقة الافتراضية، وضع الألوان، التغذية التلقائية وإعدادات OCR ليتم تطبيقها تلقائياً.'
                 : 'Définissez la résolution, le mode couleur, le chargeur ADF et les options OCR appliquées par défaut.'}

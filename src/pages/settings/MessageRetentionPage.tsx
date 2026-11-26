@@ -116,7 +116,7 @@ const MessageRetentionPage = () => {
       <div className="w-full min-h-[60vh] flex items-center justify-center bg-[#f7fafc]">
         <div className="text-center space-y-4">
           <RefreshCw className="h-10 w-10 mx-auto animate-spin text-[#2c5282]" />
-          <p className="text-base text-[#4a5568]">جاري تحميل بيانات وسياسات الرسائل...</p>
+          <p className="text-base text-slate-700 dark:text-slate-300">جاري تحميل بيانات وسياسات الرسائل...</p>
         </div>
       </div>
     );
@@ -146,7 +146,7 @@ const MessageRetentionPage = () => {
                 سياسة الحفظ
               </span>
             </div>
-            <p className="text-base text-[#4a5568] mt-1 leading-relaxed">
+            <p className="text-base text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
               تحديد قواعد الحفظ التلقائي، تحليل سعة التخزين، والتنظيف الآمن للمراسلات القديمة
             </p>
           </div>
@@ -168,7 +168,7 @@ const MessageRetentionPage = () => {
         <TabsList className="w-full flex flex-wrap h-auto p-1.5 bg-[#edf2f7] border border-[#e2e8f0] rounded gap-1.5">
           <TabsTrigger
             value="statistics"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <BarChart3 className="h-5 w-5" />
             <span>إحصائيات الرسائل</span>
@@ -176,7 +176,7 @@ const MessageRetentionPage = () => {
 
           <TabsTrigger
             value="retention"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Clock className="h-5 w-5" />
             <span>سياسة الحفظ التلقائية</span>
@@ -184,7 +184,7 @@ const MessageRetentionPage = () => {
 
           <TabsTrigger
             value="cleanup"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Trash2 className="h-5 w-5" />
             <span>التنظيف اليدوي والأرشفة</span>
@@ -202,7 +202,7 @@ const MessageRetentionPage = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-[#1a202c]">إجمالي المراسلات</CardTitle>
-                    <CardDescription className="text-base text-[#5f6b7d]">عدد الرسائل المسجلة في النظام</CardDescription>
+                    <CardDescription className="text-base text-slate-700 dark:text-slate-300">عدد الرسائل المسجلة في النظام</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -224,7 +224,7 @@ const MessageRetentionPage = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-[#1a202c]">إجمالي المرفقات</CardTitle>
-                    <CardDescription className="text-base text-[#5f6b7d]">الملفات والمستندات الملحقة بالرسائل</CardDescription>
+                    <CardDescription className="text-base text-slate-700 dark:text-slate-300">الملفات والمستندات الملحقة بالرسائل</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -248,7 +248,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">توزيع الرسائل حسب العمر</CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">تصنيف المراسلات بحسب الفترة الزمنية لانقضائها</CardDescription>
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">تصنيف المراسلات بحسب الفترة الزمنية لانقضائها</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -256,23 +256,23 @@ const MessageRetentionPage = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded text-center">
                   <div className="text-2xl font-bold text-[#2c5282]">{stats?.messagesByAge?.lastMonth || 0}</div>
-                  <div className="text-base font-semibold text-[#4a5568] mt-1">آخر شهر</div>
+                  <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">آخر شهر</div>
                 </div>
                 <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded text-center">
                   <div className="text-2xl font-bold text-emerald-700">{stats?.messagesByAge?.lastThreeMonths || 0}</div>
-                  <div className="text-base font-semibold text-[#4a5568] mt-1">آخر 3 أشهر</div>
+                  <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">آخر 3 أشهر</div>
                 </div>
                 <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded text-center">
                   <div className="text-2xl font-bold text-[#b7791f]">{stats?.messagesByAge?.lastSixMonths || 0}</div>
-                  <div className="text-base font-semibold text-[#4a5568] mt-1">آخر 6 أشهر</div>
+                  <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">آخر 6 أشهر</div>
                 </div>
                 <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded text-center">
                   <div className="text-2xl font-bold text-orange-700">{stats?.messagesByAge?.lastYear || 0}</div>
-                  <div className="text-base font-semibold text-[#4a5568] mt-1">آخر سنة</div>
+                  <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">آخر سنة</div>
                 </div>
                 <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded text-center col-span-2 sm:col-span-1">
                   <div className="text-2xl font-bold text-red-700">{stats?.messagesByAge?.olderThanYear || 0}</div>
-                  <div className="text-base font-semibold text-[#4a5568] mt-1">أقدم من سنة</div>
+                  <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">أقدم من سنة</div>
                 </div>
               </div>
 
@@ -284,14 +284,14 @@ const MessageRetentionPage = () => {
                 </h4>
                 <div className="space-y-3">
                   <div>
-                    <div className="flex justify-between text-sm text-[#4a5568] mb-1 font-medium">
+                    <div className="flex justify-between text-sm text-slate-700 dark:text-slate-300 mb-1 font-medium">
                       <span>الرسائل الحديثة (آخر 3 أشهر)</span>
                       <span className="text-emerald-700 font-bold">استهلاك منخفض</span>
                     </div>
                     <Progress value={25} className="h-2.5 bg-gray-200" />
                   </div>
                   <div>
-                    <div className="flex justify-between text-sm text-[#4a5568] mb-1 font-medium">
+                    <div className="flex justify-between text-sm text-slate-700 dark:text-slate-300 mb-1 font-medium">
                       <span>الرسائل المؤرشفة والقديمة (أقدم من سنة)</span>
                       <span className="text-amber-700 font-bold">استهلاك مرتفع</span>
                     </div>
@@ -313,7 +313,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">سياسة الحفظ التلقائي</CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                     تكوين جدولة الحذف التلقائي للمراسلات والمرفقات القديمة
                   </CardDescription>
                 </div>
@@ -325,7 +325,7 @@ const MessageRetentionPage = () => {
                   <Label htmlFor="enable-retention" className="text-base font-bold text-[#1a202c] cursor-pointer">
                     تفعيل الحذف التلقائي للمراسلات
                   </Label>
-                  <p className="text-sm text-[#4a5568] mt-0.5">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
                     حذف المراسلات والمرفقات تلقائياً بعد مرور فترة محددة لتوفير مساحة التخزين
                   </p>
                 </div>
@@ -350,7 +350,7 @@ const MessageRetentionPage = () => {
                         max="999"
                         value={policy.period}
                         onChange={(e) => setPolicy({ ...policy, period: parseInt(e.target.value) || 1 })}
-                        className="h-11 text-base border-[#cbd5e1] rounded bg-white"
+                        className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white"
                       />
                     </div>
                     <div className="space-y-2">
@@ -363,7 +363,7 @@ const MessageRetentionPage = () => {
                           setPolicy({ ...policy, unit: value })
                         }
                       >
-                        <SelectTrigger id="retention-unit" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                        <SelectTrigger id="retention-unit" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -420,7 +420,7 @@ const MessageRetentionPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-red-700">تنظيف يدوي للرسائل</CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                     حذف فوري للمراسلات والمرفقات الأقدم من فترة زمنية محددة
                   </CardDescription>
                 </div>
@@ -439,7 +439,7 @@ const MessageRetentionPage = () => {
                     max="999"
                     value={deleteForm.period}
                     onChange={(e) => setDeleteForm({ ...deleteForm, period: parseInt(e.target.value) || 1 })}
-                    className="h-11 text-base border-[#cbd5e1] rounded bg-white"
+                    className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white"
                   />
                 </div>
                 <div className="space-y-2">
@@ -452,7 +452,7 @@ const MessageRetentionPage = () => {
                       setDeleteForm({ ...deleteForm, unit: value })
                     }
                   >
-                    <SelectTrigger id="delete-unit" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="delete-unit" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -478,11 +478,11 @@ const MessageRetentionPage = () => {
                         stats?.messagesByAge?.lastSixMonths || 0
                       }
                     </div>
-                    <div className="text-sm text-[#4a5568] mt-1 font-medium">رسائل مؤهلة للحذف</div>
+                    <div className="text-sm text-slate-700 dark:text-slate-300 mt-1 font-medium">رسائل مؤهلة للحذف</div>
                   </div>
                   <div className="p-3 bg-white rounded border border-[#e2e8f0]">
                     <div className="text-2xl font-bold text-emerald-700">~2.5 جيجابايت</div>
-                    <div className="text-sm text-[#4a5568] mt-1 font-medium">مساحة تخزينية متوقع توفيرها</div>
+                    <div className="text-sm text-slate-700 dark:text-slate-300 mt-1 font-medium">مساحة تخزينية متوقع توفيرها</div>
                   </div>
                 </div>
               </div>
@@ -535,7 +535,7 @@ const MessageRetentionPage = () => {
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-700">
               تأكيد حذف المراسلات نهائياً
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-[#4a5568] leading-relaxed mt-2">
+            <AlertDialogDescription className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-2">
               أنت على وشك حذف كافة المراسلات والمرفقات الأقدم من{' '}
               <strong className="text-[#1a202c]">
                 {deleteForm.period} {deleteForm.unit === 'days' ? 'أيام' : deleteForm.unit === 'months' ? 'أشهر' : 'سنوات'}

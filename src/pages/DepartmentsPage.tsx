@@ -396,7 +396,7 @@ const DepartmentsPage: React.FC = () => {
         {/* Total Departments */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">إجمالي الأقسام المسجلة</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">إجمالي الأقسام المسجلة</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.total}</span>
           </div>
           <div className="w-10 h-10 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
@@ -407,7 +407,7 @@ const DepartmentsPage: React.FC = () => {
         {/* Active Departments */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">الأقسام النشطة</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">الأقسام النشطة</span>
             <span className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 block">{metrics.active}</span>
           </div>
           <div className="w-10 h-10 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
@@ -418,7 +418,7 @@ const DepartmentsPage: React.FC = () => {
         {/* Inactive Departments / Structure */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">الأقسام المعطلة</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">الأقسام المعطلة</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.inactive}</span>
           </div>
           {/* Institutional Amber / Gold indicator with dark text/icon */}
@@ -451,7 +451,7 @@ const DepartmentsPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {/* Search by name or description */}
           <div className="relative sm:col-span-2">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-700 dark:text-slate-300 pointer-events-none" />
             <Input 
               placeholder="البحث باسم القسم أو بالوصف..."
               value={searchTerm}
@@ -459,7 +459,7 @@ const DepartmentsPage: React.FC = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-11 text-base pr-10 pl-3 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+              className="h-11 text-base pr-10 pl-3 bg-white border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
             />
           </div>
 
@@ -472,7 +472,7 @@ const DepartmentsPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-11 text-base bg-white border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder="تصفية حسب الحالة" />
               </SelectTrigger>
               <SelectContent>
@@ -575,11 +575,11 @@ const DepartmentsPage: React.FC = () => {
                       </TableCell>
 
                       {/* Description */}
-                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568]">
+                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-slate-700 dark:text-slate-300">
                         {department.description ? (
                           <span className="line-clamp-2 max-w-md">{department.description}</span>
                         ) : (
-                          <span className="text-gray-400 italic text-xs">لا يوجد وصف مسجل</span>
+                          <span className="text-slate-700 dark:text-slate-300 italic text-xs">لا يوجد وصف مسجل</span>
                         )}
                       </TableCell>
 
@@ -596,7 +596,7 @@ const DepartmentsPage: React.FC = () => {
                       </TableCell>
 
                       {/* Created At */}
-                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568] tabular-nums">
+                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-slate-700 dark:text-slate-300 tabular-nums">
                         {department.createdAt ? (
                           <bdi dir="rtl" className="tabular-nums">{formatLongDate(department.createdAt, 'ar')}</bdi>
                         ) : 'غير مسجل'}
@@ -778,7 +778,7 @@ const DepartmentsPage: React.FC = () => {
                       <span
                         key={`ellipsis-${idx}`}
                         aria-hidden="true"
-                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-gray-500 font-bold select-none"
+                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold select-none"
                       >
                         …
                       </span>
@@ -843,7 +843,7 @@ const DepartmentsPage: React.FC = () => {
           {/* Department Meta Specs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-base space-y-1">
-              <span className="text-xs font-semibold text-gray-500 block">الحالة التشغيلية</span>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">الحالة التشغيلية</span>
               <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold ${
                 selectedDepartmentForView?.isActive !== false
                   ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
@@ -855,7 +855,7 @@ const DepartmentsPage: React.FC = () => {
             </div>
 
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-base space-y-1">
-              <span className="text-xs font-semibold text-gray-500 block">تاريخ الإنشاء</span>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">تاريخ الإنشاء</span>
               <p className="font-medium text-[#1a202c] tabular-nums">
                 {selectedDepartmentForView?.createdAt ? (
                   <bdi dir="rtl" className="tabular-nums">{formatLongDate(selectedDepartmentForView.createdAt, 'ar')}</bdi>
@@ -874,25 +874,25 @@ const DepartmentsPage: React.FC = () => {
             </div>
 
             {isLoadingDeptUsers ? (
-              <div className="p-6 text-center text-gray-500 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+              <div className="p-6 text-center text-slate-700 dark:text-slate-300 bg-[#f8fafc] border border-[#e2e8f0] rounded">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-2"></div>
                 <span className="text-sm">جاري تحميل قائمة المستخدمين...</span>
               </div>
             ) : departmentUsers.length === 0 ? (
-              <div className="p-6 text-center text-gray-500 bg-[#f8fafc] border border-[#e2e8f0] rounded">
-                <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <div className="p-6 text-center text-slate-700 dark:text-slate-300 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                <Users className="h-8 w-8 text-slate-700 dark:text-slate-300 mx-auto mb-2" />
                 <p className="text-base font-medium">لا يوجد مستخدمون منتسبون لهذا القسم حالياً.</p>
-                <p className="text-sm text-gray-400 mt-1">يمكنك إسناد المستخدمين لهذا القسم عبر شاشة إدارة المستخدمين.</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">يمكنك إسناد المستخدمين لهذا القسم عبر شاشة إدارة المستخدمين.</p>
               </div>
             ) : (
               <div className="border border-[#e2e8f0] rounded overflow-hidden">
                 <Table className="w-full">
                   <TableHeader className="bg-[#f8fafc]">
                     <TableRow>
-                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700 w-12">الصورة</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">اسم المستخدم</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">الدور</TableHead>
-                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-gray-700">الحالة</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-slate-800 w-12">الصورة</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-slate-800">اسم المستخدم</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-slate-800">الدور</TableHead>
+                      <TableHead className="text-right py-3 px-3 text-sm font-bold text-slate-800">الحالة</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

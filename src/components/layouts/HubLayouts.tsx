@@ -272,7 +272,7 @@ export const AdminHubLayout: React.FC = () => {
       to: '/dashboard/admin/settings',
       label: t('sidebar.settings'),
       icon: Settings,
-      color: 'text-gray-500',
+      color: 'text-slate-700 dark:text-slate-300',
       allowedRoles: ['Admin'],
     },
     {

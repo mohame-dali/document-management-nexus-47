@@ -25,6 +25,9 @@ export default {
         inter: ['"Inter Variable"', '"Segoe UI"', 'system-ui', 'sans-serif'],
         sans: ['"Cairo Variable"', 'Cairo', '"Inter Variable"', '"Segoe UI"', 'system-ui', 'sans-serif'],
       },
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.55' }],
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

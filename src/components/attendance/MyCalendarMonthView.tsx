@@ -216,7 +216,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
             value={String(month)}
             onValueChange={(val) => onYearMonthChange(year, parseInt(val, 10))}
           >
-            <SelectTrigger className="h-9 w-44 border-slate-200 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
+            <SelectTrigger className="h-9 w-44 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
               <SelectValue />
             </SelectTrigger>
             <SelectContent dir={dir}>
@@ -232,7 +232,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
             value={String(year)}
             onValueChange={(val) => onYearMonthChange(parseInt(val, 10), month)}
           >
-            <SelectTrigger className="h-9 w-24 border-slate-200 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 font-mono tabular-nums">
+            <SelectTrigger className="h-9 w-24 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 font-mono tabular-nums">
               <SelectValue />
             </SelectTrigger>
             <SelectContent dir={dir}>
@@ -250,7 +250,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
       {isLoading ? (
         <div className="py-20 text-center space-y-2">
           <div className="h-6 w-6 border-2 border-[#2c5282] dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 dark:text-slate-400">جاري تحميل بيانات الشهر...</p>
+          <p className="text-xs text-slate-700 dark:text-slate-300">جاري تحميل بيانات الشهر...</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -334,7 +334,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
                     {/* Libellé d'état du jour */}
                     <div className="mt-1">
                       <div
-                        className={`text-[11px] font-semibold px-1.5 py-0.5 rounded text-center truncate shadow-none border bg-white/95 dark:bg-slate-900/90 ${
+                        className={`text-[13px] font-semibold px-1.5 py-0.5 rounded text-center truncate shadow-none border bg-white/95 dark:bg-slate-900/90 ${
                           visual.statut === 'present'
                             ? 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                             : visual.statut === 'unrecorded'
@@ -355,7 +355,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
                       </div>
 
                       {att?.statut === 'present' && att.heureArrivee && (
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono tabular-nums block text-center mt-0.5">
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 font-mono tabular-nums block text-center mt-0.5">
                           {att.heureArrivee}
                         </span>
                       )}
@@ -371,7 +371,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
       {/* Résumé mensuel */}
       <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-slate-600 dark:text-slate-400">حصيلة الشهر :</span>
+          <span className="text-slate-700 dark:text-slate-300">حصيلة الشهر :</span>
           <span className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 font-medium tabular-nums">
             حضور : {monthStats.presents} أيام
           </span>
@@ -385,7 +385,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
           )}
         </div>
 
-        <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+        <span className="text-slate-700 dark:text-slate-300 text-[13px]">
           * اضغط على أي يوم لعرض تفاصيله الكاملة أدناه
         </span>
       </div>
@@ -399,7 +399,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
               <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 تفاصيل اليوم المحدد : <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formatDateWithWeekday(selectedDate, isRTL ? 'ar' : 'fr')}</bdi>
               </h4>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">({selectedDate})</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-mono tabular-nums">({selectedDate})</span>
             </div>
 
             <div
@@ -456,7 +456,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {selectedDayAttendance.detailsMotif.nomService && (
                     <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 dark:text-slate-400 block mb-0.5 flex items-center gap-1">
+                      <span className="text-slate-700 dark:text-slate-300 block mb-0.5 flex items-center gap-1">
                         <Building2 className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                         <span>المصلحة:</span>
                       </span>
@@ -468,7 +468,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
 
                   {selectedDayAttendance.detailsMotif.lieuMission && (
                     <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 dark:text-slate-400 block mb-0.5 flex items-center gap-1">
+                      <span className="text-slate-700 dark:text-slate-300 block mb-0.5 flex items-center gap-1">
                         <Briefcase className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                         <span>مكان المهمة:</span>
                       </span>
@@ -480,7 +480,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
 
                   {selectedDayAttendance.detailsMotif.objetMission && (
                     <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 dark:text-slate-400 block mb-0.5 flex items-center gap-1">
+                      <span className="text-slate-700 dark:text-slate-300 block mb-0.5 flex items-center gap-1">
                         <FileText className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                         <span>موضوع المهمة:</span>
                       </span>
@@ -492,7 +492,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
 
                   {selectedDayAttendance.detailsMotif.intituleFormation && (
                     <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <span className="text-slate-500 dark:text-slate-400 block mb-0.5 flex items-center gap-1">
+                      <span className="text-slate-700 dark:text-slate-300 block mb-0.5 flex items-center gap-1">
                         <GraduationCap className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                         <span>التكوين:</span>
                       </span>
@@ -504,7 +504,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
 
                   {selectedDayAttendance.detailsMotif.commentaire && (
                     <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 sm:col-span-2">
-                      <span className="text-slate-500 dark:text-slate-400 block mb-0.5">ملاحظة:</span>
+                      <span className="text-slate-700 dark:text-slate-300 block mb-0.5">ملاحظة:</span>
                       <span className="text-slate-800 dark:text-slate-200">
                         {selectedDayAttendance.detailsMotif.commentaire}
                       </span>
@@ -514,7 +514,7 @@ export const MyCalendarMonthView: React.FC<MyCalendarMonthViewProps> = ({
               )}
             </div>
           ) : (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               لم يتم تسجيل أي حضور أو غياب لهذا اليوم بعد.
             </p>
           )}

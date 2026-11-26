@@ -14,7 +14,7 @@ const UnauthorizedPage = () => {
           <ShieldAlert className="h-16 w-16 text-[#e53e3e]" />
         </div>
         <h1 className="text-2xl font-bold text-[#1a202c] mb-3">غير مصرح بالوصول</h1>
-        <p className="text-[#4a5568] text-sm leading-relaxed mb-6">
+        <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-6">
           ليس لديك صلاحية للوصول إلى هذه الصفحة. يرجى التواصل مع مسؤول النظام إذا كنت تعتقد أن هذا خطأ.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -27,7 +27,7 @@ const UnauthorizedPage = () => {
           <Button 
             variant="outline" 
             onClick={() => navigate(-1)}
-            className="h-11 px-6 border-[#e2e8f0] text-[#4a5568] hover:bg-[#f7fafc] rounded font-medium"
+            className="h-11 px-6 border-[#e2e8f0] text-slate-700 dark:text-slate-300 hover:bg-[#f7fafc] rounded font-medium"
           >
             العودة
           </Button>

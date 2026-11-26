@@ -233,7 +233,7 @@ const EditUser: React.FC = () => {
               {photoFile && (
                 <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-700">
                   <p className="font-semibold text-[#1a202c]">الصورة المختارة: {photoFile.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت</p>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت</p>
                 </div>
               )}
             </div>
@@ -254,14 +254,14 @@ const EditUser: React.FC = () => {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-base">
             <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
-              <span className="text-sm font-semibold text-gray-500 block">تاريخ الإنشاء</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">تاريخ الإنشاء</span>
               <p className="font-medium text-[#1a202c] tabular-nums">
                 <bdi dir="rtl" className="tabular-nums">{formatLongDate(user.createdAt, 'ar')}</bdi>
               </p>
             </div>
             
             <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
-              <span className="text-sm font-semibold text-gray-500 block">الحالة الحالية</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الحالة الحالية</span>
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                 user.isActive 
                   ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
@@ -272,7 +272,7 @@ const EditUser: React.FC = () => {
             </div>
 
             <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
-              <span className="text-sm font-semibold text-gray-500 block">الدور المسجل</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الدور المسجل</span>
               <div>
                 {user.role === 'Director' ? (
                   <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#e2be40] font-bold text-xs px-2.5 py-0.5">
@@ -299,7 +299,7 @@ const EditUser: React.FC = () => {
             </div>
 
             <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
-              <span className="text-sm font-semibold text-gray-500 block">الأقسام المرتبطة</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الأقسام المرتبطة</span>
               <p className="font-medium text-[#1a202c] truncate">
                 {user.departments && user.departments.length > 0 
                   ? user.departments.map((d: Department) => d.name).join('، ')

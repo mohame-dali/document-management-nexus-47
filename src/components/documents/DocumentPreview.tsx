@@ -54,9 +54,9 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           height: '500px'
         }}
       >
-        <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir={dir}>
+        <div className="flex flex-col items-center justify-center w-full h-full text-slate-700 dark:text-slate-300 p-4" dir={dir}>
           <FileInput className="h-8 w-8 mb-2" />
-          <p className="text-sm text-center text-[#5f6b7d]">{translations.noPreview}</p>
+          <p className="text-sm text-center text-slate-700 dark:text-slate-300">{translations.noPreview}</p>
         </div>
       </div>
     );
@@ -78,7 +78,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
       {/* Header with document title */}
       <div className="bg-[#f7fafc] px-3.5 py-2.5 border-b border-[#e2e8f0]" dir={dir}>
         <h3 className="text-xs font-semibold text-[#1a202c] truncate">{document.subject}</h3>
-        <p className="text-[11px] text-[#5f6b7d]"><bdi dir="ltr">#{document.serialNumber} - {document.year}</bdi></p>
+        <p className="text-[13px] text-slate-700 dark:text-slate-300"><bdi dir="ltr">#{document.serialNumber} - {document.year}</bdi></p>
       </div>
 
       <div className="flex flex-col h-full">
@@ -88,8 +88,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
             <tbody className="space-y-1">
               {/* Serial Number and Year */}
               <tr>
-                <td className="font-medium text-[#4a5568] py-1 w-24">
-                  <Hash className="h-3 w-3 inline me-1 text-[#718096]" />
+                <td className="font-medium text-slate-700 dark:text-slate-300 py-1 w-24">
+                  <Hash className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                   الرقم:
                 </td>
                 <td className="text-[#1a202c] py-1 font-medium"><bdi dir="ltr">#{document.serialNumber}/{document.year}</bdi></td>
@@ -97,8 +97,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
 
               {/* Date */}
               <tr>
-                <td className="font-medium text-[#4a5568] py-1">
-                  <Calendar className="h-3 w-3 inline me-1 text-[#718096]" />
+                <td className="font-medium text-slate-700 dark:text-slate-300 py-1">
+                  <Calendar className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                   التاريخ:
                 </td>
                 <td className="text-[#2d3748] py-1 tabular-nums">
@@ -109,8 +109,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {/* Type Document */}
               {document.typeDocument && (
                 <tr>
-                  <td className="font-medium text-[#4a5568] py-1">
-                    <FileText className="h-3 w-3 inline me-1 text-[#718096]" />
+                  <td className="font-medium text-slate-700 dark:text-slate-300 py-1">
+                    <FileText className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                     النوع:
                   </td>
                   <td className="text-[#2d3748] py-1">{document.typeDocument}</td>
@@ -119,8 +119,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
 
               {/* Source */}
               <tr>
-                <td className="font-medium text-[#4a5568] py-1">
-                  <Building className="h-3 w-3 inline me-1 text-[#718096]" />
+                <td className="font-medium text-slate-700 dark:text-slate-300 py-1">
+                  <Building className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                   المصدر:
                 </td>
                 <td className="text-[#2d3748] py-1">
@@ -134,8 +134,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {/* Activity (for incoming documents) */}
               {isIncomingDocument(document) && document.activity && (
                 <tr>
-                  <td className="font-medium text-[#4a5568] py-1">
-                    <MapPin className="h-3 w-3 inline me-1 text-[#718096]" />
+                  <td className="font-medium text-slate-700 dark:text-slate-300 py-1">
+                    <MapPin className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                     النشاط:
                   </td>
                   <td className="text-[#2d3748] py-1">{document.activity}</td>
@@ -147,8 +147,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                 <>
                   {document.correspondenceNumber && (
                     <tr>
-                      <td className="font-medium text-[#4a5568] py-1">
-                        <Mail className="h-3 w-3 inline me-1 text-[#718096]" />
+                      <td className="font-medium text-slate-700 dark:text-slate-300 py-1">
+                        <Mail className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                         رقم المراسلة:
                       </td>
                       <td className="text-[#2d3748] py-1"><bdi dir="ltr">{document.correspondenceNumber}</bdi></td>
@@ -156,8 +156,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                   )}
                   {document.correspondenceDate && (
                     <tr>
-                      <td className="font-medium text-[#4a5568] py-1">
-                        <Calendar className="h-3 w-3 inline me-1 text-[#718096]" />
+                      <td className="font-medium text-slate-700 dark:text-slate-300 py-1">
+                        <Calendar className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                         تاريخ المراسلة:
                       </td>
                       <td className="text-[#2d3748] py-1 tabular-nums"><bdi dir="ltr">{formatDate(document.correspondenceDate)}</bdi></td>
@@ -169,8 +169,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {/* Assigned To details for outgoing documents */}
               {!isIncomingDocument(document) && (document as OutgoingDocument).assignedTo && (document as OutgoingDocument).assignedTo.length > 0 && (
                 <tr>
-                  <td className="font-medium text-[#4a5568] py-1 align-top">
-                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
+                  <td className="font-medium text-slate-700 dark:text-slate-300 py-1 align-top">
+                    <User className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                     مُوجه إلى:
                   </td>
                   <td className="text-[#2d3748] py-1">
@@ -182,8 +182,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {/* Pour Info for outgoing documents */}
               {!isIncomingDocument(document) && (document as OutgoingDocument).pourInfo && (document as OutgoingDocument).pourInfo.length > 0 && (
                 <tr>
-                  <td className="font-medium text-[#4a5568] py-1 align-top">
-                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
+                  <td className="font-medium text-slate-700 dark:text-slate-300 py-1 align-top">
+                    <User className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                     للعلم:
                   </td>
                   <td className="text-[#2d3748] py-1">
@@ -195,8 +195,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {/* Assigned To for incoming documents */}
               {isIncomingDocument(document) && document.assignedTo && document.assignedTo.length > 0 && (
                 <tr>
-                  <td className="font-medium text-[#4a5568] py-1 align-top">
-                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
+                  <td className="font-medium text-slate-700 dark:text-slate-300 py-1 align-top">
+                    <User className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                     مُعيّن إلى:
                   </td>
                   <td className="text-[#2d3748] py-1">
@@ -208,8 +208,8 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               {/* Responsible User for incoming documents */}
               {isIncomingDocument(document) && document.responsibleUser && typeof document.responsibleUser === 'object' && (
                 <tr>
-                  <td className="font-medium text-[#4a5568] py-1">
-                    <User className="h-3 w-3 inline me-1 text-[#718096]" />
+                  <td className="font-medium text-slate-700 dark:text-slate-300 py-1">
+                    <User className="h-3 w-3 inline me-1 text-slate-700 dark:text-slate-300" />
                     المسؤول:
                   </td>
                   <td className="text-[#2d3748] py-1">{document.responsibleUser.username}</td>
@@ -224,7 +224,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           {hasValidPDF ? (
             <>
               {loadError ? (
-                <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir={dir}>
+                <div className="flex flex-col items-center justify-center w-full h-full text-slate-700 dark:text-slate-300 p-4" dir={dir}>
                   <AlertCircle className="h-6 w-6 mb-2 text-[#e53e3e]" />
                   <p className="text-xs text-center text-[#e53e3e]">فشل في تحميل المعاينة</p>
                 </div>
@@ -250,9 +250,9 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full text-[#5f6b7d] p-4" dir={dir}>
+            <div className="flex flex-col items-center justify-center w-full h-full text-slate-700 dark:text-slate-300 p-4" dir={dir}>
               <FileInput className="h-6 w-6 mb-2" />
-              <p className="text-xs text-center text-[#5f6b7d]">{translations.noPreview}</p>
+              <p className="text-xs text-center text-slate-700 dark:text-slate-300">{translations.noPreview}</p>
             </div>
           )}
         </div>

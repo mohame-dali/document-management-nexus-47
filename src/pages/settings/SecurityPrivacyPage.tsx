@@ -239,7 +239,7 @@ const SecurityPrivacyPage = () => {
       <div className="w-full min-h-[60vh] flex items-center justify-center bg-[#f7fafc]">
         <div className="text-center space-y-4">
           <RefreshCw className="h-10 w-10 mx-auto animate-spin text-[#2c5282]" />
-          <p className="text-base text-[#4a5568]">جاري تحميل إعدادات الأمان...</p>
+          <p className="text-base text-slate-700 dark:text-slate-300">جاري تحميل إعدادات الأمان...</p>
         </div>
       </div>
     );
@@ -269,7 +269,7 @@ const SecurityPrivacyPage = () => {
                 الحماية وسياسة الدخول
               </span>
             </div>
-            <p className="text-base text-[#4a5568] mt-1 leading-relaxed">
+            <p className="text-base text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
               إدارة سياسات الدخول، تعقيد كلمات المرور، والتحكم بالجلسات النشطة
             </p>
           </div>
@@ -290,7 +290,7 @@ const SecurityPrivacyPage = () => {
         <TabsList className="w-full flex flex-wrap h-auto p-1.5 bg-[#edf2f7] border border-[#e2e8f0] rounded gap-1.5">
           <TabsTrigger
             value="security"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Lock className="h-5 w-5" />
             <span>سياسات الأمان</span>
@@ -298,7 +298,7 @@ const SecurityPrivacyPage = () => {
 
           <TabsTrigger
             value="privacy"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Eye className="h-5 w-5" />
             <span>الخصوصية وتصدير البيانات</span>
@@ -306,7 +306,7 @@ const SecurityPrivacyPage = () => {
 
           <TabsTrigger
             value="sessions"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Monitor className="h-5 w-5" />
             <span>الجلسات النشطة</span>
@@ -324,7 +324,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">سياسة تعقيد كلمات المرور</CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                     تكوين شروط كلمة المرور الإلزامية للمستخدمين في النظام
                   </CardDescription>
                 </div>
@@ -340,9 +340,9 @@ const SecurityPrivacyPage = () => {
                     onChange={(e) => handlePasswordPolicyChange('minLength', parseInt(e.target.value) || 8)}
                     min={6}
                     max={64}
-                    className="h-11 text-base border-[#cbd5e1] rounded bg-white"
+                    className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white"
                   />
-                  <p className="text-sm text-gray-500">موصى به: 8 أحرف على الأقل</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">موصى به: 8 أحرف على الأقل</p>
                 </div>
 
                 <div className="space-y-2">
@@ -353,9 +353,9 @@ const SecurityPrivacyPage = () => {
                     onChange={(e) => handlePasswordPolicyChange('expirationDays', parseInt(e.target.value) || 90)}
                     min={30}
                     max={365}
-                    className="h-11 text-base border-[#cbd5e1] rounded bg-white"
+                    className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white"
                   />
-                  <p className="text-sm text-gray-500">إلزام المستخدمين بتغيير كلمة المرور كل 90 يوماً</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">إلزام المستخدمين بتغيير كلمة المرور كل 90 يوماً</p>
                 </div>
               </div>
 
@@ -402,7 +402,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">المصادقة الثنائية (2FA)</CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                     طبقة حماية إضافية تمنع الوصول غير المصرح به حتى عند تسرب كلمة المرور
                   </CardDescription>
                 </div>
@@ -412,7 +412,7 @@ const SecurityPrivacyPage = () => {
               <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
                 <div className="space-y-1">
                   <p className="text-base font-bold text-[#1a202c]">تفعيل المصادقة الثنائية للمستخدمين الإداريين</p>
-                  <p className="text-sm text-[#4a5568]">
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
                     إرسال رمز تحقق مؤقت للبريد الإلكتروني عند الدخول من عنوان IP أو متصفح جديد
                   </p>
                 </div>
@@ -444,7 +444,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">الخصوصية وتصدير البيانات</CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                     خيارات الاحتفاظ بسجلات الأمان وتصدير البيانات الإدارية
                   </CardDescription>
                 </div>
@@ -457,7 +457,7 @@ const SecurityPrivacyPage = () => {
                     <Label className="text-base font-bold text-[#1a202c] cursor-pointer">
                       تفعيل تصدير سجلات الأمان
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       السماح لمدير النظام بتنزيل تقرير بصيغة CSV لكافة عمليات الدخول
                     </p>
                   </div>
@@ -472,7 +472,7 @@ const SecurityPrivacyPage = () => {
                     <Label className="text-base font-bold text-[#1a202c] cursor-pointer">
                       إظهار حالة الاتصال (متصل الآن)
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       إظهار شارة الاتصال في قائمة المستخدمين لزملائك في الإدارة
                     </p>
                   </div>
@@ -515,7 +515,7 @@ const SecurityPrivacyPage = () => {
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-[#1a202c]">الجلسات النشطة حالياً</CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                     الأجهزة والمتصفحات المسجل الدخول إليها بحسابك في الوقت الراهن
                   </CardDescription>
                 </div>
@@ -540,8 +540,8 @@ const SecurityPrivacyPage = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 mt-0.5">{session.browser} — {session.ip}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">الموقع: {session.location} | آخر نشاط: {session.lastActivity}</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">{session.browser} — {session.ip}</p>
+                      <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">الموقع: {session.location} | آخر نشاط: {session.lastActivity}</p>
                     </div>
                   </div>
 
@@ -574,7 +574,7 @@ const SecurityPrivacyPage = () => {
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-700">
               تأكيد إلغاء تنشيط الحساب
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-[#4a5568] leading-relaxed mt-2">
+            <AlertDialogDescription className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-2">
               هل أنت متأكد من رغبتك في إلغاء تنشيط هذا الحساب؟ لن تتمكن من تسجيل الدخول إلى المنظومة بعد تأكيد هذا الإجراء، وسيتم إخطار مدير النظام الرئيسي.
             </AlertDialogDescription>
           </AlertDialogHeader>

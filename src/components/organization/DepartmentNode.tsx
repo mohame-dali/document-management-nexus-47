@@ -89,7 +89,7 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
           {data.name}
         </h4>
         <div className="shrink-0">
-          <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-full ${badgeInfo.className}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 text-[13px] font-semibold rounded-full ${badgeInfo.className}`}>
             {badgeInfo.label}
           </span>
         </div>
@@ -99,7 +99,7 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between text-xs text-[#4a5568] hover:text-[#2c5282] hover:bg-[#f7fafc] px-2 py-1.5 rounded border border-[#edf2f7] transition-colors mt-2"
+        className="w-full flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 hover:text-[#2c5282] hover:bg-[#f7fafc] px-2 py-1.5 rounded border border-[#edf2f7] transition-colors mt-2"
       >
         <span className="flex items-center gap-1.5 font-medium">
           <Users className="w-3.5 h-3.5 text-[#2c5282]" />
@@ -107,7 +107,7 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
             {data.totalPersonnel} موظف{data.totalPersonnel > 1 ? 'ين' : ''}
           </span>
         </span>
-        <span className="flex items-center gap-1 text-[11px] text-[#5f6b7d]">
+        <span className="flex items-center gap-1 text-[13px] text-slate-700 dark:text-slate-300">
           {expanded ? (
             <>
               <span>إخفاء</span>
@@ -152,22 +152,22 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                     {p.username && (
                       <span
                         dir="ltr"
-                        className="inline-block shrink-0 max-w-[95px] truncate text-[10px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1 py-0"
+                        className="inline-block shrink-0 max-w-[95px] truncate text-[13px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1 py-0"
                       >
                         @{p.username}
                       </span>
                     )}
                   </div>
                   {p.poste ? (
-                    <p className="text-[10px] text-[#5f6b7d] truncate">{p.poste}</p>
+                    <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate">{p.poste}</p>
                   ) : (
-                    <p className="text-[10px] text-[#5f6b7d] italic truncate">بدون خطة</p>
+                    <p className="text-[13px] text-slate-700 dark:text-slate-300 italic truncate">بدون خطة</p>
                   )}
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-[#5f6b7d] text-center py-2">لا يوجد موظفين مسجلين</p>
+            <p className="text-[13px] text-slate-700 dark:text-slate-300 text-center py-2">لا يوجد موظفين مسجلين</p>
           )}
           {data.totalPersonnel > 10 && (
             <div className="pt-1.5 border-t border-dashed border-[#e2e8f0]">
@@ -180,7 +180,7 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                   setModalSearch('');
                   setShowAllModal(true);
                 }}
-                className="w-full h-8 text-[11px] font-semibold text-[#2c5282] hover:text-[#1a365d] hover:bg-blue-50"
+                className="w-full h-8 text-[13px] font-semibold text-[#2c5282] hover:text-[#1a365d] hover:bg-blue-50"
               >
                 عرض القائمة الكاملة (+ {data.totalPersonnel - 10} موظفين آخرين)
               </Button>
@@ -199,18 +199,18 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                 {data.personnel?.length || data.totalPersonnel}
               </span>
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#5f6b7d]">
+            <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
               القائمة الكاملة للموظفين المسجلين بهذا القسم ({data.personnel?.length || data.totalPersonnel} موظف)
             </DialogDescription>
           </DialogHeader>
 
           <div className="relative mt-1">
-            <Search className="w-4 h-4 text-gray-400 absolute right-3 top-3" />
+            <Search className="w-4 h-4 text-slate-700 dark:text-slate-300 absolute right-3 top-3" />
             <Input
               value={modalSearch}
               onChange={(e) => setModalSearch(e.target.value)}
               placeholder="ابحث بالاسم أو الخطة..."
-              className="h-10 pr-9 border-[#e2e8f0] text-sm"
+              className="h-10 pr-9 border-slate-300 dark:border-slate-700 text-sm"
             />
           </div>
 
@@ -242,20 +242,20 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                       {p.username && (
                         <span
                           dir="ltr"
-                          className="inline-block shrink-0 max-w-[140px] truncate text-[11px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5"
+                          className="inline-block shrink-0 max-w-[140px] truncate text-[13px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5"
                         >
                           @{p.username}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-[#5f6b7d] truncate">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 truncate">
                       {p.poste || 'بدون خطة'}
                     </p>
                   </div>
                 </button>
               ))
             ) : (
-              <p className="text-sm text-[#5f6b7d] text-center py-6">
+              <p className="text-sm text-slate-700 dark:text-slate-300 text-center py-6">
                 لا توجد نتائج مطابقة للبحث
               </p>
             )}

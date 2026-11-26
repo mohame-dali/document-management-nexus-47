@@ -120,7 +120,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
               <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] leading-normal">
                 {editingOption ? 'تعديل خيار الوثيقة' : 'إضافة خيار وثيقة جديد'}
               </DialogTitle>
-              <DialogDescription className="text-base text-[#4a5568] leading-relaxed mt-1">
+              <DialogDescription className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-1">
                 {editingOption 
                   ? 'تحديث بيانات الخيار المتاح في القوائم المنسدلة للوثائق'
                   : 'تحديد فئة ونوع المراسلة وتسمية الخيار الجديد لإضافته للنظام'
@@ -151,7 +151,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
+                      <SelectTrigger className="h-11 text-base text-start border-slate-300 dark:border-slate-700 rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
                         <SelectValue placeholder="اختر الفئة الإدارية" />
                       </SelectTrigger>
                     </FormControl>
@@ -160,7 +160,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                         <SelectItem key={value} value={value} className="text-base py-2">
                           <div className="flex flex-col text-start">
                             <span className="font-semibold text-[#1a202c]">{item.label}</span>
-                            <span className="text-xs text-[#5f6b7d]">{item.desc}</span>
+                            <span className="text-xs text-slate-700 dark:text-slate-300">{item.desc}</span>
                           </div>
                         </SelectItem>
                       ))}
@@ -182,7 +182,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
+                      <SelectTrigger className="h-11 text-base text-start border-slate-300 dark:border-slate-700 rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200">
                         <SelectValue placeholder="اختر نوع المراسلة" />
                       </SelectTrigger>
                     </FormControl>
@@ -213,7 +213,7 @@ export const DocumentOptionDialog: React.FC<DocumentOptionDialogProps> = ({
                       placeholder="أدخل نص الخيار كما سيظهر بالقائمة..." 
                       {...field} 
                       disabled={isLoading}
-                      className="h-11 text-base text-start border-[#cbd5e1] rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                      className="h-11 text-base text-start border-slate-300 dark:border-slate-700 rounded bg-white focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
                     />
                   </FormControl>
                   <FormMessage className="text-sm text-red-600" />

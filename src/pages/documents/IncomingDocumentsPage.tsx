@@ -413,7 +413,7 @@ const IncomingDocumentsPage: React.FC = () => {
             <Calendar className="h-7 w-7" />
           </div>
           <h2 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">{t('incoming.yearModal.title')}</h2>
-          <p className="text-base text-[#4a5568] dark:text-slate-300 leading-relaxed">
+          <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
             {t('incoming.yearModal.description', { year: new Date().getFullYear() })}
           </p>
           <form
@@ -424,7 +424,7 @@ const IncomingDocumentsPage: React.FC = () => {
             className="pt-2 flex flex-col items-center space-y-4"
           >
             <div className="relative">
-              <Calendar className="absolute start-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4 pointer-events-none" />
+              <Calendar className="absolute start-3.5 top-1/2 transform -translate-y-1/2 text-slate-700 dark:text-slate-300 h-4 w-4 pointer-events-none" />
               <Input
                 type="text"
                 inputMode="numeric"
@@ -451,7 +451,7 @@ const IncomingDocumentsPage: React.FC = () => {
               />
             </div>
             {yearInput.length > 0 && yearInput.length < 4 && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 {t('incoming.yearModal.incomplete')}
               </p>
             )}
@@ -466,7 +466,7 @@ const IncomingDocumentsPage: React.FC = () => {
             </div>
             {/* Quick Year Shortcuts */}
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('incoming.yearModal.quickYears')}</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('incoming.yearModal.quickYears')}</span>
               {[
                 new Date().getFullYear(),
                 new Date().getFullYear() - 1,
@@ -513,7 +513,7 @@ const IncomingDocumentsPage: React.FC = () => {
             <AlertCircle className="h-7 w-7" />
           </div>
           <h2 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">{t('incoming.error.title')}</h2>
-          <p className="text-base text-[#4a5568] dark:text-slate-300 leading-relaxed">
+          <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
             {t('incoming.error.description')}
           </p>
           <Button
@@ -530,9 +530,9 @@ const IncomingDocumentsPage: React.FC = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-2 sm:p-4 lg:p-5 space-y-4">
       {/* Fil d'Ariane (Breadcrumbs) */}
-      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 print:hidden">
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 print:hidden">
         <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('common.home')}</Link>
-        <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+        <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
         <span className="text-[#1a202c] dark:text-slate-100 font-medium">{t('incoming.page.breadcrumb')}</span>
       </nav>
 
@@ -546,7 +546,7 @@ const IncomingDocumentsPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-blue-300 leading-normal flex items-center gap-2.5">
               {t('incoming.page.title')}
             </h1>
-            <p className="text-base text-[#4a5568] dark:text-slate-300 leading-relaxed mt-1">
+            <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-1">
               {t('incoming.page.subtitle')}
             </p>
           </div>
@@ -642,7 +642,7 @@ const IncomingDocumentsPage: React.FC = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-[#2c5282] dark:border-t-blue-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
               {isFr ? 'Total entrants' : 'إجمالي الوارد'}
             </p>
             <p className="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-0.5">
@@ -656,7 +656,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-amber-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
               {isFr ? 'En attente de traitement' : 'بانتظار المعالجة'}
             </p>
             <p className="text-xl font-bold text-amber-700 dark:text-amber-300 tabular-nums mt-0.5">
@@ -670,7 +670,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-red-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
               {isFr ? 'En retard' : 'متأخر'}
             </p>
             <p className="text-xl font-bold text-red-600 dark:text-red-400 tabular-nums mt-0.5">
@@ -684,7 +684,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-emerald-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
               {isFr ? 'Répondu / Archivé' : 'تم الرد / مؤرشف'}
             </p>
             <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300 tabular-nums mt-0.5">
@@ -702,7 +702,7 @@ const IncomingDocumentsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search Input */}
           <div className="relative lg:col-span-2">
-            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4 pointer-events-none" />
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-slate-700 dark:text-slate-300 h-4 w-4 pointer-events-none" />
             <Input
               placeholder={t('incoming.filters.searchPlaceholder')}
               value={searchQuery}
@@ -717,7 +717,7 @@ const IncomingDocumentsPage: React.FC = () => {
           {/* Year Filter */}
           <div>
             <div className="relative">
-              <Calendar className="absolute start-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4 pointer-events-none" />
+              <Calendar className="absolute start-3 top-1/2 transform -translate-y-1/2 text-slate-700 dark:text-slate-300 h-4 w-4 pointer-events-none" />
               <Input
                 type="text"
                 inputMode="numeric"
@@ -794,7 +794,7 @@ const IncomingDocumentsPage: React.FC = () => {
             {/* Department Filter - AdminTuningDesk */}
             {currentUser?.role === 'AdminTuningDesk' && departments && (
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-[#4a5568] dark:text-slate-300 whitespace-nowrap">{t('incoming.filters.departmentLabel')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">{t('incoming.filters.departmentLabel')}</span>
                 <Select 
                   value={selectedDepartment} 
                   onValueChange={(val) => {
@@ -838,7 +838,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
             {/* Sort Selector */}
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-[#4a5568] dark:text-slate-300 flex items-center gap-1.5 whitespace-nowrap">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 whitespace-nowrap">
                 <ArrowUpDown className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
                 {t('incoming.sort.label')}
               </span>
@@ -907,7 +907,7 @@ const IncomingDocumentsPage: React.FC = () => {
                 className={`h-11 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
                   viewMode === 'table'
                     ? 'bg-[#2c5282] text-white'
-                    : 'text-[#4a5568] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
                 title={t('incoming.view.tableLabel')}
               >
@@ -921,7 +921,7 @@ const IncomingDocumentsPage: React.FC = () => {
                 className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-s border-slate-300 dark:border-slate-700 transition-colors duration-200 ${
                   viewMode === 'grid'
                     ? 'bg-[#2c5282] text-white'
-                    : 'text-[#4a5568] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
                 title={t('incoming.view.cardsLabel')}
               >
@@ -938,12 +938,12 @@ const IncomingDocumentsPage: React.FC = () => {
         {totalFiltered === 0 ? (
           /* Empty State */
           <div className="border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 sm:p-12 text-center bg-slate-50/70 dark:bg-slate-800/40 space-y-4">
-            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center mx-auto text-[#5f6b7d] dark:text-slate-400">
+            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center mx-auto text-slate-700 dark:text-slate-300">
               <FileText className="h-7 w-7 text-[#2c5282] dark:text-blue-300" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">{t('incoming.empty.title')}</h3>
-              <p className="text-base text-[#4a5568] dark:text-slate-300 max-w-md mx-auto mt-1 leading-relaxed">
+              <p className="text-base text-slate-700 dark:text-slate-300 max-w-md mx-auto mt-1 leading-relaxed">
                 {hasActiveFilters
                   ? t('incoming.empty.filtered')
                   : t('incoming.empty.noDocsYear', { year: selectedYear })}
@@ -1059,7 +1059,7 @@ const IncomingDocumentsPage: React.FC = () => {
                             <CopyReferenceButton value={serialLabel} />
                           </div>
                           {doc.correspondenceNumber && (
-                            <div className="flex items-center gap-1 ps-3.5 text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                            <div className="flex items-center gap-1 ps-3.5 text-xs text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                               <span>
                                 <bdi dir="ltr">{doc.correspondenceNumber}</bdi>
                               </span>
@@ -1123,9 +1123,9 @@ const IncomingDocumentsPage: React.FC = () => {
                       </td>
 
                       {/* Arrival Date */}
-                      <td className="py-3 px-4 whitespace-nowrap text-sm text-[#4a5568] dark:text-slate-300 tabular-nums">
+                      <td className="py-3 px-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 tabular-nums">
                         <div className="flex items-center gap-1.5 font-medium">
-                          <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                          <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                           <bdi dir={isFr ? 'ltr' : 'rtl'}>{formatLongDate(doc.arrivalDate, isFr ? 'fr' : 'ar')}</bdi>
                         </div>
                       </td>
@@ -1133,7 +1133,7 @@ const IncomingDocumentsPage: React.FC = () => {
                       {/* Source */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5 text-sm font-normal text-[#2d3748] dark:text-slate-200">
-                          <Building2 className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                          <Building2 className="h-4 w-4 text-slate-700 dark:text-slate-300 flex-shrink-0" />
                           <span className="line-clamp-1" title={doc.source || t('incoming.source.unspecified')}>
                             {highlightMatch(doc.source || t('incoming.source.unspecified'), searchQuery)}
                           </span>
@@ -1161,8 +1161,8 @@ const IncomingDocumentsPage: React.FC = () => {
                           )}
 
                           {doc.responsibleUser && typeof doc.responsibleUser === 'object' && (
-                            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 flex items-center gap-1">
-                              <Users className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                            <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                              <Users className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                               {t('incoming.responsible.label', { name: doc.responsibleUser.username })}
                             </span>
                           )}
@@ -1221,7 +1221,7 @@ const IncomingDocumentsPage: React.FC = () => {
                                   variant="ghost"
                                   size="sm"
                                   aria-label={t('incoming.actions.more')}
-                                  className="h-8 w-8 p-0 text-[#5f6b7d] dark:text-slate-400 hover:text-[#1a202c] dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md shrink-0"
+                                  className="h-8 w-8 p-0 text-slate-700 dark:text-slate-300 hover:text-[#1a202c] dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md shrink-0"
                                   title={t('incoming.actions.more')}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
@@ -1243,7 +1243,7 @@ const IncomingDocumentsPage: React.FC = () => {
                                     onClick={() => setFolderDoc(doc)}
                                     className="text-sm py-2.5 cursor-pointer"
                                   >
-                                    <FolderOpen className="me-2 h-4 w-4 text-[#4a5568]" />
+                                    <FolderOpen className="me-2 h-4 w-4 text-slate-700 dark:text-slate-300" />
                                     {t('incoming.actions.archive')}
                                   </DropdownMenuItem>
                                 )}
@@ -1393,9 +1393,9 @@ const IncomingDocumentsPage: React.FC = () => {
                     </div>
 
                     {/* Source, External Ref & Date Info */}
-                    <div className="space-y-1.5 text-xs text-[#4a5568] dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                        <Building2 className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                         <span className="truncate">{doc.source || t('incoming.source.unspecifiedSource')}</span>
                       </div>
                       {doc.correspondenceNumber && (
@@ -1408,12 +1408,12 @@ const IncomingDocumentsPage: React.FC = () => {
                         </div>
                       )}
                       <div className="flex items-center gap-1.5 tabular-nums">
-                        <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                        <Calendar className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                         <bdi dir={isFr ? 'ltr' : 'rtl'}>{formatLongDate(doc.arrivalDate, isFr ? 'fr' : 'ar')}</bdi>
                       </div>
                       {doc.responsibleUser && typeof doc.responsibleUser === 'object' && (
                         <div className="flex items-center gap-1.5">
-                          <Users className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                          <Users className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                           <span>{t('incoming.responsible.label', { name: doc.responsibleUser.username })}</span>
                         </div>
                       )}
@@ -1466,7 +1466,7 @@ const IncomingDocumentsPage: React.FC = () => {
                             size="sm"
                             aria-label={t('incoming.actions.more')}
                             title={t('incoming.actions.more')}
-                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-[#5f6b7d] dark:text-slate-400 hover:text-[#1a202c] dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg shrink-0"
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-slate-700 dark:text-slate-300 hover:text-[#1a202c] dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg shrink-0"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -1486,7 +1486,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               onClick={() => setFolderDoc(doc)}
                               className="text-sm py-2.5 cursor-pointer"
                             >
-                              <FolderOpen className="me-2 h-4 w-4 text-[#4a5568]" />
+                              <FolderOpen className="me-2 h-4 w-4 text-slate-700 dark:text-slate-300" />
                               {t('incoming.actions.archive')}
                             </DropdownMenuItem>
                           )}
@@ -1543,7 +1543,7 @@ const IncomingDocumentsPage: React.FC = () => {
         {/* 4. Pagination Section (En-tête → filtres/tri → tableau → pagination) */}
         {totalFiltered > 0 && (
           <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-base text-[#4a5568] dark:text-slate-300 tabular-nums">
+            <div className="text-base text-slate-700 dark:text-slate-300 tabular-nums">
               {t('incoming.pagination.info', {
                 from: totalCount === 0 ? 0 : startIndex + 1,
                 to: endIndex,
@@ -1553,7 +1553,7 @@ const IncomingDocumentsPage: React.FC = () => {
 
             <div className="flex items-center gap-3 flex-wrap">
               {/* Page Size Selector */}
-              <div className="flex items-center gap-2 text-sm text-[#4a5568] dark:text-slate-300">
+              <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <span>{t('incoming.pagination.perPage')}</span>
                 <Select 
                   value={pageSize.toString()} 

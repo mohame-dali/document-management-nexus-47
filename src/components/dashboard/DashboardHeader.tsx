@@ -60,11 +60,11 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
               <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c] dark:text-slate-100">
                 {t('sidebar.dashboard')}
               </h1>
-              <p className="text-sm text-[#4a5568] dark:text-slate-300 mt-1 leading-relaxed">
+              <p className="text-sm text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
                 {getWelcomeMessage()}
               </p>
               {!isMobile && (
-                <p className="text-xs text-[#5f6b7d] dark:text-slate-400 mt-1 tabular-nums">
+                <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 tabular-nums">
                   {t('dashboard.header.today')}: <bdi dir={dateDir}>{formattedDate}</bdi>
                 </p>
               )}
@@ -92,7 +92,7 @@ const DashboardHeader = ({ currentUser, currentYear }: DashboardHeaderProps) => 
           {isMobile && (
             <Badge 
               variant="outline" 
-              className="text-xs px-2 py-1 w-full justify-center border-slate-200/80 dark:border-slate-700 text-[#5f6b7d] dark:text-slate-400 rounded-full tabular-nums"
+              className="text-xs px-2 py-1 w-full justify-center border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-full tabular-nums"
             >
               <bdi dir={dateDir}>{formattedDate}</bdi>
             </Badge>

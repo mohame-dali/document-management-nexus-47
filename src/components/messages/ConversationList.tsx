@@ -49,12 +49,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       {/* Search Header */}
       <div className="p-3 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="relative">
-          <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+          <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-700 dark:text-slate-300 pointer-events-none" />
           <Input
             placeholder={t('messages.searchConversationsOrNames')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-9 text-xs text-start ps-10 pe-3 border-slate-200 dark:border-slate-800 focus:border-[#2c5282] dark:focus:border-sky-500 focus:ring-1 focus:ring-[#2c5282] dark:focus:ring-sky-500 rounded-lg bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            className="h-9 text-xs text-start ps-10 pe-3 border-slate-300 dark:border-slate-800 focus:border-[#2c5282] dark:focus:border-sky-500 focus:ring-1 focus:ring-[#2c5282] dark:focus:ring-sky-500 rounded-lg bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
         </div>
       </div>
@@ -125,13 +125,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     >
                       {conv.interlocutorName}
                     </h3>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0 font-medium tabular-nums">
+                    <span className="text-[13px] text-slate-700 dark:text-slate-300 shrink-0 font-medium tabular-nums">
                       <bdi dir="ltr">{formatConversationTime(conv.lastMessageTime)}</bdi>
                     </span>
                   </div>
 
                   {conv.interlocutorRole && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mb-1">
+                    <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate mb-1">
                       {conv.interlocutorRole}
                       {conv.interlocutorDepartment && ` • ${conv.interlocutorDepartment}`}
                     </p>
@@ -142,14 +142,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                       className={`text-xs truncate ${
                         hasUnread
                           ? 'text-slate-900 dark:text-slate-100 font-medium'
-                          : 'text-slate-500 dark:text-slate-400'
+                          : 'text-slate-700 dark:text-slate-300'
                       }`}
                     >
                       {conv.lastMessage || t('messages.attachmentOrDoc')}
                     </p>
 
                     {hasUnread && (
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#FFCB56] text-[#1a202c] shadow-2xs shrink-0 tabular-nums">
+                      <span className="px-2 py-0.5 rounded-full text-[13px] font-bold bg-[#FFCB56] text-[#1a202c] shadow-2xs shrink-0 tabular-nums">
                         {conv.unreadCount}
                       </span>
                     )}

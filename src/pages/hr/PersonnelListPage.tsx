@@ -194,7 +194,7 @@ export const PersonnelListPage: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
               {t('personnel.page.title')}
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5 truncate">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 truncate">
               {t('personnel.page.subtitle')}
             </p>
           </div>
@@ -236,7 +236,7 @@ export const PersonnelListPage: React.FC = () => {
 
             <div className="hidden sm:block h-4 w-px bg-slate-200 dark:bg-slate-700" />
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
               <span>
                 {isRTL ? 'الإجمالي:' : 'Total :'}{' '}
                 <strong className="font-bold text-slate-900 dark:text-slate-100">{pagination.total}</strong>
@@ -276,7 +276,7 @@ export const PersonnelListPage: React.FC = () => {
         <div className="px-4 sm:px-5 py-3.5 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-200/80 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Recherche par nom, prénom ou CIN */}
           <div className="relative">
-            <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700 dark:text-slate-300 pointer-events-none" />
             <Input
               value={searchTerm}
               onChange={(e) => {
@@ -338,22 +338,22 @@ export const PersonnelListPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[220px] border-e border-slate-200/60 dark:border-slate-700/60">
+                <TableHead className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 text-start py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[220px] border-e border-slate-200/60 dark:border-slate-700/60">
                   {t('personnel.table.fullName')}
                 </TableHead>
-                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[130px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[130px]">
                   {t('personnel.table.cin')}
                 </TableHead>
-                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[180px]">
                   {t('personnel.table.position')}
                 </TableHead>
-                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[180px]">
                   {t('personnel.table.department')}
                 </TableHead>
-                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[180px]">
                   {t('personnel.table.status')}
                 </TableHead>
-                <TableHead className="text-center py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[160px]">
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[160px]">
                   {t('common.actions')}
                 </TableHead>
               </TableRow>
@@ -439,7 +439,7 @@ export const PersonnelListPage: React.FC = () => {
                           <div>
                             <div>{p.nom} {p.prenom}</div>
                             {p.telephone && (
-                              <div className="text-xs text-slate-500 dark:text-slate-400 font-normal tabular-nums" dir="ltr">
+                              <div className="text-xs text-slate-700 dark:text-slate-300 font-normal tabular-nums" dir="ltr">
                                 {p.telephone}
                               </div>
                             )}
@@ -456,7 +456,7 @@ export const PersonnelListPage: React.FC = () => {
                       <TableCell className="py-3 px-4 text-sm text-slate-800 dark:text-slate-200">
                         {p.poste ? (
                           <span className="flex items-center gap-1.5">
-                            <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                            <Briefcase className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                             <span>{p.poste}</span>
                           </span>
                         ) : (
@@ -468,7 +468,7 @@ export const PersonnelListPage: React.FC = () => {
                       <TableCell className="py-3 px-4 text-sm text-slate-700 dark:text-slate-300">
                         {deptName !== '—' ? (
                           <span className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                            <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                            <Building2 className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                             <span>{deptName}</span>
                           </span>
                         ) : (
@@ -489,7 +489,7 @@ export const PersonnelListPage: React.FC = () => {
                               <span>{t('personnel.account.linkedBadge')}</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700 rounded-full text-xs font-medium">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 rounded-full text-xs font-medium">
                               <Clock className="w-3 h-3 shrink-0" />
                               <span>{isRTL ? 'بدون حساب' : 'Sans compte'}</span>
                             </span>

@@ -38,7 +38,7 @@ const DirectorNode: React.FC<DirectorNodeProps> = ({ data }) => {
           <Crown className="h-3 w-3" />
           مدير الإدارة
         </div>
-        <span className="text-[11px] text-[#5f6b7d] font-medium">المستوى الأول</span>
+        <span className="text-[13px] text-slate-700 dark:text-slate-300 font-medium">المستوى الأول</span>
       </div>
 
       {/* Director Identity */}
@@ -57,12 +57,12 @@ const DirectorNode: React.FC<DirectorNodeProps> = ({ data }) => {
           {data.username && (
             <span
               dir="ltr"
-              className="inline-block max-w-full truncate text-[10px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5 mt-0.5"
+              className="inline-block max-w-full truncate text-[13px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5 mt-0.5"
             >
               @{data.username}
             </span>
           )}
-          <p className="text-xs text-[#4a5568] flex items-center gap-1 mt-0.5 truncate">
+          <p className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1 mt-0.5 truncate">
             <Briefcase className="w-3 h-3 text-[#2c5282] shrink-0" />
             <span className="truncate">{data.poste || 'مدير الإدارة'}</span>
           </p>

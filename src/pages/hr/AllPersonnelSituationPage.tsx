@@ -521,13 +521,13 @@ export const AllPersonnelSituationPage: React.FC = () => {
     <div className="space-y-6 pb-12 text-start" dir={dir}>
       {/* 1. Fil d'Ariane & En-tête */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 space-y-3 shadow-sm">
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 print:hidden">
+        <nav className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 print:hidden">
           <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
             الرئيسية
           </Link>
-          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
           <span>الموارد البشرية</span>
-          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
           <span className="text-slate-900 dark:text-slate-100 font-bold">وضعية الموظفين</span>
         </nav>
 
@@ -537,12 +537,12 @@ export const AllPersonnelSituationPage: React.FC = () => {
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                 وضعية الموظفين
               </h1>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-sky-300 border border-blue-200 dark:border-blue-800/70">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[13px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-sky-300 border border-blue-200 dark:border-blue-800/70">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>إدارة الموارد البشرية</span>
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mt-1">
               متابعة شاملة ومجمّعة لحالة حضور وغياب كافة موظفي الإدارة حسب اليوم، الأسبوع، الشهر، أو السنة
             </p>
           </div>
@@ -712,7 +712,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
             />
             {monthTotalPages > 1 && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-                <div className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+                <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                   المجموع: <strong className="text-slate-900 dark:text-slate-100">{monthTotal}</strong> موظف — صفحة{' '}
                   <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
                   <strong className="text-slate-900 dark:text-slate-100">{monthTotalPages}</strong>
@@ -774,7 +774,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
             />
             {yearTotalPages > 1 && (
               <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-                <div className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+                <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                   المجموع: <strong className="text-slate-900 dark:text-slate-100">{yearTotal}</strong> موظف — صفحة{' '}
                   <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
                   <strong className="text-slate-900 dark:text-slate-100">{yearTotalPages}</strong>

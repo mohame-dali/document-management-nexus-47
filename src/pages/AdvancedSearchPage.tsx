@@ -48,7 +48,7 @@ const AdvancedSearchPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal flex items-center gap-2.5">
               {t('search.pageTitle')}
             </h1>
-            <p className="text-sm sm:text-base text-[#4a5568] leading-normal mt-1">
+            <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-normal mt-1">
               {t('search.pageSubtitle')}
             </p>
           </div>

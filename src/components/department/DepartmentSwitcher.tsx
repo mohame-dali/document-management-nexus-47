@@ -153,7 +153,7 @@ const DepartmentSwitcher: React.FC = () => {
                       {department.isActive ? 'نشط' : 'غير نشط'}
                     </span>
                     {department.description && (
-                      <span className="text-xs text-gray-500 text-start">
+                      <span className="text-xs text-slate-700 dark:text-slate-300 text-start">
                         {department.description}
                       </span>
                     )}

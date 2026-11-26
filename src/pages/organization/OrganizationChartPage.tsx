@@ -232,7 +232,7 @@ const OrganizationChartPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">الهيكل التنظيمي للإدارة</h1>
-            <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
               هيكل تراتبي هرمي تفاعلي (الإدارة العامة ← المصالح السيادية ← المصالح والدوائر العملياتية)
             </p>
           </div>
@@ -241,7 +241,7 @@ const OrganizationChartPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="h-9 px-3.5 border-slate-300 dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0"
+            className="h-9 px-3.5 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0"
             title="تحديث البيانات"
           >
             <RotateCcw className="w-4 h-4 ml-2" />
@@ -250,7 +250,7 @@ const OrganizationChartPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => navigate(-1)}
-            className="h-9 px-3.5 border-slate-300 dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0"
+            className="h-9 px-3.5 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0"
           >
             <ArrowRight className="w-4 h-4 ml-2" />
             العودة
@@ -262,7 +262,7 @@ const OrganizationChartPage: React.FC = () => {
       {isLoading && (
         <div className="min-h-[600px] flex flex-col items-center justify-center bg-[#f7fafc] border border-[#e2e8f0] rounded shadow-sm">
           <Loader2 className="w-10 h-10 text-[#2c5282] animate-spin mb-3" />
-          <p className="text-sm font-medium text-[#4a5568]">جاري تحميل الهيكل التنظيمي...</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">جاري تحميل الهيكل التنظيمي...</p>
         </div>
       )}
 
@@ -273,7 +273,7 @@ const OrganizationChartPage: React.FC = () => {
             <AlertCircle className="w-8 h-8" />
           </div>
           <h3 className="text-base font-bold text-[#1a202c] mb-1">تعذر تحميل الهيكل التنظيمي</h3>
-          <p className="text-sm text-[#4a5568] max-w-md mb-4">
+          <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md mb-4">
             {error instanceof Error ? error.message : 'حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
           </p>
           <Button onClick={() => refetch()} className="h-10 px-4 bg-[#2c5282] hover:bg-[#2a4365] text-white rounded">
@@ -290,7 +290,7 @@ const OrganizationChartPage: React.FC = () => {
             <Building2 className="w-8 h-8" />
           </div>
           <h3 className="text-base font-bold text-[#1a202c] mb-1">لا توجد أقسام مسجلة</h3>
-          <p className="text-sm text-[#4a5568] max-w-md">
+          <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md">
             لم يتم العثور على أقسام نشطة في النظام لعرضها ضمن الهيكل التنظيمي.
           </p>
         </div>
@@ -398,7 +398,7 @@ const OrganizationChartPage: React.FC = () => {
           </div>
           <button
             type="button"
-            className="flex items-center gap-1 text-[#5f6b7d] dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-blue-300 text-xs font-medium"
+            className="flex items-center gap-1 text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 text-xs font-medium"
           >
             <span>{showLegend ? 'إخفاء' : 'عرض الدليل'}</span>
             {showLegend ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -410,22 +410,22 @@ const OrganizationChartPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-5">
               <div className="flex items-center gap-2">
                 <span className="w-3.5 h-3.5 rounded bg-[#FFD758] border border-[#e2be40]"></span>
-                <span className="text-[#4a5568]">المستوى 1 : المدير (مدير الإدارة)</span>
+                <span className="text-slate-700 dark:text-slate-300">المستوى 1 : المدير (مدير الإدارة)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3.5 h-3.5 rounded bg-amber-100 border border-amber-300"></span>
-                <span className="text-[#4a5568]">مكتب الضبط (Bureau d'Ordre)</span>
+                <span className="text-slate-700 dark:text-slate-300">مكتب الضبط (Bureau d'Ordre)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3.5 h-3.5 rounded bg-emerald-100 border border-emerald-400"></span>
-                <span className="text-[#4a5568]">الموارد البشرية (RH)</span>
+                <span className="text-slate-700 dark:text-slate-300">الموارد البشرية (RH)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3.5 h-3.5 rounded bg-blue-100 border border-blue-300"></span>
-                <span className="text-[#4a5568]">المستوى 3 : الأقسام والمصالح العملياتية</span>
+                <span className="text-slate-700 dark:text-slate-300">المستوى 3 : الأقسام والمصالح العملياتية</span>
               </div>
             </div>
-            <div className="text-[#5f6b7d] text-[11px]">
+            <div className="text-slate-700 dark:text-slate-300 text-[13px]">
               * انقر على زر "عرض" لتوسيع قائمة موظفي أي قسم، أو انقر على موظف/مدير لفتح ملفه
             </div>
           </div>
@@ -462,14 +462,14 @@ const OrganizationChartPage: React.FC = () => {
                     {selectedContact.person.username && (
                       <span
                         dir="ltr"
-                        className="inline-block text-[11px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5"
+                        className="inline-block text-[13px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5"
                       >
                         @{selectedContact.person.username}
                       </span>
                     )}
                   </div>
                   {selectedContact.departmentName && (
-                    <p className="text-xs text-[#5f6b7d] flex items-center gap-1 mt-0.5">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1 mt-0.5">
                       <Building2 className="w-3.5 h-3.5 text-[#2c5282]" />
                       <span>{selectedContact.departmentName}</span>
                     </p>
@@ -478,12 +478,12 @@ const OrganizationChartPage: React.FC = () => {
               </div>
 
               <div className="space-y-2.5 text-sm">
-                <div className="flex items-center gap-2 text-[#4a5568]">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <Briefcase className="w-4 h-4 text-[#2c5282] shrink-0" />
                   <span className="font-medium text-[#1a202c]">الخطة:</span>
                   <span>{selectedContact.person.poste || 'غير محددة'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-[#4a5568]">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                   <Mail className="w-4 h-4 text-[#2c5282] shrink-0" />
                   <span className="font-medium text-[#1a202c]">البريد الإلكتروني:</span>
                   <span dir="ltr">{selectedContact.person.emailPersonnel || 'غير متوفر'}</span>

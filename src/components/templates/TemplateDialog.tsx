@@ -186,7 +186,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
           <div className="space-y-2">
             <Label className="text-base font-bold text-[#1a202c] dark:text-slate-100">
               ملف النموذج {!isEditing && <span className="text-red-600 dark:text-red-400">*</span>}
-              {isEditing && <span className="text-sm font-normal text-slate-500 dark:text-slate-400"> (اختياري - اتركه فارغاً للاحتفاظ بالملف الحالي)</span>}
+              {isEditing && <span className="text-sm font-normal text-slate-700 dark:text-slate-300"> (اختياري - اتركه فارغاً للاحتفاظ بالملف الحالي)</span>}
             </Label>
             
             <div
@@ -213,7 +213,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                 <div className="space-y-2">
                   <FileText className="h-10 w-10 mx-auto text-emerald-600 dark:text-emerald-400" />
                   <p className="font-bold text-base text-[#1a202c] dark:text-slate-100">{selectedFile.name}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 tabular-nums">{formatFileSize(selectedFile.size)}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 tabular-nums">{formatFileSize(selectedFile.size)}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -221,7 +221,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
                   <p className="text-base font-medium text-slate-700 dark:text-slate-200">
                     اسحب وأفلت ملف Word هنا أو انقر للاختيار
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
                     يدعم فقط ملفات .doc و .docx
                   </p>
                 </div>

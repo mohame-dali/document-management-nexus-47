@@ -105,11 +105,11 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
           {/* Department Admins */}
           <Card className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-slate-400 dark:border-t-slate-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
+              <CardTitle className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 {t('dashboard.userStats.departmentAdmins')}
               </CardTitle>
               <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
-                <Shield className="h-4 w-4 text-[#4a5568] dark:text-slate-400" />
+                <Shield className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-1">
@@ -125,21 +125,21 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
         {/* User Roles Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-800">
-            <span className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               {t('dashboard.userStats.tuningDeskAdmins')}
             </span>
             <span className="text-base font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{stats.adminTuningUsers}</span>
           </div>
           
           <div className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-800">
-            <span className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               {t('dashboard.userStats.regularUsers')}
             </span>
             <span className="text-base font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{stats.regularUsers}</span>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-800">
-            <span className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               {t('dashboard.userStats.totalActive')}
             </span>
             <span className="text-base font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{stats.activeUsers}</span>

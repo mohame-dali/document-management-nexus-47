@@ -180,7 +180,7 @@ const InstallationGuidePage: React.FC = () => {
             </div>
             <h1 className="text-2xl font-bold text-[#1a202c]">دليل الإعداد والتثبيت</h1>
           </div>
-          <p className="text-sm text-[#4a5568] mt-1 mr-10">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-1 mr-10">
             دليل إرشادي تفصيلي خطوة بخطوة لتهيئة وتشغيل النظام بعد معالج الإعداد الأولي
           </p>
         </div>
@@ -191,7 +191,7 @@ const InstallationGuidePage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleReset}
-              className="text-[#5f6b7d] hover:text-[#2c5282] text-xs h-9 border-[#cbd5e1]"
+              className="text-slate-700 dark:text-slate-300 hover:text-[#2c5282] text-xs h-9 border-[#cbd5e1]"
               title="إعادة تعيين التقدم"
             >
               <RotateCcw className="w-3.5 h-3.5 ml-1.5" />
@@ -202,7 +202,7 @@ const InstallationGuidePage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate(-1)}
-            className="text-[#4a5568] hover:bg-[#f7fafc] text-xs h-9 border-[#cbd5e1]"
+            className="text-slate-700 dark:text-slate-300 hover:bg-[#f7fafc] text-xs h-9 border-[#cbd5e1]"
           >
             <ArrowLeft className="w-3.5 h-3.5 ml-1.5" />
             الرجوع
@@ -273,14 +273,14 @@ const InstallationGuidePage: React.FC = () => {
                       {isCompleted ? (
                         <CheckCircle2 className="w-6 h-6 text-emerald-600 fill-emerald-100" />
                       ) : (
-                        <Circle className="w-6 h-6 text-[#a0aec0] hover:text-[#2c5282]" />
+                        <Circle className="w-6 h-6 text-slate-700 dark:text-slate-300 hover:text-[#2c5282]" />
                       )}
                     </button>
                     <div>
                       <CardTitle className="text-base font-bold text-[#1a202c]">
                         {step.title}
                       </CardTitle>
-                      <CardDescription className="text-xs text-[#4a5568] mt-1 leading-relaxed">
+                      <CardDescription className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
                         {step.description}
                       </CardDescription>
                     </div>
@@ -338,7 +338,7 @@ const InstallationGuidePage: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleStep(step.id)}
-                    className="text-xs text-[#5f6b7d] hover:text-[#2c5282] hover:bg-[#edf2f7] h-8"
+                    className="text-xs text-slate-700 dark:text-slate-300 hover:text-[#2c5282] hover:bg-[#edf2f7] h-8"
                   >
                     {isCompleted ? 'إلغاء التحديد كـ مكتمل' : 'وضع علامة مكتمل'}
                   </Button>

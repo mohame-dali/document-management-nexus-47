@@ -145,7 +145,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
   const getPriorityBadge = (priority?: string) => {
     if (priority === 'urgent') {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[13px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
           <AlertCircle className="h-3 w-3" />
           {isRTL ? 'عاجل' : 'Urgent'}
         </span>
@@ -153,7 +153,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
     }
     if (priority === 'high') {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-[#FFD758]/25 dark:bg-amber-500/20 text-[#92400e] dark:text-amber-300 border border-[#FFCB56]/50 dark:border-amber-500/40">
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[13px] font-medium bg-[#FFD758]/25 dark:bg-amber-500/20 text-[#92400e] dark:text-amber-300 border border-[#FFCB56]/50 dark:border-amber-500/40">
           {isRTL ? 'مرتفع' : 'Haute'}
         </span>
       );
@@ -188,15 +188,15 @@ const MessagesList: React.FC<MessagesListProps> = ({
           <MessageSquare className="h-6 w-6" />
         </div>
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-1">{t('messages.error')}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">{t('messages.tryAgain')}</p>
+        <p className="text-xs text-slate-700 dark:text-slate-300">{t('messages.tryAgain')}</p>
       </div>
     );
   }
 
   if (filteredMessages.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900">
-        <div className="inline-flex p-3 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg mb-3">
+      <div className="p-8 text-center text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900">
+        <div className="inline-flex p-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg mb-3">
           <MessageSquare className="h-6 w-6" />
         </div>
         <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
@@ -206,7 +206,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
                 ? (isRTL ? 'لا توجد رسائل مرسلة' : 'Aucun message envoyé')
                 : (isRTL ? 'صندوق الوارد فارغ' : 'Boîte de réception vide'))}
         </p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs mx-auto">
+        <p className="text-xs text-slate-700 dark:text-slate-300 max-w-xs mx-auto">
           {searchTerm ? t('messages.tryOtherSearch') : t('messages.clickNewMessageToStart')}
         </p>
       </div>
@@ -267,19 +267,19 @@ const MessagesList: React.FC<MessagesListProps> = ({
                     <span className={`text-xs truncate ${!isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-800 dark:text-slate-100'}`}>
                       {displayName}
                     </span>
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 rounded-md ${getRoleBadgeClasses(displayRole)}`}>
+                    <Badge variant="outline" className={`text-[13px] px-1.5 py-0 h-4 rounded-md ${getRoleBadgeClasses(displayRole)}`}>
                       {getRoleDisplayName(displayRole)}
                     </Badge>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                  <div className="flex items-center gap-1.5 shrink-0 text-[13px] text-slate-700 dark:text-slate-300 tabular-nums">
                     {activeTab === 'sent' && (
                       <span title={t('messages.sentStatus')}>
                         <CheckCheck className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
                       </span>
                     )}
                     <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                      <Clock className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                       {message.createdAt ? (
                         <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">
                           {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true, locale: isRTL ? ar : fr })}
@@ -298,28 +298,28 @@ const MessagesList: React.FC<MessagesListProps> = ({
                 </div>
 
                 {/* Content snippet */}
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 leading-snug">
+                <p className="text-[13px] text-slate-700 dark:text-slate-300 line-clamp-1 leading-snug">
                   {message.content || t('messages.noContent')}
                 </p>
 
                 {/* Footer indicators */}
-                <div className="flex items-center justify-between mt-1.5 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-between mt-1.5 pt-1 text-[13px] text-slate-700 dark:text-slate-300">
                   <div className="flex items-center gap-2">
                     {hasAttachments && (
-                      <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px] tabular-nums">
+                      <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[13px] tabular-nums">
                         <Paperclip className="h-3 w-3" />
                         {message.attachments?.length}
                       </span>
                     )}
                     {message.crossDepartment && (
-                      <span className="text-[10px] text-[#2c5282] dark:text-sky-300 bg-blue-50 dark:bg-sky-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-sky-800/60">
+                      <span className="text-[13px] text-[#2c5282] dark:text-sky-300 bg-blue-50 dark:bg-sky-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-sky-800/60">
                         {isRTL ? 'عبر الأقسام' : 'Interservices'}
                       </span>
                     )}
                   </div>
 
                   {!isRead && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56]/20 text-[#78350f] dark:text-amber-300 border border-[#FFD758]/70 dark:border-amber-500/40">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] font-semibold bg-[#FFCB56]/20 text-[#78350f] dark:text-amber-300 border border-[#FFD758]/70 dark:border-amber-500/40">
                       {isRTL ? 'جديدة' : 'Nouveau'}
                     </span>
                   )}

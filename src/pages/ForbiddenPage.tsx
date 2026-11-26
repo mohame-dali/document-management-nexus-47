@@ -23,25 +23,25 @@ const ForbiddenPage: React.FC = () => {
           <h1 className="text-xl font-bold text-[#1a202c] mt-3">
             ليس لديك صلاحية للوصول إلى هذه الصفحة
           </h1>
-          <p className="text-xs text-[#4a5568] mt-2 leading-relaxed">
+          <p className="text-xs text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
             حسابك الحالي لا يمتلك الأذونات الكافية لعرض هذا المسار أو تنفيذ هذا الإجراء.
           </p>
         </div>
 
         {currentUser && (
-          <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-3 text-xs text-[#5f6b7d] text-right space-y-1">
+          <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-3 text-xs text-slate-700 dark:text-slate-300 text-right space-y-1">
             <div className="flex justify-between">
-              <span className="text-[#4a5568] font-medium">المستخدم الحالي:</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium">المستخدم الحالي:</span>
               <span className="font-semibold text-[#1a202c]">{currentUser.username}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#4a5568] font-medium">الدور الوظيفي:</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium">الدور الوظيفي:</span>
               <span className="font-semibold text-[#2c5282]">{currentUser.role}</span>
             </div>
             {location.state?.from && (
               <div className="flex justify-between pt-1 border-t border-[#e2e8f0]">
-                <span className="text-[#4a5568] font-medium">المسار المطلوب:</span>
-                <span className="font-mono text-[11px] text-red-500">{location.state.from.pathname}</span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">المسار المطلوب:</span>
+                <span className="font-mono text-[13px] text-red-500">{location.state.from.pathname}</span>
               </div>
             )}
           </div>
@@ -58,7 +58,7 @@ const ForbiddenPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => navigate(-1)}
-            className="w-full sm:w-auto border-[#cbd5e1] text-[#4a5568] hover:bg-[#f7fafc] text-xs h-9 px-4"
+            className="w-full sm:w-auto border-[#cbd5e1] text-slate-700 dark:text-slate-300 hover:bg-[#f7fafc] text-xs h-9 px-4"
           >
             <ArrowLeft className="w-4 h-4 ml-1.5" />
             الرجوع للخلف

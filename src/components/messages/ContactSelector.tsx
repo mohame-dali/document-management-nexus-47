@@ -95,14 +95,14 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
               className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-xs text-slate-800 dark:text-slate-100"
             >
               <span className="font-semibold">{contact.username}</span>
-              <Badge variant="outline" className={`text-[10px] px-1 py-0 rounded ${getRoleColor(contact.role)}`}>
+              <Badge variant="outline" className={`text-[13px] px-1 py-0 rounded ${getRoleColor(contact.role)}`}>
                 {getRoleDisplayName(contact.role)}
               </Badge>
               <button
                 type="button"
                 aria-label={t('messages.removeRecipientAria', { username: contact.username })}
                 title={t('messages.removeRecipientAria', { username: contact.username })}
-                className="w-6 h-6 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 rounded"
+                className="w-6 h-6 inline-flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded"
                 onClick={() => removeContact(contact._id)}
               >
                 <X className="h-3.5 w-3.5" />
@@ -122,14 +122,14 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
             className="h-10 w-full justify-between bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 hover:border-[#2c5282] dark:hover:border-sky-500 rounded-lg px-3.5 text-start transition-colors"
           >
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+              <Users className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               <span className="text-sm text-slate-600 dark:text-slate-300 tabular-nums">
                 {selectedContacts.length > 0
                   ? (isRTL ? `${selectedContacts.length} مستلم محدد` : `${selectedContacts.length} destinataire(s) sélectionné(s)`)
                   : (t('messages.selectContacts') || (isRTL ? 'اختر المستلمين...' : 'Sélectionner des destinataires...'))}
               </span>
             </div>
-            <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            <ChevronDown className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
           </Button>
         </PopoverTrigger>
 
@@ -147,7 +147,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
               className="text-xs text-start h-9"
             />
             <CommandList className="max-h-60">
-              <CommandEmpty className="p-3 text-xs text-slate-500 dark:text-slate-400 text-center">
+              <CommandEmpty className="p-3 text-xs text-slate-700 dark:text-slate-300 text-center">
                 {t('messages.noContactsFound')}
               </CommandEmpty>
               <CommandGroup>
@@ -166,13 +166,13 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
                         username={user.username}
                         size="xs"
                       />
-                      <span className="text-slate-400 dark:text-slate-500">{getRoleIcon(user.role)}</span>
+                      <span className="text-slate-700 dark:text-slate-300">{getRoleIcon(user.role)}</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-100 truncate">{user.username}</span>
-                      <Badge variant="outline" className={`text-[10px] px-1 py-0 rounded ${getRoleColor(user.role)}`}>
+                      <Badge variant="outline" className={`text-[13px] px-1 py-0 rounded ${getRoleColor(user.role)}`}>
                         {getRoleDisplayName(user.role)}
                       </Badge>
                       {user.activeDepartment && typeof user.activeDepartment === 'object' && (
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 truncate">
                           ({user.activeDepartment.name})
                         </span>
                       )}

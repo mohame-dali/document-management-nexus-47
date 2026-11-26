@@ -58,12 +58,12 @@ export const RestoreBackupDialog: React.FC<RestoreBackupDialogProps> = ({
         {backupInfo && (
           <div className="bg-amber-50/80 dark:bg-amber-950/35 border border-amber-200/80 dark:border-amber-800/70 rounded-lg p-3.5 text-sm space-y-1.5">
             <div className="flex justify-between gap-2">
-              <span className="text-slate-600 dark:text-slate-400">الملف :</span>
+              <span className="text-slate-700 dark:text-slate-300">الملف :</span>
               <span className="font-semibold text-slate-800 dark:text-slate-100 truncate">{backupInfo.fileName}</span>
             </div>
             {backupInfo.createdAt && (
               <div className="flex justify-between gap-2">
-                <span className="text-slate-600 dark:text-slate-400">التاريخ :</span>
+                <span className="text-slate-700 dark:text-slate-300">التاريخ :</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-100 tabular-nums">
                   <bdi dir="rtl">{formatDateTime(backupInfo.createdAt, 'ar')}</bdi>
                 </span>
@@ -71,7 +71,7 @@ export const RestoreBackupDialog: React.FC<RestoreBackupDialogProps> = ({
             )}
             {backupInfo.fileSize && (
               <div className="flex justify-between gap-2">
-                <span className="text-slate-600 dark:text-slate-400">الحجم :</span>
+                <span className="text-slate-700 dark:text-slate-300">الحجم :</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-100 tabular-nums">
                   {(backupInfo.fileSize / 1024 / 1024).toFixed(2)} MB
                 </span>
@@ -81,7 +81,7 @@ export const RestoreBackupDialog: React.FC<RestoreBackupDialogProps> = ({
         )}
 
         <div className="space-y-2 pt-2">
-          <Label htmlFor="confirm-restore" className="text-sm font-medium text-slate-700 dark:text-slate-200">
+          <Label htmlFor="confirm-restore" className="text-sm font-medium text-slate-800 dark:text-slate-200">
             للتأكيد، اكتب كلمة <code className="bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200/70 dark:border-red-900/60 px-1.5 py-0.5 rounded font-mono text-xs">RESTORE</code> بالأسفل :
           </Label>
           <Input

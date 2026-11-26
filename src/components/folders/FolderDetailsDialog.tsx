@@ -55,7 +55,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4">
-              <span className="text-slate-500 dark:text-slate-400 font-medium block mb-1 text-sm">المستندات المصنفة</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium block mb-1 text-sm">المستندات المصنفة</span>
               <div className="flex items-center justify-between">
                 <span className="text-2xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{documentCount}</span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70">
@@ -65,7 +65,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
             </div>
 
             <div className="bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4">
-              <span className="text-slate-500 dark:text-slate-400 font-medium block mb-1 text-sm">حالة المجلد</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium block mb-1 text-sm">حالة المجلد</span>
               <div className="flex items-center justify-between">
                 <span className={`text-base font-bold ${folder.status === 'En cours' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}`}>
                   {folder.status === 'En cours' ? 'نشط (مفتوح)' : 'مؤرشف (مغلق)'}
@@ -78,7 +78,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
           {/* Details Table */}
           <div className="border border-slate-200/80 dark:border-slate-800 rounded-lg divide-y divide-slate-200/80 dark:divide-slate-800 bg-white dark:bg-slate-900">
             <div className="p-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-              <span className="text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
+              <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
                 <Tag className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                 اسم المجلد
               </span>
@@ -87,7 +87,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
 
             {folder.description && (
               <div className="p-4 flex items-start justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
+                <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
                   <FileText className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                   الوصف
                 </span>
@@ -96,7 +96,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
             )}
 
             <div className="p-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-              <span className="text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
+              <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
                 <Folder className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                 المستوى الهرمي
               </span>
@@ -106,7 +106,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
             </div>
 
             <div className="p-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-              <span className="text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
+              <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
                 <Calendar className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                 تاريخ الإنشاء
               </span>
@@ -116,7 +116,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
             </div>
 
             <div className="p-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-              <span className="text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
+              <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
                 <Clock className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                 وقت الإنشاء
               </span>
@@ -127,7 +127,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
 
             {typeof folder.createdBy === 'object' && folder.createdBy?.username && (
               <div className="p-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
+                <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
                   <User className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                   أنشئ بواسطة
                 </span>
@@ -137,7 +137,7 @@ const FolderDetailsDialog: React.FC<FolderDetailsDialogProps> = ({
 
             {typeof folder.department === 'object' && folder.department?.name && (
               <div className="p-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors duration-150">
-                <span className="text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
+                <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
                   <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                   القسم الإداري
                 </span>

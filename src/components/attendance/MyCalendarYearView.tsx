@@ -146,7 +146,7 @@ export const MyCalendarYearView: React.FC<MyCalendarYearViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">السنة المعروضة :</span>
+          <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">السنة المعروضة :</span>
           <span className="text-base font-bold text-slate-900 dark:text-slate-100 font-mono tabular-nums px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700">
             {year}
           </span>
@@ -190,7 +190,7 @@ export const MyCalendarYearView: React.FC<MyCalendarYearViewProps> = ({
       {isLoading ? (
         <div className="py-20 text-center space-y-2">
           <div className="h-6 w-6 border-2 border-[#2c5282] dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 dark:text-slate-400">جاري تحميل بيانات السنة...</p>
+          <p className="text-xs text-slate-700 dark:text-slate-300">جاري تحميل بيانات السنة...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
@@ -213,7 +213,7 @@ export const MyCalendarYearView: React.FC<MyCalendarYearViewProps> = ({
                     <span className="font-bold text-xs text-slate-900 dark:text-slate-100 group-hover:text-[#2c5282] dark:group-hover:text-blue-400">
                       {m.monthName}
                     </span>
-                    <span className="text-slate-400 dark:text-slate-500 group-hover:text-[#2c5282] dark:group-hover:text-blue-400 flex items-center text-[10px] font-semibold">
+                    <span className="text-slate-700 dark:text-slate-300 group-hover:text-[#2c5282] dark:group-hover:text-blue-400 flex items-center text-[13px] font-semibold">
                       <span>عرض</span>
                       <ArrowUpRight className="h-3 w-3" />
                     </span>
@@ -232,7 +232,7 @@ export const MyCalendarYearView: React.FC<MyCalendarYearViewProps> = ({
                     </div>
 
                     {m.deductibles > 0 && (
-                      <div className="flex items-center justify-between text-amber-700 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/50 px-1.5 py-0.5 rounded text-[11px] tabular-nums">
+                      <div className="flex items-center justify-between text-amber-700 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/50 px-1.5 py-0.5 rounded text-[13px] tabular-nums">
                         <span>خصم من الرصيد :</span>
                         <span className="font-bold font-mono">{m.deductibles} يوم</span>
                       </div>
@@ -241,14 +241,14 @@ export const MyCalendarYearView: React.FC<MyCalendarYearViewProps> = ({
                     {/* Liste succincte des motifs d'absence */}
                     {Object.keys(m.motifsCount).length > 0 && (
                       <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block font-medium">
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 block font-medium">
                           أسباب الغياب :
                         </span>
                         <div className="flex flex-wrap gap-1">
                           {Object.entries(m.motifsCount).map(([code, count]) => (
                             <span
                               key={code}
-                              className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded font-mono tabular-nums"
+                              className="text-[13px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded font-mono tabular-nums"
                             >
                               {getMotifLabel(code)}: {count}
                             </span>
@@ -261,7 +261,7 @@ export const MyCalendarYearView: React.FC<MyCalendarYearViewProps> = ({
 
                 {/* Barre de présence */}
                 <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 mb-1">
+                  <div className="flex items-center justify-between text-[13px] text-slate-700 dark:text-slate-300 mb-1">
                     <span>نسبة الانضباط</span>
                     <span className="font-mono tabular-nums">{hasData ? `${presenceRate}%` : '-'}</span>
                   </div>

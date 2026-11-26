@@ -210,16 +210,16 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
               <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
               </Link>
-              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
               <Link to="/dashboard/hr/personnel" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
                 <span>الموارد البشرية</span>
               </Link>
-              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
               <span className="text-slate-900 dark:text-slate-100 font-semibold">أنواع الغياب</span>
             </div>
 
@@ -231,7 +231,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
                 <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   إدارة أنواع وأسباب الغياب
                 </h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   تكوين أسباب الغياب والعطل، تحديد شروط الاستقطاع من الرصيد والوثائق المطلوبة
                 </p>
               </div>
@@ -268,7 +268,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Total */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">إجمالي الأنواع</p>
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">إجمالي الأنواع</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 tabular-nums">{stats.total}</p>
           </div>
           <div className="p-3 bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-sky-400 rounded-lg">
@@ -279,7 +279,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Active */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">الأنواع المفعلة</p>
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">الأنواع المفعلة</p>
             <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1 tabular-nums">{stats.active}</p>
           </div>
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-lg">
@@ -290,10 +290,10 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Inactive */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">الأنواع المعطلة</p>
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">الأنواع المعطلة</p>
             <p className="text-2xl font-bold text-slate-600 dark:text-slate-300 mt-1 tabular-nums">{stats.inactive}</p>
           </div>
-          <div className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg">
+          <div className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg">
             <XCircle className="h-5 w-5" />
           </div>
         </div>
@@ -301,7 +301,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         {/* Deducts from balance */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">تخصم من الرصيد السنوي</p>
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">تخصم من الرصيد السنوي</p>
             <p className="text-2xl font-bold text-amber-700 dark:text-amber-400 mt-1 tabular-nums">{stats.deducts}</p>
           </div>
           <div className="p-3 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-lg">
@@ -315,19 +315,19 @@ export const LeaveReasonsManagementPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Search */}
           <div className="lg:col-span-2 relative">
-            <Search className="h-4 w-4 text-slate-400 absolute start-3 top-3" />
+            <Search className="h-4 w-4 text-slate-700 dark:text-slate-300 absolute start-3 top-3" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="البحث بالرمز، الاسم بالعربية أو بالفرنسية..."
-              className="ps-9 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start text-sm h-10"
+              className="ps-9 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start text-sm h-10"
             />
           </div>
 
           {/* Category */}
           <div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs">
+              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs">
                 <SelectValue placeholder="كل التصنيفات" />
               </SelectTrigger>
               <SelectContent dir={dir}>
@@ -344,7 +344,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
           {/* Status */}
           <div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs">
+              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs">
                 <SelectValue placeholder="كل الحالات" />
               </SelectTrigger>
               <SelectContent dir={dir}>
@@ -358,7 +358,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
           {/* Deductible */}
           <div className="flex gap-2">
             <Select value={impactFilter} onValueChange={setImpactFilter}>
-              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs flex-1">
+              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs flex-1">
                 <SelectValue placeholder="خصم الرصيد" />
               </SelectTrigger>
               <SelectContent dir={dir}>
@@ -394,7 +394,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
       {/* 6. Pagination */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 text-xs shadow-sm">
-          <span className="text-slate-600 dark:text-slate-400 tabular-nums">
+          <span className="text-slate-700 dark:text-slate-300 tabular-nums">
             عرض {paginatedReasons.length} من أصل {filteredReasons.length} نوع
           </span>
 

@@ -205,7 +205,7 @@ export const RHStagesPage: React.FC = () => {
       case 'en_attente':
         return <span className="text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-800">في الانتظار</span>;
       default:
-        return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>;
+        return <span className="text-xs text-slate-700 dark:text-slate-300">—</span>;
     }
   };
 
@@ -219,7 +219,7 @@ export const RHStagesPage: React.FC = () => {
               <GraduationCap className="w-7 h-7" />
             </div>
             <div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium mb-0.5">
+              <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium mb-0.5">
                 <span>الموارد البشرية</span>
                 <span>/</span>
                 <span className="text-[#2c5282] dark:text-blue-400 font-bold">التربصات والتكوين</span>
@@ -228,11 +228,11 @@ export const RHStagesPage: React.FC = () => {
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                   جميع التربصات
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[13px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800">
                   عرض شامل
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mt-1">
                 عرض وإدارة تربصات جميع الموظفين (بتونس وبالخارج)
               </p>
             </div>
@@ -281,7 +281,7 @@ export const RHStagesPage: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-[#2c5282] dark:border-t-sky-500 rounded-lg p-4 shadow-sm flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">إجمالي التربصات</div>
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">إجمالي التربصات</div>
               <div className="text-2xl font-extrabold text-[#2c5282] dark:text-blue-400 font-mono tabular-nums">{statsData.total || 0}</div>
             </div>
             <div className="p-2.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60">
@@ -290,7 +290,7 @@ export const RHStagesPage: React.FC = () => {
           </div>
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-emerald-500 dark:border-t-emerald-400 rounded-lg p-4 shadow-sm flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">التربصات بتونس</div>
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">التربصات بتونس</div>
               <div className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums">
                 {statsData.parLocalisation?.tunisie || 0}
               </div>
@@ -301,7 +301,7 @@ export const RHStagesPage: React.FC = () => {
           </div>
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-blue-500 dark:border-t-blue-400 rounded-lg p-4 shadow-sm flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">التربصات بالخارج</div>
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">التربصات بالخارج</div>
               <div className="text-2xl font-extrabold text-blue-700 dark:text-blue-400 font-mono tabular-nums">
                 {statsData.parLocalisation?.etranger || 0}
               </div>
@@ -312,7 +312,7 @@ export const RHStagesPage: React.FC = () => {
           </div>
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-indigo-500 dark:border-t-indigo-400 rounded-lg p-4 shadow-sm flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">الناجحون والمؤهلون</div>
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">الناجحون والمؤهلون</div>
               <div className="text-2xl font-extrabold text-indigo-700 dark:text-indigo-400 font-mono tabular-nums">
                 {statsData.parResultat?.admis || 0}
               </div>
@@ -347,7 +347,7 @@ export const RHStagesPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Recherche textuelle */}
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3.5" />
+            <Search className="w-4 h-4 text-slate-700 dark:text-slate-300 absolute start-3 top-3.5" />
             <Input
               value={searchTerm}
               onChange={(e) => {
@@ -435,7 +435,7 @@ export const RHStagesPage: React.FC = () => {
           </div>
         ) : stagesList.length === 0 ? (
           <EmptyState
-            icon={<GraduationCap className="w-10 h-10 text-slate-400 dark:text-slate-500" />}
+            icon={<GraduationCap className="w-10 h-10 text-slate-700 dark:text-slate-300" />}
             title="لا توجد تربصات مسجلة"
             description="لم يتم العثور على أي تربص يطابق معايير البحث الحالية."
             action={
@@ -454,28 +454,28 @@ export const RHStagesPage: React.FC = () => {
             <Table>
               <TableHeader className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur-sm">
                 <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-700">
-                  <TableHead className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 text-start py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 text-start py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     الموظف
                   </TableHead>
-                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     موضوع التربص
                   </TableHead>
-                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     مكان التربص / الدولة
                   </TableHead>
-                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     الفترة
                   </TableHead>
-                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     المدة
                   </TableHead>
-                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     الحالة
                   </TableHead>
-                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="text-start py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     النتيجة
                   </TableHead>
-                  <TableHead className="text-center py-3.5 px-4 font-bold text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">
+                  <TableHead className="text-center py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                     الإجراءات
                   </TableHead>
                 </TableRow>
@@ -491,7 +491,7 @@ export const RHStagesPage: React.FC = () => {
                           {personnel ? `${personnel.nom} ${personnel.prenom}` : '—'}
                         </div>
                         {personnel?.cin && (
-                          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                          <div className="text-xs text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                             ب.ت.و: {personnel.cin}
                           </div>
                         )}
@@ -503,7 +503,7 @@ export const RHStagesPage: React.FC = () => {
                           {stage.sujetStage}
                         </div>
                         {stage.numeroRoute && (
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                          <div className="text-xs text-slate-700 dark:text-slate-300">
                             رقم الإرسالية: <span className="font-mono tabular-nums">{stage.numeroRoute}</span>
                           </div>
                         )}
@@ -519,7 +519,7 @@ export const RHStagesPage: React.FC = () => {
                           )}
                           <span>{stage.lieuStage}</span>
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                        <div className="text-xs text-slate-700 dark:text-slate-300">
                           {stage.localisation === 'etranger' ? `الدولة: ${stage.pays}` : 'تونس'}
                         </div>
                       </TableCell>
@@ -594,7 +594,7 @@ export const RHStagesPage: React.FC = () => {
         {/* Pagination */}
         {pagination.pages > 1 && (
           <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm bg-slate-50/50 dark:bg-slate-900">
-            <div className="text-slate-500 dark:text-slate-400 tabular-nums">
+            <div className="text-slate-700 dark:text-slate-300 tabular-nums">
               إجمالي النتائج: <strong className="text-slate-800 dark:text-slate-200">{pagination.total}</strong> (الصفحة {pagination.page} من {pagination.pages})
             </div>
             <div className="flex items-center gap-2">
@@ -643,7 +643,7 @@ export const RHStagesPage: React.FC = () => {
           {stageToView && (
             <div className="space-y-4 pt-2 text-sm">
               <div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 block font-semibold">الموظف</span>
+                <span className="text-xs text-slate-700 dark:text-slate-300 block font-semibold">الموظف</span>
                 <span className="font-bold text-slate-900 dark:text-slate-100 text-base">
                   {typeof stageToView.personnelId === 'object'
                     ? `${stageToView.personnelId.nom} ${stageToView.personnelId.prenom}`
@@ -653,11 +653,11 @@ export const RHStagesPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block font-semibold">موضوع التربص</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block font-semibold">موضوع التربص</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200">{stageToView.sujetStage}</span>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block font-semibold">المكان / الدولة</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block font-semibold">المكان / الدولة</span>
                   <span className="text-slate-800 dark:text-slate-200">
                     {stageToView.lieuStage} {stageToView.localisation === 'etranger' ? `(${stageToView.pays})` : '(تونس)'}
                   </span>
@@ -666,42 +666,42 @@ export const RHStagesPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block font-semibold">الفترة</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block font-semibold">الفترة</span>
                   <span className="text-slate-800 dark:text-slate-200 tabular-nums">
                     <bdi dir={dir} className="tabular-nums">{formatLongDate(stageToView.dateDebut, isRTL ? 'ar' : 'fr')}</bdi> إلى <bdi dir={dir} className="tabular-nums">{formatLongDate(stageToView.dateFin, isRTL ? 'ar' : 'fr')}</bdi>
                   </span>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block font-semibold">المدة المحتسبة</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block font-semibold">المدة المحتسبة</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 tabular-nums">{stageToView.duree || 0} يوم</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block">الحالة</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block">الحالة</span>
                   <div className="mt-1">{renderStatutBadge(stageToView.statut)}</div>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block">النتيجة</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block">النتيجة</span>
                   <div className="mt-1">{renderResultatBadge(stageToView.resultat)}</div>
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block">الملاحظة / التقدير</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block">الملاحظة / التقدير</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{stageToView.mention || '—'}</span>
                 </div>
               </div>
 
               {stageToView.numeroRoute && (
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block font-semibold">رقم الإرسالية (Route)</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block font-semibold">رقم الإرسالية (Route)</span>
                   <span className="font-mono tabular-nums text-slate-800 dark:text-slate-200">{stageToView.numeroRoute}</span>
                 </div>
               )}
 
               {stageToView.observations && (
                 <div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block font-semibold">ملاحظات</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 block font-semibold">ملاحظات</span>
                   <p className="text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 whitespace-pre-line">
                     {stageToView.observations}
                   </p>
@@ -720,7 +720,7 @@ export const RHStagesPage: React.FC = () => {
               <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               <span>تأكيد حذف التربص</span>
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+            <AlertDialogDescription className="text-sm text-slate-700 dark:text-slate-300 mt-2">
               هل أنت متأكد من حذف هذا التربص نهائياً من سجل الموظف؟
               {stageToDelete && (
                 <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-lg text-red-800 dark:text-red-300 text-xs font-semibold">

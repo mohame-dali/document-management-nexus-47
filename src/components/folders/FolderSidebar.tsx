@@ -79,7 +79,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className, onNavigate }) 
                 e.stopPropagation();
                 toggleExpanded(folder._id);
               }}
-              className="p-1 hover:bg-[#1a202c] rounded text-slate-400 hover:text-slate-200 transition-colors duration-200"
+              className="p-1 hover:bg-[#1a202c] rounded text-slate-300 hover:text-white transition-colors duration-200"
             >
               {isExpanded ? (
                 <ChevronDown className="h-3 w-3" />
@@ -105,7 +105,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className, onNavigate }) 
           
           <Badge 
             variant="outline" 
-            className={`text-[10px] px-1.5 py-0 rounded font-normal ${
+            className={`text-[13px] px-1.5 py-0 rounded font-normal ${
               folder.status === 'En cours' 
                 ? 'bg-[#FFCB56]/20 text-[#FFD758] border-[#FFCB56]/40' 
                 : 'bg-slate-700/50 text-slate-300 border-slate-600'
@@ -137,7 +137,7 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className, onNavigate }) 
           <FolderOpen className="h-3.5 w-3.5 text-[#90cdf4]" />
           تصنيف المستندات
           {currentUser?.role === 'User' && (
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 rounded bg-slate-700/50 text-slate-300 border-slate-600 font-normal">
+            <Badge variant="outline" className="text-[13px] px-1.5 py-0 rounded bg-slate-700/50 text-slate-200 border-slate-600 font-normal">
               للعرض
             </Badge>
           )}
@@ -147,11 +147,11 @@ const FolderSidebar: React.FC<FolderSidebarProps> = ({ className, onNavigate }) 
         {isLoading ? (
           <div className="text-center py-3">
             <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#90cdf4] mx-auto"></div>
-            <p className="text-[11px] text-slate-400 mt-2">جاري التحميل...</p>
+            <p className="text-[13px] text-slate-300 mt-2">جاري التحميل...</p>
           </div>
         ) : rootFolders.length === 0 ? (
-          <div className="text-center py-3 text-slate-400">
-            <Folder className="h-6 w-6 mx-auto mb-1 opacity-40 text-slate-400" />
+          <div className="text-center py-3 text-slate-300">
+            <Folder className="h-6 w-6 mx-auto mb-1 opacity-60 text-slate-300" />
             <p className="text-xs">لا توجد مجلدات</p>
           </div>
         ) : (

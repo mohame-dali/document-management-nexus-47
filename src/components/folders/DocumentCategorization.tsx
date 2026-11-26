@@ -103,7 +103,7 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
             <div className="space-y-2">
               <Label htmlFor="folder">اختر المجلد الجديد</Label>
               <Select value={selectedFolder} onValueChange={setSelectedFolder}>
-                <SelectTrigger id="folder" className="h-8 text-xs bg-white border-[#cbd5e1] rounded">
+                <SelectTrigger id="folder" className="h-8 text-xs bg-white border-slate-300 dark:border-slate-700 rounded">
                   <SelectValue placeholder="اختر مجلداً أو اتركه فارغاً" />
                 </SelectTrigger>
                 <SelectContent>
@@ -118,7 +118,7 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
                       <div className="flex items-center gap-2">
                         <FolderOpen className="h-4 w-4 text-[#2c5282]" />
                         <span>{folder.name}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
+                        <span className={`text-[13px] px-1.5 py-0.2 rounded font-medium ${
                           folder.status === 'En cours' 
                             ? 'bg-[#FFCB56] text-[#78350f]' 
                             : 'bg-gray-100 text-gray-600'
@@ -148,7 +148,7 @@ const DocumentCategorization: React.FC<DocumentCategorizationProps> = ({
           </>
         ) : (
           <div className="text-center py-4">
-            <Lock className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+            <Lock className="h-8 w-8 mx-auto text-slate-700 dark:text-slate-300 mb-2" />
             <p className="text-sm text-muted-foreground">
               يمكن لمدير القسم فقط تغيير تصنيف المستندات
             </p>

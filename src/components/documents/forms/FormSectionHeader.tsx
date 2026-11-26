@@ -31,7 +31,7 @@ const FormSectionHeader: React.FC<FormSectionHeaderProps> = ({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 leading-snug">
               {subtitle}
             </p>
           )}

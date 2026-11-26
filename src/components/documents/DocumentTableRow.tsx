@@ -164,13 +164,13 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
                 {doc.activity}
               </span>
               {doc.dateActivity && (
-                <span className="text-[11px] text-[#2c5282]/80 dark:text-blue-300/80 tabular-nums">
+                <span className="text-[13px] text-[#2c5282]/80 dark:text-blue-300/80 tabular-nums">
                   (<bdi dir="ltr">{formatShortDayMonth(doc.dateActivity)}</bdi>)
                 </span>
               )}
             </div>
           ) : (
-            <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">-</span>
+            <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">-</span>
           )}
         </TableCell>
       )}
@@ -182,7 +182,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
               {doc.responsibleUser.username}
             </div>
           ) : (
-            <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">-</span>
+            <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">-</span>
           )}
         </TableCell>
       )}
@@ -201,7 +201,7 @@ const DocumentTableRow: React.FC<DocumentTableRowProps> = ({
               )}
             </div>
           ) : (
-            <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">-</span>
+            <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">-</span>
           )}
         </TableCell>
       )}

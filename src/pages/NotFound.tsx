@@ -20,13 +20,13 @@ const NotFound = () => {
           <h1 className="text-xl font-bold text-[#1a202c] mt-3">
             الصفحة التي تبحث عنها غير متوفرة
           </h1>
-          <p className="text-xs text-[#4a5568] mt-2 leading-relaxed">
+          <p className="text-xs text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
             قد يكون الرابط خاطئاً أو تم نقل الصفحة أو حذفها من النظام.
           </p>
         </div>
 
-        <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-2.5 text-xs text-[#5f6b7d]">
-          المسار المطلوب: <span className="font-mono text-[11px] text-[#2c5282] font-semibold">{location.pathname}</span>
+        <div className="bg-[#f8fafc] border border-[#edf2f7] rounded p-2.5 text-xs text-slate-700 dark:text-slate-300">
+          المسار المطلوب: <span className="font-mono text-[13px] text-[#2c5282] font-semibold">{location.pathname}</span>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -42,7 +42,7 @@ const NotFound = () => {
           <Button 
             variant="outline" 
             onClick={() => navigate(-1)}
-            className="w-full sm:w-auto border-[#cbd5e1] text-[#4a5568] hover:bg-[#f7fafc] text-xs h-9 px-4 font-medium"
+            className="w-full sm:w-auto border-[#cbd5e1] text-slate-700 dark:text-slate-300 hover:bg-[#f7fafc] text-xs h-9 px-4 font-medium"
           >
             <ArrowLeft className="h-4 w-4 ml-1.5" />
             الرجوع للخلف

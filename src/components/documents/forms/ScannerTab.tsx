@@ -243,7 +243,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
         {/* Format, Resolution & Quick Per-Scan Overrides + Settings Gear */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-zinc-300">
               {t.format || (lang === 'ar' ? 'الصيغة' : 'Format')}
             </span>
             <Select
@@ -263,7 +263,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-zinc-300">
               {t.resolution || (lang === 'ar' ? 'الدقة' : 'DPI')}
             </span>
             <Select
@@ -337,7 +337,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                 ? 'إعدادات الماسح الضوئي و OCR'
                 : 'Paramètres Scanner & OCR'
             }
-            className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800 shrink-0"
+            className="h-8 w-8 text-zinc-300 hover:text-white hover:bg-zinc-800 shrink-0"
           >
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
@@ -376,7 +376,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
         {currentState === 'IDLE' && (
           <div className="flex-1 flex flex-col items-center justify-center p-6">
             {isEffectiveLoading ? (
-              <div className="flex flex-col items-center gap-3 text-zinc-400">
+              <div className="flex flex-col items-center gap-3 text-zinc-200">
                 <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
                 <span className="text-sm">
                   {lang === 'ar'
@@ -435,7 +435,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                   <h4 className="text-base font-semibold text-zinc-100">
                     {tr('scanner.studio.readyTitle', 'Prêt pour la numérisation', 'جاهز للمسح الضوئي')}
                   </h4>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-zinc-300">
                     {tr(
                       'scanner.studio.readyHint',
                       'Placez votre document dans le scanner puis lancez la capture.',
@@ -510,7 +510,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                     </div>
                     <div className="min-w-0 text-start">
                       <p className="text-sm font-semibold text-zinc-100 truncate">{stageLabel}</p>
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-zinc-300">
                         {normalizedSelectFormat.toUpperCase()} · <bdi dir="ltr">{scanSettings.resolution} DPI</bdi>
                         {scanPage > 0 && (
                           <>
@@ -541,12 +541,12 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                     return (
                       <div
                         key={stage}
-                        className={`rounded-md px-2 py-1.5 text-center text-[11px] border transition-colors ${
+                        className={`rounded-md px-2 py-1.5 text-center text-[13px] border transition-colors ${
                           isCurrent
                             ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300 font-medium'
                             : isCompleted
-                              ? 'border-zinc-700 bg-zinc-800/80 text-zinc-300'
-                              : 'border-zinc-800 bg-zinc-950/60 text-zinc-500'
+                              ? 'border-zinc-700 bg-zinc-800/80 text-zinc-200'
+                              : 'border-zinc-800 bg-zinc-950/60 text-zinc-300'
                         }`}
                       >
                         <span className="inline-flex items-center gap-1 justify-center">
@@ -603,14 +603,14 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                         alt={`Page ${thumb.page}`}
                         className="h-24 w-20 object-cover block"
                       />
-                      <span className="absolute bottom-1 end-1 rounded bg-zinc-950/85 border border-zinc-700 px-1.5 py-0.5 text-[10px] font-medium text-zinc-100">
+                      <span className="absolute bottom-1 end-1 rounded bg-zinc-950/85 border border-zinc-700 px-1.5 py-0.5 text-[13px] font-medium text-zinc-100 tabular-nums">
                         <bdi dir="ltr">P.{thumb.page}</bdi>
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-24 rounded-md border border-dashed border-zinc-800 bg-zinc-950/60 text-xs text-zinc-500">
+                <div className="flex items-center justify-center h-24 rounded-md border border-dashed border-zinc-800 bg-zinc-950/60 text-xs text-zinc-300">
                   {stageLabel}
                 </div>
               )}
@@ -685,7 +685,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                   : 'Configuration du Scanner et de l’OCR'}
               </span>
             </DialogTitle>
-            <DialogDescription className="text-sm text-[#5f6b7d]">
+            <DialogDescription className="text-sm text-slate-700 dark:text-slate-300">
               {lang === 'ar'
                 ? 'اضبط الدقة الافتراضية، وضع الألوان، التغذية التلقائية وإعدادات OCR ليتم تطبيقها تلقائياً.'
                 : 'Définissez la résolution, le mode couleur, le chargeur ADF et les options OCR appliquées par défaut.'}

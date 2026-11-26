@@ -335,7 +335,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                       </Badge>
                     )}
 
-                    <p className="text-xs text-slate-500 ms-auto">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 ms-auto">
                       {translate('documents.forms.ai.helperText')}
                     </p>
                   </div>

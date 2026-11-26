@@ -257,7 +257,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                 {department?.name || 'جميع الأقسام والمصالح'}
               </span>
             </p>
-            <p className="text-[11px] text-[#475569]">
+            <p className="text-[13px] text-slate-700">
               المرجع : كشف المواظبة الشهري ({monthNameFr} {year})
             </p>
           </div>
@@ -294,7 +294,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                 <span className="font-semibold">عدد الأعوان :</span>{' '}
                 <span className="font-mono font-bold">{totalPersonnel}</span>
               </p>
-              <p className="text-[10px] text-[#475569]">
+              <p className="text-[13px] text-slate-700">
                 تاريخ الطباعة : <bdi dir="ltr" className="font-mono tabular-nums">{printedDateStr}</bdi>
               </p>
             </div>
@@ -338,17 +338,17 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                       key={day}
                       className={`w-[22px] py-1 px-0 text-[9px] leading-tight ${
                         isOutOfMonth
-                          ? 'bg-slate-200 text-slate-400'
+                          ? 'bg-slate-200 text-slate-600'
                           : isHoliday
                           ? 'bg-amber-100/80 text-amber-900'
                           : isWeekend
-                          ? 'bg-slate-200/60 text-slate-700'
+                          ? 'bg-slate-200/60 text-slate-800'
                           : ''
                       }`}
                     >
                       <div className="font-mono font-bold">{day}</div>
                       {dateObj && (
-                        <div className="text-[7px] font-normal text-slate-500">
+                        <div className="text-[7px] font-medium text-slate-700">
                           {ARABIC_DAY_INITIALS[dayOfWeek]}
                         </div>
                       )}
@@ -372,7 +372,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
             <tbody>
               {records.length === 0 ? (
                 <tr>
-                  <td colSpan={38} className="py-8 text-center text-sm text-slate-500">
+                  <td colSpan={38} className="py-8 text-center text-sm text-slate-700">
                     لا يوجد أعوان مسجلون في هذا القسم خلال هذه الفترة
                   </td>
                 </tr>
@@ -392,7 +392,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                           {p.nom} {p.prenom}
                         </div>
                         {subtitle && (
-                          <div className="text-[8px] text-slate-500 truncate">{subtitle}</div>
+                          <div className="text-[8px] text-slate-700 truncate">{subtitle}</div>
                         )}
                       </td>
 
@@ -456,7 +456,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
 
         {/* Légende des symboles + Zone signatures officielle */}
         <div className="mt-4 pt-3 border-t border-[#cbd5e1] space-y-4">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] text-[#1e293b]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#1e293b]">
             <span className="font-bold">دليل الرموز :</span>
             {legendItems.map((item) => (
               <span key={`${item.symbol}-${item.labelAr}`} className="inline-flex items-center gap-1">
@@ -467,7 +467,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
               </span>
             ))}
             <span className="inline-flex items-center gap-1">
-              <strong className="px-1 border border-slate-300 rounded-sm bg-slate-200 text-slate-500">
+              <strong className="px-1 border border-slate-300 rounded-sm bg-slate-200 text-slate-700">
                 —
               </strong>
               <span>: خارج أيام الشهر</span>
@@ -477,15 +477,15 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
           <div className="grid grid-cols-3 gap-6 pt-2 pb-6 text-xs text-center font-bold text-[#0f172a]">
             <div>
               <p className="mb-10">رئيس القسم / المصلحة</p>
-              <p className="text-[10px] font-normal text-slate-500">الإمضاء والختم</p>
+              <p className="text-xs font-medium text-slate-700">الإمضاء والختم</p>
             </div>
             <div>
               <p className="mb-10">مصلحة الموارد البشرية</p>
-              <p className="text-[10px] font-normal text-slate-500">المراجعة والتأشير</p>
+              <p className="text-xs font-medium text-slate-700">المراجعة والتأشير</p>
             </div>
             <div>
               <p className="mb-10">مصادقة المدير / الإدارة</p>
-              <p className="text-[10px] font-normal text-slate-500">الختم والإمضاء</p>
+              <p className="text-xs font-medium text-slate-700">الختم والإمضاء</p>
             </div>
           </div>
         </div>

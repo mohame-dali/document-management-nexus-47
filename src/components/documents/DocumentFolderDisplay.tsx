@@ -30,7 +30,7 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
       <Card className={`border-dashed border-2 border-gray-300 hover:border-gray-400 transition-colors duration-200 ${className}`}>
         <CardContent className="p-6 text-center">
           <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-4">
-            <Archive className="h-10 w-10 text-gray-400" />
+            <Archive className="h-10 w-10 text-slate-700 dark:text-slate-300" />
           </div>
           <h3 className="font-semibold text-gray-700 mb-2">غير مصنف</h3>
           <p className="text-sm text-muted-foreground">

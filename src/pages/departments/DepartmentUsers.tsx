@@ -90,7 +90,7 @@ const DepartmentUsersPage: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 font-medium">إجمالي المنسوبين:</span>
+          <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">إجمالي المنسوبين:</span>
           <span className="px-3 py-1 bg-blue-50 text-[#2c5282] font-bold text-sm rounded border border-blue-200">
             {users.length} {users.length === 1 ? 'مستخدم' : 'مستخدمين'}
           </span>
@@ -103,19 +103,19 @@ const DepartmentUsersPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 w-16">الصورة</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[160px]">اسم المستخدم</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">الدور الوظيفي</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[140px]">تاريخ الانضمام</TableHead>
-                <TableHead className="text-right py-4 px-4 text-sm font-bold text-gray-700 min-w-[120px]">حالة الحساب</TableHead>
+                <TableHead className="text-right py-4 px-4 text-sm font-bold text-slate-800 w-16">الصورة</TableHead>
+                <TableHead className="text-right py-4 px-4 text-sm font-bold text-slate-800 min-w-[160px]">اسم المستخدم</TableHead>
+                <TableHead className="text-right py-4 px-4 text-sm font-bold text-slate-800 min-w-[140px]">الدور الوظيفي</TableHead>
+                <TableHead className="text-right py-4 px-4 text-sm font-bold text-slate-800 min-w-[140px]">تاريخ الانضمام</TableHead>
+                <TableHead className="text-right py-4 px-4 text-sm font-bold text-slate-800 min-w-[120px]">حالة الحساب</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-40 text-center text-base text-gray-500">
+                  <TableCell colSpan={5} className="h-40 text-center text-base text-slate-700 dark:text-slate-300">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <Users className="h-8 w-8 text-gray-400" />
+                      <Users className="h-8 w-8 text-slate-700 dark:text-slate-300" />
                       <span>لا يوجد أي مستخدم مرتبط بهذا القسم حالياً.</span>
                     </div>
                   </TableCell>

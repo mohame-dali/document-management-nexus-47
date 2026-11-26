@@ -185,7 +185,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
   const content = (
     <div dir={dir} className="space-y-6">
       {/* Workstation Scope Notice */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-sm text-[#4a5568]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
         <div className="flex items-center gap-2.5 min-w-0">
           <Monitor className="h-4 w-4 text-[#2c5282] shrink-0" />
           <span>
@@ -210,7 +210,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
                 : 'Résolution par défaut (DPI)'}
             </span>
           </Label>
-          <span className="text-xs text-[#64748b] tabular-nums">
+          <span className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
             <bdi dir="ltr">{prefs.resolution} DPI</bdi>
           </span>
         </div>
@@ -226,7 +226,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
                 className={`text-start rounded-md border p-3.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] ${
                   isSelected
                     ? 'border-[#2c5282] bg-[#ebf8ff]/60 text-[#1a202c]'
-                    : 'border-[#e2e8f0] bg-white hover:bg-[#f8fafc] text-[#4a5568]'
+                    : 'border-[#e2e8f0] bg-white hover:bg-[#f8fafc] text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -234,15 +234,15 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
                     <bdi dir="ltr">{isAr ? option.arLabel : option.frLabel}</bdi>
                   </span>
                   {option.recommended && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#FFCB56] text-[#1a202c] whitespace-nowrap">
+                    <span className="text-[13px] font-semibold px-2 py-0.5 rounded bg-[#FFCB56] text-[#1a202c] whitespace-nowrap">
                       {isAr ? 'موصى به' : 'Recommandé'}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[#4a5568] mt-1.5">
+                <p className="text-xs text-slate-700 dark:text-slate-300 mt-1.5">
                   {isAr ? option.arDesc : option.frDesc}
                 </p>
-                <p className="text-[11px] text-[#64748b] mt-0.5">
+                <p className="text-[13px] text-slate-700 dark:text-slate-300 mt-0.5">
                   {isAr ? option.frDesc : option.arDesc}
                 </p>
               </button>
@@ -266,7 +266,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
               setPrefs((prev) => ({ ...prev, colorMode: value as ScannerColorMode }))
             }
           >
-            <SelectTrigger id="scanner-color-mode" className="h-11 text-sm border-[#cbd5e1] bg-white rounded">
+            <SelectTrigger id="scanner-color-mode" className="h-11 text-sm border-slate-300 dark:border-slate-700 bg-white rounded">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -277,7 +277,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-[#64748b]">
+          <p className="text-xs text-slate-700 dark:text-slate-300">
             {COLOR_MODE_OPTIONS.find((m) => m.value === prefs.colorMode)?.[
               isAr ? 'arHint' : 'frHint'
             ]}
@@ -295,7 +295,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
               setPrefs((prev) => ({ ...prev, paperSize: value as ScannerPaperSize }))
             }
           >
-            <SelectTrigger id="scanner-paper-size" className="h-11 text-sm border-[#cbd5e1] bg-white rounded">
+            <SelectTrigger id="scanner-paper-size" className="h-11 text-sm border-slate-300 dark:border-slate-700 bg-white rounded">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -310,7 +310,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
               </SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-[#64748b]">
+          <p className="text-xs text-slate-700 dark:text-slate-300">
             {isAr
               ? 'حجم الصفحة الافتراضي لوثائق البريد'
               : 'Dimension de page appliquée par défaut'}
@@ -328,7 +328,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
               setPrefs((prev) => ({ ...prev, format: value as ScannerFormat }))
             }
           >
-            <SelectTrigger id="scanner-default-format" className="h-11 text-sm border-[#cbd5e1] bg-white rounded">
+            <SelectTrigger id="scanner-default-format" className="h-11 text-sm border-slate-300 dark:border-slate-700 bg-white rounded">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -339,7 +339,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
               <SelectItem value="png">PNG (Image haute qualité)</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-[#64748b]">
+          <p className="text-xs text-slate-700 dark:text-slate-300">
             {isAr
               ? 'صيغة الحفظ المبدئية عند فتح الماسح'
               : 'Extension présélectionnée à l’ouverture du scanner'}
@@ -354,7 +354,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
             <Label htmlFor="scanner-use-adf" className="text-sm font-bold text-[#1a202c] cursor-pointer">
               {isAr ? 'التغذية التلقائية (ADF / Chargeur)' : 'Chargeur automatique (ADF)'}
             </Label>
-            <p className="text-xs text-[#4a5568]">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {isAr
                 ? 'اعتماد ملقم الأوراق التلقائي بدلاً من الزجاج المسطح للملفات متعددة الصفحات'
                 : 'Utiliser le bac d’alimentation automatique au lieu du plateau vitré'}
@@ -378,7 +378,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
             <Label htmlFor="scanner-duplex" className="text-sm font-bold text-[#1a202c] cursor-pointer">
               {isAr ? 'المسح على الوجهين (Recto-verso / Duplex)' : 'Numérisation recto-verso (Duplex)'}
             </Label>
-            <p className="text-xs text-[#4a5568]">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {isAr
                 ? 'مسح وجهي الورقة في تمريرة واحدة عندما يدعم الماسح هذه الميزة'
                 : 'Numériser les deux faces en un passage si le matériel le prend en charge'}
@@ -410,7 +410,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
                   ? 'تشغيل OCR تلقائياً بعد المسح'
                   : 'Lancer l’OCR automatiquement après numérisation'}
               </Label>
-              <p className="text-xs text-[#4a5568]">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 {isAr
                   ? 'استخراج النص وتعبئة الحقول المقترحة تلقائياً بعد انتهاء المسح الضوئي'
                   : 'Extraire le texte et pré-remplir les champs détectés automatiquement'}
@@ -436,7 +436,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
                 setPrefs((prev) => ({ ...prev, ocrLanguages: value as ScannerOcrLanguage }))
               }
             >
-              <SelectTrigger id="scanner-ocr-languages" className="h-10 text-sm border-[#cbd5e1] bg-white rounded">
+              <SelectTrigger id="scanner-ocr-languages" className="h-10 text-sm border-slate-300 dark:border-slate-700 bg-white rounded">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -465,7 +465,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
                 ? 'عنوان خدمة الماسح الضوئي / الجسر المحلي (Local Bridge URL)'
                 : 'URL du service scanner / pont local'}
             </Label>
-            <p className="text-xs text-[#64748b]">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {isAr
                 ? `العنوان الافتراضي المدمج: ${defaultBridgePlaceholder} — يمكن تغييره إذا كان الماسح يعمل عبر منفذ محلي خاص.`
                 : `Point d’accès par défaut : ${defaultBridgePlaceholder} — modifiable si un pont local dédié est utilisé sur ce poste.`}
@@ -479,7 +479,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
               value={prefs.bridgeUrl}
               onChange={(e) => setPrefs((prev) => ({ ...prev, bridgeUrl: e.target.value }))}
               placeholder={defaultBridgePlaceholder}
-              className="h-11 font-mono text-sm border-[#cbd5e1] bg-white rounded flex-1"
+              className="h-11 font-mono text-sm border-slate-300 dark:border-slate-700 bg-white rounded flex-1"
             />
             <Button
               type="button"
@@ -548,7 +548,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
           type="button"
           variant="outline"
           onClick={handleReset}
-          className="h-11 px-5 text-sm font-semibold border-[#cbd5e1] text-[#4a5568] hover:bg-gray-50 rounded whitespace-nowrap shrink-0 gap-2"
+          className="h-11 px-5 text-sm font-semibold border-[#cbd5e1] text-slate-700 dark:text-slate-300 hover:bg-gray-50 rounded whitespace-nowrap shrink-0 gap-2"
         >
           <RotateCcw className="h-4 w-4" />
           <span>
@@ -603,7 +603,7 @@ const ScannerWorkstationSettings: React.FC<ScannerWorkstationSettingsProps> = ({
                   : 'Configuration du Scanner et de l’OCR'}
               </span>
             </CardTitle>
-            <CardDescription className="text-sm text-[#5f6b7d] mt-1">
+            <CardDescription className="text-sm text-slate-700 dark:text-slate-300 mt-1">
               {isAr
                 ? 'ضبط الدقة الافتراضية، وضع الألوان، وحدة التغذية التلقائية (ADF)، ولغات OCR الخاصة بهذا الجهاز'
                 : 'Définissez la résolution, le mode couleur, le chargeur ADF et les paramètres OCR de ce poste'}

@@ -15,7 +15,7 @@ const MessageNotFound: React.FC<MessageNotFoundProps> = ({ onBack }) => {
 
   return (
     <Card className="p-6 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 rounded-xl" dir={dir}>
-      <div className="text-center text-slate-500 dark:text-slate-400">
+      <div className="text-center text-slate-700 dark:text-slate-300">
         <p>{t('messages.messageNotFound')}</p>
         <Button
           variant="outline"

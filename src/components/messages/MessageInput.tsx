@@ -135,13 +135,13 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 <span className="truncate max-w-[130px] font-medium" dir="ltr">
                   {file.name}
                 </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                <span className="text-[13px] text-slate-700 dark:text-slate-300 tabular-nums">
                   ({(file.size / 1024).toFixed(0)} {t('common.kb')})
                 </span>
                 <button
                   type="button"
                   onClick={() => setPreviewFile(file)}
-                  className="text-slate-400 dark:text-slate-500 hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors p-0.5 rounded-full"
+                  className="text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors p-0.5 rounded-full"
                   title={t('common.preview')}
                 >
                   <Eye className="h-3 w-3" />
@@ -149,7 +149,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveFile(idx)}
-                  className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors p-0.5 rounded-full"
+                  className="text-slate-700 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors p-0.5 rounded-full"
                   title={t('common.remove')}
                 >
                   <X className="h-3 w-3" />
@@ -227,7 +227,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       </div>
 
       {/* Mention quota */}
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-1 select-none">
+      <p className="text-[13px] text-slate-700 dark:text-slate-300 text-center mt-1 select-none">
         {t('messages.attachmentsHint')}
       </p>
     </div>

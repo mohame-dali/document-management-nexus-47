@@ -152,7 +152,7 @@ const DocumentFolderDialog: React.FC<DocumentFolderDialogProps> = ({
         <div className="border-t border-slate-200/80 dark:border-slate-800 p-4 px-6 bg-slate-50/90 dark:bg-slate-900">
           <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+              <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               <span>{t('documents.folderDialog.lastUpdate')}</span>
             </div>
             <div className="flex items-center gap-2">

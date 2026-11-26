@@ -164,12 +164,12 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               معايير وفلاتر البحث
             </h2>
             {currentUser?.activeDepartment && (
-              <span className="inline-flex items-center gap-1.5 bg-[#f7fafc] border border-[#e2e8f0] px-3 py-1 rounded text-xs font-medium text-[#4a5568]">
+              <span className="inline-flex items-center gap-1.5 bg-[#f7fafc] border border-[#e2e8f0] px-3 py-1 rounded text-xs font-medium text-slate-700 dark:text-slate-300">
                 <span>نطاق البحث: {currentUser.activeDepartment.name}</span>
               </span>
             )}
           </div>
-          <p className="text-sm text-[#4a5568] leading-normal mt-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 leading-normal mt-1">
             حدد المعايير المطلوبة للبحث المتقدم في نصوص وفهارس المراسلات
           </p>
         </div>
@@ -207,7 +207,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               className={`h-11 px-4 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-all duration-150 ${
                 filters.documentType === 'incoming'
                   ? 'bg-[#2c5282] text-white shadow-sm font-semibold'
-                  : 'bg-transparent text-[#4a5568] hover:bg-white/80'
+                  : 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-white/80'
               }`}
             >
               <Inbox className="h-4 w-4" />
@@ -220,7 +220,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               className={`h-11 px-4 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-all duration-150 ${
                 filters.documentType === 'outgoing'
                   ? 'bg-[#2c5282] text-white shadow-sm font-semibold'
-                  : 'bg-transparent text-[#4a5568] hover:bg-white/80'
+                  : 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-white/80'
               }`}
             >
               <Send className="h-4 w-4" />
@@ -233,7 +233,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               className={`h-11 px-4 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-all duration-150 ${
                 filters.documentType === 'all'
                   ? 'bg-[#2c5282] text-white shadow-sm font-semibold'
-                  : 'bg-transparent text-[#4a5568] hover:bg-white/80'
+                  : 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-white/80'
               }`}
             >
               <Files className="h-4 w-4" />
@@ -254,7 +254,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               placeholder="اكتب كلمات مفتاحية للبحث في الموضوع، المحتوى أو النصوص المستخرجة..."
               value={filters.keyword}
               onChange={(e) => handleFilterChange('keyword', e.target.value)}
-              className="h-12 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200 pr-4 pl-10"
+              className="h-12 text-base text-right border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200 pr-4 pl-10"
             />
           </div>
 
@@ -269,7 +269,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               />
               <span className="font-medium">البحث أيضاً داخل النص المستخرج عبر قارئ النصوص (OCR)</span>
             </label>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#2c5282] border border-blue-200">
+            <span className="inline-flex items-center gap-1 text-[13px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#2c5282] border border-blue-200">
               <CheckCircle2 className="h-3 w-3" />
               مفهرس آلياً
             </span>
@@ -284,7 +284,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               السنوات الإدارية المتاحة
             </Label>
             {loadingYears && (
-              <span className="text-xs text-[#5f6b7d] flex items-center gap-1">
+              <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 جاري التحميل...
               </span>
@@ -299,7 +299,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
                 filters.years.length === 0
                   ? 'bg-[#2c5282] text-white border-[#2c5282] shadow-xs'
-                  : 'bg-white text-[#4a5568] border-[#cbd5e1] hover:border-[#2c5282]'
+                  : 'bg-white text-slate-700 dark:text-slate-300 border-[#cbd5e1] hover:border-[#2c5282]'
               }`}
             >
               كل السنوات
@@ -316,7 +316,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 ${
                     isSelected
                       ? 'bg-[#2c5282] text-white border-[#2c5282] shadow-xs'
-                      : 'bg-white text-[#4a5568] border-[#cbd5e1] hover:border-[#2c5282]'
+                      : 'bg-white text-slate-700 dark:text-slate-300 border-[#cbd5e1] hover:border-[#2c5282]'
                   }`}
                 >
                   {yr}
@@ -338,7 +338,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* المصدر / الجهة */}
               <div className="space-y-1.5">
-                <Label htmlFor="source" className="text-sm font-medium text-[#4a5568] mb-1 flex items-center gap-2">
+                <Label htmlFor="source" className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-[#2c5282]" />
                   المصدر / الجهة / المصلحة
                 </Label>
@@ -355,7 +355,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
 
               {/* الرقم التسلسلي */}
               <div className="space-y-1.5">
-                <Label htmlFor="serialNumber" className="text-sm font-medium text-[#4a5568] mb-1 flex items-center gap-2">
+                <Label htmlFor="serialNumber" className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-2">
                   <Hash className="h-4 w-4 text-[#2c5282]" />
                   الرقم التسلسلي
                 </Label>
@@ -365,13 +365,13 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
                   placeholder="مثال: 1045"
                   value={filters.serialNumber}
                   onChange={(e) => handleFilterChange('serialNumber', e.target.value)}
-                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                  className="h-11 text-base text-right border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
                 />
               </div>
 
               {/* موضوع المراسلة */}
               <div className="space-y-1.5 md:col-span-2">
-                <Label htmlFor="subject" className="text-sm font-medium text-[#4a5568] mb-1 flex items-center gap-2">
+                <Label htmlFor="subject" className="text-sm font-medium text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-2">
                   <FileText className="h-4 w-4 text-[#2c5282]" />
                   موضوع المراسلة
                 </Label>
@@ -380,7 +380,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
                   placeholder="ابحث في نص الموضوع مباشرة..."
                   value={filters.subject}
                   onChange={(e) => handleFilterChange('subject', e.target.value)}
-                  className="h-11 text-base text-right border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
+                  className="h-11 text-base text-right border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] transition-colors duration-200"
                 />
               </div>
             </div>
@@ -399,7 +399,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
           <Button
             type="button"
             onClick={handleClear}
-            className="h-11 px-5 border border-[#e2e8f0] bg-white text-[#4a5568] hover:bg-[#f7fafc] rounded font-medium flex items-center justify-center gap-2 transition-colors duration-200 w-full sm:w-auto"
+            className="h-11 px-5 border border-[#e2e8f0] bg-white text-slate-700 dark:text-slate-300 hover:bg-[#f7fafc] rounded font-medium flex items-center justify-center gap-2 transition-colors duration-200 w-full sm:w-auto"
           >
             <RotateCcw className="h-4 w-4" />
             <span>مسح الفلاتر</span>

@@ -133,7 +133,7 @@ export const PersonnelFormPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               {isEditMode ? t('hr.form.page.editTitle') : t('hr.form.page.createTitle')}
             </h1>
-            <p className="text-base text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-base text-slate-700 dark:text-slate-300 mt-1">
               {isEditMode
                 ? t('hr.form.page.editSubtitle', { name: fullName })
                 : t('hr.form.page.createSubtitle')}
@@ -153,7 +153,7 @@ export const PersonnelFormPage: React.FC = () => {
 
       {/* Contenu du formulaire */}
       {isEditMode && isLoadingData ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-12 text-center text-slate-500 dark:text-slate-400 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-12 text-center text-slate-700 dark:text-slate-300 shadow-sm">
           <div className="flex flex-col items-center justify-center gap-3">
             <RefreshCw className="w-8 h-8 animate-spin text-[#2c5282] dark:text-blue-400" />
             <span className="text-base">{t('hr.form.page.loading')}</span>

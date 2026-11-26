@@ -70,14 +70,14 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
         <div className={`px-5 sm:px-6 lg:px-8 ${compact ? 'pt-3.5' : 'pt-6'} pb-0 max-w-[1600px] mx-auto`}>
           {/* Breadcrumb */}
           {breadcrumb && breadcrumb.length > 0 && (
-            <nav className={`flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 ${compact ? 'mb-1.5' : 'mb-3'}`} aria-label="Breadcrumb">
+            <nav className={`flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 ${compact ? 'mb-1.5' : 'mb-3'}`} aria-label="Breadcrumb">
               <Link to="/dashboard" className="flex items-center gap-1 hover:text-[#2c5282] dark:hover:text-blue-400 transition-colors">
                 <Home className="w-3.5 h-3.5" />
                 <span>{isRTL ? 'الرئيسية' : 'Accueil'}</span>
               </Link>
               {breadcrumb.map((item, idx) => (
                 <React.Fragment key={idx}>
-                  <Chevron className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                  <Chevron className="w-3 h-3 text-slate-600 dark:text-slate-300" />
                   {item.to ? (
                     <Link to={item.to} className="hover:text-[#2c5282] dark:hover:text-blue-400 transition-colors">
                       {item.label}
@@ -102,7 +102,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
                 {title}
               </h1>
               {description && (
-                <p className={`${compact ? 'text-xs sm:text-sm' : 'text-sm mt-0.5'} text-slate-500 dark:text-slate-400`}>
+                <p className={`${compact ? 'text-xs sm:text-sm' : 'text-sm mt-0.5'} text-slate-700 dark:text-slate-300`}>
                   {description}
                 </p>
               )}
@@ -129,14 +129,14 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
                     ${
                       isActive
                         ? 'text-[#2c5282] dark:text-blue-400 border-[#2c5282] dark:border-blue-400 font-bold'
-                        : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-[#2c5282] dark:hover:text-blue-300 hover:border-slate-300 dark:hover:border-slate-700'
+                        : 'text-slate-700 dark:text-slate-300 border-transparent hover:text-[#2c5282] dark:hover:text-blue-300 hover:border-slate-300 dark:hover:border-slate-700'
                     }
                   `}
                   role="tab"
                 >
                   <Icon
                     className={`w-4 h-4 shrink-0 transition-colors ${
-                      isActive ? tab.color || 'text-[#2c5282] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
+                      isActive ? tab.color || 'text-[#2c5282] dark:text-blue-400' : 'text-slate-600 dark:text-slate-300'
                     }`}
                   />
                   <span>{tab.label}</span>

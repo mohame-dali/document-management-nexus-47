@@ -59,7 +59,7 @@ const DocumentPreviewModal = ({
             </DialogDescription>
           )}
           {docDate && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 tabular-nums">
+            <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 tabular-nums">
               📅 <bdi dir="ltr">{formatShortDate(docDate)}</bdi>
             </p>
           )}
@@ -71,7 +71,7 @@ const DocumentPreviewModal = ({
             <PDFViewer documentPath={document?.scannedDocument} />
           ) : (
             <div className="flex flex-col items-center justify-center 
-                            py-12 text-slate-500 dark:text-slate-400">
+                            py-12 text-slate-700 dark:text-slate-300">
               <span className="text-4xl mb-3">📄</span>
               <p className="text-sm font-medium">
                 لا يوجد ملف مرفق بهذه الوثيقة

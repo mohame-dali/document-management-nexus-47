@@ -211,7 +211,7 @@ export const MonthlyAttendanceReport: React.FC = () => {
               <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
                 {isAr ? 'بطاقة الحضور الشهرية للطباعة' : 'Fiche de présence mensuelle'}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 {isAr
                   ? 'إعداد وطباعة جدول المواظبة الشهري (A4 أفقي - 31 يوماً)'
                   : 'Générer et imprimer la grille mensuelle des présences (A4 Paysage - 31 jours)'}
@@ -246,7 +246,7 @@ export const MonthlyAttendanceReport: React.FC = () => {
               value={String(selectedMonth)}
               onValueChange={(val) => setSelectedMonth(parseInt(val, 10))}
             >
-              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm tabular-nums">
+              <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm tabular-nums">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent dir={dir}>
@@ -269,7 +269,7 @@ export const MonthlyAttendanceReport: React.FC = () => {
               value={String(selectedYear)}
               onValueChange={(val) => setSelectedYear(parseInt(val, 10))}
             >
-              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm font-mono tabular-nums">
+              <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm font-mono tabular-nums">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent dir={dir}>
@@ -293,14 +293,14 @@ export const MonthlyAttendanceReport: React.FC = () => {
                 type="text"
                 disabled
                 value={userDepartmentName || (isAr ? 'القسم المخصص' : 'Département assigné')}
-                className="h-10 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-sm cursor-not-allowed"
+                className="h-10 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-sm cursor-not-allowed"
               />
             ) : (
               <Select
                 value={selectedDepartment}
                 onValueChange={(val) => setSelectedDepartment(val)}
               >
-                <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm">
+                <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm">
                   <SelectValue placeholder={isAr ? 'جميع الأقسام' : 'Tous les départements'} />
                 </SelectTrigger>
                 <SelectContent dir={dir}>
@@ -339,7 +339,7 @@ export const MonthlyAttendanceReport: React.FC = () => {
       {loading && !reportData ? (
         <div className="no-print bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg py-20 text-center space-y-3 shadow-sm">
           <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] dark:text-sky-400 mx-auto" />
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
             {isAr ? 'جاري تحميل بيانات الحضور الشهري...' : 'Chargement de la fiche mensuelle...'}
           </p>
         </div>

@@ -283,7 +283,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 <DialogTitle className="text-xl font-bold text-[#1a202c] dark:text-slate-100">
                   {isEditing ? 'تعديل بيانات التربص / التكوين' : 'إضافة تربص جديد (تسجيل تاريخي / مباشر)'}
                 </DialogTitle>
-                <DialogDescription className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                <DialogDescription className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
                   تسجيل الدورات التكوينية والتربصات المنجزة بتونس أو بالخارج لفائدة موظفي الإدارة
                 </DialogDescription>
               </div>
@@ -307,7 +307,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 }}
                 disabled={Boolean(defaultPersonnelId && !isEditing)}
               >
-                <SelectTrigger className={`h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.personnelId ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}>
+                <SelectTrigger className={`h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.personnelId ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}>
                   <SelectValue placeholder="-- اختر الموظف --" />
                 </SelectTrigger>
                 <SelectContent className="text-start max-h-60 dark:bg-slate-900 dark:border-slate-700" dir={dir}>
@@ -364,7 +364,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 </div>
 
                 <div className="w-full sm:w-60">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                  <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200 block mb-1">
                     الدولة <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -372,7 +372,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     onChange={(e) => setPays(e.target.value)}
                     placeholder="مثال: فرنسا، الصين، تونس..."
                     disabled={localisation === 'tunisie'}
-                    className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.pays ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
+                    className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.pays ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
                   />
                   {errors.pays && (
                     <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.pays}</p>
@@ -394,7 +394,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     if (errors.sujetStage) setErrors((prev) => ({ ...prev, sujetStage: '' }));
                   }}
                   placeholder="مثال: إدارة خوادم الشبكات، القيادة الإدارية..."
-                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.sujetStage ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.sujetStage ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
                 />
                 {errors.sujetStage && (
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.sujetStage}</p>
@@ -412,7 +412,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     if (errors.lieuStage) setErrors((prev) => ({ ...prev, lieuStage: '' }));
                   }}
                   placeholder="مثال: مدرسة العوينة، معهد الدفاع الوطني، بكين..."
-                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.lieuStage ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.lieuStage ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
                 />
                 {errors.lieuStage && (
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.lieuStage}</p>
@@ -424,7 +424,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     المدرسة / الهيكل المكون (اختياري)
                   </Label>
                   <Button
@@ -439,7 +439,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                   </Button>
                 </div>
                 <Select value={ecoleId} onValueChange={setEcoleId}>
-                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg">
                     <SelectValue placeholder="-- اختر المدرسة إن وجدت --" />
                   </SelectTrigger>
                   <SelectContent className="text-start max-h-60 dark:bg-slate-900 dark:border-slate-700" dir={dir}>
@@ -454,11 +454,11 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   نوع التكوين (اختياري)
                 </Label>
                 <Select value={typeFormationId} onValueChange={setTypeFormationId}>
-                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg">
                     <SelectValue placeholder="-- اختر نوع التكوين --" />
                   </SelectTrigger>
                   <SelectContent className="text-start max-h-60 dark:bg-slate-900 dark:border-slate-700" dir={dir}>
@@ -488,7 +488,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     setDateDebut(e.target.value);
                     if (errors.dateDebut) setErrors((prev) => ({ ...prev, dateDebut: '' }));
                   }}
-                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${errors.dateDebut ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${errors.dateDebut ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
                 />
                 {errors.dateDebut && (
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.dateDebut}</p>
@@ -508,7 +508,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     setDateFin(e.target.value);
                     if (errors.dateFin) setErrors((prev) => ({ ...prev, dateFin: '' }));
                   }}
-                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${errors.dateFin ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${errors.dateFin ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
                 />
                 {errors.dateFin && (
                   <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.dateFin}</p>
@@ -519,26 +519,26 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             {/* 6. Numéro de route et numéro de stage */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   رقم الإرسالية / Route (اختياري)
                 </Label>
                 <Input
                   value={numeroRoute}
                   onChange={(e) => setNumeroRoute(e.target.value)}
                   placeholder="مثال: 2024/0981"
-                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg tabular-nums"
+                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg tabular-nums"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   رقم التربص / المرجع (اختياري)
                 </Label>
                 <Input
                   value={numeroStage}
                   onChange={(e) => setNumeroStage(e.target.value)}
                   placeholder="مثال: STG-102"
-                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg tabular-nums"
+                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg tabular-nums"
                 />
               </div>
             </div>
@@ -548,7 +548,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
               <div className="space-y-1.5">
                 <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">حالة التربص</Label>
                 <Select value={statut} onValueChange={(val) => setStatut(val as typeof statut)}>
-                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="text-start dark:bg-slate-900 dark:border-slate-700" dir={dir}>
@@ -564,7 +564,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
               <div className="space-y-1.5">
                 <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">النتيجة</Label>
                 <Select value={resultat || 'EMPTY'} onValueChange={(val) => setResultat(val === 'EMPTY' ? '' : (val as typeof resultat))}>
-                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="text-start dark:bg-slate-900 dark:border-slate-700" dir={dir}>
@@ -577,25 +577,25 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">الملاحظة / التقدير</Label>
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">الملاحظة / التقدير</Label>
                 <Input
                   value={mention}
                   onChange={(e) => setMention(e.target.value)}
                   placeholder="مثال: حسن جداً، مشرف..."
-                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
                 />
               </div>
             </div>
 
             {/* 8. Observations */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">ملاحظات إضافية</Label>
+              <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">ملاحظات إضافية</Label>
               <Textarea
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
                 rows={2}
                 placeholder="أية توضيحات أو تفاصيل أخرى حول هذا التربص..."
-                className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-sm rounded-lg"
+                className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 text-sm rounded-lg"
               />
             </div>
 
@@ -639,7 +639,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 value={newEcoleNomAr}
                 onChange={(e) => setNewEcoleNomAr(e.target.value)}
                 placeholder="مثال: مدرسة ضباط الصف"
-                className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
                 required
               />
             </div>
@@ -652,7 +652,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 value={newEcoleNom}
                 onChange={(e) => setNewEcoleNom(e.target.value)}
                 placeholder="Ex: École des Sous-Officiers"
-                className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
                 dir="ltr"
                 required
               />
@@ -660,21 +660,21 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm text-slate-700 dark:text-slate-300">الدولة</Label>
+                <Label className="text-sm text-slate-800 dark:text-slate-200">الدولة</Label>
                 <Input
                   value={newEcolePays}
                   onChange={(e) => setNewEcolePays(e.target.value)}
                   placeholder="تونس"
-                  className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                  className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm text-slate-700 dark:text-slate-300">المدينة</Label>
+                <Label className="text-sm text-slate-800 dark:text-slate-200">المدينة</Label>
                 <Input
                   value={newEcoleVille}
                   onChange={(e) => setNewEcoleVille(e.target.value)}
                   placeholder="تونس، بنزرت..."
-                  className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                  className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
                 />
               </div>
             </div>

@@ -90,22 +90,22 @@ export const DocumentOptionCombobox: React.FC<DocumentOptionComboboxProps> = ({
           disabled={disabled}
           dir="rtl"
           className={cn(
-            'w-full h-11 justify-between border-[#e2e8f0] bg-white rounded font-normal text-start px-3 hover:bg-[#f7fafc] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]',
-            !value && 'text-gray-400',
+            'w-full h-11 justify-between border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium rounded text-start px-3 hover:bg-slate-50 dark:hover:bg-slate-800 focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]',
+            !value && 'font-normal text-slate-400 dark:text-slate-500',
             className
           )}
         >
           <span className="truncate flex-1 text-start">
             {value ? displayLabel : placeholder}
           </span>
-          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 ms-2" />
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-600 dark:text-slate-300 ms-2" />
         </Button>
       </PopoverTrigger>
 
       <PopoverContent
         dir="rtl"
         align="start"
-        className="w-[--radix-popover-trigger-width] p-0 bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden z-50"
+        className="w-[--radix-popover-trigger-width] p-0 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded shadow-sm overflow-hidden z-50"
       >
         <Command
           dir="rtl"
@@ -118,17 +118,17 @@ export const DocumentOptionCombobox: React.FC<DocumentOptionComboboxProps> = ({
         >
           <CommandInput
             placeholder={placeholder}
-            className="h-10 border-none border-b border-[#e2e8f0] text-sm text-start"
+            className="h-10 border-none border-b border-slate-200 dark:border-slate-800 text-sm text-start text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
           />
           <CommandList className="max-h-60 overflow-y-auto p-1">
             {isLoading ? (
-              <div className="py-6 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
+              <div className="py-6 text-center text-xs text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-[#2c5282]" />
                 <span>جاري التحميل...</span>
               </div>
             ) : (
               <>
-                <CommandEmpty className="py-4 text-center text-xs text-gray-500">
+                <CommandEmpty className="py-4 text-center text-xs text-slate-700 dark:text-slate-300">
                   {emptyMessage}
                 </CommandEmpty>
                 <CommandGroup>

@@ -23,7 +23,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
 
   if (!documentArray || documentArray.length === 0) {
     return (
-      <div className="text-center py-4 text-gray-500" dir={dir}>
+      <div className="text-center py-4 text-slate-700 dark:text-slate-300" dir={dir}>
         <p>لا توجد مستندات في هذا المجلد</p>
       </div>
     );
@@ -40,17 +40,17 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <h4 className="font-medium text-sm truncate">{doc.subject}</h4>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 الرقم التسلسلي: <bdi dir="ltr">{doc.serialNumber}/{doc.year}</bdi>
               </p>
-              <p className="text-xs text-gray-500 tabular-nums">
+              <p className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                 {isIncomingDocument(doc) 
                   ? <>تاريخ الوصول: <bdi dir="rtl" className="tabular-nums">{formatLongDate(doc.arrivalDate, 'ar')}</bdi></>
                   : <>تاريخ الإصدار: <bdi dir="rtl" className="tabular-nums">{formatLongDate(doc.issueDate, 'ar')}</bdi></>
                 }
               </p>
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-slate-700 dark:text-slate-300">
               {isIncomingDocument(doc) ? 'وارد' : 'صادر'}
             </div>
           </div>

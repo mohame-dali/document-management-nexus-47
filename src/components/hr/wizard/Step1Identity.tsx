@@ -143,7 +143,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-[#2c5282]/70 dark:text-blue-300/70 bg-blue-50/50 dark:bg-blue-950/30">
                   <UserIcon className="w-12 h-12" />
-                  <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{t('hr.form.photo.noPhoto')}</span>
+                  <span className="text-xs text-slate-700 dark:text-slate-300 mt-1 font-medium">{t('hr.form.photo.noPhoto')}</span>
                 </div>
               )}
 
@@ -151,7 +151,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
               {(isUploadingPhoto || (isLoading && Boolean(photoFile))) && (
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center text-white z-10">
                   <RefreshCw className="w-6 h-6 animate-spin text-white" />
-                  <span className="text-[11px] font-medium mt-1">{t('hr.form.photo.uploading')}</span>
+                  <span className="text-[13px] font-medium mt-1">{t('hr.form.photo.uploading')}</span>
                 </div>
               )}
             </div>
@@ -172,7 +172,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
           <div className="flex-1 text-center sm:text-start space-y-3">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{t('hr.form.photo.title')}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+              <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
                 {t('hr.form.photo.formatsHintPrefix')}{' '}
                 <strong className="font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.photo.formatsValue')}</strong>.{' '}
                 {t('hr.form.photo.maxSizeHintPrefix')}{' '}
@@ -258,7 +258,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Nom */}
         <div className="space-y-2">
-          <Label htmlFor="nom" className="text-base font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+          <Label htmlFor="nom" className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
             <span>{t('hr.form.identity.nom.label')}</span>
             <span className="text-red-500">*</span>
           </Label>
@@ -284,7 +284,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Prénom */}
         <div className="space-y-2">
-          <Label htmlFor="prenom" className="text-base font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+          <Label htmlFor="prenom" className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
             <span>{t('hr.form.identity.prenom.label')}</span>
             <span className="text-red-500">*</span>
           </Label>
@@ -310,7 +310,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Groupe A : Nom du père */}
         <div className="space-y-2">
-          <Label htmlFor="nomPere" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="nomPere" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.nomPere.label')}
           </Label>
           <Input
@@ -324,7 +324,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Groupe A : Nom du grand-père */}
         <div className="space-y-2">
-          <Label htmlFor="nomGrandPere" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="nomGrandPere" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.nomGrandPere.label')}
           </Label>
           <Input
@@ -338,7 +338,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Groupe A : Nom de la mère */}
         <div className="space-y-2">
-          <Label htmlFor="nomMere" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="nomMere" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.nomMere.label')}
           </Label>
           <Input
@@ -352,7 +352,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Sexe */}
         <div className="space-y-2">
-          <Label htmlFor="sexe" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="sexe" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.sexe.label')}
           </Label>
           <Select value={sexe} onValueChange={(val) => setSexe(val as PersonnelSexe | 'NONE')}>
@@ -369,7 +369,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Groupe A : Groupe sanguin */}
         <div className="space-y-2">
-          <Label htmlFor="groupeSanguin" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="groupeSanguin" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.groupeSanguin.label')}
           </Label>
           <Select value={groupeSanguin} onValueChange={(val) => setGroupeSanguin(val)}>
@@ -392,7 +392,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Date de naissance */}
         <div className="space-y-2">
-          <Label htmlFor="dateNaissance" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="dateNaissance" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.dateNaissance.label')}
           </Label>
           <Input
@@ -406,7 +406,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Lieu de naissance */}
         <div className="space-y-2">
-          <Label htmlFor="lieuNaissance" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="lieuNaissance" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.lieuNaissance.label')}
           </Label>
           <Input
@@ -420,7 +420,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* CIN */}
         <div className="space-y-2">
-          <Label htmlFor="cin" className="text-base font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+          <Label htmlFor="cin" className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
             <span>{t('hr.form.identity.cin.label')}</span>
             <span className="text-red-500">*</span>
           </Label>
@@ -447,7 +447,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Groupe B : Date d'émission CIN */}
         <div className="space-y-2">
-          <Label htmlFor="dateEmissionCin" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="dateEmissionCin" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.dateEmissionCin.label')}
           </Label>
           <Input
@@ -461,7 +461,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Groupe D : Numéro de passeport */}
         <div className="space-y-2">
-          <Label htmlFor="numeroPasseport" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="numeroPasseport" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.numeroPasseport.label')}
           </Label>
           <Input
@@ -475,7 +475,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         {/* Groupe D : Date de validité du passeport */}
         <div className="space-y-2">
-          <Label htmlFor="dateValiditePasseport" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="dateValiditePasseport" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.dateValiditePasseport.label')}
           </Label>
           <Input
@@ -491,7 +491,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
       {/* Coordonnées */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800">
         <div className="space-y-2">
-          <Label htmlFor="telephone" className="text-base font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1">
+          <Label htmlFor="telephone" className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
             <span>{t('hr.form.identity.telephone.label')}</span>
             <span className="text-red-500">*</span>
           </Label>
@@ -518,7 +518,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="emailPersonnel" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="emailPersonnel" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.emailPersonnel.label')}
           </Label>
           <Input
@@ -544,7 +544,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
         </div>
 
         <div className="space-y-2 md:col-span-2 lg:col-span-1">
-          <Label htmlFor="adresse" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="adresse" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.identity.adresse.label')}
           </Label>
           <Input

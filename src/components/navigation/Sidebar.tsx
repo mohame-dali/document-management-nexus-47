@@ -265,7 +265,7 @@ const Sidebar = () => {
                 <h1 className="text-base font-bold text-white truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
-                <p className="text-xs text-slate-400 truncate mt-0.5">{t('sidebar.documentManagement')}</p>
+                <p className="text-xs text-slate-300 truncate mt-0.5">{t('sidebar.documentManagement')}</p>
               </div>
             )}
           </div>
@@ -311,13 +311,13 @@ const Sidebar = () => {
                   <div className="mt-1">
                     <Badge 
                       variant="outline" 
-                      className={cn("text-[11px] px-2 py-0.2 rounded font-medium", getRoleBadgeColor(currentUser.role))}
+                      className={cn("text-[13px] px-2 py-0.5 rounded font-medium", getRoleBadgeColor(currentUser.role))}
                     >
                       {getRoleLabel(currentUser.role)}
                     </Badge>
                   </div>
                   {currentUser.activeDepartment && (
-                    <p className="text-[11px] text-slate-400 mt-1 truncate">
+                    <p className="text-[13px] text-slate-300 mt-1 truncate">
                       {currentUser.activeDepartment.name}
                     </p>
                   )}
@@ -358,7 +358,7 @@ const Sidebar = () => {
                   )}
                   <item.icon className={cn(
                     "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                    active ? "text-[#FFCB56]" : "text-slate-400 group-hover:text-slate-200"
+                    active ? "text-[#FFCB56]" : "text-slate-300 group-hover:text-white"
                   )} />
                   {expanded ? (
                     <>
@@ -425,7 +425,7 @@ const Sidebar = () => {
             )}
           />
           {expanded && (
-            <span className="text-[11px] font-medium text-slate-300 truncate">
+            <span className="text-[13px] font-medium text-slate-200 truncate">
               {serverStatus === 'connected'
                 ? isFr
                   ? 'Système connecté'

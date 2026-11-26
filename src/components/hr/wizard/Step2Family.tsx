@@ -46,7 +46,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* État civil */}
         <div className="space-y-2">
-          <Label htmlFor="etatCivil" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="etatCivil" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.family.etatCivil.label')}
           </Label>
           <Select value={etatCivil} onValueChange={(val) => setEtatCivil(val)}>
@@ -65,7 +65,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
 
         {/* Nom du conjoint */}
         <div className="space-y-2">
-          <Label htmlFor="nomConjoint" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="nomConjoint" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.family.nomConjoint.label')}
           </Label>
           <Input
@@ -79,7 +79,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
 
         {/* Date de mariage */}
         <div className="space-y-2">
-          <Label htmlFor="dateMariage" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="dateMariage" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.family.dateMariage.label')}
           </Label>
           <Input
@@ -93,7 +93,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
 
         {/* Nombre d'enfants */}
         <div className="space-y-2">
-          <Label htmlFor="nombreEnfants" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="nombreEnfants" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.family.nombreEnfants.label')}
           </Label>
           <Input

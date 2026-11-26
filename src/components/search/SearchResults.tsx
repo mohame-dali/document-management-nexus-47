@@ -71,7 +71,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-8 sm:p-12 min-h-[300px] flex flex-col items-center justify-center text-center" dir="rtl">
         <Loader2 className="h-8 w-8 text-[#2c5282] dark:text-sky-400 animate-spin mb-4" />
         <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">جاري معالجة البحث المتقدم...</h3>
-        <p className="text-base text-[#4a5568] dark:text-slate-400 mt-2 leading-relaxed">
+        <p className="text-base text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
           يتم فحص الوثائق الواردة والصادرة وقواعد بيانات النصوص المفهرسة عبر OCR
         </p>
       </div>
@@ -87,7 +87,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         </div>
         <div>
           <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">جاهز للبحث المتقدم</h3>
-          <p className="text-base text-[#4a5568] dark:text-slate-400 mt-2 max-w-lg mx-auto leading-relaxed">
+          <p className="text-base text-slate-700 dark:text-slate-300 mt-2 max-w-lg mx-auto leading-relaxed">
             استخدم النموذج أعلاه لتحديد الكلمات المفتاحية، السنوات الإدارية، أو الفلاتر الزمنية لعرض نتائج المطابقة.
           </p>
         </div>
@@ -104,7 +104,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         </div>
         <div>
           <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">لم يتم العثور على أي نتائج</h3>
-          <p className="text-base text-[#4a5568] dark:text-slate-400 mt-2 max-w-lg mx-auto leading-relaxed">
+          <p className="text-base text-slate-700 dark:text-slate-300 mt-2 max-w-lg mx-auto leading-relaxed">
             لم تطابق أي وثيقة المعايير المحددة. جرب استخدام كلمات مفتاحية أخرى أو توسيع نطاق البحث الزمني.
           </p>
         </div>
@@ -124,7 +124,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100 leading-normal flex items-center gap-2">
               نتائج البحث
             </h2>
-            <p className="text-base text-[#4a5568] dark:text-slate-400 leading-relaxed mt-0.5">
+            <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-0.5">
               تم العثور على وثائق مطابقة وفقاً للمعايير المدخلة
             </p>
           </div>
@@ -143,7 +143,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               className={`h-9 px-3 text-base flex items-center gap-1.5 transition-colors duration-150 ${
                 viewMode === 'table'
                   ? 'bg-[#2c5282] text-white'
-                  : 'text-[#4a5568] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
               title="عرض كجدول"
             >
@@ -156,7 +156,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               className={`h-9 px-3 text-base flex items-center gap-1.5 border-r border-slate-300 dark:border-slate-700 transition-colors duration-150 ${
                 viewMode === 'grid'
                   ? 'bg-[#2c5282] text-white'
-                  : 'text-[#4a5568] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
               title="عرض كبطاقات"
             >
@@ -204,15 +204,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <td className="py-3.5 px-4 text-[#2d3748] dark:text-slate-200 font-medium leading-relaxed max-w-xs md:max-w-md">
                       <div className="line-clamp-2">{doc.subject}</div>
                       {doc.typeDocument && (
-                        <span className="text-xs text-[#5f6b7d] dark:text-slate-400 block mt-0.5">
+                        <span className="text-xs text-slate-700 dark:text-slate-300 block mt-0.5">
                           {doc.typeDocument}
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-[#4a5568] dark:text-slate-300 whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       {doc.source || '-'}
                     </td>
-                    <td className="py-3.5 px-4 text-[#4a5568] dark:text-slate-300 whitespace-nowrap tabular-nums">
+                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap tabular-nums">
                       <bdi dir="ltr">{formatDate(doc.arrivalDate)}</bdi>
                     </td>
                     <td className="py-3.5 px-4 whitespace-nowrap text-center">
@@ -264,15 +264,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                     <td className="py-3.5 px-4 text-[#2d3748] dark:text-slate-200 font-medium leading-relaxed max-w-xs md:max-w-md">
                       <div className="line-clamp-2">{doc.subject}</div>
                       {doc.typeDocument && (
-                        <span className="text-xs text-[#5f6b7d] dark:text-slate-400 block mt-0.5">
+                        <span className="text-xs text-slate-700 dark:text-slate-300 block mt-0.5">
                           {doc.typeDocument}
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-[#4a5568] dark:text-slate-300 whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap">
                       {sourceName || '-'}
                     </td>
-                    <td className="py-3.5 px-4 text-[#4a5568] dark:text-slate-300 whitespace-nowrap tabular-nums">
+                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 whitespace-nowrap tabular-nums">
                       <bdi dir="ltr">{formatDate(doc.issueDate)}</bdi>
                     </td>
                     <td className="py-3.5 px-4 whitespace-nowrap text-center">
@@ -326,7 +326,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                       #{doc.serialNumber} / {doc.year}
                     </span>
                     {doc.typeDocument && (
-                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[#4a5568] dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                         {doc.typeDocument}
                       </span>
                     )}
@@ -337,7 +337,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   {doc.subject}
                 </h3>
 
-                <div className="grid grid-cols-2 gap-2 text-sm text-[#4a5568] dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-1.5 truncate tabular-nums">
                     <Calendar className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                     <bdi dir="ltr">{formatDate(doc.arrivalDate)}</bdi>
@@ -395,7 +395,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                       #{doc.serialNumber} / {doc.year}
                     </span>
                     {doc.typeDocument && (
-                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[#4a5568] dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                         {doc.typeDocument}
                       </span>
                     )}
@@ -406,7 +406,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   {doc.subject}
                 </h3>
 
-                <div className="grid grid-cols-2 gap-2 text-sm text-[#4a5568] dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-1.5 truncate tabular-nums">
                     <Calendar className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                     <bdi dir="ltr">{formatDate(doc.issueDate)}</bdi>
@@ -448,7 +448,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
       {/* Pagination & Load More Section */}
       <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-base text-[#4a5568] dark:text-slate-400 tabular-nums">
+        <div className="text-base text-slate-700 dark:text-slate-300 tabular-nums">
           تم عرض <span className="font-semibold text-[#1a202c] dark:text-slate-100">{combinedResultsCount}</span> من أصل{' '}
           <span className="font-semibold text-[#1a202c] dark:text-slate-100">{totalCount || combinedResultsCount}</span> وثيقة
         </div>
@@ -473,7 +473,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           )}
 
           {!hasNextPage && combinedResultsCount > 0 && (
-            <span className="text-sm font-medium text-[#5f6b7d] dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
               تم الوصول لنهاية النتائج
             </span>
           )}

@@ -556,7 +556,7 @@ const SetupWizardPage: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">معالج الإعداد الأولي للنظام</h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                 تهيئة الهيكلية الإدارية والتعريفية وحسابات الإدارة في خطوات موجهة وبسيطة
               </p>
             </div>
@@ -579,9 +579,9 @@ const SetupWizardPage: React.FC = () => {
                 ? 'bg-[#ebf8ff] border-[#2c5282] text-[#2c5282] font-bold shadow-xs' 
                 : currentStep > 1 
                   ? 'bg-gray-50 border-emerald-200 text-emerald-700' 
-                  : 'bg-white border-gray-200 text-gray-400'
+                  : 'bg-white border-gray-200 text-slate-700 dark:text-slate-300'
             }`}>
-              <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+              <div className="flex items-center justify-center gap-1 text-[13px] sm:text-xs">
                 <span>1/6</span>
                 <span className="hidden sm:inline">اسم الإدارة</span>
               </div>
@@ -593,9 +593,9 @@ const SetupWizardPage: React.FC = () => {
                 ? 'bg-[#ebf8ff] border-[#2c5282] text-[#2c5282] font-bold shadow-xs' 
                 : currentStep > 2 
                   ? 'bg-gray-50 border-emerald-200 text-emerald-700' 
-                  : 'bg-white border-gray-200 text-gray-400'
+                  : 'bg-white border-gray-200 text-slate-700 dark:text-slate-300'
             }`}>
-              <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+              <div className="flex items-center justify-center gap-1 text-[13px] sm:text-xs">
                 <span>2/6</span>
                 <span className="hidden sm:inline">الأقسام</span>
               </div>
@@ -607,9 +607,9 @@ const SetupWizardPage: React.FC = () => {
                 ? 'bg-[#ebf8ff] border-[#2c5282] text-[#2c5282] font-bold shadow-xs' 
                 : currentStep > 3 
                   ? 'bg-gray-50 border-emerald-200 text-emerald-700' 
-                  : 'bg-white border-gray-200 text-gray-400'
+                  : 'bg-white border-gray-200 text-slate-700 dark:text-slate-300'
             }`}>
-              <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+              <div className="flex items-center justify-center gap-1 text-[13px] sm:text-xs">
                 <span>3/6</span>
                 <span className="hidden sm:inline">الأقسام السيادية</span>
               </div>
@@ -621,9 +621,9 @@ const SetupWizardPage: React.FC = () => {
                 ? 'bg-[#ebf8ff] border-[#2c5282] text-[#2c5282] font-bold shadow-xs' 
                 : currentStep > 4 
                   ? 'bg-gray-50 border-emerald-200 text-emerald-700' 
-                  : 'bg-white border-gray-200 text-gray-400'
+                  : 'bg-white border-gray-200 text-slate-700 dark:text-slate-300'
             }`}>
-              <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+              <div className="flex items-center justify-center gap-1 text-[13px] sm:text-xs">
                 <span>4/6</span>
                 <span className="hidden sm:inline">مدير الإدارة</span>
               </div>
@@ -635,9 +635,9 @@ const SetupWizardPage: React.FC = () => {
                 ? 'bg-[#ebf8ff] border-[#2c5282] text-[#2c5282] font-bold shadow-xs' 
                 : currentStep > 5 
                   ? 'bg-gray-50 border-emerald-200 text-emerald-700' 
-                  : 'bg-white border-gray-200 text-gray-400'
+                  : 'bg-white border-gray-200 text-slate-700 dark:text-slate-300'
             }`}>
-              <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+              <div className="flex items-center justify-center gap-1 text-[13px] sm:text-xs">
                 <span>5/6</span>
                 <span className="hidden sm:inline">مسؤول RH</span>
               </div>
@@ -647,9 +647,9 @@ const SetupWizardPage: React.FC = () => {
             <div className={`p-2 rounded-lg border transition-all ${
               currentStep === 6 
                 ? 'bg-[#ebf8ff] border-[#2c5282] text-[#2c5282] font-bold shadow-xs' 
-                : 'bg-white border-gray-200 text-gray-400'
+                : 'bg-white border-gray-200 text-slate-700 dark:text-slate-300'
             }`}>
-              <div className="flex items-center justify-center gap-1 text-[11px] sm:text-xs">
+              <div className="flex items-center justify-center gap-1 text-[13px] sm:text-xs">
                 <span>6/6</span>
                 <span className="hidden sm:inline">الملخص والتأكيد</span>
               </div>
@@ -669,13 +669,13 @@ const SetupWizardPage: React.FC = () => {
                   <Building className="w-5 h-5 text-[#2c5282]" />
                   الخطوة 1 : تحديد اسم وهوية المؤسسة الإدارية
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 mt-1">
+                <CardDescription className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                   سيظهر هذا الاسم في أعلى الشريط العلوي (Header)، الهيكل التنظيمي، والتقارير الرسمية لنظام DMS.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="nomAdmin" className="text-sm font-semibold text-gray-700">
+                  <Label htmlFor="nomAdmin" className="text-sm font-semibold text-slate-800">
                     اسم الإدارة أو المؤسسة <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -683,16 +683,16 @@ const SetupWizardPage: React.FC = () => {
                     value={nomAdministration}
                     onChange={(e) => setNomAdministration(e.target.value)}
                     placeholder="مثال: إدارة التشفير والإعلام الآلي"
-                    className="h-11 text-sm border-gray-300 focus:border-[#2c5282] focus:ring-[#2c5282]"
+                    className="h-11 text-sm border-slate-300 dark:border-slate-700 focus:border-[#2c5282] focus:ring-[#2c5282]"
                     autoFocus
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-700 dark:text-slate-300">
                     حقل إجباري. يُرجى استخدام التسمية الرسمية المعتمدة للمؤسسة.
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="logoAdmin" className="text-sm font-semibold text-gray-700">
+                  <Label htmlFor="logoAdmin" className="text-sm font-semibold text-slate-800">
                     رابط أو مسار الشعار (اختياري)
                   </Label>
                   <div className="flex gap-2">
@@ -701,10 +701,10 @@ const SetupWizardPage: React.FC = () => {
                       value={logoAdministration}
                       onChange={(e) => setLogoAdministration(e.target.value)}
                       placeholder="/uploads/logo.png أو رابط صورة"
-                      className="h-11 text-sm border-gray-300"
+                      className="h-11 text-sm border-slate-300 dark:border-slate-700"
                     />
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-700 dark:text-slate-300">
                     يمكن تحديث أو رفع شعار المؤسسة لاحقاً من صفحة الإعدادات العامة.
                   </p>
                 </div>
@@ -722,7 +722,7 @@ const SetupWizardPage: React.FC = () => {
                       <Layers className="w-5 h-5 text-[#2c5282]" />
                       الخطوة 2 : تأسيس الأقسام الإدارية (3 أقسام على الأقل)
                     </CardTitle>
-                    <CardDescription className="text-xs text-gray-500 mt-1">
+                    <CardDescription className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                       يجب تسجيل ما لا يقل عن 3 أقسام (الإدارة العامة، مكتب الضبط، والموارد البشرية RH).
                     </CardDescription>
                   </div>
@@ -767,18 +767,18 @@ const SetupWizardPage: React.FC = () => {
                     <tbody className="divide-y divide-gray-100">
                       {departments.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="p-6 text-center text-gray-400">
+                          <td colSpan={4} className="p-6 text-center text-slate-700 dark:text-slate-300">
                             لا توجد أقسام مسجلة حتى الآن. انقر على "إضافة قسم جديد" للمتابعة.
                           </td>
                         </tr>
                       ) : (
                         departments.map((dept, index) => (
                           <tr key={dept._id} className="hover:bg-gray-50/50">
-                            <td className="p-3 font-mono text-gray-400">{index + 1}</td>
+                            <td className="p-3 font-mono text-slate-700 dark:text-slate-300">{index + 1}</td>
                             <td className="p-3 font-semibold text-gray-900">{dept.name}</td>
-                            <td className="p-3 text-gray-500">{dept.description || '-'}</td>
+                            <td className="p-3 text-slate-700 dark:text-slate-300">{dept.description || '-'}</td>
                             <td className="p-3 text-center">
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                              <span className="px-2 py-0.5 rounded-full text-[13px] font-semibold bg-emerald-100 text-emerald-800">
                                 نشط
                               </span>
                             </td>
@@ -800,7 +800,7 @@ const SetupWizardPage: React.FC = () => {
                   <Sliders className="w-5 h-5 text-[#2c5282]" />
                   الخطوة 3 : تخصيص الأقسام السيادية والوظيفية (OrganizationSettings)
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 mt-1">
+                <CardDescription className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                   تحديد الأقسام المسؤولة عن الموارد البشرية، مكتب الضبط، وإدارة المؤسسة. يمنع اختيار نفس القسم لأكثر من وظيفة.
                 </CardDescription>
               </CardHeader>
@@ -812,7 +812,7 @@ const SetupWizardPage: React.FC = () => {
                     <span className="w-2 h-2 rounded-full bg-blue-600"></span>
                     قسم الموارد البشرية (rhDepartmentId) <span className="text-red-500">*</span>
                   </Label>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[13px] text-slate-700 dark:text-slate-300">
                     القسم المخول بإدارة شؤون الموظفين، الحضور والانصراف، والمسار المهني.
                   </p>
                   <select
@@ -834,7 +834,7 @@ const SetupWizardPage: React.FC = () => {
                     <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
                     مكتب الضبط (bureauOrdreDepartmentId) <span className="text-red-500">*</span>
                   </Label>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[13px] text-slate-700 dark:text-slate-300">
                     القسم المسؤول عن تسجيل وتوزيع البريد والمراسلات الصادرة والواردة.
                   </p>
                   <select
@@ -856,7 +856,7 @@ const SetupWizardPage: React.FC = () => {
                     <span className="w-2 h-2 rounded-full bg-purple-600"></span>
                     الإدارة العامة / مكتب المدير (bureauDirecteurDepartmentId) <span className="text-red-500">*</span>
                   </Label>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[13px] text-slate-700 dark:text-slate-300">
                     مكتب المدير العام المشرف على كامل المراسلات والمصالح الإدارية.
                   </p>
                   <select
@@ -895,7 +895,7 @@ const SetupWizardPage: React.FC = () => {
                   <UserCheck className="w-5 h-5 text-[#2c5282]" />
                   الخطوة 4 : إنشاء حساب مدير الإدارة
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 mt-1">
+                <CardDescription className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                   Le Directeur de l'administration — accès en lecture seule
                 </CardDescription>
               </CardHeader>
@@ -928,7 +928,7 @@ const SetupWizardPage: React.FC = () => {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="dirNom" className="text-xs font-semibold text-gray-700">
+                      <Label htmlFor="dirNom" className="text-xs font-semibold text-slate-800">
                         اللقب (Nom) <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -941,7 +941,7 @@ const SetupWizardPage: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="dirPrenom" className="text-xs font-semibold text-gray-700">
+                      <Label htmlFor="dirPrenom" className="text-xs font-semibold text-slate-800">
                         الاسم (Prénom) <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -964,7 +964,7 @@ const SetupWizardPage: React.FC = () => {
                   </h3>
                   
                   <div className="space-y-1.5">
-                    <Label htmlFor="dirUsername" className="text-xs font-semibold text-gray-700">
+                    <Label htmlFor="dirUsername" className="text-xs font-semibold text-slate-800">
                       اسم المستخدم (Username) <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -976,7 +976,7 @@ const SetupWizardPage: React.FC = () => {
                       className="h-10 text-xs"
                       dir="ltr"
                     />
-                    <p className="text-[11px] text-gray-500">
+                    <p className="text-[13px] text-slate-700 dark:text-slate-300">
                       الاسم الافتراضي المقترح: <code className="bg-gray-100 px-1 py-0.5 rounded">directeur</code>
                     </p>
                   </div>
@@ -984,7 +984,7 @@ const SetupWizardPage: React.FC = () => {
                   {!directorCreated && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="dirPassword" className="text-xs font-semibold text-gray-700">
+                        <Label htmlFor="dirPassword" className="text-xs font-semibold text-slate-800">
                           كلمة المرور (6 أحرف على الأقل) <span className="text-red-500">*</span>
                         </Label>
                         <Input
@@ -999,7 +999,7 @@ const SetupWizardPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="dirConfirmPassword" className="text-xs font-semibold text-gray-700">
+                        <Label htmlFor="dirConfirmPassword" className="text-xs font-semibold text-slate-800">
                           تأكيد كلمة المرور <span className="text-red-500">*</span>
                         </Label>
                         <Input
@@ -1029,7 +1029,7 @@ const SetupWizardPage: React.FC = () => {
                   <UserPlus className="w-5 h-5 text-[#2c5282]" />
                   الخطوة 5 : إنشاء حساب مسؤول الموارد البشرية
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 mt-1">
+                <CardDescription className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                   Ce compte permettra de créer et compléter les fiches du personnel
                 </CardDescription>
               </CardHeader>
@@ -1062,7 +1062,7 @@ const SetupWizardPage: React.FC = () => {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="rhNom" className="text-xs font-semibold text-gray-700">
+                      <Label htmlFor="rhNom" className="text-xs font-semibold text-slate-800">
                         اللقب (Nom) <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -1075,7 +1075,7 @@ const SetupWizardPage: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="rhPrenom" className="text-xs font-semibold text-gray-700">
+                      <Label htmlFor="rhPrenom" className="text-xs font-semibold text-slate-800">
                         الاسم (Prénom) <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -1098,7 +1098,7 @@ const SetupWizardPage: React.FC = () => {
                   </h3>
                   
                   <div className="space-y-1.5">
-                    <Label htmlFor="rhUsername" className="text-xs font-semibold text-gray-700">
+                    <Label htmlFor="rhUsername" className="text-xs font-semibold text-slate-800">
                       اسم المستخدم (Username) <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -1110,7 +1110,7 @@ const SetupWizardPage: React.FC = () => {
                       className="h-10 text-xs"
                       dir="ltr"
                     />
-                    <p className="text-[11px] text-gray-500">
+                    <p className="text-[13px] text-slate-700 dark:text-slate-300">
                       الاسم الافتراضي المقترح: <code className="bg-gray-100 px-1 py-0.5 rounded">rh_manager</code>
                     </p>
                   </div>
@@ -1118,7 +1118,7 @@ const SetupWizardPage: React.FC = () => {
                   {!rhManagerCreated && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="rhPassword" className="text-xs font-semibold text-gray-700">
+                        <Label htmlFor="rhPassword" className="text-xs font-semibold text-slate-800">
                           كلمة المرور (6 أحرف على الأقل) <span className="text-red-500">*</span>
                         </Label>
                         <Input
@@ -1133,7 +1133,7 @@ const SetupWizardPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="rhConfirmPassword" className="text-xs font-semibold text-gray-700">
+                        <Label htmlFor="rhConfirmPassword" className="text-xs font-semibold text-slate-800">
                           تأكيد كلمة المرور <span className="text-red-500">*</span>
                         </Label>
                         <Input
@@ -1163,7 +1163,7 @@ const SetupWizardPage: React.FC = () => {
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                   الخطوة 6 : مراجعة الملخص النهائي واعتماد التهيئة
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 mt-1">
+                <CardDescription className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                   الملخص الشامل للهيكلية الإدارية، الحسابات المنشأة، والخطوات التالية
                 </CardDescription>
               </CardHeader>
@@ -1178,12 +1178,12 @@ const SetupWizardPage: React.FC = () => {
                       الهوية الرسمية للمؤسسة
                     </h3>
                     <div className="space-y-1 text-xs">
-                      <p className="text-gray-500">اسم الإدارة :</p>
+                      <p className="text-slate-700 dark:text-slate-300">اسم الإدارة :</p>
                       <p className="font-bold text-gray-900 text-sm">{nomAdministration}</p>
                     </div>
                     {logoAdministration && (
                       <div className="space-y-1 text-xs pt-1">
-                        <p className="text-gray-500">رابط الشعار :</p>
+                        <p className="text-slate-700 dark:text-slate-300">رابط الشعار :</p>
                         <p className="font-mono text-gray-700 truncate">{logoAdministration}</p>
                       </div>
                     )}
@@ -1196,13 +1196,13 @@ const SetupWizardPage: React.FC = () => {
                         <Layers className="w-4 h-4 text-[#2c5282]" />
                         الأقسام الإدارية المؤسسة
                       </span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                      <span className="text-[13px] font-mono px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
                         {departments.length} أقسام
                       </span>
                     </h3>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {departments.map(d => (
-                        <span key={d._id} className="px-2 py-1 bg-white border border-gray-200 text-gray-700 rounded text-[11px]">
+                        <span key={d._id} className="px-2 py-1 bg-white border border-gray-200 text-gray-700 rounded text-[13px]">
                           {d.name}
                         </span>
                       ))}
@@ -1217,15 +1217,15 @@ const SetupWizardPage: React.FC = () => {
                     </h3>
                     <div className="space-y-2 text-xs">
                       <div>
-                        <span className="text-gray-500">الموارد البشرية (RH) : </span>
+                        <span className="text-slate-700 dark:text-slate-300">الموارد البشرية (RH) : </span>
                         <strong className="text-gray-900">{getDeptName(rhDepartmentId)}</strong>
                       </div>
                       <div>
-                        <span className="text-gray-500">مكتب الضبط (BO) : </span>
+                        <span className="text-slate-700 dark:text-slate-300">مكتب الضبط (BO) : </span>
                         <strong className="text-gray-900">{getDeptName(bureauOrdreDepartmentId)}</strong>
                       </div>
                       <div>
-                        <span className="text-gray-500">الإدارة العامة (Direction) : </span>
+                        <span className="text-slate-700 dark:text-slate-300">الإدارة العامة (Direction) : </span>
                         <strong className="text-gray-900">{getDeptName(bureauDirecteurDepartmentId)}</strong>
                       </div>
                     </div>
@@ -1242,9 +1242,9 @@ const SetupWizardPage: React.FC = () => {
                         <div className="font-semibold text-gray-900">
                           مدير الإدارة (Directeur) : {directorNom} {directorPrenom}
                         </div>
-                        <div className="text-[11px] text-gray-500 flex items-center justify-between mt-1">
+                        <div className="text-[13px] text-slate-700 dark:text-slate-300 flex items-center justify-between mt-1">
                           <span>اسم الدخول: <code className="font-mono text-gray-700">{directorUsername}</code></span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-semibold">
+                          <span className="px-1.5 py-0.5 rounded text-[13px] bg-emerald-100 text-emerald-800 font-semibold">
                             Fiche Personnel : créée (statut: actif)
                           </span>
                         </div>
@@ -1254,9 +1254,9 @@ const SetupWizardPage: React.FC = () => {
                         <div className="font-semibold text-gray-900">
                           مسؤول الموارد البشرية (RH Manager) : {rhNom} {rhPrenom}
                         </div>
-                        <div className="text-[11px] text-gray-500 flex items-center justify-between mt-1">
+                        <div className="text-[13px] text-slate-700 dark:text-slate-300 flex items-center justify-between mt-1">
                           <span>اسم الدخول: <code className="font-mono text-gray-700">{rhUsername}</code></span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-semibold">
+                          <span className="px-1.5 py-0.5 rounded text-[13px] bg-emerald-100 text-emerald-800 font-semibold">
                             Fiche Personnel : créée (statut: actif)
                           </span>
                         </div>
@@ -1275,23 +1275,23 @@ const SetupWizardPage: React.FC = () => {
                   <ol className="list-decimal list-inside space-y-1.5 text-xs text-amber-800 pr-2 leading-relaxed">
                     <li>
                       <strong>Déconnectez-vous et connectez-vous avec le compte RH Manager</strong>
-                      <span className="block text-[11px] text-amber-700 mr-5">تسجيل الخروج من حساب المشرف الحالي، ثم الدخول بحساب مسؤول الموارد البشرية.</span>
+                      <span className="block text-[13px] text-amber-700 mr-5">تسجيل الخروج من حساب المشرف الحالي، ثم الدخول بحساب مسؤول الموارد البشرية.</span>
                     </li>
                     <li>
                       <strong>Complétez votre fiche Personnel (CIN, poste, etc.)</strong>
-                      <span className="block text-[11px] text-amber-700 mr-5">استكمال البيانات الشخصية والمهنية لبطاقة مسؤول الموارد البشرية.</span>
+                      <span className="block text-[13px] text-amber-700 mr-5">استكمال البيانات الشخصية والمهنية لبطاقة مسؤول الموارد البشرية.</span>
                     </li>
                     <li>
                       <strong>Complétez la fiche du Directeur</strong>
-                      <span className="block text-[11px] text-amber-700 mr-5">استكمال ملف مدير الإدارة بالمعلومات الرسمية (رقم بطاقة التعريف، المنصب، إلخ).</span>
+                      <span className="block text-[13px] text-amber-700 mr-5">استكمال ملف مدير الإدارة بالمعلومات الرسمية (رقم بطاقة التعريف، المنصب، إلخ).</span>
                     </li>
                     <li>
                       <strong>Créez les fiches du personnel des autres départements</strong>
-                      <span className="block text-[11px] text-amber-700 mr-5">إنشاء بطاقات الموظفين لباقي الأقسام (مكتب الضبط BO، المخبر LABO، الجودة QT...).</span>
+                      <span className="block text-[13px] text-amber-700 mr-5">إنشاء بطاقات الموظفين لباقي الأقسام (مكتب الضبط BO، المخبر LABO، الجودة QT...).</span>
                     </li>
                     <li>
                       <strong>Créez leurs comptes utilisateurs</strong>
-                      <span className="block text-[11px] text-amber-700 mr-5">إنشاء حسابات المستخدمين وربطها بالبطاقات المهنية المنشأة.</span>
+                      <span className="block text-[13px] text-amber-700 mr-5">إنشاء حسابات المستخدمين وربطها بالبطاقات المهنية المنشأة.</span>
                     </li>
                   </ol>
                 </div>
@@ -1369,7 +1369,7 @@ const SetupWizardPage: React.FC = () => {
             <DialogTitle className="text-base font-bold text-gray-800">
               إضافة قسم إداري جديد
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500">
+            <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
               أدخل اسم القسم ووصفه لإنشائه وإدراجه في الهيكل الإداري.
             </DialogDescription>
           </DialogHeader>

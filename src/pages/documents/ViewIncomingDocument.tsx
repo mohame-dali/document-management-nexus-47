@@ -230,11 +230,11 @@ const ViewIncomingDocument: React.FC = () => {
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-4 sm:p-6 lg:p-8 space-y-4">
       
       {/* Fil d'Ariane (Breadcrumbs) */}
-      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
         <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('documents.viewIncoming.breadcrumb.home')}</Link>
-        <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+        <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
         <Link to="/dashboard/incoming-documents" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('documents.viewIncoming.breadcrumb.incomingDocuments')}</Link>
-        <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+        <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
         <span className="text-slate-900 dark:text-slate-100 font-medium truncate max-w-md">
           {document.subject || t('documents.viewIncoming.fallback.untitled', { serialNumber: document.serialNumber })}
         </span>
@@ -262,7 +262,7 @@ const ViewIncomingDocument: React.FC = () => {
               <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-blue-300 leading-normal tabular-nums">
                 {t('documents.viewIncoming.title.incomingNumber', { serialNumber: document.serialNumber })}
               </h1>
-              <span className="text-base font-bold text-slate-600 dark:text-slate-400 tabular-nums">
+              <span className="text-base font-bold text-slate-700 dark:text-slate-300 tabular-nums">
                 {t('documents.viewIncoming.title.yearSuffix', { year: document.year })}
               </span>
             </div>
@@ -362,15 +362,15 @@ const ViewIncomingDocument: React.FC = () => {
           </div>
 
           {/* Registration Date Pill */}
-          <div className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5 tabular-nums">
-            <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+          <div className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5 tabular-nums">
+            <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
             <span>{t('documents.viewIncoming.badge.registeredOn', { date: formatDateTime(document.createdAt, dateLang) })}</span>
           </div>
         </div>
 
         {/* Document Main Subject (H2 display) */}
         <div className="space-y-2">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
+          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wider uppercase">
             {t('documents.viewIncoming.subject.title')}
           </span>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 leading-relaxed">
@@ -382,7 +382,7 @@ const ViewIncomingDocument: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
           {/* 1. Source / Sender */}
           <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
               <Building2 className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.source')}</span>
             </div>
@@ -393,7 +393,7 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* 2. Arrival Date */}
           <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
               <Calendar className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.arrivalDate')}</span>
             </div>
@@ -404,7 +404,7 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* 3. Original Correspondence */}
           <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
               <Hash className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.originalCorrespondence')}</span>
             </div>
@@ -414,7 +414,7 @@ const ViewIncomingDocument: React.FC = () => {
                   <span><bdi dir="ltr">#{document.correspondenceNumber}</bdi></span>
                   <CopyReferenceButton value={document.correspondenceNumber} />
                   {document.correspondenceDate && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal me-1.5 tabular-nums">
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-normal me-1.5 tabular-nums">
                       (<bdi dir={dateDir}>{formatLongDate(document.correspondenceDate, dateLang)}</bdi>)
                     </span>
                   )}
@@ -427,7 +427,7 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* 4. Responsible Officer */}
           <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
               <User className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.responsible')}</span>
             </div>
@@ -457,7 +457,7 @@ const ViewIncomingDocument: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-base">
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.internalSerial')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.adminInfo.internalSerial')}</span>
                 <div className="inline-flex items-center gap-1.5 text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                   <bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi>
                   <CopyReferenceButton value={`#${document.serialNumber} / ${document.year}`} />
@@ -465,12 +465,12 @@ const ViewIncomingDocument: React.FC = () => {
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.arrivalDateAtInstitution')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.adminInfo.arrivalDateAtInstitution')}</span>
                 <span className="text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums"><bdi dir={dateDir}>{formatLongDate(document.arrivalDate, dateLang)}</bdi></span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.senderCorrespondenceNumber')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.adminInfo.senderCorrespondenceNumber')}</span>
                 <div className="inline-flex items-center gap-1.5 text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums">
                   {document.correspondenceNumber ? (
                     <>
@@ -484,26 +484,26 @@ const ViewIncomingDocument: React.FC = () => {
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.originalIssueDate')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.adminInfo.originalIssueDate')}</span>
                 <span className="text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums">
                   {document.correspondenceDate ? <bdi dir={dateDir}>{formatLongDate(document.correspondenceDate, dateLang)}</bdi> : t('documents.viewIncoming.fallback.unspecified')}
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.documentType')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.adminInfo.documentType')}</span>
                 <span className="text-base font-medium text-slate-900 dark:text-slate-100">{document.typeDocument || t('documents.viewIncoming.fallback.unclassified')}</span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.relatedActivity')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.adminInfo.relatedActivity')}</span>
                 <span className="text-base font-medium text-slate-900 dark:text-slate-100">
                   {document.activity ? (
                     <span className="inline-flex items-center gap-1.5 text-[#2c5282] dark:text-blue-300 font-semibold">
                       <Bookmark className="h-4 w-4" />
                       {document.activity}
                       {document.dateActivity && (
-                        <span className="text-xs text-slate-500 dark:text-slate-400 font-normal tabular-nums">
+                        <span className="text-xs text-slate-700 dark:text-slate-300 font-normal tabular-nums">
                           {t('documents.viewIncoming.adminInfo.onDate', { date: formatLongDate(document.dateActivity, dateLang) })}
                         </span>
                       )}
@@ -529,7 +529,7 @@ const ViewIncomingDocument: React.FC = () => {
 
             <div className="space-y-4 text-base">
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.sender.sourceLabel')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.sender.sourceLabel')}</span>
                 <p className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {document.source || t('documents.viewIncoming.fallback.unspecified')}
                 </p>
@@ -538,7 +538,7 @@ const ViewIncomingDocument: React.FC = () => {
               <Separator className="dark:bg-slate-800" />
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-2">{t('documents.viewIncoming.sender.assignedDepartments')}</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-2">{t('documents.viewIncoming.sender.assignedDepartments')}</span>
                 {document.assignedTo && document.assignedTo.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {document.assignedTo.map((dept, index) => (
@@ -546,13 +546,13 @@ const ViewIncomingDocument: React.FC = () => {
                         key={index} 
                         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700"
                       >
-                        <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                        <Users className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                         {dept.name}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-base text-slate-500 dark:text-slate-400">{t('documents.viewIncoming.sender.noDepartments')}</p>
+                  <p className="text-base text-slate-700 dark:text-slate-300">{t('documents.viewIncoming.sender.noDepartments')}</p>
                 )}
               </div>
             </div>
@@ -570,7 +570,7 @@ const ViewIncomingDocument: React.FC = () => {
                     <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                       {t('documents.viewIncoming.ocr.title')}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('documents.viewIncoming.ocr.subtitle')}</p>
+                    <p className="text-xs text-slate-700 dark:text-slate-300">{t('documents.viewIncoming.ocr.subtitle')}</p>
                   </div>
                 </div>
 
@@ -634,20 +634,20 @@ const ViewIncomingDocument: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
                   <div className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                     <bdi dir="ltr">#{populatedAnswer.serialNumber} / {populatedAnswer.year}</bdi>
                     <CopyReferenceButton value={`#${populatedAnswer.serialNumber} / ${populatedAnswer.year}`} />
                   </div>
                   {populatedAnswer.issueDate && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400 me-1.5 block tabular-nums">
+                    <span className="text-xs text-slate-700 dark:text-slate-300 me-1.5 block tabular-nums">
                       {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatLongDate(populatedAnswer.issueDate, dateLang) })}
                     </span>
                   )}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
                   <p className="font-medium text-slate-900 dark:text-slate-100 line-clamp-2">
                     {populatedAnswer.subject}
                   </p>
@@ -682,18 +682,18 @@ const ViewIncomingDocument: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
                 <div>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
                   <div className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                     <bdi dir="ltr">#{answerDocument.serialNumber} / {answerDocument.year}</bdi>
                     <CopyReferenceButton value={`#${answerDocument.serialNumber} / ${answerDocument.year}`} />
                   </div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 me-1.5 block tabular-nums">
+                  <span className="text-xs text-slate-700 dark:text-slate-300 me-1.5 block tabular-nums">
                     {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatLongDate(answerDocument.issueDate, dateLang) })}
                   </span>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
                   <p className="font-medium text-slate-900 dark:text-slate-100 line-clamp-2">
                     {answerDocument.subject}
                   </p>
@@ -727,14 +727,14 @@ const ViewIncomingDocument: React.FC = () => {
             </div>
 
             <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg flex items-center gap-3">
-              <FolderTree className="h-6 w-6 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+              <FolderTree className="h-6 w-6 text-slate-700 dark:text-slate-300 flex-shrink-0" />
               <div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 block">{t('documents.viewIncoming.sidebar.folder.current')}</span>
+                <span className="text-xs text-slate-700 dark:text-slate-300 block">{t('documents.viewIncoming.sidebar.folder.current')}</span>
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">{folderName}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
               {t('documents.viewIncoming.sidebar.folder.description')}
             </p>
           </div>
@@ -764,7 +764,7 @@ const ViewIncomingDocument: React.FC = () => {
                 {responsibleName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 block">{t('documents.viewIncoming.sidebar.responsible.assignedTo')}</span>
+                <span className="text-xs text-slate-700 dark:text-slate-300 block">{t('documents.viewIncoming.sidebar.responsible.assignedTo')}</span>
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">{responsibleName}</span>
               </div>
             </div>
@@ -787,7 +787,7 @@ const ViewIncomingDocument: React.FC = () => {
               </li>
 
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.responsibleUser ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.responsibleUser ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`} />
                 <div>
                   <span className="font-semibold text-slate-900 dark:text-slate-100 block">{t('documents.viewIncoming.sidebar.summary.responsibleAssignment')}</span>
                   <span>{document.responsibleUser ? responsibleName : t('documents.viewIncoming.sidebar.summary.pending')}</span>
@@ -801,7 +801,7 @@ const ViewIncomingDocument: React.FC = () => {
                       ? 'text-amber-500'
                       : document.answer
                         ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-slate-400 dark:text-slate-500'
+                        : 'text-slate-700 dark:text-slate-300'
                   }`}
                 />
                 <div>
@@ -845,7 +845,7 @@ const ViewIncomingDocument: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100">
                 {t('documents.viewIncoming.attachments.title')}
               </h2>
-              <p className="text-base text-[#4a5568] dark:text-slate-300">
+              <p className="text-base text-slate-700 dark:text-slate-300">
                 {t('documents.viewIncoming.attachments.subtitle')}
               </p>
             </div>
@@ -859,7 +859,7 @@ const ViewIncomingDocument: React.FC = () => {
                   type="button"
                   onClick={() => setPreviewTab('incoming')}
                   className={`h-9 px-3 text-sm font-semibold transition-colors duration-200 ${
-                    previewTab === 'incoming' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                    previewTab === 'incoming' ? 'bg-[#2c5282] text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   {t('documents.viewIncoming.viewer.tab.incoming')}
@@ -868,7 +868,7 @@ const ViewIncomingDocument: React.FC = () => {
                   type="button"
                   onClick={() => setPreviewTab('answer')}
                   className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] dark:border-slate-700 transition-colors duration-200 ${
-                    previewTab === 'answer' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                    previewTab === 'answer' ? 'bg-[#2c5282] text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   {t('documents.viewIncoming.viewer.tab.answer')}
@@ -877,7 +877,7 @@ const ViewIncomingDocument: React.FC = () => {
                   type="button"
                   onClick={() => setPreviewTab('split')}
                   className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] dark:border-slate-700 transition-colors duration-200 ${
-                    previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                    previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   {t('documents.viewIncoming.viewer.tab.split')}
@@ -1066,11 +1066,11 @@ const ViewIncomingDocument: React.FC = () => {
         ) : (
           /* Empty Attachments State */
           <div className="p-8 sm:p-12 text-center bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700 rounded-lg space-y-3">
-            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center mx-auto text-slate-500 dark:text-slate-400">
-              <Paperclip className="h-7 w-7 text-slate-400 dark:text-slate-500" />
+            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center mx-auto text-slate-700 dark:text-slate-300">
+              <Paperclip className="h-7 w-7 text-slate-700 dark:text-slate-300" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('documents.viewIncoming.attachments.empty.title')}</h3>
-            <p className="text-base text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+            <p className="text-base text-slate-700 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
               {t('documents.viewIncoming.attachments.empty.description')}
             </p>
             {canEdit && (
@@ -1200,7 +1200,7 @@ const ViewIncomingDocument: React.FC = () => {
                     <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {item.action || t('documents.viewIncoming.timeline.fallback.action')}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium tabular-nums">
                       <bdi dir={dateDir}>{formatDateTime(item.createdAt, dateLang)}</bdi>
                     </span>
                   </div>
@@ -1222,7 +1222,7 @@ const ViewIncomingDocument: React.FC = () => {
                   <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                     {t('documents.viewIncoming.timeline.lifecycle.step1.title')}
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
+                  <span className="text-xs text-slate-700 dark:text-slate-300 font-medium tabular-nums">
                     <bdi dir={dateDir}>{formatDateTime(document.createdAt || document.arrivalDate, dateLang)}</bdi>
                   </span>
                 </div>

@@ -98,7 +98,7 @@ const ScanResult: React.FC<ScanResultProps> = ({
                         alt={`Page ${thumb.page}`}
                         className="w-full h-full object-cover"
                       />
-                      <span className="absolute bottom-1 end-1 rounded bg-zinc-950/85 border border-zinc-700 px-1.5 py-0.5 text-[10px] font-medium text-zinc-100">
+                      <span className="absolute bottom-1 end-1 rounded bg-zinc-950/85 border border-zinc-700 px-1.5 py-0.5 text-[13px] font-medium text-zinc-100 tabular-nums">
                         <bdi dir="ltr">P.{thumb.page}</bdi>
                       </span>
                     </div>

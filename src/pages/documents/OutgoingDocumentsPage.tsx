@@ -388,9 +388,9 @@ const OutgoingDocumentsPage: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-4 max-w-7xl">
         
         {/* Fil d'Ariane (Breadcrumbs) */}
-        <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 print:hidden">
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 print:hidden">
           <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('common.home')}</Link>
-          <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+          <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
           <span className="text-[#1a202c] dark:text-slate-100 font-medium">{t('outgoing.page.title')}</span>
         </nav>
 
@@ -405,7 +405,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c] dark:text-slate-100 leading-tight">
                   {t('outgoing.page.headerTitle')}
                 </h1>
-                <p className="text-base text-[#4a5568] dark:text-slate-300 mt-1.5 leading-relaxed">
+                <p className="text-base text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">
                   {t('outgoing.page.headerSubtitle')}
                 </p>
               </div>
@@ -470,7 +470,7 @@ const OutgoingDocumentsPage: React.FC = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-[#2c5282] dark:border-t-blue-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                 {isFr ? 'Total sortants' : 'إجمالي الصادر'}
               </p>
               <p className="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-0.5">
@@ -484,7 +484,7 @@ const OutgoingDocumentsPage: React.FC = () => {
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-emerald-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                 {isFr ? 'Avec pièce jointe' : 'مرفقة بملف'}
               </p>
               <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300 tabular-nums mt-0.5">
@@ -498,7 +498,7 @@ const OutgoingDocumentsPage: React.FC = () => {
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-amber-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                 {isFr ? 'Classés en dossier' : 'مصنفة في مجلد'}
               </p>
               <p className="text-xl font-bold text-amber-700 dark:text-amber-300 tabular-nums mt-0.5">
@@ -512,7 +512,7 @@ const OutgoingDocumentsPage: React.FC = () => {
 
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-indigo-500 rounded-lg px-4 py-3 shadow-sm flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                 {isFr ? 'En réponse à un entrant' : 'رد على وارد'}
               </p>
               <p className="text-xl font-bold text-indigo-700 dark:text-indigo-300 tabular-nums mt-0.5">
@@ -535,7 +535,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 {t('outgoing.filters.searchLabel')}
               </label>
               <div className="relative">
-                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-700 dark:text-slate-300" />
                 <Input
                   type="text"
                   placeholder={t('outgoing.filters.searchPlaceholder')}
@@ -550,7 +550,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#5f6b7d] dark:text-slate-300 hover:text-[#1a202c] dark:hover:text-white px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800"
+                    className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#1a202c] dark:hover:text-white px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800"
                   >
                     {t('outgoing.filters.clear')}
                   </button>
@@ -564,7 +564,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 {t('outgoing.filters.yearLabel')}
               </label>
               <div className="relative">
-                <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                <Calendar className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-700 dark:text-slate-300" />
                 <Input
                   type="text"
                   maxLength={4}
@@ -749,7 +749,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               </span>
 
               {isFetching && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100/90 dark:bg-slate-800 text-[#4a5568] dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282] dark:text-blue-300" />
                   {t('outgoing.stats.syncing')}
                 </span>
@@ -765,7 +765,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 className={`h-11 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
                   viewMode === 'table'
                     ? 'bg-[#2c5282] text-white'
-                    : 'text-[#4a5568] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
                 title={t('outgoing.view.tableLabel')}
               >
@@ -779,7 +779,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-s border-slate-300 dark:border-slate-700 transition-colors duration-200 ${
                   viewMode === 'grid'
                     ? 'bg-[#2c5282] text-white'
-                    : 'text-[#4a5568] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
                 title={t('outgoing.view.gridLabel')}
               >
@@ -800,7 +800,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 <Calendar className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">{t('outgoing.yearValidation.title')}</h3>
-              <p className="text-base text-[#4a5568] dark:text-slate-300 max-w-md mx-auto">
+              <p className="text-base text-slate-700 dark:text-slate-300 max-w-md mx-auto">
                 {t('outgoing.yearValidation.description')}
               </p>
             </div>
@@ -947,7 +947,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               <CopyReferenceButton value={serialLabel} />
                             </div>
                             {refLabel && (
-                              <div className="flex items-center gap-1 ps-3.5 text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                              <div className="flex items-center gap-1 ps-3.5 text-xs text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                                 <span><bdi dir="ltr">{refLabel}</bdi></span>
                                 <CopyReferenceButton
                                   value={refLabel}
@@ -992,9 +992,9 @@ const OutgoingDocumentsPage: React.FC = () => {
                         </td>
 
                         {/* Issue Date */}
-                        <td className="py-3 px-4 whitespace-nowrap text-sm text-[#4a5568] dark:text-slate-300 tabular-nums">
+                        <td className="py-3 px-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 tabular-nums">
                           <div className="flex items-center gap-1.5 font-medium">
-                            <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                            <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                             <bdi dir={isFr ? 'ltr' : 'rtl'}>{formatLongDate(doc.issueDate, isFr ? 'fr' : 'ar')}</bdi>
                           </div>
                         </td>
@@ -1002,7 +1002,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                         {/* Source */}
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-1.5 text-sm font-normal text-[#2d3748] dark:text-slate-200">
-                            <Building2 className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                            <Building2 className="h-4 w-4 text-slate-700 dark:text-slate-300 flex-shrink-0" />
                             <span className="line-clamp-1" title={doc.source?.name || t('outgoing.source.unspecified')}>
                               {highlightMatch(doc.source?.name || t('outgoing.source.unspecified'), searchQuery)}
                             </span>
@@ -1022,13 +1022,13 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 </span>
                               ))}
                               {doc.assignedTo.length > 2 && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100/90 dark:bg-slate-800 text-[#4a5568] dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 tabular-nums">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 tabular-nums">
                                   {t('outgoing.table.otherRecipients', { count: doc.assignedTo.length - 2 })}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-[#5f6b7d] dark:text-slate-400">{t('outgoing.source.unspecified')}</span>
+                            <span className="text-xs text-slate-700 dark:text-slate-300">{t('outgoing.source.unspecified')}</span>
                           )}
                         </td>
 
@@ -1040,7 +1040,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorizedInFolder')}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium text-[#5f6b7d] dark:text-slate-300 bg-slate-100/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
                               {t('outgoing.status.uncategorized')}
                             </span>
                           )}
@@ -1084,7 +1084,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                   size="sm"
                                   aria-label={t('outgoing.actions.moreActions')}
                                   title={t('outgoing.actions.moreActions')}
-                                  className="h-8 w-8 p-0 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-[#5f6b7d] dark:text-slate-400 shrink-0"
+                                  className="h-8 w-8 p-0 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
@@ -1095,7 +1095,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                     onClick={() => handleEdit(doc._id)}
                                     className="text-sm py-2.5 cursor-pointer"
                                   >
-                                    <Edit className="h-4 w-4 me-2 text-[#4a5568]" />
+                                    <Edit className="h-4 w-4 me-2 text-slate-700 dark:text-slate-300" />
                                     {t('common.edit')}
                                   </DropdownMenuItem>
                                 )}
@@ -1184,7 +1184,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                             {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorized')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-slate-800 text-[#5f6b7d] dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                             {t('outgoing.status.uncategorized')}
                           </span>
                         )}
@@ -1215,20 +1215,20 @@ const OutgoingDocumentsPage: React.FC = () => {
                       </div>
 
                       {/* Meta Information */}
-                      <div className="space-y-2 text-sm text-[#4a5568] dark:text-slate-300 mb-4">
+                      <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300 mb-4">
                         <div className="flex items-center gap-2 tabular-nums">
-                          <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                          <Clock className="h-4 w-4 text-slate-700 dark:text-slate-300 flex-shrink-0" />
                           <span>{t('outgoing.cards.issueDate', { date: formatLongDate(doc.issueDate, isFr ? 'fr' : 'ar') })}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                          <Building2 className="h-4 w-4 text-slate-700 dark:text-slate-300 flex-shrink-0" />
                           <span className="truncate">{t('outgoing.cards.source', { source: doc.source?.name || t('outgoing.source.unspecified') })}</span>
                         </div>
 
                         {Array.isArray(doc.assignedTo) && doc.assignedTo.length > 0 && (
                           <div className="flex items-start gap-2">
-                            <Users className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0 mt-0.5" />
+                            <Users className="h-4 w-4 text-slate-700 dark:text-slate-300 flex-shrink-0 mt-0.5" />
                             <div className="flex flex-wrap gap-1">
                               {doc.assignedTo.slice(0, 2).map((d, i) => (
                                 <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-slate-100/90 dark:bg-slate-800 text-[#2d3748] dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
@@ -1236,7 +1236,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                                 </span>
                               ))}
                               {doc.assignedTo.length > 2 && (
-                                <span className="text-xs text-[#5f6b7d] dark:text-slate-400 tabular-nums">
+                                <span className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                                   +{doc.assignedTo.length - 2}
                                 </span>
                               )}
@@ -1280,7 +1280,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                             size="sm"
                             aria-label={t('outgoing.actions.moreActions')}
                             title={t('outgoing.actions.moreActions')}
-                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[#5f6b7d] dark:text-slate-400 shrink-0"
+                            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shrink-0"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -1291,7 +1291,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                               onClick={() => handleEdit(doc._id)}
                               className="text-sm py-2.5 cursor-pointer"
                             >
-                              <Edit className="h-4 w-4 me-2 text-[#4a5568]" />
+                              <Edit className="h-4 w-4 me-2 text-slate-700 dark:text-slate-300" />
                               {t('common.edit')}
                             </DropdownMenuItem>
                           )}
@@ -1347,7 +1347,7 @@ const OutgoingDocumentsPage: React.FC = () => {
             <div className="pt-5 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-base">
               
               {/* Counter Display */}
-              <div className="text-sm font-medium text-[#4a5568] dark:text-slate-300 tabular-nums">
+              <div className="text-sm font-medium text-slate-700 dark:text-slate-300 tabular-nums">
                 {t('outgoing.pagination.info', {
                   from: startIndex + 1,
                   to: endIndex,
@@ -1359,7 +1359,7 @@ const OutgoingDocumentsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 {/* Page Size Selector */}
                 <div className="flex items-center gap-1.5 me-3">
-                  <span className="text-xs font-semibold text-[#5f6b7d] dark:text-slate-400">{t('outgoing.pagination.itemsLabel')}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('outgoing.pagination.itemsLabel')}</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -1524,7 +1524,7 @@ const OutgoingDocumentsPage: React.FC = () => {
                 <div className="font-bold text-slate-900 dark:text-slate-100">
                   {t('outgoing.transfer.subjectLabel', { subject: transferDoc.subject })}
                 </div>
-                <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-4 tabular-nums">
+                <div className="text-sm text-slate-700 dark:text-slate-300 flex items-center gap-4 tabular-nums">
                   <span>{t('outgoing.transfer.issueDateLabel', { date: formatLongDate(transferDoc.issueDate, isFr ? 'fr' : 'ar') })}</span>
                   <span>{t('outgoing.transfer.sourceLabel', { source: transferDoc.source?.name || t('outgoing.source.unspecified') })}</span>
                 </div>

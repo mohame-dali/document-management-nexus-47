@@ -341,7 +341,7 @@ const BackupSettingsPage: React.FC = () => {
       <div className="w-full min-h-[60vh] flex items-center justify-center bg-[#f7fafc]">
         <div className="text-center space-y-4">
           <RefreshCw className="h-10 w-10 mx-auto animate-spin text-[#2c5282]" />
-          <p className="text-base text-[#4a5568]">جاري تحميل بيانات النسخ الاحتياطي...</p>
+          <p className="text-base text-slate-700 dark:text-slate-300">جاري تحميل بيانات النسخ الاحتياطي...</p>
         </div>
       </div>
     );
@@ -372,7 +372,7 @@ const BackupSettingsPage: React.FC = () => {
                 أرشيف الوثائق
               </span>
             </div>
-            <p className="text-base text-[#4a5568] mt-1 leading-relaxed">
+            <p className="text-base text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
               إدارة وحماية الوثائق الواردة والصادرة مع ملفات PDF والمرفقات
             </p>
           </div>
@@ -399,7 +399,7 @@ const BackupSettingsPage: React.FC = () => {
               </div>
               <span>إحصائيات البيانات المتوفرة للأرشفة</span>
             </CardTitle>
-            <CardDescription className="text-base text-[#5f6b7d]">
+            <CardDescription className="text-base text-slate-700 dark:text-slate-300">
               نظرة تفصيلية على حجم الوثائق والمراسلات المتاحة للنسخ الاحتياطي
             </CardDescription>
           </CardHeader>
@@ -410,7 +410,7 @@ const BackupSettingsPage: React.FC = () => {
                   <FileText className="h-5 w-5" />
                 </div>
                 <div className="text-3xl font-bold text-[#2c5282]">{stats.totalIncomingDocuments}</div>
-                <div className="text-base font-semibold text-[#4a5568] mt-1">الوثائق الواردة</div>
+                <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">الوثائق الواردة</div>
               </div>
 
               <div className="p-5 bg-white border border-[#e2e8f0] rounded text-center">
@@ -418,7 +418,7 @@ const BackupSettingsPage: React.FC = () => {
                   <FileText className="h-5 w-5" />
                 </div>
                 <div className="text-3xl font-bold text-emerald-700">{stats.totalOutgoingDocuments}</div>
-                <div className="text-base font-semibold text-[#4a5568] mt-1">الوثائق الصادرة</div>
+                <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">الوثائق الصادرة</div>
               </div>
 
               <div className="p-5 bg-white border border-[#e2e8f0] rounded text-center">
@@ -426,7 +426,7 @@ const BackupSettingsPage: React.FC = () => {
                   <HardDrive className="h-5 w-5" />
                 </div>
                 <div className="text-2xl font-bold text-purple-800">{stats.totalFileSize}</div>
-                <div className="text-base font-semibold text-[#4a5568] mt-1">إجمالي حجم البيانات</div>
+                <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">إجمالي حجم البيانات</div>
               </div>
 
               <div className="p-5 bg-white border border-[#e2e8f0] rounded text-center">
@@ -438,7 +438,7 @@ const BackupSettingsPage: React.FC = () => {
                     <bdi dir="rtl" className="tabular-nums">{formatLongDate(stats.lastBackupDate, 'ar')}</bdi>
                   ) : 'لا توجد بعد'}
                 </div>
-                <div className="text-base font-semibold text-[#4a5568] mt-1">آخر نسخة احتياطية</div>
+                <div className="text-base font-semibold text-slate-700 dark:text-slate-300 mt-1">آخر نسخة احتياطية</div>
               </div>
             </div>
             
@@ -474,7 +474,7 @@ const BackupSettingsPage: React.FC = () => {
             </div>
             <span>إنشاء نسخة احتياطية يدوية</span>
           </CardTitle>
-          <CardDescription className="text-base text-[#5f6b7d]">
+          <CardDescription className="text-base text-slate-700 dark:text-slate-300">
             إنشاء وتصدير نسخة احتياطية فورية من جميع الوثائق مع ملفات PDF
           </CardDescription>
         </CardHeader>
@@ -500,7 +500,7 @@ const BackupSettingsPage: React.FC = () => {
                 <Label htmlFor="yearly-backup" className="text-base font-bold text-[#1a202c] cursor-pointer">
                   نسخة احتياطية مخصصة حسب السنة
                 </Label>
-                <p className="text-sm text-[#4a5568]">حصر التصدير لوثائق سنة مالية محددة</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300">حصر التصدير لوثائق سنة مالية محددة</p>
               </div>
               <Switch
                 id="yearly-backup"
@@ -523,7 +523,7 @@ const BackupSettingsPage: React.FC = () => {
                     type="number"
                     min="2000"
                     max="2035"
-                    className="h-11 text-base border-[#cbd5e1] rounded bg-white"
+                    className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white"
                   />
                 </div>
                 <div className="space-y-2">
@@ -536,7 +536,7 @@ const BackupSettingsPage: React.FC = () => {
                       placeholder={savedBackupPath || "backups/"}
                       value={exportPath}
                       onChange={(e) => setExportPath(e.target.value)}
-                      className="h-11 text-base border-[#cbd5e1] rounded bg-white flex-1"
+                      className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white flex-1"
                     />
                     <Button
                       type="button"
@@ -551,7 +551,7 @@ const BackupSettingsPage: React.FC = () => {
                     </Button>
                   </div>
                   {savedBackupPath && (
-                    <p className="text-sm text-gray-500">المسار الافتراضي المسجل: {savedBackupPath}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">المسار الافتراضي المسجل: {savedBackupPath}</p>
                   )}
                 </div>
               </div>
@@ -568,7 +568,7 @@ const BackupSettingsPage: React.FC = () => {
                     placeholder={savedBackupPath || "backups/"}
                     value={exportPath}
                     onChange={(e) => setExportPath(e.target.value)}
-                    className="h-11 text-base border-[#cbd5e1] rounded bg-white flex-1"
+                    className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white flex-1"
                   />
                   <Button
                     type="button"
@@ -583,7 +583,7 @@ const BackupSettingsPage: React.FC = () => {
                   </Button>
                 </div>
                 {savedBackupPath && (
-                  <p className="text-sm text-gray-500">المسار الافتراضي المسجل: {savedBackupPath}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">المسار الافتراضي المسجل: {savedBackupPath}</p>
                 )}
               </div>
             )}
@@ -628,7 +628,7 @@ const BackupSettingsPage: React.FC = () => {
                 <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] text-right">
                   تأكيد إنشاء النسخة الاحتياطية
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-base text-[#4a5568] mt-2 text-right leading-relaxed">
+                <AlertDialogDescription className="text-base text-slate-700 dark:text-slate-300 mt-2 text-right leading-relaxed">
                   {isYearlyBackup ? 
                     `هل تريد إنشاء وتصدير نسخة احتياطية لوثائق عام ${selectedYear}؟` :
                     'هل تريد إنشاء نسخة احتياطية شاملة لجميع الوثائق والمرفقات؟'
@@ -671,7 +671,7 @@ const BackupSettingsPage: React.FC = () => {
             </div>
             <span>النسخ الاحتياطي التلقائي المجدول</span>
           </CardTitle>
-          <CardDescription className="text-base text-[#5f6b7d]">
+          <CardDescription className="text-base text-slate-700 dark:text-slate-300">
             تكوين جدولة دورية لإنشاء النسخ الاحتياطية تلقائياً مع ملفات PDF
           </CardDescription>
         </CardHeader>
@@ -681,7 +681,7 @@ const BackupSettingsPage: React.FC = () => {
               <Label htmlFor="enable-backup" className="text-base font-bold text-[#1a202c] cursor-pointer">
                 تفعيل النسخ الاحتياطي التلقائي
               </Label>
-              <p className="text-sm text-[#4a5568]">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 إنشاء نسخ احتياطية دورية بصورة آلية دون الحاجة لتدخل يدوي
               </p>
             </div>
@@ -700,7 +700,7 @@ const BackupSettingsPage: React.FC = () => {
                     تكرار النسخ الاحتياطي
                   </Label>
                   <Select value={policy.frequency} onValueChange={(value: BackupPolicy['frequency']) => setPolicy(prev => ({ ...prev, frequency: value }))}>
-                    <SelectTrigger id="frequency" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="frequency" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -715,7 +715,7 @@ const BackupSettingsPage: React.FC = () => {
                     مستوى ضغط الملفات
                   </Label>
                   <Select value={policy.compressionLevel} onValueChange={(value: BackupPolicy['compressionLevel']) => setPolicy(prev => ({ ...prev, compressionLevel: value }))}>
-                    <SelectTrigger id="compression" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="compression" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -733,7 +733,7 @@ const BackupSettingsPage: React.FC = () => {
                     <Label htmlFor="include-attachments" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       تضمين المرفقات والـ PDF
                     </Label>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-700 dark:text-slate-300">
                       نسخ ملفات المستندات والمرفقات كاملة
                     </p>
                   </div>
@@ -754,7 +754,7 @@ const BackupSettingsPage: React.FC = () => {
                     max="365"
                     value={policy.retentionDays}
                     onChange={(e) => setPolicy(prev => ({ ...prev, retentionDays: parseInt(e.target.value) || 30 }))}
-                    className="h-11 text-base border-[#cbd5e1] rounded bg-white"
+                    className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white"
                   />
                 </div>
               </div>
@@ -791,7 +791,7 @@ const BackupSettingsPage: React.FC = () => {
               </div>
               <span>سجل النسخ الاحتياطية</span>
             </CardTitle>
-            <CardDescription className="text-base text-[#5f6b7d] mt-1">
+            <CardDescription className="text-base text-slate-700 dark:text-slate-300 mt-1">
               {filteredHistory.length} من أصل {backupHistory.length} نسخة محفوظة
             </CardDescription>
           </div>
@@ -828,9 +828,9 @@ const BackupSettingsPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
-                <Label htmlFor="type-filter" className="text-sm text-[#4a5568] whitespace-nowrap">النوع:</Label>
+                <Label htmlFor="type-filter" className="text-sm text-slate-800 dark:text-slate-200 whitespace-nowrap">النوع:</Label>
                 <Select value={typeFilter} onValueChange={(val: 'all' | 'manual' | 'automatic') => setTypeFilter(val)}>
-                  <SelectTrigger id="type-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
+                  <SelectTrigger id="type-filter" className="h-9 min-w-[120px] text-sm border-slate-300 dark:border-slate-700 rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -842,9 +842,9 @@ const BackupSettingsPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 flex-1 sm:flex-initial">
-                <Label htmlFor="status-filter" className="text-sm text-[#4a5568] whitespace-nowrap">الحالة:</Label>
+                <Label htmlFor="status-filter" className="text-sm text-slate-800 dark:text-slate-200 whitespace-nowrap">الحالة:</Label>
                 <Select value={statusFilter} onValueChange={(val: 'all' | 'completed' | 'in_progress' | 'failed') => setStatusFilter(val)}>
-                  <SelectTrigger id="status-filter" className="h-9 min-w-[120px] text-sm border-[#cbd5e1] rounded bg-white">
+                  <SelectTrigger id="status-filter" className="h-9 min-w-[120px] text-sm border-slate-300 dark:border-slate-700 rounded bg-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -860,15 +860,15 @@ const BackupSettingsPage: React.FC = () => {
 
           {/* Table */}
           {historyLoading ? (
-            <div className="text-center py-10 text-slate-500 flex items-center justify-center gap-2">
+            <div className="text-center py-10 text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-[#2c5282]" />
               <span>جاري تحميل سجل النسخ الاحتياطية...</span>
             </div>
           ) : filteredHistory.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 bg-[#f7fafc] border border-dashed border-[#e2e8f0] rounded">
+            <div className="text-center py-12 text-slate-700 dark:text-slate-300 bg-[#f7fafc] border border-dashed border-[#e2e8f0] rounded">
               <HardDrive className="w-12 h-12 mx-auto mb-3 text-slate-300" />
               <p className="font-semibold text-slate-700">لا توجد نسخ احتياطية مطابقة</p>
-              <p className="text-sm text-slate-500 mt-1">قم بإنشاء نسخة احتياطية جديدة أو تغيير معايير التصفية</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">قم بإنشاء نسخة احتياطية جديدة أو تغيير معايير التصفية</p>
             </div>
           ) : (
             <div className="border border-[#e2e8f0] rounded overflow-x-auto">

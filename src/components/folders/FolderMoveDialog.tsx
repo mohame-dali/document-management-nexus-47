@@ -106,7 +106,7 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
           onClick={() => setSelectedParentId(folderOption._id)}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Folder className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-[#2c5282] dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'}`} />
+            <Folder className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-[#2c5282] dark:text-sky-400' : 'text-slate-700 dark:text-slate-300'}`} />
             <span className="truncate">{folderOption.name}</span>
           </div>
           {folderOption.status === 'En cours' && (
@@ -142,7 +142,7 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
             </div>
             <span>نقل المجلد: {folder?.name}</span>
           </DialogTitle>
-          <p className="text-slate-600 dark:text-slate-400 text-base mt-1.5">
+          <p className="text-slate-700 dark:text-slate-300 text-base mt-1.5">
             اختر المجلد الأصل الجديد، أو انقر على الجذر لجعله مجلداً رئيسياً
           </p>
         </DialogHeader>
@@ -162,7 +162,7 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
             </div>
             <div className="flex-1">
               <span className="block font-bold text-base text-[#1a202c] dark:text-slate-100">المستوى الرئيسي (الجذر)</span>
-              <span className="text-sm text-slate-500 dark:text-slate-400 font-normal">جعل المجلد في المستوى الأول بدون مجلد أب</span>
+              <span className="text-sm text-slate-700 dark:text-slate-300 font-normal">جعل المجلد في المستوى الأول بدون مجلد أب</span>
             </div>
             {selectedParentId === null && (
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70">

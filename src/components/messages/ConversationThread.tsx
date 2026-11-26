@@ -67,7 +67,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1.5">
             {t('messages.selectMessage')}
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed mb-5">
+          <p className="text-xs text-slate-700 dark:text-slate-300 max-w-xs leading-relaxed mb-5">
             {t('messages.selectInterlocutorDesc')}
           </p>
 
@@ -161,7 +161,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
                 showLabel={true}
               />
               {conversation.interlocutorDepartment && (
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal truncate">
+                <span className="text-[13px] text-slate-700 dark:text-slate-300 font-normal truncate">
                   • {conversation.interlocutorDepartment}
                 </span>
               )}
@@ -173,7 +173,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
         <button
           type="button"
           aria-label={t('messages.conversationOptions')}
-          className="h-9 w-9 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0"
+          className="h-9 w-9 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0"
           title={t('messages.conversationOptions')}
         >
           <MoreVertical className="w-4 h-4" />
@@ -186,7 +186,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
         className="flex-1 overflow-y-auto p-4 bg-slate-50/70 dark:bg-slate-950/60 space-y-2 scroll-smooth"
       >
         {sortedMessages.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
+          <div className="text-center py-12 text-slate-700 dark:text-slate-300 text-xs">
             {t('messages.noPreviousMessages')}
           </div>
         ) : (
@@ -215,7 +215,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
               <React.Fragment key={msg._id || msg.id || idx}>
                 {showTimeSeparator && (
                   <div className="flex items-center justify-center my-4 select-none">
-                    <div className="bg-slate-200/80 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-300/40 dark:border-slate-700/60 text-[11px] px-3 py-1 rounded-full font-medium shadow-2xs tabular-nums">
+                    <div className="bg-slate-200/80 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-300/40 dark:border-slate-700/60 text-[13px] px-3 py-1 rounded-full font-medium shadow-2xs tabular-nums">
                       <bdi dir={labelDir}>{timeLabel}</bdi>
                     </div>
                   </div>

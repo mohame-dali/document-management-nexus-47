@@ -70,7 +70,7 @@ const EditOutgoingDocument = () => {
         <div className="flex flex-col items-center justify-center h-64">
           <FileText className="h-16 w-16 text-gray-300 mb-4" />
           <h2 className="text-xl font-medium text-gray-600">{t('documents.editOutgoing.notFoundTitle')}</h2>
-          <p className="text-gray-500 mb-4">{t('documents.editOutgoing.notFoundDesc')}</p>
+          <p className="text-slate-700 dark:text-slate-300 mb-4">{t('documents.editOutgoing.notFoundDesc')}</p>
           <Button onClick={() => navigate('/dashboard/outgoing-documents')}>
             {t('documents.editOutgoing.backToList')}
           </Button>

@@ -50,12 +50,12 @@ const RecentScans: React.FC<RecentScansProps> = ({
                     onClick={() => onSelectScan(scan)}
                   >
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 mr-2 text-gray-500" />
+                      <FileText className="w-4 h-4 mr-2 text-slate-700 dark:text-slate-300" />
                       <span className="text-sm truncate">
                         {scan.filePath ? scan.filePath.split('/').pop() : 'Unknown file'}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1 tabular-nums">
+                    <div className="text-xs text-slate-700 dark:text-slate-300 mt-1 tabular-nums">
                       <bdi dir={language === 'fr' ? 'ltr' : 'rtl'}>
                         {formatDateTime(scan.timestamp || scan.createdAt || Date.now(), language)}
                       </bdi>
@@ -64,7 +64,7 @@ const RecentScans: React.FC<RecentScansProps> = ({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-gray-500">
+              <div className="text-center py-6 text-slate-700 dark:text-slate-300">
                 {t.noRecentScans}
               </div>
             )}

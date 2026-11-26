@@ -86,7 +86,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-500" />
+            <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300" />
             <span className="text-sm text-gray-600 font-medium">
               {type === 'incoming' ? 'تاريخ الوصول' : 'تاريخ الإصدار'}:
             </span>
@@ -98,7 +98,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
           {/* Show activity date for incoming documents */}
           {type === 'incoming' && document.dateActivity && (
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
+              <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               <span className="text-sm text-gray-600 font-medium">تاريخ النشاط:</span>
               <span className="text-sm tabular-nums">
                 <bdi dir="rtl">{formatLongDate(document.dateActivity, 'ar')}</bdi>
@@ -109,7 +109,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
           <div className="flex items-center gap-2">
             {type === 'incoming' ? (
               <>
-                <Building className="h-4 w-4 text-gray-500" />
+                <Building className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                 <span className="text-sm text-gray-600 font-medium">المصدر:</span>
                 <span className="text-sm">
                   {typeof document.source === 'string' ? document.source : document.source?.name || 'غير محدد'}
@@ -117,7 +117,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
               </>
             ) : (
               <>
-                <Building className="h-4 w-4 text-gray-500" />
+                <Building className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                 <span className="text-sm text-gray-600 font-medium">القسم:</span>
                 <span className="text-sm">
                   {typeof document.source === 'object' ? document.source?.name || 'غير محدد' : document.source || 'غير محدد'}
@@ -146,7 +146,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
                   <div className="flex items-center gap-2 mb-1">
                     <User className="h-3 w-3" />
                     <span className="text-xs font-medium">{comment.author.name}</span>
-                    <span className="text-xs text-gray-500 tabular-nums">
+                    <span className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                       <bdi dir="rtl">{formatDateTime(comment.createdAt, 'ar')}</bdi>
                     </span>
                   </div>
@@ -159,17 +159,17 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
       </CardContent>
       <CardFooter className="border-t pt-4 flex justify-between">
         {document.createdBy && (
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-slate-700 dark:text-slate-300">
             أنشأ بواسطة: {document.createdBy.name || 'النظام'}
           </div>
         )}
         {document.updatedAt && (
-          <div className="text-xs text-gray-500 tabular-nums">
+          <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
             آخر تحديث: <bdi dir="rtl">{formatLongDate(document.updatedAt, 'ar')}</bdi>
           </div>
         )}
         {document.createdAt && (
-          <div className="text-xs text-gray-500 tabular-nums">
+          <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
             تاريخ الإنشاء: <bdi dir="rtl">{formatLongDate(document.createdAt, 'ar')}</bdi>
           </div>
         )}

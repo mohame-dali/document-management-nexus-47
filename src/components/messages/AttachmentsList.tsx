@@ -25,7 +25,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
     if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
       return <FileText className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />;
     }
-    return <File className="h-4 w-4 text-slate-500 dark:text-slate-400" />;
+    return <File className="h-4 w-4 text-slate-700 dark:text-slate-300" />;
   };
 
   const formatFileSize = (bytes?: number): string => {
@@ -135,7 +135,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                       {displayName}
                     </p>
                     {att.size ? (
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                      <p className="text-[13px] text-slate-700 dark:text-slate-300 tabular-nums">
                         {formatFileSize(att.size)}
                       </p>
                     ) : null}
@@ -153,7 +153,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                       });
                     }}
                     aria-label={t('common.preview')}
-                    className="h-9 w-9 inline-flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                    className="h-9 w-9 inline-flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
                     title={t('common.preview')}
                   >
                     <Eye className="h-4 w-4" />
@@ -163,7 +163,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                     onClick={() => handleDownload(att, globalIndex, true)}
                     disabled={isCurrentDownloading}
                     aria-label={t('common.view')}
-                    className="h-9 w-9 inline-flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+                    className="h-9 w-9 inline-flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
                     title={t('common.view')}
                   >
                     <ExternalLink className="h-4 w-4" />

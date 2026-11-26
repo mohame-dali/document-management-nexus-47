@@ -31,7 +31,7 @@ export const showResponsibleAssignmentNotification = ({
             <User className="h-4 w-4" />
             <span className="text-sm text-gray-600">تم التعيين بواسطة: {assignedBy}</span>
           </div>
-          <div className="text-xs text-gray-500 tabular-nums">
+          <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
             <bdi dir={docDir} className="tabular-nums">{formatLongDate(new Date(), docDir === 'ltr' ? 'fr' : 'ar')}</bdi>
           </div>
         </div>

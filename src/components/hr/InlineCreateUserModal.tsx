@@ -209,7 +209,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
             </div>
             <span>إنشاء حساب مستخدم سريع للبطاقة</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-[#4a5568] dark:text-slate-400 mt-1">
+          <DialogDescription className="text-sm text-slate-700 dark:text-slate-300 mt-1">
             سيتم إنشاء حساب مستخدم للنظام وربطه تلقائياً ببطاقة الموظف:
             {' '}
             <strong className="text-[#1a202c] dark:text-slate-100 font-bold">{personnel.prenom} {personnel.nom}</strong>
@@ -221,14 +221,14 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
           <div className="p-3 bg-[#f8fafc] dark:bg-slate-800/70 border border-[#e2e8f0] dark:border-slate-700 rounded-lg text-sm flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
-              <span className="text-slate-600 dark:text-slate-400">القسم:</span>
+              <span className="text-slate-700 dark:text-slate-300">القسم:</span>
               <span className="font-semibold text-[#1a202c] dark:text-slate-100">
                 {resolvedDept?.name || '—'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
-              <span className="text-slate-600 dark:text-slate-400">الرتبة / الخطة:</span>
+              <span className="text-slate-700 dark:text-slate-300">الرتبة / الخطة:</span>
               <span className="font-semibold text-[#1a202c] dark:text-slate-100">{personnel.poste || '—'}</span>
             </div>
           </div>
@@ -245,14 +245,14 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="prenom.nom"
                 dir="ltr"
-                className="h-10 pl-10 pr-3 font-mono text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-left rounded-lg"
+                className="h-10 pl-10 pr-3 font-mono text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 text-left rounded-lg"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => handleCopy(username, 'username')}
-                className="absolute left-1 top-1 h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-blue-300"
+                className="absolute left-1 top-1 h-8 w-8 text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300"
                 title="نسخ اسم المستخدم"
               >
                 {copiedField === 'username' ? (
@@ -287,14 +287,14 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 dir="ltr"
-                className="h-10 pl-10 pr-3 font-mono text-sm bg-amber-50/50 dark:bg-amber-950/30 border-[#cbd5e1] dark:border-slate-700 text-left font-bold text-[#1a202c] dark:text-amber-200 rounded-lg"
+                className="h-10 pl-10 pr-3 font-mono text-sm bg-amber-50/50 dark:bg-amber-950/30 border-slate-300 dark:border-slate-700 text-left font-bold text-[#1a202c] dark:text-amber-200 rounded-lg"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => handleCopy(password, 'password')}
-                className="absolute left-1 top-1 h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-blue-300"
+                className="absolute left-1 top-1 h-8 w-8 text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300"
                 title="نسخ كلمة المرور"
               >
                 {copiedField === 'password' ? (
@@ -315,7 +315,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
               value={role}
               onValueChange={(val) => setRole(val as typeof role)}
             >
-              <SelectTrigger id="quick-role" className="h-10 bg-white dark:bg-slate-800 border-[#cbd5e1] dark:border-slate-700 dark:text-slate-100 text-start rounded-lg">
+              <SelectTrigger id="quick-role" className="h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 dark:text-slate-100 text-start rounded-lg">
                 <SelectValue placeholder="اختر الدور" />
               </SelectTrigger>
               <SelectContent className="dark:bg-slate-900 dark:border-slate-700">
@@ -325,7 +325,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
                 <SelectItem value="User">موظف عادي (User)</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               * تم اقتراح الدور تلقائياً بناءً على تبعية القسم الإداري.
             </p>
           </div>
@@ -339,7 +339,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
               value={departmentId || 'none'}
               onValueChange={(val) => setDepartmentId(val === 'none' ? '' : val)}
             >
-              <SelectTrigger id="quick-dept" className="h-10 bg-white dark:bg-slate-800 border-[#cbd5e1] dark:border-slate-700 dark:text-slate-100 text-start rounded-lg">
+              <SelectTrigger id="quick-dept" className="h-10 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 dark:text-slate-100 text-start rounded-lg">
                 <SelectValue placeholder="اختر القسم" />
               </SelectTrigger>
               <SelectContent className="dark:bg-slate-900 dark:border-slate-700">

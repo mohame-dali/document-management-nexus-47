@@ -104,7 +104,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
               <CardTitle className="text-sm font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 {t('messages.allContacts')} ({filteredUsers.length})
               </CardTitle>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate">
                 {isRTL
                   ? 'دليل المستخدمين ومسؤولي الأقسام المتاحين للمراسلة'
                   : 'Annuaire des utilisateurs et chefs de service disponibles'}
@@ -128,12 +128,12 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
       <CardContent className="p-4 space-y-3">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+          <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-700 dark:text-slate-300 pointer-events-none" />
           <Input
             placeholder={t('messages.searchContact')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="ps-10 pe-3 text-xs text-start bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#2c5282] dark:focus:border-sky-500 rounded-lg h-9"
+            className="ps-10 pe-3 text-xs text-start bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#2c5282] dark:focus:border-sky-500 rounded-lg h-9"
           />
         </div>
 
@@ -166,7 +166,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
             >
               {getRoleIcon(role)}
               <span>{getRoleDisplayName(role)}</span>
-              <span className="text-[10px] opacity-80">({count})</span>
+              <span className="text-[13px] opacity-80">({count})</span>
             </Button>
           ))}
         </div>
@@ -174,7 +174,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
         {/* Selected pill row */}
         {selectedUsers.length > 0 && (
           <div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200/80 dark:border-slate-800 text-xs">
-            <span className="text-slate-500 dark:text-slate-400 font-medium block mb-1.5 tabular-nums">
+            <span className="text-slate-700 dark:text-slate-300 font-medium block mb-1.5 tabular-nums">
               {isRTL ? `المستخدمون المحددون (${selectedUsers.length}):` : `Utilisateurs sélectionnés (${selectedUsers.length}) :`}
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -188,7 +188,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
                     type="button"
                     onClick={() => toggleUserSelection(user)}
                     aria-label={t('messages.deselectUserAria', { username: user.username })}
-                    className="w-6 h-6 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 rounded"
+                    className="w-6 h-6 inline-flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded"
                   >
                     ×
                   </button>
@@ -213,7 +213,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
               ))}
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center text-slate-500 dark:text-slate-400 py-8 text-xs">
+            <div className="text-center text-slate-700 dark:text-slate-300 py-8 text-xs">
               <p>{t('messages.noContactsFound')}</p>
             </div>
           ) : (
@@ -252,12 +252,12 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
                         <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
                           {user.username}
                         </span>
-                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded-md ${getRoleColor(user.role)}`}>
+                        <Badge variant="outline" className={`text-[13px] px-1.5 py-0 rounded-md ${getRoleColor(user.role)}`}>
                           {getRoleDisplayName(user.role)}
                         </Badge>
                       </div>
                       {user.activeDepartment && typeof user.activeDepartment === 'object' && (
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 block truncate">
                           {isRTL ? 'قسم:' : 'Service :'} {user.activeDepartment.name}
                         </span>
                       )}

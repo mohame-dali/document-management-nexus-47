@@ -227,7 +227,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             {/* MongoDB */}
             <div className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <Database className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                <Database className="h-4 w-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                   {t('dashboard.exec.mongodbLabel')}
                 </span>
@@ -251,7 +251,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             {/* Isolated AI Worker */}
             <div className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <Cpu className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                <Cpu className="h-4 w-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                   {t('dashboard.exec.aiWorkerLabel')}
                 </span>
@@ -284,7 +284,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             {/* Semantic Index */}
             <div className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <Database className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                <Database className="h-4 w-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                   {t('dashboard.exec.ragIndexLabel')}
                 </span>
@@ -293,12 +293,12 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
                 <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {system.semanticIndex.indexedDocs} {t('dashboard.exec.indexedUnit')}
                 </span>
-                <span aria-hidden="true" className="text-slate-400">·</span>
+                <span aria-hidden="true" className="text-slate-700 dark:text-slate-300">·</span>
                 <span
                   className={
                     failedDocs > 0
                       ? 'font-semibold text-red-700 dark:text-red-400'
-                      : 'text-slate-500 dark:text-slate-400'
+                      : 'text-slate-700 dark:text-slate-300'
                   }
                 >
                   {failedDocs} {t('dashboard.exec.failedUnit')}
@@ -322,7 +322,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
               <div className="text-3xl font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 {pendingPersonnelCount}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                 {pendingPersonnelCount > 0
                   ? t('dashboard.exec.pendingAccountsDesc')
                   : t('dashboard.exec.pendingAccountsEmpty')}
@@ -381,23 +381,23 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
                       <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {getAuditActionLabel(item.action)}
                       </span>
-                      <span aria-hidden="true" className="text-slate-400">·</span>
+                      <span aria-hidden="true" className="text-slate-700 dark:text-slate-300">·</span>
                       <span className="text-slate-600 dark:text-slate-300 truncate">
                         {item.username}
                       </span>
-                      <span aria-hidden="true" className="text-slate-400 hidden sm:inline">·</span>
-                      <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">
+                      <span aria-hidden="true" className="text-slate-700 dark:text-slate-300 hidden sm:inline">·</span>
+                      <span className="text-slate-700 dark:text-slate-300 hidden sm:inline">
                         {item.entityType}
                       </span>
                     </div>
-                    <span className="text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap shrink-0">
+                    <span className="text-slate-700 dark:text-slate-300 tabular-nums whitespace-nowrap shrink-0">
                       <bdi dir={isRTL ? 'rtl' : 'ltr'}>{formatDateTime(item.createdAt)}</bdi>
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+              <div className="p-6 text-center text-xs text-slate-700 dark:text-slate-300">
                 {t('dashboard.exec.criticalAuditEmpty')}
               </div>
             )}
@@ -455,7 +455,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-slate-200 dark:divide-slate-800">
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.todayIncoming')}
             </p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
@@ -463,7 +463,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </p>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.todayOutgoing')}
             </p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
@@ -471,7 +471,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </p>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.unroutedIncoming')}
             </p>
             <button
@@ -488,7 +488,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </button>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.unansweredIncoming')}
             </p>
             <button
@@ -505,7 +505,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </button>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.activeOcrJobs')}
             </p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
@@ -555,7 +555,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-slate-200 dark:divide-slate-800">
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.activePersonnel')}
             </p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
@@ -563,7 +563,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </p>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.awaitingAccounts')}
             </p>
             <p
@@ -577,24 +577,24 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </p>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.todayAttendance')}
             </p>
             <div className="flex items-baseline gap-2 mt-1 tabular-nums">
               <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
                 {hr.todayAttendance.present}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-700 dark:text-slate-300">
                 {t('dashboard.exec.presentUnit')}
               </span>
-              <span aria-hidden="true" className="text-slate-400">·</span>
+              <span aria-hidden="true" className="text-slate-700 dark:text-slate-300">·</span>
               <span className="text-sm font-semibold text-red-700 dark:text-red-400">
                 {hr.todayAttendance.absent} {t('dashboard.exec.absentUnit')}
               </span>
             </div>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.pendingDeclarations')}
             </p>
             <button
@@ -611,8 +611,8 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </button>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <GraduationCap className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <p className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1">
+              <GraduationCap className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300 shrink-0" />
               <span className="truncate">{t('dashboard.exec.expiringInternships')}</span>
             </p>
             <button
@@ -671,7 +671,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-slate-200 dark:divide-slate-800">
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.totalIncomingYear')}
             </p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
@@ -679,7 +679,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </p>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.totalOutgoingYear')}
             </p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
@@ -687,7 +687,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </p>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.unansweredIncoming')}
             </p>
             <button
@@ -704,7 +704,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </button>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.unansweredUrgent')}
             </p>
             <button
@@ -721,7 +721,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </button>
           </div>
           <div className="p-4">
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.activeDepartmentsCount')}
             </p>
             <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
@@ -773,7 +773,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
 
           <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x rtl:sm:divide-x-reverse divide-slate-200 dark:divide-slate-800">
             <div className="p-4">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 {t('dashboard.exec.deptUnansweredIncoming')}
               </p>
               <button
@@ -787,7 +787,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </div>
 
             <div className="p-4">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 {t('dashboard.exec.deptUrgentIncoming')}
               </p>
               <button
@@ -805,7 +805,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </div>
 
             <div className="p-4">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 {t('dashboard.exec.unreadMessages')}
               </p>
               <button
@@ -819,13 +819,13 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             </div>
 
             <div className="p-4">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 {t('dashboard.exec.myLeaveBalance')}
               </p>
               {myBalance?.data ? (
                 <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums mt-1">
                   {myBalance.data.soldeRestant}{' '}
-                  <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
                     {t('dashboard.exec.daysUnit')}
                   </span>
                 </p>
@@ -878,7 +878,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
                     >
                       {msg.subject}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 mt-0.5">
                       <span>{msg.senderUsername}</span>
                       <span aria-hidden="true">·</span>
                       <span>
@@ -902,14 +902,14 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap shrink-0">
+                  <span className="text-xs text-slate-700 dark:text-slate-300 tabular-nums whitespace-nowrap shrink-0">
                     <bdi dir={isRTL ? 'rtl' : 'ltr'}>{formatDateTime(msg.createdAt)}</bdi>
                   </span>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+            <div className="p-6 text-center text-xs text-slate-700 dark:text-slate-300">
               {t('dashboard.exec.noRecentMessages')}
             </div>
           )}

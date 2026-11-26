@@ -62,7 +62,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
             <h2 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
               رصيد الإجازات السنوية (Solde de congés)
             </h2>
-            <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               متابعة الأيام المستحقة، المستنفذة والرصيد المتبقي لسنة {year}
             </p>
           </div>
@@ -77,12 +77,12 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
         {/* Total days */}
         <div className="bg-[#f7fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded-lg p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium block">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">
               الرصيد الإجمالي السنوي
             </span>
             <div className="mt-1 flex items-baseline gap-1">
               <span className="text-2xl font-bold text-[#1a202c] dark:text-slate-100 font-mono tabular-nums">{total}</span>
-              <span className="text-xs text-[#5f6b7d] dark:text-slate-400">يوم</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300">يوم</span>
             </div>
           </div>
           <div className="p-2.5 bg-blue-50 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 rounded-lg border border-blue-100 dark:border-blue-800/70">
@@ -93,12 +93,12 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
         {/* Used days */}
         <div className="bg-[#f7fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded-lg p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium block">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">
               الأيام المستهلكة (الغياب المخصوم)
             </span>
             <div className="mt-1 flex items-baseline gap-1">
               <span className="text-2xl font-bold text-amber-700 dark:text-amber-300 font-mono tabular-nums">{used}</span>
-              <span className="text-xs text-[#5f6b7d] dark:text-slate-400">يوم</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300">يوم</span>
             </div>
           </div>
           <div className="p-2.5 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-800/70">
@@ -109,7 +109,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
         {/* Remaining days */}
         <div className="bg-[#f7fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded-lg p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium block">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">
               الرصيد المتبقي المتاح
             </span>
             <div className="mt-1 flex items-baseline gap-1">
@@ -125,7 +125,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
 
       {/* Progress Bar & Details */}
       <div className="pt-2">
-        <div className="flex items-center justify-between text-xs text-[#5f6b7d] dark:text-slate-400 mb-1.5 font-medium">
+        <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
           <span>نسبة استهلاك الرصيد السنوي</span>
           <span className="font-mono tabular-nums">{percentUsed}% ({used} من {total} يوم)</span>
         </div>
@@ -140,7 +140,7 @@ export const MyLeaveBalanceCard: React.FC<MyLeaveBalanceCardProps> = ({
       {/* Breakdown by motif if available */}
       {balance?.byMotif && Object.keys(balance.byMotif).length > 0 && (
         <div className="pt-2 border-t border-[#edf2f7] dark:border-slate-800 flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-[#5f6b7d] dark:text-slate-400 flex items-center gap-1">
+          <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
             <Info className="h-3.5 w-3.5" />
             <span>تفاصيل الاستهلاك :</span>
           </span>

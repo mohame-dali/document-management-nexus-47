@@ -65,7 +65,7 @@ export const PersonnelCard: React.FC<PersonnelCardProps> = ({
               {personnel.nom} {personnel.prenom}
             </h3>
             {personnel.cin && (
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+              <p className="text-sm text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                 CIN: {personnel.cin}
               </p>
             )}
@@ -82,7 +82,7 @@ export const PersonnelCard: React.FC<PersonnelCardProps> = ({
               <span>{t('personnel.account.linkedBadge')}</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
               <Clock className="w-3 h-3 shrink-0" />
               <span>{isRTL ? 'بدون حساب' : 'Sans compte'}</span>
             </span>
@@ -93,28 +93,28 @@ export const PersonnelCard: React.FC<PersonnelCardProps> = ({
       <div className="space-y-2.5 text-sm text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-3 mb-4">
         {personnel.poste && (
           <div className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            <Briefcase className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
             <span className="font-medium text-slate-800 dark:text-slate-200">{personnel.poste}</span>
           </div>
         )}
 
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-            <Building2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+            <Building2 className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0" />
             <span>{departmentName}</span>
           </span>
         </div>
 
         {personnel.telephone && (
           <div className="flex items-center gap-2">
-            <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            <Phone className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
             <span dir="ltr" className="tabular-nums">{personnel.telephone}</span>
           </div>
         )}
 
         {personnel.emailPersonnel && (
           <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            <Mail className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
             <span dir="ltr" className="truncate">{personnel.emailPersonnel}</span>
           </div>
         )}

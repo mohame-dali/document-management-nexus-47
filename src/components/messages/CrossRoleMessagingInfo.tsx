@@ -81,7 +81,7 @@ const CrossRoleMessagingInfo: React.FC = () => {
                   {isRTL ? 'الإدارة العامة (Admin)' : 'Direction Générale (Admin)'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed">
                 {isRTL
                   ? 'مراسلات مركزية، توجيهات عامة وإعلانات رسمية لكافة المكاتب والأقسام.'
                   : 'Correspondances centrales, directives et annonces officielles.'}
@@ -95,7 +95,7 @@ const CrossRoleMessagingInfo: React.FC = () => {
                   {isRTL ? 'مديرو الأقسام (Department)' : 'Chefs de service'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed">
                 {isRTL
                   ? 'مراسلات رسمية متبادلة وتنسيق مباشر بين الإدارات والأقسام المعتمدة.'
                   : 'Échanges officiels et coordination directe entre directions.'}
@@ -109,7 +109,7 @@ const CrossRoleMessagingInfo: React.FC = () => {
                   {isRTL ? 'مكتب التنسيق (TuningDesk)' : 'Bureau de coordination'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed">
                 {isRTL
                   ? 'متابعة سير المعاملات الإدارية وتبادل المذكرات التنسيقية المشتركة.'
                   : 'Suivi des dossiers administratifs et notes de coordination.'}
@@ -123,7 +123,7 @@ const CrossRoleMessagingInfo: React.FC = () => {
                   {isRTL ? 'الموظفون (User)' : 'Collaborateurs (User)'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed">
                 {isRTL
                   ? 'رفع التقارير الميدانية والمراسلة المباشرة مع المسؤولين والمصالح المعنية.'
                   : 'Remontée de rapports et échanges directs avec les responsables.'}

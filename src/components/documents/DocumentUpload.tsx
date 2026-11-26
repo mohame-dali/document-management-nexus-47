@@ -81,7 +81,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     } else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
       return <FileText className="h-8 w-8 text-green-500" />;
     } else {
-      return <FileText className="h-8 w-8 text-gray-500" />;
+      return <FileText className="h-8 w-8 text-slate-700 dark:text-slate-300" />;
     }
   };
 
@@ -96,9 +96,9 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+        <Upload className="h-12 w-12 mx-auto mb-4 text-slate-700 dark:text-slate-300" />
         <p className="text-gray-600 mb-2">اسحب وأفلت الملفات هنا</p>
-        <p className="text-gray-500 mb-4">أو</p>
+        <p className="text-slate-700 dark:text-slate-300 mb-4">أو</p>
         <Button
           type="button"
           variant="outline"

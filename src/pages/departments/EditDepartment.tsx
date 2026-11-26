@@ -103,7 +103,7 @@ const EditDepartment: React.FC = () => {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1">
-              <span className="text-sm font-semibold text-gray-500 block flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block flex items-center gap-1.5">
                 <Calendar className="h-4 w-4 text-[#2c5282]" />
                 تاريخ الإنشاء
               </span>
@@ -115,7 +115,7 @@ const EditDepartment: React.FC = () => {
             </div>
 
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1">
-              <span className="text-sm font-semibold text-gray-500 block flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-[#2c5282]" />
                 الحالة التشغيلية
               </span>
@@ -132,7 +132,7 @@ const EditDepartment: React.FC = () => {
             </div>
 
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1">
-              <span className="text-sm font-semibold text-gray-500 block flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block flex items-center gap-1.5">
                 <Hash className="h-4 w-4 text-[#2c5282]" />
                 المعرف النظامي
               </span>

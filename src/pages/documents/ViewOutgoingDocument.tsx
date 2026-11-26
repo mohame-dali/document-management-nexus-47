@@ -238,7 +238,7 @@ const ViewOutgoingDocument: React.FC = () => {
       <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center space-y-4">
         <Loader2 className="h-10 w-10 text-[#2c5282] animate-spin" />
         <h2 className="text-xl font-bold text-[#1a202c]">{t('documents.viewOutgoing.loading.title')}</h2>
-        <p className="text-base text-[#4a5568]">{t('documents.viewOutgoing.loading.description')}</p>
+        <p className="text-base text-slate-700 dark:text-slate-300">{t('documents.viewOutgoing.loading.description')}</p>
       </div>
     );
   }
@@ -294,11 +294,11 @@ const ViewOutgoingDocument: React.FC = () => {
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-4 sm:p-6 lg:p-8 space-y-4">
       
       {/* Fil d'Ariane (Breadcrumbs) */}
-      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 print:hidden">
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 print:hidden">
         <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('documents.viewOutgoing.breadcrumb.home')}</Link>
-        <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+        <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
         <Link to="/dashboard/outgoing-documents" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('documents.viewOutgoing.breadcrumb.outgoingDocuments')}</Link>
-        <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+        <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
         <span className="text-slate-900 dark:text-slate-100 font-medium truncate max-w-md">
           {document.subject || t('documents.viewOutgoing.fallback.untitled', { serialNumber: document.serialNumber })}
         </span>
@@ -346,11 +346,11 @@ const ViewOutgoingDocument: React.FC = () => {
         <div className="mt-12 flex justify-between text-center pt-8 border-t">
           <div className="w-1/3">
             <p className="font-bold mb-12">{t('documents.viewOutgoing.print.visa.issuingService')}</p>
-            <p className="text-xs text-gray-500">{t('documents.viewOutgoing.print.visa.stampAndSignature')}</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300">{t('documents.viewOutgoing.print.visa.stampAndSignature')}</p>
           </div>
           <div className="w-1/3">
             <p className="font-bold mb-12">{t('documents.viewOutgoing.print.visa.registryOffice')}</p>
-            <p className="text-xs text-gray-500">{t('documents.viewOutgoing.print.visa.visaAndDate')}</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300">{t('documents.viewOutgoing.print.visa.visaAndDate')}</p>
           </div>
         </div>
       </div>
@@ -377,7 +377,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-blue-300 leading-normal tabular-nums">
                 {t('documents.viewOutgoing.title.outgoingNumber', { serialNumber: document.serialNumber })}
               </h1>
-              <span className="text-base font-bold text-slate-600 dark:text-slate-400 tabular-nums">
+              <span className="text-base font-bold text-slate-700 dark:text-slate-300 tabular-nums">
                 {t('documents.viewOutgoing.title.yearSuffix', { year: document.year })}
               </span>
             </div>
@@ -472,14 +472,14 @@ const ViewOutgoingDocument: React.FC = () => {
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-semibold bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
-                <FileOutput className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <FileOutput className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                 {t('documents.viewOutgoing.badge.initialOutgoing')}
               </span>
             )}
 
             {/* Folder Status Badge */}
             <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-medium bg-slate-50/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
-              <FolderOpen className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+              <FolderOpen className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               {folderName}
             </span>
           </div>
@@ -494,7 +494,7 @@ const ViewOutgoingDocument: React.FC = () => {
         {/* Document Subject Callout Box */}
         <div className="bg-slate-50/80 dark:bg-slate-800/60 border-s-4 border-[#2c5282] dark:border-s-blue-500 border-y border-e border-slate-200/80 dark:border-slate-700/80 rounded-lg p-5 sm:p-6 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+            <span className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
               {t('documents.viewOutgoing.subject.title')}
             </span>
             <div className="flex items-center gap-2">
@@ -554,7 +554,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Building2 className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{t('documents.viewOutgoing.metric.issuingService')}</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{t('documents.viewOutgoing.metric.issuingService')}</span>
               <span className="text-base font-bold text-slate-900 dark:text-slate-100 truncate block" title={sourceName}>
                 {sourceName}
               </span>
@@ -567,7 +567,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Calendar className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{t('documents.viewOutgoing.metric.actualIssueDate')}</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{t('documents.viewOutgoing.metric.actualIssueDate')}</span>
               <span className="text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums block">
                 <bdi dir={dateDir}>{formatLongDate(document.issueDate, dateLang)}</bdi>
               </span>
@@ -580,7 +580,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Users className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{t('documents.viewOutgoing.metric.recipients')}</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{t('documents.viewOutgoing.metric.recipients')}</span>
               <span className="text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums block">
                 {assignedCount > 0 ? t('documents.viewOutgoing.metric.recipientsCount', { count: assignedCount }) : t('documents.viewOutgoing.fallback.unspecified')}
               </span>
@@ -593,7 +593,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <Eye className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{t('documents.viewOutgoing.metric.pourInfo')}</span>
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{t('documents.viewOutgoing.metric.pourInfo')}</span>
               <span className="text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums block">
                 {pourInfoCount > 0 ? t('documents.viewOutgoing.metric.pourInfoCount', { count: pourInfoCount }) : t('documents.viewOutgoing.metric.noCopies')}
               </span>
@@ -621,7 +621,7 @@ const ViewOutgoingDocument: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-base">
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">رقم القيد الصادر:</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">رقم القيد الصادر:</span>
                 <div className="inline-flex items-center gap-1.5 text-base font-bold text-[#2c5282] dark:text-blue-300 tabular-nums">
                   <span>
                     <bdi dir="ltr">#{document.serialNumber}</bdi> لسنة <bdi dir="ltr">{document.year}</bdi>
@@ -631,32 +631,32 @@ const ViewOutgoingDocument: React.FC = () => {
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">تاريخ الإصدار / الإرسال:</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">تاريخ الإصدار / الإرسال:</span>
                 <span className="text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums">
                   <bdi dir={dateDir}>{formatLongDate(document.issueDate, dateLang)}</bdi>
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">نوع الوثيقة:</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">نوع الوثيقة:</span>
                 <span className="text-base font-medium text-slate-900 dark:text-slate-100">
                   {document.typeDocument || 'غير مصنف'}
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">تاريخ الإنشاء والتسجيل بالمنظومة:</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">تاريخ الإنشاء والتسجيل بالمنظومة:</span>
                 <span className="text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums">
                   <bdi dir={dateDir}>{formatDateTime(document.createdAt, dateLang)}</bdi>
                 </span>
               </div>
 
               <div className="md:col-span-2">
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">المصلحة / القسم المصدر:</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">المصلحة / القسم المصدر:</span>
                 <div className="p-3 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg flex items-center justify-between">
                   <span className="text-base font-bold text-slate-900 dark:text-slate-100">{sourceName}</span>
                   {sourceId && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">معرّف المصلحة: <bdi dir="ltr">{String(sourceId)}</bdi></span>
+                    <span className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">معرّف المصلحة: <bdi dir="ltr">{String(sourceId)}</bdi></span>
                   )}
                 </div>
               </div>
@@ -682,7 +682,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <Users className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
                     الجهات الموجه إليها (المستلمون الأساسيون):
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold tabular-nums">
+                  <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold tabular-nums">
                     <bdi dir="ltr">{assignedCount}</bdi> جهة
                   </span>
                 </div>
@@ -700,7 +700,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 text-sm">
+                  <div className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-sm">
                     لم يتم تحديد جهات توجيه أساسية لهذه الوثيقة
                   </div>
                 )}
@@ -715,7 +715,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <Eye className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     نسخ للإعلام والإطلاع (Pour Information):
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold tabular-nums">
+                  <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold tabular-nums">
                     <bdi dir="ltr">{pourInfoCount}</bdi> جهة
                   </span>
                 </div>
@@ -733,7 +733,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 text-sm">
+                  <div className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-sm">
                     لا توجد نسخ محددة للإعلام مع هذه المراسلة
                   </div>
                 )}
@@ -753,7 +753,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                       النص المستخرج آلياً (OCR)
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">تم التعرف على النص عبر خوارزميات المسح الضوئي</p>
+                    <p className="text-xs text-slate-700 dark:text-slate-300">تم التعرف على النص عبر خوارزميات المسح الضوئي</p>
                   </div>
                 </div>
 
@@ -789,12 +789,12 @@ const ViewOutgoingDocument: React.FC = () => {
                   placeholder="بحث داخل النص المستخرج..."
                   className="w-full h-10 px-3 ps-9 text-sm border border-slate-300 dark:border-slate-700 focus:border-[#2c5282] rounded-lg bg-slate-50/80 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 outline-none"
                 />
-                <FileSearch className="h-4 w-4 text-slate-400 dark:text-slate-500 absolute top-3 start-3" />
+                <FileSearch className="h-4 w-4 text-slate-700 dark:text-slate-300 absolute top-3 start-3" />
                 {ocrSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setOcrSearchQuery('')}
-                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 absolute top-2.5 end-3 font-semibold"
+                    className="text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 absolute top-2.5 end-3 font-semibold"
                   >
                     مسح
                   </button>
@@ -807,7 +807,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1 tabular-nums">
+              <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 pt-1 tabular-nums">
                 <span>عدد الكلمات التقريبي: <bdi dir="ltr">{document.ocrText.trim().split(/\s+/).length}</bdi> كلمة</span>
                 <span>الحروف: <bdi dir="ltr">{document.ocrText.length}</bdi> حرف</span>
               </div>
@@ -855,7 +855,7 @@ const ViewOutgoingDocument: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">رقم القيد الوارد:</span>
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold">رقم القيد الوارد:</span>
                     <div className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                       <bdi dir="ltr">#{populatedReference.serialNumber} / {populatedReference.year}</bdi>
                       <CopyReferenceButton value={`#${populatedReference.serialNumber} / ${populatedReference.year}`} />
@@ -864,7 +864,7 @@ const ViewOutgoingDocument: React.FC = () => {
 
                   {populatedReference.subject && (
                     <div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-0.5">موضوع الوارد:</span>
+                      <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold block mb-0.5">موضوع الوارد:</span>
                       <p className="text-sm font-bold text-slate-900 dark:text-slate-100 line-clamp-2">
                         {populatedReference.subject}
                       </p>
@@ -880,7 +880,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <div className="space-y-3">
                 <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">رقم القيد الوارد:</span>
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold">رقم القيد الوارد:</span>
                     <div className="inline-flex items-center gap-1.5 text-sm font-bold text-[#2c5282] dark:text-blue-300 tabular-nums">
                       <bdi dir="ltr">#{referenceDocument.serialNumber} / {referenceDocument.year}</bdi>
                       <CopyReferenceButton value={`#${referenceDocument.serialNumber} / ${referenceDocument.year}`} />
@@ -888,13 +888,13 @@ const ViewOutgoingDocument: React.FC = () => {
                   </div>
 
                   <div>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-0.5">موضوع الوارد:</span>
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-semibold block mb-0.5">موضوع الوارد:</span>
                     <p className="text-sm font-bold text-slate-900 dark:text-slate-100 line-clamp-2">
                       {referenceDocument.subject}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/80 dark:border-slate-700/80 tabular-nums">
+                  <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 pt-1 border-t border-slate-200/80 dark:border-slate-700/80 tabular-nums">
                     <span>تاريخ الوصول:</span>
                     <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums"><bdi dir={dateDir}>{formatLongDate(referenceDocument.arrivalDate, dateLang)}</bdi></span>
                   </div>
@@ -912,9 +912,9 @@ const ViewOutgoingDocument: React.FC = () => {
               </div>
             ) : (
               <div className="p-4 bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-center space-y-2">
-                <FileOutput className="h-8 w-8 text-slate-400 dark:text-slate-500 mx-auto opacity-70" />
+                <FileOutput className="h-8 w-8 text-slate-700 dark:text-slate-300 mx-auto opacity-70" />
                 <p className="text-base font-semibold text-slate-700 dark:text-slate-200">مراسلة صادرة ابتدائية</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                   هذه الوثيقة غير مرتبطة بوارد سابق، وصدرت مباشرة بمبادرة إدارية من المصلحة المصدرة.
                 </p>
               </div>
@@ -942,14 +942,14 @@ const ViewOutgoingDocument: React.FC = () => {
             </div>
 
             <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg flex items-center gap-3">
-              <FolderTree className="h-6 w-6 text-slate-500 dark:text-slate-400 flex-shrink-0" />
+              <FolderTree className="h-6 w-6 text-slate-700 dark:text-slate-300 flex-shrink-0" />
               <div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 block">المجلد الحالي:</span>
+                <span className="text-xs text-slate-700 dark:text-slate-300 block">المجلد الحالي:</span>
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">{folderName}</span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
               تصنيف الوثيقة داخل مجلد يضمن سهولة الفهرسة والبحث والرجوع المستقبلي للوثائق المشتركة.
             </p>
           </div>
@@ -971,7 +971,7 @@ const ViewOutgoingDocument: React.FC = () => {
               </li>
 
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${assignedCount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${assignedCount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`} />
                 <div>
                   <span className="font-semibold text-slate-900 dark:text-slate-100 block">تحديد الموجه إليهم:</span>
                   <span className="tabular-nums">{assignedCount > 0 ? <><bdi dir="ltr">{assignedCount}</bdi> جهة</> : 'غير محدد'}</span>
@@ -979,7 +979,7 @@ const ViewOutgoingDocument: React.FC = () => {
               </li>
 
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.folder ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.folder ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`} />
                 <div>
                   <span className="font-semibold text-slate-900 dark:text-slate-100 block">الأرشفة في مجلد:</span>
                   <span>{document.folder ? folderName : 'لم تؤرشف بعد'}</span>
@@ -987,7 +987,7 @@ const ViewOutgoingDocument: React.FC = () => {
               </li>
 
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.scannedDocument ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.scannedDocument ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`} />
                 <div>
                   <span className="font-semibold text-slate-900 dark:text-slate-100 block">المسح الضوئي (PDF):</span>
                   <span>{document.scannedDocument ? 'مرفق وممسوح ضوئياً' : 'غير مرفق'}</span>
@@ -1025,7 +1025,7 @@ const ViewOutgoingDocument: React.FC = () => {
               <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100">
                 الوثائق المرفقة والممسوحة ضوئياً
               </h2>
-              <p className="text-base text-[#4a5568] dark:text-slate-300">
+              <p className="text-base text-slate-700 dark:text-slate-300">
                 معاينة مستندات PDF المرفقة مع إمكانية التحميل والطباعة المباشرة
               </p>
             </div>
@@ -1038,7 +1038,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 type="button"
                 onClick={() => setPreviewTab('outgoing')}
                 className={`h-9 px-3 text-sm font-semibold transition-colors duration-200 ${
-                  previewTab === 'outgoing' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  previewTab === 'outgoing' ? 'bg-[#2c5282] text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                 }`}
               >
                 الوثيقة الصادرة
@@ -1047,7 +1047,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 type="button"
                 onClick={() => setPreviewTab('reference')}
                 className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] dark:border-slate-700 transition-colors duration-200 ${
-                  previewTab === 'reference' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  previewTab === 'reference' ? 'bg-[#2c5282] text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                 }`}
               >
                 الوارد المرجعي
@@ -1056,7 +1056,7 @@ const ViewOutgoingDocument: React.FC = () => {
                 type="button"
                 onClick={() => setPreviewTab('split')}
                 className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] dark:border-slate-700 transition-colors duration-200 ${
-                  previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-slate-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                 }`}
               >
                 عرض مقارن جنباً إلى جنب
@@ -1243,19 +1243,19 @@ const ViewOutgoingDocument: React.FC = () => {
               </div>
             ) : (
               <div className="p-8 bg-[#f8fafc] dark:bg-slate-800/40 border border-dashed border-[#cbd5e1] dark:border-slate-700 rounded text-center">
-                <Paperclip className="h-10 w-10 text-[#718096] mx-auto mb-2 opacity-50" />
-                <p className="text-base font-semibold text-[#4a5568] dark:text-slate-300">لا يوجد ملف PDF ممسوح ضوئياً لهذه الوثيقة</p>
+                <Paperclip className="h-10 w-10 text-slate-700 dark:text-slate-300 mx-auto mb-2 opacity-50" />
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-300">لا يوجد ملف PDF ممسوح ضوئياً لهذه الوثيقة</p>
               </div>
             )}
           </div>
         ) : (
           /* Empty Attachments State */
           <div className="p-10 bg-slate-50/80 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-center space-y-3">
-            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center mx-auto">
               <Paperclip className="h-7 w-7" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">لا توجد وثائق ممسوحة ضوئياً مرفقة</h3>
-            <p className="text-base text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+            <p className="text-base text-slate-700 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
               لم يتم تحميل أي ملف PDF ممسوح ضوئياً لهذه المراسلة الصادرة حتى الآن.
             </p>
             {canEdit && (
@@ -1409,7 +1409,7 @@ const ViewOutgoingDocument: React.FC = () => {
                     <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {item.action || 'إجراء إداري'}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium tabular-nums">
                       <bdi dir={dateDir}>{formatDateTime(item.createdAt, dateLang)}</bdi>
                     </span>
                   </div>
@@ -1431,7 +1431,7 @@ const ViewOutgoingDocument: React.FC = () => {
                   <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                     تسجيل وقيد الوثيقة في سجل الصادر
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
+                  <span className="text-xs text-slate-700 dark:text-slate-300 font-medium tabular-nums">
                     <bdi dir={dateDir}>{formatDateTime(document.createdAt || document.issueDate, dateLang)}</bdi>
                   </span>
                 </div>

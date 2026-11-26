@@ -51,7 +51,7 @@ const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
       
       {breadcrumbPath.map((folder, index) => (
         <React.Fragment key={folder._id}>
-          <ChevronRight className="h-3 w-3 text-gray-400 rotate-180" />
+          <ChevronRight className="h-3 w-3 text-slate-700 dark:text-slate-300 rotate-180" />
           <Button
             variant="ghost"
             size="sm"

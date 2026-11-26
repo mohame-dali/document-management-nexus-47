@@ -13,10 +13,10 @@ const AuditTrailPage = () => {
       <div className="max-w-7xl mx-auto p-4 sm:p-6" dir="rtl">
         <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
           <CardContent className="p-8 text-center space-y-4">
-            <Lock className="h-12 w-12 mx-auto text-gray-400" />
+            <Lock className="h-12 w-12 mx-auto text-slate-700 dark:text-slate-300" />
             <div className="space-y-2">
               <h2 className="text-lg font-bold text-[#1a202c]">ليس لديك صلاحية</h2>
-              <p className="text-sm text-[#4a5568] leading-relaxed">
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                 ليس لديك الصلاحية لعرض سجل التدقيق والمراجعة
               </p>
             </div>
@@ -34,7 +34,7 @@ const AuditTrailPage = () => {
           <h1 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
             سجل التدقيق والمراجعة
           </h1>
-          <p className="text-sm text-[#4a5568] mt-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
             مراقبة جميع العمليات والأنشطة في النظام مع إمكانية التصدير والتحليل
           </p>
         </div>

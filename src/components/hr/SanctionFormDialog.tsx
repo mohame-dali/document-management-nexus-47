@@ -127,7 +127,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
             <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             <span>{isEditing ? 'تعديل بيانات العقوبة' : 'إضافة عقوبة تأديبية جديدة'}</span>
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
             سجل العقوبات والإجراءات التأديبية الخاصة بالموظف
           </DialogDescription>
         </DialogHeader>
@@ -135,7 +135,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 تاريخ العقوبة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -146,7 +146,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
                   if (errors.dateSanction) setErrors((prev) => ({ ...prev, dateSanction: '' }));
                 }}
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${
-                  errors.dateSanction ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.dateSanction ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.dateSanction && (
@@ -158,7 +158,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 عدد الأيام (إن وجد)
               </Label>
               <Input
@@ -167,13 +167,13 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
                 value={nombreJours}
                 onChange={(e) => setNombreJours(e.target.value)}
                 placeholder="مثال: 3"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg tabular-nums"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg tabular-nums"
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
               سبب العقوبة <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -184,7 +184,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
               }}
               placeholder="مثال: غياب غير مبرر / إخلال بالواجب المهني"
               className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${
-                errors.raison ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                errors.raison ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
               }`}
             />
             {errors.raison && (
@@ -197,32 +197,32 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 نوع أو درجة العقوبة
               </Label>
               <Input
                 value={typeSanction}
                 onChange={(e) => setTypeSanction(e.target.value)}
                 placeholder="مثال: إنذار / توبيخ / إيقاف مؤقت"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 المرجع / القرار التأديبي
               </Label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="مثال: قرار مجلس التأديب عدد 44"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea
@@ -230,7 +230,7 @@ export const SanctionFormDialog: React.FC<SanctionFormDialogProps> = ({
               onChange={(e) => setObservations(e.target.value)}
               placeholder="أي تفاصيل أو ملاحظات حول العقوبة..."
               rows={3}
-              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg resize-none"
+              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg resize-none"
             />
           </div>
 

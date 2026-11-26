@@ -105,7 +105,7 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-[#2c5282] dark:border-t-sky-500 rounded-lg p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">وارد غير مصنف</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">وارد غير مصنف</span>
             <span className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-sky-400 tabular-nums mt-1 block">{unclassifiedIncoming.length}</span>
           </div>
           <div className="p-2.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60 shrink-0">
@@ -115,7 +115,7 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-emerald-500 dark:border-t-emerald-400 rounded-lg p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">صادر غير مصنف</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">صادر غير مصنف</span>
             <span className="text-2xl sm:text-3xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums mt-1 block">{unclassifiedOutgoing.length}</span>
           </div>
           <div className="p-2.5 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60 shrink-0">
@@ -125,7 +125,7 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-amber-500 dark:border-t-amber-400 rounded-lg p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">إجمالي غير المصنف</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">إجمالي غير المصنف</span>
             <span className="text-2xl sm:text-3xl font-bold text-amber-700 dark:text-amber-400 tabular-nums mt-1 block">
               {unclassifiedIncoming.length + unclassifiedOutgoing.length}
             </span>
@@ -137,7 +137,7 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-slate-400 dark:border-t-slate-500 rounded-lg p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">المجلدات المتاحة</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">المجلدات المتاحة</span>
             <span className="text-2xl sm:text-3xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums mt-1 block">{folders.length}</span>
           </div>
           <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700 shrink-0">
@@ -180,7 +180,7 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
 
           {/* Search bar */}
           <div className="relative max-w-sm w-full">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-700 dark:text-slate-300" />
             <Input
               placeholder="البحث في المراسلات غير المصنفة..."
               value={searchTerm}
@@ -218,17 +218,17 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
         {/* List of Uncategorized Documents */}
         <div className="p-4 sm:p-6">
           {isLoadingIncoming || isLoadingOutgoing ? (
-            <div className="text-center py-16 text-slate-500 dark:text-slate-400 space-y-3">
+            <div className="text-center py-16 text-slate-700 dark:text-slate-300 space-y-3">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] dark:border-sky-400 mx-auto"></div>
-              <p className="text-base text-slate-600 dark:text-slate-400 font-medium">جاري تحميل المستندات غير المصنفة...</p>
+              <p className="text-base text-slate-700 dark:text-slate-300 font-medium">جاري تحميل المستندات غير المصنفة...</p>
             </div>
           ) : filteredDocuments.length === 0 ? (
-            <div className="text-center py-16 text-slate-400 dark:text-slate-500 space-y-3">
+            <div className="text-center py-16 text-slate-700 dark:text-slate-300 space-y-3">
               <CheckCircle2 className="h-14 w-14 mx-auto text-emerald-500 opacity-90" />
               <p className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
                 {searchTerm ? 'لا توجد مراسلات مطابقة لمعايير البحث' : 'ممتاز! جميع المراسلات في هذا القسم مصنفة في مجلدات'}
               </p>
-              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">
+              <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300">
                 يمكنك مراجعة المجلدات وتصفح مستنداتها من خلال تبويب الهيكل الهرمي للمجلدات
               </p>
             </div>
@@ -256,8 +256,8 @@ const DocumentCategoryManager: React.FC<DocumentCategoryManagerProps> = ({
                           #{doc.serialNumber}/{doc.year}
                         </span>
 
-                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-medium tabular-nums">
-                          <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                        <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium tabular-nums">
+                          <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                           <bdi dir="rtl" className="tabular-nums">{formatLongDate(date, 'ar')}</bdi>
                         </span>
 

@@ -56,11 +56,11 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
   if (!selectedFolder) {
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 sm:p-12 text-center shadow-sm" dir="rtl">
-        <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-400 dark:text-slate-500">
+        <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-700 dark:text-slate-300">
           <FolderOpen className="h-8 w-8" />
         </div>
         <h3 className="text-lg sm:text-xl font-bold text-[#1a202c] dark:text-slate-100 mb-2">اختر مجلداً لعرض محتواه</h3>
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
+        <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed max-w-md mx-auto">
           انقر على أي مجلد في الشجرة الهرمية لعرض المستندات الواردة والصادرة المصنفة به
         </p>
       </div>
@@ -71,7 +71,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-12 text-center shadow-sm" dir="rtl">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] dark:border-sky-400 mx-auto mb-3"></div>
-        <p className="text-base text-slate-600 dark:text-slate-400 font-medium">جاري تحميل مستندات المجلد...</p>
+        <p className="text-base text-slate-700 dark:text-slate-300 font-medium">جاري تحميل مستندات المجلد...</p>
       </div>
     );
   }
@@ -103,7 +103,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                 </span>
               </div>
               {selectedFolder.description && (
-                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">{selectedFolder.description}</p>
+                <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">{selectedFolder.description}</p>
               )}
             </div>
           </div>
@@ -125,7 +125,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
               <Inbox className="h-5 w-5" />
             </div>
             <div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">المستندات الواردة</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">المستندات الواردة</span>
               <span className="text-2xl sm:text-3xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{incomingDocuments.length}</span>
             </div>
           </div>
@@ -140,7 +140,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
               <Send className="h-5 w-5" />
             </div>
             <div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">المستندات الصادرة</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">المستندات الصادرة</span>
               <span className="text-2xl sm:text-3xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{outgoingDocuments.length}</span>
             </div>
           </div>
@@ -155,7 +155,7 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">إجمالي المستندات</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">إجمالي المستندات</span>
               <span className="text-2xl sm:text-3xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{totalDocuments}</span>
             </div>
           </div>
@@ -181,9 +181,9 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
 
           <div className="p-4 sm:p-5 flex-1">
             {incomingDocuments.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 dark:text-slate-500 space-y-2">
-                <Inbox className="h-12 w-12 mx-auto opacity-30 text-slate-400 dark:text-slate-500" />
-                <p className="text-base font-semibold text-slate-600 dark:text-slate-400">لا توجد مستندات واردة في هذا المجلد</p>
+              <div className="text-center py-12 text-slate-700 dark:text-slate-300 space-y-2">
+                <Inbox className="h-12 w-12 mx-auto opacity-30 text-slate-700 dark:text-slate-300" />
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-300">لا توجد مستندات واردة في هذا المجلد</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1 pl-1 custom-scrollbar">
@@ -196,8 +196,8 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                       <span className="px-2.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-[#2c5282] dark:text-sky-300 border border-slate-200/80 dark:border-slate-700 shadow-2xs tabular-nums">
                         #{doc.serialNumber}/{doc.year}
                       </span>
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-medium tabular-nums">
-                        <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                      <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium tabular-nums">
+                        <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300 shrink-0" />
                         <bdi dir="rtl">{formatLongDate(doc.arrivalDate, 'ar')}</bdi>
                       </span>
                     </div>
@@ -210,9 +210,9 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                     </h4>
 
                     {doc.source && (
-                      <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 min-w-0">
+                      <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 min-w-0">
                         <Building className="h-4 w-4 text-[#2c5282] dark:text-sky-400 shrink-0" />
-                        <span className="text-slate-500 dark:text-slate-400 shrink-0">الجهة المصدرة:</span>
+                        <span className="text-slate-700 dark:text-slate-300 shrink-0">الجهة المصدرة:</span>
                         <span className="text-slate-900 dark:text-slate-100 font-bold truncate">{doc.source}</span>
                       </div>
                     )}
@@ -260,9 +260,9 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
 
           <div className="p-4 sm:p-5 flex-1">
             {outgoingDocuments.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 dark:text-slate-500 space-y-2">
-                <Send className="h-12 w-12 mx-auto opacity-30 text-slate-400 dark:text-slate-500" />
-                <p className="text-base font-semibold text-slate-600 dark:text-slate-400">لا توجد مستندات صادرة في هذا المجلد</p>
+              <div className="text-center py-12 text-slate-700 dark:text-slate-300 space-y-2">
+                <Send className="h-12 w-12 mx-auto opacity-30 text-slate-700 dark:text-slate-300" />
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-300">لا توجد مستندات صادرة في هذا المجلد</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1 pl-1 custom-scrollbar">
@@ -275,8 +275,8 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                       <span className="px-2.5 py-1 rounded-full text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 border border-slate-200/80 dark:border-slate-700 shadow-2xs tabular-nums">
                         #{doc.serialNumber}/{doc.year}
                       </span>
-                      <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-medium tabular-nums">
-                        <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                      <span className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium tabular-nums">
+                        <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300 shrink-0" />
                         <bdi dir="rtl">{formatLongDate(doc.issueDate, 'ar')}</bdi>
                       </span>
                     </div>
@@ -289,9 +289,9 @@ export const FolderDocumentsList: React.FC<FolderDocumentsListProps> = ({
                     </h4>
 
                     {doc.assignedTo && doc.assignedTo.length > 0 && (
-                      <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 min-w-0">
+                      <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 min-w-0">
                         <UserCheck className="h-4 w-4 text-[#2c5282] dark:text-sky-400 shrink-0" />
-                        <span className="text-slate-500 dark:text-slate-400 shrink-0">الجهة الموجه إليها:</span>
+                        <span className="text-slate-700 dark:text-slate-300 shrink-0">الجهة الموجه إليها:</span>
                         <span className="text-slate-900 dark:text-slate-100 font-bold truncate">{doc.assignedTo.join(', ')}</span>
                       </div>
                     )}

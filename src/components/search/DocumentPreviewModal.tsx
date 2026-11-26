@@ -98,7 +98,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                 <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] dark:text-sky-300 leading-normal">
                   معاينة الوثيقة
                 </DialogTitle>
-                <p className="text-base text-[#4a5568] dark:text-slate-400 leading-relaxed mt-1">
+                <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-1">
                   الرقم التسلسلي: <strong className="text-[#1a202c] dark:text-slate-100 tabular-nums"><bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi></strong>
                 </p>
               </div>
@@ -123,14 +123,14 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200/80 dark:border-slate-700/80">
               <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
                 <Calendar className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
-                <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">التاريخ:</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">التاريخ:</span>
                 <span className="tabular-nums"><bdi dir="ltr">{docDate ? formatShortDate(docDate, '-') : '-'}</bdi></span>
               </div>
 
               {sourceName && (
                 <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
                   <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
-                  <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">الجهة / المصدر:</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">الجهة / المصدر:</span>
                   <span className="truncate">{sourceName}</span>
                 </div>
               )}
@@ -138,7 +138,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               {document.typeDocument && (
                 <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
                   <Layers className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
-                  <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">نوع الوثيقة:</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">نوع الوثيقة:</span>
                   <span>{document.typeDocument}</span>
                 </div>
               )}
@@ -146,7 +146,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               {isIncoming && (document as IncomingDocument).responsibleUser && (
                 <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
                   <User className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
-                  <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">المسؤول:</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">المسؤول:</span>
                   <span>
                     {typeof (document as IncomingDocument).responsibleUser === 'object'
                       ? ((document as IncomingDocument).responsibleUser as { username?: string }).username || '-'

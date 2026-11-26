@@ -106,7 +106,7 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-gray-500">جاري تحميل الجدول الزمني...</p>
+            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">جاري تحميل الجدول الزمني...</p>
           </div>
         ) : (
           <ScrollArea className="h-[400px]">
@@ -133,7 +133,7 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
                             <Badge className={getActionColor(entry.action)}>
                               {getActionText(entry.action)}
                             </Badge>
-                            <div className="text-xs text-gray-500 flex items-center gap-1 tabular-nums">
+                            <div className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1 tabular-nums">
                               <Clock className="h-3 w-3" />
                               <bdi dir="rtl">{formatDateTime(entry.createdAt, 'ar')}</bdi>
                             </div>
@@ -166,7 +166,7 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
                 })}
                 
                 {timeline?.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-slate-700 dark:text-slate-300">
                     <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>لا يوجد سجل زمني لهذا المستند</p>
                   </div>

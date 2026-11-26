@@ -370,7 +370,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                   </span>
                 )}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
                 مراجعة تصاريح الحضور والغياب والمأموريات المقدمة مسبقاً من طرف الموظفين واعتمادها في السجل اليومي.
               </p>
             </div>
@@ -470,12 +470,12 @@ export const AttendanceDeclarationsPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {/* Recherche */}
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3" />
+            <Search className="w-4 h-4 text-slate-700 dark:text-slate-300 absolute start-3 top-3" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو الرقم الوظيفي..."
-              className="h-10 ps-9 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm"
+              className="h-10 ps-9 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm"
             />
           </div>
 
@@ -488,7 +488,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm">
+              <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm">
                 <SelectValue placeholder="تصفية حسب الحالة" />
               </SelectTrigger>
               <SelectContent dir={dir}>
@@ -510,7 +510,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm">
+              <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm">
                 <SelectValue placeholder="كل الأقسام / المصالح" />
               </SelectTrigger>
               <SelectContent dir={dir}>
@@ -533,7 +533,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 setDateFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm tabular-nums"
+              className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm tabular-nums"
             />
             {dateFilter && (
               <Button
@@ -543,7 +543,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                   setDateFilter('');
                   setPage(1);
                 }}
-                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg shrink-0"
+                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg shrink-0"
                 aria-label={t('attendance.declarations.clearDateAria')}
                 title={t('attendance.declarations.clearDateAria')}
               >
@@ -600,7 +600,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                             <div className="font-semibold text-slate-900 dark:text-slate-100">
                               {pers ? `${pers.nom} ${pers.prenom}` : 'موظف غير معرف'}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                            <div className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2">
                               {pers?.matricule && <span className="tabular-nums">{pers.matricule}</span>}
                               {dept?.name && <span>• {dept.name}</span>}
                             </div>
@@ -614,7 +614,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                           <Calendar className="w-3.5 h-3.5 text-[#2c5282] dark:text-sky-400" />
                           <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formattedDate}</bdi>
                         </div>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 tabular-nums">
                           قُدم: <bdi dir="ltr" className="tabular-nums">{formatShortDate(decl.createdAt)}</bdi>
                         </span>
                       </td>
@@ -638,29 +638,29 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                             </div>
                           )}
                           {decl.detailsMotif?.lieuMission && (
-                            <div className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <div className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-slate-700 dark:text-slate-300 shrink-0" />
                               {decl.detailsMotif.lieuMission} {decl.detailsMotif.objetMission ? `(${decl.detailsMotif.objetMission})` : ''}
                             </div>
                           )}
                           {decl.detailsMotif?.intituleFormation && (
-                            <div className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                              <GraduationCap className="w-3 h-3 text-slate-400 shrink-0" />
+                            <div className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                              <GraduationCap className="w-3 h-3 text-slate-700 dark:text-slate-300 shrink-0" />
                               {decl.detailsMotif.intituleFormation}
                             </div>
                           )}
                           {decl.detailsMotif?.commentaire && (
-                            <p className="text-slate-500 dark:text-slate-400 italic truncate" title={decl.detailsMotif.commentaire}>
+                            <p className="text-slate-700 dark:text-slate-300 italic truncate" title={decl.detailsMotif.commentaire}>
                               "{decl.detailsMotif.commentaire}"
                             </p>
                           )}
                           {decl.rejectionReason && (
-                            <p className="text-red-600 dark:text-red-400 text-[11px] font-semibold">
+                            <p className="text-red-600 dark:text-red-400 text-[13px] font-semibold">
                               سبب الرفض: {decl.rejectionReason}
                             </p>
                           )}
                           {decl.adminComment && (
-                            <p className="text-blue-600 dark:text-sky-400 text-[11px]">
+                            <p className="text-blue-600 dark:text-sky-400 text-[13px]">
                               ملاحظة الإدارة: {decl.adminComment}
                             </p>
                           )}
@@ -697,7 +697,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleOpenEdit(decl)}
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-sky-400 hover:bg-blue-50 dark:hover:bg-sky-950/40 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 hover:bg-blue-50 dark:hover:bg-sky-950/40 rounded-lg"
                                 title={t('attendance.declarations.editAria')}
                                 aria-label={t('attendance.declarations.editAria')}
                               >
@@ -728,7 +728,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
         {/* Pagination */}
         {!loading && total > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80">
-            <div className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+            <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
               عرض <strong>{declarations.length}</strong> من أصل <strong>{total}</strong> تصريح — صفحة{' '}
               <strong>{page}</strong> من <strong>{Math.max(totalPages, 1)}</strong>
             </div>
@@ -781,7 +781,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             </p>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                 ملاحظة الإدارة (اختياري)
               </Label>
               <Textarea
@@ -789,7 +789,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 value={adminComment}
                 onChange={(e) => setAdminComment(e.target.value)}
                 placeholder="أية ملاحظة تود توثيقها في سجل المراجعة..."
-                className="text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
+                className="text-sm border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>
@@ -831,7 +831,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             </p>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                 سبب الرفض <span className="text-red-500">*</span>
               </Label>
               <Textarea
@@ -844,12 +844,12 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">ملاحظة داخلية إضافية (اختياري)</Label>
+              <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">ملاحظة داخلية إضافية (اختياري)</Label>
               <Input
                 value={adminComment}
                 onChange={(e) => setAdminComment(e.target.value)}
                 placeholder="ملاحظة للإدارة..."
-                className="h-10 text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
+                className="h-10 text-sm border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>
@@ -888,12 +888,12 @@ export const AttendanceDeclarationsPage: React.FC = () => {
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">الوضعية</Label>
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">الوضعية</Label>
                 <Select
                   value={editForm.statut}
                   onValueChange={(val: 'present' | 'absent') => setEditForm((prev) => ({ ...prev, statut: val }))}
                 >
-                  <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100">
+                  <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent dir={dir}>
@@ -905,22 +905,22 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
               {editForm.statut === 'present' ? (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">ساعة الحضور</Label>
+                  <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">ساعة الحضور</Label>
                   <Input
                     type="time"
                     value={editForm.heureArrivee}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, heureArrivee: e.target.value }))}
-                    className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
+                    className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
                   />
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">سبب الغياب</Label>
+                  <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">سبب الغياب</Label>
                   <Select
                     value={editForm.motif}
                     onValueChange={(val) => setEditForm((prev) => ({ ...prev, motif: val }))}
                   >
-                    <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100">
+                    <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100">
                       <SelectValue placeholder="اختر السبب" />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
@@ -938,29 +938,29 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             {editForm.statut === 'absent' && (
               <>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">اسم المصلحة / الإدارة</Label>
+                  <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">اسم المصلحة / الإدارة</Label>
                   <Input
                     value={editForm.nomService}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, nomService: e.target.value }))}
                     placeholder="اسم المصلحة المستقبلة..."
-                    className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
+                    className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">مكان المأمورية</Label>
+                    <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">مكان المأمورية</Label>
                     <Input
                       value={editForm.lieuMission}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, lieuMission: e.target.value }))}
-                      className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
+                      className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">موضوع المأمورية</Label>
+                    <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">موضوع المأمورية</Label>
                     <Input
                       value={editForm.objetMission}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, objetMission: e.target.value }))}
-                      className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
+                      className="h-10 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
                     />
                   </div>
                 </div>
@@ -968,13 +968,13 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">ملاحظة التعديل للملف</Label>
+              <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">ملاحظة التعديل للملف</Label>
               <Textarea
                 rows={2}
                 value={editForm.adminComment}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, adminComment: e.target.value }))}
                 placeholder="سبب التعديل من طرف الإدارة..."
-                className="text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
+                className="text-sm border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>

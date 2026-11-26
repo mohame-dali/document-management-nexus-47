@@ -85,7 +85,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
                 minLength: { value: 2, message: 'اسم القسم يجب أن يحتوي على حرفين على الأقل' }
               })}
               placeholder="مثال: قسم الشؤون القانونية والإدارية"
-              className={`h-11 text-base px-4 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] ${
+              className={`h-11 text-base px-4 bg-white border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] ${
                 errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
               }`}
             />
@@ -95,7 +95,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
                 <span>{errors.name.message}</span>
               </p>
             ) : (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 الاسم الرسمي للقسم كما سيظهر في كافة المعاملات والمراسلات والمجلدات
               </p>
             )}
@@ -111,9 +111,9 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
               {...register('description')}
               placeholder="أدخل نبذة مختصرة عن مهام واختصاصات هذا القسم (اختياري)..."
               rows={4}
-              className="min-h-[110px] text-base p-3.5 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] leading-relaxed"
+              className="min-h-[110px] text-base p-3.5 bg-white border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] leading-relaxed"
             />
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
               معلومات إضافية توضح طبيعة عمل القسم لتسهيل توزيع المراسلات بدقة
             </p>
           </div>

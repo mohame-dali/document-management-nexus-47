@@ -92,7 +92,7 @@ export const AttendanceStatusBadge: React.FC<AttendanceStatusBadgeProps> = ({
 
       {isDeductible && (
         <span
-          className="text-[11px] px-1.5 rounded font-semibold border border-amber-300 dark:border-amber-700/70 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300"
+          className="text-[13px] px-1.5 rounded font-semibold border border-amber-300 dark:border-amber-700/70 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300"
           title={isRTL ? 'يخصم من رصيد الإجازات السنوية' : 'Déduit du solde de congés'}
         >
           {isRTL ? 'خصم' : 'Déduit'}

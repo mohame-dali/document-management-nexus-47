@@ -108,7 +108,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
             onClick={onClose}
             aria-label={t('common.close')}
             title={t('common.close')}
-            className="h-9 w-9 p-0 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center justify-center shrink-0"
+            className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center justify-center shrink-0"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -117,7 +117,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
         <CardContent className="p-5">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label className="text-sm font-semibold text-slate-700 dark:text-slate-200 block mb-1">
+              <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200 block mb-1">
                 {t('messages.recipients')} *
               </Label>
               <ContactSelector
@@ -128,7 +128,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
-                <Label htmlFor="quick-subject" className="text-sm font-semibold text-slate-700 dark:text-slate-200 block mb-1">
+                <Label htmlFor="quick-subject" className="text-sm font-semibold text-slate-800 dark:text-slate-200 block mb-1">
                   {t('messages.subject')} *
                 </Label>
                 <Input
@@ -142,7 +142,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
               </div>
 
               <div>
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-200 block mb-1">
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200 block mb-1">
                   {isRTL ? 'الأولوية' : 'Priorité'}
                 </Label>
                 <select
@@ -158,7 +158,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="quick-content" className="text-sm font-semibold text-slate-700 dark:text-slate-200 block mb-1">
+              <Label htmlFor="quick-content" className="text-sm font-semibold text-slate-800 dark:text-slate-200 block mb-1">
                 {t('messages.content')} *
               </Label>
               <Textarea
@@ -208,14 +208,14 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                       <span className="truncate max-w-[140px] font-medium" dir="ltr">
                         {file.name}
                       </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                      <span className="text-[13px] text-slate-700 dark:text-slate-300 tabular-nums">
                         ({(file.size / 1024).toFixed(0)} {t('common.kb')})
                       </span>
                       <button
                         type="button"
                         onClick={() => setPreviewFile(file)}
                         aria-label={t('common.preview')}
-                        className="h-8 w-8 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                        className="h-8 w-8 inline-flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
                         title={t('common.preview')}
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -224,7 +224,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
                         type="button"
                         onClick={() => removeAttachment(idx)}
                         aria-label={t('common.remove')}
-                        className="h-8 w-8 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-colors"
+                        className="h-8 w-8 inline-flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-colors"
                         title={t('common.remove')}
                       >
                         <X className="h-3.5 w-3.5" />

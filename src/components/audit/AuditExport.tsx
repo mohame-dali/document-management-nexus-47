@@ -86,7 +86,7 @@ const AuditExport: React.FC<AuditExportProps> = ({ filters, totalRecords = 0 }) 
           
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
+              <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               <span className="text-gray-600 tabular-nums">
                 من:{' '}
                 {filters.startDate ? (
@@ -97,7 +97,7 @@ const AuditExport: React.FC<AuditExportProps> = ({ filters, totalRecords = 0 }) 
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
+              <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               <span className="text-gray-600 tabular-nums">
                 إلى:{' '}
                 {filters.endDate ? (
@@ -184,7 +184,7 @@ const AuditExport: React.FC<AuditExportProps> = ({ filters, totalRecords = 0 }) 
         </Button>
 
         {totalRecords === 0 && (
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-sm text-slate-700 dark:text-slate-300 text-center">
             لا توجد سجلات للتصدير. يرجى تعديل المرشحات أو إضافة بيانات جديدة.
           </p>
         )}

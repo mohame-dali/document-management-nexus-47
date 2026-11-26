@@ -293,7 +293,7 @@ const SettingsPage = () => {
                 الإعدادات العامة
               </span>
             </div>
-            <p className="text-base text-[#4a5568] mt-1 leading-relaxed">
+            <p className="text-base text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
               إدارة إعدادات الحساب، معايير الأمان، قنوات الإشعارات والنسخ الاحتياطي للوثائق
             </p>
           </div>
@@ -328,7 +328,7 @@ const SettingsPage = () => {
         <TabsList className="w-full flex flex-wrap h-auto p-1.5 bg-[#edf2f7] border border-[#e2e8f0] rounded gap-1.5">
           <TabsTrigger
             value="profile"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <User className="h-5 w-5" />
             <span>الملف الشخصي</span>
@@ -336,7 +336,7 @@ const SettingsPage = () => {
 
           <TabsTrigger
             value="security"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Shield className="h-5 w-5" />
             <span>الأمان والخصوصية</span>
@@ -344,7 +344,7 @@ const SettingsPage = () => {
 
           <TabsTrigger
             value="notifications"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Bell className="h-5 w-5" />
             <span>الإشعارات</span>
@@ -352,7 +352,7 @@ const SettingsPage = () => {
 
           <TabsTrigger
             value="preferences"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Sliders className="h-5 w-5" />
             <span>تفضيلات النظام</span>
@@ -360,7 +360,7 @@ const SettingsPage = () => {
 
           <TabsTrigger
             value="scanner"
-            className="flex-1 min-w-[155px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[155px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Scan className="h-5 w-5" />
             <span>إعدادات الماسح الضوئي</span>
@@ -368,7 +368,7 @@ const SettingsPage = () => {
 
           <TabsTrigger
             value="backup"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <Database className="h-5 w-5" />
             <span>النسخ الاحتياطي</span>
@@ -376,7 +376,7 @@ const SettingsPage = () => {
 
           <TabsTrigger
             value="retention"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
           >
             <MessageCircle className="h-5 w-5" />
             <span>حفظ الرسائل</span>
@@ -385,7 +385,7 @@ const SettingsPage = () => {
           {(currentUser?.role === 'Admin' || currentUser?.role === 'Director') && (
             <TabsTrigger
               value="organization"
-              className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+              className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
             >
               <Building2 className="h-5 w-5" />
               <span>هوية المؤسسة</span>
@@ -405,7 +405,7 @@ const SettingsPage = () => {
                   <Camera className="h-5 w-5 text-[#2c5282]" />
                   <span>الصورة الشخصية</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#5f6b7d]">
+                <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                   صورتك تظهر في التوقيعات وسجلات العمليات
                 </CardDescription>
               </CardHeader>
@@ -474,7 +474,7 @@ const SettingsPage = () => {
                     <User className="h-5 w-5 text-[#2c5282]" />
                     <span>بيانات الحساب</span>
                   </CardTitle>
-                  <CardDescription className="text-base text-[#5f6b7d]">
+                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                     المعلومات الإدارية المسجلة لحسابك في المنظومة
                   </CardDescription>
                 </CardHeader>
@@ -489,9 +489,9 @@ const SettingsPage = () => {
                         id="account-username"
                         value={currentUser?.username || ''}
                         disabled
-                        className="h-11 text-base bg-gray-50 border-[#cbd5e1] rounded text-gray-700 font-medium"
+                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium"
                       />
-                      <p className="text-sm text-gray-500">اسم الدخول المسجل في النظام</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">اسم الدخول المسجل في النظام</p>
                     </div>
 
                     <div className="space-y-2">
@@ -502,9 +502,9 @@ const SettingsPage = () => {
                         id="account-role"
                         value={currentUser?.role || ''}
                         disabled
-                        className="h-11 text-base bg-gray-50 border-[#cbd5e1] rounded text-gray-700 font-medium"
+                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium"
                       />
-                      <p className="text-sm text-gray-500">مستوى الصلاحيات المعطى للحساب</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300">مستوى الصلاحيات المعطى للحساب</p>
                     </div>
                   </div>
 
@@ -517,7 +517,7 @@ const SettingsPage = () => {
                         id="account-department"
                         value={currentUser?.activeDepartment?.name || 'غير محدد'}
                         disabled
-                        className="h-11 text-base bg-gray-50 border-[#cbd5e1] rounded text-gray-700 font-medium"
+                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium"
                       />
                     </div>
 
@@ -529,7 +529,7 @@ const SettingsPage = () => {
                         id="account-created"
                         value={currentUser?.createdAt ? formatLongDate(currentUser.createdAt, 'ar') : 'غير متوفر'}
                         disabled
-                        className="h-11 text-base bg-gray-50 border-[#cbd5e1] rounded text-gray-700 font-medium tabular-nums"
+                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium tabular-nums"
                       />
                     </div>
                   </div>
@@ -537,7 +537,7 @@ const SettingsPage = () => {
                   <div className="pt-4 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                       <h4 className="text-base font-bold text-[#1a202c]">كلمة المرور والأمان</h4>
-                      <p className="text-sm text-[#4a5568]">
+                      <p className="text-sm text-slate-700 dark:text-slate-300">
                         ينصح بتغيير كلمة المرور دورياً كل 90 يوماً للحفاظ على سرية النظام
                       </p>
                     </div>
@@ -567,7 +567,7 @@ const SettingsPage = () => {
                 <Shield className="h-5 w-5 text-[#2c5282]" />
                 <span>سياسات الأمان والحماية</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#5f6b7d]">
+              <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                 تكوين معايير الجلسات وحماية الدخول ضد المحاولات المشبوهة
               </CardDescription>
             </CardHeader>
@@ -580,7 +580,7 @@ const SettingsPage = () => {
                     مهلة انتهاء الجلسة عند عدم النشاط
                   </Label>
                   <Select value={sessionTimeout} onValueChange={setSessionTimeout}>
-                    <SelectTrigger id="session-timeout" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="session-timeout" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -590,7 +590,7 @@ const SettingsPage = () => {
                       <SelectItem value="120">ساعتان</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-500">يتم قفل الشاشة تلقائياً بعد مرور هذه المدة دون نشاط</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">يتم قفل الشاشة تلقائياً بعد مرور هذه المدة دون نشاط</p>
                 </div>
 
                 <div className="space-y-2">
@@ -598,7 +598,7 @@ const SettingsPage = () => {
                     الحد الأقصى لمحاولات الدخول الخاطئة
                   </Label>
                   <Select value={maxLoginAttempts} onValueChange={setMaxLoginAttempts}>
-                    <SelectTrigger id="max-login-attempts" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="max-login-attempts" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -607,7 +607,7 @@ const SettingsPage = () => {
                       <SelectItem value="10">10 محاولات</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-500">يتم تعليق الحساب مؤقتاً عند تجاوز هذا العدد</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">يتم تعليق الحساب مؤقتاً عند تجاوز هذا العدد</p>
                 </div>
               </div>
 
@@ -620,7 +620,7 @@ const SettingsPage = () => {
                     <Label htmlFor="require-strong-pwd" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       فرض كلمات مرور قوية ومعقدة
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       إلزام المستخدمين بكلمات مرور تحتوي على حروف كبيرة وصغيرة وأرقام ورموز
                     </p>
                   </div>
@@ -636,7 +636,7 @@ const SettingsPage = () => {
                     <Label htmlFor="audit-logging" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       سجل المراقبة والتدقيق الأمني
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       تسجيل كافة عمليات الدخول وتعديلات الوثائق في سجل التدقيق للنظام
                     </p>
                   </div>
@@ -652,7 +652,7 @@ const SettingsPage = () => {
                     <Label htmlFor="2fa-toggle" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       التحقق بخطوتين (2FA)
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       طلب رمز تحقق إضافي عبر التطبيق أو البريد عند الدخول من جهاز جديد
                     </p>
                   </div>
@@ -698,7 +698,7 @@ const SettingsPage = () => {
                 <Bell className="h-5 w-5 text-[#2c5282]" />
                 <span>قنوات وتفضيلات التنبيهات</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#5f6b7d]">
+              <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                 تخصيص الإشعارات الفورية والتنبيهات البريدية للأحداث الهامة
               </CardDescription>
             </CardHeader>
@@ -710,7 +710,7 @@ const SettingsPage = () => {
                     <Label htmlFor="instant-alerts" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       إشعارات فورية على الشاشة
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       إظهار إشعارات منبثقة عند استلام معاملات أو توجيهات جديدة
                     </p>
                   </div>
@@ -726,7 +726,7 @@ const SettingsPage = () => {
                     <Label htmlFor="deadline-reminders" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       تنبيهات مواعيد المعالجة والتأخيرات
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       تنبيه عند اقتراب المهلة المحددة للرد على المعاملات الواردة
                     </p>
                   </div>
@@ -742,7 +742,7 @@ const SettingsPage = () => {
                     <Label htmlFor="email-notifications" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       إشعارات البريد الإلكتروني
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       إرسال رسالة بريد إلكتروني عند إسناد وثيقة أو إحالتها إلى قسمك
                     </p>
                   </div>
@@ -758,7 +758,7 @@ const SettingsPage = () => {
                     <Label htmlFor="sound-alerts" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       التنبيه الصوتي
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       تشغيل نغمة تنبيه هادئة وموجزة عند ورود رسالة جديدة
                     </p>
                   </div>
@@ -774,7 +774,7 @@ const SettingsPage = () => {
                     <Label htmlFor="daily-digest" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       التقرير الصباحي اليومي
                     </Label>
-                    <p className="text-sm text-[#4a5568]">
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
                       تلقي ملخص يومي في بداية ساعات الدوام بجميع المعاملات المعلقة
                     </p>
                   </div>
@@ -810,7 +810,7 @@ const SettingsPage = () => {
                 <Sliders className="h-5 w-5 text-[#2c5282]" />
                 <span>تفضيلات العرض والمظهر</span>
               </CardTitle>
-              <CardDescription className="text-base text-[#5f6b7d]">
+              <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                 ضبط كثافة الجداول، عدد النتائج الافتراضي، وطريقة ترتيب السجلات
               </CardDescription>
             </CardHeader>
@@ -822,7 +822,7 @@ const SettingsPage = () => {
                     كثافة العرض في جداول الوثائق
                   </Label>
                   <Select value={tableDensity} onValueChange={setTableDensity}>
-                    <SelectTrigger id="pref-density" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="pref-density" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -831,7 +831,7 @@ const SettingsPage = () => {
                       <SelectItem value="compact">مدمج (كثافة بيانات عالية)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-500">يحدد ارتفاع أسطر الجداول وتناسق الخطوط</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">يحدد ارتفاع أسطر الجداول وتناسق الخطوط</p>
                 </div>
 
                 <div className="space-y-2">
@@ -839,7 +839,7 @@ const SettingsPage = () => {
                     عدد العناصر الافتراضي في الصفحة
                   </Label>
                   <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
-                    <SelectTrigger id="pref-items-per-page" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="pref-items-per-page" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -849,7 +849,7 @@ const SettingsPage = () => {
                       <SelectItem value="100">100 عنصر</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-gray-500">عدد سجلات المراسلات المعروضة قبل الانتقال للصفحة التالية</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">عدد سجلات المراسلات المعروضة قبل الانتقال للصفحة التالية</p>
                 </div>
               </div>
 
@@ -859,7 +859,7 @@ const SettingsPage = () => {
                     الترتيب الافتراضي للمراسلات
                   </Label>
                   <Select value={defaultSortOrder} onValueChange={setDefaultSortOrder}>
-                    <SelectTrigger id="pref-sort-order" className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectTrigger id="pref-sort-order" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -874,7 +874,7 @@ const SettingsPage = () => {
                     <Label htmlFor="pref-auto-open" className="text-base font-bold text-[#1a202c] cursor-pointer">
                       معاينة الـ PDF تلقائياً
                     </Label>
-                    <p className="text-sm text-gray-500">فتح ملف الوثيقة الممسوحة عند النقر على السجل</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">فتح ملف الوثيقة الممسوحة عند النقر على السجل</p>
                   </div>
                   <Switch
                     id="pref-auto-open"
@@ -916,7 +916,7 @@ const SettingsPage = () => {
                   <Database className="h-5 w-5 text-[#2c5282]" />
                   <span>النسخ الاحتياطي وأرشفة البيانات</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#5f6b7d]">
+                <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                   متابعة وتأمين الوثائق والمرفقات بصيغة رقمية متكاملة
                 </CardDescription>
               </div>
@@ -941,7 +941,7 @@ const SettingsPage = () => {
                   <div className="text-3xl font-bold text-[#1a202c]">
                     {backupStats?.totalIncomingDocuments ?? '—'}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">مشمولة في الأرشيف</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">مشمولة في الأرشيف</p>
                 </div>
 
                 <div className="p-5 bg-white border border-[#e2e8f0] rounded">
@@ -952,7 +952,7 @@ const SettingsPage = () => {
                   <div className="text-3xl font-bold text-[#1a202c]">
                     {backupStats?.totalOutgoingDocuments ?? '—'}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">مشمولة في الأرشيف</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">مشمولة في الأرشيف</p>
                 </div>
 
                 <div className="p-5 bg-white border border-[#e2e8f0] rounded">
@@ -963,7 +963,7 @@ const SettingsPage = () => {
                   <div className="text-2xl font-bold text-[#1a202c]">
                     {backupStats?.totalFileSize ?? '—'}
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">المستندات والمرفقات</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">المستندات والمرفقات</p>
                 </div>
 
                 <div className="p-5 bg-white border border-[#e2e8f0] rounded">
@@ -985,7 +985,7 @@ const SettingsPage = () => {
               <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <h4 className="text-base font-bold text-[#1a202c]">النسخ الاحتياطي التلقائي المجدول</h4>
-                  <p className="text-sm text-[#4a5568]">
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
                     يمكنك ضبط التكرار الأسبوعي أو الشهري وتحديد مجلد التصدير من خلال صفحة النسخ الاحتياطي
                   </p>
                 </div>
@@ -1012,7 +1012,7 @@ const SettingsPage = () => {
                   <MessageCircle className="h-5 w-5 text-[#2c5282]" />
                   <span>سياسة حفظ وحذف المراسلات</span>
                 </CardTitle>
-                <CardDescription className="text-base text-[#5f6b7d]">
+                <CardDescription className="text-base text-slate-700 dark:text-slate-300">
                   إدارة سعة التخزين وتحديد فترة الاحتفاظ بالمراسلات والمرفقات
                 </CardDescription>
               </div>
@@ -1029,7 +1029,7 @@ const SettingsPage = () => {
             <CardContent className="p-6 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <span className="text-base font-semibold text-[#4a5568]">إجمالي الرسائل في النظام</span>
+                  <span className="text-base font-semibold text-slate-700 dark:text-slate-300">إجمالي الرسائل في النظام</span>
                   <div className="text-3xl font-bold text-[#2c5282] mt-2">
                     {messagesStats?.totalMessages ?? 0}
                   </div>
@@ -1039,7 +1039,7 @@ const SettingsPage = () => {
                 </div>
 
                 <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <span className="text-base font-semibold text-[#4a5568]">إجمالي المرفقات</span>
+                  <span className="text-base font-semibold text-slate-700 dark:text-slate-300">إجمالي المرفقات</span>
                   <div className="text-3xl font-bold text-emerald-700 mt-2">
                     {messagesStats?.totalAttachments ?? 0}
                   </div>
@@ -1049,7 +1049,7 @@ const SettingsPage = () => {
                 </div>
 
                 <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <span className="text-base font-semibold text-[#4a5568]">حالة الحذف التلقائي</span>
+                  <span className="text-base font-semibold text-slate-700 dark:text-slate-300">حالة الحذف التلقائي</span>
                   <div className="text-2xl font-bold text-[#1a202c] mt-2">
                     {retentionPolicy?.enabled ? 'مفعّل' : 'معطّل'}
                   </div>
@@ -1070,7 +1070,7 @@ const SettingsPage = () => {
               <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <h4 className="text-base font-bold text-[#1a202c]">التنظيف اليدوي والأرشفة</h4>
-                  <p className="text-sm text-[#4a5568]">
+                  <p className="text-sm text-slate-700 dark:text-slate-300">
                     يمكنك حذف الرسائل الأقدم من مدة محددة أو تصديرها قبل الحذف من خلال صفحة إدارة الرسائل
                   </p>
                 </div>
@@ -1102,7 +1102,7 @@ const SettingsPage = () => {
                       <CardTitle className="text-xl font-bold text-[#1a202c]">
                         هوية المؤسسة والأقسام السيادية
                       </CardTitle>
-                      <CardDescription className="text-sm text-[#5f6b7d] mt-0.5">
+                      <CardDescription className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
                         إدارة التسمية الرسمية، شعار المؤسسة، وتعيين الأقسام الوظيفية الرئيسية (RH، مكتب الضبط، الإدارة العامة)
                       </CardDescription>
                     </div>
@@ -1125,13 +1125,13 @@ const SettingsPage = () => {
                     </span>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-500">اسم الإدارة الحالي :</span>
+                        <span className="text-slate-700 dark:text-slate-300">اسم الإدارة الحالي :</span>
                         <strong className="text-gray-900 font-bold">
                           {orgSettings?.nomAdministration || 'غير محدد'}
                         </strong>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-500">حالة التكوين الإجمالي :</span>
+                        <span className="text-slate-700 dark:text-slate-300">حالة التكوين الإجمالي :</span>
                         {isSetupComplete ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800">
                             مكتمل وجاهز
@@ -1151,7 +1151,7 @@ const SettingsPage = () => {
                     </span>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-500">قسم الموارد البشرية (RH) :</span>
+                        <span className="text-slate-700 dark:text-slate-300">قسم الموارد البشرية (RH) :</span>
                         <strong className="text-gray-900 font-semibold">
                           {typeof orgSettings?.rhDepartmentId === 'object' && orgSettings?.rhDepartmentId !== null
                             ? (orgSettings.rhDepartmentId as { name?: string }).name || 'معرّف'
@@ -1159,7 +1159,7 @@ const SettingsPage = () => {
                         </strong>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-500">مكتب الضبط (BO) :</span>
+                        <span className="text-slate-700 dark:text-slate-300">مكتب الضبط (BO) :</span>
                         <strong className="text-gray-900 font-semibold">
                           {typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings?.bureauOrdreDepartmentId !== null
                             ? (orgSettings.bureauOrdreDepartmentId as { name?: string }).name || 'معرّف'
@@ -1167,7 +1167,7 @@ const SettingsPage = () => {
                         </strong>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-500">الإدارة العامة (Direction) :</span>
+                        <span className="text-slate-700 dark:text-slate-300">الإدارة العامة (Direction) :</span>
                         <strong className="text-gray-900 font-semibold">
                           {typeof orgSettings?.bureauDirecteurDepartmentId === 'object' && orgSettings?.bureauDirecteurDepartmentId !== null
                             ? (orgSettings.bureauDirecteurDepartmentId as { name?: string }).name || 'معرّف'
@@ -1214,7 +1214,7 @@ const SettingsPage = () => {
               </div>
               <span>تغيير كلمة المرور</span>
             </DialogTitle>
-            <DialogDescription className="text-base text-[#4a5568] mt-1">
+            <DialogDescription className="text-base text-slate-700 dark:text-slate-300 mt-1">
               أدخل كلمة المرور الحالية ثم كلمة المرور الجديدة مع تأكيدها
             </DialogDescription>
           </DialogHeader>
@@ -1231,13 +1231,13 @@ const SettingsPage = () => {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="أدخل كلمة المرور الحالية"
-                  className="h-11 text-base border-[#cbd5e1] rounded pl-10 focus:border-[#2c5282]"
+                  className="h-11 text-base border-slate-300 dark:border-slate-700 rounded pl-10 focus:border-[#2c5282]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2c5282]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 hover:text-[#2c5282]"
                 >
                   {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -1255,13 +1255,13 @@ const SettingsPage = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="6 أحرف على الأقل"
-                  className="h-11 text-base border-[#cbd5e1] rounded pl-10 focus:border-[#2c5282]"
+                  className="h-11 text-base border-slate-300 dark:border-slate-700 rounded pl-10 focus:border-[#2c5282]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2c5282]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 hover:text-[#2c5282]"
                 >
                   {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -1279,13 +1279,13 @@ const SettingsPage = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="أعد كتابة كلمة المرور الجديدة"
-                  className="h-11 text-base border-[#cbd5e1] rounded pl-10 focus:border-[#2c5282]"
+                  className="h-11 text-base border-slate-300 dark:border-slate-700 rounded pl-10 focus:border-[#2c5282]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#2c5282]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 hover:text-[#2c5282]"
                 >
                   {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -1327,7 +1327,7 @@ const SettingsPage = () => {
             <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
               تأكيد إنهاء الجلسات النشطة الأخرى
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-[#4a5568] leading-relaxed mt-2">
+            <AlertDialogDescription className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-2">
               سيتم تسجيل الخروج الفوري من كافة الأجهزة والمتصفحات الأخرى المسجل الدخول إليها بحسابك، مع الإبقاء على الجلسة الحالية فقط.
             </AlertDialogDescription>
           </AlertDialogHeader>

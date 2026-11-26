@@ -134,7 +134,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             <GraduationCap className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
             <span>{isEditing ? 'تعديل بيانات الشهادة' : 'إضافة شهادة علمية / مهنية جديدة'}</span>
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
             سجل الشهادات الأكاديمية والمهنية والتكوينية المحرزة
           </DialogDescription>
         </DialogHeader>
@@ -142,7 +142,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 نوع الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -153,7 +153,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
                 }}
                 placeholder="مثال: الإجازة / الماجستير / شهادة ختم تكوين"
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${
-                  errors.typeDiplome ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.typeDiplome ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.typeDiplome && (
@@ -165,7 +165,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 موضوع / اختصاص الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -176,7 +176,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
                 }}
                 placeholder="مثال: علوم التصرف / حقوق / هندسة الإعلامية"
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${
-                  errors.sujetDiplome ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.sujetDiplome ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.sujetDiplome && (
@@ -190,7 +190,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 تاريخ الحصول على الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -201,7 +201,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
                   if (errors.dateObtention) setErrors((prev) => ({ ...prev, dateObtention: '' }));
                 }}
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${
-                  errors.dateObtention ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.dateObtention ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.dateObtention && (
@@ -213,46 +213,46 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 المستوى التعليمي / الصنف
               </Label>
               <Input
                 value={niveau}
                 onChange={(e) => setNiveau(e.target.value)}
                 placeholder="مثال: صنف أ2 / بكالوريا + 3"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 المؤسسة المانحة / الجامعة
               </Label>
               <Input
                 value={etablissement}
                 onChange={(e) => setEtablissement(e.target.value)}
                 placeholder="مثال: جامعة تونس المنار / معهد التكوين المستمر"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 المرجع / رقم التسجيل
               </Label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="مثال: رقم الشهادة أو المرجع 9874/2021"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea
@@ -260,7 +260,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
               onChange={(e) => setObservations(e.target.value)}
               placeholder="أي ملاحظات حول الشهادة أو المعادلة..."
               rows={3}
-              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg resize-none"
+              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg resize-none"
             />
           </div>
 

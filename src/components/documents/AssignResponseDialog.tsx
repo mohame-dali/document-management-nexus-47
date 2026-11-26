@@ -134,7 +134,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-base font-semibold text-slate-700 dark:text-slate-200">
+                <Label className="flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-slate-200">
                   <Calendar className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
                   {t('documents.assignResponse.searchSection.yearLabel')}
                 </Label>
@@ -158,7 +158,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
               </div>
               
               <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-base font-semibold text-slate-700 dark:text-slate-200">
+                <Label className="flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-slate-200">
                   <Search className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
                   {t('documents.assignResponse.searchSection.serialLabel')}
                 </Label>
@@ -246,11 +246,11 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2c5282] dark:border-blue-400 mx-auto mb-3"></div>
                   <p className="text-base font-bold text-slate-900 dark:text-slate-100">{t('documents.assignResponse.loading.searching')}</p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('documents.assignResponse.loading.loadingDocs')}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{t('documents.assignResponse.loading.loadingDocs')}</p>
                 </div>
               ) : filteredOutgoingDocs.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50/80 dark:bg-slate-800/40 rounded-lg border border-slate-200/80 dark:border-slate-700">
-                  <FileOutput className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
+                  <FileOutput className="h-12 w-12 text-slate-700 dark:text-slate-300 mx-auto mb-3" />
                   <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-1">
                     {t('documents.assignResponse.emptyState.noMatchesTitle')}
                   </h3>
@@ -279,7 +279,7 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                             <span className="px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold tabular-nums bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60">
                               <bdi dir="ltr">#{doc.serialNumber}/{doc.year}</bdi>
                             </span>
-                            <span className="text-sm text-slate-600 dark:text-slate-400 tabular-nums">
+                            <span className="text-sm text-slate-700 dark:text-slate-300 tabular-nums">
                               <bdi dir={language === 'fr' ? 'ltr' : 'rtl'}>{formatLongDate(doc.issueDate, language)}</bdi>
                             </span>
                           </div>
@@ -287,8 +287,8 @@ const AssignResponseDialog: React.FC<AssignResponseDialogProps> = ({
                             {doc.subject}
                           </h4>
                           {doc.assignedTo && doc.assignedTo.length > 0 && (
-                            <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400 mt-1">
-                              <ArrowRight className="h-4 w-4 text-slate-400 dark:text-slate-500 rtl:rotate-180 ltr:rotate-0" />
+                            <div className="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300 mt-1">
+                              <ArrowRight className="h-4 w-4 text-slate-700 dark:text-slate-300 rtl:rotate-180 ltr:rotate-0" />
                               <span>{t('documents.assignResponse.item.assignedTo', { departments: doc.assignedTo.join(listSeparator) })}</span>
                             </div>
                           )}

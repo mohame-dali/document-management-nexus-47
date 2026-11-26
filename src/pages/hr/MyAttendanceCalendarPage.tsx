@@ -417,7 +417,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
             <p className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
               لا توجد بطاقة موظف مرتبطة بحسابك الحالي في الموارد البشرية.
             </p>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               يرجى التواصل مع إدارة الموارد البشرية أو مسؤول النظام لربط حسابك ببطاقتك المهنية لتتمكن من متابعة حضورك ورصيد إجازاتك.
             </p>
           </div>
@@ -441,16 +441,16 @@ export const MyAttendanceCalendarPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
               <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
               </Link>
-              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
               <Link to="/dashboard/hr/my-profile" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
                 <span>ملفي الشخصي</span>
               </Link>
-              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
               <span className="text-slate-900 dark:text-slate-100 font-semibold">تقويم حضوري</span>
             </div>
 
@@ -462,7 +462,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                 <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   حضوري — تقويم وسجل الحضور الشخصي
                 </h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-sm text-slate-700 dark:text-slate-300">
                   متابعة حالة الحضور اليومي، فترات التكوين، المهمات، ورصيد الإجازات السنوية
                 </p>
               </div>
@@ -566,7 +566,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="text-xs text-slate-600 dark:text-slate-400 px-2 font-mono tabular-nums flex items-center gap-1.5">
+        <div className="text-xs text-slate-700 dark:text-slate-300 px-2 font-mono tabular-nums flex items-center gap-1.5">
           <CalendarDays className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
           <span>
             {viewMode === 'day' && `معاينة اليوم : ${selectedDate}`}
@@ -641,7 +641,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                 </Badge>
               )}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
               متابعة حالة تصاريح الحضور أو الغياب أو المأموريات التي قدمتها للإدارة.
             </p>
           </div>
@@ -710,7 +710,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                             <div>المكان: {decl.detailsMotif.lieuMission}</div>
                           )}
                           {decl.detailsMotif?.commentaire && (
-                            <div className="italic text-slate-400">"{decl.detailsMotif.commentaire}"</div>
+                            <div className="italic text-slate-700 dark:text-slate-300">"{decl.detailsMotif.commentaire}"</div>
                           )}
                           {decl.rejectionReason && (
                             <div className="text-red-600 dark:text-red-400 font-semibold">سبب الرفض: {decl.rejectionReason}</div>

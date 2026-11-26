@@ -282,7 +282,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
       {/* Central Dark Document Viewport */}
       <div className="flex-1 min-h-[380px] bg-zinc-950 p-3 flex items-center justify-center">
         {isLoadingBlob ? (
-          <div className="flex flex-col items-center justify-center h-[380px] w-full gap-3 text-zinc-400">
+          <div className="flex flex-col items-center justify-center h-[380px] w-full gap-3 text-zinc-200">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
             <p className="text-sm">
               {tr('scanner.preview.loading', 'Chargement de l’aperçu...', 'جاري تحميل المعاينة...')}
@@ -359,7 +359,7 @@ const ScannedDocumentPreview: React.FC<ScannedDocumentPreviewProps> = ({
             <span>
               {t.ocrText || (language === 'ar' ? 'النص المستخرج (OCR)' : 'Texte extrait (OCR)')}
             </span>
-            <span className="flex items-center gap-1 text-zinc-400">
+            <span className="flex items-center gap-1 text-zinc-300">
               {showOcr
                 ? tr('scanner.actions.hideOcr', 'Masquer le texte OCR', 'إخفاء النص المستخرج')
                 : tr('scanner.actions.showOcr', 'Afficher le texte OCR', 'عرض النص المستخرج (OCR)')}

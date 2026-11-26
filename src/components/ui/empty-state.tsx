@@ -28,7 +28,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
           {title}
         </h3>
         {description && (
-          <p className="mt-1.5 max-w-md text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="mt-1.5 max-w-md text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             {description}
           </p>
         )}

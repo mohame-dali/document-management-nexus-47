@@ -88,7 +88,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             </div>
             تغيير كلمة المرور
           </DialogTitle>
-          <DialogDescription className="text-base text-slate-600 dark:text-slate-400 text-right mt-1.5">
+          <DialogDescription className="text-base text-slate-700 dark:text-slate-300 text-right mt-1.5">
             تغيير كلمة المرور للمستخدم: <strong className="text-[#1a202c] dark:text-slate-100 font-bold">{user.username}</strong>
           </DialogDescription>
         </DialogHeader>
@@ -110,7 +110,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400"
+                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -138,7 +138,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400"
+                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
@@ -155,7 +155,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
               <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282] dark:bg-sky-400 inline-block"></span>
               كلمة المرور يجب أن تتكون من 6 خانات على الأقل
             </p>
-            <p className="flex items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
+            <p className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 inline-block"></span>
               يُفضل استخدام مزيج متوازن من الحروف والأرقام لضمان حماية أفضل
             </p>

@@ -118,11 +118,11 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t('documents.assignResponsible.serialNumber')}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{t('documents.assignResponsible.serialNumber')}</p>
                 <p className="font-bold text-[#2c5282] dark:text-blue-300 tabular-nums mt-0.5"><bdi dir="ltr">#{document.serialNumber}/{document.year}</bdi></p>
               </div>
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t('documents.assignResponsible.subject')}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{t('documents.assignResponsible.subject')}</p>
                 <p className="font-bold text-slate-900 dark:text-slate-100 line-clamp-2 mt-0.5">{document.subject}</p>
               </div>
             </div>
@@ -150,7 +150,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
                     </SelectItem>
                   ) : departmentUsers.length === 0 ? (
                     <SelectItem value="none" disabled>
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 py-2">
+                      <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 py-2">
                         <Users className="h-4 w-4" />
                         <span>{t('documents.assignResponsible.noUsersInDepartment')}</span>
                       </div>
@@ -195,7 +195,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
               <Shield className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
               <span>{t('documents.assignResponsible.activeDepartment', { department: currentUser?.activeDepartment?.name })}</span>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
               {t('documents.assignResponsible.departmentConstraintNotice')}
             </p>
           </div>

@@ -123,7 +123,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-gray-700">جاري التحميل...</h3>
-            <p className="text-sm text-gray-500">يتم تحميل سجل التدقيق، يرجى الانتظار</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">يتم تحميل سجل التدقيق، يرجى الانتظار</p>
           </div>
         </div>
       </div>
@@ -135,11 +135,11 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
       <div className="rounded border border-gray-200 bg-white shadow-sm">
         <div className="p-12 text-center">
           <div className="mx-auto mb-6 rounded-full bg-gray-100 p-4 w-fit">
-            <Shield className="h-8 w-8 text-gray-400" />
+            <Shield className="h-8 w-8 text-slate-700 dark:text-slate-300" />
           </div>
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-gray-700">لا توجد سجلات</h3>
-            <p className="text-sm text-gray-500">لم يتم العثور على سجلات تدقيق للمعايير المحددة</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">لم يتم العثور على سجلات تدقيق للمعايير المحددة</p>
           </div>
         </div>
       </div>
@@ -209,7 +209,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                         <div className="font-semibold text-sm text-gray-900 group-hover:text-blue-700 transition-colors tabular-nums">
                           <bdi dir="ltr">{formatShortDate(log.createdAt)}</bdi>
                         </div>
-                        <div className="text-xs text-gray-500 font-medium tabular-nums">
+                        <div className="text-xs text-slate-700 dark:text-slate-300 font-medium tabular-nums">
                           <bdi dir="ltr">{formatTime(log.createdAt, true)}</bdi>
                         </div>
                       </div>
@@ -252,7 +252,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                       <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
                         {log.userDetails.username}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1 font-medium">
+                      <div className="text-xs text-slate-700 dark:text-slate-300 mt-1 font-medium">
                         {log.userDetails.role}
                       </div>
                     </div>
@@ -267,7 +267,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                       </div>
                     ) : (
                       <div className="bg-gray-50 border border-gray-200 rounded p-3 text-center">
-                        <span className="text-gray-400 text-xs font-medium">لا توجد تفاصيل</span>
+                        <span className="text-slate-700 dark:text-slate-300 text-xs font-medium">لا توجد تفاصيل</span>
                       </div>
                     )}
                   </TableCell>

@@ -127,7 +127,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
             <Award className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
             <span>{isEditing ? 'تعديل بيانات الترقية' : 'إضافة ترقية جديدة'}</span>
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
             سجل الترقيات الإدارية وتغييرات الرتب الخاصة بالموظف
           </DialogDescription>
         </DialogHeader>
@@ -135,19 +135,19 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 الرتبة السابقة
               </Label>
               <Input
                 value={gradePrecedent}
                 onChange={(e) => setGradePrecedent(e.target.value)}
                 placeholder="مثال: متصرف مساعد"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 الرتبة الجديدة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -158,7 +158,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
                 }}
                 placeholder="مثال: متصرف"
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${
-                  errors.gradeNouveau ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.gradeNouveau ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.gradeNouveau && (
@@ -172,7 +172,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 تاريخ الترقية <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -183,7 +183,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
                   if (errors.datePromotion) setErrors((prev) => ({ ...prev, datePromotion: '' }));
                 }}
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${
-                  errors.datePromotion ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.datePromotion ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.datePromotion && (
@@ -195,32 +195,32 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 المرجع / القرار
               </Label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="مثال: قرار وزاري عدد 550"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
               سبب أو نمط الترقية
             </Label>
             <Input
               value={motif}
               onChange={(e) => setMotif(e.target.value)}
               placeholder="مثال: بالمناظرة الداخلية / بالاختيار / بالامتحان المهني"
-              className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+              className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
             />
           </div>
 
           <div>
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea
@@ -228,7 +228,7 @@ export const PromotionFormDialog: React.FC<PromotionFormDialogProps> = ({
               onChange={(e) => setObservations(e.target.value)}
               placeholder="أي ملاحظات تخص هذه الترقية..."
               rows={3}
-              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg resize-none"
+              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg resize-none"
             />
           </div>
 

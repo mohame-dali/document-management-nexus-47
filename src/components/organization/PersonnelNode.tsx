@@ -28,7 +28,7 @@ const PersonnelNode: React.FC<PersonnelNodeProps> = ({ data }) => {
             {data.prenom} {data.nom}
           </p>
           {data.poste && (
-            <p className="text-xs text-gray-500 truncate">{data.poste}</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 truncate">{data.poste}</p>
           )}
         </div>
       </div>

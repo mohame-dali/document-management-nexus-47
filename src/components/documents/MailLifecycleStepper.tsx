@@ -346,7 +346,7 @@ const MailLifecycleStepper: React.FC<MailLifecycleStepperProps> = ({
       case 'current':
         return 'bg-[#ebf4ff]/70 dark:bg-blue-950/40 border-[#2c5282] dark:border-blue-400 text-[#2c5282] dark:text-blue-300';
       default:
-        return 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500';
+        return 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
     }
   };
 
@@ -377,7 +377,7 @@ const MailLifecycleStepper: React.FC<MailLifecycleStepperProps> = ({
         <div className="flex items-center gap-2 text-sm font-bold text-[#1a202c] dark:text-slate-100">
           <span>{t('documents.lifecycle.title')}</span>
         </div>
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tabular-nums">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
           {t('documents.lifecycle.progress', {
             completed: completedCount,
             total: steps.length,
@@ -429,7 +429,7 @@ const MailLifecycleStepper: React.FC<MailLifecycleStepperProps> = ({
               {/* Step Copy & Badges */}
               <div className="min-w-0 flex-1 md:text-center md:px-1.5 space-y-1">
                 <div className="flex items-center md:justify-center gap-1.5">
-                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 tabular-nums">
+                  <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
                     {step.number}.
                   </span>
                   <p
@@ -440,7 +440,7 @@ const MailLifecycleStepper: React.FC<MailLifecycleStepperProps> = ({
                           ? 'text-amber-800 dark:text-amber-300'
                           : step.state === 'processing' || step.state === 'current'
                             ? 'text-[#2c5282] dark:text-blue-400'
-                            : 'text-slate-500 dark:text-slate-400'
+                            : 'text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {step.title}
@@ -448,7 +448,7 @@ const MailLifecycleStepper: React.FC<MailLifecycleStepperProps> = ({
                 </div>
 
                 {step.subtitle && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed tabular-nums">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed tabular-nums">
                     {step.subtitle}
                   </p>
                 )}
@@ -459,7 +459,7 @@ const MailLifecycleStepper: React.FC<MailLifecycleStepperProps> = ({
                       <span
                         key={bIdx}
                         title={badgeText}
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold max-w-[160px] truncate border ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[13px] font-semibold max-w-[160px] truncate border ${
                           step.highlighted
                             ? 'bg-[#ebf4ff] dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 border-[#bee3f8] dark:border-blue-800'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
@@ -471,7 +471,7 @@ const MailLifecycleStepper: React.FC<MailLifecycleStepperProps> = ({
                     {step.badges.length > 2 && (
                       <span
                         title={step.badges.slice(2).join(', ')}
-                        className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 tabular-nums px-1"
+                        className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 tabular-nums px-1"
                       >
                         +{step.badges.length - 2}
                       </span>

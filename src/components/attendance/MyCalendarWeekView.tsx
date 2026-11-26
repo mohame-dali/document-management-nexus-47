@@ -151,7 +151,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
           </Button>
         </div>
 
-        <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-mono tabular-nums">
+        <div className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-mono tabular-nums">
           <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
           <span>{weekRangeLabel}</span>
         </div>
@@ -161,7 +161,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
       {isLoading ? (
         <div className="py-16 text-center space-y-2">
           <div className="h-6 w-6 border-2 border-[#2c5282] dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 dark:text-slate-400">جاري تحميل بيانات الأسبوع...</p>
+          <p className="text-xs text-slate-700 dark:text-slate-300">جاري تحميل بيانات الأسبوع...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -197,7 +197,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{day.dayName}</span>
                     {day.isToday && (
-                      <span className="text-[10px] bg-[#2c5282] dark:bg-blue-600 text-white px-1.5 py-0.5 rounded font-semibold">
+                      <span className="text-[13px] bg-[#2c5282] dark:bg-blue-600 text-white px-1.5 py-0.5 rounded font-semibold">
                         اليوم
                       </span>
                     )}
@@ -205,7 +205,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
                   <div className="text-lg font-bold text-slate-900 dark:text-slate-100 font-mono tabular-nums mt-0.5">
                     {day.dayNumber}
                   </div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono tabular-nums">{day.date}</div>
+                  <div className="text-[13px] text-slate-700 dark:text-slate-300 font-mono tabular-nums">{day.date}</div>
                 </div>
 
                 {/* Badge d'état dans la case */}
@@ -232,14 +232,14 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
                   </div>
 
                   {att?.statut === 'present' && att.heureArrivee && (
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1 font-mono tabular-nums">
-                      <Clock className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                    <div className="text-[13px] text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1 font-mono tabular-nums">
+                      <Clock className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                       <span>{att.heureArrivee}</span>
                     </div>
                   )}
 
                   {att?.statut === 'absent' && visual.impacteSolde && (
-                    <div className="text-[10px] text-amber-700 dark:text-amber-300 text-center font-medium">
+                    <div className="text-[13px] text-amber-700 dark:text-amber-300 text-center font-medium">
                       يخصم من الرصيد
                     </div>
                   )}
@@ -253,7 +253,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
       {/* Résumé en bas */}
       <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-slate-600 dark:text-slate-400">حصيلة هذا الأسبوع :</span>
+          <span className="text-slate-700 dark:text-slate-300">حصيلة هذا الأسبوع :</span>
           <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 font-medium tabular-nums">
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>حضور : {weekStats.presents} أيام</span>
@@ -267,7 +267,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
           </span>
         </div>
 
-        <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+        <span className="text-slate-700 dark:text-slate-300 text-[13px]">
           * اضغط على أي يوم للانتقال إلى المعاينة التفصيلية
         </span>
       </div>

@@ -160,7 +160,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
             <Link2 className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
             <span>ربط وثيقة بالملف الإداري للموظف</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-sm text-slate-700 dark:text-slate-300">
             {personnelName ? `ربط مستند أو مراسلة بملف: ${personnelName}` : 'ربط وثيقة رسمية (واردة أو صادرة) بهذا الموظف'}
           </DialogDescription>
         </DialogHeader>
@@ -168,7 +168,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* 1. Sélection du type de document (وارد / صادر) */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+            <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200 block">
               1. نوع المراسلة <span className="text-red-500">*</span>
             </Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -208,7 +208,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
 
           {/* 2. Recherche et Sélection de la وثيقة */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+            <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200 block">
               2. اختيار الوثيقة <span className="text-red-500">*</span>
             </Label>
 
@@ -224,7 +224,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
                   <p className="text-xs text-slate-700 dark:text-slate-200 font-medium">
                     {selectedDoc.subject || 'بدون موضوع'}
                   </p>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 tabular-nums">
+                  <div className="text-[13px] text-slate-700 dark:text-slate-300 flex items-center gap-2 tabular-nums">
                     {selectedDoc.entryDate || selectedDoc.issueDate || selectedDoc.arrivalDate ? (
                       <span>تاريخ: <bdi dir="rtl" className="tabular-nums">{formatLongDate(selectedDoc.entryDate || selectedDoc.issueDate || selectedDoc.arrivalDate, 'ar')}</bdi></span>
                     ) : null}
@@ -245,24 +245,24 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
             ) : (
               <div className="space-y-2 border border-[#e2e8f0] dark:border-slate-800 rounded-lg p-3 bg-[#f8fafc] dark:bg-slate-950/50">
                 <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3.5" />
+                  <Search className="w-4 h-4 text-slate-700 dark:text-slate-300 absolute start-3 top-3.5" />
                   <Input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="ابحث برقم الترتيب أو السنة أو الموضوع..."
-                    className="ps-9 h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-base rounded-lg"
+                    className="ps-9 h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 text-base rounded-lg"
                   />
                 </div>
 
                 <div className="max-h-48 overflow-y-auto space-y-1.5 pt-1">
                   {isLoadingDocs ? (
-                    <div className="py-6 text-center text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+                    <div className="py-6 text-center text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-[#2c5282] dark:text-blue-400" />
                       <span>جاري تحميل الوثائق...</span>
                     </div>
                   ) : filteredDocs.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                    <div className="py-6 text-center text-sm text-slate-700 dark:text-slate-300">
                       لا توجد وثائق مطابقة لخيارات البحث
                     </div>
                   ) : (
@@ -277,12 +277,12 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
                           <div className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#2c5282] dark:group-hover:text-blue-300 flex items-center gap-2 tabular-nums">
                             <span>#{doc.serialNumber} / {doc.year}</span>
                             {doc.correspondenceNumber && (
-                              <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">
+                              <span className="text-xs text-slate-700 dark:text-slate-300 font-normal">
                                 (مرجع: {doc.correspondenceNumber})
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-600 dark:text-slate-400 truncate max-w-sm">
+                          <div className="text-xs text-slate-700 dark:text-slate-300 truncate max-w-sm">
                             {doc.subject || 'بدون موضوع'}
                           </div>
                         </div>
@@ -299,7 +299,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
 
           {/* 3. Type d'association */}
           <div className="space-y-1.5 text-start">
-            <Label htmlFor="type-association-select" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <Label htmlFor="type-association-select" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               3. طبيعة الوثيقة / نوع الربط <span className="text-red-500">*</span>
             </Label>
             <select
@@ -316,14 +316,14 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
                 </option>
               ))}
             </select>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-700 dark:text-slate-300">
               مثال: تدريب (Stage)، تكوين (Formation)، شهادة (Diplôme)، قرار إداري، إلخ.
             </span>
           </div>
 
           {/* 4. Commentaire optionnel */}
           <div className="space-y-1.5 text-start">
-            <Label htmlFor="association-comment" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <Label htmlFor="association-comment" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               4. ملاحظات أو تفاصيل إضافية (اختياري)
             </Label>
             <Textarea
@@ -332,7 +332,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
               onChange={(e) => setCommentaire(e.target.value)}
               placeholder="مثال: شهادة تدريبية مسلمة من المركز الوطني، مرجع المراسلة الإدارية..."
               rows={2}
-              className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 focus-visible:ring-[#2c5282] text-base rounded-lg"
+              className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 focus-visible:ring-[#2c5282] text-base rounded-lg"
             />
           </div>
 

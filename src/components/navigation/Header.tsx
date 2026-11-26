@@ -105,7 +105,7 @@ const Header = () => {
             <h1 className="text-sm sm:text-base md:text-lg font-bold text-[#2c5282] dark:text-slate-100 leading-tight truncate">
               {nomAdmin || t('header.title')}
             </h1>
-            <p className="hidden md:block text-xs text-slate-500 dark:text-slate-400 truncate">
+            <p className="hidden md:block text-xs text-slate-700 dark:text-slate-300 truncate">
               {currentUser.role === 'AdminDepartment' && currentUser.activeDepartment
                 ? currentUser.activeDepartment.name
                 : t('header.subtitle')}
@@ -139,8 +139,8 @@ const Header = () => {
           >
             <MessageSquare className="h-5 w-5" />
             {unreadCount > 0 && (
-              <div className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-[#2c5282] dark:bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
-                <span className="text-[10px] text-white font-bold leading-none tabular-nums">
+              <div className="absolute -top-0.5 -end-0.5 min-w-[20px] h-[20px] bg-[#2c5282] dark:bg-blue-600 text-white text-[13px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
+                <span className="text-[13px] text-white font-bold leading-none tabular-nums">
                   <bdi dir="ltr">{unreadCount > 9 ? '9+' : unreadCount}</bdi>
                 </span>
               </div>
@@ -168,11 +168,11 @@ const Header = () => {
                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
                     {currentUser.username}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-tight mt-0.5 truncate">
                     {t(`roles.${currentUser.role}`)}
                   </p>
                 </div>
-                <ChevronDown className="hidden lg:block h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                <ChevronDown className="hidden lg:block h-4 w-4 text-slate-700 dark:text-slate-300 shrink-0" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 text-start">

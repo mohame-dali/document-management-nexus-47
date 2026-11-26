@@ -92,7 +92,7 @@ export const MyDocumentsList: React.FC<MyDocumentsListProps> = ({
                 {documents.length}
               </span>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
               قائمة الوثائق والمراسلات الإدارية والتكوينية المرتبطة بملفك الشخصي
             </p>
           </div>
@@ -102,11 +102,11 @@ export const MyDocumentsList: React.FC<MyDocumentsListProps> = ({
       {/* Content section */}
       {documents.length === 0 ? (
         <div className="py-12 px-4 text-center border border-dashed border-[#cbd5e1] dark:border-slate-700 rounded-lg bg-[#f8fafc] dark:bg-slate-950/40">
-          <FileText className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-3" />
+          <FileText className="w-12 h-12 text-slate-700 dark:text-slate-300 mx-auto mb-3" />
           <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">
             {isRTL ? 'لا توجد وثائق مرتبطة' : 'Aucun document associé'}
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md mx-auto">
             لا توجد أي وثائق تدريبية أو إدارية أو شواهد مرتبطة بملفك المهني في الوقت الحالي.
           </p>
         </div>
@@ -149,7 +149,7 @@ export const MyDocumentsList: React.FC<MyDocumentsListProps> = ({
                     {/* Serial & Year */}
                     <span className="font-bold text-base text-[#1a202c] dark:text-slate-100 group-hover:text-[#2c5282] dark:group-hover:text-blue-300 flex items-center gap-1 font-mono tabular-nums">
                       <span>#{serialDisplay}</span>
-                      <span className="text-slate-400">/</span>
+                      <span className="text-slate-700 dark:text-slate-300">/</span>
                       <span>{yearDisplay}</span>
                     </span>
 
@@ -165,20 +165,20 @@ export const MyDocumentsList: React.FC<MyDocumentsListProps> = ({
                   {/* Comment if exists */}
                   {assoc.commentaire && (
                     <div className="flex items-start gap-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 rounded-md px-2.5 py-1 max-w-2xl">
-                      <MessageSquare className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                      <MessageSquare className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0 mt-0.5" />
                       <span>{assoc.commentaire}</span>
                     </div>
                   )}
 
                   {/* Association Date */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 pt-0.5 tabular-nums">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-700 dark:text-slate-300 pt-0.5 tabular-nums">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <Calendar className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
                       <span>تاريخ الربط: <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formatLongDate(assoc.dateAssociation || assoc.createdAt || '', isRTL ? 'ar' : 'fr')}</bdi></span>
                     </span>
 
                     {(doc?.entryDate || doc?.issueDate) && (
-                      <span className="text-slate-400 dark:text-slate-500">
+                      <span className="text-slate-700 dark:text-slate-300">
                         • تاريخ الوثيقة: <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formatLongDate(doc.entryDate || doc.issueDate, isRTL ? 'ar' : 'fr')}</bdi>
                       </span>
                     )}

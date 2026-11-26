@@ -47,7 +47,7 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
               size="sm"
               onClick={onTemporaryDismiss}
               aria-label="إغلاق الإشعار"
-              className="h-11 w-11 p-0 text-gray-500 hover:text-gray-700"
+              className="h-11 w-11 p-0 text-slate-700 dark:text-slate-300 hover:text-gray-700"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -66,7 +66,7 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
                 <p className="font-medium text-gray-900 leading-relaxed">
                   {documentSubject}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                   رقم الوثيقة: <bdi dir="ltr">{documentSerialNumber}/{documentYear}</bdi>
                 </p>
               </div>

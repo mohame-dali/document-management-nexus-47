@@ -26,7 +26,7 @@ const MessageHistoryStats: React.FC<MessageHistoryStatsProps> = ({
       {/* Total Messages Card */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-3 py-2 shadow-xs flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+          <span className="block text-[13px] text-slate-700 dark:text-slate-300 font-medium truncate">
             {t('messages.total')}
           </span>
           <span className="text-lg font-bold text-slate-900 dark:text-slate-100 tabular-nums leading-tight">
@@ -47,7 +47,7 @@ const MessageHistoryStats: React.FC<MessageHistoryStatsProps> = ({
         }`}
       >
         <div className="min-w-0">
-          <span className="block text-[11px] text-slate-600 dark:text-slate-400 font-medium truncate">
+          <span className="block text-[13px] text-slate-700 dark:text-slate-300 font-medium truncate">
             {t('messages.unread')}
           </span>
           <div className="flex items-center gap-1.5">
@@ -55,7 +55,7 @@ const MessageHistoryStats: React.FC<MessageHistoryStatsProps> = ({
               {unreadCount}
             </span>
             {unreadCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              <span className="px-1.5 py-0.5 rounded text-[13px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
                 {isRTL ? 'جديد' : 'Nouveau'}
               </span>
             )}
@@ -69,7 +69,7 @@ const MessageHistoryStats: React.FC<MessageHistoryStatsProps> = ({
       {/* Direct / One-to-One */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-3 py-2 shadow-xs flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+          <span className="block text-[13px] text-slate-700 dark:text-slate-300 font-medium truncate">
             {t('messages.oneToOne')}
           </span>
           <span className="text-lg font-bold text-slate-800 dark:text-slate-100 tabular-nums leading-tight">
@@ -84,7 +84,7 @@ const MessageHistoryStats: React.FC<MessageHistoryStatsProps> = ({
       {/* Group Messages */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-3 py-2 shadow-xs flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+          <span className="block text-[13px] text-slate-700 dark:text-slate-300 font-medium truncate">
             {t('messages.group')}
           </span>
           <span className="text-lg font-bold text-slate-800 dark:text-slate-100 tabular-nums leading-tight">

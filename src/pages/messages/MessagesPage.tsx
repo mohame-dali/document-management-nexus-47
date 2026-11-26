@@ -312,12 +312,12 @@ const MessagesPage: React.FC = () => {
                   {t('messages.title')}
                 </h1>
                 {messageStats.unreadCount > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] tabular-nums">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[13px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] tabular-nums">
                     {messageStats.unreadCount} {t('messages.unread')}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate">
                 {t('messages.pageSubtitle')}
               </p>
             </div>
@@ -403,7 +403,7 @@ const MessagesPage: React.FC = () => {
             <Inbox className="h-3.5 w-3.5" />
             <span>{t('messages.conversationsAndInbox')}</span>
             {messageStats.unreadCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-[#FFCB56] text-[#78350f] tabular-nums">
+              <span className="px-1.5 py-0.5 rounded-md text-[13px] font-bold bg-[#FFCB56] text-[#78350f] tabular-nums">
                 {messageStats.unreadCount}
               </span>
             )}

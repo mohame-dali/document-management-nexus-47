@@ -146,7 +146,7 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
               <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] dark:text-sky-300">
                 {selectedFolder ? `مستندات المجلد: ${selectedFolder.name}` : 'مستندات المجلد'}
               </DialogTitle>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
             </div>
           </div>
         </DialogHeader>

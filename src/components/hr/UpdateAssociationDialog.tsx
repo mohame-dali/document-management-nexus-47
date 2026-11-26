@@ -92,7 +92,7 @@ export const UpdateAssociationDialog: React.FC<UpdateAssociationDialogProps> = (
             <Edit3 className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
             <span>تعديل بيانات ربط الوثيقة</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-sm text-slate-700 dark:text-slate-300">
             تعديل طبيعة العلاقة الإدارية أو الملاحظات التوضيحية المرفقة بالوثيقة
           </DialogDescription>
         </DialogHeader>
@@ -102,13 +102,13 @@ export const UpdateAssociationDialog: React.FC<UpdateAssociationDialogProps> = (
             <div className="font-bold text-[#1a202c] dark:text-slate-100 mb-1 tabular-nums">
               {association.documentType === 'IncomingDocument' ? 'وارد' : 'صادر'} رقم #{doc.serialNumber || '—'} / {doc.year || '—'}
             </div>
-            <div className="text-xs text-slate-600 dark:text-slate-400 truncate">{doc.subject || 'بدون موضوع'}</div>
+            <div className="text-xs text-slate-700 dark:text-slate-300 truncate">{doc.subject || 'بدون موضوع'}</div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-1.5 text-start">
-            <Label htmlFor="update-type-association" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <Label htmlFor="update-type-association" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               طبيعة الوثيقة / نوع الربط <span className="text-red-500">*</span>
             </Label>
             <select
@@ -128,7 +128,7 @@ export const UpdateAssociationDialog: React.FC<UpdateAssociationDialogProps> = (
           </div>
 
           <div className="space-y-1.5 text-start">
-            <Label htmlFor="update-commentaire" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <Label htmlFor="update-commentaire" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               ملاحظات أو تفاصيل إضافية (اختياري)
             </Label>
             <Textarea
@@ -137,7 +137,7 @@ export const UpdateAssociationDialog: React.FC<UpdateAssociationDialogProps> = (
               onChange={(e) => setCommentaire(e.target.value)}
               placeholder="أدخل أي إيضاحات أو مرجعيات تكميلية..."
               rows={3}
-              className="bg-white dark:bg-slate-800 border-[#cbd5e1] dark:border-slate-700 dark:text-slate-100 focus-visible:ring-[#2c5282] text-base rounded-lg"
+              className="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 dark:text-slate-100 focus-visible:ring-[#2c5282] text-base rounded-lg"
             />
           </div>
 

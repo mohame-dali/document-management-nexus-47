@@ -107,12 +107,12 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
 
         {/* Sélecteur de date direct */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">اختر التاريخ:</span>
+          <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">اختر التاريخ:</span>
           <Input
             type="date"
             value={selectedDate}
             onChange={(e) => onDateChange(e.target.value)}
-            className="h-9 w-40 border-slate-200 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
+            className="h-9 w-40 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
           />
         </div>
       </div>
@@ -121,7 +121,7 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
       {isLoading ? (
         <div className="py-12 text-center space-y-2">
           <div className="h-6 w-6 border-2 border-[#2c5282] dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-500 dark:text-slate-400">جاري تحميل بيانات اليوم...</p>
+          <p className="text-xs text-slate-700 dark:text-slate-300">جاري تحميل بيانات اليوم...</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -138,13 +138,13 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
             }
           >
             <div className="space-y-1">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">
+              <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">
                 تاريخ المعاينة اليومية
               </span>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formatDateWithWeekday(selectedDate, isRTL ? 'ar' : 'fr')}</bdi>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">{selectedDate}</p>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-mono tabular-nums">{selectedDate}</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
@@ -224,7 +224,7 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
                 {/* Service */}
                 {details.nomService && (
                   <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <span className="text-slate-500 dark:text-slate-400 block mb-1 flex items-center gap-1">
+                    <span className="text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
                       <Building2 className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                       <span>المصلحة أو الوجهة:</span>
                     </span>
@@ -235,7 +235,7 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
                 {/* Mission */}
                 {details.lieuMission && (
                   <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <span className="text-slate-500 dark:text-slate-400 block mb-1 flex items-center gap-1">
+                    <span className="text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
                       <Briefcase className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                       <span>مكان المهمة:</span>
                     </span>
@@ -245,7 +245,7 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
 
                 {details.objetMission && (
                   <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <span className="text-slate-500 dark:text-slate-400 block mb-1 flex items-center gap-1">
+                    <span className="text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
                       <FileText className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                       <span>موضوع المهمة:</span>
                     </span>
@@ -256,7 +256,7 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
                 {/* Formation */}
                 {details.intituleFormation && (
                   <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <span className="text-slate-500 dark:text-slate-400 block mb-1 flex items-center gap-1">
+                    <span className="text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
                       <GraduationCap className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
                       <span>عنوان الدورة التكوينية:</span>
                     </span>
@@ -266,14 +266,14 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
 
                 {details.organismeFormation && (
                   <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <span className="text-slate-500 dark:text-slate-400 block mb-1">الهيئة المؤطرة:</span>
+                    <span className="text-slate-700 dark:text-slate-300 block mb-1">الهيئة المؤطرة:</span>
                     <span className="font-semibold text-slate-900 dark:text-slate-100">{details.organismeFormation}</span>
                   </div>
                 )}
 
                 {details.dureeFormation && (
                   <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <span className="text-slate-500 dark:text-slate-400 block mb-1">مدة التكوين:</span>
+                    <span className="text-slate-700 dark:text-slate-300 block mb-1">مدة التكوين:</span>
                     <span className="font-semibold text-slate-900 dark:text-slate-100">{details.dureeFormation}</span>
                   </div>
                 )}
@@ -281,8 +281,8 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
 
               {details.commentaire && (
                 <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 text-xs space-y-1">
-                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                    <MessageSquare className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                     <span>ملاحظات إضافية:</span>
                   </span>
                   <p className="text-slate-800 dark:text-slate-200">{details.commentaire}</p>
@@ -294,11 +294,11 @@ export const MyCalendarDayView: React.FC<MyCalendarDayViewProps> = ({
           {/* Si non enregistré */}
           {!dayAttendance && (
             <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center space-y-2">
-              <Calendar className="h-8 w-8 text-slate-400 dark:text-slate-500 mx-auto" />
+              <Calendar className="h-8 w-8 text-slate-700 dark:text-slate-300 mx-auto" />
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                 لم يتم تسجيل حالة الحضور لهذا اليوم بعد
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 يقوم مسؤول الموارد البشرية أو رئيس المصلحة بتسجيل وتأكيد الحضور اليومي.
               </p>
             </div>

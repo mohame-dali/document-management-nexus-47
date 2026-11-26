@@ -188,7 +188,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
             value={String(month)}
             onValueChange={(val) => onYearMonthChange(year, parseInt(val, 10))}
           >
-            <SelectTrigger className="h-9 w-44 border-slate-200 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
+            <SelectTrigger className="h-9 w-44 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
               <SelectValue />
             </SelectTrigger>
             <SelectContent dir={dir}>
@@ -204,7 +204,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
             value={String(year)}
             onValueChange={(val) => onYearMonthChange(parseInt(val, 10), month)}
           >
-            <SelectTrigger className="h-9 w-24 border-slate-200 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 font-mono tabular-nums">
+            <SelectTrigger className="h-9 w-24 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 font-mono tabular-nums">
               <SelectValue />
             </SelectTrigger>
             <SelectContent dir={dir}>
@@ -221,21 +221,21 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
       {/* Barre de filtres (Département & Recherche) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
         <div className="relative">
-          <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-400" />
+          <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-700 dark:text-slate-300" />
           <Input
             type="text"
             placeholder="بحث بالاسم أو اللقب أو ب.ت.و..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-9 ps-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
+            className="h-9 ps-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
           />
         </div>
 
         <div>
           <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
-            <SelectTrigger className="h-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
+            <SelectTrigger className="h-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <div className="flex items-center gap-1.5 truncate">
-                <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                <Building2 className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                 <SelectValue placeholder="كل الأقسام والمصالح" />
               </div>
             </SelectTrigger>
@@ -261,7 +261,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
       ) : sortedRecords.length === 0 ? (
         <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
           <EmptyState
-            icon={<Users className="h-8 w-8 text-slate-400 dark:text-slate-500" />}
+            icon={<Users className="h-8 w-8 text-slate-700 dark:text-slate-300" />}
             title="لا يوجد موظفون مطابقون لمعايير البحث"
           />
         </div>
@@ -276,7 +276,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                 >
                   <div className="flex items-center gap-1">
                     <span>الموظف</span>
-                    <ArrowUpDown className="h-3 w-3 text-slate-400" />
+                    <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
                 <th
@@ -285,7 +285,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                 >
                   <div className="flex items-center gap-1">
                     <span>القسم / المصلحة</span>
-                    <ArrowUpDown className="h-3 w-3 text-slate-400" />
+                    <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
                 <th
@@ -294,7 +294,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span>أيام الحضور</span>
-                    <ArrowUpDown className="h-3 w-3 text-slate-400" />
+                    <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
                 <th
@@ -303,7 +303,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span>أيام الغياب</span>
-                    <ArrowUpDown className="h-3 w-3 text-slate-400" />
+                    <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
                 <th className="py-3 px-3 whitespace-nowrap">تفاصيل أسباب الغياب خلال الشهر</th>
@@ -334,7 +334,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                           <div className="font-bold text-slate-900 dark:text-slate-100">
                             {p.nom} {p.prenom}
                           </div>
-                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono tabular-nums">
+                          <div className="text-[13px] text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                             {p.poste || p.cin || '-'}
                           </div>
                         </div>
@@ -343,7 +343,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
 
                     {/* Département */}
                     <td className="py-2.5 px-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] whitespace-nowrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[13px] whitespace-nowrap">
                         {getDepartmentName(p.activeDepartment)}
                       </span>
                     </td>
@@ -361,7 +361,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                         className={`font-bold px-2 py-0.5 rounded-md border font-mono tabular-nums ${
                           item.joursAbsents > 0
                             ? 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800'
-                            : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                            : 'text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {item.joursAbsents} يوم
@@ -375,7 +375,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                           {Object.entries(item.parMotif).map(([code, count]) => (
                             <span
                               key={code}
-                              className="inline-flex items-center gap-1 text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1.5 py-0.5 rounded-md border border-slate-200 dark:border-slate-700"
+                              className="inline-flex items-center gap-1 text-[13px] bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1.5 py-0.5 rounded-md border border-slate-200 dark:border-slate-700"
                             >
                               <span>{getMotifLabel(code)}:</span>
                               <strong className="font-mono tabular-nums">{count}</strong>
@@ -383,7 +383,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500 text-[11px]">-</span>
+                        <span className="text-slate-700 dark:text-slate-300 text-[13px]">-</span>
                       )}
                     </td>
 

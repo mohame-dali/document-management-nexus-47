@@ -255,7 +255,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 tabular-nums">
+          <span className="text-xs font-medium text-slate-700 dark:text-slate-300 tabular-nums">
             المعروض: <strong className="text-slate-800 dark:text-slate-200"><bdi dir="ltr">{totalFiltered}</bdi></strong>
           </span>
 
@@ -298,7 +298,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Search Input */}
           <div className="relative lg:col-span-2">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 h-4 w-4 pointer-events-none" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 h-4 w-4 pointer-events-none" />
             <Input
               placeholder="ابحث بقيمة الخيار..."
               value={searchTerm}
@@ -372,7 +372,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
         {/* Sort and Reset Row */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 whitespace-nowrap">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5 whitespace-nowrap">
               <ArrowUpDown className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
               الترتيب:
             </span>
@@ -414,7 +414,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
               لا توجد خيارات مطابقة
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1">
+            <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md mx-auto mt-1">
               {hasActiveFilters
                 ? 'لم يتم العثور على خيارات تطابق معايير البحث الحالية.'
                 : 'لم يتم تسجيل أي خيارات في النظام حتى الآن.'}
@@ -488,22 +488,22 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                         نشط
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700">
-                        <XCircle className="h-3 w-3 text-slate-500" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                        <XCircle className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                         معطّل
                       </span>
                     )}
                   </td>
 
                   {/* Created Date & Creator */}
-                  <td className="py-3.5 px-4 whitespace-nowrap text-xs text-slate-600 dark:text-slate-400">
+                  <td className="py-3.5 px-4 whitespace-nowrap text-xs text-slate-700 dark:text-slate-300">
                     <div className="flex flex-col gap-0.5">
                       <span className="flex items-center gap-1 tabular-nums">
-                        <Clock className="h-3 w-3 text-slate-400" />
+                        <Clock className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                         <bdi dir="rtl">{formatLongDate(option.createdAt, 'ar')}</bdi>
                       </span>
                       {option.createdBy?.username && (
-                        <span className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        <span className="flex items-center gap-1 text-[13px] text-slate-700 dark:text-slate-300">
                           <User className="h-3 w-3" />
                           {option.createdBy.username}
                         </span>
@@ -596,7 +596,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                     نشط
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
                     <XCircle className="h-3.5 w-3.5" />
                     معطّل
                   </span>
@@ -607,12 +607,12 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
                   {highlightMatch(option.value, searchTerm)}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-700 dark:text-slate-300">
                   {getDocumentTypeLabel(option.documentType)}
                 </p>
               </div>
 
-              <div className="text-xs text-slate-500 dark:text-slate-400 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="text-xs text-slate-700 dark:text-slate-300 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <span className="flex items-center gap-1 tabular-nums">
                   <Clock className="h-3 w-3" />
                   <bdi dir="rtl">{formatLongDate(option.createdAt, 'ar')}</bdi>
@@ -679,7 +679,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
       {/* Pagination Bar */}
       {totalFiltered > 0 && (
         <div className="px-4 sm:px-5 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 tabular-nums">
+          <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 tabular-nums">
             عرض{' '}
             <span className="font-semibold text-slate-900 dark:text-slate-100">
               <bdi dir="ltr">{startIndex + 1}</bdi>
@@ -696,7 +696,7 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
               <span>في كل صفحة:</span>
               <Select
                 value={pageSize.toString()}

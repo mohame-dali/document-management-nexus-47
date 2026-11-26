@@ -134,7 +134,7 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1 tabular-nums">
+          <span className="text-xs text-slate-700 dark:text-slate-300 font-medium flex items-center gap-1 tabular-nums">
             <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
             <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formatDateWithWeekday(date, isRTL ? 'ar' : 'fr')}</bdi>
           </span>
@@ -142,7 +142,7 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
             type="date"
             value={date}
             onChange={(e) => onDateChange(e.target.value)}
-            className="h-9 w-40 border-slate-200 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
+            className="h-9 w-40 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
           />
         </div>
       </div>
@@ -151,22 +151,22 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
         {/* Recherche */}
         <div className="relative">
-          <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-400" />
+          <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-700 dark:text-slate-300" />
           <Input
             type="text"
             placeholder="بحث بالاسم أو اللقب أو ب.ت.و..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-9 ps-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
+            className="h-9 ps-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
           />
         </div>
 
         {/* Filtre Département */}
         <div>
           <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
-            <SelectTrigger className="h-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
+            <SelectTrigger className="h-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <div className="flex items-center gap-1.5 truncate">
-                <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                <Building2 className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                 <SelectValue placeholder="كل الأقسام والمصالح" />
               </div>
             </SelectTrigger>
@@ -186,7 +186,7 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
         {/* Filtre État */}
         <div>
           <Select value={selectedStatus} onValueChange={onStatusChange}>
-            <SelectTrigger className="h-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
+            <SelectTrigger className="h-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <SelectValue placeholder="كل الحالات" />
             </SelectTrigger>
             <SelectContent dir={dir}>
@@ -221,7 +221,7 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
       ) : records.length === 0 ? (
         <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
           <EmptyState
-            icon={<Users className="h-8 w-8 text-slate-400 dark:text-slate-500" />}
+            icon={<Users className="h-8 w-8 text-slate-700 dark:text-slate-300" />}
             title="لا يوجد موظفون يطابقون معايير البحث المحددة"
             description="يرجى ضبط معايير البحث أو اختيار قسم مختلف"
           />
@@ -261,7 +261,7 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
                             {p.nom} {p.prenom}
                           </div>
                           {p.cin && (
-                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono tabular-nums">
+                            <div className="text-[13px] text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                               {p.cin}
                             </div>
                           )}
@@ -276,8 +276,8 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
 
                     {/* Département */}
                     <td className="py-2.5 px-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] whitespace-nowrap">
-                        <Building2 className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[13px] whitespace-nowrap">
+                        <Building2 className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                         <span>{getDepartmentName(p.activeDepartment)}</span>
                       </span>
                     </td>
@@ -297,29 +297,29 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
                     {/* Motif & Détails */}
                     <td className="py-2.5 px-3 text-slate-700 dark:text-slate-300">
                       {att?.statut === 'present' ? (
-                        <span className="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                        <span className="text-[13px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                           <Clock className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                           <span>حاضر في مقر العمل</span>
                         </span>
                       ) : att?.statut === 'absent' ? (
                         <div className="space-y-0.5 max-w-xs">
                           {details?.nomService && (
-                            <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                            <div className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">
                               الجهة: {details.nomService}
                             </div>
                           )}
                           {details?.lieuMission && (
-                            <div className="text-[11px] text-slate-600 dark:text-slate-300">
+                            <div className="text-[13px] text-slate-600 dark:text-slate-300">
                               المكان: {details.lieuMission} {details.objetMission && `— ${details.objetMission}`}
                             </div>
                           )}
                           {details?.intituleFormation && (
-                            <div className="text-[11px] text-slate-600 dark:text-slate-300">
+                            <div className="text-[13px] text-slate-600 dark:text-slate-300">
                               التكوين: {details.intituleFormation}
                             </div>
                           )}
                           {details?.commentaire && (
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 italic">
+                            <div className="text-[13px] text-slate-700 dark:text-slate-300 italic">
                               "{details.commentaire}"
                             </div>
                           )}
@@ -327,11 +327,11 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
                             !details?.lieuMission &&
                             !details?.intituleFormation &&
                             !details?.commentaire && (
-                              <span className="text-slate-400 dark:text-slate-500 text-[11px]">-</span>
+                              <span className="text-slate-700 dark:text-slate-300 text-[13px]">-</span>
                             )}
                         </div>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500 text-[11px]">-</span>
+                        <span className="text-slate-700 dark:text-slate-300 text-[13px]">-</span>
                       )}
                     </td>
 
@@ -339,16 +339,16 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       {att?.statut === 'absent' ? (
                         att.impacteSolde ? (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[13px] font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                             نعم (يخصم)
                           </span>
                         ) : (
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[13px] font-medium bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                             لا يخصم
                           </span>
                         )
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500">-</span>
+                        <span className="text-slate-700 dark:text-slate-300">-</span>
                       )}
                     </td>
                   </tr>
@@ -360,9 +360,9 @@ export const AllPersonnelDayView: React.FC<AllPersonnelDayViewProps> = ({
       )}
 
       {/* Pied de tableau */}
-      <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-slate-300">
         <span>إجمالي السجلات المعروضة : <strong className="font-mono tabular-nums text-slate-700 dark:text-slate-200">{records.length}</strong> موظف</span>
-        <span className="text-[11px] flex items-center gap-1">
+        <span className="text-[13px] flex items-center gap-1">
           <Info className="h-3 w-3" />
           <span>تظهر النتائج المطابقة للتاريخ والقسم والحالة المحددة</span>
         </span>

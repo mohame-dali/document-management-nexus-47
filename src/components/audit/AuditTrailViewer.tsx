@@ -61,9 +61,9 @@ const AuditTrailViewer: React.FC = () => {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Shield className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <Shield className="h-12 w-12 mx-auto mb-4 text-slate-700 dark:text-slate-300" />
           <h3 className="text-lg font-semibold text-gray-600 mb-2">غير مصرح</h3>
-          <p className="text-gray-500">ليس لديك صلاحية لعرض سجل التدقيق</p>
+          <p className="text-slate-700 dark:text-slate-300">ليس لديك صلاحية لعرض سجل التدقيق</p>
         </CardContent>
       </Card>
     );
@@ -88,7 +88,7 @@ const AuditTrailViewer: React.FC = () => {
                 </CardTitle>
                 <p className="text-gray-600">مراقبة شاملة لجميع العمليات والأنشطة في النظام</p>
                 {pagination && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
                     عرض {auditLogs.length} من أصل {pagination.total} سجل
                     (الصفحة {pagination.current} من {pagination.pages})
                   </p>

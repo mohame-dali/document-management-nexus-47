@@ -105,7 +105,7 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
                 {documents.length} وثيقة
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
               سجل الشواهد، التدريبات، القرارات والمراسلات الرسمية ذات الصلة بالملف الإداري
             </p>
           </div>
@@ -125,7 +125,7 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
 
       {/* Content */}
       {isLoading ? (
-        <div className="py-12 text-center text-slate-500 dark:text-slate-400 space-y-2">
+        <div className="py-12 text-center text-slate-700 dark:text-slate-300 space-y-2">
           <Loader2 className="w-8 h-8 animate-spin text-[#2c5282] dark:text-blue-400 mx-auto" />
           <p className="text-sm">جاري تحميل سجل وثائق الموظف...</p>
         </div>
@@ -136,11 +136,11 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
         </div>
       ) : documents.length === 0 ? (
         <div className="bg-[#f8fafc] dark:bg-slate-950/40 border border-dashed border-[#cbd5e1] dark:border-slate-700 rounded-lg p-8 text-center space-y-3">
-          <FolderOpen className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto" />
+          <FolderOpen className="w-12 h-12 text-slate-700 dark:text-slate-300 mx-auto" />
           <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
             لا توجد وثائق أو مراسلات مرتبطة بهذا الموظف حالياً
           </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+          <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
             يمكنك ربط مراسلات واردة أو صادرة (شواهد، تكوينات، قرارات تعيين، شواهد عمل) بأرشيف الموظف لتوثيق مساره الإداري.
           </p>
           {!readOnly && (
@@ -190,9 +190,9 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
                       className="font-bold text-base text-[#1a202c] dark:text-slate-100 hover:text-[#2c5282] dark:hover:text-blue-300 hover:underline flex items-center gap-1 tabular-nums"
                     >
                       <span>#{doc?.serialNumber || '—'}</span>
-                      <span className="text-slate-400">/</span>
+                      <span className="text-slate-700 dark:text-slate-300">/</span>
                       <span>{doc?.year || '—'}</span>
-                      <ExternalLink className="w-3.5 h-3.5 text-slate-400 inline" />
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 inline" />
                     </Link>
 
                     {/* Type Association Badge (Stage, Formation, Diplome, etc.) */}
@@ -207,27 +207,27 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
                   {/* Comment if exists */}
                   {assoc.commentaire && (
                     <div className="flex items-start gap-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 rounded-md px-2.5 py-1 max-w-xl">
-                      <MessageSquare className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                      <MessageSquare className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0 mt-0.5" />
                       <span>{assoc.commentaire}</span>
                     </div>
                   )}
 
                   {/* Meta info: association date and who associated */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 pt-0.5 tabular-nums">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-700 dark:text-slate-300 pt-0.5 tabular-nums">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <Calendar className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
                       <span>تاريخ الربط: <bdi dir={dir} className="tabular-nums">{formatLongDate(assoc.dateAssociation || assoc.createdAt || '', dir === 'ltr' ? 'fr' : 'ar')}</bdi></span>
                     </span>
 
                     {assoc.associePar && (
                       <span className="flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-slate-400" />
+                        <User className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
                         <span>بواسطة: {assoc.associePar.username}</span>
                       </span>
                     )}
 
                     {(doc?.entryDate || doc?.issueDate) && (
-                      <span className="text-slate-400 dark:text-slate-500">
+                      <span className="text-slate-700 dark:text-slate-300">
                         • تاريخ المراسلة: <bdi dir={dir} className="tabular-nums">{formatLongDate(doc.entryDate || doc.issueDate, dir === 'ltr' ? 'fr' : 'ar')}</bdi>
                       </span>
                     )}
@@ -269,7 +269,7 @@ export const PersonnelDocumentsList: React.FC<PersonnelDocumentsListProps> = ({
                         onClick={() => setDeletingAssociation(assoc)}
                         aria-label="إلغاء الربط"
                         title="إلغاء الربط"
-                        className="h-9 w-9 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg"
+                        className="h-9 w-9 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

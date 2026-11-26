@@ -92,17 +92,17 @@ const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
               <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center hover:border-yellow-400 hover:bg-yellow-50 transition-colors">
                 <Heart className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
                 <p className="text-sm text-gray-600 font-medium">إسقاط المستندات هنا</p>
-                <p className="text-xs text-gray-500">لإزالتها من المجلدات</p>
+                <p className="text-xs text-slate-700 dark:text-slate-300">لإزالتها من المجلدات</p>
               </div>
             </DragDropWrapper>
 
             {isLoading ? (
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                <p className="mt-2 text-xs text-gray-500">جاري التحميل...</p>
+                <p className="mt-2 text-xs text-slate-700 dark:text-slate-300">جاري التحميل...</p>
               </div>
             ) : favorites?.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-slate-700 dark:text-slate-300">
                 <Star className="h-12 w-12 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">لا توجد مجلدات مفضلة</p>
                 <p className="text-xs mt-1">استخدم النجمة لإضافة مجلدات</p>

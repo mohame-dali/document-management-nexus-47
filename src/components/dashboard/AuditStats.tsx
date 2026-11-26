@@ -94,7 +94,7 @@ const AuditStats: React.FC = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">{stat.title}</p>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{stat.title}</p>
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums">{stat.value}</p>
               </div>
               <div className={`p-2.5 rounded-lg border ${stat.bgColor}`}>

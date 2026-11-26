@@ -14,7 +14,7 @@ export interface PersonnelAvatarProps {
 const sizeConfig = {
   xs: {
     container: 'w-6 h-6 border',
-    text: 'text-[10px]',
+    text: 'text-[13px]',
     icon: 'w-3.5 h-3.5',
   },
   sm: {

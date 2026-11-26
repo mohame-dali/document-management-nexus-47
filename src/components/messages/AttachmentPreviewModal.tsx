@@ -160,7 +160,7 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
               <DialogTitle className="text-base font-semibold truncate text-slate-800 dark:text-slate-100" title={filename}>
                 {filename || t('common.preview')}
               </DialogTitle>
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-slate-700 dark:text-slate-300">
                 {isPdf ? 'Document PDF' : isImage ? 'Image' : 'Fichier'}
               </p>
             </div>
@@ -200,7 +200,7 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
         {/* Corps de la modale */}
         <div className="flex-1 w-full min-h-[50vh] max-h-[72vh] overflow-auto flex items-center justify-center bg-slate-100 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 p-2">
           {isLoading && (
-            <div className="flex flex-col items-center justify-center gap-3 py-12 text-slate-500 dark:text-slate-400">
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-slate-700 dark:text-slate-300">
               <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] dark:text-sky-400" />
               <p className="text-sm font-medium">Chargement de l'aperçu...</p>
             </div>
@@ -210,7 +210,7 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center px-4">
               <AlertCircle className="h-10 w-10 text-amber-500" />
               <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Impossible de charger l'aperçu</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm">{error}</p>
+              <p className="text-xs text-slate-700 dark:text-slate-300 max-w-sm">{error}</p>
             </div>
           )}
 
@@ -236,11 +236,11 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
 
               {!isPdf && !isImage && (
                 <div className="flex flex-col items-center justify-center gap-3 py-12 text-center px-4">
-                  <FileText className="h-12 w-12 text-slate-400 dark:text-slate-500" />
+                  <FileText className="h-12 w-12 text-slate-700 dark:text-slate-300" />
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                     Aperçu non disponible pour ce type de fichier
                   </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-700 dark:text-slate-300">
                     Vous pouvez télécharger le fichier pour l'ouvrir avec l'application appropriée.
                   </p>
                   <Button

@@ -42,7 +42,7 @@ const LandingPage = () => {
           <p className="text-lg sm:text-xl font-semibold text-[#2c5282] mb-3">
             {t('landing.heroSubtitle')}
           </p>
-          <p className="text-sm sm:text-base text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-700 mb-8 max-w-2xl mx-auto leading-relaxed">
             {t('landing.heroDescription1')}{' '}
             {t('landing.heroDescription2')}
           </p>
@@ -56,13 +56,13 @@ const LandingPage = () => {
 
           {/* Badges */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
-            <span className="inline-flex items-center px-3 py-1 rounded-full border border-[#e2e8f0] bg-white text-xs font-medium text-[#4a5568] shadow-xs">
+            <span className="inline-flex items-center px-3 py-1 rounded-full border border-[#e2e8f0] bg-white text-xs font-medium text-slate-700 shadow-xs">
               ✓ {t('landing.badgeFast')}
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full border border-[#e2e8f0] bg-white text-xs font-medium text-[#4a5568] shadow-xs">
+            <span className="inline-flex items-center px-3 py-1 rounded-full border border-[#e2e8f0] bg-white text-xs font-medium text-slate-700 shadow-xs">
               ✓ {t('landing.badgeSecure')}
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full border border-[#e2e8f0] bg-white text-xs font-medium text-[#4a5568] shadow-xs">
+            <span className="inline-flex items-center px-3 py-1 rounded-full border border-[#e2e8f0] bg-white text-xs font-medium text-slate-700 shadow-xs">
               ✓ {t('landing.badgeComplete')}
             </span>
           </div>
@@ -81,7 +81,7 @@ const LandingPage = () => {
                 <Inbox className="w-10 h-10" />
               </div>
               <h3 className="text-lg font-bold mb-2 text-gray-900">{t('landing.feature1Title')}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-slate-700 leading-relaxed">
                 {t('landing.feature1Description')}
               </p>
               <p className="text-xs font-medium text-[#2c5282] text-center mt-3">
@@ -95,7 +95,7 @@ const LandingPage = () => {
                 <Users className="w-10 h-10" />
               </div>
               <h3 className="text-lg font-bold mb-2 text-gray-900">{t('landing.feature2Title')}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-slate-700 leading-relaxed">
                 {t('landing.feature2Description')}
               </p>
               <p className="text-xs font-medium text-[#2c5282] text-center mt-3">
@@ -109,7 +109,7 @@ const LandingPage = () => {
                 <FileText className="w-10 h-10" />
               </div>
               <h3 className="text-lg font-bold mb-2 text-gray-900">{t('landing.feature3Title')}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-slate-700 leading-relaxed">
                 {t('landing.feature3Description')}
               </p>
               <p className="text-xs font-medium text-[#2c5282] text-center mt-3">
@@ -135,7 +135,7 @@ const LandingPage = () => {
           >
             {t('landing.ctaLoginButton')}
           </Button>
-          <p className="text-xs text-white/70 mt-3">
+          <p className="text-xs text-white/90 mt-3">
             {t('landing.ctaContactNote')}
           </p>
         </div>
@@ -152,7 +152,7 @@ const LandingPage = () => {
               </h2>
             </div>
             <div>
-              <p className="text-sm text-gray-400">{t('landing.footerCopyright')}</p>
+              <p className="text-sm text-slate-300">{t('landing.footerCopyright')}</p>
             </div>
           </div>
         </div>

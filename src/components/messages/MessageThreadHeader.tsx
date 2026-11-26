@@ -139,29 +139,29 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
           {/* Sender */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">
                 {isRTL ? 'المرسل:' : 'Expéditeur :'}
               </span>
               <span className="font-semibold text-slate-800 dark:text-slate-100">
                 {senderInfo ? senderInfo.username : t('messages.unknownUser')}
               </span>
               {senderInfo && (
-                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 rounded-md ${getRoleColor(senderInfo.role)}`}>
+                <Badge variant="outline" className={`text-[13px] px-1.5 py-0 h-4 rounded-md ${getRoleColor(senderInfo.role)}`}>
                   {getRoleIcon(senderInfo.role)}
                   <span className="ms-1">{getRoleDisplayName(senderInfo.role)}</span>
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 tabular-nums">
-              <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+            <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 tabular-nums">
+              <Clock className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
               <bdi dir={isRTL ? 'rtl' : 'ltr'}>{formatDateTime(message.createdAt, language)}</bdi>
             </div>
           </div>
 
           {/* Recipients */}
           <div className="flex items-start gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
-            <span className="text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap mt-0.5">
+            <span className="text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap mt-0.5">
               {isRTL ? 'المستلمون:' : 'Destinataires :'}
             </span>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -173,15 +173,15 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
                 return (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md text-[11px] text-slate-700 dark:text-slate-200"
+                    className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md text-[13px] text-slate-700 dark:text-slate-200"
                   >
                     <span>{recipientName}</span>
                     {isRead ? (
-                      <span className="text-[10px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-1 rounded border border-emerald-200 dark:border-emerald-800/60">
+                      <span className="text-[13px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-1 rounded border border-emerald-200 dark:border-emerald-800/60">
                         {isRTL ? 'مقروءة' : 'Lu'}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-[#854d0e] dark:text-amber-300 bg-[#FFD758]/20 dark:bg-amber-500/20 px-1 rounded border border-[#FFCB56]/80 dark:border-amber-500/40">
+                      <span className="text-[13px] text-[#854d0e] dark:text-amber-300 bg-[#FFD758]/20 dark:bg-amber-500/20 px-1 rounded border border-[#FFCB56]/80 dark:border-amber-500/40">
                         {isRTL ? 'غير مقروءة' : 'Non lu'}
                       </span>
                     )}

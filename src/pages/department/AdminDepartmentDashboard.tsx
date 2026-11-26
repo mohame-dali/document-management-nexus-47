@@ -56,7 +56,7 @@ const AdminDepartmentDashboard = () => {
           <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">
             {language === 'fr' ? 'Tableau de bord du département' : 'لوحة تحكم إدارة القسم'}
           </h1>
-          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
             {language === 'fr'
               ? `Suivi des documents et activités pour ${activeDepartment.name}`
               : `إدارة الوثائق والأنشطة في قسم ${activeDepartment.name}`}
@@ -97,14 +97,14 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <Users className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
               {language === 'fr' ? 'Équipe' : 'المستخدمين'}
             </span>
           </div>
           <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
             {language === 'fr' ? 'Membres du département' : 'أعضاء القسم'}
           </h3>
-          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 flex-1">
             {language === 'fr'
               ? `Consulter les comptes rattachés au département ${activeDepartment.name}.`
               : `استعراض حسابات المستخدمين التابعين لقسم ${activeDepartment.name}.`}
@@ -125,14 +125,14 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <FileText className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
               {language === 'fr' ? 'Entrants' : 'الوارد'}
             </span>
           </div>
           <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
             {language === 'fr' ? 'Courriers entrants' : 'الوثائق الواردة'}
           </h3>
-          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 flex-1">
             {language === 'fr'
               ? 'Suivi des courriers entrants, affectation des responsables et réponses.'
               : 'إدارة ومتابعة المراسلات الواردة للقسم وتعيين المسؤولين وإضافة الردود.'}
@@ -150,7 +150,7 @@ const AdminDepartmentDashboard = () => {
               size="sm" 
               variant="outline"
               onClick={() => navigate('/dashboard/incoming-documents')}
-              className="flex-1 h-10 border border-[#e2e8f0] dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-[#f7fafc] dark:hover:bg-slate-800 rounded font-medium gap-1.5"
+              className="flex-1 h-10 border border-[#e2e8f0] dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-[#f7fafc] dark:hover:bg-slate-800 rounded font-medium gap-1.5"
             >
               <Edit className="h-4 w-4" />
               {language === 'fr' ? 'Gérer' : 'إدارة'}
@@ -162,14 +162,14 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <FileText className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
               {language === 'fr' ? 'Sortants' : 'الصادر'}
             </span>
           </div>
           <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
             {language === 'fr' ? 'Courriers sortants' : 'الوثائق الصادرة'}
           </h3>
-          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 flex-1">
             {language === 'fr'
               ? 'Consulter et organiser les courriers sortants du département.'
               : 'عرض وتنظيم المراسلات والوثائق الصادرة الرسمية من القسم.'}
@@ -187,7 +187,7 @@ const AdminDepartmentDashboard = () => {
               size="sm" 
               variant="outline"
               onClick={() => navigate('/dashboard/outgoing-documents')}
-              className="flex-1 h-10 border border-[#e2e8f0] dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-[#f7fafc] dark:hover:bg-slate-800 rounded font-medium gap-1.5"
+              className="flex-1 h-10 border border-[#e2e8f0] dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-[#f7fafc] dark:hover:bg-slate-800 rounded font-medium gap-1.5"
             >
               <Edit className="h-4 w-4" />
               {language === 'fr' ? 'Gérer' : 'إدارة'}
@@ -199,14 +199,14 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <FolderOpen className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
               {language === 'fr' ? 'Classement' : 'التنظيم'}
             </span>
           </div>
           <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
             {language === 'fr' ? 'Gestion des dossiers' : 'إدارة المجلدات'}
           </h3>
-          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 flex-1">
             {language === 'fr'
               ? 'Organiser et classer les courriers du département dans des dossiers.'
               : 'تنظيم وفهرسة وثائق ومراسلات القسم ضمن مجلدات وتصنيفات مخصصة.'}
@@ -227,14 +227,14 @@ const AdminDepartmentDashboard = () => {
         <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
             <MessageSquare className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
-            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
               {language === 'fr' ? 'Communication' : 'التواصل'}
             </span>
           </div>
           <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
             {language === 'fr' ? 'Messagerie interne' : 'الرسائل والمحادثات'}
           </h3>
-          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-2 flex-1">
             {language === 'fr'
               ? 'Échanger des messages administratifs avec les utilisateurs.'
               : 'إرسال واستقبال التنبيهات والرسائل الإدارية مع مستخدمي القسم.'}
@@ -262,32 +262,32 @@ const AdminDepartmentDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex items-start gap-2 text-sm text-[#4a5568]">
+          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <CheckCircle2 className="h-4 w-4 text-[#38a169] flex-shrink-0 mt-0.5" />
             <span>إنشاء وتعديل وإدارة حسابات المستخدمين التابعين للقسم</span>
           </div>
 
-          <div className="flex items-start gap-2 text-sm text-[#4a5568]">
+          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <CheckCircle2 className="h-4 w-4 text-[#38a169] flex-shrink-0 mt-0.5" />
             <span>تحديد وتعيين المسؤولين ومتابعة مسار الوثائق الواردة</span>
           </div>
 
-          <div className="flex items-start gap-2 text-sm text-[#4a5568]">
+          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <CheckCircle2 className="h-4 w-4 text-[#38a169] flex-shrink-0 mt-0.5" />
             <span>إضافة الردود والإجراءات الإدارية على المراسلات الواردة</span>
           </div>
 
-          <div className="flex items-start gap-2 text-sm text-[#4a5568]">
+          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <CheckCircle2 className="h-4 w-4 text-[#38a169] flex-shrink-0 mt-0.5" />
             <span>تنظيم الوثائق وفهرستها ضمن مجلدات وتصنيفات إدارية</span>
           </div>
 
-          <div className="flex items-start gap-2 text-sm text-[#4a5568]">
+          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <CheckCircle2 className="h-4 w-4 text-[#38a169] flex-shrink-0 mt-0.5" />
             <span>البحث والاستعلام المتقدم في أرشيف وثائق القسم النشط</span>
           </div>
 
-          <div className="flex items-start gap-2 text-sm text-[#4a5568]">
+          <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <CheckCircle2 className="h-4 w-4 text-[#38a169] flex-shrink-0 mt-0.5" />
             <span>الوصول محصور بحدود القسم النشط مع إمكانية التبديل عند توفر الصلاحية</span>
           </div>

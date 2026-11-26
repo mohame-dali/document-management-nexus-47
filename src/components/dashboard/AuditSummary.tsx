@@ -87,7 +87,7 @@ const AuditSummary: React.FC = () => {
               <CardTitle className="text-base sm:text-lg font-bold text-[#1a202c] dark:text-slate-100">
                 {t('dashboard.audit.title')}
               </CardTitle>
-              <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d] dark:text-slate-400 mt-0.5">
+              <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 mt-0.5">
                 <TrendingUp className="h-3.5 w-3.5 text-[#38a169] dark:text-emerald-400" />
                 <span>{t('dashboard.audit.subtitle')}</span>
               </div>
@@ -109,7 +109,7 @@ const AuditSummary: React.FC = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10">
             <div className="w-8 h-8 border-2 border-[#bee3f8] border-t-[#2c5282] rounded-full animate-spin"></div>
-            <p className="mt-3 text-xs text-[#5f6b7d] dark:text-slate-400">{t('common.loading')}</p>
+            <p className="mt-3 text-xs text-slate-700 dark:text-slate-300">{t('common.loading')}</p>
           </div>
         ) : (
           <ScrollArea className="h-[340px]">
@@ -127,22 +127,22 @@ const AuditSummary: React.FC = () => {
                           <Badge className={`${getActionColor(log.action)} border text-xs px-2.5 py-0.5 rounded-full font-medium`}>
                             {getActionText(log.action)}
                           </Badge>
-                          <Badge variant="outline" className="text-[11px] bg-slate-50/90 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full font-normal">
+                          <Badge variant="outline" className="text-[13px] bg-slate-50/90 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full font-normal">
                             {log.entityType}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-[#5f6b7d] dark:text-slate-400">
+                        <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                           <div className="flex items-center gap-1.5">
-                            <User className="h-3 w-3 text-[#a0aec0]" />
+                            <User className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                             <span className="font-medium text-[#2d3748] dark:text-slate-200">{log.userDetails.username}</span>
                           </div>
                           <span className="text-[#cbd5e1] dark:text-slate-700">•</span>
-                          <span className="text-[11px] text-[#5f6b7d] dark:text-slate-400">{getRoleDisplayName(log.userDetails.role)}</span>
+                          <span className="text-[13px] text-slate-700 dark:text-slate-300">{getRoleDisplayName(log.userDetails.role)}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d] dark:text-slate-400 bg-[#f7fafc] dark:bg-slate-800 px-2.5 py-1.5 rounded border border-[#e2e8f0] dark:border-slate-700 flex-shrink-0 tabular-nums">
-                        <Clock className="h-3 w-3 text-[#a0aec0]" />
-                        <span className="text-[11px] tabular-nums">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 bg-[#f7fafc] dark:bg-slate-800 px-2.5 py-1.5 rounded border border-[#e2e8f0] dark:border-slate-700 flex-shrink-0 tabular-nums">
+                        <Clock className="h-3 w-3 text-slate-700 dark:text-slate-300" />
+                        <span className="text-[13px] tabular-nums">
                           <bdi dir={language === 'fr' ? 'ltr' : 'rtl'}>{formatDateTime(log.createdAt)}</bdi>
                         </span>
                       </div>
@@ -153,13 +153,13 @@ const AuditSummary: React.FC = () => {
               {recentLogs?.data?.length === 0 && (
                 <div className="text-center py-10">
                   <div className="p-3 bg-[#f7fafc] dark:bg-slate-800 rounded inline-block border border-[#e2e8f0] dark:border-slate-700 mb-2">
-                    <Shield className="h-8 w-8 text-[#a0aec0]" />
+                    <Shield className="h-8 w-8 text-slate-700 dark:text-slate-300" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#4a5568] dark:text-slate-300">
+                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       {t('dashboard.audit.noRecentActivities')}
                     </h3>
-                    <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
+                    <p className="text-xs text-slate-700 dark:text-slate-300">
                       {t('dashboard.audit.noActivitiesDescription')}
                     </p>
                   </div>

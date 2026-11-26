@@ -68,7 +68,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
         <EmptyState
-          icon={<Tag className="h-10 w-10 text-slate-400 dark:text-slate-500" />}
+          icon={<Tag className="h-10 w-10 text-slate-700 dark:text-slate-300" />}
           title="لا توجد أنواع غياب مطابقة"
           description="قم بتعديل خيارات البحث أو الفلترة أو أضف نوع غياب جديد."
         />
@@ -81,13 +81,13 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
       <Table dir={dir} className="w-full text-start border-collapse">
         <TableHeader className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur-sm">
           <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-700">
-            <TableHead className="w-16 text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الترتيب</TableHead>
-            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الرمز (Code)</TableHead>
-            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">المسمى بالعربية والفرنسية</TableHead>
-            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">التصنيف</TableHead>
-            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">خصم من الرصيد</TableHead>
-            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الحالة</TableHead>
-            <TableHead className="w-36 text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الإجراءات</TableHead>
+            <TableHead className="w-16 text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الترتيب</TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الرمز (Code)</TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">المسمى بالعربية والفرنسية</TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">التصنيف</TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">خصم من الرصيد</TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الحالة</TableHead>
+            <TableHead className="w-36 text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -99,7 +99,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                 className="hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors duration-150 border-slate-200 dark:border-slate-800"
               >
                 {/* Order */}
-                <TableCell className="py-3 px-4 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 tabular-nums">
+                <TableCell className="py-3 px-4 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 tabular-nums">
                   {reason.order ?? 100}
                 </TableCell>
 
@@ -115,8 +115,8 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                       {reason.code}
                     </span>
                     {reason.isSystem && (
-                      <Badge variant="outline" className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 gap-1 px-1.5 py-0 h-5 font-medium">
-                        <ShieldCheck className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                      <Badge variant="outline" className="text-[13px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 gap-1 px-1.5 py-0 h-5 font-medium">
+                        <ShieldCheck className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                         نظامي
                       </Badge>
                     )}
@@ -130,12 +130,12 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                       {reason.labelAr}
                     </span>
                     {reason.labelFr && (
-                      <span className="block text-xs text-slate-500 dark:text-slate-400 font-normal" dir="ltr">
+                      <span className="block text-xs text-slate-700 dark:text-slate-300 font-normal" dir="ltr">
                         {reason.labelFr}
                       </span>
                     )}
                     {reason.requiresDocument && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md mt-1">
+                      <span className="inline-flex items-center gap-1 text-[13px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md mt-1">
                         <FileText className="h-3 w-3" />
                         يتطلب وثيقة
                       </span>
@@ -158,8 +158,8 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                       يخصم
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
-                      <XCircle className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+                    <span className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
+                      <XCircle className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                       لا يخصم
                     </span>
                   )}
@@ -173,7 +173,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                       onCheckedChange={() => onToggle(reason._id)}
                       aria-label="تغيير الحالة"
                     />
-                    <span className={`text-xs font-medium ${reason.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                    <span className={`text-xs font-medium ${reason.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
                       {reason.isActive ? 'نشط' : 'معطل'}
                     </span>
                   </div>

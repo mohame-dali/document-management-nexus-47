@@ -186,7 +186,7 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
           </Button>
         </div>
 
-        <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-mono tabular-nums">
+        <div className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-mono tabular-nums">
           <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
           <span>{weekRangeLabel}</span>
         </div>
@@ -196,22 +196,22 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
         {/* Recherche */}
         <div className="relative">
-          <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-400" />
+          <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-700 dark:text-slate-300" />
           <Input
             type="text"
             placeholder="بحث بالاسم أو اللقب أو ب.ت.و..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-9 ps-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
+            className="h-9 ps-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
           />
         </div>
 
         {/* Filtre Département */}
         <div>
           <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
-            <SelectTrigger className="h-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
+            <SelectTrigger className="h-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <div className="flex items-center gap-1.5 truncate">
-                <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                <Building2 className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                 <SelectValue placeholder="كل الأقسام والمصالح" />
               </div>
             </SelectTrigger>
@@ -237,7 +237,7 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
       ) : personnelList.length === 0 ? (
         <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
           <EmptyState
-            icon={<Users className="h-8 w-8 text-slate-400 dark:text-slate-500" />}
+            icon={<Users className="h-8 w-8 text-slate-700 dark:text-slate-300" />}
             title="لا يوجد موظفون مطابقون لمعايير البحث"
           />
         </div>
@@ -255,7 +255,7 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
                     }`}
                   >
                     <div className="font-bold">{day.dayName}</div>
-                    <div className="text-[10px] font-mono tabular-nums text-slate-500 dark:text-slate-400">{day.date}</div>
+                    <div className="text-[13px] font-mono tabular-nums text-slate-700 dark:text-slate-300">{day.date}</div>
                   </th>
                 ))}
               </tr>
@@ -276,7 +276,7 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
                         <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
                           {p.nom} {p.prenom}
                         </div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        <div className="text-[13px] text-slate-700 dark:text-slate-300 truncate">
                           {getDepartmentName(p.activeDepartment)}
                         </div>
                       </div>
@@ -321,13 +321,13 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
                 {dailyTotals.map((tot, idx) => (
                   <td
                     key={weekDays[idx].date}
-                    className="py-2 px-1.5 text-center border-s border-slate-200 dark:border-slate-700 text-[11px]"
+                    className="py-2 px-1.5 text-center border-s border-slate-200 dark:border-slate-700 text-[13px]"
                   >
                     <div className="space-y-0.5 tabular-nums">
                       <div className="text-emerald-700 dark:text-emerald-400 font-mono">ح: {tot.presents}</div>
                       <div className="text-red-700 dark:text-red-400 font-mono">غ: {tot.absents}</div>
                       {tot.unrecorded > 0 && (
-                        <div className="text-slate-400 dark:text-slate-500 font-mono text-[10px]">
+                        <div className="text-slate-700 dark:text-slate-300 font-mono text-[13px]">
                           غ.م: {tot.unrecorded}
                         </div>
                       )}

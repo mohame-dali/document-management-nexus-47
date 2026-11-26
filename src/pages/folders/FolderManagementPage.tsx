@@ -18,13 +18,13 @@ const FolderManagementPage: React.FC = () => {
     return (
       <div className="p-6 sm:p-8 lg:p-10 bg-slate-50/70 dark:bg-slate-950 min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-8 sm:p-10 max-w-lg w-full text-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-500 dark:text-slate-400">
+          <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-700 dark:text-slate-300">
             <Lock className="h-8 w-8" />
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100">
             {t('folders.page.accessDenied.title')}
           </h2>
-          <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
             {t('folders.page.accessDenied.description')}
           </p>
         </div>
@@ -44,7 +44,7 @@ const FolderManagementPage: React.FC = () => {
             <FolderTree className="h-7 w-7 text-[#2c5282] dark:text-sky-400 flex-shrink-0" />
             <span>{t('folders.page.title')}</span>
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">
             {readOnly 
               ? t('folders.page.subtitleReadOnly')
               : t('folders.page.subtitleManage')

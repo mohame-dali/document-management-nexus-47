@@ -115,13 +115,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) 
         {/* Footer: time + read receipt */}
         <div
           className={`flex items-center justify-end gap-1 mt-1 select-none ${
-            isOwnMessage ? 'text-white/75' : 'text-slate-400 dark:text-slate-500'
+            isOwnMessage ? 'text-white/75' : 'text-slate-700 dark:text-slate-300'
           }`}
         >
-          <span className="text-[10px] tabular-nums"><bdi dir="ltr">{formatTime(message.createdAt)}</bdi></span>
+          <span className="text-[13px] tabular-nums"><bdi dir="ltr">{formatTime(message.createdAt)}</bdi></span>
           {isOwnMessage && (
             <span
-              className="text-[10px] tracking-tighter tabular-nums"
+              className="text-[13px] tracking-tighter tabular-nums"
               title={isRead ? t('messages.readStatus') : t('messages.sentStatus')}
             >
               {isRead ? '✓✓' : '✓'}

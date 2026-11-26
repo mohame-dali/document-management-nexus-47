@@ -111,7 +111,7 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
               <span>{currentFolder.name}</span>
             </div>
           ) : (
-            <span className="text-gray-500 text-base">هذا المستند غير مصنف في أي مجلد بعد</span>
+            <span className="text-slate-700 dark:text-slate-300 text-base">هذا المستند غير مصنف في أي مجلد بعد</span>
           )}
         </div>
       </div>
@@ -167,7 +167,7 @@ const DocumentFolderAssignment: React.FC<DocumentFolderAssignmentProps> = ({
 
       {!isAdminDepartment && (
         <div className="text-center py-6">
-          <Lock className="h-10 w-10 mx-auto text-gray-400 mb-2" />
+          <Lock className="h-10 w-10 mx-auto text-slate-700 dark:text-slate-300 mb-2" />
           <p className="text-base text-gray-600">
             يمكن لمدير القسم فقط تغيير تصنيف المستندات
           </p>

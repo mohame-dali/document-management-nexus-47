@@ -67,7 +67,7 @@ const CopyReferenceButton: React.FC<CopyReferenceButtonProps> = ({
         'inline-flex items-center justify-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]',
         copied
           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/70'
-          : 'text-slate-400 hover:text-[#2c5282] hover:bg-blue-50/80 dark:text-slate-400 dark:hover:text-blue-300 dark:hover:bg-blue-950/50',
+          : 'text-slate-700 dark:text-slate-300 hover:text-[#2c5282] hover:bg-blue-50/80 dark:text-slate-300 dark:hover:text-blue-300 dark:hover:bg-blue-950/50',
         className
       )}
     >

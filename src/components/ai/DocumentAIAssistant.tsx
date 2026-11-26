@@ -188,7 +188,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
           <div>
             <h3 className="text-base font-bold leading-tight flex items-center gap-2">
               المساعد الذكي للوثائق
-              <span className="text-[11px] bg-white/20 text-white font-normal px-2 py-0.5 rounded">
+              <span className="text-[13px] bg-white/20 text-white font-normal px-2 py-0.5 rounded">
                 ذكاء اصطناعي محلي
               </span>
             </h3>
@@ -235,7 +235,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
           <div className="space-y-4">
             {/* Barre de contrôle du résumé */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#f8fafc] dark:bg-slate-800/60 border border-[#e2e8f0] dark:border-slate-800 rounded-md">
-              <div className="flex items-center gap-2 text-sm text-[#4a5568] dark:text-slate-300">
+              <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <span className="font-semibold text-[#2d3748] dark:text-slate-100">طول الملخص :</span>
                 <div className="inline-flex rounded-md shadow-sm border border-[#cbd5e1] dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 text-xs">
                   <button
@@ -244,7 +244,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     className={`px-2.5 py-1 font-medium transition ${
                       selectedLength === 100
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     موجز (~100 كلمة)
@@ -255,7 +255,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     className={`px-2.5 py-1 font-medium transition border-r border-[#cbd5e1] dark:border-slate-700 ${
                       selectedLength === 200
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     عادي (~200 كلمة)
@@ -266,7 +266,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     className={`px-2.5 py-1 font-medium transition border-r border-[#cbd5e1] dark:border-slate-700 ${
                       selectedLength === 350
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     مفصل (~350 كلمة)
@@ -322,7 +322,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                 <p className="text-sm font-bold text-[#2c5282] dark:text-blue-300">
                   جاري تحليل النص واستخراج جوهر المراسلة الرسمية...
                 </p>
-                <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
+                <p className="text-xs text-slate-700 dark:text-slate-300">
                   يتم المعالجة عبر النموذج الإداري المحلي (Qwen) في سرية وأمان تام
                 </p>
               </div>
@@ -338,7 +338,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     </span>
                     {renderUrgencyBadge(summaryData.urgency)}
                     {summaryData.language && (
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-medium">
+                      <span className="text-[13px] px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-medium">
                         اللغة: {summaryData.language === 'ar' ? 'العربية' : summaryData.language === 'fr' ? 'الفرنسية' : 'مزدوجة'}
                       </span>
                     )}
@@ -372,13 +372,13 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                 {/* Points Clés */}
                 {Array.isArray(summaryData.keyPoints) && summaryData.keyPoints.length > 0 && (
                   <div className="pt-2">
-                    <h4 className="text-xs font-bold text-[#4a5568] dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282] dark:bg-blue-400"></span>
                       أهم النقاط والقرارات الواردة بالمراسلة :
                     </h4>
                     <ul className="space-y-1.5 pr-2">
                       {summaryData.keyPoints.map((point, index) => (
-                        <li key={index} className="text-xs text-[#4a5568] dark:text-slate-300 flex items-start gap-2">
+                        <li key={index} className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
                           <span className="font-bold text-[#2c5282] dark:text-blue-400 shrink-0 mt-0.5">•</span>
                           <span className="leading-normal">{point}</span>
                         </li>
@@ -391,7 +391,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* Message d'incitation initial */}
             {!isSummarizing && !summaryData && !summaryError && (
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded text-center text-xs text-[#5f6b7d] dark:text-slate-400">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded text-center text-xs text-slate-700 dark:text-slate-300">
                 اضغط على زر <strong className="text-[#2c5282] dark:text-blue-300">"توليد ملخص المراسلة"</strong> للحصول على تحليل ذكي موجز لمحتوى النص المستخرج.
               </div>
             )}
@@ -405,7 +405,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
           <div className="space-y-4">
             {/* Contrôles de traduction */}
             <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#f8fafc] dark:bg-slate-800/60 border border-[#e2e8f0] dark:border-slate-800 rounded-md">
-              <div className="flex items-center gap-2 text-sm text-[#4a5568] dark:text-slate-300">
+              <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <span className="font-semibold text-[#2d3748] dark:text-slate-100">اتجاه الترجمة :</span>
                 <div className="inline-flex rounded-md shadow-sm border border-[#cbd5e1] dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 text-xs">
                   <button
@@ -414,7 +414,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     className={`px-3 py-1 font-medium transition ${
                       targetLang === 'fr'
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     إلى الفرنسية (Vers le français)
@@ -425,7 +425,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     className={`px-3 py-1 font-medium transition border-r border-[#cbd5e1] dark:border-slate-700 ${
                       targetLang === 'ar'
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     إلى العربية (Vers l'arabe)
@@ -481,7 +481,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                 <p className="text-sm font-bold text-[#2c5282] dark:text-blue-300">
                   جاري ترجمة المراسلة الإدارية مع الحفاظ على الصياغة الرسمية...
                 </p>
-                <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
+                <p className="text-xs text-slate-700 dark:text-slate-300">
                   ترجمة مطابقة للمصطلحات الإدارية التونسية المعتمدة
                 </p>
               </div>
@@ -495,7 +495,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     <span className="font-bold text-sm text-[#1a202c] dark:text-slate-100">
                       النص المترجم ({translationData.targetLang === 'fr' ? 'باللغة الفرنسية' : 'باللغة العربية'}) :
                     </span>
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold">
+                    <span className="text-[13px] px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold">
                       {translationData.sourceLang === 'ar' ? 'عربي' : 'فرنسي'} ➔ {translationData.targetLang === 'ar' ? 'عربي' : 'فرنسي'}
                     </span>
                   </div>
@@ -531,7 +531,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
             )}
 
             {!isTranslating && !translationData && !translationError && (
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded text-center text-xs text-[#5f6b7d] dark:text-slate-400">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded text-center text-xs text-slate-700 dark:text-slate-300">
                 اختر اتجاه الترجمة واضغط على <strong className="text-[#2c5282] dark:text-blue-300">"ترجمة نص الوثيقة"</strong> للحصول على ترجمة إدارية فورية.
               </div>
             )}

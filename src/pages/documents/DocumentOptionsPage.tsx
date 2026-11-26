@@ -131,7 +131,7 @@ const DocumentOptionsPage: React.FC = () => {
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             الوصول مقيّد بالصلاحيات
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             إدارة خيارات وحقول الوثائق تتطلب صلاحية مكتب الضبط (AdminTuningDesk). يرجى مراجعة مسؤول النظام.
           </p>
         </div>
@@ -233,7 +233,7 @@ const DocumentOptionsPage: React.FC = () => {
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             تعذر تحميل البيانات
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
             حدث خطأ أثناء جلب خيارات الوثائق. يرجى المحاولة مجدداً.
           </p>
           <Button
@@ -259,7 +259,7 @@ const DocumentOptionsPage: React.FC = () => {
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
               خيارات وحقول الوثائق
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 truncate">
               إدارة القوائم المنسدلة للأنشطة والمصادر وأنواع المراسلات
             </p>
           </div>
@@ -291,12 +291,12 @@ const DocumentOptionsPage: React.FC = () => {
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
                   isSelected
                     ? 'bg-white dark:bg-slate-800 text-[#2c5282] dark:text-blue-300 border border-slate-200/90 dark:border-slate-700 shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-400 border border-transparent hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50'
+                    : 'text-slate-700 dark:text-slate-300 border border-transparent hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50'
                 }`}
               >
                 {cat.icon}
                 <span>{cat.label}</span>
-                <span className="text-[11px] opacity-75 tabular-nums">
+                <span className="text-[13px] opacity-75 tabular-nums">
                   (<bdi dir="ltr">{cat.count}</bdi>)
                 </span>
               </button>

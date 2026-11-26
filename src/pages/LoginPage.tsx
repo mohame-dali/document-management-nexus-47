@@ -137,7 +137,7 @@ const LoginPage = () => {
               </div>
             </div>
             <CardTitle className="text-xl font-bold text-center text-[#1a202c]">{t('login.welcome')}</CardTitle>
-            <CardDescription className="text-center text-xs text-[#5f6b7d]">
+            <CardDescription className="text-center text-xs text-slate-700 dark:text-slate-300">
               {t('login.subtitle')}
             </CardDescription>
           </CardHeader>
@@ -158,7 +158,7 @@ const LoginPage = () => {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium text-[#4a5568]">{t('login.username')}</FormLabel>
+                      <FormLabel className="text-xs font-medium text-slate-800 dark:text-slate-200">{t('login.username')}</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder={t('login.enterUsername')}
@@ -179,7 +179,7 @@ const LoginPage = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium text-[#4a5568]">{t('login.password')}</FormLabel>
+                      <FormLabel className="text-xs font-medium text-slate-800 dark:text-slate-200">{t('login.password')}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input 
@@ -193,7 +193,7 @@ const LoginPage = () => {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-1 p-1 rounded"
+                            className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-1 p-1 rounded"
                             aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -215,7 +215,7 @@ const LoginPage = () => {
                   />
                   <label 
                     htmlFor="remember-me" 
-                    className="text-[#4a5568] cursor-pointer select-none"
+                    className="text-slate-700 dark:text-slate-300 cursor-pointer select-none"
                   >
                     {t('login.rememberMe')}
                   </label>
@@ -241,8 +241,8 @@ const LoginPage = () => {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex flex-col text-center text-xs text-[#5f6b7d] border-t border-[#f7fafc] pt-3">
-            <p className="text-xs text-[#5f6b7d]">
+          <CardFooter className="flex flex-col text-center text-xs text-slate-700 dark:text-slate-300 border-t border-[#f7fafc] pt-3">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('login.appDescription')}
             </p>
           </CardFooter>

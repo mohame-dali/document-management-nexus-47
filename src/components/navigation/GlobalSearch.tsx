@@ -449,18 +449,18 @@ const GlobalSearch: React.FC = () => {
         id="global-search-trigger"
         type="button"
         onClick={() => setIsOpen(true)}
-        className="relative flex items-center justify-between h-9 w-full ps-9 pe-2.5 text-xs bg-slate-50/80 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-[#2c5282]/50 dark:hover:border-blue-500/50 transition-colors rounded-lg text-slate-500 dark:text-slate-400 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
+        className="relative flex items-center justify-between h-9 w-full ps-9 pe-2.5 text-xs bg-slate-50/80 dark:bg-slate-800/70 border border-slate-300 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-[#2c5282]/50 dark:hover:border-blue-500/50 transition-colors rounded-lg text-slate-700 dark:text-slate-300 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
         aria-label={isRtl ? 'فتح البحث الشامل (Ctrl+K)' : 'Ouvrir la recherche globale (Ctrl+K)'}
       >
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none select-none" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 dark:text-slate-300 pointer-events-none select-none" />
         <span className="truncate">
           {isRtl ? 'بحث شامل في النظام... (Ctrl+K)' : 'Recherche globale... (Ctrl+K)'}
         </span>
         <kbd
           dir="ltr"
-          className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded shadow-2xs pointer-events-none select-none tabular-nums shrink-0"
+          className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[13px] leading-none font-mono font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded shadow-2xs pointer-events-none select-none tabular-nums shrink-0"
         >
-          <span className="text-[9px]">Ctrl</span>K
+          <span>Ctrl</span>K
         </kbd>
       </button>
 
@@ -510,7 +510,7 @@ const GlobalSearch: React.FC = () => {
                     setActiveIndex(0);
                     inputRef.current?.focus();
                   }}
-                  className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded transition-colors"
+                  className="p-1 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded transition-colors"
                   aria-label={isRtl ? 'مسح البحث' : 'Effacer'}
                 >
                   <X className="w-4 h-4" />
@@ -519,7 +519,7 @@ const GlobalSearch: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="px-1.5 py-0.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-100 dark:hover:bg-slate-700"
+                className="px-2 py-0.5 text-[13px] leading-tight font-mono font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 ESC
               </button>
@@ -529,7 +529,7 @@ const GlobalSearch: React.FC = () => {
           {/* Categorized Results List */}
           <div className="max-h-[430px] overflow-y-auto custom-scrollbar p-2.5 space-y-3 text-start">
             {showLoading && remoteCount === 0 && (
-              <div className="py-5 flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <div className="py-5 flex items-center justify-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                 <Loader2 className="w-4 h-4 animate-spin text-[#2c5282] dark:text-blue-400" />
                 <span>{isRtl ? 'جاري البحث في النظام...' : 'Recherche en cours...'}</span>
               </div>
@@ -537,11 +537,11 @@ const GlobalSearch: React.FC = () => {
 
             {!showLoading && debouncedQuery.length >= 2 && flatItems.length === 0 && (
               <div className="py-8 text-center space-y-1.5">
-                <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                <FileText className="w-8 h-8 text-slate-500 dark:text-slate-400 mx-auto" />
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                   {isRtl ? 'لا توجد نتائج مطابقة' : 'Aucun résultat trouvé'}
                 </p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                <p className="text-[13px] text-slate-700 dark:text-slate-300">
                   {isRtl
                     ? `لم نتمكن من العثور على أي نتيجة تطابق "${debouncedQuery}"`
                     : `Aucune correspondance pour "${debouncedQuery}"`}
@@ -552,14 +552,14 @@ const GlobalSearch: React.FC = () => {
             {/* 1. المراسلات الواردة */}
             {results.incoming.length > 0 && (
               <div>
-                <div className="flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold text-[#1e3a5f] dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/40 rounded-md">
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-[13px] font-bold text-[#1e3a5f] dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/40 rounded-md">
                   <span className="flex items-center gap-1.5">
                     <Inbox className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
                     {isRtl ? 'المراسلات الواردة' : 'Courriers entrants'}
                   </span>
                   <Badge
                     variant="outline"
-                    className="text-[10px] px-1.5 py-0 bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-800 text-[#2c5282] dark:text-blue-300 tabular-nums"
+                    className="text-[13px] leading-tight px-1.5 py-0 bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-800 text-[#2c5282] dark:text-blue-300 tabular-nums"
                   >
                     <bdi dir="ltr">{results.incoming.length}</bdi>
                   </Badge>
@@ -586,13 +586,13 @@ const GlobalSearch: React.FC = () => {
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-blue-100/80 dark:bg-blue-900/50 text-[#2c5282] dark:text-blue-300 tabular-nums shrink-0">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] leading-tight font-mono font-bold bg-blue-100/80 dark:bg-blue-900/50 text-[#2c5282] dark:text-blue-300 tabular-nums shrink-0">
                               <bdi dir="ltr">#{doc.serialNumber}/{doc.year}</bdi>
                             </span>
                             <span className="truncate">{doc.subject}</span>
                           </div>
                           {doc.correspondenceNumber && (
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 tabular-nums">
+                            <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate mt-0.5 tabular-nums">
                               {isRtl ? 'رقم الإرسالية: ' : 'Réf : '}
                               <bdi dir="ltr">{doc.correspondenceNumber}</bdi>
                             </p>
@@ -600,7 +600,7 @@ const GlobalSearch: React.FC = () => {
                         </div>
                         <CornerDownLeft
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive ? 'text-[#2c5282] dark:text-blue-400' : 'text-slate-300 dark:text-slate-600'
+                            isActive ? 'text-[#2c5282] dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'
                           }`}
                         />
                       </button>
@@ -613,14 +613,14 @@ const GlobalSearch: React.FC = () => {
             {/* 2. المراسلات الصادرة */}
             {results.outgoing.length > 0 && (
               <div>
-                <div className="flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold text-emerald-900 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-md">
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-[13px] font-bold text-emerald-900 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-md">
                   <span className="flex items-center gap-1.5">
                     <Send className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     {isRtl ? 'المراسلات الصادرة' : 'Courriers sortants'}
                   </span>
                   <Badge
                     variant="outline"
-                    className="text-[10px] px-1.5 py-0 bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 tabular-nums"
+                    className="text-[13px] leading-tight px-1.5 py-0 bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 tabular-nums"
                   >
                     <bdi dir="ltr">{results.outgoing.length}</bdi>
                   </Badge>
@@ -647,20 +647,20 @@ const GlobalSearch: React.FC = () => {
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-slate-100">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-100/80 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 tabular-nums shrink-0">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] leading-tight font-mono font-bold bg-emerald-100/80 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 tabular-nums shrink-0">
                               <bdi dir="ltr">#{doc.serialNumber}/{doc.year}</bdi>
                             </span>
                             <span className="truncate">{doc.subject}</span>
                           </div>
                           {doc.typeDocument && (
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate mt-0.5">
                               {doc.typeDocument}
                             </p>
                           )}
                         </div>
                         <CornerDownLeft
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-300 dark:text-slate-600'
+                            isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'
                           }`}
                         />
                       </button>
@@ -673,14 +673,14 @@ const GlobalSearch: React.FC = () => {
             {/* 3. الموظفون */}
             {results.personnel.length > 0 && (
               <div>
-                <div className="flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold text-purple-900 dark:text-purple-300 bg-purple-50/80 dark:bg-purple-950/40 rounded-md">
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-[13px] font-bold text-purple-900 dark:text-purple-300 bg-purple-50/80 dark:bg-purple-950/40 rounded-md">
                   <span className="flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                     {isRtl ? 'الموظفون' : 'Personnel RH'}
                   </span>
                   <Badge
                     variant="outline"
-                    className="text-[10px] px-1.5 py-0 bg-white dark:bg-slate-900 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 tabular-nums"
+                    className="text-[13px] leading-tight px-1.5 py-0 bg-white dark:bg-slate-900 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 tabular-nums"
                   >
                     <bdi dir="ltr">{results.personnel.length}</bdi>
                   </Badge>
@@ -711,20 +711,20 @@ const GlobalSearch: React.FC = () => {
                               {p.nom} {p.prenom}
                             </span>
                             {p.cin && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-purple-100/80 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 tabular-nums shrink-0">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[13px] leading-tight font-mono font-semibold bg-purple-100/80 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 tabular-nums shrink-0">
                                 <bdi dir="ltr">{p.cin}</bdi>
                               </span>
                             )}
                           </div>
                           {(p.poste || p.activeDepartment?.name) && (
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate mt-0.5">
                               {[p.poste, p.activeDepartment?.name].filter(Boolean).join(' · ')}
                             </p>
                           )}
                         </div>
                         <CornerDownLeft
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive ? 'text-purple-600 dark:text-purple-400' : 'text-slate-300 dark:text-slate-600'
+                            isActive ? 'text-purple-600 dark:text-purple-400' : 'text-slate-500 dark:text-slate-400'
                           }`}
                         />
                       </button>
@@ -737,14 +737,14 @@ const GlobalSearch: React.FC = () => {
             {/* Optional: حسابات المستخدمين */}
             {results.users.length > 0 && (
               <div>
-                <div className="flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold text-amber-900 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 rounded-md">
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-[13px] font-bold text-amber-900 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40 rounded-md">
                   <span className="flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     {isRtl ? 'حسابات المستخدمين' : 'Comptes utilisateurs'}
                   </span>
                   <Badge
                     variant="outline"
-                    className="text-[10px] px-1.5 py-0 bg-white dark:bg-slate-900 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 tabular-nums"
+                    className="text-[13px] leading-tight px-1.5 py-0 bg-white dark:bg-slate-900 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 tabular-nums"
                   >
                     <bdi dir="ltr">{results.users.length}</bdi>
                   </Badge>
@@ -774,19 +774,19 @@ const GlobalSearch: React.FC = () => {
                             <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 font-mono tabular-nums">
                               <bdi dir="ltr">@{u.username}</bdi>
                             </span>
-                            <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-normal">
+                            <Badge variant="secondary" className="text-[13px] leading-tight py-0 px-1.5 font-medium">
                               {u.role}
                             </Badge>
                           </div>
                           {u.activeDepartment?.name && (
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate mt-0.5">
                               {u.activeDepartment.name}
                             </p>
                           )}
                         </div>
                         <CornerDownLeft
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive ? 'text-amber-600 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600'
+                            isActive ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'
                           }`}
                         />
                       </button>
@@ -799,14 +799,14 @@ const GlobalSearch: React.FC = () => {
             {/* 4. الوصول السريع */}
             {filteredQuickAccess.length > 0 && (
               <div>
-                <div className="flex items-center justify-between px-2.5 py-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800/80 rounded-md">
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-[13px] font-bold text-slate-800 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800/80 rounded-md">
                   <span className="flex items-center gap-1.5">
                     <Compass className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
                     {isRtl ? 'الوصول السريع' : 'Accès rapide'}
                   </span>
                   <Badge
                     variant="outline"
-                    className="text-[10px] px-1.5 py-0 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 tabular-nums"
+                    className="text-[13px] leading-tight px-1.5 py-0 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 tabular-nums"
                   >
                     <bdi dir="ltr">{filteredQuickAccess.length}</bdi>
                   </Badge>
@@ -836,7 +836,7 @@ const GlobalSearch: React.FC = () => {
                             className={`w-4 h-4 shrink-0 ${
                               isActive
                                 ? 'text-[#2c5282] dark:text-blue-400'
-                                : 'text-slate-400 dark:text-slate-500'
+                                : 'text-slate-600 dark:text-slate-300'
                             }`}
                           />
                           <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
@@ -844,12 +844,12 @@ const GlobalSearch: React.FC = () => {
                           </span>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 tabular-nums">
+                          <span className="text-[13px] leading-tight font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300/80 dark:border-slate-700 tabular-nums">
                             {isRtl ? qa.badgeAr : qa.badgeFr}
                           </span>
                           <CornerDownLeft
                             className={`w-3.5 h-3.5 ${
-                              isActive ? 'text-[#2c5282] dark:text-blue-400' : 'text-slate-300 dark:text-slate-600'
+                              isActive ? 'text-[#2c5282] dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'
                             }`}
                           />
                         </div>
@@ -862,16 +862,16 @@ const GlobalSearch: React.FC = () => {
           </div>
 
           {/* Keyboard Navigation Footer */}
-          <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/95 px-3 py-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/95 px-3 py-2 flex items-center justify-between text-[13px] text-slate-700 dark:text-slate-300">
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1">
-                <kbd dir="ltr" className="px-1 py-0.5 font-mono text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded">
+                <kbd dir="ltr" className="px-1.5 py-0.5 font-mono text-[13px] leading-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded">
                   ↑↓
                 </kbd>
                 <span>{isRtl ? 'للتنقل' : 'Naviguer'}</span>
               </span>
               <span className="inline-flex items-center gap-1">
-                <kbd dir="ltr" className="px-1 py-0.5 font-mono text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded">
+                <kbd dir="ltr" className="px-1.5 py-0.5 font-mono text-[13px] leading-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded">
                   Enter
                 </kbd>
                 <span>{isRtl ? 'للفتح' : 'Ouvrir'}</span>

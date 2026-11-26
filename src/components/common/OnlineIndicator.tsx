@@ -8,7 +8,7 @@ interface OnlineIndicatorProps {
 }
 
 const sizeMap = {
-  sm: { dot: 'w-2 h-2', text: 'text-[10px]' },
+  sm: { dot: 'w-2 h-2', text: 'text-[13px]' },
   md: { dot: 'w-2.5 h-2.5', text: 'text-xs' },
   lg: { dot: 'w-3 h-3', text: 'text-sm' },
 };
@@ -30,7 +30,7 @@ export const OnlineIndicator: React.FC<OnlineIndicatorProps> = ({
       />
       {showLabel && (
         <span className={`${text} font-medium ${
-          isOnline ? 'text-emerald-600' : 'text-slate-400'
+          isOnline ? 'text-emerald-600' : 'text-slate-700 dark:text-slate-300'
         }`}>
           {isOnline ? 'متصل الآن' : 'غير متصل'}
         </span>

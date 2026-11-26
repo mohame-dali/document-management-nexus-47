@@ -119,7 +119,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
               <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                 {t('messages.compose')}
               </CardTitle>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+              <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5 truncate">
                 {isRTL
                   ? 'إرسال رسالة رسمية جديدة إلى مستخدم أو مجموعة مستخدمين'
                   : 'Envoyer un nouveau message officiel à un utilisateur ou un groupe'}
@@ -133,7 +133,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
             onClick={onClose}
             aria-label={t('common.close')}
             title={t('common.close')}
-            className="h-10 w-10 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors duration-200 flex items-center justify-center shrink-0"
+            className="h-10 w-10 p-0 text-slate-700 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors duration-200 flex items-center justify-center shrink-0"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -143,7 +143,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Recipients Section */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <span>{t('messages.recipients')}</span>
                 <span className="text-red-500">*</span>
               </Label>
@@ -155,7 +155,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
 
             {/* Subject — Full Width */}
             <div className="space-y-1.5">
-              <Label htmlFor="subject" className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <Label htmlFor="subject" className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <span>{t('messages.subject')}</span>
                 <span className="text-red-500">*</span>
               </Label>
@@ -171,7 +171,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
 
             {/* Priority Selector */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 {isRTL ? 'درجة الأولوية' : 'Priorité'}
               </Label>
               <div className="flex gap-2">
@@ -215,7 +215,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
 
             {/* Content Textarea */}
             <div className="space-y-1.5">
-              <Label htmlFor="content" className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <Label htmlFor="content" className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <span>{t('messages.content')}</span>
                 <span className="text-red-500">*</span>
               </Label>
@@ -233,11 +233,11 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
             {/* Attachments Section */}
             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Paperclip className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Paperclip className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                   <span>{t('messages.attachments')}</span>
                 </Label>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="text-[13px] text-slate-700 dark:text-slate-300">
                   {isRTL ? '(PDF, صور، مستندات)' : '(PDF, images, documents)'}
                 </span>
               </div>
@@ -256,7 +256,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                   onClick={() => document.getElementById('file-upload-input')?.click()}
                   className="h-10 text-xs border border-dashed border-slate-300 dark:border-slate-700 bg-transparent hover:border-[#2c5282] dark:hover:border-sky-500 hover:bg-slate-50 dark:hover:bg-slate-800/60 w-full transition-colors duration-200 rounded-lg text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2"
                 >
-                  <Upload className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                  <Upload className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
                   <span>{t('messages.addAttachments')}</span>
                 </Button>
               </div>
@@ -269,9 +269,9 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                       className="flex items-center justify-between bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 ps-3 pe-1 py-1 rounded-lg text-xs"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <Paperclip className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                        <Paperclip className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300 shrink-0" />
                         <span className="font-medium text-slate-700 dark:text-slate-200 truncate">{file.name}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 tabular-nums">
+                        <span className="text-[13px] text-slate-700 dark:text-slate-300 shrink-0 tabular-nums">
                           ({(file.size / 1024).toFixed(0)} {t('common.kb')})
                         </span>
                       </div>
@@ -282,7 +282,7 @@ const ComposeMessage: React.FC<ComposeMessageProps> = ({
                         onClick={() => removeAttachment(index)}
                         aria-label={t('common.remove')}
                         title={t('common.remove')}
-                        className="h-9 w-9 p-0 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 rounded-md shrink-0"
+                        className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-md shrink-0"
                       >
                         <X className="h-4 w-4" />
                       </Button>

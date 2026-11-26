@@ -96,7 +96,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Poste actuel */}
         <div className="space-y-2">
-          <Label htmlFor="posteActuel" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="posteActuel" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.posteActuel.label')}
           </Label>
           <Input
@@ -113,7 +113,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Département principal */}
         <div className="space-y-2">
-          <Label htmlFor="activeDepartment" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="activeDepartment" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.department.label')}
           </Label>
           <Select
@@ -137,7 +137,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Date d'embauche */}
         <div className="space-y-2">
-          <Label htmlFor="dateEmbauche" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="dateEmbauche" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.dateEmbauche.label')}
           </Label>
           <Input
@@ -164,7 +164,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Numéro d'unité */}
         <div className="space-y-2">
-          <Label htmlFor="numeroUnite" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="numeroUnite" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.numeroUnite.label')}
           </Label>
           <Input
@@ -178,7 +178,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Numéro d'armée */}
         <div className="space-y-2">
-          <Label htmlFor="numeroArmee" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="numeroArmee" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.numeroArmee.label')}
           </Label>
           <Input
@@ -192,7 +192,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Date d'engagement */}
         <div className="space-y-2">
-          <Label htmlFor="dateEngagement" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="dateEngagement" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.dateEngagement.label')}
           </Label>
           <Input
@@ -206,7 +206,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Type d'engagement */}
         <div className="space-y-2">
-          <Label htmlFor="typeEngagement" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="typeEngagement" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.typeEngagement.label')}
           </Label>
           <Input
@@ -220,7 +220,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Origine d'engagement */}
         <div className="space-y-2">
-          <Label htmlFor="origineEngagement" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="origineEngagement" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.origineEngagement.label')}
           </Label>
           <Input
@@ -234,7 +234,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Niveau d'étude */}
         <div className="space-y-2">
-          <Label htmlFor="niveauEtude" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="niveauEtude" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.niveauEtude.label')}
           </Label>
           <Input
@@ -248,7 +248,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Diplôme de base */}
         <div className="space-y-2">
-          <Label htmlFor="diplomeBase" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="diplomeBase" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.diplomeBase.label')}
           </Label>
           <Input
@@ -262,7 +262,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Spécialité */}
         <div className="space-y-2">
-          <Label htmlFor="specialite" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="specialite" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.specialite.label')}
           </Label>
           <Input
@@ -276,7 +276,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Arme */}
         <div className="space-y-2">
-          <Label htmlFor="arme" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+          <Label htmlFor="arme" className="text-base font-semibold text-slate-800 dark:text-slate-200">
             {t('hr.form.admin.arme.label')}
           </Label>
           <Input
@@ -291,7 +291,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
       {/* Notes */}
       <div className="space-y-2 mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800">
-        <Label htmlFor="notes" className="text-base font-semibold text-slate-700 dark:text-slate-200">
+        <Label htmlFor="notes" className="text-base font-semibold text-slate-800 dark:text-slate-200">
           {t('hr.form.admin.notes.label')}
         </Label>
         <Textarea

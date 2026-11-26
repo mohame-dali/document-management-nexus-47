@@ -128,14 +128,14 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
             <Briefcase className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
             <span>{isEditing ? 'تعديل بيانات الخطة الوظيفية' : 'إضافة خطة وظيفية جديدة'}</span>
           </DialogTitle>
-          <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+          <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
             سجل الخطط الوظيفية والتكليفات الإدارية الخاصة بالموظف
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div>
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
               الخطة الوظيفية / التكليف <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -146,7 +146,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
               }}
               placeholder="مثال: رئيس مصلحة الموارد البشرية / كاتب تصرف"
               className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${
-                errors.poste ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                errors.poste ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
               }`}
             />
             {errors.poste && (
@@ -159,7 +159,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 تاريخ المباشرة / البداية <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -170,7 +170,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
                   if (errors.dateDebut) setErrors((prev) => ({ ...prev, dateDebut: '' }));
                 }}
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${
-                  errors.dateDebut ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.dateDebut ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.dateDebut && (
@@ -182,7 +182,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 تاريخ الانتهاء (اختياري)
               </Label>
               <Input
@@ -193,7 +193,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
                   if (errors.dateFin) setErrors((prev) => ({ ...prev, dateFin: '' }));
                 }}
                 className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${
-                  errors.dateFin ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
+                  errors.dateFin ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                 }`}
               />
               {errors.dateFin && (
@@ -207,32 +207,32 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 المرجع / التكليف
               </Label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="مثال: مذكرة تعيين عدد 12/2024"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
                 مكان العمل / الإدارة
               </Label>
               <Input
                 value={lieu}
                 onChange={(e) => setLieu(e.target.value)}
                 placeholder="مثال: الإدارة العامة للشؤون الإدارية"
-                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg"
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea
@@ -240,7 +240,7 @@ export const PosteFormDialog: React.FC<PosteFormDialogProps> = ({
               onChange={(e) => setObservations(e.target.value)}
               placeholder="أي تفاصيل أو ملاحظات حول الخطة الوظيفية..."
               rows={3}
-              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg resize-none"
+              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg resize-none"
             />
           </div>
 

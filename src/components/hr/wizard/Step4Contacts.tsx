@@ -43,7 +43,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p1-nom" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.fullName.label')}</Label>
+            <Label htmlFor="p1-nom" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.fullName.label')}</Label>
             <Input
               id="p1-nom"
               value={personne1.nom}
@@ -54,7 +54,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p1-lien" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.relationship.label')}</Label>
+            <Label htmlFor="p1-lien" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.relationship.label')}</Label>
             <Input
               id="p1-lien"
               value={personne1.lien}
@@ -65,7 +65,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p1-tel" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.phone.label')}</Label>
+            <Label htmlFor="p1-tel" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.phone.label')}</Label>
             <Input
               id="p1-tel"
               value={personne1.telephone}
@@ -77,7 +77,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p1-adr" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.address.label')}</Label>
+            <Label htmlFor="p1-adr" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.address.label')}</Label>
             <Input
               id="p1-adr"
               value={personne1.adresse}
@@ -96,7 +96,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p2-nom" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.fullName.label')}</Label>
+            <Label htmlFor="p2-nom" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.fullName.label')}</Label>
             <Input
               id="p2-nom"
               value={personne2.nom}
@@ -107,7 +107,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p2-lien" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.relationship.label')}</Label>
+            <Label htmlFor="p2-lien" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.relationship.label')}</Label>
             <Input
               id="p2-lien"
               value={personne2.lien}
@@ -118,7 +118,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p2-tel" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.phone.label')}</Label>
+            <Label htmlFor="p2-tel" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.phone.label')}</Label>
             <Input
               id="p2-tel"
               value={personne2.telephone}
@@ -130,7 +130,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p2-adr" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.address.label')}</Label>
+            <Label htmlFor="p2-adr" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.address.label')}</Label>
             <Input
               id="p2-adr"
               value={personne2.adresse}
@@ -149,7 +149,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p3-nom" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.fullName.label')}</Label>
+            <Label htmlFor="p3-nom" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.fullName.label')}</Label>
             <Input
               id="p3-nom"
               value={personne3.nom}
@@ -160,7 +160,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p3-lien" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.relationship.label')}</Label>
+            <Label htmlFor="p3-lien" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.relationship.label')}</Label>
             <Input
               id="p3-lien"
               value={personne3.lien}
@@ -171,7 +171,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p3-tel" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.phone.label')}</Label>
+            <Label htmlFor="p3-tel" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.phone.label')}</Label>
             <Input
               id="p3-tel"
               value={personne3.telephone}
@@ -183,7 +183,7 @@ export const Step4Contacts: React.FC<Step4ContactsProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="p3-adr" className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('hr.form.contacts.address.label')}</Label>
+            <Label htmlFor="p3-adr" className="text-xs font-semibold text-slate-800 dark:text-slate-200">{t('hr.form.contacts.address.label')}</Label>
             <Input
               id="p3-adr"
               value={personne3.adresse}

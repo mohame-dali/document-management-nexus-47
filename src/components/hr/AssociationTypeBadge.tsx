@@ -60,7 +60,7 @@ export const AssociationTypeBadge: React.FC<AssociationTypeBadgeProps> = ({ type
     <span
       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-slate-100 text-[#1a202c] border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 ${className}`}
     >
-      <Tag className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+      <Tag className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
       <span>{type || 'أخرى'}</span>
     </span>
   );

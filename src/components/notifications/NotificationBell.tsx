@@ -33,7 +33,7 @@ const NotificationBell: React.FC = () => {
             {notificationCount > 0 && (
               <span className="absolute -top-0.5 -end-0.5 flex h-[18px] min-w-[18px]">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
+                <span className="relative min-w-[18px] h-[18px] bg-red-500 text-white text-[13px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
                   <bdi dir="ltr">{notificationCount > 9 ? '9+' : notificationCount}</bdi>
                 </span>
               </span>

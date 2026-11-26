@@ -218,7 +218,7 @@ export const PersonnelDetailPage: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/60 rounded-lg p-8 shadow-sm">
           <AlertCircle className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-3" />
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">بطاقة الموظف غير موجودة</h2>
-          <p className="text-base text-slate-600 dark:text-slate-400 mb-6">
+          <p className="text-base text-slate-700 dark:text-slate-300 mb-6">
             تعذر العثور على البطاقة المطلوبة أو تم حذفها.
           </p>
           <Button
@@ -335,17 +335,17 @@ export const PersonnelDetailPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">اللقب</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">اللقب</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.nom}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الاسم</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الاسم</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.prenom}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">تاريخ الولادة</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">تاريخ الولادة</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 {personnel.dateNaissance ? (
                   <bdi dir={dir} className="tabular-nums">{formatLongDate(personnel.dateNaissance, isRTL ? 'ar' : 'fr')}</bdi>
@@ -354,19 +354,19 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">مكان الولادة</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">مكان الولادة</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.lieuNaissance || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الجنس</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الجنس</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {personnel.sexe === 'Homme' ? 'ذكر' : personnel.sexe === 'Femme' ? 'أنثى' : '—'}
               </span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الحالة المدنية</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الحالة المدنية</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {personnel.etatCivil === 'celibataire'
                   ? 'أعزب / عزباء'
@@ -381,35 +381,35 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">رقم ب.ت.و</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">رقم ب.ت.و</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 font-mono tabular-nums">{personnel.cin || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">عدد الأبناء</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">عدد الأبناء</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">{personnel.enfants ?? '—'}</span>
             </div>
 
             <div className="sm:col-span-2">
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">العنوان</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">العنوان</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mt-0.5">
-                <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <MapPin className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span>{personnel.adresse || '—'}</span>
               </span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الهاتف الشخصي</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الهاتف الشخصي</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mt-0.5 tabular-nums" dir="ltr">
-                <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <Phone className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span>{personnel.telephone || '—'}</span>
               </span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">البريد الإلكتروني</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">البريد الإلكتروني</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mt-0.5" dir="ltr">
-                <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <Mail className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span className="truncate">{personnel.emailPersonnel || '—'}</span>
               </span>
             </div>
@@ -425,39 +425,39 @@ export const PersonnelDetailPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">المعرف الوحيد</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">المعرف الوحيد</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 font-mono tabular-nums">{personnel.matricule || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الرتبة</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الرتبة</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.grade || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الخطة الوظيفية</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الخطة الوظيفية</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.poste || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الصنف</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الصنف</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.categorie || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الدرجة</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الدرجة</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">{personnel.echelon || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">القسم الفعلي</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">القسم الفعلي</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {departmentObj ? departmentObj.name : '—'}
               </span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">تاريخ الانتداب</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">تاريخ الانتداب</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 {personnel.dateEmbauche ? (
                   <bdi dir={dir} className="tabular-nums">{formatLongDate(personnel.dateEmbauche, isRTL ? 'ar' : 'fr')}</bdi>
@@ -466,7 +466,7 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">تاريخ الترسيم</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">تاريخ الترسيم</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 {personnel.dateTitularisation ? (
                   <bdi dir={dir} className="tabular-nums">{formatLongDate(personnel.dateTitularisation, isRTL ? 'ar' : 'fr')}</bdi>
@@ -475,7 +475,7 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">تاريخ نهاية الخدمة</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">تاريخ نهاية الخدمة</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 {personnel.dateFinService ? (
                   <bdi dir={dir} className="tabular-nums">{formatLongDate(personnel.dateFinService, isRTL ? 'ar' : 'fr')}</bdi>
@@ -484,14 +484,14 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">الحالة المهنية</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">الحالة المهنية</span>
               <div className="mt-1">
                 <PersonnelStatusBadge statut={personnel.statut} />
               </div>
             </div>
 
             <div className="sm:col-span-2 pt-2 border-t border-slate-200/80 dark:border-slate-800">
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                 حساب المستخدم المرتبط بالنظام
               </span>
               {userObj ? (
@@ -502,7 +502,7 @@ export const PersonnelDetailPage: React.FC = () => {
                       <span className="font-bold text-slate-900 dark:text-slate-100 me-2" dir="ltr">
                         {userObj.username}
                       </span>
-                      <span className="text-slate-500 dark:text-slate-400">
+                      <span className="text-slate-700 dark:text-slate-300">
                         ({userObj.role})
                       </span>
                     </div>
@@ -514,7 +514,7 @@ export const PersonnelDetailPage: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="text-sm text-slate-500 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 p-2.5 rounded-lg">
+                <div className="text-sm text-slate-700 dark:text-slate-300 italic bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 p-2.5 rounded-lg">
                   لا يوجد حساب مستخدم مرتبط بهذه البطاقة
                 </div>
               )}
@@ -557,13 +557,13 @@ export const PersonnelDetailPage: React.FC = () => {
                 <History className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
                 <h2>الأقسام التي انتمى إليها / المسار الوظيفي</h2>
               </div>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tabular-nums">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
                 عدد التنقلات والتعيينات: {displayAffectations.length}
               </span>
             </div>
 
             {displayAffectations.length === 0 ? (
-              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center text-sm text-slate-500 dark:text-slate-400">
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center text-sm text-slate-700 dark:text-slate-300">
                 لم يتم تسجيل أي تعيين أو نقلة قسم بعد
               </div>
             ) : (
@@ -571,12 +571,12 @@ export const PersonnelDetailPage: React.FC = () => {
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-800/70">
                     <TableRow className="border-slate-200/80 dark:border-slate-800">
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-12">#</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">القسم / الوحدة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">الخطة الوظيفية</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">من تاريخ</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">إلى تاريخ</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">الوضعية</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-12">#</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">القسم / الوحدة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">الخطة الوظيفية</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">من تاريخ</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">إلى تاريخ</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">الوضعية</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -594,7 +594,7 @@ export const PersonnelDetailPage: React.FC = () => {
                           key={aff._id || `${deptLabel}-${idx}`}
                           className="border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                         >
-                          <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                          <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-700 dark:text-slate-300">
                             {idx + 1}
                           </TableCell>
                           <TableCell className="py-2.5 px-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -632,7 +632,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                 حالي
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                 سابق
                               </span>
                             )}
@@ -677,7 +677,7 @@ export const PersonnelDetailPage: React.FC = () => {
                 <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   سجل المسار الإداري والتكويني
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                   سجل التربصات، الترقيات، الخطط الوظيفية، الشهادات العلمية، والعقوبات التأديبية
                 </p>
               </div>
@@ -779,7 +779,7 @@ export const PersonnelDetailPage: React.FC = () => {
               </div>
 
               {stagesTunisie.length === 0 ? (
-                <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                   لا توجد تربصات مسجلة داخل تونس لهذا الموظف
                 </div>
               ) : (
@@ -787,26 +787,26 @@ export const PersonnelDetailPage: React.FC = () => {
                   <Table>
                     <TableHeader className="bg-slate-50 dark:bg-slate-800/70">
                       <TableRow className="border-slate-200/80 dark:border-slate-800">
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-12">#</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">موضوع التربص</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">مكان التربص</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">بداية</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">إلى</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المدة</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">النتيجة</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-12">#</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">موضوع التربص</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">مكان التربص</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">بداية</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">إلى</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المدة</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">النتيجة</TableHead>
                         {canManageStages && (
-                          <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-24">الإجراءات</TableHead>
+                          <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-24">الإجراءات</TableHead>
                         )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {stagesTunisie.map((st, idx) => (
                         <TableRow key={st._id} className="border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">{idx + 1}</TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-700 dark:text-slate-300">{idx + 1}</TableCell>
                           <TableCell className="py-2.5 px-3 text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{st.sujetStage}</TableCell>
                           <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300">{st.lieuStage}</TableCell>
-                          <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateDebut, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
-                          <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateFin, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateDebut, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateFin, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
                           <TableCell className="py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 tabular-nums">{st.duree ? `${st.duree} يوم` : '—'}</TableCell>
                           <TableCell className="py-2.5 px-3 text-xs font-semibold">
                             {st.resultat === 'admis' ? (
@@ -816,7 +816,7 @@ export const PersonnelDetailPage: React.FC = () => {
                             ) : st.resultat === 'en_attente' ? (
                               <span className="text-amber-700 dark:text-amber-400">في الانتظار</span>
                             ) : (
-                              <span className="text-slate-400 dark:text-slate-500">—</span>
+                              <span className="text-slate-700 dark:text-slate-300">—</span>
                             )}
                           </TableCell>
                           {canManageStages && (
@@ -829,7 +829,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                     setStageToEdit(st);
                                     setShowStageDialog(true);
                                   }}
-                                  className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
+                                  className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
                                   title="تعديل"
                                 >
                                   <Edit className="w-4 h-4" />
@@ -838,7 +838,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setStageToDelete(st)}
-                                  className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
+                                  className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
                                   title="حذف"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -867,7 +867,7 @@ export const PersonnelDetailPage: React.FC = () => {
               </div>
 
               {stagesEtranger.length === 0 ? (
-                <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                   لا توجد تربصات مسجلة بالخارج لهذا الموظف
                 </div>
               ) : (
@@ -875,28 +875,28 @@ export const PersonnelDetailPage: React.FC = () => {
                   <Table>
                     <TableHeader className="bg-slate-50 dark:bg-slate-800/70">
                       <TableRow className="border-slate-200/80 dark:border-slate-800">
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-12">#</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">موضوع التربص</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المكان / الدولة</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">بداية</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">إلى</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المدة</TableHead>
-                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">النتيجة</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-12">#</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">موضوع التربص</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المكان / الدولة</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">بداية</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">إلى</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المدة</TableHead>
+                        <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">النتيجة</TableHead>
                         {canManageStages && (
-                          <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-24">الإجراءات</TableHead>
+                          <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-24">الإجراءات</TableHead>
                         )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {stagesEtranger.map((st, idx) => (
                         <TableRow key={st._id} className="border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">{idx + 1}</TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-700 dark:text-slate-300">{idx + 1}</TableCell>
                           <TableCell className="py-2.5 px-3 text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{st.sujetStage}</TableCell>
                           <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300">
                             {st.lieuStage} {st.pays ? `(${st.pays})` : ''}
                           </TableCell>
-                          <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateDebut, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
-                          <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateFin, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateDebut, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
+                          <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums"><bdi dir={dir} className="tabular-nums">{formatLongDate(st.dateFin, isRTL ? 'ar' : 'fr')}</bdi></TableCell>
                           <TableCell className="py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 tabular-nums">{st.duree ? `${st.duree} يوم` : '—'}</TableCell>
                           <TableCell className="py-2.5 px-3 text-xs font-semibold">
                             {st.resultat === 'admis' ? (
@@ -906,7 +906,7 @@ export const PersonnelDetailPage: React.FC = () => {
                             ) : st.resultat === 'en_attente' ? (
                               <span className="text-amber-700 dark:text-amber-400">في الانتظار</span>
                             ) : (
-                              <span className="text-slate-400 dark:text-slate-500">—</span>
+                              <span className="text-slate-700 dark:text-slate-300">—</span>
                             )}
                           </TableCell>
                           {canManageStages && (
@@ -919,7 +919,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                     setStageToEdit(st);
                                     setShowStageDialog(true);
                                   }}
-                                  className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
+                                  className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
                                   title="تعديل"
                                 >
                                   <Edit className="w-4 h-4" />
@@ -928,7 +928,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => setStageToDelete(st)}
-                                  className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
+                                  className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
                                   title="حذف"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -971,7 +971,7 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             {promotions.length === 0 ? (
-              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 لا توجد ترقيات مسجلة لهذا الموظف حتى الآن
               </div>
             ) : (
@@ -979,22 +979,22 @@ export const PersonnelDetailPage: React.FC = () => {
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-800/70">
                     <TableRow className="border-slate-200/80 dark:border-slate-800">
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-12">#</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">الرتبة السابقة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">الرتبة الجديدة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">تاريخ الترقية</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المرجع / القرار</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">السبب / الملاحظات</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-12">#</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">الرتبة السابقة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">الرتبة الجديدة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">تاريخ الترقية</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المرجع / القرار</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">السبب / الملاحظات</TableHead>
                       {canManageStages && (
-                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-24">الإجراءات</TableHead>
+                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-24">الإجراءات</TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {promotions.map((item, idx) => (
                       <TableRow key={item._id} className="border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">{idx + 1}</TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-700 dark:text-slate-300">{idx + 1}</TableCell>
+                        <TableCell className="py-2.5 px-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                           {item.gradePrecedent || '—'}
                         </TableCell>
                         <TableCell className="py-2.5 px-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -1003,10 +1003,10 @@ export const PersonnelDetailPage: React.FC = () => {
                         <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                           <bdi dir={dir} className="tabular-nums">{formatLongDate(item.datePromotion, isRTL ? 'ar' : 'fr')}</bdi>
                         </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                        <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 font-mono">
                           {item.reference || '—'}
                         </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400">
+                        <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300">
                           {item.motif || item.observations || '—'}
                         </TableCell>
                         {canManageStages && (
@@ -1019,7 +1019,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                   setPromotionToEdit(item);
                                   setShowPromotionDialog(true);
                                 }}
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
                                 title="تعديل"
                               >
                                 <Edit className="w-4 h-4" />
@@ -1034,7 +1034,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                     title: `ترقية إلى رتبة: ${item.gradeNouveau}`,
                                   })
                                 }
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
                                 title="حذف"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1076,7 +1076,7 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             {postes.length === 0 ? (
-              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 لا توجد خطط أو تكليفات وظيفية مسجلة لهذا الموظف حتى الآن
               </div>
             ) : (
@@ -1084,21 +1084,21 @@ export const PersonnelDetailPage: React.FC = () => {
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-800/70">
                     <TableRow className="border-slate-200/80 dark:border-slate-800">
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-12">#</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">الخطة الوظيفية</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">تاريخ التعيين</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">تاريخ الانتهاء</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المرجع</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">مكان العمل / الإدارة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-12">#</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">الخطة الوظيفية</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">تاريخ التعيين</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">تاريخ الانتهاء</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المرجع</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">مكان العمل / الإدارة</TableHead>
                       {canManageStages && (
-                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-24">الإجراءات</TableHead>
+                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-24">الإجراءات</TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {postes.map((item, idx) => (
                       <TableRow key={item._id} className="border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">{idx + 1}</TableCell>
+                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-700 dark:text-slate-300">{idx + 1}</TableCell>
                         <TableCell className="py-2.5 px-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                           {item.poste}
                         </TableCell>
@@ -1114,10 +1114,10 @@ export const PersonnelDetailPage: React.FC = () => {
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                        <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 font-mono">
                           {item.reference || '—'}
                         </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400">
+                        <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300">
                           {item.lieu || item.observations || '—'}
                         </TableCell>
                         {canManageStages && (
@@ -1130,7 +1130,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                   setPosteToEdit(item);
                                   setShowPosteDialog(true);
                                 }}
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
                                 title="تعديل"
                               >
                                 <Edit className="w-4 h-4" />
@@ -1145,7 +1145,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                     title: `خطة وظيفية: ${item.poste}`,
                                   })
                                 }
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
                                 title="حذف"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1187,7 +1187,7 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             {diplomes.length === 0 ? (
-              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 لا توجد شهادات علمية أو مهنية مسجلة لهذا الموظف حتى الآن
               </div>
             ) : (
@@ -1195,21 +1195,21 @@ export const PersonnelDetailPage: React.FC = () => {
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-800/70">
                     <TableRow className="border-slate-200/80 dark:border-slate-800">
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-12">#</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">نوع الشهادة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">موضوع / اختصاص الشهادة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">تاريخ الشهادة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المرجع</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المؤسسة المانحة / المستوى</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-12">#</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">نوع الشهادة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">موضوع / اختصاص الشهادة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">تاريخ الشهادة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المرجع</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المؤسسة المانحة / المستوى</TableHead>
                       {canManageStages && (
-                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-24">الإجراءات</TableHead>
+                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-24">الإجراءات</TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {diplomes.map((item, idx) => (
                       <TableRow key={item._id} className="border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">{idx + 1}</TableCell>
+                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-700 dark:text-slate-300">{idx + 1}</TableCell>
                         <TableCell className="py-2.5 px-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                           {item.typeDiplome}
                         </TableCell>
@@ -1219,10 +1219,10 @@ export const PersonnelDetailPage: React.FC = () => {
                         <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                           <bdi dir={dir} className="tabular-nums">{formatLongDate(item.dateObtention, isRTL ? 'ar' : 'fr')}</bdi>
                         </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                        <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 font-mono">
                           {item.reference || '—'}
                         </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400">
+                        <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300">
                           {item.etablissement ? `${item.etablissement} ` : ''}
                           {item.niveau ? `(${item.niveau})` : ''}
                           {!item.etablissement && !item.niveau ? '—' : ''}
@@ -1237,7 +1237,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                   setDiplomeToEdit(item);
                                   setShowDiplomeDialog(true);
                                 }}
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
                                 title="تعديل"
                               >
                                 <Edit className="w-4 h-4" />
@@ -1252,7 +1252,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                     title: `شهادة: ${item.typeDiplome} - ${item.sujetDiplome}`,
                                   })
                                 }
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
                                 title="حذف"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1294,7 +1294,7 @@ export const PersonnelDetailPage: React.FC = () => {
             </div>
 
             {sanctions.length === 0 ? (
-              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              <div className="bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 text-center text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 لا توجد أي عقوبات أو تتبعات تأديبية مسجلة لهذا الموظف
               </div>
             ) : (
@@ -1302,21 +1302,21 @@ export const PersonnelDetailPage: React.FC = () => {
                 <Table>
                   <TableHeader className="bg-slate-50 dark:bg-slate-800/70">
                     <TableRow className="border-slate-200/80 dark:border-slate-800">
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-12">#</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">تاريخ العقوبة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">عدد الأيام</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">السبب</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">نوع العقوبة</TableHead>
-                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200">المرجع</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-12">#</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">تاريخ العقوبة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">عدد الأيام</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">السبب</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">نوع العقوبة</TableHead>
+                      <TableHead className="text-start py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200">المرجع</TableHead>
                       {canManageStages && (
-                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 w-24">الإجراءات</TableHead>
+                        <TableHead className="text-center py-2.5 px-3 text-xs font-bold text-slate-800 dark:text-slate-200 w-24">الإجراءات</TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {sanctions.map((item, idx) => (
                       <TableRow key={item._id} className="border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">{idx + 1}</TableCell>
+                        <TableCell className="py-2.5 px-3 text-xs font-mono tabular-nums text-slate-700 dark:text-slate-300">{idx + 1}</TableCell>
                         <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                           <bdi dir={dir} className="tabular-nums">{formatLongDate(item.dateSanction, isRTL ? 'ar' : 'fr')}</bdi>
                         </TableCell>
@@ -1329,7 +1329,7 @@ export const PersonnelDetailPage: React.FC = () => {
                         <TableCell className="py-2.5 px-3 text-xs text-amber-700 dark:text-amber-400 font-medium">
                           {item.typeSanction || '—'}
                         </TableCell>
-                        <TableCell className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                        <TableCell className="py-2.5 px-3 text-xs text-slate-700 dark:text-slate-300 font-mono">
                           {item.reference || '—'}
                         </TableCell>
                         {canManageStages && (
@@ -1342,7 +1342,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                   setSanctionToEdit(item);
                                   setShowSanctionDialog(true);
                                 }}
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 rounded-lg"
                                 title="تعديل"
                               >
                                 <Edit className="w-4 h-4" />
@@ -1357,7 +1357,7 @@ export const PersonnelDetailPage: React.FC = () => {
                                     title: `عقوبة: ${item.raison}`,
                                   })
                                 }
-                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
+                                className="h-9 w-9 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg"
                                 title="حذف"
                               >
                                 <Trash2 className="w-4 h-4" />

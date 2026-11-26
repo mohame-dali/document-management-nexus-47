@@ -201,7 +201,7 @@ const TrashPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">سلة المحذوفات</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
               إدارة العناصر المحذوفة واستعادتها أو حذفها نهائياً من النظام
             </p>
           </div>
@@ -343,13 +343,13 @@ const TrashPage: React.FC = () => {
 
         {/* Local Search input */}
         <div className="relative w-full lg:w-72">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-700 dark:text-slate-300 pointer-events-none" />
           <Input
             type="text"
             placeholder="بحث في العناصر المحذوفة..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-11 min-h-[44px] pr-9 pl-4 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus-visible:ring-1 focus-visible:ring-[#2c5282]"
+            className="h-11 min-h-[44px] pr-9 pl-4 rounded-lg bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus-visible:ring-1 focus-visible:ring-[#2c5282]"
           />
         </div>
       </div>
@@ -359,7 +359,7 @@ const TrashPage: React.FC = () => {
         {isLoading ? (
           <div className="p-16 text-center space-y-3">
             <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] dark:text-sky-400 mx-auto" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">جاري تحميل عناصر سلة المحذوفات...</p>
+            <p className="text-slate-700 dark:text-slate-300 text-sm font-medium">جاري تحميل عناصر سلة المحذوفات...</p>
           </div>
         ) : isError ? (
           <div className="p-16 text-center space-y-4">
@@ -367,7 +367,7 @@ const TrashPage: React.FC = () => {
               <AlertTriangle className="h-8 w-8" />
             </div>
             <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">تعذر تحميل سلة المحذوفات</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md mx-auto">
               {(error as Error)?.message || 'حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
             </p>
             <Button
@@ -381,11 +381,11 @@ const TrashPage: React.FC = () => {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="p-16 text-center space-y-3">
-            <div className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+            <div className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
               <Trash2 className="h-8 w-8" />
             </div>
             <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">السلة فارغة</h3>
-            <p className="text-sm text-slate-400 dark:text-slate-500 max-w-sm mx-auto">
+            <p className="text-sm text-slate-700 dark:text-slate-300 max-w-sm mx-auto">
               {searchQuery.trim()
                 ? 'لا توجد نتائج تطابق معايير البحث الحالية.'
                 : 'لا توجد عناصر محذوفة حالياً.'}
@@ -427,12 +427,12 @@ const TrashPage: React.FC = () => {
                               {item.subject || item.label || 'بدون موضوع'}
                             </p>
                             {item.content && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                              <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
                                 {item.content}
                               </p>
                             )}
                             {item.attachments && item.attachments.length > 0 && (
-                              <span className="inline-flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 tabular-nums">
+                              <span className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                                 <span>📎</span>
                                 <span>{item.attachments.length} مرفق</span>
                               </span>
@@ -444,7 +444,7 @@ const TrashPage: React.FC = () => {
                               {item.label}
                             </p>
                             {item.documentId && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                              <p className="text-xs text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                                 رقم المرجع: {item.documentId}
                               </p>
                             )}
@@ -462,12 +462,12 @@ const TrashPage: React.FC = () => {
                         {isMessage ? (
                           <div className="space-y-1 text-xs">
                             <div className="flex items-center gap-1 text-slate-700 dark:text-slate-200 font-medium">
-                              <span className="text-slate-400 dark:text-slate-500">من:</span>
+                              <span className="text-slate-700 dark:text-slate-300">من:</span>
                               <span className="truncate max-w-[140px]">{item.sender?.username || '—'}</span>
                             </div>
                             {item.recipients && item.recipients.length > 0 && (
-                              <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                <span className="text-slate-400 dark:text-slate-500">إلى:</span>
+                              <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                                <span className="text-slate-700 dark:text-slate-300">إلى:</span>
                                 <span className="truncate max-w-[140px]">
                                   {item.recipients
                                     .map((r: { user?: { username?: string }; username?: string }) => r.user?.username || r.username || 'مستخدم')

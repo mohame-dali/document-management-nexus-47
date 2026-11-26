@@ -311,7 +311,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 {associations.length}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-300">
               {t('documents.personnel.subtitle')}
             </p>
           </div>
@@ -331,7 +331,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
 
       {/* Content */}
       {isLoading ? (
-        <div className="py-6 text-center text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+        <div className="py-6 text-center text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin text-[#2c5282] dark:text-blue-400" />
           <span className="text-sm">{t('documents.personnel.loading')}</span>
         </div>
@@ -342,11 +342,11 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
         </div>
       ) : associations.length === 0 ? (
         <div className="bg-[#f8fafc] dark:bg-slate-950/40 border border-dashed border-[#cbd5e1] dark:border-slate-700 rounded-lg p-6 text-center space-y-2">
-          <Users className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto" />
+          <Users className="w-8 h-8 text-slate-700 dark:text-slate-300 mx-auto" />
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
             {t('documents.personnel.empty.title')}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+          <p className="text-xs text-slate-700 dark:text-slate-300 max-w-md mx-auto">
             {t('documents.personnel.empty.description')}
           </p>
           {canManage && (
@@ -385,7 +385,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                     >
                       <User className="w-4 h-4 text-[#2c5282] dark:text-blue-400 shrink-0" />
                       <span>{personnelName}</span>
-                      <ExternalLink className="w-3 h-3 text-slate-400" />
+                      <ExternalLink className="w-3 h-3 text-slate-700 dark:text-slate-300" />
                     </Link>
 
                     <AssociationTypeBadge type={assoc.typeAssociation} />
@@ -394,13 +394,13 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
                     {p?.poste && (
                       <span className="flex items-center gap-1">
-                        <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+                        <Briefcase className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" />
                         <span>{p.poste}</span>
                       </span>
                     )}
 
                     {p?.cin && (
-                      <span className="font-mono text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 tabular-nums">
+                      <span className="font-mono text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 tabular-nums">
                         {p.cin}
                       </span>
                     )}
@@ -408,15 +408,15 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
 
                   {assoc.commentaire && (
                     <div className="flex items-start gap-1 text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-2">
-                      <MessageSquare className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                      <MessageSquare className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300 shrink-0 mt-0.5" />
                       <span>{assoc.commentaire}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between border-t border-[#e2e8f0] dark:border-slate-700 pt-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-between border-t border-[#e2e8f0] dark:border-slate-700 pt-2 mt-1 text-[13px] text-slate-700 dark:text-slate-300">
                   <span className="flex items-center gap-1 tabular-nums">
-                    <Calendar className="w-3 h-3 text-slate-400" />
+                    <Calendar className="w-3 h-3 text-slate-700 dark:text-slate-300" />
                     <span>{t('documents.personnel.associationDate', { date: formatLongDate(assoc.dateAssociation, 'ar') })}</span>
                   </span>
 
@@ -428,7 +428,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                         size="icon"
                         onClick={() => handleOpenEditDialog(assoc)}
                         aria-label={t('documents.personnel.editAria')}
-                        className="h-9 w-9 text-slate-500 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-white dark:hover:bg-slate-700 rounded-lg"
+                        className="h-9 w-9 text-slate-700 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-white dark:hover:bg-slate-700 rounded-lg"
                         title={t('documents.personnel.editAria')}
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -440,7 +440,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                         size="icon"
                         onClick={() => handleOpenDeleteDialog(assoc)}
                         aria-label={t('documents.personnel.deleteAria')}
-                        className="h-9 w-9 text-slate-400 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg"
+                        className="h-9 w-9 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg"
                         title={t('documents.personnel.deleteAria')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -474,7 +474,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 <UserPlus className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
                 <span>{t('documents.personnel.dialog.addTitle')}</span>
               </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+              <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
                 {t('documents.personnel.dialog.addDescription')}
               </DialogDescription>
             </DialogHeader>
@@ -482,7 +482,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
             <form onSubmit={handleAddSubmit} className="space-y-4 pt-2">
               {/* Candidate Selection */}
               <div className="space-y-2">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200 block">
                   {t('documents.personnel.dialog.step1')} <span className="text-red-500">*</span>
                 </Label>
 
@@ -512,23 +512,23 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                 ) : (
                   <div className="space-y-2 border border-[#e2e8f0] dark:border-slate-800 rounded-lg p-3 bg-[#f8fafc] dark:bg-slate-950/50">
                     <div className="relative">
-                      <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3.5" />
+                      <Search className="w-4 h-4 text-slate-700 dark:text-slate-300 absolute start-3 top-3.5" />
                       <Input
                         type="text"
                         value={personnelSearch}
                         onChange={(e) => setPersonnelSearch(e.target.value)}
                         placeholder={t('documents.personnel.dialog.searchPlaceholder')}
-                        className="ps-9 h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-sm rounded-lg"
+                        className="ps-9 h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 text-sm rounded-lg"
                       />
                     </div>
 
                     <div className="max-h-44 overflow-y-auto space-y-1 pt-1">
                       {loadingCandidates ? (
-                        <div className="py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                        <div className="py-4 text-center text-xs text-slate-700 dark:text-slate-300">
                           {t('documents.personnel.dialog.loadingCandidates')}
                         </div>
                       ) : eligibleCandidates.length === 0 ? (
-                        <div className="py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                        <div className="py-4 text-center text-xs text-slate-700 dark:text-slate-300">
                           {t('documents.personnel.dialog.noCandidatesFound')}
                         </div>
                       ) : (
@@ -543,7 +543,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                               <div className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-[#2c5282] dark:group-hover:text-blue-300">
                                 {p.nom} {p.prenom}
                               </div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                              <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
                                 {p.poste || t('documents.personnel.noPoste')} {p.cin ? `(${p.cin})` : ''}
                               </div>
                             </div>
@@ -560,7 +560,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
 
               {/* Association Type */}
               <div className="space-y-1.5 text-start">
-                <Label htmlFor="doc-type-association" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <Label htmlFor="doc-type-association" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {t('documents.personnel.dialog.step2')} <span className="text-red-500">*</span>
                 </Label>
                 <select
@@ -581,7 +581,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
 
               {/* Comment */}
               <div className="space-y-1.5 text-start">
-                <Label htmlFor="doc-commentaire" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <Label htmlFor="doc-commentaire" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {t('documents.personnel.dialog.step3')}
                 </Label>
                 <Textarea
@@ -590,7 +590,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
                   onChange={(e) => setCommentaire(e.target.value)}
                   placeholder={t('documents.personnel.dialog.commentPlaceholder')}
                   rows={2}
-                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-sm rounded-lg"
+                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 text-sm rounded-lg"
                 />
               </div>
 
@@ -633,7 +633,7 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
 
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-2">
               <div className="space-y-1.5 text-start">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {t('documents.personnel.dialog.editTypeLabel')} <span className="text-red-500">*</span>
                 </Label>
                 <select
@@ -652,14 +652,14 @@ export const PersonnelAssociatedToDocument: React.FC<PersonnelAssociatedToDocume
               </div>
 
               <div className="space-y-1.5 text-start">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {t('documents.personnel.dialog.editCommentLabel')}
                 </Label>
                 <Textarea
                   value={commentaire}
                   onChange={(e) => setCommentaire(e.target.value)}
                   rows={3}
-                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-sm rounded-lg"
+                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 text-sm rounded-lg"
                 />
               </div>
 

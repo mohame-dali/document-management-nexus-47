@@ -183,8 +183,8 @@ const CreateUser: React.FC = () => {
                 {previewUrl ? (
                   <img src={previewUrl} alt="معاينة الصورة" className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  <AvatarFallback className="bg-gray-100 text-gray-500 text-lg font-bold flex flex-col items-center justify-center">
-                    <Upload className="h-6 w-6 text-gray-400" />
+                  <AvatarFallback className="bg-gray-100 text-slate-700 dark:text-slate-300 text-lg font-bold flex flex-col items-center justify-center">
+                    <Upload className="h-6 w-6 text-slate-700 dark:text-slate-300" />
                   </AvatarFallback>
                 )}
               </Avatar>
@@ -235,7 +235,7 @@ const CreateUser: React.FC = () => {
               {photoFile && (
                 <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-gray-700">
                   <p className="font-semibold text-[#1a202c]">{photoFile.name}</p>
-                  <p className="text-gray-500 text-xs mt-0.5">الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت</p>
+                  <p className="text-slate-700 dark:text-slate-300 text-xs mt-0.5">الحجم: {(photoFile.size / 1024 / 1024).toFixed(2)} ميجابايت</p>
                 </div>
               )}
               

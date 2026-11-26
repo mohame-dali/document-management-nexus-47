@@ -495,10 +495,10 @@ const UserForm: React.FC<UserFormProps> = ({
                       {...field} 
                       placeholder="أدخل اسم المستخدم (مثال: ahmad_ali)"
                       required
-                      className="h-11 text-base px-4 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+                      className="h-11 text-base px-4 bg-white border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
                     />
                   </FormControl>
-                  <p className="text-sm text-gray-500">اسم فريد يُستخدم لتسجيل الدخول والتعريف في النظام</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">اسم فريد يُستخدم لتسجيل الدخول والتعريف في النظام</p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -522,10 +522,10 @@ const UserForm: React.FC<UserFormProps> = ({
                         {...field} 
                         placeholder="أدخل كلمة المرور (8 أحرف على الأقل: كبير، صغير ورقم)"
                         required 
-                        className="h-11 text-base px-4 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+                        className="h-11 text-base px-4 bg-white border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
                       />
                     </FormControl>
-                    <p className="text-sm text-gray-500">يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، تشمل حرفاً كبيراً وحرفاً صغيراً ورقماً</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، تشمل حرفاً كبيراً وحرفاً صغيراً ورقماً</p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -544,7 +544,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   <span>بطاقة الموظف المرتبطة (Fiche Personnel associée)</span>
                 </div>
                 {!canManagePersonnel && (
-                  <Badge variant="outline" className="bg-[#f7fafc] text-[#5f6b7d] border-[#cbd5e1]">
+                  <Badge variant="outline" className="bg-[#f7fafc] text-slate-700 dark:text-slate-300 border-[#cbd5e1]">
                     اختيار من قائمة الموظفين
                   </Badge>
                 )}
@@ -554,11 +554,11 @@ const UserForm: React.FC<UserFormProps> = ({
             <CardContent className="pt-6 space-y-4">
               {/* Info : différencier RH vs AdminDepartment */}
               {canManagePersonnel ? (
-                <p className="text-sm text-[#4a5568] mb-4">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">
                   اختر ملف موظف من القائمة أدناه أو أنشئ ملفًا جديدًا
                 </p>
               ) : (
-                <p className="text-sm text-[#4a5568] mb-4">
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">
                   اختر ملف موظف موجود في قسمك لربطه بهذا الحساب
                 </p>
               )}
@@ -574,7 +574,7 @@ const UserForm: React.FC<UserFormProps> = ({
                         <span>اختيار ملف الموظف</span>
                         {isPersonnelRequired && <span className="text-red-500 font-bold">*</span>}
                       </span>
-                      <span className="text-xs font-normal text-gray-500">
+                      <span className="text-xs font-normal text-slate-700 dark:text-slate-300">
                         {availablePersonnels.length} بطاقة متاحة
                       </span>
                     </FormLabel>
@@ -583,16 +583,16 @@ const UserForm: React.FC<UserFormProps> = ({
                         value={field.value || ''}
                         onValueChange={(val) => handlePersonnelChange(val)}
                       >
-                        <SelectTrigger className="h-11 bg-white border-[#cbd5e1] text-right">
+                        <SelectTrigger className="h-11 bg-white border-slate-300 dark:border-slate-700 text-right">
                           <SelectValue placeholder="اختر موظفًا" />
                         </SelectTrigger>
                         <SelectContent dir="rtl">
                           {isLoadingPersonnel ? (
-                            <div className="p-3 text-center text-sm text-[#5f6b7d]">
+                            <div className="p-3 text-center text-sm text-slate-700 dark:text-slate-300">
                               جاري تحميل القائمة...
                             </div>
                           ) : availablePersonnels.length === 0 ? (
-                            <div className="p-3 text-center text-sm text-[#5f6b7d]">
+                            <div className="p-3 text-center text-sm text-slate-700 dark:text-slate-300">
                               {personnels.length > 0
                                 ? 'جميع الموظفين يمتلكون حسابات مستخدمين مسبقاً'
                                 : 'لا يوجد موظفون في قسمك'}
@@ -631,14 +631,14 @@ const UserForm: React.FC<UserFormProps> = ({
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                     <div>
-                      <span className="text-xs text-gray-500 block">الاسم الكامل:</span>
+                      <span className="text-xs text-slate-700 dark:text-slate-300 block">الاسم الكامل:</span>
                       <span className="font-bold text-[#1a202c]">
                         {selectedPersonnel.nom} {selectedPersonnel.prenom}
                       </span>
                     </div>
                     {selectedPersonnel.cin && (
                       <div>
-                        <span className="text-xs text-gray-500 block">رقم البطاقة الوطنية (CIN):</span>
+                        <span className="text-xs text-slate-700 dark:text-slate-300 block">رقم البطاقة الوطنية (CIN):</span>
                         <span className="font-mono font-bold text-[#1a202c]">
                           {selectedPersonnel.cin}
                         </span>
@@ -646,7 +646,7 @@ const UserForm: React.FC<UserFormProps> = ({
                     )}
                     {selectedPersonnel.poste && (
                       <div>
-                        <span className="text-xs text-gray-500 block">المنصب / الرتبة:</span>
+                        <span className="text-xs text-slate-700 dark:text-slate-300 block">المنصب / الرتبة:</span>
                         <span className="font-semibold text-[#1a202c]">
                           {selectedPersonnel.poste}
                         </span>
@@ -654,7 +654,7 @@ const UserForm: React.FC<UserFormProps> = ({
                     )}
                     {selectedPersonnel.activeDepartment && (
                       <div className="sm:col-span-2 md:col-span-3 pt-1">
-                        <span className="text-xs text-gray-500 block">القسم الإداري:</span>
+                        <span className="text-xs text-slate-700 dark:text-slate-300 block">القسم الإداري:</span>
                         <span className="inline-flex items-center gap-1 font-semibold text-[#2c5282] bg-blue-50 px-2.5 py-1 rounded border border-blue-200 text-xs mt-0.5">
                           <Building className="w-3.5 h-3.5" />
                           {typeof selectedPersonnel.activeDepartment === 'object' 
@@ -666,7 +666,7 @@ const UserForm: React.FC<UserFormProps> = ({
                             Cet employé appartient à une unité fonctionnelle transversale (Bureau Directeur / Bureau d'Ordre). Le compte n'aura pas de département assigné.
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-500 mr-2">
+                          <span className="text-xs text-slate-700 dark:text-slate-300 mr-2">
                             (تم تحديد هذا القسم تلقائياً أدناه، ويمكن تعديله من قبل الإدارة)
                           </span>
                         )}
@@ -729,7 +729,7 @@ const UserForm: React.FC<UserFormProps> = ({
                     disabled={currentUserRole === 'AdminDepartment'}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+                      <SelectTrigger className="h-11 text-base bg-white border-slate-300 dark:border-slate-700 rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                         <SelectValue placeholder="اختر الدور" />
                       </SelectTrigger>
                     </FormControl>
@@ -887,7 +887,7 @@ const UserForm: React.FC<UserFormProps> = ({
                       <FormLabel className="text-base font-bold text-[#1a202c] cursor-pointer">
                         حساب نشط ومفعل
                       </FormLabel>
-                      <p className="text-sm text-gray-500 mt-0.5">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
                         يمكن للمستخدم النشط تسجيل الدخول والوصول لكافة الصلاحيات الممنوحة له
                       </p>
                     </div>

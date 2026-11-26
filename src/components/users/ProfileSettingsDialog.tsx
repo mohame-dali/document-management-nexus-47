@@ -178,7 +178,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
             </div>
             إعدادات الملف الشخصي
           </DialogTitle>
-          <DialogDescription className="text-base text-slate-600 dark:text-slate-400 text-right mt-1.5">
+          <DialogDescription className="text-base text-slate-700 dark:text-slate-300 text-right mt-1.5">
             تحديث كلمة المرور والصورة الشخصية للمستخدم <strong className="text-[#1a202c] dark:text-slate-100 font-bold">{currentUser.username}</strong>
           </DialogDescription>
         </DialogHeader>
@@ -227,7 +227,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                     onChange={handlePhotoChange}
                     className="h-12 text-base rounded-lg file:ml-4 file:py-2.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-bold file:bg-[#2c5282] file:text-white hover:file:bg-[#234269] bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200"
                   />
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">
                     JPG, PNG, GIF (الحد الأقصى المسموح به 2 ميجابايت)
                   </p>
                 </div>
@@ -266,7 +266,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400"
+                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
                     {showCurrentPassword ? (
@@ -294,7 +294,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400"
+                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                   >
                     {showNewPassword ? (
@@ -322,7 +322,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400"
+                    className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
@@ -339,7 +339,7 @@ const ProfileSettingsDialog: React.FC<ProfileSettingsDialogProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282] dark:bg-sky-400 inline-block"></span>
                   كلمة المرور يجب أن تكون 6 أحرف على الأقل
                 </p>
-                <p className="flex items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
+                <p className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 inline-block"></span>
                   استخدم مزيجاً من الأحرف والأرقام لكلمة مرور قوية
                 </p>

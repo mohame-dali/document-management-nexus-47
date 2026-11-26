@@ -614,7 +614,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
                     ? 'border-[#2c5282] dark:border-blue-600 bg-blue-50/90 dark:bg-blue-950/50 text-[#1e3a8a] dark:text-blue-200 shadow-xs'
                     : isCompleted
                     ? 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-emerald-800 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
                 <div
@@ -623,13 +623,13 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
                       ? 'bg-[#2c5282] text-white'
                       : isCompleted
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
                 </div>
                 <div className="truncate">
-                  <span className="text-[11px] block font-medium opacity-75 tabular-nums">
+                  <span className="text-[13px] block font-medium opacity-75 tabular-nums">
                     {t('hr.form.steps.stepCount', { current: step.id, total: 4 })}
                   </span>
                   <span className="text-xs font-semibold truncate block">

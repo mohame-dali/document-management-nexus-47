@@ -132,9 +132,9 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
   if (!canViewFolders) {
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 sm:p-10 text-center shadow-sm space-y-3">
-        <ShieldCheck className="h-14 w-14 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+        <ShieldCheck className="h-14 w-14 text-slate-700 dark:text-slate-300 mx-auto mb-2" />
         <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">{t('folders.accessDenied.title')}</h3>
-        <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">{t('folders.accessDenied.description')}</p>
+        <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">{t('folders.accessDenied.description')}</p>
       </div>
     );
   }
@@ -158,7 +158,7 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
                 {roleBadge.text}
               </span>
             </div>
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
               {t('folders.banner.subtitle')}
             </p>
           </div>
@@ -176,7 +176,7 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
           </div>
 
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-2xs tabular-nums">
-            <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+            <Calendar className="h-4 w-4 text-slate-700 dark:text-slate-300" />
             <bdi dir={dir} className="tabular-nums">{formatLongDate(new Date(), dir === 'ltr' ? 'fr' : 'ar')}</bdi>
           </div>
         </div>

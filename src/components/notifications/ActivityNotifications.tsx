@@ -237,7 +237,7 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
 
     return (
       <div className="mb-2">
-        <div className="px-3 py-1 bg-slate-50 dark:bg-slate-800/80 border-y border-slate-200/80 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+        <div className="px-3 py-1 bg-slate-50 dark:bg-slate-800/80 border-y border-slate-200/80 dark:border-slate-800 text-[13px] font-bold text-slate-600 dark:text-slate-300">
           {title} (<bdi dir="ltr">{items.length}</bdi>)
         </div>
         <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -289,13 +289,13 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
                           : `نشاط: ${notification.activity}`
                         : notification.title}
                     </p>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 shrink-0 font-medium tabular-nums">
+                    <span className="text-[13px] text-slate-700 dark:text-slate-300 shrink-0 font-medium tabular-nums">
                       <bdi dir="auto">{getRelativeTime(notification.createdAt)}</bdi>
                     </span>
                   </div>
 
                   {notification.documentId && typeof notification.documentId === 'object' && (
-                    <div className="flex items-center gap-1 text-[11px] text-[#2c5282] dark:text-blue-400 font-semibold mt-1">
+                    <div className="flex items-center gap-1 text-[13px] text-[#2c5282] dark:text-blue-400 font-semibold mt-1">
                       <FileText className="w-3 h-3 shrink-0" />
                       <span>
                         {isFr ? 'Document ' : 'الوثيقة '}
@@ -304,7 +304,7 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
                         </bdi>
                       </span>
                       {target && (
-                        <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">
+                        <span className="text-[13px] font-normal text-slate-700 dark:text-slate-300">
                           · {isFr ? 'Ouvrir' : 'فتح'}
                         </span>
                       )}
@@ -314,14 +314,14 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
                   {notification.documentId &&
                     typeof notification.documentId === 'object' &&
                     notification.documentId.subject && (
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1 mt-0.5">
+                      <p className="text-[13px] text-slate-600 dark:text-slate-300 line-clamp-1 mt-0.5">
                         {isFr ? 'Objet : ' : 'الموضوع: '}
                         {notification.documentId.subject}
                       </p>
                     )}
 
                   {notification.message && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">
+                    <p className="text-[13px] text-slate-700 dark:text-slate-300 line-clamp-2 mt-0.5 leading-relaxed">
                       {notification.message}
                     </p>
                   )}
@@ -350,7 +350,7 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
                       e.stopPropagation();
                       handleDelete(notification._id);
                     }}
-                    className="h-6 w-6 p-0 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 rounded"
+                    className="h-6 w-6 p-0 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 rounded"
                     title={isFr ? 'Supprimer' : 'حذف'}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -377,11 +377,11 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
             {isFr ? 'Notifications et alertes' : 'الإشعارات والتنبيهات'}
           </span>
           {unreadCount > 0 ? (
-            <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/70 shrink-0 tabular-nums">
+            <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[13px] font-bold rounded-full bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/70 shrink-0 tabular-nums">
               <bdi dir="ltr">{unreadCount}</bdi> {isFr ? 'nouveau(x)' : 'جديد'}
             </span>
           ) : (
-            <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+            <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[13px] font-medium rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
               {isFr ? 'À jour' : 'محدث'}
             </span>
           )}
@@ -404,19 +404,19 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] dark:border-blue-400 mx-auto"></div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+            <p className="text-xs text-slate-700 dark:text-slate-300 mt-2 font-medium">
               {isFr ? 'Chargement des notifications...' : 'جاري تحميل الإشعارات...'}
             </p>
           </div>
         ) : transformedNotifications.length === 0 ? (
           <div className="text-center py-10 px-4">
-            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3">
               <Bell className="w-6 h-6 stroke-[1.5]" />
             </div>
             <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">
               {isFr ? 'Aucune nouvelle notification' : 'لا توجد إشعارات جديدة'}
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
               {isFr
                 ? 'Toutes les alertes système et documents apparaîtront ici'
                 : 'ستظهر هنا كافة تنبيهات النظام والمستندات والمهام'}

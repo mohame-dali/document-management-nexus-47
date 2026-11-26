@@ -99,7 +99,7 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
         <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
           {isRTL ? 'دليل الألوان والرموز' : 'Légende des statuts'}
         </h3>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-xs text-slate-700 dark:text-slate-300">
           {isRTL
             ? 'يتم تحميل أسباب الغياب ديناميكياً بحسب إعدادات المؤسسة'
             : "Motifs d'absence chargés dynamiquement selon la configuration"}
@@ -139,11 +139,11 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
               />
               <span className="font-medium">{reasonLabel}</span>
               {reason.impacteSolde ? (
-                <span className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 rounded border border-amber-200 dark:border-amber-800/60">
+                <span className="text-[13px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 rounded border border-amber-200 dark:border-amber-800/60">
                   {isRTL ? 'مخصوم' : 'Déduit'}
                 </span>
               ) : (
-                <span className="text-[11px] text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 rounded border border-blue-200 dark:border-blue-800/60">
+                <span className="text-[13px] text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 rounded border border-blue-200 dark:border-blue-800/60">
                   {isRTL ? 'غير مخصوم' : 'Non déduit'}
                 </span>
               )}

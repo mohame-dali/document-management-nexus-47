@@ -185,7 +185,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="code" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+                <Label htmlFor="code" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   الرمز البرمجي (Code) <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -194,24 +194,24 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                   disabled={isEditing}
                   placeholder="ex: conge_annuel"
-                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-left font-mono text-sm"
+                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-left font-mono text-sm"
                   dir="ltr"
                   required
                 />
                 {isEditing && (
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">لا يمكن تعديل الرمز التعريفي بعد إنشائه.</p>
+                  <p className="text-[13px] text-slate-700 dark:text-slate-300">لا يمكن تعديل الرمز التعريفي بعد إنشائه.</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="category" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+                <Label htmlFor="category" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   التصنيف (Category) <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={formData.category}
                   onValueChange={(val: LeaveReasonFormData['category']) => setFormData({ ...formData, category: val })}
                 >
-                  <SelectTrigger id="category" className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-start">
+                  <SelectTrigger id="category" className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-start">
                     <SelectValue placeholder="اختر التصنيف" />
                   </SelectTrigger>
                   <SelectContent dir={dir} className="dark:bg-slate-900 dark:border-slate-700">
@@ -227,7 +227,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="labelAr" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+                <Label htmlFor="labelAr" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   التسمية بالعربية <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -235,13 +235,13 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                   value={formData.labelAr}
                   onChange={(e) => setFormData({ ...formData, labelAr: e.target.value })}
                   placeholder="مثال: عطلة سنوية"
-                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-start"
+                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-start"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="labelFr" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+                <Label htmlFor="labelFr" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   التسمية بالفرنسية (اختياري)
                 </Label>
                 <Input
@@ -249,14 +249,14 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                   value={formData.labelFr}
                   onChange={(e) => setFormData({ ...formData, labelFr: e.target.value })}
                   placeholder="Ex: Congé annuel"
-                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-left"
+                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-left"
                   dir="ltr"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+              <Label htmlFor="description" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 الوصف والملاحظات
               </Label>
               <Textarea
@@ -264,7 +264,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="تفاصيل إضافية حول شروط وطبيعة هذا الغياب..."
-                className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-start min-h-[70px]"
+                className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-start min-h-[70px]"
               />
             </div>
           </div>
@@ -282,7 +282,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                   <Label htmlFor="impacteSolde" className="text-sm font-bold text-[#1a202c] dark:text-slate-100 cursor-pointer">
                     يخصم من رصيد العطل السنوي (Déduit du solde)
                   </Label>
-                  <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
+                  <p className="text-xs text-slate-700 dark:text-slate-300">
                     إذا تم التفعيل، سيتم استقطاع أيام هذا الغياب تلقائياً من رصيد العطل السنوية للموظف.
                   </p>
                 </div>
@@ -295,7 +295,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
               <div className="border-t border-[#e2e8f0] dark:border-slate-700 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-[#e2e8f0] dark:border-slate-700">
-                  <Label htmlFor="requiresDoc" className="text-sm font-medium text-[#4a5568] dark:text-slate-300 cursor-pointer">
+                  <Label htmlFor="requiresDoc" className="text-sm font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
                     يتطلب وثيقة تبرير (شهادة/تقرير)
                   </Label>
                   <Switch
@@ -306,7 +306,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-[#e2e8f0] dark:border-slate-700">
-                  <Label htmlFor="requiresLieu" className="text-sm font-medium text-[#4a5568] dark:text-slate-300 cursor-pointer">
+                  <Label htmlFor="requiresLieu" className="text-sm font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
                     يتطلب تحديد المكان (خاص بالمهمات)
                   </Label>
                   <Switch
@@ -317,7 +317,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-[#e2e8f0] dark:border-slate-700">
-                  <Label htmlFor="requiresService" className="text-sm font-medium text-[#4a5568] dark:text-slate-300 cursor-pointer">
+                  <Label htmlFor="requiresService" className="text-sm font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
                     يتطلب اسم المصلحة (خاص بالخدمة)
                   </Label>
                   <Switch
@@ -328,7 +328,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-[#e2e8f0] dark:border-slate-700">
-                  <Label htmlFor="requiresFormation" className="text-sm font-medium text-[#4a5568] dark:text-slate-300 cursor-pointer">
+                  <Label htmlFor="requiresFormation" className="text-sm font-medium text-slate-800 dark:text-slate-200 cursor-pointer">
                     يتطلب تفاصيل التكوين
                   </Label>
                   <Switch
@@ -350,7 +350,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="color" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+                <Label htmlFor="color" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   لون الشارة (Couleur)
                 </Label>
                 <div className="flex items-center gap-2">
@@ -366,14 +366,14 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                     placeholder="#ebf8f1"
-                    className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-left font-mono text-sm"
+                    className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-left font-mono text-sm"
                     dir="ltr"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="icon" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+                <Label htmlFor="icon" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   أيقونة Lucide (اختياري)
                 </Label>
                 <Input
@@ -381,13 +381,13 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                   value={formData.icon || ''}
                   onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                   placeholder="Calendar, Briefcase..."
-                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-left text-sm"
+                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-left text-sm"
                   dir="ltr"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="order" className="text-sm font-semibold text-[#4a5568] dark:text-slate-300">
+                <Label htmlFor="order" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   ترتيب العرض (Ordre)
                 </Label>
                 <Input
@@ -397,7 +397,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                   max="999"
                   value={formData.order}
                   onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value, 10) || 100 })}
-                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#e2e8f0] dark:border-slate-700 rounded-lg text-center tabular-nums"
+                  className="bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 rounded-lg text-center tabular-nums"
                 />
               </div>
             </div>
@@ -415,7 +415,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
                 <Label htmlFor="isActive" className="text-sm font-bold text-[#1a202c] dark:text-slate-100 cursor-pointer">
                   حالة النوع : {formData.isActive ? 'مفعل (نشط)' : 'معطل'}
                 </Label>
-                <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
+                <p className="text-xs text-slate-700 dark:text-slate-300">
                   عند التعطيل، لن يظهر هذا النوع في قوائم تسجيل الغياب الجديدة مع بقاء البيانات القديمة سليمة.
                 </p>
               </div>
@@ -432,7 +432,7 @@ export const LeaveReasonFormDialog: React.FC<LeaveReasonFormDialogProps> = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-[#e2e8f0] dark:border-slate-700 dark:bg-slate-800 rounded-lg text-[#4a5568] dark:text-slate-200 hover:bg-[#f8fafc] dark:hover:bg-slate-700"
+              className="border-[#e2e8f0] dark:border-slate-700 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-[#f8fafc] dark:hover:bg-slate-700"
               disabled={submitting}
             >
               إلغاء

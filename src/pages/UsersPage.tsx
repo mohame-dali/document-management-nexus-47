@@ -423,7 +423,7 @@ const UsersPage: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.total')}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">{t('users.metrics.total')}</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100 mt-1 block tabular-nums">{metrics.total}</span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center shrink-0">
@@ -433,7 +433,7 @@ const UsersPage: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.active')}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">{t('users.metrics.active')}</span>
             <span className="text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1 block tabular-nums">{metrics.active}</span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-200/80 dark:border-emerald-800/70">
@@ -443,7 +443,7 @@ const UsersPage: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.inactive')}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">{t('users.metrics.inactive')}</span>
             <span className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400 mt-1 block tabular-nums">{metrics.inactive}</span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-red-50/90 dark:bg-red-950/50 text-red-600 dark:text-red-300 flex items-center justify-center shrink-0 border border-red-200/80 dark:border-red-800/70">
@@ -453,7 +453,7 @@ const UsersPage: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.admins')}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 block">{t('users.metrics.admins')}</span>
             <span className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100 mt-1 block tabular-nums">{metrics.admins}</span>
           </div>
           {/* Gold indicator with dark text/icon */}
@@ -508,7 +508,7 @@ const UsersPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search by username */}
           <div className="relative">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-700 dark:text-slate-300 pointer-events-none" />
             <Input 
               placeholder={t('users.filters.searchPlaceholder')}
               value={searchTerm}
@@ -594,10 +594,10 @@ const UsersPage: React.FC = () => {
           <Table className="w-full">
             <TableHeader className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200/80 dark:border-slate-800">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 w-16">{t('users.table.photo')}</TableHead>
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 w-16">{t('users.table.photo')}</TableHead>
                 <TableHead
                   aria-sort={sortField === 'username' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[160px]"
+                  className="p-0 text-start text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[160px]"
                 >
                   <button
                     type="button"
@@ -612,7 +612,7 @@ const UsersPage: React.FC = () => {
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'role' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[130px]"
+                  className="p-0 text-start text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[130px]"
                 >
                   <button
                     type="button"
@@ -627,7 +627,7 @@ const UsersPage: React.FC = () => {
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'departments' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]"
+                  className="p-0 text-start text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[180px]"
                 >
                   <button
                     type="button"
@@ -642,7 +642,7 @@ const UsersPage: React.FC = () => {
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'createdAt' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[140px]"
+                  className="p-0 text-start text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[140px]"
                 >
                   <button
                     type="button"
@@ -657,7 +657,7 @@ const UsersPage: React.FC = () => {
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'isActive' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[120px]"
+                  className="p-0 text-start text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[120px]"
                 >
                   <button
                     type="button"
@@ -670,7 +670,7 @@ const UsersPage: React.FC = () => {
                     {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
                   </button>
                 </TableHead>
-                <TableHead className="text-center py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[140px]">{t('users.table.actions')}</TableHead>
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-slate-800 dark:text-slate-200 min-w-[140px]">{t('users.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -768,12 +768,12 @@ const UsersPage: React.FC = () => {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500 text-xs italic">{t('users.noDepartment')}</span>
+                        <span className="text-slate-700 dark:text-slate-300 text-xs italic">{t('users.noDepartment')}</span>
                       )}
                     </TableCell>
 
                     {/* Created Date */}
-                    <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568] dark:text-slate-300 tabular-nums">
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm text-slate-700 dark:text-slate-300 tabular-nums">
                       <bdi dir="rtl" className="tabular-nums">{formatLongDate(user.createdAt, 'ar')}</bdi>
                     </TableCell>
 
@@ -952,7 +952,7 @@ const UsersPage: React.FC = () => {
                       <span
                         key={`ellipsis-${idx}`}
                         aria-hidden="true"
-                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold select-none"
+                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold select-none"
                       >
                         …
                       </span>

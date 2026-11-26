@@ -93,7 +93,7 @@ const TemplatesPage = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#1a202c]">النماذج</h1>
-            <p className="text-sm text-[#4a5568] mt-0.5">
+            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
               إدارة نماذج الوثائق المتاحة للتحميل والاستخدام
             </p>
           </div>
@@ -136,7 +136,7 @@ const TemplatesPage = () => {
                   <div className="h-10 w-10 rounded bg-[#ebf4ff] text-[#2c5282] flex items-center justify-center flex-shrink-0">
                     <FileText className="h-5 w-5" />
                   </div>
-                  <Badge variant="secondary" className="text-xs bg-[#f7fafc] text-[#4a5568] border border-[#e2e8f0] font-normal">
+                  <Badge variant="secondary" className="text-xs bg-[#f7fafc] text-slate-700 dark:text-slate-300 border border-[#e2e8f0] font-normal">
                     {formatFileSize(template.fileSize)}
                   </Badge>
                 </div>
@@ -148,15 +148,15 @@ const TemplatesPage = () => {
 
                 {/* Description */}
                 {template.description && (
-                  <p className="text-sm text-[#4a5568] mt-1 line-clamp-2">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1 line-clamp-2">
                     {template.description}
                   </p>
                 )}
 
                 {/* Metadata */}
-                <div className="text-xs text-[#5f6b7d] flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[#f1f5f9]">
+                <div className="text-xs text-slate-700 dark:text-slate-300 flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[#f1f5f9]">
                   <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3 text-[#718096]" />
+                    <Users className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                     <span>{template.downloads} تحميل</span>
                   </div>
                   <span>•</span>
@@ -183,7 +183,7 @@ const TemplatesPage = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(template)}
-                      className="flex-1 h-9 border border-[#e2e8f0] text-[#4a5568] hover:bg-[#f7fafc] rounded text-xs gap-1.5"
+                      className="flex-1 h-9 border border-[#e2e8f0] text-slate-700 dark:text-slate-300 hover:bg-[#f7fafc] rounded text-xs gap-1.5"
                     >
                       <Edit className="h-3.5 w-3.5" />
                       تعديل
@@ -207,8 +207,8 @@ const TemplatesPage = () => {
         /* Empty State */
         <div className="bg-white border border-[#e2e8f0] rounded p-12 text-center shadow-sm">
           <FileText className="h-12 w-12 mx-auto mb-3 text-[#cbd5e0]" />
-          <h3 className="text-base font-medium text-[#5f6b7d] mb-1">لا توجد نماذج متاحة</h3>
-          <p className="text-sm text-[#5f6b7d] mb-4">
+          <h3 className="text-base font-medium text-slate-700 dark:text-slate-300 mb-1">لا توجد نماذج متاحة</h3>
+          <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">
             {canManageTemplates 
               ? 'ابدأ بإضافة النموذج الأول للمستخدمين'
               : 'لم يتم رفع أي نماذج بعد'

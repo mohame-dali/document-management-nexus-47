@@ -143,7 +143,7 @@ export const MyProfilePage: React.FC = () => {
                   ? 'لا توجد بطاقة موظف مرتبطة بحسابك الحالي.'
                   : "Aucune fiche Personnel n'est associée à votre compte."}
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 {isRTL
                   ? 'لا توجد أي بطاقة موظف مرتبطة بحسابك الحالي في قسم الموارد البشرية. إذا كنت بحاجة إلى ربط حسابك، يرجى التواصل مع مسؤول النظام أو إدارة الموارد البشرية.'
                   : "Aucune fiche employé n'est actuellement liée à votre compte utilisateur. Veuillez contacter l'administrateur ou la direction des ressources humaines."}
@@ -255,21 +255,21 @@ export const MyProfilePage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'اللقب' : 'Nom'}
               </span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.nom}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'الاسم' : 'Prénom'}
               </span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.prenom}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'الجنس' : 'Sexe'}
               </span>
               <span className="text-slate-800 dark:text-slate-200">
@@ -282,14 +282,14 @@ export const MyProfilePage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'رقم ب.ت.و (CIN)' : 'CIN'}
               </span>
               <span className="font-mono tabular-nums text-slate-800 dark:text-slate-200">{personnel.cin || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'تاريخ الازدياد' : 'Date de naissance'}
               </span>
               <span className="text-slate-800 dark:text-slate-200 tabular-nums">
@@ -300,38 +300,38 @@ export const MyProfilePage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'مكان الازدياد' : 'Lieu de naissance'}
               </span>
               <span className="text-slate-800 dark:text-slate-200">{personnel.lieuNaissance || '—'}</span>
             </div>
 
             <div className="sm:col-span-2">
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'العنوان الشخصي' : 'Adresse'}
               </span>
               <span className="text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mt-0.5">
-                <MapPin className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <MapPin className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span>{personnel.adresse || '—'}</span>
               </span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'رقم الهاتف' : 'Téléphone'}
               </span>
               <span className="text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mt-0.5 tabular-nums" dir="ltr">
-                <Phone className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <Phone className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span>{personnel.telephone || '—'}</span>
               </span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'البريد الإلكتروني الشخصي' : 'Email personnel'}
               </span>
               <span className="text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mt-0.5" dir="ltr">
-                <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <Mail className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span className="truncate">{personnel.emailPersonnel || '—'}</span>
               </span>
             </div>
@@ -347,28 +347,28 @@ export const MyProfilePage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'الوظيفة / المنصب' : 'Poste / Fonction'}
               </span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{personnel.poste || '—'}</span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'القسم الرئيسي' : 'Département'}
               </span>
               <span className="text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mt-0.5">
-                <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <Building2 className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 <span>{departmentDisplayName}</span>
               </span>
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'تاريخ التعيين أو الالتحاق' : "Date d'embauche"}
               </span>
               <span className="text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mt-0.5 tabular-nums">
-                <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+                <Calendar className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
                 {personnel.dateEmbauche ? (
                   <bdi dir={dir} className="tabular-nums">{formatLongDate(personnel.dateEmbauche, isRTL ? 'ar' : 'fr')}</bdi>
                 ) : <span>—</span>}
@@ -376,7 +376,7 @@ export const MyProfilePage: React.FC = () => {
             </div>
 
             <div>
-              <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block">
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">
                 {isRTL ? 'تاريخ إنشاء البطاقة' : 'Date de création'}
               </span>
               <span className="text-slate-800 dark:text-slate-200 tabular-nums">
@@ -389,7 +389,7 @@ export const MyProfilePage: React.FC = () => {
             {/* Notes */}
             {personnel.notes && (
               <div className="sm:col-span-2 border-t border-slate-100 dark:border-slate-800 pt-3">
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   {isRTL ? 'ملاحظات إدارية' : 'Notes administratives'}
                 </span>
                 <p className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 rounded-lg p-3 whitespace-pre-wrap">
