@@ -35,7 +35,10 @@ const DragDropWrapper: React.FC<DragDropWrapperProps> = ({
     type: dragType || 'default',
     item: () => ({
       type: dragType || 'default',
-      id: dragData?.id || 'unknown',
+      id:
+        dragData && typeof dragData === 'object' && 'id' in dragData
+          ? String((dragData as { id?: unknown }).id ?? 'unknown')
+          : 'unknown',
       data: dragData
     }),
     collect: (monitor) => ({

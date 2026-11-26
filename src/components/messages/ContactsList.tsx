@@ -4,12 +4,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Mail, Users, Shield, Building2, Settings, User as UserIcon, Check } from 'lucide-react';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
+import { Search, Mail, Users, Shield, Building2, Settings, User as UserIcon } from 'lucide-react';
 import { getMessagingUsers } from '@/services/userService';
 import { User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 
 interface ContactsListProps {
   onSelectUser: (user: User) => void;
@@ -22,6 +23,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const { currentUser } = useAuth();
   const { t } = useLanguage();
+  const { dir, isRTL } = useDirection();
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['messaging-users'],
@@ -31,15 +33,15 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
   const filteredUsers = users?.filter(user => {
     if (user._id === currentUser?._id) return false;
     if (roleFilter !== 'all' && user.role !== roleFilter) return false;
-    
+
     const term = searchTerm.toLowerCase().trim();
     if (!term) return true;
 
     const matchesUsername = user.username.toLowerCase().includes(term);
     const matchesRole = user.role.toLowerCase().includes(term);
-    const matchesDept = user.activeDepartment && typeof user.activeDepartment === 'object' && 
+    const matchesDept = user.activeDepartment && typeof user.activeDepartment === 'object' &&
       user.activeDepartment.name.toLowerCase().includes(term);
-    
+
     return matchesUsername || matchesRole || matchesDept;
   }) || [];
 
@@ -72,23 +74,15 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Admin': return 'bg-red-50 text-red-700 border-red-200';
-      case 'AdminDepartment': return 'bg-blue-50 text-[#2c5282] border-blue-200';
-      case 'AdminTuningDesk': return 'bg-emerald-50 text-emerald-800 border-emerald-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'Admin': return 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/60';
+      case 'AdminDepartment': return 'bg-blue-50 dark:bg-sky-950/40 text-[#2c5282] dark:text-sky-300 border-blue-200 dark:border-sky-800/60';
+      case 'AdminTuningDesk': return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60';
+      default: return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
     }
   };
 
   const getRoleDisplayName = (role: string) => {
     return t(`roles.${role}`) || role;
-  };
-
-  const getUserPhoto = (user: User): string => {
-    if (user.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      return `${API_URL}${user.photo}`;
-    }
-    return '';
   };
 
   const roleCounts = users?.reduce((acc, user) => {
@@ -99,29 +93,33 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
   }, {} as Record<string, number>) || {};
 
   return (
-    <Card className="border border-[#e2e8f0] shadow-xs bg-white rounded" dir="rtl">
-      <CardHeader className="p-4 border-b border-[#e2e8f0] bg-white">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-slate-100 text-[#2c5282] rounded">
+    <Card className="border border-slate-200/80 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 rounded-xl overflow-hidden" dir={dir}>
+      <CardHeader className="p-4 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 bg-slate-100 dark:bg-slate-800 text-[#2c5282] dark:text-sky-400 rounded-lg shrink-0">
               <Users className="h-4 w-4" />
             </div>
-            <div>
-              <CardTitle className="text-sm font-bold text-slate-900">
+            <div className="min-w-0">
+              <CardTitle className="text-sm font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                 {t('messages.allContacts')} ({filteredUsers.length})
               </CardTitle>
-              <p className="text-[11px] text-slate-500">دليل المستخدمين ومسؤولي الأقسام المتاحين للمراسلة</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                {isRTL
+                  ? 'دليل المستخدمين ومسؤولي الأقسام المتاحين للمراسلة'
+                  : 'Annuaire des utilisateurs et chefs de service disponibles'}
+              </p>
             </div>
           </div>
 
           {selectedUsers.length > 0 && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={handleComposeToSelected}
-              className="h-11 px-3 rounded bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] font-semibold text-xs transition-colors duration-200 flex items-center gap-1.5"
+              className="h-9 px-3 rounded-lg bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] font-semibold text-xs transition-colors duration-200 flex items-center gap-1.5 tabular-nums"
             >
               <Mail className="h-3.5 w-3.5" />
-              <span>مراسلة ({selectedUsers.length})</span>
+              <span>{isRTL ? `مراسلة (${selectedUsers.length})` : `Écrire (${selectedUsers.length})`}</span>
             </Button>
           )}
         </div>
@@ -130,12 +128,12 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
       <CardContent className="p-4 space-y-3">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute right-2.5 top-2.5 h-4 w-4 text-slate-400" />
+          <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
           <Input
             placeholder={t('messages.searchContact')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pr-8 text-xs text-right border-[#cbd5e1] focus:border-[#2c5282] rounded h-9"
+            className="ps-10 pe-3 text-xs text-start bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#2c5282] dark:focus:border-sky-500 rounded-lg h-9"
           />
         </div>
 
@@ -145,13 +143,13 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
             variant={roleFilter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setRoleFilter('all')}
-            className={`h-11 min-h-[44px] px-3 text-xs rounded transition-colors duration-200 ${
-              roleFilter === 'all' 
-                ? 'bg-[#2c5282] hover:bg-[#234269] text-white border-transparent' 
-                : 'border-[#cbd5e1] text-slate-600 hover:bg-slate-50'
+            className={`h-9 px-3 text-xs rounded-lg transition-colors duration-200 tabular-nums ${
+              roleFilter === 'all'
+                ? 'bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white border-transparent'
+                : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
-            الكل ({Object.values(roleCounts).reduce((a, b) => a + b, 0)})
+            {isRTL ? 'الكل' : 'Tous'} ({Object.values(roleCounts).reduce((a, b) => a + b, 0)})
           </Button>
 
           {Object.entries(roleCounts).map(([role, count]) => (
@@ -160,10 +158,10 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
               variant={roleFilter === role ? 'default' : 'outline'}
               size="sm"
               onClick={() => setRoleFilter(role)}
-              className={`h-11 min-h-[44px] px-3 text-xs rounded transition-colors duration-200 flex items-center gap-1 ${
+              className={`h-9 px-3 text-xs rounded-lg transition-colors duration-200 flex items-center gap-1.5 tabular-nums ${
                 roleFilter === role
-                  ? 'bg-[#2c5282] hover:bg-[#234269] text-white border-transparent'
-                  : 'border-[#cbd5e1] text-slate-600 hover:bg-slate-50'
+                  ? 'bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white border-transparent'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               {getRoleIcon(role)}
@@ -175,22 +173,22 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
 
         {/* Selected pill row */}
         {selectedUsers.length > 0 && (
-          <div className="p-2.5 bg-[#f8fafc] rounded border border-[#e2e8f0] text-xs">
-            <span className="text-slate-500 font-medium block mb-1.5">
-              المستخدمون المحددون ({selectedUsers.length}):
+          <div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200/80 dark:border-slate-800 text-xs">
+            <span className="text-slate-500 dark:text-slate-400 font-medium block mb-1.5 tabular-nums">
+              {isRTL ? `المستخدمون المحددون (${selectedUsers.length}):` : `Utilisateurs sélectionnés (${selectedUsers.length}) :`}
             </span>
             <div className="flex flex-wrap gap-1.5">
               {selectedUsers.map(user => (
-                <span 
-                  key={user._id} 
-                  className="inline-flex items-center gap-1.5 bg-white px-2 py-0.5 rounded border border-[#cbd5e1] text-slate-700"
+                <span
+                  key={user._id}
+                  className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                 >
                   <span className="font-medium">{user.username}</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => toggleUserSelection(user)}
                     aria-label={t('messages.deselectUserAria', { username: user.username })}
-                    className="min-w-[32px] min-h-[32px] inline-flex items-center justify-center text-slate-500 hover:text-red-600 rounded"
+                    className="w-6 h-6 inline-flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 rounded"
                   >
                     ×
                   </button>
@@ -201,63 +199,66 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
         )}
 
         {/* Contact list items */}
-        <div className="divide-y divide-[#edf2f7] max-h-96 overflow-y-auto border border-[#e2e8f0] rounded">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[28rem] overflow-y-auto border border-slate-200/80 dark:border-slate-800 rounded-lg">
           {isLoading ? (
             <div className="p-4 space-y-3">
               {[1, 2, 3].map(i => (
                 <div key={i} className="animate-pulse flex items-center gap-3">
-                  <div className="w-8 h-8 bg-slate-200 rounded-full" />
+                  <div className="w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-full" />
                   <div className="flex-1 space-y-1">
-                    <div className="h-3 bg-slate-200 rounded w-1/3" />
-                    <div className="h-2.5 bg-slate-100 rounded w-1/4" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                    <div className="h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded w-1/4" />
                   </div>
                 </div>
               ))}
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center text-slate-500 py-6 text-xs">
+            <div className="text-center text-slate-500 dark:text-slate-400 py-8 text-xs">
               <p>{t('messages.noContactsFound')}</p>
             </div>
           ) : (
             filteredUsers.map(user => {
               const isSelected = selectedUsers.some(u => u._id === user._id);
-              const photo = getUserPhoto(user);
 
               return (
                 <div
                   key={user._id}
                   onClick={() => toggleUserSelection(user)}
-                  className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-                    isSelected ? 'bg-blue-50/70' : 'bg-white hover:bg-slate-50'
+                  className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors duration-150 ${
+                    isSelected
+                      ? 'bg-[#ebf4ff]/70 dark:bg-sky-950/40'
+                      : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <input 
+                    <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => {}}
-                      className="rounded border-slate-300 text-[#2c5282] focus:ring-0"
+                      className="rounded border-slate-300 dark:border-slate-600 text-[#2c5282] dark:text-sky-500 focus:ring-0"
                     />
 
-                    <Avatar className="h-8 w-8 rounded border border-[#e2e8f0]">
-                      {photo ? (
-                        <AvatarImage src={photo} alt={user.username} className="object-cover" />
-                      ) : null}
-                      <AvatarFallback className="rounded bg-slate-100 text-[#2c5282] text-xs font-semibold">
-                        {user.username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <PersonnelAvatar
+                      photo={user.photo}
+                      nom={user.nom}
+                      prenom={user.prenom}
+                      username={user.username}
+                      size="sm"
+                      className="h-8 w-8 ring-1 ring-slate-200 dark:ring-slate-700"
+                    />
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-slate-800 truncate">{user.username}</span>
-                        <Badge variant="outline" className={`text-[10px] px-1 py-0 rounded ${getRoleColor(user.role)}`}>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">
+                          {user.username}
+                        </span>
+                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 rounded-md ${getRoleColor(user.role)}`}>
                           {getRoleDisplayName(user.role)}
                         </Badge>
                       </div>
                       {user.activeDepartment && typeof user.activeDepartment === 'object' && (
-                        <span className="text-[11px] text-slate-500 block truncate">
-                          قسم: {user.activeDepartment.name}
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+                          {isRTL ? 'قسم:' : 'Service :'} {user.activeDepartment.name}
                         </span>
                       )}
                     </div>
@@ -270,11 +271,11 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, onComposeMess
                       e.stopPropagation();
                       onSelectUser(user);
                     }}
-                    className="h-11 min-h-[44px] px-3 text-xs text-[#2c5282] hover:bg-blue-50 rounded flex items-center gap-1"
-                    title="مراسلة فورية"
+                    className="h-9 px-3 text-xs text-[#2c5282] dark:text-sky-400 hover:bg-blue-50 dark:hover:bg-sky-950/50 rounded-lg flex items-center gap-1.5 shrink-0"
+                    title={isRTL ? 'مراسلة فورية' : 'Message direct'}
                   >
                     <Mail className="h-3.5 w-3.5" />
-                    <span>مراسلة</span>
+                    <span>{isRTL ? 'مراسلة' : 'Écrire'}</span>
                   </Button>
                 </div>
               );

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { FileText, Download, Edit, Trash2, Plus, Upload, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import TemplateDialog from '@/components/templates/TemplateDialog';
 
 const TemplatesPage = () => {
@@ -73,7 +73,7 @@ const TemplatesPage = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const canManageTemplates = currentUser?.role === 'AdminTuningDesk';
+  const canManageTemplates = ['Admin', 'AdminTuningDesk'].includes(currentUser?.role || '');
 
   if (isLoading) {
     return (
@@ -160,7 +160,7 @@ const TemplatesPage = () => {
                     <span>{template.downloads} تحميل</span>
                   </div>
                   <span>•</span>
-                  <span>{formatArabicDate(template.createdAt)}</span>
+                  <bdi dir="rtl" className="tabular-nums">{formatLongDate(template.createdAt, 'ar')}</bdi>
                   <span>•</span>
                   <span>بواسطة: {template.uploadedBy.username}</span>
                 </div>

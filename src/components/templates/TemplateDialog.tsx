@@ -147,30 +147,30 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm" dir="rtl">
-        <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 sm:p-8 space-y-6 shadow-lg" dir="rtl">
+        <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-800">
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] dark:text-sky-300">
             {isEditing ? 'تعديل النموذج' : 'إضافة نموذج جديد'}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-base font-bold text-[#1a202c]">
-              اسم النموذج <span className="text-red-600">*</span>
+            <Label htmlFor="name" className="text-base font-bold text-[#1a202c] dark:text-slate-100">
+              اسم النموذج <span className="text-red-600 dark:text-red-400">*</span>
             </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="أدخل اسم النموذج..."
-              className="h-11 text-base border-[#cbd5e1] rounded bg-white focus:border-[#2c5282]"
+              className="h-11 text-base border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-[#2c5282] dark:focus:border-sky-400"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-base font-bold text-[#1a202c]">
+            <Label htmlFor="description" className="text-base font-bold text-[#1a202c] dark:text-slate-100">
               الوصف
             </Label>
             <Textarea
@@ -178,22 +178,22 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="أدخل وصف النموذج (اختياري)..."
-              className="text-base border-[#cbd5e1] rounded min-h-[90px] p-3 focus:border-[#2c5282]"
+              className="text-base border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 min-h-[90px] p-3 focus:border-[#2c5282] dark:focus:border-sky-400"
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-base font-bold text-[#1a202c]">
-              ملف النموذج {!isEditing && <span className="text-red-600">*</span>}
-              {isEditing && <span className="text-sm font-normal text-gray-500"> (اختياري - اتركه فارغاً للاحتفاظ بالملف الحالي)</span>}
+            <Label className="text-base font-bold text-[#1a202c] dark:text-slate-100">
+              ملف النموذج {!isEditing && <span className="text-red-600 dark:text-red-400">*</span>}
+              {isEditing && <span className="text-sm font-normal text-slate-500 dark:text-slate-400"> (اختياري - اتركه فارغاً للاحتفاظ بالملف الحالي)</span>}
             </Label>
             
             <div
-              className={`border-2 border-dashed rounded p-6 text-center cursor-pointer transition-colors ${
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                 dragActive 
-                  ? 'border-[#2c5282] bg-[#2c5282]/5' 
-                  : 'border-gray-300 hover:border-[#2c5282]'
+                  ? 'border-[#2c5282] dark:border-sky-400 bg-[#2c5282]/5 dark:bg-sky-950/30' 
+                  : 'border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/50 hover:border-[#2c5282] dark:hover:border-sky-500'
               }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -211,17 +211,17 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
               
               {selectedFile ? (
                 <div className="space-y-2">
-                  <FileText className="h-10 w-10 mx-auto text-emerald-600" />
-                  <p className="font-bold text-base text-[#1a202c]">{selectedFile.name}</p>
-                  <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                  <FileText className="h-10 w-10 mx-auto text-emerald-600 dark:text-emerald-400" />
+                  <p className="font-bold text-base text-[#1a202c] dark:text-slate-100">{selectedFile.name}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 tabular-nums">{formatFileSize(selectedFile.size)}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Upload className="h-10 w-10 mx-auto text-[#2c5282]" />
-                  <p className="text-base font-medium text-gray-700">
+                  <Upload className="h-10 w-10 mx-auto text-[#2c5282] dark:text-sky-400" />
+                  <p className="text-base font-medium text-slate-700 dark:text-slate-200">
                     اسحب وأفلت ملف Word هنا أو انقر للاختيار
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     يدعم فقط ملفات .doc و .docx
                   </p>
                 </div>
@@ -229,11 +229,11 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
             </div>
           </div>
 
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-[#e2e8f0]">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800">
             <Button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="h-11 px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-none"
+              className="h-11 px-7 rounded-lg bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-none"
             >
               {createMutation.isPending || updateMutation.isPending
                 ? 'جاري الحفظ...'
@@ -246,7 +246,7 @@ const TemplateDialog: React.FC<TemplateDialogProps> = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="h-11 px-6 rounded border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 text-base font-medium"
+              className="h-11 px-6 rounded-lg border-slate-300 dark:border-slate-700 text-[#2d3748] dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-base font-medium"
             >
               إلغاء
             </Button>

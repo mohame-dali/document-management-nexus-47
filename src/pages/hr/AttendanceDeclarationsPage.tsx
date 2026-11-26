@@ -16,7 +16,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useDirection } from '@/i18n/useDirection';
+import { PersonnelAvatar } from '@/components/hr/PersonnelAvatar';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Dialog,
   DialogContent,
@@ -50,9 +53,11 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { getErrorMessage } from '@/utils/errorMessages';
+import { formatDateWithWeekday, formatShortDate } from '@/utils/formatDate';
 
 export const AttendanceDeclarationsPage: React.FC = () => {
   const { t } = useTranslation();
+  const { dir, isRTL } = useDirection();
 
   // Liste des déclarations & chargement
   const [declarations, setDeclarations] = useState<AttendanceDeclaration[]>([]);
@@ -293,29 +298,29 @@ export const AttendanceDeclarationsPage: React.FC = () => {
     switch (status) {
       case 'en_attente':
         return (
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border border-amber-300 font-medium px-2.5 py-0.5 gap-1">
-            <Clock className="w-3 h-3 text-amber-600" />
+          <Badge className="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60 border border-amber-300 dark:border-amber-800 font-medium px-2.5 py-0.5 gap-1">
+            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
             قيد المراجعة
           </Badge>
         );
       case 'approuvee':
         return (
-          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 font-medium px-2.5 py-0.5 gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+          <Badge className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 font-medium px-2.5 py-0.5 gap-1">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
             مقبول ومعتمد
           </Badge>
         );
       case 'rejetee':
         return (
-          <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border border-red-300 font-medium px-2.5 py-0.5 gap-1">
-            <XCircle className="w-3 h-3 text-red-600" />
+          <Badge className="bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/60 border border-red-300 dark:border-red-800 font-medium px-2.5 py-0.5 gap-1">
+            <XCircle className="w-3 h-3 text-red-600 dark:text-red-400" />
             مرفوض
           </Badge>
         );
       case 'modifiee':
         return (
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border border-blue-300 font-medium px-2.5 py-0.5 gap-1">
-            <Edit3 className="w-3 h-3 text-blue-600" />
+          <Badge className="bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/60 border border-blue-300 dark:border-blue-800 font-medium px-2.5 py-0.5 gap-1">
+            <Edit3 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
             تم التعديل
           </Badge>
         );
@@ -328,7 +333,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
   const getMotifLabel = (decl: AttendanceDeclaration) => {
     if (decl.statut === 'present') {
       return (
-        <span className="inline-flex items-center gap-1 text-emerald-700 font-medium">
+        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium tabular-nums">
           <UserCheck className="w-3.5 h-3.5" />
           حاضر {decl.heureArrivee ? `(${decl.heureArrivee})` : ''}
         </span>
@@ -337,32 +342,35 @@ export const AttendanceDeclarationsPage: React.FC = () => {
     const lrId = typeof decl.leaveReasonId === 'object' && decl.leaveReasonId !== null ? (decl.leaveReasonId as LeaveReason)._id : decl.leaveReasonId;
     const found = leaveReasons.find((r) => r.code === decl.motif || r._id === lrId);
     return (
-      <span className="inline-flex items-center gap-1 text-amber-800 font-medium">
-        <UserX className="w-3.5 h-3.5 text-amber-600" />
+      <span className="inline-flex items-center gap-1 text-amber-800 dark:text-amber-300 font-medium">
+        <UserX className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
         {found ? found.labelAr : decl.motif || 'غياب مبرر'}
       </span>
     );
   };
 
+  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
+
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto text-start" dir={dir}>
       {/* En-tête de la page */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#2c5282]/10 rounded-lg text-[#2c5282]">
+            <div className="p-2.5 bg-[#2c5282]/10 dark:bg-sky-900/40 rounded-lg text-[#2c5282] dark:text-sky-300">
               <ClipboardList className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                الإعلانات والتصاريح في انتظار الموافقة
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
+                <span>الإعلانات والتصاريح في انتظار الموافقة</span>
                 {kpis.pending > 0 && (
-                  <span className="text-xs bg-[#FFCB56] text-[#111827] border border-[#d97706] font-bold px-2 py-0.5 rounded animate-pulse">
+                  <span className="text-xs bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold px-2.5 py-0.5 rounded-full tabular-nums">
                     {kpis.pending} معلقة
                   </span>
                 )}
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 مراجعة تصاريح الحضور والغياب والمأموريات المقدمة مسبقاً من طرف الموظفين واعتمادها في السجل اليومي.
               </p>
             </div>
@@ -374,10 +382,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             variant="outline"
             onClick={fetchDeclarations}
             disabled={loading}
-            className="h-11 min-h-[44px] border-[#e2e8f0] text-gray-700 hover:bg-gray-100 gap-2"
+            className="h-10 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg gap-2"
           >
             <RotateCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            تحديث
+            <span>تحديث</span>
           </Button>
         </div>
       </div>
@@ -390,21 +398,21 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             setStatusFilter('en_attente');
             setPage(1);
           }}
-          className={`cursor-pointer p-4 rounded-lg border transition-all ${
+          className={`cursor-pointer p-4 rounded-lg border border-t-2 border-t-amber-500 dark:border-t-amber-400 shadow-sm transition-all ${
             statusFilter === 'en_attente'
-              ? 'bg-amber-50/70 border-amber-300 ring-2 ring-amber-400/50 shadow-sm'
-              : 'bg-white border-[#e2e8f0] hover:border-amber-200'
+              ? 'bg-amber-50/80 dark:bg-amber-950/35 border-amber-300 dark:border-amber-700 ring-2 ring-amber-400/50 dark:ring-amber-600/40'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-800">قيد المراجعة (معلقة)</span>
-            <div className="p-2 bg-amber-100 rounded-md text-amber-700">
+            <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">قيد المراجعة (معلقة)</span>
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg text-amber-700 dark:text-amber-300">
               <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-amber-900">{kpis.pending}</span>
-            <span className="text-xs text-amber-700">تتطلب اتخاذ قرار</span>
+            <span className="text-2xl font-extrabold text-amber-900 dark:text-amber-200 tabular-nums">{kpis.pending}</span>
+            <span className="text-xs text-amber-700 dark:text-amber-400">تتطلب اتخاذ قرار</span>
           </div>
         </div>
 
@@ -414,21 +422,21 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             setStatusFilter('approuvee');
             setPage(1);
           }}
-          className={`cursor-pointer p-4 rounded-lg border transition-all ${
+          className={`cursor-pointer p-4 rounded-lg border border-t-2 border-t-emerald-500 dark:border-t-emerald-400 shadow-sm transition-all ${
             statusFilter === 'approuvee'
-              ? 'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-400/50 shadow-sm'
-              : 'bg-white border-[#e2e8f0] hover:border-emerald-200'
+              ? 'bg-emerald-50/80 dark:bg-emerald-950/35 border-emerald-300 dark:border-emerald-700 ring-2 ring-emerald-400/50 dark:ring-emerald-600/40'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-800">المقبولة والمعتمدة</span>
-            <div className="p-2 bg-emerald-100 rounded-md text-emerald-700">
+            <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">المقبولة والمعتمدة</span>
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg text-emerald-700 dark:text-emerald-300">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-emerald-900">{kpis.approved}</span>
-            <span className="text-xs text-emerald-700">تم ترحيلها للسجل</span>
+            <span className="text-2xl font-extrabold text-emerald-900 dark:text-emerald-200 tabular-nums">{kpis.approved}</span>
+            <span className="text-xs text-emerald-700 dark:text-emerald-400">تم ترحيلها للسجل</span>
           </div>
         </div>
 
@@ -438,36 +446,36 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             setStatusFilter('rejetee');
             setPage(1);
           }}
-          className={`cursor-pointer p-4 rounded-lg border transition-all ${
+          className={`cursor-pointer p-4 rounded-lg border border-t-2 border-t-red-500 dark:border-t-red-400 shadow-sm transition-all ${
             statusFilter === 'rejetee'
-              ? 'bg-red-50/70 border-red-300 ring-2 ring-red-400/50 shadow-sm'
-              : 'bg-white border-[#e2e8f0] hover:border-red-200'
+              ? 'bg-red-50/80 dark:bg-red-950/35 border-red-300 dark:border-red-700 ring-2 ring-red-400/50 dark:ring-red-600/40'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-red-300 dark:hover:border-red-800'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-red-800">المرفوضة</span>
-            <div className="p-2 bg-red-100 rounded-md text-red-700">
+            <span className="text-xs font-semibold text-red-800 dark:text-red-300">المرفوضة</span>
+            <div className="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg text-red-700 dark:text-red-300">
               <XCircle className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-red-900">{kpis.rejected}</span>
-            <span className="text-xs text-red-700">تم إشعار أصحابها</span>
+            <span className="text-2xl font-extrabold text-red-900 dark:text-red-200 tabular-nums">{kpis.rejected}</span>
+            <span className="text-xs text-red-700 dark:text-red-400">تم إشعار أصحابها</span>
           </div>
         </div>
       </div>
 
       {/* Barre des filtres */}
-      <div className="bg-white p-4 rounded-lg border border-[#e2e8f0] shadow-sm space-y-3">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {/* Recherche */}
           <div className="relative">
-            <Search className="w-4 h-4 text-gray-400 absolute right-3 top-3" />
+            <Search className="w-4 h-4 text-slate-400 absolute start-3 top-3" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو الرقم الوظيفي..."
-              className="h-10 pr-9 border-[#e2e8f0] text-sm"
+              className="h-10 ps-9 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm"
             />
           </div>
 
@@ -480,10 +488,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
+              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm">
                 <SelectValue placeholder="تصفية حسب الحالة" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir={dir}>
                 <SelectItem value="all">كل الحالات ({total || declarations.length})</SelectItem>
                 <SelectItem value="en_attente">قيد المراجعة فقط</SelectItem>
                 <SelectItem value="approuvee">المقبولة</SelectItem>
@@ -502,10 +510,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-10 border-[#e2e8f0] bg-white text-sm">
+              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm">
                 <SelectValue placeholder="كل الأقسام / المصالح" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir={dir}>
                 <SelectItem value="all">كل الأقسام والمصالح</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept._id} value={dept._id}>
@@ -525,7 +533,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 setDateFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-10 border-[#e2e8f0] text-sm"
+              className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg text-sm tabular-nums"
             />
             {dateFilter && (
               <Button
@@ -535,7 +543,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                   setDateFilter('');
                   setPage(1);
                 }}
-                className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-gray-500 hover:text-gray-700"
+                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg shrink-0"
                 aria-label={t('attendance.declarations.clearDateAria')}
                 title={t('attendance.declarations.clearDateAria')}
               >
@@ -547,63 +555,53 @@ export const AttendanceDeclarationsPage: React.FC = () => {
       </div>
 
       {/* Tableau des déclarations */}
-      <div className="bg-white rounded-lg border border-[#e2e8f0] shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-gray-500 space-y-2">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2c5282]" />
-            <p className="text-sm">جاري تحميل التصاريح...</p>
-          </div>
+          <TableSkeleton rows={6} columns={6} />
         ) : filteredDeclarations.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-400">
-              <ClipboardList className="w-6 h-6" />
-            </div>
-            <p className="text-base font-semibold text-gray-700">لا توجد تصاريح مطابقة للشروط</p>
-            <p className="text-xs text-gray-400 max-w-sm mx-auto">
-              لم يقم أي موظف بتقديم تصريح في هذه الفترة أو تم البت في جميع الطلبات المقدمة مسبقاً.
-            </p>
-          </div>
+          <EmptyState
+            className="border-0 rounded-none py-14"
+            icon={<ClipboardList className="w-6 h-6" />}
+            title="لا توجد تصاريح مطابقة للشروط"
+            description="لم يقم أي موظف بتقديم تصريح في هذه الفترة أو تم البت في جميع الطلبات المقدمة مسبقاً."
+          />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
-              <thead className="bg-gray-50 border-b border-[#e2e8f0] text-xs font-bold text-gray-600">
+          <div className="overflow-x-auto max-h-[68vh]">
+            <table className="w-full text-start text-sm border-collapse">
+              <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300">
                 <tr>
-                  <th className="py-3 px-4">الموظف</th>
-                  <th className="py-3 px-4">التاريخ المعني</th>
-                  <th className="py-3 px-4">الحالة</th>
-                  <th className="py-3 px-4">نوع التصريح / السبب</th>
-                  <th className="py-3 px-4">التفاصيل والملاحظات</th>
-                  <th className="py-3 px-4 text-center">الإجراءات</th>
+                  <th className="py-3 px-4 sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 whitespace-nowrap">الموظف</th>
+                  <th className="py-3 px-4 whitespace-nowrap">التاريخ المعني</th>
+                  <th className="py-3 px-4 whitespace-nowrap">الحالة</th>
+                  <th className="py-3 px-4 whitespace-nowrap">نوع التصريح / السبب</th>
+                  <th className="py-3 px-4 whitespace-nowrap">التفاصيل والملاحظات</th>
+                  <th className="py-3 px-4 text-center whitespace-nowrap">الإجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e2e8f0]">
+              <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800">
                 {filteredDeclarations.map((decl) => {
                   const pers = typeof decl.personnelId === 'object' && decl.personnelId !== null ? decl.personnelId : null;
                   const dept = typeof decl.departmentId === 'object' && decl.departmentId !== null ? decl.departmentId : null;
-                  const formattedDate = new Date(decl.date).toLocaleDateString('fr-FR', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  });
+                  const formattedDate = formatDateWithWeekday(decl.date, isRTL ? 'ar' : 'fr');
 
                   return (
-                    <tr key={decl._id} className="hover:bg-gray-50/80 transition-colors">
+                    <tr key={decl._id} className="group hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors">
                       {/* الموظف */}
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 sticky start-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/95 transition-colors">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 border border-gray-200">
-                            {pers?.photo && <AvatarImage src={pers.photo} />}
-                            <AvatarFallback className="bg-[#2c5282] text-white font-bold text-xs">
-                              {pers ? `${pers.nom?.[0] || ''}${pers.prenom?.[0] || ''}` : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
+                          <PersonnelAvatar
+                            photo={pers?.photo}
+                            nom={pers?.nom}
+                            prenom={pers?.prenom}
+                            size="sm"
+                            className="h-9 w-9"
+                          />
                           <div>
-                            <div className="font-semibold text-gray-900">
+                            <div className="font-semibold text-slate-900 dark:text-slate-100">
                               {pers ? `${pers.nom} ${pers.prenom}` : 'موظف غير معرف'}
                             </div>
-                            <div className="text-xs text-gray-400 flex items-center gap-2">
-                              {pers?.matricule && <span>{pers.matricule}</span>}
+                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                              {pers?.matricule && <span className="tabular-nums">{pers.matricule}</span>}
                               {dept?.name && <span>• {dept.name}</span>}
                             </div>
                           </div>
@@ -612,12 +610,12 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
                       {/* التاريخ */}
                       <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 text-gray-800 font-medium">
-                          <Calendar className="w-3.5 h-3.5 text-[#2c5282]" />
-                          <span>{formattedDate}</span>
+                        <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-medium tabular-nums">
+                          <Calendar className="w-3.5 h-3.5 text-[#2c5282] dark:text-sky-400" />
+                          <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formattedDate}</bdi>
                         </div>
-                        <span className="text-[11px] text-gray-400">
-                          قُدم: {new Date(decl.createdAt || '').toLocaleDateString('fr-FR')}
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                          قُدم: <bdi dir="ltr" className="tabular-nums">{formatShortDate(decl.createdAt)}</bdi>
                         </span>
                       </td>
 
@@ -635,34 +633,34 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                       <td className="py-3 px-4 max-w-xs">
                         <div className="space-y-1 text-xs">
                           {decl.detailsMotif?.nomService && (
-                            <div className="text-gray-700 font-medium">
+                            <div className="text-slate-700 dark:text-slate-300 font-medium">
                               المصلحة: {decl.detailsMotif.nomService}
                             </div>
                           )}
                           {decl.detailsMotif?.lieuMission && (
-                            <div className="text-gray-600 flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-gray-400" />
+                            <div className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                               {decl.detailsMotif.lieuMission} {decl.detailsMotif.objetMission ? `(${decl.detailsMotif.objetMission})` : ''}
                             </div>
                           )}
                           {decl.detailsMotif?.intituleFormation && (
-                            <div className="text-gray-600 flex items-center gap-1">
-                              <GraduationCap className="w-3 h-3 text-gray-400" />
+                            <div className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                              <GraduationCap className="w-3 h-3 text-slate-400 shrink-0" />
                               {decl.detailsMotif.intituleFormation}
                             </div>
                           )}
                           {decl.detailsMotif?.commentaire && (
-                            <p className="text-gray-500 italic truncate" title={decl.detailsMotif.commentaire}>
+                            <p className="text-slate-500 dark:text-slate-400 italic truncate" title={decl.detailsMotif.commentaire}>
                               "{decl.detailsMotif.commentaire}"
                             </p>
                           )}
                           {decl.rejectionReason && (
-                            <p className="text-red-600 text-[11px] font-semibold">
+                            <p className="text-red-600 dark:text-red-400 text-[11px] font-semibold">
                               سبب الرفض: {decl.rejectionReason}
                             </p>
                           )}
                           {decl.adminComment && (
-                            <p className="text-blue-600 text-[11px]">
+                            <p className="text-blue-600 dark:text-sky-400 text-[11px]">
                               ملاحظة الإدارة: {decl.adminComment}
                             </p>
                           )}
@@ -677,7 +675,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                               <Button
                                 size="sm"
                                 onClick={() => handleOpenApprove(decl)}
-                                className="h-11 min-h-[44px] px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 shadow-sm"
+                                className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 rounded-lg shadow-sm"
                                 title="موافقة واعتماد"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -688,7 +686,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleOpenReject(decl)}
-                                className="h-11 min-h-[44px] px-3.5 border-red-200 text-red-600 hover:bg-red-50 text-xs gap-1"
+                                className="h-9 px-3 border-red-200 dark:border-red-800/80 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs gap-1 rounded-lg"
                                 title="رفض التصريح"
                               >
                                 <XCircle className="w-3.5 h-3.5" />
@@ -699,7 +697,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleOpenEdit(decl)}
-                                className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-sky-400 hover:bg-blue-50 dark:hover:bg-sky-950/40 rounded-lg"
                                 title={t('attendance.declarations.editAria')}
                                 aria-label={t('attendance.declarations.editAria')}
                               >
@@ -711,7 +709,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => handleOpenEdit(decl)}
-                              className="h-11 min-h-[44px] px-3.5 border-[#e2e8f0] text-gray-600 hover:bg-gray-100 text-xs gap-1"
+                              className="h-9 px-3 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs gap-1 rounded-lg"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                               <span>مراجعة / تعديل</span>
@@ -729,8 +727,8 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
         {/* Pagination */}
         {!loading && total > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-[#e2e8f0] bg-gray-50/70">
-            <div className="text-xs text-gray-600">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80">
+            <div className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
               عرض <strong>{declarations.length}</strong> من أصل <strong>{total}</strong> تصريح — صفحة{' '}
               <strong>{page}</strong> من <strong>{Math.max(totalPages, 1)}</strong>
             </div>
@@ -741,9 +739,9 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1 || loading}
-                className="h-9 px-3 border-[#e2e8f0] text-gray-700 gap-1"
+                className="h-9 px-3 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg gap-1"
               >
-                <ChevronRight className="w-4 h-4" />
+                <PrevIcon className="w-4 h-4" />
                 <span>السابق</span>
               </Button>
               <Button
@@ -752,10 +750,10 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 size="sm"
                 onClick={() => setPage((p) => (totalPages > 0 ? Math.min(totalPages, p + 1) : p + 1))}
                 disabled={page >= totalPages || loading}
-                className="h-9 px-3 border-[#e2e8f0] text-gray-700 gap-1"
+                className="h-9 px-3 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg gap-1"
               >
                 <span>التالي</span>
-                <ChevronLeft className="w-4 h-4" />
+                <NextIcon className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -764,24 +762,26 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal d'approbation avec commentaire optionnel */}
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
-        <DialogContent className="sm:max-w-[460px] text-right">
+        <DialogContent dir={dir} className="sm:max-w-[460px] text-start rounded-xl bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2 text-emerald-700">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <DialogTitle className="text-lg font-bold flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               تأكيد اعتماد التصريح وترحيله للسجل
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-gray-600 leading-relaxed">
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               عند التأكيد، سيتم ترحيل هذه الوضعية مباشرة إلى سجل الحضور اليومي للمؤسسة ليوم{' '}
-              <strong className="text-gray-900">
-                {activeDeclaration && new Date(activeDeclaration.date).toLocaleDateString('fr-FR')}
+              <strong className="text-slate-900 dark:text-slate-100 tabular-nums">
+                {activeDeclaration && (
+                  <bdi dir="ltr" className="tabular-nums">{formatShortDate(activeDeclaration.date)}</bdi>
+                )}
               </strong>
               .
             </p>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-gray-700">
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 ملاحظة الإدارة (اختياري)
               </Label>
               <Textarea
@@ -789,16 +789,17 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 value={adminComment}
                 onChange={(e) => setAdminComment(e.target.value)}
                 placeholder="أية ملاحظة تود توثيقها في سجل المراجعة..."
-                className="text-sm border-[#e2e8f0]"
+                className="text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>
-          <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 pt-2 border-t">
+          <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"
               onClick={() => setReviewModalOpen(false)}
               disabled={isProcessing}
+              className="border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               تراجع
             </Button>
@@ -817,20 +818,20 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal de Rejet avec motif obligatoire */}
       <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
-        <DialogContent className="sm:max-w-[460px] text-right">
+        <DialogContent dir={dir} className="sm:max-w-[460px] text-start rounded-xl bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
-              <XCircle className="w-5 h-5 text-red-600" />
+            <DialogTitle className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
               رفض تصريح الحضور / الغياب
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               يرجى إدخال سبب الرفض ليتمكن الموظف من الاطلاع عليه وتصحيح وضعيته إذا لزم الأمر:
             </p>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-gray-700">
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 سبب الرفض <span className="text-red-500">*</span>
               </Label>
               <Textarea
@@ -838,26 +839,27 @@ export const AttendanceDeclarationsPage: React.FC = () => {
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="مثال: تعارض مع مأمورية سابقة، عدم تقديم إذن مسبق، ضرورة الحضور للاجتماع..."
-                className="text-sm border-red-200 focus:border-red-500"
+                className="text-sm border-red-200 dark:border-red-800 focus:border-red-500 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-gray-700">ملاحظة داخلية إضافية (اختياري)</Label>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">ملاحظة داخلية إضافية (اختياري)</Label>
               <Input
                 value={adminComment}
                 onChange={(e) => setAdminComment(e.target.value)}
                 placeholder="ملاحظة للإدارة..."
-                className="h-10 text-sm border-[#e2e8f0]"
+                className="h-10 text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>
-          <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 pt-2 border-t">
+          <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"
               onClick={() => setRejectModalOpen(false)}
               disabled={isProcessing}
+              className="border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               إلغاء
             </Button>
@@ -876,25 +878,25 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
       {/* Modal d'Édition Admin */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="sm:max-w-[520px] text-right">
+        <DialogContent dir={dir} className="sm:max-w-[520px] text-start rounded-xl bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <Edit3 className="w-5 h-5 text-[#2c5282]" />
+            <DialogTitle className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Edit3 className="w-5 h-5 text-[#2c5282] dark:text-sky-400" />
               تعديل بيانات التصريح (إدارة الموارد البشرية)
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">الوضعية</Label>
+                <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">الوضعية</Label>
                 <Select
                   value={editForm.statut}
                   onValueChange={(val: 'present' | 'absent') => setEditForm((prev) => ({ ...prev, statut: val }))}
                 >
-                  <SelectTrigger className="h-10 border-[#e2e8f0]">
+                  <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir={dir}>
                     <SelectItem value="present">حاضر</SelectItem>
                     <SelectItem value="absent">غائب / مصلحة</SelectItem>
                   </SelectContent>
@@ -903,25 +905,25 @@ export const AttendanceDeclarationsPage: React.FC = () => {
 
               {editForm.statut === 'present' ? (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-gray-700">ساعة الحضور</Label>
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">ساعة الحضور</Label>
                   <Input
                     type="time"
                     value={editForm.heureArrivee}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, heureArrivee: e.target.value }))}
-                    className="h-10 border-[#e2e8f0]"
+                    className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
                   />
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-gray-700">سبب الغياب</Label>
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">سبب الغياب</Label>
                   <Select
                     value={editForm.motif}
                     onValueChange={(val) => setEditForm((prev) => ({ ...prev, motif: val }))}
                   >
-                    <SelectTrigger className="h-10 border-[#e2e8f0]">
+                    <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100">
                       <SelectValue placeholder="اختر السبب" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent dir={dir}>
                       {leaveReasons.map((r) => (
                         <SelectItem key={r._id} value={r.code}>
                           {r.labelAr}
@@ -936,29 +938,29 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             {editForm.statut === 'absent' && (
               <>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-gray-700">اسم المصلحة / الإدارة</Label>
+                  <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">اسم المصلحة / الإدارة</Label>
                   <Input
                     value={editForm.nomService}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, nomService: e.target.value }))}
                     placeholder="اسم المصلحة المستقبلة..."
-                    className="h-10 border-[#e2e8f0]"
+                    className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700">مكان المأمورية</Label>
+                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">مكان المأمورية</Label>
                     <Input
                       value={editForm.lieuMission}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, lieuMission: e.target.value }))}
-                      className="h-10 border-[#e2e8f0]"
+                      className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-gray-700">موضوع المأمورية</Label>
+                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">موضوع المأمورية</Label>
                     <Input
                       value={editForm.objetMission}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, objetMission: e.target.value }))}
-                      className="h-10 border-[#e2e8f0]"
+                      className="h-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
                     />
                   </div>
                 </div>
@@ -966,22 +968,23 @@ export const AttendanceDeclarationsPage: React.FC = () => {
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-gray-700">ملاحظة التعديل للملف</Label>
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">ملاحظة التعديل للملف</Label>
               <Textarea
                 rows={2}
                 value={editForm.adminComment}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, adminComment: e.target.value }))}
                 placeholder="سبب التعديل من طرف الإدارة..."
-                className="text-sm border-[#e2e8f0]"
+                className="text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>
-          <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 pt-2 border-t">
+          <DialogFooter className="flex items-center justify-between sm:justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
             <Button
               type="button"
               variant="outline"
               onClick={() => setEditModalOpen(false)}
               disabled={isProcessing}
+              className="border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               إلغاء
             </Button>
@@ -989,7 +992,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
               type="button"
               onClick={handleConfirmEdit}
               disabled={isProcessing}
-              className="bg-[#2c5282] hover:bg-[#1a365d] text-white font-medium"
+              className="bg-[#2c5282] hover:bg-[#1a365d] dark:bg-sky-700 dark:hover:bg-sky-600 text-white font-medium"
             >
               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'حفظ التعديلات'}
             </Button>

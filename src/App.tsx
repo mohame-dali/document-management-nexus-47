@@ -1,15 +1,16 @@
 
 import { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageProvider';
 import { DepartmentProvider } from './components/department/DepartmentContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { getOrganizationSettings } from './services/hr/personnelApi';
 import DashboardLayout from './components/layouts/DashboardLayout';
 import {
   MailHubLayout,
@@ -109,6 +110,58 @@ const RedirectWithId = ({ toPrefix, suffix = '' }: { toPrefix: string; suffix?: 
   return <Navigate to={`${toPrefix}/${id || ''}${suffix ? `/${suffix}` : ''}`} replace />;
 };
 
+/** Garde RH : Admin, Director, ou AdminDepartment rattaché au département RH */
+const HRProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { currentUser, loading } = useAuth();
+  const isDeptAdmin = currentUser?.role === 'AdminDepartment';
+
+  const { data: orgSettings, isLoading: orgLoading } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+    enabled: Boolean(isDeptAdmin),
+  });
+
+  if (loading || (isDeptAdmin && orgLoading)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (['Admin', 'Director'].includes(currentUser.role)) {
+    return <>{children}</>;
+  }
+
+  if (currentUser.role === 'AdminDepartment') {
+    const rhDepartmentId =
+      typeof orgSettings?.rhDepartmentId === 'object' && orgSettings?.rhDepartmentId !== null
+        ? (orgSettings.rhDepartmentId as { _id?: string })._id
+        : orgSettings?.rhDepartmentId;
+    const userActiveDeptId =
+      typeof currentUser.activeDepartment === 'object' && currentUser.activeDepartment !== null
+        ? currentUser.activeDepartment._id
+        : currentUser.activeDepartment;
+
+    if (
+      Boolean(rhDepartmentId) &&
+      Boolean(userActiveDeptId) &&
+      String(userActiveDeptId) === String(rhDepartmentId)
+    ) {
+      return <>{children}</>;
+    }
+
+    return <Navigate to="/dashboard/admin-department" replace />;
+  }
+
+  return <Navigate to="/403" replace />;
+};
+
 function App() {
   return (
     <ErrorBoundary>
@@ -185,9 +238,9 @@ function App() {
 
                         {/* Hub 2 : الموارد البشرية (Ressources Humaines - 7 onglets) */}
                         <Route path="hr" element={
-                          <ProtectedRoute allowedRoles={['Admin', 'AdminDepartment', 'Director']}>
+                          <HRProtectedRoute>
                             <HRHubLayout />
-                          </ProtectedRoute>
+                          </HRProtectedRoute>
                         }>
                           <Route index element={<Navigate to="/dashboard/hr/personnel" replace />} />
                           <Route path="personnel" element={<PersonnelListPage />} />

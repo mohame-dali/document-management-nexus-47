@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createUserWithPhoto } from '@/services/userService';
+import { createUserWithPhoto, deleteUser, permanentDeleteUser } from '@/services/userService';
 import { getDepartments } from '@/services/departmentService';
 import { linkUserToPersonnel } from '@/services/hr/personnelApi';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,21 +33,25 @@ const CreateUser: React.FC = () => {
       // 2. Création du compte utilisateur
       const newUser = await createUserWithPhoto(userData, photoFile || undefined);
 
-      // 3. Si un personnelId a été envoyé, lier le User à la fiche Personnel
-      let linkSuccess = true;
+      // 3. Si un personnelId a été envoyé, lier le User à la fiche Personnel (avec rollback si échec)
       if (personnelId && newUser?._id) {
         try {
           await linkUserToPersonnel(personnelId, newUser._id);
         } catch (linkError) {
-          console.error('Error linking user to personnel:', linkError);
-          linkSuccess = false;
+          console.error('Error linking user to personnel, rolling back created user:', linkError);
+          try {
+            await deleteUser(newUser._id);
+            await permanentDeleteUser(newUser._id);
+          } catch (rollbackError) {
+            console.error('Rollback failed for orphan user:', newUser._id, rollbackError);
+          }
+          throw linkError;
         }
       }
 
       return {
         newUser,
         hasPersonnel: Boolean(personnelId),
-        linkSuccess,
       };
     },
     onSuccess: (result) => {
@@ -55,13 +59,11 @@ const CreateUser: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['personnels-for-user-form'] });
       queryClient.invalidateQueries({ queryKey: ['personnel-en-attente'] });
+      queryClient.invalidateQueries({ queryKey: ['personnel-list'] });
       queryClient.invalidateQueries({ queryKey: ['hr', 'personnel'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
 
-      if (result.hasPersonnel && !result.linkSuccess) {
-        toast.warning(
-          "Compte créé, mais l'association à la fiche Personnel a échoué. Veuillez réessayer depuis le module RH."
-        );
-      } else if (result.hasPersonnel && result.linkSuccess) {
+      if (result.hasPersonnel) {
         toast.success('Compte créé et fiche Personnel associée avec succès.');
       } else {
         toast.success('تم إنشاء المستخدم بنجاح');
@@ -71,9 +73,15 @@ const CreateUser: React.FC = () => {
     },
     onError: (error: unknown) => {
       console.error('Error creating user:', error);
-      const errorMsg = error && typeof error === 'object' && 'response' in error && (error as { response?: { data?: { error?: string } } }).response?.data?.error
-        ? (error as { response?: { data?: { error?: string } } }).response!.data!.error!
-        : 'فشل في إنشاء المستخدم';
+      const errObj = error as {
+        response?: { data?: { message?: string; error?: string } };
+        message?: string;
+      };
+      const errorMsg =
+        errObj?.response?.data?.message ||
+        errObj?.response?.data?.error ||
+        errObj?.message ||
+        'فشل في إنشاء المستخدم';
       toast.error(errorMsg);
     }
   });
@@ -249,7 +257,9 @@ const CreateUser: React.FC = () => {
         currentUserDepartment={
           typeof currentUser?.activeDepartment === 'object' && currentUser?.activeDepartment
             ? currentUser.activeDepartment._id
-            : (currentUser?.activeDepartment as string) || ''
+            : typeof currentUser?.activeDepartment === 'string'
+              ? currentUser.activeDepartment
+              : ''
         }
       />
     </div>

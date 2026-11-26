@@ -6,6 +6,8 @@ const { handleUploadedFile } = require('../../../utils/fileUploadHandler');
 const { handleScannedDocument } = require('../../../utils/scannedDocumentHandler');
 const { getDocumentPath, createYearFolder } = require('../../../utils/documentHelper');
 const { createActivityNotifications, updateActivityNotifications } = require('../../../utils/activityNotificationHelper');
+const { isSameDocumentPath, prepareNextVersionState, appendNewVersion } = require('../../../utils/documentVersionHelper');
+const { computeFileSha256 } = require('../../../utils/fileSecurity');
 const fs = require('fs');
 const path = require('path');
 
@@ -107,60 +109,75 @@ exports.updateIncomingDocument = async (req, res, next) => {
       }));
     }
     
-    // Handle document updates (upload or scan)
-    if (req.file || req.body.scannedDocumentPath) {
-      // Delete old file if exists
-      if (document.scannedDocument) {
-        const oldFilePath = path.join(__dirname, '../../..', document.scannedDocument);
-        if (fs.existsSync(oldFilePath)) {
-          try {
-            fs.unlinkSync(oldFilePath);
-            console.log(`Deleted old file: ${oldFilePath}`);
-          } catch (deleteErr) {
-            console.warn('Could not delete old file:', deleteErr);
-          }
-        }
-      }
-      
+    // Handle document updates (upload or scan) with immutable versioning
+    const hasNewScannedPath = Boolean(
+      req.body.scannedDocumentPath &&
+      req.body.scannedDocumentPath.trim() !== '' &&
+      !isSameDocumentPath(req.body.scannedDocumentPath, document.scannedDocument)
+    );
+
+    if (req.file || hasNewScannedPath) {
       // Get year and serial number from document or updated data
       const year = updateData.year || document.year;
       const serialNumber = updateData.serialNumber || document.serialNumber;
-      
+      const { seededVersions, nextVersion } = prepareNextVersionState(document);
+
       // Define the final folder path
       const finalFolderPath = getDocumentPath('incoming', year);
       await createYearFolder(finalFolderPath);
-      
+
       let documentPath = null;
       let ocrText = null;
       let ocrStatus = null;
       let ocrError = null;
       const scanId = req.body.scanId ? String(req.body.scanId).trim() : '';
-      
+
       if (req.file) {
-        // Handle file upload
-        const result = await handleUploadedFile(req.file, serialNumber, finalFolderPath, 'incoming');
+        // Handle file upload with next version suffix
+        const result = await handleUploadedFile(req.file, serialNumber, finalFolderPath, 'incoming', { version: nextVersion });
         documentPath = result.finalDocumentPath;
         ocrText = result.ocrText;
         ocrStatus = ocrText ? 'completed' : null;
-      } else if (req.body.scannedDocumentPath) {
-        // Handle scanned document
+      } else if (hasNewScannedPath) {
+        // Handle scanned document with next version suffix
         const result = await handleScannedDocument(
-          req.user._id, 
-          serialNumber, 
-          finalFolderPath, 
-          'incoming', 
-          req.body.scannedDocumentPath, 
+          req.user._id,
+          serialNumber,
+          finalFolderPath,
+          'incoming',
+          req.body.scannedDocumentPath,
           req.body.ocrText,
-          { scanId }
+          { scanId, version: nextVersion }
         );
         documentPath = result.finalDocumentPath;
         ocrText = result.ocrText || req.body.ocrText;
         ocrStatus = result.ocrStatus || (ocrText ? 'completed' : null);
         ocrError = result.ocrError || null;
       }
-      
+
       if (documentPath) {
+        let sha256 = null;
+        let fileSize = null;
+        try {
+          const absFilePath = path.resolve(__dirname, '../../..', documentPath);
+          if (fs.existsSync(absFilePath) && fs.statSync(absFilePath).isFile()) {
+            fileSize = fs.statSync(absFilePath).size;
+            sha256 = computeFileSha256(absFilePath);
+          }
+        } catch (_) {}
+
+        const versionState = appendNewVersion(seededVersions, nextVersion, documentPath, {
+          ocrText,
+          ocrStatus,
+          ocrError,
+          sha256,
+          fileSize,
+          uploadedBy: req.user._id,
+        });
+
         updateData.scannedDocument = documentPath;
+        updateData.currentVersion = versionState.currentVersion;
+        updateData.versions = versionState.versions;
         if (ocrText) {
           updateData.ocrText = ocrText;
         }

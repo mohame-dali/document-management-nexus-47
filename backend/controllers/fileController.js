@@ -109,18 +109,63 @@ exports.serveProtectedFile = async (req, res) => {
     }
 
     const safeFilename = path.basename(filename);
-    const ROOT = path.resolve(process.env.DOCUMENT_PATH || path.join(__dirname, '../../backend/courrier'));
+    const ROOT = path.resolve(process.env.DOCUMENT_PATH || path.join(__dirname, '../courrier'));
+    const BACKEND_ROOT = path.resolve(__dirname, '..');
     const ALLOWED_ROOT = path.resolve(process.cwd());
 
-    // Check multiple potential locations safely
-    const possiblePaths = [
-      path.resolve(ROOT, safeFilename),
-      doc.year ? path.resolve(ROOT, String(doc.year), safeFilename) : null,
-      doc.year ? path.resolve(ROOT, String(doc.year), type === 'incoming' ? 'Incoming-Doc' : 'Outgoing-Doc', safeFilename) : null,
-      path.resolve(process.cwd(), 'backend', 'uploads', safeFilename),
-      path.resolve(process.cwd(), 'uploads', safeFilename),
-      doc.scannedDocument ? path.resolve(process.cwd(), doc.scannedDocument) : null,
-    ].filter(Boolean);
+    let requestedDocPath = doc.scannedDocument || null;
+    const rawVersionParam = req.query?.version;
+    let isExplicitVersion = false;
+
+    if (rawVersionParam !== undefined && rawVersionParam !== null && String(rawVersionParam).trim() !== '') {
+      const requestedVer = Number(rawVersionParam);
+      if (!Number.isInteger(requestedVer) || requestedVer < 1) {
+        return res.status(400).json({ success: false, message: 'Numéro de version invalide' });
+      }
+      isExplicitVersion = true;
+      const matchedVersion = Array.isArray(doc.versions)
+        ? doc.versions.find((v) => Number(v?.version) === requestedVer)
+        : null;
+
+      if (matchedVersion && matchedVersion.filePath) {
+        requestedDocPath = matchedVersion.filePath;
+      } else if (requestedVer === (Number(doc.currentVersion) || 1) && doc.scannedDocument) {
+        requestedDocPath = doc.scannedDocument;
+      } else {
+        return res.status(404).json({ success: false, message: `Version ${requestedVer} introuvable` });
+      }
+    }
+
+    const resolveDocRelPaths = (relPath) => {
+      if (!relPath || typeof relPath !== 'string') return [];
+      const cleanRel = relPath.replace(/\\/g, '/').replace(/^\/+/, '');
+      const paths = [
+        path.resolve(BACKEND_ROOT, cleanRel),
+        path.resolve(ALLOWED_ROOT, 'backend', cleanRel),
+        path.resolve(ALLOWED_ROOT, cleanRel),
+      ];
+      if (cleanRel.startsWith('courrier/')) {
+        paths.push(path.resolve(ROOT, cleanRel.slice('courrier/'.length)));
+      }
+      return paths;
+    };
+
+    const possiblePaths = isExplicitVersion
+      ? [
+          ...resolveDocRelPaths(requestedDocPath),
+          path.resolve(ROOT, path.basename(requestedDocPath)),
+          doc.year
+            ? path.resolve(ROOT, String(doc.year), type === 'incoming' ? 'Incoming-Doc' : 'Outgoing-Doc', path.basename(requestedDocPath))
+            : null,
+        ].filter(Boolean)
+      : [
+          ...resolveDocRelPaths(requestedDocPath),
+          path.resolve(ROOT, safeFilename),
+          doc.year ? path.resolve(ROOT, String(doc.year), safeFilename) : null,
+          doc.year ? path.resolve(ROOT, String(doc.year), type === 'incoming' ? 'Incoming-Doc' : 'Outgoing-Doc', safeFilename) : null,
+          path.resolve(BACKEND_ROOT, 'uploads', safeFilename),
+          path.resolve(ALLOWED_ROOT, 'uploads', safeFilename),
+        ].filter(Boolean);
 
     const targetFile = possiblePaths.find((p) => {
       try {
@@ -135,7 +180,11 @@ exports.serveProtectedFile = async (req, res) => {
     }
 
     const resolvedTarget = path.resolve(targetFile);
-    if (!resolvedTarget.startsWith(ALLOWED_ROOT + path.sep) && !resolvedTarget.startsWith(ROOT + path.sep)) {
+    if (
+      !resolvedTarget.startsWith(ALLOWED_ROOT + path.sep) &&
+      !resolvedTarget.startsWith(BACKEND_ROOT + path.sep) &&
+      !resolvedTarget.startsWith(ROOT + path.sep)
+    ) {
       return res.status(403).json({ success: false, message: 'Accès refusé' });
     }
 
@@ -184,7 +233,7 @@ exports.serveCourrierStatic = async (req, res, next) => {
       let matchedDoc = null;
       let matchedType = null;
 
-      const parsedMatch = normalizedRel.match(/^(\d{4})\/(Incoming-Doc|Outgoing-Doc)\/(\d+)\.[a-z0-9]+$/i);
+      const parsedMatch = normalizedRel.match(/^(\d{4})\/(Incoming-Doc|Outgoing-Doc)\/(\d+)(?:_v\d+(?:_\d+)?)?\.[a-z0-9]+$/i);
       if (parsedMatch) {
         const yearNum = Number(parsedMatch[1]);
         const folderKind = parsedMatch[2].toLowerCase();
@@ -195,20 +244,27 @@ exports.serveCourrierStatic = async (req, res, next) => {
           isDeleted: { $ne: true },
           $or: [
             { scannedDocument: { $in: candidateScannedPaths } },
+            { 'versions.filePath': { $in: candidateScannedPaths } },
             { year: yearNum, serialNumber: serialNum },
           ],
         }).lean();
       } else {
         matchedDoc = await IncomingDocument.findOne({
           isDeleted: { $ne: true },
-          scannedDocument: { $in: candidateScannedPaths },
+          $or: [
+            { scannedDocument: { $in: candidateScannedPaths } },
+            { 'versions.filePath': { $in: candidateScannedPaths } },
+          ],
         }).lean();
         if (matchedDoc) {
           matchedType = 'incoming';
         } else {
           matchedDoc = await OutgoingDocument.findOne({
             isDeleted: { $ne: true },
-            scannedDocument: { $in: candidateScannedPaths },
+            $or: [
+              { scannedDocument: { $in: candidateScannedPaths } },
+              { 'versions.filePath': { $in: candidateScannedPaths } },
+            ],
           }).lean();
           if (matchedDoc) {
             matchedType = 'outgoing';

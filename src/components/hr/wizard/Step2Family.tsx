@@ -37,26 +37,26 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
   const { dir } = useDirection();
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
-      <h2 className="text-xl font-bold text-[#1a202c] border-b border-[#e2e8f0] pb-3 mb-6 flex items-center gap-2">
-        <Heart className="w-5 h-5 text-rose-600" />
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200/80 dark:border-slate-800 pb-3 mb-6 flex items-center gap-2">
+        <Heart className="w-5 h-5 text-rose-600 dark:text-rose-400" />
         <span>{t('hr.form.family.sectionTitle')}</span>
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* État civil */}
         <div className="space-y-2">
-          <Label htmlFor="etatCivil" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="etatCivil" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.family.etatCivil.label')}
           </Label>
           <Select value={etatCivil} onValueChange={(val) => setEtatCivil(val)}>
-            <SelectTrigger id="etatCivil" className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+            <SelectTrigger id="etatCivil" className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
               <SelectValue placeholder={t('hr.form.family.etatCivil.placeholder')} />
             </SelectTrigger>
             <SelectContent dir={dir}>
               <SelectItem value="NONE" className="text-base py-2 font-medium">{t('hr.form.family.etatCivil.none')}</SelectItem>
               <SelectItem value="celibataire" className="text-base py-2">{t('hr.form.family.etatCivil.celibataire')}</SelectItem>
-              <SelectItem value="marie" className="text-base py-2 font-semibold text-[#2c5282]">{t('hr.form.family.etatCivil.marie')}</SelectItem>
+              <SelectItem value="marie" className="text-base py-2 font-semibold text-[#2c5282] dark:text-blue-300">{t('hr.form.family.etatCivil.marie')}</SelectItem>
               <SelectItem value="divorce" className="text-base py-2">{t('hr.form.family.etatCivil.divorce')}</SelectItem>
               <SelectItem value="veuf" className="text-base py-2">{t('hr.form.family.etatCivil.veuf')}</SelectItem>
             </SelectContent>
@@ -65,7 +65,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
 
         {/* Nom du conjoint */}
         <div className="space-y-2">
-          <Label htmlFor="nomConjoint" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="nomConjoint" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.family.nomConjoint.label')}
           </Label>
           <Input
@@ -73,13 +73,13 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
             value={nomConjoint}
             onChange={(e) => setNomConjoint(e.target.value)}
             placeholder={t('hr.form.family.nomConjoint.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Date de mariage */}
         <div className="space-y-2">
-          <Label htmlFor="dateMariage" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="dateMariage" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.family.dateMariage.label')}
           </Label>
           <Input
@@ -87,13 +87,13 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
             type="date"
             value={dateMariage}
             onChange={(e) => setDateMariage(e.target.value)}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Nombre d'enfants */}
         <div className="space-y-2">
-          <Label htmlFor="nombreEnfants" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="nombreEnfants" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.family.nombreEnfants.label')}
           </Label>
           <Input
@@ -103,7 +103,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
             value={nombreEnfants}
             onChange={(e) => setNombreEnfants(e.target.value)}
             placeholder="0"
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
       </div>

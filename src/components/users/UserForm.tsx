@@ -90,7 +90,9 @@ const UserForm: React.FC<UserFormProps> = ({
     currentUserDepartment ||
     (typeof currentUser?.activeDepartment === 'object' && currentUser?.activeDepartment
       ? currentUser.activeDepartment._id
-      : (currentUser?.activeDepartment as string) || '')
+      : typeof currentUser?.activeDepartment === 'string'
+        ? currentUser.activeDepartment
+        : '')
   );
 
   // Recherche des informations du département actif (nom / code)
@@ -123,16 +125,28 @@ const UserForm: React.FC<UserFormProps> = ({
   const isAdminDeptRH = effectiveUserRole === 'AdminDepartment' && isRHDepartment;
   const canManagePersonnel = isSuperOrAdmin || isAdminDeptRH;
 
-  // Récupération de la liste des personnels (filtrée par département pour AdminDepartment non-RH)
+  // Récupération de toutes les fiches personnel (pagination multi-pages pour dépasser la limite de 100)
   const { data: personnelData, isLoading: isLoadingPersonnel } = useQuery({
     queryKey: ['personnels-for-user-form', currentUserDepartment, canManagePersonnel],
     queryFn: async () => {
-      const params: Record<string, unknown> = { limit: 100 };
-      if (!canManagePersonnel && currentUserDepartment) {
-        params.activeDepartment = currentUserDepartment;
-      }
-      const res = await getPersonnelList(params as Parameters<typeof getPersonnelList>[0]);
-      return res?.data || [];
+      const allPersonnel: Personnel[] = [];
+      let page = 1;
+      let totalPages = 1;
+
+      do {
+        const params: Record<string, unknown> = { page, limit: 100 };
+        if (!canManagePersonnel && currentUserDepartment) {
+          params.activeDepartment = currentUserDepartment;
+        }
+        const res = await getPersonnelList(params as Parameters<typeof getPersonnelList>[0]);
+        if (Array.isArray(res?.data)) {
+          allPersonnel.push(...res.data);
+        }
+        totalPages = res?.pagination?.pages || 1;
+        page += 1;
+      } while (page <= totalPages && page <= 50);
+
+      return allPersonnel;
     },
     enabled: !isEditMode,
     staleTime: 1000 * 30,
@@ -177,7 +191,10 @@ const UserForm: React.FC<UserFormProps> = ({
   }, [usersData, user?._id]);
 
   const availablePersonnels: Personnel[] = useMemo(
-    () => personnels.filter((p) => !takenPersonnelIds.has(String(p._id))),
+    () =>
+      personnels.filter(
+        (p) => !takenPersonnelIds.has(String(p._id)) && !p.userId
+      ),
     [personnels, takenPersonnelIds]
   );
 
@@ -383,6 +400,17 @@ const UserForm: React.FC<UserFormProps> = ({
       data.departments = [currentUserDepartment];
     }
 
+    if (!isEditMode) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+      if (!data.password || !passwordRegex.test(data.password)) {
+        form.setError('password', {
+          type: 'manual',
+          message: 'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل، تشمل حرفاً كبيراً وحرفاً صغيراً ورقماً.'
+        });
+        return;
+      }
+    }
+
     // Validation du champ personnelId obligatoire pour Director, AdminDepartment, AdminTuningDesk, User
     const isRequired = ['Director', 'AdminDepartment', 'AdminTuningDesk', 'User'].includes(data.role);
     if (!isEditMode && isRequired && !data.personnelId) {
@@ -492,12 +520,12 @@ const UserForm: React.FC<UserFormProps> = ({
                       <Input 
                         type="password" 
                         {...field} 
-                        placeholder="أدخل كلمة المرور (6 أحرف على الأقل)"
+                        placeholder="أدخل كلمة المرور (8 أحرف على الأقل: كبير، صغير ورقم)"
                         required 
                         className="h-11 text-base px-4 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
                       />
                     </FormControl>
-                    <p className="text-sm text-gray-500">يُفضل استخدام مزيج من الأحرف والأرقام لضمان حماية الحساب</p>
+                    <p className="text-sm text-gray-500">يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل، تشمل حرفاً كبيراً وحرفاً صغيراً ورقماً</p>
                     <FormMessage />
                   </FormItem>
                 )}

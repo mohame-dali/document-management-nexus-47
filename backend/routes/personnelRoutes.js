@@ -40,7 +40,8 @@ router.put(
   (err, req, res, next) => {
     if (err) {
       const isLimit = err.code === 'LIMIT_FILE_SIZE';
-      return res.status(400).json({
+      const status = err.statusCode || (isLimit ? 413 : 400);
+      return res.status(status).json({
         success: false,
         message: isLimit ? 'Le fichier dépasse la taille maximale autorisée (2 Mo)' : (err.message || 'Fichier image non valide')
       });

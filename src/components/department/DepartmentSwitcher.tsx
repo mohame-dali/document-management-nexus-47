@@ -113,7 +113,7 @@ const DepartmentSwitcher: React.FC = () => {
     <div className="flex items-center gap-2 bg-blue-50 p-2 rounded border border-blue-200">
       <Building className="h-4 w-4 text-blue-600" />
       <div className="text-sm text-blue-700 font-medium">إدارة الأقسام:</div>
-      <DropdownMenu>
+      <DropdownMenu dir={dir}>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="justify-between min-w-[180px] bg-white">
             <span className="flex items-center gap-2">
@@ -127,7 +127,7 @@ const DepartmentSwitcher: React.FC = () => {
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" dir={dir} className="w-[280px]">
+        <DropdownMenuContent align="start" className="w-[280px]">
           <DropdownMenuLabel className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             تبديل القسم النشط

@@ -1,13 +1,13 @@
-// Import the new Arabic date formatter
-import { formatArabicDate, formatArabicDateTime } from './arabicDateFormatter';
+// Import centralized BiDi-safe date formatter
+import { formatLongDate, formatDateTime as formatLocalizedDateTime } from './formatDate';
 
-// Update all existing functions to use Arabic format
+// Update all existing functions to use centralized formatting
 export const formatDate = (date: string | Date): string => {
-  return formatArabicDate(date);
+  return formatLongDate(date, 'ar', 'تاريخ غير صحيح');
 };
 
 export const formatDateTime = (date: string | Date): string => {
-  return formatArabicDateTime(date);
+  return formatLocalizedDateTime(date, 'ar', 'تاريخ غير صحيح');
 };
 
 // Keep other utility functions but update them to use Arabic formatting
@@ -24,7 +24,7 @@ export const formatRelativeDate = (date: string | Date): string => {
   } else if (diffInDays < 7) {
     return `منذ ${diffInDays} أيام`;
   } else {
-    return formatArabicDate(date);
+    return formatLongDate(date, 'ar', 'تاريخ غير صحيح');
   }
 };
 

@@ -3,6 +3,8 @@ import React from 'react';
 import { FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { formatDateTime } from '@/utils/formatDate';
 
 export interface ScanItem {
   filePath?: string;
@@ -24,6 +26,7 @@ const RecentScans: React.FC<RecentScansProps> = ({
   isRecentScansLoading,
   onSelectScan
 }) => {
+  const { language } = useLanguage();
   return (
     <Card>
       <CardHeader>
@@ -52,8 +55,10 @@ const RecentScans: React.FC<RecentScansProps> = ({
                         {scan.filePath ? scan.filePath.split('/').pop() : 'Unknown file'}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {new Date(scan.timestamp || scan.createdAt || Date.now()).toLocaleString()}
+                    <div className="text-xs text-gray-500 mt-1 tabular-nums">
+                      <bdi dir={language === 'fr' ? 'ltr' : 'rtl'}>
+                        {formatDateTime(scan.timestamp || scan.createdAt || Date.now(), language)}
+                      </bdi>
                     </div>
                   </div>
                 ))}

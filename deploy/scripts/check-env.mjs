@@ -146,8 +146,8 @@ if (!mongoUri) {
 console.log('\n[Stockage] Contrôle des répertoires de données :');
 const storageDirs = [
   { name: 'DOCUMENT_PATH (Courrier)', path: process.env.DOCUMENT_PATH || path.join(process.cwd(), 'backend', 'courrier') },
-  { name: 'UPLOAD_DIR (Téléversements)', path: process.env.UPLOAD_DIR || path.join(process.cwd(), 'backend', 'uploads') },
-  { name: 'BACKUP_DIR (Sauvegardes)', path: process.env.BACKUP_DIR || path.join(process.cwd(), 'backend', 'backups') },
+  { name: 'UPLOAD_DIR (Téléversements)', path: process.env.UPLOAD_DIR || process.env.UPLOAD_PATH || path.join(process.cwd(), 'backend', 'uploads') },
+  { name: 'BACKUP_DIR (Sauvegardes)', path: process.env.BACKUP_DIR || process.env.BACKUP_PATH || process.env.BACKUP_ROOT || '/var/backups/dms' },
 ];
 
 for (const dir of storageDirs) {

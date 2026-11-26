@@ -2,10 +2,35 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Calendar, User, Building, MessageSquare } from "lucide-react";
-import { formatArabicDate, formatArabicDateTime } from "@/utils/arabicDateFormatter";
+import { formatLongDate, formatDateTime } from "@/utils/formatDate";
+
+interface DocumentCommentItem {
+  _id: string;
+  author: {
+    name?: string;
+  };
+  createdAt: string;
+  content: string;
+}
+
+interface DocumentDetailItem {
+  _id?: string;
+  subject: string;
+  serialNumber: number | string;
+  status?: string;
+  arrivalDate?: string;
+  issueDate?: string;
+  dateActivity?: string;
+  source?: string | { name?: string };
+  description?: string;
+  comments?: DocumentCommentItem[];
+  createdBy?: { name?: string };
+  updatedAt?: string;
+  createdAt?: string;
+}
 
 interface DocumentDetailCardProps {
-  document: any;
+  document: DocumentDetailItem;
   type: 'incoming' | 'outgoing';
 }
 
@@ -54,7 +79,7 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
             </CardDescription>
           </div>
           <div>
-            {getStatusBadge(document.status, type)}
+            {getStatusBadge(document.status || '', type)}
           </div>
         </div>
       </CardHeader>
@@ -65,8 +90,8 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
             <span className="text-sm text-gray-600 font-medium">
               {type === 'incoming' ? 'تاريخ الوصول' : 'تاريخ الإصدار'}:
             </span>
-            <span className="text-sm">
-              {formatArabicDate(type === 'incoming' ? document.arrivalDate : document.issueDate)}
+            <span className="text-sm tabular-nums">
+              <bdi dir="rtl">{formatLongDate((type === 'incoming' ? document.arrivalDate : document.issueDate) || '', 'ar')}</bdi>
             </span>
           </div>
           
@@ -75,8 +100,8 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-500" />
               <span className="text-sm text-gray-600 font-medium">تاريخ النشاط:</span>
-              <span className="text-sm">
-                {formatArabicDate(document.dateActivity)}
+              <span className="text-sm tabular-nums">
+                <bdi dir="rtl">{formatLongDate(document.dateActivity, 'ar')}</bdi>
               </span>
             </div>
           )}
@@ -86,13 +111,17 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
               <>
                 <Building className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600 font-medium">المصدر:</span>
-                <span className="text-sm">{document.source}</span>
+                <span className="text-sm">
+                  {typeof document.source === 'string' ? document.source : document.source?.name || 'غير محدد'}
+                </span>
               </>
             ) : (
               <>
                 <Building className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600 font-medium">القسم:</span>
-                <span className="text-sm">{document.source?.name || 'غير محدد'}</span>
+                <span className="text-sm">
+                  {typeof document.source === 'object' ? document.source?.name || 'غير محدد' : document.source || 'غير محدد'}
+                </span>
               </>
             )}
           </div>
@@ -112,13 +141,13 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
               التعليقات ({document.comments.length})
             </h3>
             <div className="space-y-3">
-              {document.comments.map((comment: any) => (
+              {document.comments.map((comment: DocumentCommentItem) => (
                 <div key={comment._id} className="bg-gray-50 p-3 rounded">
                   <div className="flex items-center gap-2 mb-1">
                     <User className="h-3 w-3" />
                     <span className="text-xs font-medium">{comment.author.name}</span>
-                    <span className="text-xs text-gray-500">
-                      {formatArabicDateTime(comment.createdAt)}
+                    <span className="text-xs text-gray-500 tabular-nums">
+                      <bdi dir="rtl">{formatDateTime(comment.createdAt, 'ar')}</bdi>
                     </span>
                   </div>
                   <p className="text-sm">{comment.content}</p>
@@ -135,13 +164,13 @@ export function DocumentDetailCard({ document, type }: DocumentDetailCardProps) 
           </div>
         )}
         {document.updatedAt && (
-          <div className="text-xs text-gray-500">
-            آخر تحديث: {formatArabicDate(document.updatedAt)}
+          <div className="text-xs text-gray-500 tabular-nums">
+            آخر تحديث: <bdi dir="rtl">{formatLongDate(document.updatedAt, 'ar')}</bdi>
           </div>
         )}
         {document.createdAt && (
-          <div className="text-xs text-gray-500">
-            تاريخ الإنشاء: {formatArabicDate(document.createdAt)}
+          <div className="text-xs text-gray-500 tabular-nums">
+            تاريخ الإنشاء: <bdi dir="rtl">{formatLongDate(document.createdAt, 'ar')}</bdi>
           </div>
         )}
       </CardFooter>

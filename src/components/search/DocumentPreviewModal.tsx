@@ -20,6 +20,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatShortDate } from '@/utils/formatDate';
 
 interface DocumentPreviewModalProps {
   document: (IncomingDocument | OutgoingDocument) | null;
@@ -45,11 +46,14 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     ? (document as IncomingDocument).arrivalDate
     : (document as OutgoingDocument).issueDate;
 
-  const sourceName = isIncoming
-    ? (document as IncomingDocument).source
-    : typeof (document as OutgoingDocument).source === 'object'
-      ? (document as OutgoingDocument).source.name
-      : (document as OutgoingDocument).source;
+  const rawOutgoingSource = (document as OutgoingDocument).source;
+  const sourceName: string = isIncoming
+    ? (document as IncomingDocument).source || ''
+    : typeof rawOutgoingSource === 'object' && rawOutgoingSource !== null
+      ? rawOutgoingSource.name || ''
+      : typeof rawOutgoingSource === 'string'
+        ? rawOutgoingSource
+        : '';
 
   const handleOpenFullPage = () => {
     onClose();
@@ -83,25 +87,25 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className="w-[95vw] sm:w-[90vw] sm:max-w-4xl bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-sm"
+        className="w-[95vw] sm:w-[90vw] sm:max-w-4xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-lg"
       >
-        <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
+        <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-lg bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
                 <FileText className="h-6 w-6" />
               </div>
               <div>
-                <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] leading-normal">
+                <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] dark:text-sky-300 leading-normal">
                   معاينة الوثيقة
                 </DialogTitle>
-                <p className="text-base text-[#4a5568] leading-relaxed mt-1">
-                  الرقم التسلسلي: <strong className="text-[#1a202c]"><bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi></strong>
+                <p className="text-base text-[#4a5568] dark:text-slate-400 leading-relaxed mt-1">
+                  الرقم التسلسلي: <strong className="text-[#1a202c] dark:text-slate-100 tabular-nums"><bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi></strong>
                 </p>
               </div>
             </div>
 
-            <span className="inline-flex items-center px-3.5 py-1.5 rounded text-sm font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758] flex-shrink-0">
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-sm font-bold bg-[#FFCB56]/90 dark:bg-amber-950/60 text-[#1a202c] dark:text-amber-300 border border-[#FFD758] dark:border-amber-800/70 flex-shrink-0">
               {isIncoming ? 'وثيقة واردة' : 'وثيقة صادرة'}
             </span>
           </div>
@@ -109,41 +113,41 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
         {/* Details Grid */}
         <div className="space-y-4">
-          <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded p-4 space-y-3">
+          <div className="bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 space-y-3">
             <div className="flex items-start gap-2">
-              <span className="text-base font-semibold text-[#1a202c] min-w-[80px]">الموضوع:</span>
-              <span className="text-base text-[#2d3748] leading-relaxed font-medium">
+              <span className="text-base font-semibold text-[#1a202c] dark:text-slate-100 min-w-[80px]">الموضوع:</span>
+              <span className="text-base text-[#2d3748] dark:text-slate-200 leading-relaxed font-medium">
                 {highlightText(document.subject, highlightKeyword)}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#e2e8f0]">
-              <div className="flex items-center gap-2 text-base text-[#2d3748]">
-                <Calendar className="h-4 w-4 text-[#2c5282]" />
-                <span className="text-sm font-medium text-[#4a5568]">التاريخ:</span>
-                <span><bdi dir="ltr">{docDate ? new Date(docDate).toLocaleDateString('ar-TN') : '-'}</bdi></span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200/80 dark:border-slate-700/80">
+              <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
+                <Calendar className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
+                <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">التاريخ:</span>
+                <span className="tabular-nums"><bdi dir="ltr">{docDate ? formatShortDate(docDate, '-') : '-'}</bdi></span>
               </div>
 
               {sourceName && (
-                <div className="flex items-center gap-2 text-base text-[#2d3748]">
-                  <Building2 className="h-4 w-4 text-[#2c5282]" />
-                  <span className="text-sm font-medium text-[#4a5568]">الجهة / المصدر:</span>
+                <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
+                  <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
+                  <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">الجهة / المصدر:</span>
                   <span className="truncate">{sourceName}</span>
                 </div>
               )}
 
               {document.typeDocument && (
-                <div className="flex items-center gap-2 text-base text-[#2d3748]">
-                  <Layers className="h-4 w-4 text-[#2c5282]" />
-                  <span className="text-sm font-medium text-[#4a5568]">نوع الوثيقة:</span>
+                <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
+                  <Layers className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
+                  <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">نوع الوثيقة:</span>
                   <span>{document.typeDocument}</span>
                 </div>
               )}
 
               {isIncoming && (document as IncomingDocument).responsibleUser && (
-                <div className="flex items-center gap-2 text-base text-[#2d3748]">
-                  <User className="h-4 w-4 text-[#2c5282]" />
-                  <span className="text-sm font-medium text-[#4a5568]">المسؤول:</span>
+                <div className="flex items-center gap-2 text-base text-[#2d3748] dark:text-slate-200">
+                  <User className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
+                  <span className="text-sm font-medium text-[#4a5568] dark:text-slate-400">المسؤول:</span>
                   <span>
                     {typeof (document as IncomingDocument).responsibleUser === 'object'
                       ? ((document as IncomingDocument).responsibleUser as { username?: string }).username || '-'
@@ -157,12 +161,12 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           {/* OCR Extracted Text */}
           {document.ocrText && (
             <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[#1a202c] flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#2c5282]" />
+              <h3 className="text-base font-semibold text-[#1a202c] dark:text-slate-100 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                 النص المستخرج عبر القارئ الآلي (OCR)
               </h3>
-              <div className="bg-white border border-[#e2e8f0] rounded p-4 max-h-56 overflow-y-auto">
-                <p className="text-base text-[#2d3748] leading-relaxed whitespace-pre-wrap">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 max-h-56 overflow-y-auto">
+                <p className="text-base text-[#2d3748] dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
                   {highlightText(document.ocrText, highlightKeyword)}
                 </p>
               </div>
@@ -170,12 +174,12 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           )}
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#e2e8f0]">
+        <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="w-full sm:w-auto h-11 text-base font-medium px-6 rounded border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 transition-colors duration-200"
+            className="w-full sm:w-auto h-11 text-base font-medium px-6 rounded-lg border-slate-300 dark:border-slate-700 text-[#2d3748] dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
           >
             إغلاق
           </Button>
@@ -183,7 +187,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           <Button
             type="button"
             onClick={handleOpenFullPage}
-            className="w-full sm:w-auto h-11 text-base font-semibold px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white flex items-center justify-center gap-2 transition-colors duration-200 shadow-none"
+            className="w-full sm:w-auto h-11 text-base font-semibold px-7 rounded-lg bg-[#2c5282] hover:bg-[#234269] text-white flex items-center justify-center gap-2 transition-colors duration-150 shadow-none"
           >
             <span>عرض الصفحة الكاملة للوثيقة</span>
             <ExternalLink className="h-5 w-5" />

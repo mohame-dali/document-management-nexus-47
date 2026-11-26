@@ -2,6 +2,16 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 import { useDirection } from '@/i18n/useDirection';
 import { useLanguage } from '@/contexts/LanguageProvider';
 
@@ -9,6 +19,12 @@ import ScannerSetup from '@/components/scanner/ScannerSetup';
 import ScanSettingsComponent from '@/components/scanner/ScanSettings';
 import ScanResult, { ScanResultData } from '@/components/scanner/ScanResult';
 import RecentScans from '@/components/scanner/RecentScans';
+import ScannerWorkstationSettings from '@/components/scanner/ScannerWorkstationSettings';
+import {
+  SCANNER_PREFERENCES_UPDATED_EVENT,
+  loadScannerPreferences,
+  preferencesToFormScanSettings,
+} from '@/utils/scannerPreferences';
 
 import {
   ScanStage,
@@ -34,6 +50,7 @@ const BASE_SCAN_TIMEOUT_MS = 120000;
 
 const ScanDocumentPage: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const { dir } = useDirection();
   const { t: translate, language } = useLanguage();
   const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
@@ -102,11 +119,33 @@ const ScanDocumentPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isScanning, setIsScanning] = useState(false);
   const [selectedScanner, setSelectedScanner] = useState('');
-  const [scanSettings, setScanSettings] = useState({
+  const [isWorkstationSettingsOpen, setIsWorkstationSettingsOpen] = useState(false);
+  const [scanSettings, setScanSettings] = useState(() => ({
     documentType: 'incoming',
-    resolution: '300',
-    format: 'pdf',
-  });
+    ...preferencesToFormScanSettings(loadScannerPreferences()),
+  }));
+
+  useEffect(() => {
+    const syncScannerPrefs = () => {
+      const nextDefaults = preferencesToFormScanSettings(loadScannerPreferences());
+      setScanSettings((prev) => ({
+        ...prev,
+        ...nextDefaults,
+      }));
+    };
+    window.addEventListener(SCANNER_PREFERENCES_UPDATED_EVENT, syncScannerPrefs);
+    return () => {
+      window.removeEventListener(SCANNER_PREFERENCES_UPDATED_EVENT, syncScannerPrefs);
+    };
+  }, []);
+
+  const handleOpenScannerPreferences = () => {
+    if (currentUser?.role === 'Admin') {
+      navigate('/dashboard/admin/settings?tab=scanner');
+      return;
+    }
+    setIsWorkstationSettingsOpen(true);
+  };
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [scanStage, setScanStage] = useState<ScanStage | null>(null);
@@ -232,23 +271,40 @@ const ScanDocumentPage: React.FC = () => {
       documentType: string;
       resolution: string;
       format: string;
+      colorMode?: string;
+      documentSource?: string;
+      paperSize?: string;
+      duplex?: string;
+      autoOcr?: string;
+      languages?: string;
       scanId: string;
       signal: AbortSignal;
     }) => {
+      const ocrLanguages = options.autoOcr === 'false' ? undefined : options.languages;
       if (options.temporary) {
         return scanTemporaryDocument({
           documentType: options.documentType,
           format: options.format as 'pdf' | 'jpg' | 'jpeg' | 'png',
           resolution: Number(options.resolution),
+          colorMode: options.colorMode as 'Color' | 'Grayscale' | 'BlackAndWhite' | undefined,
+          documentSource: options.documentSource as 'Flatbed' | 'Feeder' | undefined,
+          paperSize: options.paperSize,
+          duplex: options.duplex === 'true',
+          languages: ocrLanguages,
           scanId: options.scanId,
           signal: options.signal,
         });
       }
       return scanDocument({
-        documentType: (options.documentType === 'outgoing' ? 'outgoing' : 'incoming'),
+        documentType: options.documentType === 'outgoing' ? 'outgoing' : 'incoming',
         config: {
           format: options.format as 'pdf' | 'jpg' | 'jpeg' | 'png',
           resolution: Number(options.resolution),
+          colorMode: options.colorMode as 'Color' | 'Grayscale' | 'BlackAndWhite' | undefined,
+          documentSource: options.documentSource as 'Flatbed' | 'Feeder' | undefined,
+          paperSize: options.paperSize,
+          duplex: options.duplex === 'true',
+          languages: ocrLanguages,
         },
         scanId: options.scanId,
         signal: options.signal,
@@ -479,7 +535,23 @@ const ScanDocumentPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4" dir={dir}>
-      <h1 className="text-2xl font-bold mb-6">{translations.title}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h1 className="text-2xl font-bold">{translations.title}</h1>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleOpenScannerPreferences}
+          className="gap-2 whitespace-nowrap"
+        >
+          <Settings className="w-4 h-4" />
+          <span>
+            {lang === 'ar'
+              ? 'إعدادات الماسح الضوئي و OCR'
+              : 'Paramètres Scanner & OCR'}
+          </span>
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -503,6 +575,7 @@ const ScanDocumentPage: React.FC = () => {
             onScanDocument={handleScanDocument}
             selectedScanner={selectedScanner}
             scanning={scanning}
+            onOpenSettings={handleOpenScannerPreferences}
           />
 
           <ScanResult
@@ -536,6 +609,35 @@ const ScanDocumentPage: React.FC = () => {
           />
         </div>
       </div>
+
+      <Dialog open={isWorkstationSettingsOpen} onOpenChange={setIsWorkstationSettingsOpen}>
+        <DialogContent
+          dir={dir}
+          className="w-[95vw] sm:max-w-[780px] max-h-[90vh] overflow-y-auto bg-white text-[#1a202c] border border-[#e2e8f0]"
+        >
+          <DialogHeader className="pb-3 border-b border-[#e2e8f0]">
+            <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#2c5282]" />
+              <span>
+                {lang === 'ar'
+                  ? 'إعدادات الماسح الضوئي و OCR لهذا الجهاز'
+                  : 'Configuration du Scanner et de l’OCR'}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-[#5f6b7d]">
+              {lang === 'ar'
+                ? 'اضبط الدقة الافتراضية، وضع الألوان، التغذية التلقائية وإعدادات OCR ليتم تطبيقها تلقائياً.'
+                : 'Définissez la résolution, le mode couleur, le chargeur ADF et les options OCR appliquées par défaut.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-2">
+            <ScannerWorkstationSettings
+              compact
+              onClose={() => setIsWorkstationSettingsOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

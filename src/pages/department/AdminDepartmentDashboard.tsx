@@ -11,18 +11,22 @@ import {
   Users, 
   FolderOpen, 
   MessageSquare,
-  Plus,
   Eye,
   Edit,
   Shield,
   CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import RoleExecutiveSection from '@/components/dashboard/RoleExecutiveSection';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 const AdminDepartmentDashboard = () => {
   const { currentUser } = useAuth();
   const { activeDepartment, isMultiDepartment } = useDepartmentContext();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const currentYear = new Date().getFullYear().toString();
+  const dir = language === 'fr' ? 'ltr' : 'rtl';
 
   if (!currentUser || currentUser.role !== 'AdminDepartment') {
     return (
@@ -45,19 +49,21 @@ const AdminDepartmentDashboard = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto" dir="rtl">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto" dir={dir}>
       {/* Header with Department Info */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#1a202c]">
-            لوحة تحكم إدارة القسم
+          <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">
+            {language === 'fr' ? 'Tableau de bord du département' : 'لوحة تحكم إدارة القسم'}
           </h1>
-          <p className="text-sm text-[#4a5568] mt-1">
-            إدارة الوثائق والمستخدمين في قسم {activeDepartment.name}
+          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-1">
+            {language === 'fr'
+              ? `Suivi des documents et activités pour ${activeDepartment.name}`
+              : `إدارة الوثائق والأنشطة في قسم ${activeDepartment.name}`}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="text-xs px-3 py-1 bg-[#ebf4ff] text-[#2c5282] border-[#bee3f8] font-medium">
+          <Badge variant="outline" className="text-xs px-3 py-1 bg-[#ebf4ff] dark:bg-slate-800 text-[#2c5282] dark:text-blue-300 border-[#bee3f8] dark:border-slate-700 font-medium">
             {currentUser.role}
           </Badge>
         </div>
@@ -66,176 +72,192 @@ const AdminDepartmentDashboard = () => {
       {/* Department Switcher for multi-department users */}
       {isMultiDepartment && <DepartmentSwitcher />}
 
+      {/* Role-Tailored Executive Overview (RH vs Operational Department) */}
+      <RoleExecutiveSection currentUser={currentUser} currentYear={currentYear} />
+
       {/* Active Department Info Banner */}
-      <div className="bg-[#ebf4ff] border border-[#bee3f8] rounded p-4 flex items-center justify-between shadow-sm">
+      <div className="bg-[#ebf4ff] dark:bg-slate-900 border border-[#bee3f8] dark:border-slate-800 rounded p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <Building className="h-6 w-6 text-[#2c5282] flex-shrink-0" />
+          <Building className="h-6 w-6 text-[#2c5282] dark:text-blue-400 flex-shrink-0" />
           <div>
-            <h3 className="text-xs font-semibold text-[#2c5282]">القسم النشط</h3>
-            <p className="text-base font-bold text-[#1a202c]">{activeDepartment.name}</p>
+            <h3 className="text-xs font-semibold text-[#2c5282] dark:text-blue-400">
+              {language === 'fr' ? 'Département actif' : 'القسم النشط'}
+            </h3>
+            <p className="text-base font-bold text-[#1a202c] dark:text-slate-100">{activeDepartment.name}</p>
           </div>
         </div>
-        <Badge variant="outline" className="bg-white text-[#2c5282] border-[#bee3f8] text-xs font-medium px-2.5 py-1">
-          قسم مفعل
-        </Badge>
+        <span className="text-xs font-semibold text-[#2c5282] dark:text-blue-300">
+          {language === 'fr' ? 'Actif' : 'قسم مفعل'}
+        </span>
       </div>
 
       {/* Action Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* User Management */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
+        {/* Department Users (View only — creation restricted to Admin) */}
+        <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
-            <Users className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
-              المستخدمين
+            <Users className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
+            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+              {language === 'fr' ? 'Équipe' : 'المستخدمين'}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-[#1a202c] mt-4">إدارة المستخدمين</h3>
-          <p className="text-sm text-[#4a5568] mt-2 flex-1">
-            إنشاء وتعديل وإدارة حسابات المستخدمين التابعين لقسم {activeDepartment.name}.
+          <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
+            {language === 'fr' ? 'Membres du département' : 'أعضاء القسم'}
+          </h3>
+          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+            {language === 'fr'
+              ? `Consulter les comptes rattachés au département ${activeDepartment.name}.`
+              : `استعراض حسابات المستخدمين التابعين لقسم ${activeDepartment.name}.`}
           </p>
-          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9]">
+          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9] dark:border-slate-800">
             <Button 
               size="sm" 
               onClick={() => navigate('/dashboard/users')}
-              className="flex-1 h-10 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium gap-1.5"
+              className="w-full h-10 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium gap-1.5"
             >
               <Eye className="h-4 w-4" />
-              عرض
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => navigate('/dashboard/users/create')}
-              className="flex-1 h-10 border border-[#e2e8f0] text-[#4a5568] hover:bg-[#f7fafc] rounded font-medium gap-1.5"
-            >
-              <Plus className="h-4 w-4" />
-              إضافة
+              {language === 'fr' ? 'Consulter' : 'عرض'}
             </Button>
           </div>
         </div>
 
         {/* Incoming Documents */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
+        <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
-            <FileText className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
-              الوارد
+            <FileText className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
+            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+              {language === 'fr' ? 'Entrants' : 'الوارد'}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-[#1a202c] mt-4">الوثائق الواردة</h3>
-          <p className="text-sm text-[#4a5568] mt-2 flex-1">
-            إدارة ومتابعة المراسلات الواردة للقسم وتعيين المسؤولين وإضافة الردود.
+          <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
+            {language === 'fr' ? 'Courriers entrants' : 'الوثائق الواردة'}
+          </h3>
+          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+            {language === 'fr'
+              ? 'Suivi des courriers entrants, affectation des responsables et réponses.'
+              : 'إدارة ومتابعة المراسلات الواردة للقسم وتعيين المسؤولين وإضافة الردود.'}
           </p>
-          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9]">
+          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9] dark:border-slate-800">
             <Button 
-              size="sm"
+              size="sm" 
               onClick={() => navigate('/dashboard/incoming-documents')}
               className="flex-1 h-10 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium gap-1.5"
             >
               <Eye className="h-4 w-4" />
-              عرض
+              {language === 'fr' ? 'Voir' : 'عرض'}
             </Button>
             <Button 
               size="sm" 
               variant="outline"
               onClick={() => navigate('/dashboard/incoming-documents')}
-              className="flex-1 h-10 border border-[#e2e8f0] text-[#4a5568] hover:bg-[#f7fafc] rounded font-medium gap-1.5"
+              className="flex-1 h-10 border border-[#e2e8f0] dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-[#f7fafc] dark:hover:bg-slate-800 rounded font-medium gap-1.5"
             >
               <Edit className="h-4 w-4" />
-              إدارة
+              {language === 'fr' ? 'Gérer' : 'إدارة'}
             </Button>
           </div>
         </div>
 
         {/* Outgoing Documents */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
+        <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
-            <FileText className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
-              الصادر
+            <FileText className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
+            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+              {language === 'fr' ? 'Sortants' : 'الصادر'}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-[#1a202c] mt-4">الوثائق الصادرة</h3>
-          <p className="text-sm text-[#4a5568] mt-2 flex-1">
-            عرض وتنظيم المراسلات والوثائق الصادرة الرسمية من القسم.
+          <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
+            {language === 'fr' ? 'Courriers sortants' : 'الوثائق الصادرة'}
+          </h3>
+          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+            {language === 'fr'
+              ? 'Consulter et organiser les courriers sortants du département.'
+              : 'عرض وتنظيم المراسلات والوثائق الصادرة الرسمية من القسم.'}
           </p>
-          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9]">
+          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9] dark:border-slate-800">
             <Button 
               size="sm" 
               onClick={() => navigate('/dashboard/outgoing-documents')}
               className="flex-1 h-10 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium gap-1.5"
             >
               <Eye className="h-4 w-4" />
-              عرض
+              {language === 'fr' ? 'Voir' : 'عرض'}
             </Button>
             <Button 
               size="sm" 
               variant="outline"
               onClick={() => navigate('/dashboard/outgoing-documents')}
-              className="flex-1 h-10 border border-[#e2e8f0] text-[#4a5568] hover:bg-[#f7fafc] rounded font-medium gap-1.5"
+              className="flex-1 h-10 border border-[#e2e8f0] dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-[#f7fafc] dark:hover:bg-slate-800 rounded font-medium gap-1.5"
             >
               <Edit className="h-4 w-4" />
-              إدارة
+              {language === 'fr' ? 'Gérer' : 'إدارة'}
             </Button>
           </div>
         </div>
 
         {/* Folder Management */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
+        <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
-            <FolderOpen className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
-              التنظيم
+            <FolderOpen className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
+            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+              {language === 'fr' ? 'Classement' : 'التنظيم'}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-[#1a202c] mt-4">إدارة المجلدات</h3>
-          <p className="text-sm text-[#4a5568] mt-2 flex-1">
-            تنظيم وفهرسة وثائق ومراسلات القسم ضمن مجلدات وتصنيفات مخصصة.
+          <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
+            {language === 'fr' ? 'Gestion des dossiers' : 'إدارة المجلدات'}
+          </h3>
+          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+            {language === 'fr'
+              ? 'Organiser et classer les courriers du département dans des dossiers.'
+              : 'تنظيم وفهرسة وثائق ومراسلات القسم ضمن مجلدات وتصنيفات مخصصة.'}
           </p>
-          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9]">
+          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9] dark:border-slate-800">
             <Button 
-              size="sm"
+              size="sm" 
               onClick={() => navigate('/dashboard/folders')}
               className="w-full h-10 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium gap-1.5"
             >
               <FolderOpen className="h-4 w-4" />
-              إدارة المجلدات
+              {language === 'fr' ? 'Ouvrir les dossiers' : 'إدارة المجلدات'}
             </Button>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
+        <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px] flex flex-col">
           <div className="flex items-center justify-between">
-            <MessageSquare className="h-8 w-8 text-[#2c5282]" />
-            <span className="text-xs bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d] px-2 py-0.5 rounded font-normal">
-              التواصل
+            <MessageSquare className="h-8 w-8 text-[#2c5282] dark:text-blue-400" />
+            <span className="text-xs text-[#5f6b7d] dark:text-slate-400 font-medium">
+              {language === 'fr' ? 'Communication' : 'التواصل'}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-[#1a202c] mt-4">الرسائل والمحادثات</h3>
-          <p className="text-sm text-[#4a5568] mt-2 flex-1">
-            إرسال واستقبال التنبيهات والرسائل الإدارية مع مستخدمي القسم.
+          <h3 className="text-lg font-bold text-[#1a202c] dark:text-slate-100 mt-4">
+            {language === 'fr' ? 'Messagerie interne' : 'الرسائل والمحادثات'}
+          </h3>
+          <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-2 flex-1">
+            {language === 'fr'
+              ? 'Échanger des messages administratifs avec les utilisateurs.'
+              : 'إرسال واستقبال التنبيهات والرسائل الإدارية مع مستخدمي القسم.'}
           </p>
-          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9]">
+          <div className="flex gap-2 mt-auto pt-4 border-t border-[#f1f5f9] dark:border-slate-800">
             <Button 
-              size="sm"
+              size="sm" 
               onClick={() => navigate('/dashboard/messages')}
               className="w-full h-10 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium gap-1.5"
             >
               <MessageSquare className="h-4 w-4" />
-              الرسائل
+              {language === 'fr' ? 'Messagerie' : 'الرسائل'}
             </Button>
           </div>
         </div>
       </div>
 
       {/* Section: صلاحيات إدارة القسم */}
-      <div className="mt-8 bg-[#f7fafc] border border-[#e2e8f0] rounded p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#e2e8f0]">
-          <Shield className="h-5 w-5 text-[#2c5282]" />
-          <h3 className="text-base font-bold text-[#1a202c]">
-            صلاحيات إدارة القسم
+      <div className="mt-8 bg-[#f7fafc] dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#e2e8f0] dark:border-slate-800">
+          <Shield className="h-5 w-5 text-[#2c5282] dark:text-blue-400" />
+          <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
+            {language === 'fr' ? 'Prérogatives du chef de département' : 'صلاحيات إدارة القسم'}
           </h3>
         </div>
 

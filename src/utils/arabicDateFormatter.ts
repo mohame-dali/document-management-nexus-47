@@ -1,132 +1,78 @@
 
+import {
+  ARABIC_MONTH_NAMES,
+  formatDateTime,
+  formatDateWithWeekday,
+  formatLongDate,
+  parseDateInput,
+  type DateInput,
+} from './formatDate';
+
 /**
  * Comprehensive Arabic date formatting utilities for the DMS
  * Example: 10 جويلية 2025
  */
 
-const arabicMonths = [
-  'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
-  'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-];
-
-const arabicWeekDays = [
-  'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'
-];
-
 // Core formatting function with enhanced error handling
 export const formatArabicDate = (date: string | Date): string => {
   if (!date) return 'تاريخ غير محدد';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'تاريخ غير صحيح';
-  }
-  
-  const day = dateObj.getDate();
-  const month = arabicMonths[dateObj.getMonth()];
-  const year = dateObj.getFullYear();
-  
-  return `${day} ${month} ${year}`;
+  const parsed = parseDateInput(date);
+  if (!parsed) return 'تاريخ غير صحيح';
+  return formatLongDate(parsed, 'ar');
 };
 
 export const formatLocalizedDate = (
   date: string | Date,
   language: 'ar' | 'fr' = 'ar'
 ): string => {
-  if (language === 'ar') {
-    return formatArabicDate(date);
-  }
-  if (!date) return 'Date non définie';
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(dateObj.getTime())) {
-    return 'Date invalide';
-  }
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(dateObj);
+  if (!date) return language === 'ar' ? 'تاريخ غير محدد' : 'Date non définie';
+  const parsed = parseDateInput(date);
+  if (!parsed) return language === 'ar' ? 'تاريخ غير صحيح' : 'Date invalide';
+  return formatLongDate(parsed, language);
 };
 
 // Format with time
 export const formatArabicDateTime = (date: string | Date): string => {
   if (!date) return 'تاريخ غير محدد';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'تاريخ غير صحيح';
-  }
-  
-  const day = dateObj.getDate();
-  const month = arabicMonths[dateObj.getMonth()];
-  const year = dateObj.getFullYear();
-  const hours = dateObj.getHours().toString().padStart(2, '0');
-  const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-  
-  return `${day} ${month} ${year} في ${hours}:${minutes}`;
+  const parsed = parseDateInput(date);
+  if (!parsed) return 'تاريخ غير صحيح';
+  return formatDateTime(parsed, 'ar');
 };
 
 // Format with weekday
 export const formatArabicDateWithDay = (date: string | Date): string => {
   if (!date) return 'تاريخ غير محدد';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'تاريخ غير صحيح';
-  }
-  
-  const weekDay = arabicWeekDays[dateObj.getDay()];
-  const formattedDate = formatArabicDate(dateObj);
-  
-  return `${weekDay}، ${formattedDate}`;
+  const parsed = parseDateInput(date);
+  if (!parsed) return 'تاريخ غير صحيح';
+  return formatDateWithWeekday(parsed, 'ar');
 };
 
 // Helper function to format any date value to Arabic format
 export const formatDateToArabic = (dateValue: unknown): string => {
   if (!dateValue) return 'تاريخ غير محدد';
-  
-  let dateObj: Date;
-  
-  // Handle different date formats
-  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
-    dateObj = new Date(dateValue);
-  } else if (dateValue instanceof Date) {
-    dateObj = dateValue;
-  } else if (typeof dateValue === 'object' && dateValue !== null && '$date' in dateValue) {
-    // Handle MongoDB date format
-    dateObj = new Date((dateValue as { $date: string | number }).$date);
-  } else {
-    return 'تاريخ غير صحيح';
-  }
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'تاريخ غير صحيح';
-  }
-  
-  return formatArabicDate(dateObj);
+  const parsed = parseDateInput(dateValue as DateInput);
+  if (!parsed) return 'تاريخ غير صحيح';
+  return formatLongDate(parsed, 'ar');
 };
 
 // Format for relative time (e.g., "منذ 3 أيام")
 export const formatArabicRelativeTime = (date: string | Date): string => {
   if (!date) return 'تاريخ غير محدد';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(dateObj.getTime())) {
+
+  const dateObj = parseDateInput(date);
+
+  if (!dateObj) {
     return 'تاريخ غير صحيح';
   }
-  
+
   const now = new Date();
   const diffInMs = now.getTime() - dateObj.getTime();
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
   const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
   const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  
+
   if (diffInDays > 7) {
-    return formatArabicDate(dateObj);
+    return formatLongDate(dateObj, 'ar');
   } else if (diffInDays > 0) {
     return `منذ ${diffInDays} ${diffInDays === 1 ? 'يوم' : 'أيام'}`;
   } else if (diffInHours > 0) {
@@ -141,16 +87,16 @@ export const formatArabicRelativeTime = (date: string | Date): string => {
 // Format for short date display (mobile friendly)
 export const formatArabicDateShort = (date: string | Date): string => {
   if (!date) return 'غير محدد';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(dateObj.getTime())) {
+
+  const dateObj = parseDateInput(date);
+
+  if (!dateObj) {
     return 'غير صحيح';
   }
-  
+
   const day = dateObj.getDate();
-  const month = arabicMonths[dateObj.getMonth()].substring(0, 4); // Shortened month
+  const month = ARABIC_MONTH_NAMES[dateObj.getMonth()].substring(0, 4);
   const year = dateObj.getFullYear();
-  
+
   return `${day} ${month} ${year}`;
 };

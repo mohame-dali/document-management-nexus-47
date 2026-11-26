@@ -40,10 +40,10 @@ export const getTrashData = async (type?: FilterType): Promise<TrashDataResponse
   const rawItems: Record<string, unknown>[] = response.data?.data || [];
   const rawCounts = response.data?.counts || { total: 0, incoming: 0, outgoing: 0, folder: 0, message: 0 };
 
-  const items = rawItems.map((item) => {
+  const items: TrashItem[] = rawItems.map((item) => {
     let resolvedType: TrashItemType = 'incoming';
-    if (item.type) {
-      resolvedType = item.type;
+    if (typeof item.type === 'string' && item.type) {
+      resolvedType = item.type as TrashItemType;
     } else if (item.itemType === 'outgoing' || item.itemType === 'OutgoingDocument') {
       resolvedType = 'outgoing';
     } else if (item.itemType === 'folder' || item.itemType === 'Folder') {
@@ -54,17 +54,33 @@ export const getTrashData = async (type?: FilterType): Promise<TrashDataResponse
       resolvedType = 'incoming';
     }
 
-    const resolvedLabel = item.label || item.subject || item.name || item.documentId || 'عنصر بدون عنوان';
+    const resolvedLabel = String(
+      item.label || item.subject || item.name || item.documentId || 'عنصر بدون عنوان'
+    );
+    const resolvedDeletedAt = String(item.deletedAt || item.updatedAt || '');
+    const rawDeletedBy = item.deletedBy as
+      | { _id?: string; username?: string }
+      | string
+      | undefined;
+    const deletedBy = rawDeletedBy
+      ? typeof rawDeletedBy === 'object'
+        ? {
+            _id: String(rawDeletedBy._id || ''),
+            username: String(rawDeletedBy.username || 'مستخدم'),
+          }
+        : {
+            _id: String(rawDeletedBy),
+            username: 'مستخدم',
+          }
+      : undefined;
 
     return {
       ...item,
+      _id: String(item._id || ''),
       type: resolvedType,
       label: resolvedLabel,
-      deletedAt: item.deletedAt || item.updatedAt,
-      deletedBy: item.deletedBy ? {
-        _id: item.deletedBy._id || item.deletedBy,
-        username: item.deletedBy.username || 'مستخدم'
-      } : undefined
+      deletedAt: resolvedDeletedAt,
+      deletedBy,
     };
   });
 

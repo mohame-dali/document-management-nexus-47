@@ -39,10 +39,9 @@ exports.getTemplate = asyncHandler(async (req, res, next) => {
 
 // @desc    Create new template
 // @route   POST /api/templates
-// @access  Private (AdminTuningDesk only)
+// @access  Private (Admin, AdminTuningDesk)
 exports.createTemplate = asyncHandler(async (req, res, next) => {
-  // Check if user is AdminTuningDesk
-  if (req.user.role !== 'AdminTuningDesk') {
+  if (!['Admin', 'AdminTuningDesk'].includes(req.user.role)) {
     return next(new ErrorResponse('Not authorized to create templates', 403));
   }
 
@@ -72,10 +71,9 @@ exports.createTemplate = asyncHandler(async (req, res, next) => {
 
 // @desc    Update template
 // @route   PUT /api/templates/:id
-// @access  Private (AdminTuningDesk only)
+// @access  Private (Admin, AdminTuningDesk)
 exports.updateTemplate = asyncHandler(async (req, res, next) => {
-  // Check if user is AdminTuningDesk
-  if (req.user.role !== 'AdminTuningDesk') {
+  if (!['Admin', 'AdminTuningDesk'].includes(req.user.role)) {
     return next(new ErrorResponse('Not authorized to update templates', 403));
   }
 
@@ -113,10 +111,9 @@ exports.updateTemplate = asyncHandler(async (req, res, next) => {
 
 // @desc    Delete template
 // @route   DELETE /api/templates/:id
-// @access  Private (AdminTuningDesk only)
+// @access  Private (Admin, AdminTuningDesk)
 exports.deleteTemplate = asyncHandler(async (req, res, next) => {
-  // Check if user is AdminTuningDesk
-  if (req.user.role !== 'AdminTuningDesk') {
+  if (!['Admin', 'AdminTuningDesk'].includes(req.user.role)) {
     return next(new ErrorResponse('Not authorized to delete templates', 403));
   }
 

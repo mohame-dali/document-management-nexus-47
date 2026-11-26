@@ -21,7 +21,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-TARGET_BACKUP_DIR="${1:-${BACKUP_DIR:-${PROJECT_ROOT}/backups}}"
+if [ -f "${PROJECT_ROOT}/.env" ]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${PROJECT_ROOT}/.env"
+  set +a
+fi
+
+TARGET_BACKUP_DIR="${1:-${BACKUP_DIR:-${BACKUP_PATH:-${BACKUP_ROOT:-/var/backups/dms}}}}"
 RETENTION_DAYS="${2:-14}"
 TIMESTAMP="$(date +'%Y%m%d_%H%M%S')"
 BACKUP_TAG="dms_full_backup_${TIMESTAMP}"
@@ -38,10 +45,6 @@ echo "  Rétention      : ${RETENTION_DAYS} jours (protection de la dernière ar
 
 # Récupération sécurisée de la chaîne MongoDB (sans affichage)
 MONGODB_CONN_URI="${MONGODB_URI:-}"
-if [ -z "${MONGODB_CONN_URI}" ] && [ -f "${PROJECT_ROOT}/.env" ]; then
-  MONGODB_CONN_URI=$(grep -E '^[[:space:]]*MONGODB_URI=' "${PROJECT_ROOT}/.env" | head -n1 | cut -d '=' -f2- | tr -d '"' | tr -d "'" || true)
-fi
-
 if [ -z "${MONGODB_CONN_URI}" ]; then
   MONGODB_CONN_URI="mongodb://127.0.0.1:27017/document-management"
   echo "[$(date +'%Y-%m-%d %H:%M:%S')] ℹ️ MONGODB_URI non définie, utilisation de l'hôte local 127.0.0.1:27017."
@@ -65,7 +68,7 @@ fi
 # 2. Copie des données physiques : Courrier et Téléversements
 echo "[$(date +'%Y-%m-%d %H:%M:%S')] 📂 2/4 - Archivage des documents administratifs physiques..."
 COURRIER_DIR="${DOCUMENT_PATH:-${PROJECT_ROOT}/backend/courrier}"
-UPLOADS_DATA_DIR="${UPLOAD_DIR:-${PROJECT_ROOT}/backend/uploads}"
+UPLOADS_DATA_DIR="${UPLOAD_DIR:-${UPLOAD_PATH:-${PROJECT_ROOT}/backend/uploads}}"
 
 mkdir -p "${WORK_DIR}/storage"
 

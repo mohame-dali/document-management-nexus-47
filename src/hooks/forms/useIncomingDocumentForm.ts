@@ -22,6 +22,12 @@ import {
   getScannerErrorCode,
   getScannerErrorMessage,
 } from '@/services/scannerService';
+import {
+  FormScanSettings,
+  SCANNER_PREFERENCES_UPDATED_EVENT,
+  loadScannerPreferences,
+  preferencesToFormScanSettings,
+} from '@/utils/scannerPreferences';
 
 const BASE_SCAN_TIMEOUT_MS = 120000;
 const DRAFT_KEY = 'dms:draft:incoming';
@@ -95,10 +101,19 @@ export const useIncomingDocumentForm = (
   const [scanError, setScanError] = useState<string | null>(null);
   const [liveThumbnails, setLiveThumbnails] = useState<LiveThumbnail[]>([]);
   const [isScanAttached, setIsScanAttached] = useState<boolean>(Boolean(scanData));
-  const [scanSettings, setScanSettings] = useState({
-    resolution: '300',
-    format: 'pdf',
-  });
+  const [scanSettings, setScanSettings] = useState<FormScanSettings>(() =>
+    preferencesToFormScanSettings(loadScannerPreferences())
+  );
+
+  useEffect(() => {
+    const syncScannerPrefs = () => {
+      setScanSettings(preferencesToFormScanSettings(loadScannerPreferences()));
+    };
+    window.addEventListener(SCANNER_PREFERENCES_UPDATED_EVENT, syncScannerPrefs);
+    return () => {
+      window.removeEventListener(SCANNER_PREFERENCES_UPDATED_EVENT, syncScannerPrefs);
+    };
+  }, []);
   const [isManualSerialNumber, setIsManualSerialNumber] = useState(false);
   const isManualSerialNumberRef = useRef(false);
   const [restoredDraftAt, setRestoredDraftAt] = useState<number | null>(null);
@@ -673,6 +688,11 @@ export const useIncomingDocumentForm = (
       documentType: 'incoming',
       format: scanSettings.format,
       resolution: Number(scanSettings.resolution),
+      colorMode: scanSettings.colorMode,
+      documentSource: scanSettings.documentSource,
+      paperSize: scanSettings.paperSize,
+      duplex: scanSettings.duplex === 'true',
+      languages: scanSettings.autoOcr === 'false' ? undefined : scanSettings.languages,
       temporary: true,
       scanId,
       signal: controller.signal,
@@ -710,7 +730,9 @@ export const useIncomingDocumentForm = (
         setIsScanAttached(true);
         toast.success(t.scanComplete || getScanStageLabel('done', 0, translate, lang));
 
-        applyOcrAutoFill(normalizedScan);
+        if (scanSettings.autoOcr !== 'false') {
+          applyOcrAutoFill(normalizedScan);
+        }
       },
       onError: (error: unknown) => {
         stopPolling();

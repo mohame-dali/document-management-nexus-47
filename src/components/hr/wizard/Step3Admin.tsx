@@ -87,16 +87,16 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
   const { dir } = useDirection();
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
-      <h2 className="text-xl font-bold text-[#1a202c] border-b border-[#e2e8f0] pb-3 mb-6 flex items-center gap-2">
-        <Shield className="w-5 h-5 text-[#2c5282]" />
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200/80 dark:border-slate-800 pb-3 mb-6 flex items-center gap-2">
+        <Shield className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
         <span>{t('hr.form.admin.sectionTitle')}</span>
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Poste actuel */}
         <div className="space-y-2">
-          <Label htmlFor="posteActuel" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="posteActuel" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.posteActuel.label')}
           </Label>
           <Input
@@ -107,13 +107,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
               setPoste(e.target.value);
             }}
             placeholder={t('hr.form.admin.posteActuel.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Département principal */}
         <div className="space-y-2">
-          <Label htmlFor="activeDepartment" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="activeDepartment" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.department.label')}
           </Label>
           <Select
@@ -121,7 +121,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             onValueChange={(val) => setActiveDepartment(val)}
             disabled={isLoadingDepartments}
           >
-            <SelectTrigger id="activeDepartment" className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+            <SelectTrigger id="activeDepartment" className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
               <SelectValue placeholder={t('hr.form.admin.department.placeholder')} />
             </SelectTrigger>
             <SelectContent dir={dir}>
@@ -137,7 +137,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Date d'embauche */}
         <div className="space-y-2">
-          <Label htmlFor="dateEmbauche" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="dateEmbauche" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.dateEmbauche.label')}
           </Label>
           <Input
@@ -150,12 +150,12 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
                 setErrors((prev) => ({ ...prev, dateEmbauche: undefined }));
               }
             }}
-            className={`h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] ${
+            className={`h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] ${
               errors?.dateEmbauche ? 'border-red-500' : ''
             }`}
           />
           {errors?.dateEmbauche && (
-            <p className="text-sm text-red-600 flex items-center gap-1">
+            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errors.dateEmbauche}</span>
             </p>
@@ -164,7 +164,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
 
         {/* Numéro d'unité */}
         <div className="space-y-2">
-          <Label htmlFor="numeroUnite" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="numeroUnite" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.numeroUnite.label')}
           </Label>
           <Input
@@ -172,13 +172,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={numeroUnite}
             onChange={(e) => setNumeroUnite(e.target.value)}
             placeholder={t('hr.form.admin.numeroUnite.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Numéro d'armée */}
         <div className="space-y-2">
-          <Label htmlFor="numeroArmee" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="numeroArmee" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.numeroArmee.label')}
           </Label>
           <Input
@@ -186,13 +186,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={numeroArmee}
             onChange={(e) => setNumeroArmee(e.target.value)}
             placeholder={t('hr.form.admin.numeroArmee.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Date d'engagement */}
         <div className="space-y-2">
-          <Label htmlFor="dateEngagement" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="dateEngagement" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.dateEngagement.label')}
           </Label>
           <Input
@@ -200,13 +200,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             type="date"
             value={dateEngagement}
             onChange={(e) => setDateEngagement(e.target.value)}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Type d'engagement */}
         <div className="space-y-2">
-          <Label htmlFor="typeEngagement" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="typeEngagement" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.typeEngagement.label')}
           </Label>
           <Input
@@ -214,13 +214,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={typeEngagement}
             onChange={(e) => setTypeEngagement(e.target.value)}
             placeholder={t('hr.form.admin.typeEngagement.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Origine d'engagement */}
         <div className="space-y-2">
-          <Label htmlFor="origineEngagement" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="origineEngagement" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.origineEngagement.label')}
           </Label>
           <Input
@@ -228,13 +228,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={origineEngagement}
             onChange={(e) => setOrigineEngagement(e.target.value)}
             placeholder={t('hr.form.admin.origineEngagement.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Niveau d'étude */}
         <div className="space-y-2">
-          <Label htmlFor="niveauEtude" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="niveauEtude" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.niveauEtude.label')}
           </Label>
           <Input
@@ -242,13 +242,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={niveauEtude}
             onChange={(e) => setNiveauEtude(e.target.value)}
             placeholder={t('hr.form.admin.niveauEtude.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Diplôme de base */}
         <div className="space-y-2">
-          <Label htmlFor="diplomeBase" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="diplomeBase" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.diplomeBase.label')}
           </Label>
           <Input
@@ -256,13 +256,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={diplomeBase}
             onChange={(e) => setDiplomeBase(e.target.value)}
             placeholder={t('hr.form.admin.diplomeBase.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Spécialité */}
         <div className="space-y-2">
-          <Label htmlFor="specialite" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="specialite" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.specialite.label')}
           </Label>
           <Input
@@ -270,13 +270,13 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={specialite}
             onChange={(e) => setSpecialite(e.target.value)}
             placeholder={t('hr.form.admin.specialite.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
 
         {/* Arme */}
         <div className="space-y-2">
-          <Label htmlFor="arme" className="text-base font-semibold text-gray-700">
+          <Label htmlFor="arme" className="text-base font-semibold text-slate-700 dark:text-slate-200">
             {t('hr.form.admin.arme.label')}
           </Label>
           <Input
@@ -284,14 +284,14 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
             value={arme}
             onChange={(e) => setArme(e.target.value)}
             placeholder={t('hr.form.admin.arme.placeholder')}
-            className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+            className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
           />
         </div>
       </div>
 
       {/* Notes */}
-      <div className="space-y-2 mt-6 pt-6 border-t border-[#e2e8f0]">
-        <Label htmlFor="notes" className="text-base font-semibold text-gray-700">
+      <div className="space-y-2 mt-6 pt-6 border-t border-slate-200/80 dark:border-slate-800">
+        <Label htmlFor="notes" className="text-base font-semibold text-slate-700 dark:text-slate-200">
           {t('hr.form.admin.notes.label')}
         </Label>
         <Textarea
@@ -300,7 +300,7 @@ export const Step3Admin: React.FC<Step3AdminProps> = ({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder={t('hr.form.admin.notes.placeholder')}
-          className="text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+          className="text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
         />
       </div>
     </div>

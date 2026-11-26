@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Download, FileText, Image as ImageIcon, File, ExternalLink, Paperclip, Loader2, Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Download, FileText, File, ExternalLink, Loader2, Eye } from 'lucide-react';
 import { Message } from '@/types';
 import { downloadAttachment } from '@/services/messageService';
 import { toast } from 'sonner';
@@ -24,9 +23,9 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
   const getFileIcon = (filename?: string) => {
     const extension = filename?.split('.').pop()?.toLowerCase();
     if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(extension || '')) {
-      return <FileText className="h-4 w-4 text-[#2c5282]" />;
+      return <FileText className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />;
     }
-    return <File className="h-4 w-4 text-slate-500" />;
+    return <File className="h-4 w-4 text-slate-500 dark:text-slate-400" />;
   };
 
   const formatFileSize = (bytes?: number): string => {
@@ -75,7 +74,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
             const imgSrc = `${apiBaseUrl}/api/messages/attachments/${diskName}`;
             const displayName = img.originalName || img.filename || t('messages.imageAttachment');
             return (
-              <div key={idx} className="relative group overflow-hidden bg-slate-200">
+              <div key={idx} className="relative group overflow-hidden bg-slate-200 dark:bg-slate-800">
                 <img
                   src={imgSrc}
                   alt={displayName}
@@ -93,7 +92,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
 
       {/* 2. Image seule (arrondie, max-w-[220px]) */}
       {imageAttachments.length === 1 && (
-        <div className="rounded-xl overflow-hidden max-w-[220px] max-h-[220px] bg-slate-200 shadow-xs">
+        <div className="rounded-xl overflow-hidden max-w-[220px] max-h-[220px] bg-slate-200 dark:bg-slate-800 shadow-xs">
           {(() => {
             const img = imageAttachments[0];
             const diskName = getDiskName(img);
@@ -125,25 +124,25 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
             return (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2 bg-white/90 border border-slate-200/80 rounded-lg text-xs shadow-2xs gap-2"
+                className="flex items-center justify-between p-2 bg-white/95 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 rounded-lg text-xs shadow-2xs gap-2"
               >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div className="p-1 bg-slate-100 rounded shrink-0">
+                  <div className="p-1.5 bg-slate-100 dark:bg-slate-800 rounded-md shrink-0">
                     {getFileIcon(displayName)}
                   </div>
                   <div className="min-w-0 flex-1 text-start">
-                    <p className="font-medium text-slate-800 truncate" title={displayName}>
+                    <p className="font-medium text-slate-800 dark:text-slate-100 truncate" title={displayName}>
                       {displayName}
                     </p>
                     {att.size ? (
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
                         {formatFileSize(att.size)}
                       </p>
                     ) : null}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0">
                   <button
                     type="button"
                     onClick={() => {
@@ -154,7 +153,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                       });
                     }}
                     aria-label={t('common.preview')}
-                    className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
+                    className="h-9 w-9 inline-flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
                     title={t('common.preview')}
                   >
                     <Eye className="h-4 w-4" />
@@ -164,7 +163,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                     onClick={() => handleDownload(att, globalIndex, true)}
                     disabled={isCurrentDownloading}
                     aria-label={t('common.view')}
-                    className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-slate-500 hover:text-[#2c5282] hover:bg-slate-100 rounded"
+                    className="h-9 w-9 inline-flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
                     title={t('common.view')}
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -174,7 +173,7 @@ const AttachmentsList: React.FC<AttachmentsListProps> = ({ attachments }) => {
                     onClick={() => handleDownload(att, globalIndex, false)}
                     disabled={isCurrentDownloading}
                     aria-label={t('common.download')}
-                    className="h-11 w-11 min-w-[44px] min-h-[44px] inline-flex items-center justify-center text-[#2c5282] hover:bg-slate-100 rounded"
+                    className="h-9 w-9 inline-flex items-center justify-center text-[#2c5282] dark:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
                     title={t('common.download')}
                   >
                     {isCurrentDownloading ? (

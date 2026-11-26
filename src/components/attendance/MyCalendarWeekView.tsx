@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Calendar, Clock, CheckCircle2, XCircle } fro
 import { AttendanceRecord } from '@/services/attendanceService';
 import { LeaveReason } from '@/services/leaveReasonService';
 import { getStatusVisualInfo } from './MyAttendanceLegend';
+import { useDirection } from '@/i18n/useDirection';
 
 interface MyCalendarWeekViewProps {
   currentDate: string; // YYYY-MM-DD (n'importe quel jour de la semaine)
@@ -32,6 +33,8 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
   isLoading,
   onSelectDay,
 }) => {
+  const { dir, isRTL } = useDirection();
+
   // Calculer les 7 jours de la semaine (commençant le Dimanche)
   const weekDays = useMemo(() => {
     const d = new Date(currentDate);
@@ -112,18 +115,18 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
   }, [weekDays]);
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-5 shadow-none" dir="rtl">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 space-y-5 shadow-sm text-start" dir={dir}>
       {/* Contrôles navigation semaine */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#edf2f7] pb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrevWeek}
-            className="h-11 px-3 border-[#e2e8f0] rounded text-[#2c5282] hover:bg-gray-50 flex items-center gap-1 text-xs"
+            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
             title="الأسبوع السابق"
           >
-            <ChevronRight className="h-4 w-4" />
+            {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             <span>الأسبوع السابق</span>
           </Button>
 
@@ -131,7 +134,7 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
             variant="outline"
             size="sm"
             onClick={handleCurrentWeek}
-            className="h-11 px-3 border-[#e2e8f0] rounded text-gray-700 hover:bg-gray-50 text-xs font-semibold"
+            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
           >
             الأسبوع الحالي
           </Button>
@@ -140,16 +143,16 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
             variant="outline"
             size="sm"
             onClick={handleNextWeek}
-            className="h-11 px-3 border-[#e2e8f0] rounded text-[#2c5282] hover:bg-gray-50 flex items-center gap-1 text-xs"
+            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
             title="الأسبوع الموالي"
           >
             <span>الأسبوع الموالي</span>
-            <ChevronLeft className="h-4 w-4" />
+            {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
 
-        <div className="text-xs text-[#5f6b7d] flex items-center gap-1.5 font-mono">
-          <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
+        <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-mono tabular-nums">
+          <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
           <span>{weekRangeLabel}</span>
         </div>
       </div>
@@ -157,8 +160,8 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
       {/* Grille 7 colonnes */}
       {isLoading ? (
         <div className="py-16 text-center space-y-2">
-          <div className="h-6 w-6 border-2 border-[#2c5282] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-gray-500">جاري تحميل بيانات الأسبوع...</p>
+          <div className="h-6 w-6 border-2 border-[#2c5282] dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-slate-500 dark:text-slate-400">جاري تحميل بيانات الأسبوع...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -166,57 +169,77 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
             const att = attendanceMap.get(day.date);
             const visual = getStatusVisualInfo(att, leaveReasons);
 
+            const cardClasses =
+              visual.statut === 'present'
+                ? 'bg-emerald-50 dark:bg-emerald-950/35 border-emerald-200 dark:border-emerald-800/70'
+                : visual.statut === 'unrecorded'
+                ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
+                : 'bg-white dark:bg-slate-900';
+
             return (
               <div
                 key={day.date}
                 onClick={() => onSelectDay && onSelectDay(day.date)}
-                className={`p-3.5 rounded border transition-all duration-150 flex flex-col justify-between min-h-[140px] cursor-pointer hover:shadow-sm ${
-                  day.isToday ? 'ring-2 ring-[#2c5282]' : ''
+                className={`p-3.5 rounded-lg border transition-all duration-150 flex flex-col justify-between min-h-[140px] cursor-pointer hover:shadow-sm ${cardClasses} ${
+                  day.isToday ? 'ring-2 ring-[#2c5282] dark:ring-blue-500' : ''
                 }`}
-                style={{
-                  backgroundColor: visual.bgLight,
-                  borderColor: visual.borderColor,
-                }}
+                style={
+                  visual.statut === 'absent'
+                    ? {
+                        backgroundColor: visual.bgLight,
+                        borderColor: visual.borderColor,
+                      }
+                    : undefined
+                }
               >
                 {/* Entête de case */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-800">{day.dayName}</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{day.dayName}</span>
                     {day.isToday && (
-                      <span className="text-[10px] bg-[#2c5282] text-white px-1.5 py-0.2 rounded font-semibold">
+                      <span className="text-[10px] bg-[#2c5282] dark:bg-blue-600 text-white px-1.5 py-0.5 rounded font-semibold">
                         اليوم
                       </span>
                     )}
                   </div>
-                  <div className="text-lg font-bold text-gray-900 font-mono mt-0.5">
+                  <div className="text-lg font-bold text-slate-900 dark:text-slate-100 font-mono tabular-nums mt-0.5">
                     {day.dayNumber}
                   </div>
-                  <div className="text-[10px] text-gray-400 font-mono">{day.date}</div>
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono tabular-nums">{day.date}</div>
                 </div>
 
                 {/* Badge d'état dans la case */}
-                <div className="mt-3 pt-2 border-t border-black/5 space-y-1">
+                <div className="mt-3 pt-2 border-t border-black/5 dark:border-white/10 space-y-1">
                   <div
-                    className="text-xs font-semibold px-2 py-1 rounded text-center truncate"
-                    style={{
-                      backgroundColor: '#ffffff',
-                      color: visual.color,
-                      border: `1px solid ${visual.borderColor}`,
-                    }}
+                    className={`text-xs font-semibold px-2 py-1 rounded-md text-center truncate bg-white/95 dark:bg-slate-900/90 border ${
+                      visual.statut === 'present'
+                        ? 'text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                        : visual.statut === 'unrecorded'
+                        ? 'text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        : ''
+                    }`}
+                    style={
+                      visual.statut === 'absent'
+                        ? {
+                            color: visual.color,
+                            borderColor: visual.borderColor,
+                          }
+                        : undefined
+                    }
                     title={visual.label}
                   >
                     {visual.label}
                   </div>
 
                   {att?.statut === 'present' && att.heureArrivee && (
-                    <div className="text-[11px] text-gray-500 flex items-center justify-center gap-1 font-mono">
-                      <Clock className="h-3 w-3 text-gray-400" />
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1 font-mono tabular-nums">
+                      <Clock className="h-3 w-3 text-slate-400 dark:text-slate-500" />
                       <span>{att.heureArrivee}</span>
                     </div>
                   )}
 
                   {att?.statut === 'absent' && visual.impacteSolde && (
-                    <div className="text-[10px] text-amber-700 text-center font-medium">
+                    <div className="text-[10px] text-amber-700 dark:text-amber-300 text-center font-medium">
                       يخصم من الرصيد
                     </div>
                   )}
@@ -228,23 +251,23 @@ export const MyCalendarWeekView: React.FC<MyCalendarWeekViewProps> = ({
       )}
 
       {/* Résumé en bas */}
-      <div className="pt-3 border-t border-[#edf2f7] flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[#5f6b7d]">حصيلة هذا الأسبوع :</span>
-          <span className="flex items-center gap-1 text-green-700 bg-green-50 px-2.5 py-1 rounded border border-green-200 font-medium">
+          <span className="text-slate-600 dark:text-slate-400">حصيلة هذا الأسبوع :</span>
+          <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 font-medium tabular-nums">
             <CheckCircle2 className="h-3.5 w-3.5" />
             <span>حضور : {weekStats.presents} أيام</span>
           </span>
-          <span className="flex items-center gap-1 text-red-700 bg-red-50 px-2.5 py-1 rounded border border-red-200 font-medium">
+          <span className="flex items-center gap-1 text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/50 px-2.5 py-1 rounded-md border border-red-200 dark:border-red-800 font-medium tabular-nums">
             <XCircle className="h-3.5 w-3.5" />
             <span>غياب : {weekStats.absents} أيام</span>
           </span>
-          <span className="text-gray-500 bg-gray-50 px-2.5 py-1 rounded border border-gray-200">
+          <span className="text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 tabular-nums">
             غير مسجل : {weekStats.unrecorded} أيام
           </span>
         </div>
 
-        <span className="text-gray-400 text-[11px]">
+        <span className="text-slate-400 dark:text-slate-500 text-[11px]">
           * اضغط على أي يوم للانتقال إلى المعاينة التفصيلية
         </span>
       </div>

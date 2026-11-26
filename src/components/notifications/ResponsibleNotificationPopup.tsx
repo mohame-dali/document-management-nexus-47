@@ -4,7 +4,7 @@ import { X, FileText, User, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import { useDirection } from '@/i18n/useDirection';
 
 interface ResponsibleNotificationPopupProps {
@@ -31,7 +31,8 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
   const { dir } = useDirection();
   return (
     <div 
-      className={`fixed top-4 end-4 z-[9999] animate-in ${dir === 'rtl' ? 'slide-in-from-left-full' : 'slide-in-from-right-full'} duration-200`}
+      data-responsible-overlay="true"
+      className={`fixed top-4 end-4 z-[9999] print:hidden animate-in ${dir === 'rtl' ? 'slide-in-from-left-full' : 'slide-in-from-right-full'} duration-200`}
       dir={dir}
     >
       <Card className="w-96 bg-white border-2 border-blue-500 shadow-sm">
@@ -80,8 +81,8 @@ const ResponsibleNotificationPopup: React.FC<ResponsibleNotificationPopupProps> 
             
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-600" />
-              <span className="text-sm text-gray-700">
-                {formatArabicDate(new Date(assignedAt))}
+              <span className="text-sm text-gray-700 tabular-nums">
+                <bdi dir={dir} className="tabular-nums">{formatLongDate(assignedAt, dir === 'ltr' ? 'fr' : 'ar')}</bdi>
               </span>
             </div>
           </div>

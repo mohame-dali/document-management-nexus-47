@@ -20,6 +20,9 @@ import { AttendanceRecord } from '@/services/attendanceService';
 import { LeaveReason } from '@/services/leaveReasonService';
 import { PersonnelAvatar } from '@/components/hr/PersonnelAvatar';
 import AttendanceStatusBadge from './AttendanceStatusBadge';
+import { useDirection } from '@/i18n/useDirection';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export interface WeekPersonnelSummary {
   _id: string;
@@ -68,6 +71,8 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
   searchQuery,
   onSearchChange,
 }) => {
+  const { dir, isRTL } = useDirection();
+
   // Calcul des 7 jours de la semaine (commençant Dimanche)
   const weekDays = useMemo(() => {
     const d = new Date(currentDate);
@@ -145,18 +150,18 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
   }, [weekDays, personnelList, attendanceMap]);
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-none space-y-4 p-5" dir="rtl">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm space-y-4 p-5 text-start" dir={dir}>
       {/* Contrôles Navigation Semaine */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#edf2f7] pb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrevWeek}
-            className="h-11 px-3 border-[#e2e8f0] rounded text-[#2c5282] hover:bg-gray-50 flex items-center gap-1 text-xs"
+            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
             title="الأسبوع السابق"
           >
-            <ChevronRight className="h-4 w-4" />
+            {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             <span>الأسبوع السابق</span>
           </Button>
 
@@ -164,7 +169,7 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
             variant="outline"
             size="sm"
             onClick={handleCurrentWeek}
-            className="h-11 px-3 border-[#e2e8f0] rounded text-gray-700 hover:bg-gray-50 text-xs font-semibold"
+            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
           >
             الأسبوع الحالي
           </Button>
@@ -173,44 +178,44 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
             variant="outline"
             size="sm"
             onClick={handleNextWeek}
-            className="h-11 px-3 border-[#e2e8f0] rounded text-[#2c5282] hover:bg-gray-50 flex items-center gap-1 text-xs"
+            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
             title="الأسبوع الموالي"
           >
             <span>الأسبوع الموالي</span>
-            <ChevronLeft className="h-4 w-4" />
+            {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
 
-        <div className="text-xs text-[#5f6b7d] flex items-center gap-1.5 font-mono">
-          <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
+        <div className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-mono tabular-nums">
+          <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400" />
           <span>{weekRangeLabel}</span>
         </div>
       </div>
 
       {/* Barre de filtres (Département & Recherche) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#f7fafc] p-3 rounded border border-[#e2e8f0]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
         {/* Recherche */}
         <div className="relative">
-          <Search className="h-4 w-4 absolute right-3 top-2.5 text-gray-400" />
+          <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-400" />
           <Input
             type="text"
             placeholder="بحث بالاسم أو اللقب أو ب.ت.و..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-9 pr-9 text-xs border-[#e2e8f0] bg-white rounded"
+            className="h-9 ps-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
           />
         </div>
 
         {/* Filtre Département */}
         <div>
           <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
-            <SelectTrigger className="h-9 text-xs border-[#e2e8f0] bg-white rounded">
+            <SelectTrigger className="h-9 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <div className="flex items-center gap-1.5 truncate">
-                <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                <Building2 className="h-3.5 w-3.5 text-slate-400" />
                 <SelectValue placeholder="كل الأقسام والمصالح" />
               </div>
             </SelectTrigger>
-            <SelectContent dir="rtl">
+            <SelectContent dir={dir}>
               <SelectItem value="all" className="text-xs">
                 كل الأقسام والمصالح
               </SelectItem>
@@ -226,39 +231,40 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
 
       {/* Grille de la semaine */}
       {isLoading ? (
-        <div className="py-20 text-center space-y-2">
-          <div className="h-6 w-6 border-2 border-[#2c5282] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-gray-500">جاري تحميل بيانات الأسبوع لكافة الموظفين...</p>
+        <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+          <TableSkeleton rows={6} columns={8} />
         </div>
       ) : personnelList.length === 0 ? (
-        <div className="py-16 text-center space-y-3 bg-[#f7fafc] rounded border border-dashed border-[#cbd5e0]">
-          <Users className="h-8 w-8 text-gray-400 mx-auto" />
-          <p className="text-sm font-semibold text-gray-700">لا يوجد موظفون مطابقون لمعايير البحث</p>
+        <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
+          <EmptyState
+            icon={<Users className="h-8 w-8 text-slate-400 dark:text-slate-500" />}
+            title="لا يوجد موظفون مطابقون لمعايير البحث"
+          />
         </div>
       ) : (
-        <div className="overflow-x-auto border border-[#e2e8f0] rounded">
-          <table className="w-full text-right text-xs divide-y divide-[#e2e8f0]">
-            <thead className="bg-[#f7fafc] text-[#4a5568] font-bold">
+        <div className="overflow-x-auto max-h-[650px] border border-slate-200 dark:border-slate-800 rounded-lg">
+          <table className="w-full text-start text-xs divide-y divide-slate-200 dark:divide-slate-800">
+            <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 text-slate-600 dark:text-slate-300 font-bold backdrop-blur-sm">
               <tr>
-                <th className="py-3 px-3 min-w-[200px]">الموظف</th>
+                <th className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 py-3 px-3 min-w-[210px] whitespace-nowrap">الموظف</th>
                 {weekDays.map((day) => (
                   <th
                     key={day.date}
-                    className={`py-2 px-2 text-center min-w-[110px] border-r border-gray-200 ${
-                      day.isToday ? 'bg-[#2c5282]/10 text-[#2c5282]' : ''
+                    className={`py-2 px-2 text-center min-w-[110px] border-s border-slate-200 dark:border-slate-700 ${
+                      day.isToday ? 'bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300' : ''
                     }`}
                   >
                     <div className="font-bold">{day.dayName}</div>
-                    <div className="text-[10px] font-mono text-gray-500">{day.date}</div>
+                    <div className="text-[10px] font-mono tabular-nums text-slate-500 dark:text-slate-400">{day.date}</div>
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#edf2f7] bg-white">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
               {personnelList.map((p) => (
-                <tr key={p._id} className="hover:bg-gray-50/80 transition-colors">
+                <tr key={p._id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors">
                   {/* Employé info */}
-                  <td className="py-2.5 px-3">
+                  <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 py-2.5 px-3 transition-colors">
                     <div className="flex items-center gap-2.5">
                       <PersonnelAvatar
                         photo={p.photo}
@@ -267,10 +273,10 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
                         size="sm"
                       />
                       <div className="min-w-0">
-                        <div className="font-bold text-[#1a202c] truncate">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
                           {p.nom} {p.prenom}
                         </div>
-                        <div className="text-[10px] text-gray-500 truncate">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                           {getDepartmentName(p.activeDepartment)}
                         </div>
                       </div>
@@ -284,8 +290,8 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
                     return (
                       <td
                         key={day.date}
-                        className={`py-2 px-1 text-center border-r border-gray-100 ${
-                          day.isToday ? 'bg-blue-50/30' : ''
+                        className={`py-2 px-1 text-center border-s border-slate-100 dark:border-slate-800 ${
+                          day.isToday ? 'bg-blue-50/40 dark:bg-blue-950/25' : ''
                         }`}
                       >
                         <div className="flex justify-center">
@@ -307,21 +313,21 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
             </tbody>
 
             {/* Résumé en bas : total par jour */}
-            <tfoot className="bg-[#f7fafc] border-t-2 border-[#e2e8f0] font-bold">
+            <tfoot className="bg-slate-50 dark:bg-slate-800/95 border-t-2 border-slate-200 dark:border-slate-700 font-bold">
               <tr>
-                <td className="py-3 px-3 text-xs text-[#1a202c]">
+                <td className="sticky start-0 z-10 bg-slate-50 dark:bg-slate-800 py-3 px-3 text-xs text-slate-900 dark:text-slate-100">
                   إجمالي الحضور والغياب اليومي :
                 </td>
                 {dailyTotals.map((tot, idx) => (
                   <td
                     key={weekDays[idx].date}
-                    className="py-2 px-1.5 text-center border-r border-gray-200 text-[11px]"
+                    className="py-2 px-1.5 text-center border-s border-slate-200 dark:border-slate-700 text-[11px]"
                   >
-                    <div className="space-y-0.5">
-                      <div className="text-green-700 font-mono">ح: {tot.presents}</div>
-                      <div className="text-red-700 font-mono">غ: {tot.absents}</div>
+                    <div className="space-y-0.5 tabular-nums">
+                      <div className="text-emerald-700 dark:text-emerald-400 font-mono">ح: {tot.presents}</div>
+                      <div className="text-red-700 dark:text-red-400 font-mono">غ: {tot.absents}</div>
                       {tot.unrecorded > 0 && (
-                        <div className="text-gray-400 font-mono text-[10px]">
+                        <div className="text-slate-400 dark:text-slate-500 font-mono text-[10px]">
                           غ.م: {tot.unrecorded}
                         </div>
                       )}

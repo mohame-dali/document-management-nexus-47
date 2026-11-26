@@ -91,16 +91,23 @@ exports.handleScannedDocument = async (
     const normalizedExt = ['.pdf', '.jpg', '.jpeg', '.png'].includes(sourceExt)
       ? (sourceExt === '.jpeg' ? '.jpg' : sourceExt)
       : '.pdf';
-    const newFilename = `${serialNumber}${normalizedExt}`;
-    const newFilePath = path.join(finalFolderPath, newFilename);
-
-    console.log('Target file path:', newFilePath);
+    const requestedVersion = Number(options?.version) || 1;
+    const versionSuffix = requestedVersion > 1 ? `_v${requestedVersion}` : '';
+    let newFilename = `${serialNumber}${versionSuffix}${normalizedExt}`;
+    let newFilePath = path.join(finalFolderPath, newFilename);
 
     // Ensure destination directory exists
     if (!fs.existsSync(finalFolderPath)) {
       fs.mkdirSync(finalFolderPath, { recursive: true });
       console.log('Created directory:', finalFolderPath);
     }
+
+    if (fs.existsSync(newFilePath)) {
+      newFilename = `${serialNumber}${versionSuffix}_${Date.now()}${normalizedExt}`;
+      newFilePath = path.join(finalFolderPath, newFilename);
+    }
+
+    console.log('Target file path:', newFilePath);
 
     // Enhanced path resolution
     let sourcePath = providedScannedDocumentPath;

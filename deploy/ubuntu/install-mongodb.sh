@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # deploy/ubuntu/install-mongodb.sh
-# Installation et durcissement de MongoDB Community Edition 7.0 / 8.0 sur Ubuntu
+# Installation et durcissement de MongoDB Community Edition sur Ubuntu (22.04 / 24.04 LTS)
 # [NON TESTÉ, à exécuter sur une VM de recette]
 # ==============================================================================
 # Rôle :
-#   1. Installe MongoDB Community Edition depuis le dépôt officiel
-#   2. Installe mongodb-database-tools (mongodump, mongorestore)
+#   1. Détecte dynamiquement Ubuntu 22.04 (jammy -> 7.0) ou 24.04 (noble -> 8.0)
+#   2. Installe MongoDB Community Edition + mongodb-database-tools
 #   3. Active le service systemd mongod au démarrage
 #   4. Verrouille bindIp strictement sur 127.0.0.1 (aucune écoute externe)
-#   5. Invite l'administrateur à saisir interactivement le mot de passe du compte
-#      d'application 'dms_app_user' (aucun mot de passe codé en dur)
-#   6. Active l'authentification (authorization: enabled) dans mongod.conf
+#   5. Crée admin_dms (admin) et dms_app_user (document-management) sans mot de passe codé en dur
+#   6. Active l'authentification (authorization: enabled) dans /etc/mongod.conf
 # ==============================================================================
 
 set -euo pipefail
@@ -21,20 +20,56 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+export DEBIAN_FRONTEND=noninteractive
+
+wait_for_apt_lock() {
+  local waited=0
+  local max_wait=300
+  while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 \
+     || fuser /var/lib/dpkg/lock >/dev/null 2>&1 \
+     || fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+    if [ "${waited}" -eq 0 ]; then
+      echo "  ⏳ Verrou APT/DPKG détecté — attente..."
+    fi
+    if [ "${waited}" -ge "${max_wait}" ]; then
+      echo "❌ ERREUR : Verrou APT/DPKG toujours actif après ${max_wait}s." >&2
+      exit 1
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+}
+
 echo "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
 echo "🗄️ DMS — INSTALLATION ET SÉCURISATION DE MONGODB COMMUNITY"
 echo "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
 
-# 1. Ajout de la clé GPG et du dépôt officiel MongoDB
+# 1. Ajout de la clé GPG et du dépôt officiel MongoDB selon la version d'Ubuntu
 UBUNTU_CODENAME="$(lsb_release -cs)"
-echo "[1/5] Ajout du dépôt officiel MongoDB (Ubuntu ${UBUNTU_CODENAME})..."
-curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | \
-  gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor --yes
+case "${UBUNTU_CODENAME}" in
+  jammy)
+    MONGO_SERIES="${MONGO_VERSION:-7.0}"
+    ;;
+  noble)
+    MONGO_SERIES="${MONGO_VERSION:-8.0}"
+    ;;
+  *)
+    echo "❌ ERREUR : Nom de code Ubuntu '${UBUNTU_CODENAME}' non pris en charge automatiquement." >&2
+    echo "   Attendu : jammy (22.04 LTS -> MongoDB 7.0) ou noble (24.04 LTS -> MongoDB 8.0)." >&2
+    exit 1
+    ;;
+esac
 
-echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu ${UBUNTU_CODENAME}/mongodb-org/7.0 multiverse" | \
-  tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+echo "[1/5] Ajout du dépôt officiel MongoDB ${MONGO_SERIES} (Ubuntu ${UBUNTU_CODENAME})..."
+curl -fsSL "https://www.mongodb.org/static/pgp/server-${MONGO_SERIES}.asc" | \
+  gpg -o "/usr/share/keyrings/mongodb-server-${MONGO_SERIES}.gpg" --dearmor --yes
 
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-${MONGO_SERIES}.gpg ] https://repo.mongodb.org/apt/ubuntu ${UBUNTU_CODENAME}/mongodb-org/${MONGO_SERIES} multiverse" | \
+  tee "/etc/apt/sources.list.d/mongodb-org-${MONGO_SERIES}.list"
+
+wait_for_apt_lock
 apt-get update -y
+wait_for_apt_lock
 apt-get install -y mongodb-org mongodb-database-tools
 
 # 2. Démarrage initial pour initialisation
@@ -85,15 +120,14 @@ unset ADMIN_PWD
 echo "[4/5] Application du durcissement dans /etc/mongod.conf..."
 sed -i 's/bindIp: .*/bindIp: 127.0.0.1/' /etc/mongod.conf
 
-if ! grep -q "security:" /etc/mongod.conf; then
+if ! grep -q "^security:" /etc/mongod.conf; then
   cat <<EOT >> /etc/mongod.conf
 
 security:
   authorization: enabled
 EOT
-else
-  # Si la section security existe déjà
-  sed -i '/security:/a \  authorization: enabled' /etc/mongod.conf 2>/dev/null || true
+elif ! grep -qE '^[[:space:]]*authorization:[[:space:]]*enabled' /etc/mongod.conf; then
+  sed -i '/^security:/a \  authorization: enabled' /etc/mongod.conf 2>/dev/null || true
 fi
 
 # 5. Redémarrage avec authentification active
@@ -102,8 +136,8 @@ systemctl restart mongod
 sleep 2
 
 echo "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
-echo "✅ MONGODB INSTALLÉ ET SÉCURISÉ AVEC SUCCÈS !"
+echo "✅ MONGODB ${MONGO_SERIES} INSTALLÉ ET SÉCURISÉ AVEC SUCCÈS !"
 echo "ℹ️ Chaîne de connexion à inscrire dans /var/www/dms/.env :"
-echo "   MONGODB_URI=mongodb://dms_app_user:<VOTRE_MOT_DE_PASSE>@127.0.0.1:27017/document-management?authSource=admin"
+echo "   MONGODB_URI=mongodb://dms_app_user:<VOTRE_MOT_DE_PASSE>@127.0.0.1:27017/document-management?authSource=document-management"
 echo "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
 unset APP_PWD

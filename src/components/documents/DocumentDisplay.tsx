@@ -12,7 +12,7 @@ import { Grid, List, Calendar, FileText, Send, Eye } from 'lucide-react';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 import { useNavigate } from 'react-router-dom';
 import DocumentDataGrid from './DocumentDataGrid';
-import { formatArabicDate, formatArabicDateShort } from '@/utils/arabicDateFormatter';
+import { formatLongDate, formatShortDate } from '@/utils/formatDate';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 type ViewMode = 'grid' | 'list';
@@ -40,14 +40,18 @@ const DocumentDisplay: React.FC = () => {
   });
 
   // Filter documents by year and user permissions
-  const filterDocumentsByYear = (documents: any[], year: string) => {
+  const filterDocumentsByYear = <T extends IncomingDocument | OutgoingDocument>(documents: T[], year: string): T[] => {
     return documents?.filter(doc => {
-      const docYear = new Date(doc.arrivalDate || doc.issueDate).getFullYear().toString();
+      const dateStr = 'arrivalDate' in doc ? doc.arrivalDate : doc.issueDate;
+      const docYear = new Date(dateStr).getFullYear().toString();
       return docYear === year;
     }) || [];
   };
 
-  const filterDocumentsByPermissions = (documents: any[], type: 'incoming' | 'outgoing') => {
+  const filterDocumentsByPermissions = <T extends IncomingDocument | OutgoingDocument>(
+    documents: T[],
+    type: 'incoming' | 'outgoing'
+  ): T[] => {
     if (!currentUser) return [];
     
     // Director, Admin and AdminTuningDesk see all documents
@@ -62,15 +66,21 @@ const DocumentDisplay: React.FC = () => {
       
       if (type === 'incoming') {
         return documents.filter(doc => {
-          if (Array.isArray(doc.assignedTo)) {
-            return doc.assignedTo.some((dept: any) => dept._id === activeDepartmentId);
+          const incomingDoc = doc as IncomingDocument;
+          if (Array.isArray(incomingDoc.assignedTo)) {
+            return incomingDoc.assignedTo.some((dept) => {
+              const deptId = typeof dept.id === 'string' ? dept.id : dept.id?._id;
+              return (dept as { _id?: string })._id === activeDepartmentId || deptId === activeDepartmentId;
+            });
           }
           return false;
         });
       } else {
-        return documents.filter(doc => 
-          (typeof doc.source?.id === 'string' ? doc.source.id : doc.source?.id?._id) === activeDepartmentId
-        );
+        return documents.filter(doc => {
+          const outgoingDoc = doc as OutgoingDocument;
+          const srcId = outgoingDoc.source?.id;
+          return (typeof srcId === 'string' ? srcId : srcId?._id) === activeDepartmentId;
+        });
       }
     }
     
@@ -122,7 +132,7 @@ const DocumentDisplay: React.FC = () => {
               ) : (
                 <Send className="icon-responsive text-green-500" />
               )}
-              <span className="text-responsive-sm font-medium">#{doc.serialNumber}</span>
+              <span className="text-responsive-sm font-medium tabular-nums">#{doc.serialNumber}</span>
             </div>
           </div>
         </CardHeader>
@@ -131,8 +141,13 @@ const DocumentDisplay: React.FC = () => {
           <p className="text-responsive-xs text-muted-foreground">
             <strong>المصدر:</strong> {source}
           </p>
-          <p className="text-responsive-xs text-muted-foreground">
-            <strong>التاريخ:</strong> {isMobile ? formatArabicDateShort(date) : formatArabicDate(date)}
+          <p className="text-responsive-xs text-muted-foreground tabular-nums">
+            <strong>التاريخ:</strong>{' '}
+            {isMobile ? (
+              <bdi dir="ltr" className="tabular-nums">{formatShortDate(date)}</bdi>
+            ) : (
+              <bdi dir="rtl" className="tabular-nums">{formatLongDate(date, 'ar')}</bdi>
+            )}
           </p>
           {isIncoming && getAssignedInfo() && (
             <p className="text-responsive-xs text-muted-foreground">
@@ -166,7 +181,7 @@ const DocumentDisplay: React.FC = () => {
     }
   };
 
-  const renderDocuments = (documents: any[], type: 'incoming' | 'outgoing') => {
+  const renderDocuments = (documents: (IncomingDocument | OutgoingDocument)[], type: 'incoming' | 'outgoing') => {
     if (viewMode === 'list') {
       return <DocumentDataGrid documents={documents} type={type} />;
     }
@@ -184,20 +199,20 @@ const DocumentDisplay: React.FC = () => {
       {/* Header Controls - Responsive */}
       <div className="flex-responsive-col gap-responsive items-start sm:items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-responsive-xl font-bold text-[#1a202c]">إدارة الوثائق</h2>
-          <p className="text-responsive-sm text-muted-foreground">
+          <h2 className="text-responsive-xl font-bold text-[#1a202c] dark:text-slate-100">إدارة الوثائق</h2>
+          <p className="text-responsive-sm text-muted-foreground tabular-nums">
             العرض: {getRoleDisplayScope()} • السنة: {selectedYear}
           </p>
         </div>
         
         <div className="flex gap-2 w-full sm:w-auto">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-full sm:w-32 touch-target">
+            <SelectTrigger className="w-full sm:w-32 touch-target tabular-nums">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {years.map(year => (
-                <SelectItem key={year} value={year}>
+                <SelectItem key={year} value={year} className="tabular-nums">
                   <div className="flex items-center gap-2">
                     <Calendar className="icon-responsive" />
                     {year}
@@ -207,12 +222,12 @@ const DocumentDisplay: React.FC = () => {
             </SelectContent>
           </Select>
           
-          <div className="flex border rounded">
+          <div className="flex border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size={isMobile ? "sm" : "default"}
               onClick={() => setViewMode('grid')}
-              className="rounded-r-none touch-target"
+              className="rounded-none touch-target"
             >
               <Grid className="icon-responsive" />
               {!isMobile && <span className="mr-2">شبكة</span>}
@@ -221,7 +236,7 @@ const DocumentDisplay: React.FC = () => {
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size={isMobile ? "sm" : "default"}
               onClick={() => setViewMode('list')}
-              className="rounded-l-none touch-target"
+              className="rounded-none touch-target"
             >
               <List className="icon-responsive" />
               {!isMobile && <span className="mr-2">قائمة</span>}
@@ -237,13 +252,13 @@ const DocumentDisplay: React.FC = () => {
             <FileText className="icon-responsive" />
             <span className="hidden sm:inline">الواردة</span>
             <span className="sm:hidden">واردة</span>
-            <Badge variant="secondary" className="badge-responsive">{filteredIncomingDocs.length}</Badge>
+            <Badge variant="secondary" className="badge-responsive tabular-nums">{filteredIncomingDocs.length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="outgoing" className="flex items-center gap-2 text-responsive-sm">
             <Send className="icon-responsive" />
             <span className="hidden sm:inline">الصادرة</span>
             <span className="sm:hidden">صادرة</span>
-            <Badge variant="secondary" className="badge-responsive">{filteredOutgoingDocs.length}</Badge>
+            <Badge variant="secondary" className="badge-responsive tabular-nums">{filteredOutgoingDocs.length}</Badge>
           </TabsTrigger>
         </TabsList>
 

@@ -196,8 +196,9 @@ export const downloadAttachment = async (attachment: MessageAttachmentItem, open
       responseType: 'blob',
     });
 
+    const contentType = response.headers['content-type'];
     const blob = new Blob([response.data], {
-      type: response.headers['content-type'] || 'application/octet-stream',
+      type: typeof contentType === 'string' && contentType ? contentType : 'application/octet-stream',
     });
     const blobUrl = window.URL.createObjectURL(blob);
 

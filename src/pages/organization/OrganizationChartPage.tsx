@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import ReactFlow, {
   Background,
-  Controls,
   MiniMap,
   Node,
   Edge,
   Position,
-  BackgroundVariant
+  BackgroundVariant,
+  ReactFlowInstance,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { ArrowRight, RotateCcw, AlertCircle, Loader2, Building2, Info, ChevronDown, ChevronUp, Briefcase, Mail } from 'lucide-react';
+import { ArrowRight, RotateCcw, AlertCircle, Loader2, Building2, Info, ChevronDown, ChevronUp, Briefcase, Mail, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageProvider';
 import { ChartPersonnel, Director, getOrganizationChart } from '@/services/organizationChartService';
 import AdministrationNode from '@/components/organization/AdministrationNode';
 import DirectorNode from '@/components/organization/DirectorNode';
@@ -34,7 +35,11 @@ const LEVEL_Y_STEP = 190;
 const OrganizationChartPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { language } = useLanguage();
+  const isFr = language === 'fr';
   const [showLegend, setShowLegend] = useState(true);
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [selectedContact, setSelectedContact] = useState<{
     person: ChartPersonnel | Director;
     departmentName?: string;
@@ -218,16 +223,16 @@ const OrganizationChartPage: React.FC = () => {
   }, [data, handlePersonnelClick]);
 
   return (
-    <div className="max-w-[1600px] mx-auto p-6 space-y-6" dir="rtl">
+    <div className="max-w-[1600px] mx-auto p-4 sm:p-6 space-y-5" dir="rtl">
       {/* En-tête */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#2c5282]/10 text-[#2c5282] rounded">
+          <div className="p-2.5 bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-400 rounded-lg">
             <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-[#1a202c]">الهيكل التنظيمي للإدارة</h1>
-            <p className="text-sm text-[#4a5568] mt-0.5">
+            <h1 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">الهيكل التنظيمي للإدارة</h1>
+            <p className="text-sm text-[#4a5568] dark:text-slate-400 mt-0.5">
               هيكل تراتبي هرمي تفاعلي (الإدارة العامة ← المصالح السيادية ← المصالح والدوائر العملياتية)
             </p>
           </div>
@@ -236,7 +241,7 @@ const OrganizationChartPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="h-10 px-4 border-[#cbd5e1] text-[#4a5568] hover:bg-[#f7fafc] rounded transition-colors"
+            className="h-9 px-3.5 border-slate-300 dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0"
             title="تحديث البيانات"
           >
             <RotateCcw className="w-4 h-4 ml-2" />
@@ -245,7 +250,7 @@ const OrganizationChartPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => navigate(-1)}
-            className="h-10 px-4 border-[#cbd5e1] text-[#4a5568] hover:bg-[#f7fafc] rounded transition-colors"
+            className="h-9 px-3.5 border-slate-300 dark:border-slate-700 text-[#4a5568] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0"
           >
             <ArrowRight className="w-4 h-4 ml-2" />
             العودة
@@ -293,11 +298,18 @@ const OrganizationChartPage: React.FC = () => {
 
       {/* Zone ReactFlow */}
       {!isLoading && !isError && nodes.length > 1 && (
-        <div className="bg-[#f7fafc] border border-[#e2e8f0] rounded shadow-sm overflow-hidden min-h-[650px] h-[720px] relative">
+        <div className="bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden min-h-[650px] h-[720px] relative">
           <ReactFlow
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
+            onInit={(instance) => {
+              setRfInstance(instance);
+              setZoomLevel(instance.getZoom());
+            }}
+            onMoveEnd={(_event, viewport) => {
+              setZoomLevel(viewport.zoom);
+            }}
             fitView
             fitViewOptions={{ padding: 0.25 }}
             minZoom={0.2}
@@ -305,7 +317,6 @@ const OrganizationChartPage: React.FC = () => {
             proOptions={{ hideAttribution: true }}
           >
             <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#cbd5e1" />
-            <Controls position="bottom-left" showInteractive={false} />
             <MiniMap
               position="bottom-right"
               nodeStrokeColor="#cbd5e1"
@@ -320,25 +331,74 @@ const OrganizationChartPage: React.FC = () => {
                 return '#ffffff';
               }}
               maskColor="rgba(247, 250, 252, 0.7)"
-              className="!border !border-[#e2e8f0] !rounded !overflow-hidden"
+              className="!border !border-slate-200/80 dark:!border-slate-700 !rounded-lg !overflow-hidden"
             />
           </ReactFlow>
+
+          {/* Floating Zoom & Fit Controls Pill */}
+          <div
+            className="absolute bottom-4 left-4 z-10 inline-flex items-center gap-1 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-md px-2 py-1.5"
+            dir="ltr"
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => rfInstance?.zoomOut({ duration: 200 })}
+              aria-label={isFr ? 'Zoom arrière' : 'تصغير'}
+              title={isFr ? 'Zoom arrière' : 'تصغير'}
+              className="h-7 w-7 p-0 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#2c5282] dark:hover:text-blue-300"
+            >
+              <ZoomOut className="h-3.5 w-3.5" />
+            </Button>
+
+            <span className="min-w-[42px] text-center text-xs font-semibold text-slate-700 dark:text-slate-200 tabular-nums select-none">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => rfInstance?.zoomIn({ duration: 200 })}
+              aria-label={isFr ? 'Zoom avant' : 'تكبير'}
+              title={isFr ? 'Zoom avant' : 'تكبير'}
+              className="h-7 w-7 p-0 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#2c5282] dark:hover:text-blue-300"
+            >
+              <ZoomIn className="h-3.5 w-3.5" />
+            </Button>
+
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => rfInstance?.fitView({ padding: 0.25, duration: 250 })}
+              aria-label={isFr ? 'Réinitialiser la vue' : 'إعادة ضبط العرض'}
+              title={isFr ? 'Réinitialiser la vue' : 'إعادة ضبط العرض'}
+              className="h-7 px-2.5 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#2c5282] dark:hover:text-blue-300 whitespace-nowrap shrink-0 flex items-center gap-1"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              <span>{isFr ? 'Ajuster' : 'ضبط العرض'}</span>
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Légende repliable */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm text-xs transition-all overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm text-xs transition-all overflow-hidden">
         <div 
           onClick={() => setShowLegend(!showLegend)}
-          className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-[#f7fafc] select-none transition-colors border-b border-transparent"
+          className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 select-none transition-colors border-b border-transparent"
         >
-          <div className="flex items-center gap-2 text-[#1a202c] font-bold">
-            <Info className="w-4 h-4 text-[#2c5282]" />
+          <div className="flex items-center gap-2 text-[#1a202c] dark:text-slate-100 font-bold">
+            <Info className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
             <span>دليل المستويات والوحدات الإدارية</span>
           </div>
           <button
             type="button"
-            className="flex items-center gap-1 text-[#5f6b7d] hover:text-[#2c5282] text-xs font-medium"
+            className="flex items-center gap-1 text-[#5f6b7d] dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-blue-300 text-xs font-medium"
           >
             <span>{showLegend ? 'إخفاء' : 'عرض الدليل'}</span>
             {showLegend ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -395,9 +455,19 @@ const OrganizationChartPage: React.FC = () => {
                   size="md"
                 />
                 <div className="min-w-0">
-                  <p className="text-base font-bold text-[#1a202c] truncate">
-                    {selectedContact.person.prenom} {selectedContact.person.nom}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-base font-bold text-[#1a202c] truncate">
+                      {selectedContact.person.prenom} {selectedContact.person.nom}
+                    </p>
+                    {selectedContact.person.username && (
+                      <span
+                        dir="ltr"
+                        className="inline-block text-[11px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5"
+                      >
+                        @{selectedContact.person.username}
+                      </span>
+                    )}
+                  </div>
                   {selectedContact.departmentName && (
                     <p className="text-xs text-[#5f6b7d] flex items-center gap-1 mt-0.5">
                       <Building2 className="w-3.5 h-3.5 text-[#2c5282]" />

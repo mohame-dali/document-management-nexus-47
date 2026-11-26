@@ -51,6 +51,8 @@ export const extractFromOcr = async (
   return response.data.data;
 };
 
+export type AIErrorCode = string;
+
 interface AxiosErrorLike {
   code?: string;
   message?: string;

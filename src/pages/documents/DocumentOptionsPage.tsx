@@ -133,7 +133,11 @@ const DocumentOptionsPage: React.FC = () => {
   }
 
   const handleCreate = (data: DocumentOptionFormData) => {
-    createMutation.mutate(data);
+    createMutation.mutate({
+      category: data.category || 'activity',
+      documentType: data.documentType || 'both',
+      value: data.value || '',
+    });
   };
 
   const handleEdit = (option: DocumentOption) => {

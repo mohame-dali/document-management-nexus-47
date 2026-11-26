@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { AlertCircle, Upload, ArrowRight, User as UserIcon, Info, Shield } from 'lucide-react';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import UserForm, { UserFormData } from '@/components/users/UserForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,7 @@ const EditUser: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['users', id] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
       toast.success('تم تحديث المستخدم بنجاح');
       navigate('/dashboard/users');
     },
@@ -56,6 +57,7 @@ const EditUser: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', id] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
       toast.success('تم رفع وتحديث الصورة الشخصية بنجاح');
       setPhotoFile(null);
     },
@@ -253,7 +255,9 @@ const EditUser: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-base">
             <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
               <span className="text-sm font-semibold text-gray-500 block">تاريخ الإنشاء</span>
-              <p className="font-medium text-[#1a202c]">{formatArabicDate(user.createdAt)}</p>
+              <p className="font-medium text-[#1a202c] tabular-nums">
+                <bdi dir="rtl" className="tabular-nums">{formatLongDate(user.createdAt, 'ar')}</bdi>
+              </p>
             </div>
             
             <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-1.5">
@@ -317,7 +321,9 @@ const EditUser: React.FC = () => {
         currentUserDepartment={
           typeof currentUser?.activeDepartment === 'object' && currentUser?.activeDepartment
             ? currentUser.activeDepartment._id
-            : (currentUser?.activeDepartment as string) || ''
+            : typeof currentUser?.activeDepartment === 'string'
+              ? currentUser.activeDepartment
+              : ''
         }
       />
     </div>

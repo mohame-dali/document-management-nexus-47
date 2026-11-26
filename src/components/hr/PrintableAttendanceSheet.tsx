@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
+import { formatShortDate } from '@/utils/formatDate';
 import './PrintableAttendanceSheet.css';
 
 export interface MonthlyDayEntry {
@@ -182,13 +183,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
 
   const monthNameAr = ARABIC_MONTH_NAMES[month] || String(month);
   const monthNameFr = FRENCH_MONTH_NAMES[month] || String(month);
-  const printedDateStr = useMemo(() => {
-    const now = new Date();
-    const dd = String(now.getDate()).padStart(2, '0');
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const yyyy = now.getFullYear();
-    return `${yyyy}/${mm}/${dd}`;
-  }, []);
+  const printedDateStr = useMemo(() => formatShortDate(new Date()), []);
 
   const getCellStyle = (entry: MonthlyDayEntry | undefined, isOutOfMonth: boolean, isNonWorking: boolean) => {
     if (isOutOfMonth) {
@@ -221,8 +216,8 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
       {/* Barre d'actions écran uniquement (masquée à l'impression) */}
       <div className="no-print flex flex-wrap items-center justify-between gap-3 bg-white border border-[#e2e8f0] rounded p-4">
         <div className="text-sm text-[#4a5568]">
-          <span className="font-bold text-[#1a202c]">
-            {monthNameAr} {year}
+          <span className="font-bold text-[#1a202c] tabular-nums">
+            <bdi dir="rtl" className="tabular-nums">{monthNameAr} {year}</bdi>
           </span>
           <span className="mx-2 text-slate-300">|</span>
           <span>
@@ -279,7 +274,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
             <h2 className="text-base sm:text-lg font-extrabold text-[#0f172a] tracking-normal">
               بطاقة الحضور والغياب الشهرية
             </h2>
-            <p className="text-xs sm:text-sm font-bold text-[#1e3a5f]">
+            <p className="text-xs sm:text-sm font-bold text-[#1e3a5f] tabular-nums">
               لشهر : {monthNameAr} {year}
             </p>
           </div>
@@ -300,7 +295,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                 <span className="font-mono font-bold">{totalPersonnel}</span>
               </p>
               <p className="text-[10px] text-[#475569]">
-                تاريخ الطباعة : <span className="font-mono">{printedDateStr}</span>
+                تاريخ الطباعة : <bdi dir="ltr" className="font-mono tabular-nums">{printedDateStr}</bdi>
               </p>
             </div>
           </div>

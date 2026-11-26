@@ -11,30 +11,49 @@ const { extractTextFromPDF } = require('./ocrProcessor');
  * @param {string} documentType - Type of document (incoming/outgoing)
  * @returns {Object} - { finalDocumentPath, ocrText }
  */
-exports.handleUploadedFile = async (file, serialNumber, finalFolderPath, documentType) => {
+exports.handleUploadedFile = async (file, serialNumber, finalFolderPath, documentType, options = {}) => {
   console.log('Processing uploaded file with Arabic text support:', file.path);
   console.log('Using serial number for filename:', serialNumber);
-  
-  // Always use .pdf extension for consistency
-  const newFilename = `${serialNumber}.pdf`;
-  const newFilePath = path.join(finalFolderPath, newFilename);
-  
+
+  const requestedVersion = Number(options?.version);
+  let newFilename =
+    Number.isInteger(requestedVersion) && requestedVersion > 1
+      ? `${serialNumber}_v${requestedVersion}.pdf`
+      : `${serialNumber}.pdf`;
+  let newFilePath = path.join(finalFolderPath, newFilename);
+
+  // Never overwrite an existing immutable file on disk if filename collides
+  if (fs.existsSync(newFilePath) && (!Number.isInteger(requestedVersion) || requestedVersion <= 1)) {
+    const suffix = Date.now();
+    newFilename = `${serialNumber}_v_${suffix}.pdf`;
+    newFilePath = path.join(finalFolderPath, newFilename);
+  }
+
   console.log('Target file path:', newFilePath);
-  
+
   // Ensure destination directory exists
   if (!fs.existsSync(finalFolderPath)) {
     fs.mkdirSync(finalFolderPath, { recursive: true });
     console.log('Created directory:', finalFolderPath);
   }
-  
-  // Move the file to the appropriate year folder
+
+  // Move the file to the appropriate year folder (with EXDEV cross-device fallback)
   if (fs.existsSync(file.path)) {
-    fs.renameSync(file.path, newFilePath);
+    try {
+      fs.renameSync(file.path, newFilePath);
+    } catch (moveErr) {
+      if (moveErr && moveErr.code === 'EXDEV') {
+        fs.copyFileSync(file.path, newFilePath);
+        fs.unlinkSync(file.path);
+      } else {
+        throw moveErr;
+      }
+    }
     console.log(`Successfully moved uploaded document from ${file.path} to ${newFilePath}`);
   } else {
     throw new Error(`Uploaded file not found: ${file.path}`);
   }
-  
+
   // Create relative path for the database - ensure consistent format
   const year = path.basename(path.dirname(finalFolderPath));
   const docTypeFolder = documentType === 'incoming' ? 'Incoming-Doc' : 'Outgoing-Doc';

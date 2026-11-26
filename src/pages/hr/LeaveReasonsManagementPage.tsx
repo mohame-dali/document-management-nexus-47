@@ -27,6 +27,7 @@ import {
 import { LeaveReasonFormDialog } from '@/components/attendance/LeaveReasonFormDialog';
 import { LeaveReasonsList } from '@/components/attendance/LeaveReasonsList';
 import { toast } from 'sonner';
+import { useDirection } from '@/i18n/useDirection';
 import {
   Plus,
   Search,
@@ -39,11 +40,11 @@ import {
   ChevronRight,
   Home,
   ChevronLeft,
-  ChevronDown,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const LeaveReasonsManagementPage: React.FC = () => {
+  const { dir, isRTL } = useDirection();
   const [reasons, setReasons] = useState<LeaveReason[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -198,35 +199,39 @@ export const LeaveReasonsManagementPage: React.FC = () => {
     setImpactFilter('all');
   };
 
+  const BreadcrumbChevron = isRTL ? ChevronLeft : ChevronRight;
+  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
+
   return (
-    <div className="min-h-screen bg-[#f7fafc] p-6 space-y-6" dir="rtl">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 space-y-6 text-start" dir={dir}>
       {/* 1. Breadcrumbs & Header */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
-              <Link to="/dashboard" className="hover:text-[#2c5282] flex items-center gap-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
               </Link>
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
-              <Link to="/dashboard/hr/personnel" className="hover:text-[#2c5282]">
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <Link to="/dashboard/hr/personnel" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
                 <span>الموارد البشرية</span>
               </Link>
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
-              <span className="text-[#1a202c] font-semibold">أنواع الغياب</span>
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <span className="text-slate-900 dark:text-slate-100 font-semibold">أنواع الغياب</span>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#2c5282] text-white rounded">
+              <div className="p-2.5 bg-[#2c5282] dark:bg-sky-700 text-white rounded-lg shadow-sm">
                 <CalendarDays className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-[#1a202c]">
+                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   إدارة أنواع وأسباب الغياب
                 </h1>
-                <p className="text-sm text-[#5f6b7d]">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   تكوين أسباب الغياب والعطل، تحديد شروط الاستقطاع من الرصيد والوثائق المطلوبة
                 </p>
               </div>
@@ -236,7 +241,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button
               onClick={handleOpenCreate}
-              className="bg-[#2c5282] hover:bg-[#2a4365] text-white rounded font-medium gap-2 h-11 px-4"
+              className="bg-[#2c5282] hover:bg-[#2a4365] dark:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-lg font-medium gap-2 h-10 px-4"
             >
               <Plus className="h-4 w-4" />
               <span>إضافة نوع غياب جديد</span>
@@ -246,11 +251,11 @@ export const LeaveReasonsManagementPage: React.FC = () => {
       </div>
 
       {/* 2. Info Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded p-4 text-amber-800 text-xs sm:text-sm flex items-start gap-3">
-        <Info className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+      <div className="bg-amber-50 dark:bg-amber-950/35 border border-amber-200 dark:border-amber-800/70 rounded-lg p-4 text-amber-900 dark:text-amber-200 text-xs sm:text-sm flex items-start gap-3">
+        <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
         <div className="space-y-1">
           <p className="font-bold">قواعد إدارة وحماية أنواع الغياب :</p>
-          <ul className="list-disc list-inside space-y-0.5 text-amber-700 text-xs">
+          <ul className="list-disc list-inside space-y-0.5 text-amber-800 dark:text-amber-300/90 text-xs">
             <li>الأنواع الـ 14 النظامية الأساسية محمية ولا يمكن حذفها نهائياً، بل يمكن تعديل بعض إعداداتها أو تعطيلها.</li>
             <li>الأنواع المرتبطة بسجلات حضور وغياب سابقة لا يمكن حذفها تجنباً لتلف البيانات التاريخية؛ يمكن تعطيلها لإخفائها من القوائم الجديدة.</li>
             <li>الأنواع الموسومة بـ "يخصم من الرصيد" تؤثر تلقائياً على رصيد الإجازات السنوية المتبقية للموظف.</li>
@@ -261,71 +266,71 @@ export const LeaveReasonsManagementPage: React.FC = () => {
       {/* 3. KPI Cards (4) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-[#5f6b7d]">إجمالي الأنواع</p>
-            <p className="text-2xl font-bold text-[#1a202c] mt-1">{stats.total}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">إجمالي الأنواع</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 tabular-nums">{stats.total}</p>
           </div>
-          <div className="p-3 bg-blue-50 text-[#2c5282] rounded">
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-sky-400 rounded-lg">
             <CalendarDays className="h-5 w-5" />
           </div>
         </div>
 
         {/* Active */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-[#5f6b7d]">الأنواع المفعلة</p>
-            <p className="text-2xl font-bold text-emerald-700 mt-1">{stats.active}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">الأنواع المفعلة</p>
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1 tabular-nums">{stats.active}</p>
           </div>
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded">
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-lg">
             <CheckCircle2 className="h-5 w-5" />
           </div>
         </div>
 
         {/* Inactive */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-[#5f6b7d]">الأنواع المعطلة</p>
-            <p className="text-2xl font-bold text-slate-600 mt-1">{stats.inactive}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">الأنواع المعطلة</p>
+            <p className="text-2xl font-bold text-slate-600 dark:text-slate-300 mt-1 tabular-nums">{stats.inactive}</p>
           </div>
-          <div className="p-3 bg-slate-100 text-slate-500 rounded">
+          <div className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg">
             <XCircle className="h-5 w-5" />
           </div>
         </div>
 
         {/* Deducts from balance */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-xs font-medium text-[#5f6b7d]">تخصم من الرصيد السنوي</p>
-            <p className="text-2xl font-bold text-amber-700 mt-1">{stats.deducts}</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">تخصم من الرصيد السنوي</p>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-400 mt-1 tabular-nums">{stats.deducts}</p>
           </div>
-          <div className="p-3 bg-amber-50 text-amber-600 rounded">
+          <div className="p-3 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-lg">
             <Coins className="h-5 w-5" />
           </div>
         </div>
       </div>
 
       {/* 4. Filters */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* Search */}
           <div className="lg:col-span-2 relative">
-            <Search className="h-4 w-4 text-gray-400 absolute right-3 top-3" />
+            <Search className="h-4 w-4 text-slate-400 absolute start-3 top-3" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="البحث بالرمز، الاسم بالعربية أو بالفرنسية..."
-              className="pr-9 bg-white border-[#e2e8f0] rounded text-right text-sm h-10"
+              className="ps-9 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start text-sm h-10"
             />
           </div>
 
           {/* Category */}
           <div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="bg-white border-[#e2e8f0] rounded text-right h-10 text-xs">
+              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs">
                 <SelectValue placeholder="كل التصنيفات" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent dir={dir}>
                 <SelectItem value="all">كل التصنيفات</SelectItem>
                 <SelectItem value="conge">عطلة (Congé)</SelectItem>
                 <SelectItem value="mission">مهمة (Mission)</SelectItem>
@@ -339,10 +344,10 @@ export const LeaveReasonsManagementPage: React.FC = () => {
           {/* Status */}
           <div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="bg-white border-[#e2e8f0] rounded text-right h-10 text-xs">
+              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs">
                 <SelectValue placeholder="كل الحالات" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent dir={dir}>
                 <SelectItem value="all">كل الحالات</SelectItem>
                 <SelectItem value="active">مفعل فقط</SelectItem>
                 <SelectItem value="inactive">معطل فقط</SelectItem>
@@ -353,10 +358,10 @@ export const LeaveReasonsManagementPage: React.FC = () => {
           {/* Deductible */}
           <div className="flex gap-2">
             <Select value={impactFilter} onValueChange={setImpactFilter}>
-              <SelectTrigger className="bg-white border-[#e2e8f0] rounded text-right h-10 text-xs flex-1">
+              <SelectTrigger className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 dark:text-slate-100 rounded-lg text-start h-10 text-xs flex-1">
                 <SelectValue placeholder="خصم الرصيد" />
               </SelectTrigger>
-              <SelectContent dir="rtl">
+              <SelectContent dir={dir}>
                 <SelectItem value="all">الكل (خصم الرصيد)</SelectItem>
                 <SelectItem value="deductible">يخصم من الرصيد</SelectItem>
                 <SelectItem value="non_deductible">لا يخصم</SelectItem>
@@ -369,7 +374,7 @@ export const LeaveReasonsManagementPage: React.FC = () => {
               onClick={resetFilters}
               title="إعادة تعيين الفلاتر"
               aria-label="إعادة تعيين الفلاتر"
-              className="h-11 px-3 border-[#e2e8f0] rounded text-[#5f6b7d] hover:bg-slate-50"
+              className="h-10 w-10 p-0 border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0"
             >
               <RotateCcw className="h-4 w-4" />
             </Button>
@@ -388,8 +393,8 @@ export const LeaveReasonsManagementPage: React.FC = () => {
 
       {/* 6. Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white border border-[#e2e8f0] rounded p-4 text-xs">
-          <span className="text-[#5f6b7d]">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 text-xs shadow-sm">
+          <span className="text-slate-600 dark:text-slate-400 tabular-nums">
             عرض {paginatedReasons.length} من أصل {filteredReasons.length} نوع
           </span>
 
@@ -400,12 +405,13 @@ export const LeaveReasonsManagementPage: React.FC = () => {
               size="sm"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="border-[#e2e8f0] rounded h-11 px-3"
+              className="border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg h-9 px-3 gap-1"
             >
-              السابق
+              <PrevIcon className="w-4 h-4" />
+              <span>السابق</span>
             </Button>
 
-            <span className="text-[#1a202c] font-semibold px-2">
+            <span className="text-slate-900 dark:text-slate-100 font-semibold px-2 tabular-nums">
               الصفحة {currentPage} من {totalPages}
             </span>
 
@@ -415,9 +421,10 @@ export const LeaveReasonsManagementPage: React.FC = () => {
               size="sm"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="border-[#e2e8f0] rounded h-11 px-3"
+              className="border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg h-9 px-3 gap-1"
             >
-              التالي
+              <span>التالي</span>
+              <NextIcon className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -433,14 +440,14 @@ export const LeaveReasonsManagementPage: React.FC = () => {
 
       {/* 8. Delete Confirmation Alert Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="rounded border border-[#e2e8f0]" dir="rtl">
-          <AlertDialogHeader className="text-right">
-            <AlertDialogTitle className="text-[#1a202c] font-bold">
+        <AlertDialogContent className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-start" dir={dir}>
+          <AlertDialogHeader className="text-start">
+            <AlertDialogTitle className="text-slate-900 dark:text-slate-100 font-bold">
               تأكيد حذف نوع الغياب
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-[#4a5568] pt-2">
+            <AlertDialogDescription className="text-sm text-slate-600 dark:text-slate-300 pt-2">
               هل أنت متأكد من رغبتك في حذف نوع الغياب{' '}
-              <strong className="text-[#1a202c]">"{reasonToDelete?.labelAr}"</strong> ({reasonToDelete?.code})؟
+              <strong className="text-slate-900 dark:text-slate-100">"{reasonToDelete?.labelAr}"</strong> ({reasonToDelete?.code})؟
               <br />
               هذا الإجراء لا يمكن التراجع عنه إذا لم يكن النوع مرتبطاً بأي سجلات.
             </AlertDialogDescription>
@@ -448,14 +455,14 @@ export const LeaveReasonsManagementPage: React.FC = () => {
           <AlertDialogFooter className="gap-2 justify-end">
             <AlertDialogCancel
               disabled={deleting}
-              className="border-[#e2e8f0] rounded"
+              className="border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg"
             >
               إلغاء
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={executeDelete}
               disabled={deleting}
-              className="bg-red-600 hover:bg-red-700 text-white rounded"
+              className="bg-red-600 hover:bg-red-700 text-white rounded-lg"
             >
               {deleting ? 'جاري الحذف...' : 'نعم، حذف النوع'}
             </AlertDialogAction>

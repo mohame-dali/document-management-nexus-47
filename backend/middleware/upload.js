@@ -1,6 +1,12 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const ErrorResponse = require('../utils/errorResponse');
+const {
+  precheckFileFilter,
+  validateUploadedFile,
+  removeFileSafe,
+} = require('../utils/fileSecurity');
 
 // Create uploads directory if it doesn't exist (shared application root)
 const uploadDir = path.resolve(
@@ -32,9 +38,8 @@ const userPhotoStorage = multer.diskStorage({
     cb(null, usersPhotoDir);
   },
   filename: function(req, file, cb) {
-    // Generate unique filename with original extension
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, 'user-' + uniqueSuffix + ext);
   }
 });
@@ -45,9 +50,8 @@ const personnelPhotoStorage = multer.diskStorage({
     cb(null, personnelPhotoDir);
   },
   filename: function(req, file, cb) {
-    // Generate unique filename with original extension
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, 'personnel-' + uniqueSuffix + ext);
   }
 });
@@ -59,9 +63,8 @@ const documentStorage = multer.diskStorage({
     cb(null, tempDir);
   },
   filename: function(req, file, cb) {
-    // Generate unique filename with original extension
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, 'doc-' + uniqueSuffix + ext);
   }
 });
@@ -76,9 +79,8 @@ const attachmentStorage = multer.diskStorage({
     cb(null, attachmentDir);
   },
   filename: function(req, file, cb) {
-    // Generate unique filename with original extension
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, 'msg-' + uniqueSuffix + ext);
   }
 });
@@ -93,52 +95,67 @@ const templateStorage = multer.diskStorage({
     cb(null, templateDir);
   },
   filename: function(req, file, cb) {
-    // Generate unique filename with original extension
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, 'template-' + uniqueSuffix + ext);
   }
 });
 
-// File filter for photos (stricte validation extension + MIME type)
-const photoFilter = (req, file, cb) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  const extMatch = file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-  
-  if (!extMatch || !allowedMimeTypes.includes(file.mimetype)) {
-    req.fileValidationError = 'Only valid image files (JPG, PNG, GIF, WEBP) are allowed!';
-    return cb(new Error('Only valid image files (JPG, PNG, GIF, WEBP) are allowed!'), false);
-  }
-  cb(null, true);
-};
+function makeFileFilter(context) {
+  return (req, file, cb) => {
+    const check = precheckFileFilter(file, context);
+    if (!check.valid) {
+      req.fileValidationError = check.message;
+      return cb(new ErrorResponse(check.message, check.statusCode || 415), false);
+    }
+    cb(null, true);
+  };
+}
 
-// File filter for documents (stricte validation PDF extension + MIME type)
-const documentFilter = (req, file, cb) => {
-  const allowedMimeTypes = ['application/pdf'];
-  const extMatch = file.originalname.match(/\.pdf$/i);
-  
-  if (!extMatch || (!allowedMimeTypes.includes(file.mimetype) && file.mimetype !== 'application/x-pdf')) {
-    req.fileValidationError = 'Only PDF files are allowed!';
-    return cb(new Error('Only PDF files are allowed!'), false);
+function collectUploadedFiles(req) {
+  if (req.file) return [req.file];
+  if (Array.isArray(req.files)) return req.files;
+  if (req.files && typeof req.files === 'object') {
+    return Object.values(req.files).flat();
   }
-  cb(null, true);
-};
+  return [];
+}
 
-// File filter for templates (Word documents extension + MIME type)
-const templateFilter = (req, file, cb) => {
-  const allowedMimeTypes = [
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/octet-stream'
-  ];
-  const extMatch = file.originalname.match(/\.(doc|docx)$/i);
-  
-  if (!extMatch || !allowedMimeTypes.includes(file.mimetype)) {
-    req.fileValidationError = 'Only Word documents (.doc, .docx) are allowed!';
-    return cb(new Error('Only Word documents (.doc, .docx) are allowed!'), false);
-  }
-  cb(null, true);
-};
+function createSecureMulter(multerInstance, context) {
+  const wrapMethod = (methodName) => (...args) => {
+    const multerMiddleware = multerInstance[methodName](...args);
+    return (req, res, next) => {
+      multerMiddleware(req, res, async (err) => {
+        if (err) {
+          return next(err);
+        }
+        const files = collectUploadedFiles(req);
+        if (files.length === 0) {
+          return next();
+        }
+        try {
+          for (const file of files) {
+            await validateUploadedFile(file.path, context, file.originalname);
+          }
+          return next();
+        } catch (secErr) {
+          for (const file of files) {
+            removeFileSafe(file.path);
+          }
+          return next(secErr);
+        }
+      });
+    };
+  };
+
+  return {
+    single: wrapMethod('single'),
+    array: wrapMethod('array'),
+    fields: wrapMethod('fields'),
+    any: wrapMethod('any'),
+    none: wrapMethod('none'),
+  };
+}
 
 // Handle scanned document IDs & paths with strict owner + Path Traversal protection
 exports.handleScannedDocument = (req, res, next) => {
@@ -211,31 +228,47 @@ exports.handleScannedDocument = (req, res, next) => {
   return next();
 };
 
-// Export configured multer instances
-exports.uploadUserPhoto = multer({ 
-  storage: userPhotoStorage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
-  fileFilter: photoFilter
-});
+// Export configured secure multer instances
+exports.uploadUserPhoto = createSecureMulter(
+  multer({
+    storage: userPhotoStorage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+    fileFilter: makeFileFilter('photo'),
+  }),
+  'photo'
+);
 
-exports.uploadPersonnelPhoto = multer({ 
-  storage: personnelPhotoStorage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
-  fileFilter: photoFilter
-});
+exports.uploadPersonnelPhoto = createSecureMulter(
+  multer({
+    storage: personnelPhotoStorage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+    fileFilter: makeFileFilter('photo'),
+  }),
+  'photo'
+);
+
+const documentMulter = multer({
+  storage: documentStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: makeFileFilter('document'),
+}).single('document');
 
 exports.uploadDocument = (req, res, next) => {
   if (req.body && (req.body.scanId || req.body.scannedDocumentPath)) {
     return exports.handleScannedDocument(req, res, next);
   }
-  
-  multer({
-    storage: documentStorage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-    fileFilter: documentFilter
-  }).single('document')(req, res, (err) => {
+
+  documentMulter(req, res, async (err) => {
     if (err) {
       return next(err);
+    }
+    if (req.file) {
+      try {
+        await validateUploadedFile(req.file.path, 'document', req.file.originalname);
+      } catch (secErr) {
+        removeFileSafe(req.file.path);
+        return next(secErr);
+      }
     }
     if (req.body && (req.body.scanId || req.body.scannedDocumentPath) && !req.file) {
       return exports.handleScannedDocument(req, res, next);
@@ -244,14 +277,22 @@ exports.uploadDocument = (req, res, next) => {
   });
 };
 
-exports.upload = multer({
-  storage: attachmentStorage,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
-});
+exports.upload = createSecureMulter(
+  multer({
+    storage: attachmentStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: makeFileFilter('attachment'),
+  }),
+  'attachment'
+);
 
 // Export template upload configuration
-exports.uploadTemplate = multer({ 
-  storage: templateStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: templateFilter
-});
+exports.uploadTemplate = createSecureMulter(
+  multer({
+    storage: templateStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: makeFileFilter('template'),
+  }),
+  'template'
+);
+

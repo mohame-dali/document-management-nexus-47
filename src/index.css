@@ -100,42 +100,41 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  html[lang="ar"] body {
-    font-family: "Cairo Variable", "Noto Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+  html[lang="ar"] body,
+  html[dir="rtl"] body {
+    font-family: "Cairo Variable", "Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
     font-weight: 400;
-    line-height: 1.7;
     letter-spacing: 0;
   }
 
-  html[lang="ar"] :is(h1, h2, h3, h4, h5, h6) {
-    font-family: "Cairo Variable", "Noto Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+  html[lang="ar"] :is(h1, h2, h3, h4, h5, h6),
+  html[dir="rtl"] :is(h1, h2, h3, h4, h5, h6) {
+    font-family: "Cairo Variable", "Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
     font-weight: 700;
-    line-height: 1.35;
     letter-spacing: 0;
     text-transform: none;
   }
 
-  html[lang="ar"] :is(label, th, dt) {
+  html[lang="ar"] :is(label, th, dt),
+  html[dir="rtl"] :is(label, th, dt) {
     font-weight: 600;
     letter-spacing: 0;
     text-transform: none;
   }
 
-  html[lang="ar"] :is(p, span, a, button, li, td, input, textarea, select) {
+  html[lang="ar"] :is(p, span, a, button, li, td, input, textarea, select),
+  html[dir="rtl"] :is(p, span, a, button, li, td, input, textarea, select) {
     letter-spacing: 0;
     text-transform: none;
   }
 
   html[lang="fr"] body,
-  html[lang="fr"] :is(h1, h2, h3, h4, h5, h6) {
-    font-family: "Inter Variable", "Cairo Variable", "Segoe UI", system-ui, sans-serif;
+  html[dir="ltr"] body {
+    font-family: "Inter Variable", "Cairo Variable", "Cairo", "Segoe UI", system-ui, sans-serif;
   }
 
-  html[lang="fr"] body {
-    line-height: 1.6;
-  }
-
-  html[lang="fr"] :is(table, th, td) {
+  /* Consistent tabular alignment for numeric metrics, dates, reference IDs, and tables in both RTL & LTR */
+  :is(table, th, td, bdi, time, kbd, input[type="number"], .tabular-nums) {
     font-feature-settings: "tnum" 1;
     font-variant-numeric: tabular-nums;
   }
@@ -196,11 +195,6 @@
     @apply rotate-180;
   }
 
-  /* Improve text balance */
-  p, h1, h2, h3, h4, h5, h6 {
-    text-wrap: balance;
-  }
-
   /* Enhanced responsive breakpoints for better mobile experience */
   .container-responsive {
     @apply px-4 sm:px-6 lg:px-8 xl:px-12;
@@ -248,14 +242,20 @@
     @apply min-h-[36px] min-w-[36px] sm:min-h-[32px] sm:min-w-[32px];
   }
 
-  /* Custom scrollbar for folder tree - responsive */
+  /* Thin custom scrollbars adapting smoothly to Light and Dark mode */
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+    scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+  }
+
+  .dark .custom-scrollbar,
+  [data-surface="dark"] .custom-scrollbar {
+    scrollbar-color: rgba(100, 116, 139, 0.55) transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    @apply w-2 sm:w-2;
+    width: 6px;
+    height: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -263,23 +263,31 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.5);
-    border-radius: 4px;
-    border: 2px solid transparent;
-    background-clip: content-box;
+    background-color: rgba(148, 163, 184, 0.5);
+    border-radius: 9999px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(156, 163, 175, 0.7);
+    background-color: rgba(100, 116, 139, 0.75);
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb,
+  [data-surface="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 116, 139, 0.55);
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  [data-surface="dark"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.75);
   }
 
   /* Calm folder item styling */
   .folder-item {
-    @apply transition-colors duration-200 ease-in-out hover:bg-slate-100/70 rounded;
+    @apply transition-colors duration-200 ease-in-out hover:bg-slate-100/80 dark:hover:bg-slate-800/70 rounded-md;
   }
 
   .folder-selected {
-    @apply bg-[#ebf4ff] text-[#2c5282] font-medium border-r-2 border-[#2c5282];
+    @apply bg-blue-50/80 dark:bg-blue-950/40 text-[#2c5282] dark:text-blue-300 font-medium border-e-2 border-[#2c5282] dark:border-blue-400;
   }
 
   /* High-contrast heading text (replacing saturated gradients) */
@@ -287,36 +295,36 @@
     @apply text-foreground font-bold;
   }
 
-  /* Calm card effects with subtle shadow and 200ms transition */
+  /* Standardized crisp 1px card surface with soft shadow */
   .enhanced-card {
-    @apply bg-card border border-[#cbd5e1] rounded shadow-subtle hover:shadow-sm transition-shadow duration-200;
+    @apply bg-card border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm hover:shadow transition-shadow duration-200;
   }
 
   /* Calm professional primary button */
   .professional-button {
-    @apply bg-primary hover:bg-[#1e3a5f] text-primary-foreground font-medium px-4 py-2 sm:px-5 sm:py-2.5 rounded shadow-subtle hover:shadow-sm transition-colors duration-200 text-sm sm:text-base;
+    @apply bg-primary hover:bg-[#1e3a5f] text-primary-foreground font-medium px-4 py-2 sm:px-5 sm:py-2.5 rounded-md shadow-sm transition-colors duration-200 text-sm sm:text-base;
   }
 
-  /* Official high-contrast status badges (Direction A + C >= 7:1) */
+  /* Soft tinted status pills (Light + Dark theme support) */
   .badge-soft-success {
-    @apply bg-[#ecfdf5] text-[#14532d] border border-[#86efac] font-semibold rounded text-xs px-2.5 py-0.5;
+    @apply inline-flex items-center gap-1 bg-emerald-50/90 text-emerald-800 border border-emerald-200/80 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60 font-semibold rounded-full text-xs px-2.5 py-0.5 tabular-nums;
   }
   .badge-soft-warning {
-    @apply bg-[#fef9e7] text-[#78350f] border border-[#f59e0b] font-semibold rounded text-xs px-2.5 py-0.5;
+    @apply inline-flex items-center gap-1 bg-amber-50/90 text-amber-800 border border-amber-200/80 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60 font-semibold rounded-full text-xs px-2.5 py-0.5 tabular-nums;
   }
   .badge-soft-danger {
-    @apply bg-[#fef2f2] text-[#7f1d1d] border border-[#fca5a5] font-semibold rounded text-xs px-2.5 py-0.5;
+    @apply inline-flex items-center gap-1 bg-red-50/90 text-red-800 border border-red-200/80 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60 font-semibold rounded-full text-xs px-2.5 py-0.5 tabular-nums;
   }
   .badge-soft-primary {
-    @apply bg-[#ebf4ff] text-[#1e3a5f] border border-[#93c5fd] font-semibold rounded text-xs px-2.5 py-0.5;
+    @apply inline-flex items-center gap-1 bg-blue-50/90 text-[#1e3a5f] border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/60 font-semibold rounded-full text-xs px-2.5 py-0.5 tabular-nums;
   }
   .badge-soft-neutral {
-    @apply bg-[#f1f5f9] text-[#1e293b] border border-[#cbd5e1] font-semibold rounded text-xs px-2.5 py-0.5;
+    @apply inline-flex items-center gap-1 bg-slate-100/90 text-slate-700 border border-slate-200/80 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700/80 font-semibold rounded-full text-xs px-2.5 py-0.5 tabular-nums;
   }
 
   /* Subtle table row hover */
   .table-row-subtle {
-    @apply transition-colors duration-200 hover:bg-[#f8fafc];
+    @apply transition-colors duration-150 hover:bg-slate-50/90 dark:hover:bg-slate-800/50;
   }
 
   /* Responsive grid utilities */
@@ -356,7 +364,7 @@
 
   /* Table responsive wrapper */
   .table-responsive {
-    @apply overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100;
+    @apply overflow-x-auto custom-scrollbar;
   }
 
   /* Form responsive layouts */
@@ -412,12 +420,54 @@
   @apply rtl:scale-x-[-1];
 }
 
+/* Global thin scrollbars adapting smoothly to Light and Dark themes */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+html.dark *,
+[data-surface="dark"] * {
+  scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.45);
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.7);
+}
+
+html.dark ::-webkit-scrollbar-thumb,
+[data-surface="dark"] ::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.5);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover,
+[data-surface="dark"] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.72);
+}
+
 /* Focus styles for accessibility (3px, contraste >= 3:1) */
 *:focus-visible {
   outline: 3px solid #2c5282;
   outline-offset: 2px;
 }
 
+html.dark *:focus-visible,
 [data-surface="dark"] *:focus-visible {
   outline: 3px solid #FFCB56;
   outline-offset: 2px;
@@ -526,8 +576,63 @@
 
 /* Print styles */
 @media print {
-  .no-print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  aside,
+  header,
+  [data-floating-ai-chat],
+  [data-responsible-overlay],
+  [data-sonner-toaster],
+  nav[role="tablist"],
+  nav[aria-label="Breadcrumb"],
+  nav[aria-label="Fil d'Ariane"],
+  .no-print,
+  .print\:hidden {
     display: none !important;
+  }
+
+  .h-screen,
+  .min-h-screen,
+  .overflow-hidden,
+  main,
+  main > div,
+  .container-responsive,
+  .padding-responsive,
+  .animate-fade-slide-in {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th,
+  td {
+    border-color: #cbd5e1 !important;
+  }
+
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .enhanced-card,
+  [class*="shadow"] {
+    box-shadow: none !important;
   }
 
   .print-friendly {

@@ -39,12 +39,10 @@ import {
   Calendar,
   Save,
   Plus,
-  X,
-  MapPin,
-  FileText,
   Globe2,
   AlertCircle
 } from 'lucide-react';
+import { useDirection } from '@/i18n/useDirection';
 
 interface StageFormDialogProps {
   open: boolean;
@@ -62,6 +60,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
   onSuccess,
 }) => {
   const queryClient = useQueryClient();
+  const { dir } = useDirection();
   const isEditing = Boolean(stage?._id);
 
   // Données du formulaire
@@ -274,17 +273,17 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto text-right" dir="rtl">
-          <DialogHeader className="border-b border-[#e2e8f0] pb-4">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto text-start bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800" dir={dir}>
+          <DialogHeader className="border-b border-[#e2e8f0] dark:border-slate-800 pb-4 text-start">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded bg-[#ebf4ff] text-[#2c5282]">
+              <div className="p-2.5 rounded-lg bg-[#ebf4ff] dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300">
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold text-[#1a202c]">
+                <DialogTitle className="text-xl font-bold text-[#1a202c] dark:text-slate-100">
                   {isEditing ? 'تعديل بيانات التربص / التكوين' : 'إضافة تربص جديد (تسجيل تاريخي / مباشر)'}
                 </DialogTitle>
-                <DialogDescription className="text-sm text-gray-500 mt-0.5">
+                <DialogDescription className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                   تسجيل الدورات التكوينية والتربصات المنجزة بتونس أو بالخارج لفائدة موظفي الإدارة
                 </DialogDescription>
               </div>
@@ -294,7 +293,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
           <form onSubmit={handleSubmit} className="space-y-6 pt-2">
             {/* 1. Sélection du personnel */}
             <div className="space-y-2">
-              <Label className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <span>الموظف المعني بالتربص</span>
                 <span className="text-red-500">*</span>
               </Label>
@@ -308,10 +307,10 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 }}
                 disabled={Boolean(defaultPersonnelId && !isEditing)}
               >
-                <SelectTrigger className={`h-11 text-right bg-white ${errors.personnelId ? 'border-red-500' : 'border-[#cbd5e1]'}`}>
+                <SelectTrigger className={`h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.personnelId ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}>
                   <SelectValue placeholder="-- اختر الموظف --" />
                 </SelectTrigger>
-                <SelectContent className="text-right max-h-60" dir="rtl">
+                <SelectContent className="text-start max-h-60 dark:bg-slate-900 dark:border-slate-700" dir={dir}>
                   {personnelList.map((p) => (
                     <SelectItem key={p._id} value={p._id}>
                       {p.nom} {p.prenom} {p.cin ? `(ب.ت.و: ${p.cin})` : ''} {p.matricule ? `- [${p.matricule}]` : ''}
@@ -320,7 +319,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 </SelectContent>
               </Select>
               {errors.personnelId && (
-                <p className="text-xs text-red-600 flex items-center gap-1 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>{errors.personnelId}</span>
                 </p>
@@ -328,14 +327,14 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             </div>
 
             {/* 2. Localisation (Tunisie / Étranger) + Pays */}
-            <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-4">
+            <div className="p-4 bg-[#f8fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded-lg space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <Label className="text-sm font-bold text-gray-800 block mb-2">
+                  <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 block mb-2">
                     نطاق التربص الجغرافي <span className="text-red-500">*</span>
                   </Label>
                   <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-800">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-800 dark:text-slate-200">
                       <input
                         type="radio"
                         name="localisation"
@@ -347,7 +346,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                       <span>تربص بتونس</span>
                     </label>
 
-                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-800">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-800 dark:text-slate-200">
                       <input
                         type="radio"
                         name="localisation"
@@ -357,7 +356,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                         className="w-4 h-4 text-[#2c5282] focus:ring-[#2c5282]"
                       />
                       <span className="flex items-center gap-1">
-                        <Globe2 className="w-4 h-4 text-blue-600" />
+                        <Globe2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         <span>تربص بالخارج</span>
                       </span>
                     </label>
@@ -365,7 +364,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 </div>
 
                 <div className="w-full sm:w-60">
-                  <Label className="text-sm font-semibold text-gray-700 block mb-1">
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     الدولة <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -373,10 +372,10 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     onChange={(e) => setPays(e.target.value)}
                     placeholder="مثال: فرنسا، الصين، تونس..."
                     disabled={localisation === 'tunisie'}
-                    className={`h-11 bg-white ${errors.pays ? 'border-red-500' : 'border-[#cbd5e1]'}`}
+                    className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.pays ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
                   />
                   {errors.pays && (
-                    <p className="text-xs text-red-600 mt-1">{errors.pays}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.pays}</p>
                   )}
                 </div>
               </div>
@@ -385,7 +384,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             {/* 3. Sujet et Lieu du stage */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold text-gray-800">
+                <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   موضوع التربص / التكوين <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -395,15 +394,15 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     if (errors.sujetStage) setErrors((prev) => ({ ...prev, sujetStage: '' }));
                   }}
                   placeholder="مثال: إدارة خوادم الشبكات، القيادة الإدارية..."
-                  className={`h-11 bg-white ${errors.sujetStage ? 'border-red-500' : 'border-[#cbd5e1]'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.sujetStage ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
                 />
                 {errors.sujetStage && (
-                  <p className="text-xs text-red-600 mt-1">{errors.sujetStage}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.sujetStage}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold text-gray-800">
+                <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   مكان التربص (المعهد / المركز / المدينة) <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -413,10 +412,10 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     if (errors.lieuStage) setErrors((prev) => ({ ...prev, lieuStage: '' }));
                   }}
                   placeholder="مثال: مدرسة العوينة، معهد الدفاع الوطني، بكين..."
-                  className={`h-11 bg-white ${errors.lieuStage ? 'border-red-500' : 'border-[#cbd5e1]'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${errors.lieuStage ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
                 />
                 {errors.lieuStage && (
-                  <p className="text-xs text-red-600 mt-1">{errors.lieuStage}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.lieuStage}</p>
                 )}
               </div>
             </div>
@@ -425,7 +424,7 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold text-gray-700">
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                     المدرسة / الهيكل المكون (اختياري)
                   </Label>
                   <Button
@@ -433,17 +432,17 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowAddEcoleDialog(true)}
-                    className="h-7 px-2 text-xs text-[#2c5282] hover:bg-[#ebf4ff] flex items-center gap-1 font-bold"
+                    className="h-7 px-2 text-xs text-[#2c5282] dark:text-blue-300 hover:bg-[#ebf4ff] dark:hover:bg-blue-950/50 flex items-center gap-1 font-bold"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>إضافة مدرسة</span>
                   </Button>
                 </div>
                 <Select value={ecoleId} onValueChange={setEcoleId}>
-                  <SelectTrigger className="h-11 text-right bg-white border-[#cbd5e1]">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
                     <SelectValue placeholder="-- اختر المدرسة إن وجدت --" />
                   </SelectTrigger>
-                  <SelectContent className="text-right max-h-60" dir="rtl">
+                  <SelectContent className="text-start max-h-60 dark:bg-slate-900 dark:border-slate-700" dir={dir}>
                     <SelectItem value="NONE">-- غير محدد --</SelectItem>
                     {ecoles.map((ec) => (
                       <SelectItem key={ec._id} value={ec._id}>
@@ -455,14 +454,14 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-gray-700">
+                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   نوع التكوين (اختياري)
                 </Label>
                 <Select value={typeFormationId} onValueChange={setTypeFormationId}>
-                  <SelectTrigger className="h-11 text-right bg-white border-[#cbd5e1]">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
                     <SelectValue placeholder="-- اختر نوع التكوين --" />
                   </SelectTrigger>
-                  <SelectContent className="text-right max-h-60" dir="rtl">
+                  <SelectContent className="text-start max-h-60 dark:bg-slate-900 dark:border-slate-700" dir={dir}>
                     <SelectItem value="NONE">-- غير محدد --</SelectItem>
                     {typesFormation.map((tf) => (
                       <SelectItem key={tf._id} value={tf._id}>
@@ -477,8 +476,8 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             {/* 5. Dates de début et de fin */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-[#2c5282]" />
+                <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
                   <span>تاريخ بداية التربص</span>
                   <span className="text-red-500">*</span>
                 </Label>
@@ -489,16 +488,16 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     setDateDebut(e.target.value);
                     if (errors.dateDebut) setErrors((prev) => ({ ...prev, dateDebut: '' }));
                   }}
-                  className={`h-11 bg-white ${errors.dateDebut ? 'border-red-500' : 'border-[#cbd5e1]'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${errors.dateDebut ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
                 />
                 {errors.dateDebut && (
-                  <p className="text-xs text-red-600 mt-1">{errors.dateDebut}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.dateDebut}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-[#2c5282]" />
+                <Label className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
                   <span>تاريخ نهاية التربص</span>
                   <span className="text-red-500">*</span>
                 </Label>
@@ -509,10 +508,10 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                     setDateFin(e.target.value);
                     if (errors.dateFin) setErrors((prev) => ({ ...prev, dateFin: '' }));
                   }}
-                  className={`h-11 bg-white ${errors.dateFin ? 'border-red-500' : 'border-[#cbd5e1]'}`}
+                  className={`h-11 bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${errors.dateFin ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'}`}
                 />
                 {errors.dateFin && (
-                  <p className="text-xs text-red-600 mt-1">{errors.dateFin}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.dateFin}</p>
                 )}
               </div>
             </div>
@@ -520,26 +519,26 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             {/* 6. Numéro de route et numéro de stage */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-gray-700">
+                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   رقم الإرسالية / Route (اختياري)
                 </Label>
                 <Input
                   value={numeroRoute}
                   onChange={(e) => setNumeroRoute(e.target.value)}
                   placeholder="مثال: 2024/0981"
-                  className="h-11 bg-white border-[#cbd5e1]"
+                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg tabular-nums"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-gray-700">
+                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   رقم التربص / المرجع (اختياري)
                 </Label>
                 <Input
                   value={numeroStage}
                   onChange={(e) => setNumeroStage(e.target.value)}
                   placeholder="مثال: STG-102"
-                  className="h-11 bg-white border-[#cbd5e1]"
+                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg tabular-nums"
                 />
               </div>
             </div>
@@ -547,12 +546,12 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
             {/* 7. Statut, Résultat et Mention */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold text-gray-800">حالة التربص</Label>
+                <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">حالة التربص</Label>
                 <Select value={statut} onValueChange={(val) => setStatut(val as typeof statut)}>
-                  <SelectTrigger className="h-11 text-right bg-white border-[#cbd5e1]">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="text-right" dir="rtl">
+                  <SelectContent className="text-start dark:bg-slate-900 dark:border-slate-700" dir={dir}>
                     <SelectItem value="acheve">مكتمل / منجز (Achevé)</SelectItem>
                     <SelectItem value="en_cours">قيد الإنجاز (En cours)</SelectItem>
                     <SelectItem value="inscrit">مسجل (Inscrit)</SelectItem>
@@ -563,12 +562,12 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-bold text-gray-800">النتيجة</Label>
+                <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">النتيجة</Label>
                 <Select value={resultat || 'EMPTY'} onValueChange={(val) => setResultat(val === 'EMPTY' ? '' : (val as typeof resultat))}>
-                  <SelectTrigger className="h-11 text-right bg-white border-[#cbd5e1]">
+                  <SelectTrigger className="h-11 text-start bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="text-right" dir="rtl">
+                  <SelectContent className="text-start dark:bg-slate-900 dark:border-slate-700" dir={dir}>
                     <SelectItem value="EMPTY">-- غير محددة --</SelectItem>
                     <SelectItem value="admis">ناجح / مؤهل (Admis)</SelectItem>
                     <SelectItem value="refuse">راسب / غير مؤهل (Refusé)</SelectItem>
@@ -578,41 +577,41 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-gray-700">الملاحظة / التقدير</Label>
+                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">الملاحظة / التقدير</Label>
                 <Input
                   value={mention}
                   onChange={(e) => setMention(e.target.value)}
                   placeholder="مثال: حسن جداً، مشرف..."
-                  className="h-11 bg-white border-[#cbd5e1]"
+                  className="h-11 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
                 />
               </div>
             </div>
 
             {/* 8. Observations */}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-gray-700">ملاحظات إضافية</Label>
+              <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">ملاحظات إضافية</Label>
               <Textarea
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
                 rows={2}
                 placeholder="أية توضيحات أو تفاصيل أخرى حول هذا التربص..."
-                className="bg-white border-[#cbd5e1] text-sm"
+                className="bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-sm rounded-lg"
               />
             </div>
 
-            <DialogFooter className="border-t border-[#e2e8f0] pt-4 flex flex-row items-center justify-end gap-3">
+            <DialogFooter className="border-t border-[#e2e8f0] dark:border-slate-800 pt-4 flex flex-row items-center justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="h-11 px-5 text-gray-700 border-[#cbd5e1]"
+                className="h-11 px-5 text-slate-700 dark:text-slate-200 border-[#cbd5e1] dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 disabled={stageMutation.isPending}
-                className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white font-bold flex items-center gap-2"
+                className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white font-bold flex items-center gap-2 rounded-lg"
               >
                 <Save className="w-4 h-4" />
                 <span>{stageMutation.isPending ? 'جاري الحفظ...' : isEditing ? 'حفظ التعديلات' : 'تسجيل التربص'}</span>
@@ -624,58 +623,58 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
 
       {/* Dialog Secondaire : Ajout rapide d'école */}
       <Dialog open={showAddEcoleDialog} onOpenChange={setShowAddEcoleDialog}>
-        <DialogContent className="max-w-md text-right" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-[#2c5282]" />
+        <DialogContent className="max-w-md text-start bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800" dir={dir}>
+          <DialogHeader className="text-start">
+            <DialogTitle className="text-lg font-bold text-[#1a202c] dark:text-slate-100 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
               <span>إضافة مدرسة تكوين جديدة</span>
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateEcole} className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label className="text-sm font-bold text-gray-800">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 اسم المدرسة بالعربية <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={newEcoleNomAr}
                 onChange={(e) => setNewEcoleNomAr(e.target.value)}
                 placeholder="مثال: مدرسة ضباط الصف"
-                className="h-10 bg-white border-[#cbd5e1]"
+                className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-bold text-gray-800">
+              <Label className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 اسم المدرسة بالفرنسية / اللاتينية <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={newEcoleNom}
                 onChange={(e) => setNewEcoleNom(e.target.value)}
                 placeholder="Ex: École des Sous-Officiers"
-                className="h-10 bg-white border-[#cbd5e1]"
+                className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
                 dir="ltr"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm text-gray-700">الدولة</Label>
+                <Label className="text-sm text-slate-700 dark:text-slate-300">الدولة</Label>
                 <Input
                   value={newEcolePays}
                   onChange={(e) => setNewEcolePays(e.target.value)}
                   placeholder="تونس"
-                  className="h-10 bg-white border-[#cbd5e1]"
+                  className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm text-gray-700">المدينة</Label>
+                <Label className="text-sm text-slate-700 dark:text-slate-300">المدينة</Label>
                 <Input
                   value={newEcoleVille}
                   onChange={(e) => setNewEcoleVille(e.target.value)}
                   placeholder="تونس، بنزرت..."
-                  className="h-10 bg-white border-[#cbd5e1]"
+                  className="h-10 bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
                 />
               </div>
             </div>
@@ -685,14 +684,14 @@ export const StageFormDialog: React.FC<StageFormDialogProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => setShowAddEcoleDialog(false)}
-                className="h-10 text-xs"
+                className="h-10 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded-lg"
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 disabled={addEcoleMutation.isPending}
-                className="h-10 px-4 text-xs bg-[#2c5282] hover:bg-[#234269] text-white font-bold"
+                className="h-10 px-4 text-xs bg-[#2c5282] hover:bg-[#234269] text-white font-bold rounded-lg"
               >
                 {addEcoleMutation.isPending ? 'جاري الإضافة...' : 'حفظ المدرسة'}
               </Button>

@@ -99,6 +99,7 @@ export interface FullPersonnelHistory {
   postes: RHPoste[];
   diplomes: RHDiplome[];
   sanctions: RHSanction[];
+  [key: string]: unknown;
 }
 
 // ============================================================

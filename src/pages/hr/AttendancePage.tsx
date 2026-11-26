@@ -4,8 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Select,
   SelectContent,
@@ -14,6 +12,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useDirection } from '@/i18n/useDirection';
+import { PersonnelAvatar } from '@/components/hr/PersonnelAvatar';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   CalendarCheck,
   Calendar,
@@ -23,13 +25,11 @@ import {
   CheckCircle2,
   XCircle,
   Save,
-  RotateCcw,
   Clock,
   ChevronLeft,
+  ChevronRight,
   Home,
   AlertCircle,
-  Briefcase,
-  HelpCircle,
   Check,
   Printer,
 } from 'lucide-react';
@@ -69,6 +69,7 @@ interface AgentAttendanceRow {
 
 export const AttendancePage: React.FC = () => {
   const { currentUser } = useAuth();
+  const { dir, isRTL } = useDirection();
 
   // Date du jour au format YYYY-MM-DD
   const todayStr = useMemo(() => {
@@ -408,48 +409,37 @@ export const AttendancePage: React.FC = () => {
     return { total, presents, absents, saved };
   }, [attendanceRows]);
 
-  const getUserInitials = (nom: string, prenom: string) => {
-    const n = nom ? nom.charAt(0) : '';
-    const p = prenom ? prenom.charAt(0) : '';
-    return `${n}${p}`.toUpperCase() || 'م';
-  };
-
-  const getAgentPhotoUrl = (photo?: string) => {
-    if (!photo) return undefined;
-    const API_URL = import.meta.env.VITE_API_URL || '';
-    const cleanPath = photo.startsWith('/') ? photo.slice(1) : photo;
-    return `${API_URL}/${cleanPath}`;
-  };
+  const BreadcrumbChevron = isRTL ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 pb-24 space-y-5">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 pb-24 space-y-5 text-start" dir={dir}>
       {/* 1. En-tête sobre */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-none">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
-              <Link to="/dashboard" className="hover:text-[#2c5282] flex items-center gap-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 print:hidden">
+              <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
               </Link>
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
-              <Link to="/dashboard/hr/personnel" className="hover:text-[#2c5282]">
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <Link to="/dashboard/hr/personnel" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
                 <span>الموارد البشرية</span>
               </Link>
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
-              <span className="text-[#1a202c] font-semibold">تسجيل الحضور</span>
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <span className="text-slate-900 dark:text-slate-100 font-semibold">تسجيل الحضور</span>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#2c5282] text-white rounded">
+              <div className="p-2.5 bg-[#2c5282] dark:bg-sky-700 text-white rounded-lg shadow-sm">
                 <CalendarCheck className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-[#1a202c]">
+                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   ورقة تسجيل الحضور اليومي
                 </h1>
-                <p className="text-sm text-[#5f6b7d]">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   تسجيل إثبات الحضور والغياب واحتساب الخصم من الرصيد ديناميكياً
                 </p>
               </div>
@@ -457,22 +447,22 @@ export const AttendancePage: React.FC = () => {
           </div>
 
           {/* Bouton Enregistrer en haut */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
             <Button
               asChild
               variant="outline"
-              className="border-[#2c5282] text-[#2c5282] hover:bg-[#ebf4ff] rounded font-medium gap-2 h-11 px-4 transition-colors duration-200"
+              className="border-[#2c5282] dark:border-sky-600 text-[#2c5282] dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/50 rounded-lg font-medium gap-2 h-10 px-4 transition-colors duration-200"
             >
               <Link to="/dashboard/hr/attendance/report">
                 <Printer className="h-4 w-4" />
-                <span>Imprimer la fiche mensuelle</span>
+                <span>{isRTL ? 'طباعة الكشف الشهري' : 'Imprimer la fiche mensuelle'}</span>
               </Link>
             </Button>
 
             <Button
               onClick={handleSaveAttendance}
               disabled={saving || loading || attendanceRows.length === 0}
-              className="bg-[#2c5282] hover:bg-[#2a4365] text-white rounded font-medium gap-2 h-11 px-5 transition-colors duration-200"
+              className="bg-[#2c5282] hover:bg-[#2a4365] dark:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-lg font-medium gap-2 h-10 px-5 transition-colors duration-200"
             >
               {saving ? (
                 <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -486,26 +476,26 @@ export const AttendancePage: React.FC = () => {
       </div>
 
       {/* 2. Filtres & Sélecteurs */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4 shadow-none">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 space-y-4 shadow-sm print:hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3.5 items-end">
           {/* Sélecteur de date */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#4a5568] flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
               <span>تاريخ الحضور :</span>
             </label>
             <Input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="h-10 border-[#e2e8f0] rounded text-sm bg-white"
+              className="h-10 border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
             />
           </div>
 
           {/* Sélecteur de département */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#4a5568] flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-[#2c5282]" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
               <span>القسم / المصلحة :</span>
             </label>
             {isDepartmentRestricted ? (
@@ -517,17 +507,17 @@ export const AttendancePage: React.FC = () => {
                     ? (currentUser.activeDepartment as { name?: string })?.name || 'القسم المخصص'
                     : 'القسم المخصص'
                 }
-                className="h-11 border-[#e2e8f0] bg-gray-50 text-gray-700 rounded text-sm cursor-not-allowed"
+                className="h-10 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-sm cursor-not-allowed"
               />
             ) : (
               <Select
                 value={selectedDepartment}
                 onValueChange={(val) => setSelectedDepartment(val)}
               >
-                <SelectTrigger className="h-11 border-[#e2e8f0] rounded text-sm bg-white">
+                <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-950 dark:text-slate-100">
                   <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent dir={dir}>
                   <SelectItem value="all">جميع الأقسام</SelectItem>
                   {departments.map((d) => (
                     <SelectItem key={d._id} value={d._id}>
@@ -541,8 +531,8 @@ export const AttendancePage: React.FC = () => {
 
           {/* Recherche textuelle */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#4a5568] flex items-center gap-1.5">
-              <Search className="h-3.5 w-3.5 text-[#718096]" />
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Search className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
               <span>بحث عن موظف :</span>
             </label>
             <div className="relative">
@@ -551,9 +541,9 @@ export const AttendancePage: React.FC = () => {
                 placeholder="الاسم، اللقب، رقم ب.ت.و..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 border-[#e2e8f0] rounded text-sm pr-9 bg-white"
+                className="h-10 border-slate-200 dark:border-slate-700 rounded-lg text-sm ps-9 bg-white dark:bg-slate-950 dark:text-slate-100"
               />
-              <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute start-3 top-3 h-4 w-4 text-slate-400" />
             </div>
           </div>
 
@@ -564,47 +554,49 @@ export const AttendancePage: React.FC = () => {
               variant="outline"
               onClick={handleMarkAllPresent}
               disabled={loading || attendanceRows.length === 0}
-              className="h-11 border-[#e2e8f0] text-[#2c5282] hover:bg-[#f7fafc] rounded font-medium gap-2 text-sm"
+              className="h-10 border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg font-medium gap-2 text-sm"
             >
-              <Check className="h-4 w-4 text-green-600" />
+              <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span>تحديد الكل كحاضر</span>
             </Button>
           </div>
         </div>
 
         {/* Barre de stats et filtre d'affichage */}
-        <div className="pt-3 border-t border-[#edf2f7] flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[#5f6b7d]">إجمالي الموظفين:</span>
-            <span className="font-bold text-[#1a202c] px-2 py-0.5 bg-gray-100 rounded">
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2 tabular-nums">
+            <span className="text-slate-600 dark:text-slate-400">إجمالي الموظفين:</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100 px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md">
               {stats.total}
             </span>
 
-            <span className="text-[#5f6b7d] mr-2">الحاضرون:</span>
-            <span className="font-bold text-green-700 px-2 py-0.5 bg-green-50 rounded border border-green-200">
+            <span className="text-slate-600 dark:text-slate-400 ms-2">الحاضرون:</span>
+            <span className="font-bold text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/50 rounded-md border border-emerald-200 dark:border-emerald-800/70">
               {stats.presents}
             </span>
 
-            <span className="text-[#5f6b7d] mr-2">الغائبون:</span>
-            <span className="font-bold text-red-700 px-2 py-0.5 bg-red-50 rounded border border-red-200">
+            <span className="text-slate-600 dark:text-slate-400 ms-2">الغائبون:</span>
+            <span className="font-bold text-red-700 dark:text-red-300 px-2.5 py-0.5 bg-red-50 dark:bg-red-950/50 rounded-md border border-red-200 dark:border-red-800/70">
               {stats.absents}
             </span>
 
             {stats.saved > 0 && (
-              <span className="text-gray-500 text-xs mr-2">
+              <span className="text-slate-500 dark:text-slate-400 text-xs ms-2">
                 (تم حفظ {stats.saved} مسبقاً لهذا اليوم)
               </span>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[#5f6b7d]">تصفية العرض:</span>
+            <span className="text-slate-600 dark:text-slate-400">تصفية العرض:</span>
             <Button
               size="sm"
               variant={statusFilter === 'all' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('all')}
-              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
-                statusFilter === 'all' ? 'bg-[#2c5282] text-white' : 'text-gray-600'
+              className={`h-9 text-xs px-3.5 rounded-lg tabular-nums ${
+                statusFilter === 'all'
+                  ? 'bg-[#2c5282] dark:bg-sky-700 text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
               الكل ({stats.total})
@@ -613,10 +605,10 @@ export const AttendancePage: React.FC = () => {
               size="sm"
               variant={statusFilter === 'present' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('present')}
-              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
+              className={`h-9 text-xs px-3.5 rounded-lg tabular-nums ${
                 statusFilter === 'present'
-                  ? 'bg-green-700 text-white'
-                  : 'text-gray-600 hover:text-green-700'
+                  ? 'bg-emerald-700 text-white'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
               }`}
             >
               الحاضرون ({stats.presents})
@@ -625,10 +617,10 @@ export const AttendancePage: React.FC = () => {
               size="sm"
               variant={statusFilter === 'absent' ? 'default' : 'ghost'}
               onClick={() => setStatusFilter('absent')}
-              className={`h-11 min-h-[44px] text-xs px-3.5 rounded ${
+              className={`h-9 text-xs px-3.5 rounded-lg tabular-nums ${
                 statusFilter === 'absent'
                   ? 'bg-red-700 text-white'
-                  : 'text-gray-600 hover:text-red-700'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40'
               }`}
             >
               الغائبون ({stats.absents})
@@ -638,59 +630,53 @@ export const AttendancePage: React.FC = () => {
       </div>
 
       {/* 3. Liste du personnel */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-none">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-16 text-center space-y-3">
-            <div className="h-8 w-8 border-2 border-[#2c5282] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm text-gray-500">جاري تحميل قائمة الحضور...</p>
-          </div>
+          <TableSkeleton rows={6} columns={4} />
         ) : filteredRows.length === 0 ? (
-          <div className="py-16 text-center space-y-2">
-            <Users className="h-10 w-10 text-gray-300 mx-auto" />
-            <p className="text-base font-semibold text-gray-700">لا يوجد موظفون للعرض</p>
-            <p className="text-xs text-gray-500">
-              تأكد من اختيار القسم المناسب أو إضافة موظفين في قسم الموارد البشرية
-            </p>
-          </div>
+          <EmptyState
+            className="border-0 rounded-none py-14"
+            icon={<Users className="h-6 w-6" />}
+            title="لا يوجد موظفون للعرض"
+            description="تأكد من اختيار القسم المناسب أو إضافة موظفين في قسم الموارد البشرية"
+          />
         ) : (
-          <div className="divide-y divide-[#edf2f7]">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {filteredRows.map((row) => {
               // Trouver l'index original dans attendanceRows
               const originalIndex = attendanceRows.findIndex(
                 (r) => r.personnel._id === row.personnel._id
               );
               const isPresent = row.statut === 'present';
-              const currentReason = leaveReasons.find((r) => r.code === row.motif);
 
               return (
                 <div
                   key={row.personnel._id}
                   className={`p-4 transition-colors duration-150 ${
-                    isPresent ? 'bg-white hover:bg-[#fafafa]' : 'bg-[#fffaf0] hover:bg-[#fff7eb]'
+                    isPresent
+                      ? 'bg-white dark:bg-slate-900 hover:bg-slate-50/70 dark:hover:bg-slate-800/50'
+                      : 'bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-50/80 dark:hover:bg-amber-950/30'
                   }`}
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     {/* Infos Agent */}
                     <div className="flex items-center gap-3.5 min-w-[260px] flex-1">
-                      <Avatar className="h-11 w-11 border border-[#e2e8f0] rounded-full">
-                        <AvatarImage
-                          src={getAgentPhotoUrl(row.personnel.photo)}
-                          alt={`${row.personnel.nom} ${row.personnel.prenom}`}
-                          className="object-cover"
-                        />
-                        <AvatarFallback className="bg-[#2c5282] text-white text-xs font-bold">
-                          {getUserInitials(row.personnel.nom, row.personnel.prenom)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <PersonnelAvatar
+                        photo={row.personnel.photo}
+                        nom={row.personnel.nom}
+                        prenom={row.personnel.prenom}
+                        size="md"
+                        className="h-11 w-11"
+                      />
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-[#1a202c] truncate">
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                             {row.personnel.nom} {row.personnel.prenom}
                           </h3>
                           {row.hasSavedRecord && (
                             <span
-                              className="text-xs text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-200"
+                              className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/70"
                               title="تم تسجيل هذه الحالة مسبقاً"
                             >
                               مُسجل
@@ -698,9 +684,9 @@ export const AttendancePage: React.FC = () => {
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#5f6b7d] mt-0.5">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           {row.personnel.cin && (
-                            <span className="font-mono">ب.ت.و: {row.personnel.cin}</span>
+                            <span className="font-mono tabular-nums">ب.ت.و: {row.personnel.cin}</span>
                           )}
                           {row.personnel.poste && (
                             <>
@@ -711,7 +697,7 @@ export const AttendancePage: React.FC = () => {
                           {row.personnel.activeDepartment && (
                             <>
                               <span>•</span>
-                              <span className="text-purple-700 font-medium">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60 font-medium">
                                 {row.personnel.activeDepartment.name}
                               </span>
                             </>
@@ -722,14 +708,14 @@ export const AttendancePage: React.FC = () => {
 
                     {/* Contrôle Présent / Absent */}
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-gray-50 border border-[#e2e8f0] p-1 rounded">
+                      <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-1 rounded-lg">
                         <button
                           type="button"
                           onClick={() => handleToggleStatut(originalIndex, true)}
-                          className={`h-11 px-3.5 rounded text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                          className={`h-9 px-3.5 rounded-md text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
                             isPresent
-                              ? 'bg-green-700 text-white shadow-sm'
-                              : 'text-gray-500 hover:text-green-700 hover:bg-gray-200/50'
+                              ? 'bg-emerald-700 text-white shadow-sm'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
                           }`}
                         >
                           <CheckCircle2 className="h-4 w-4" />
@@ -739,10 +725,10 @@ export const AttendancePage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleToggleStatut(originalIndex, false)}
-                          className={`h-11 px-3.5 rounded text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                          className={`h-9 px-3.5 rounded-md text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
                             !isPresent
                               ? 'bg-red-700 text-white shadow-sm'
-                              : 'text-gray-500 hover:text-red-700 hover:bg-gray-200/50'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
                           }`}
                         >
                           <XCircle className="h-4 w-4" />
@@ -752,8 +738,8 @@ export const AttendancePage: React.FC = () => {
 
                       {/* Si présent : heure d'arrivée optionnelle */}
                       {isPresent && (
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                          <Clock className="h-3.5 w-3.5 text-gray-400" />
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <Clock className="h-3.5 w-3.5 text-slate-400" />
                           <Input
                             type="time"
                             placeholder="وقت الوصول"
@@ -766,7 +752,7 @@ export const AttendancePage: React.FC = () => {
                                 return u;
                               });
                             }}
-                            className="h-9 w-28 text-xs border-[#e2e8f0] rounded bg-white"
+                            className="h-9 w-28 text-xs border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
                           />
                         </div>
                       )}
@@ -775,27 +761,27 @@ export const AttendancePage: React.FC = () => {
 
                   {/* Section Spécifique si ABSENT */}
                   {!isPresent && (
-                    <div className="mt-3.5 pt-3.5 border-t border-[#fbd38d]/40 bg-white p-4 rounded border border-[#fbd38d]/60 space-y-3">
+                    <div className="mt-3.5 pt-3.5 bg-white dark:bg-slate-900/90 p-4 rounded-lg border border-amber-300/70 dark:border-amber-800/60 space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         {/* Sélection du Motif */}
                         <div className="flex-1 min-w-[240px]">
-                          <label className="text-sm font-medium text-[#744210] mb-1.5 block">
-                            سبب الغياب <span className="text-red-600">*</span> :
+                          <label className="text-sm font-medium text-amber-900 dark:text-amber-300 mb-1.5 block">
+                            سبب الغياب <span className="text-red-600 dark:text-red-400">*</span> :
                           </label>
                           <Select
                             value={row.motif || ''}
                             onValueChange={(val) => handleMotifChange(originalIndex, val)}
                           >
-                            <SelectTrigger className="h-10 border-[#cbd5e0] rounded text-sm bg-white">
+                            <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-950 dark:text-slate-100">
                               <SelectValue placeholder="اختر سبب الغياب" />
                             </SelectTrigger>
-                            <SelectContent className="max-h-60">
+                            <SelectContent className="max-h-60" dir={dir}>
                               {leaveReasons.map((lr) => (
                                 <SelectItem key={lr._id} value={lr.code} className="text-sm py-2">
                                   <div className="flex items-center justify-between gap-3 w-full">
-                                    <span className="font-semibold text-gray-900">{lr.labelAr}</span>
+                                    <span className="font-semibold text-slate-900 dark:text-slate-100">{lr.labelAr}</span>
                                     {lr.labelFr && (
-                                      <span className="text-gray-400 text-xs font-mono">
+                                      <span className="text-slate-400 text-xs font-mono">
                                         ({lr.labelFr})
                                       </span>
                                     )}
@@ -807,25 +793,25 @@ export const AttendancePage: React.FC = () => {
                         </div>
 
                         {/* Badge Impact Solde */}
-                        <div className="sm:text-left flex flex-col justify-end">
-                          <label className="text-sm font-medium text-gray-600 mb-1.5 block">
+                        <div className="sm:text-end flex flex-col justify-end">
+                          <label className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5 block">
                             تأثير الغياب على الرصيد :
                           </label>
                           <div>
                             {row.impacteSolde ? (
                               <Badge
                                 variant="outline"
-                                className="bg-amber-50 text-amber-900 border-amber-300 px-3 py-1 text-xs font-bold gap-1.5"
+                                className="bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800 px-3 py-1 text-xs font-bold gap-1.5"
                               >
-                                <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                                <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                                 <span>يؤثر على الرصيد : نعم (مخصوم)</span>
                               </Badge>
                             ) : (
                               <Badge
                                 variant="outline"
-                                className="bg-blue-50 text-blue-800 border-blue-200 px-3 py-1 text-xs font-semibold gap-1.5"
+                                className="bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800 px-3 py-1 text-xs font-semibold gap-1.5"
                               >
-                                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                 <span>يؤثر على الرصيد : لا (غير مخصوم)</span>
                               </Badge>
                             )}
@@ -836,8 +822,8 @@ export const AttendancePage: React.FC = () => {
                       {/* Champs conditionnels selon le motif */}
                       {/* Cas 1: Motif "service" */}
                       {row.motif === 'service' && (
-                        <div className="bg-[#fffaf0] p-4 rounded border border-amber-200/80 space-y-2">
-                          <label className="text-sm font-medium text-[#744210]">
+                        <div className="bg-amber-50/60 dark:bg-slate-950/70 p-4 rounded-lg border border-amber-200/80 dark:border-amber-800/50 space-y-2">
+                          <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
                             اسم المصلحة أو الوجهة الإدارية :
                           </label>
                           <Input
@@ -847,16 +833,16 @@ export const AttendancePage: React.FC = () => {
                             onChange={(e) =>
                               handleDetailChange(originalIndex, 'serviceNom', e.target.value)
                             }
-                            className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
+                            className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
                           />
                         </div>
                       )}
 
                       {/* Cas 2: Motif "mission" */}
                       {row.motif === 'mission' && (
-                        <div className="bg-[#fffaf0] p-4 rounded border border-amber-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-amber-50/60 dark:bg-slate-950/70 p-4 rounded-lg border border-amber-200/80 dark:border-amber-800/50 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-[#744210]">
+                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
                               مكان المهمة :
                             </label>
                             <Input
@@ -866,11 +852,11 @@ export const AttendancePage: React.FC = () => {
                               onChange={(e) =>
                                 handleDetailChange(originalIndex, 'missionLieu', e.target.value)
                               }
-                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-[#744210]">
+                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
                               موضوع المهمة :
                             </label>
                             <Input
@@ -880,7 +866,7 @@ export const AttendancePage: React.FC = () => {
                               onChange={(e) =>
                                 handleDetailChange(originalIndex, 'missionObjet', e.target.value)
                               }
-                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
                             />
                           </div>
                         </div>
@@ -888,9 +874,9 @@ export const AttendancePage: React.FC = () => {
 
                       {/* Cas 3: Motif "formation" */}
                       {row.motif === 'formation' && (
-                        <div className="bg-[#fffaf0] p-4 rounded border border-amber-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="bg-amber-50/60 dark:bg-slate-950/70 p-4 rounded-lg border border-amber-200/80 dark:border-amber-800/50 grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-[#744210]">
+                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
                               عنوان التكوين :
                             </label>
                             <Input
@@ -904,11 +890,11 @@ export const AttendancePage: React.FC = () => {
                                   e.target.value
                                 )
                               }
-                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-[#744210]">
+                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
                               الهيئة المؤطرة :
                             </label>
                             <Input
@@ -922,11 +908,11 @@ export const AttendancePage: React.FC = () => {
                                   e.target.value
                                 )
                               }
-                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-[#744210]">
+                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
                               مدة التكوين :
                             </label>
                             <Input
@@ -936,7 +922,7 @@ export const AttendancePage: React.FC = () => {
                               onChange={(e) =>
                                 handleDetailChange(originalIndex, 'formationDuree', e.target.value)
                               }
-                              className="h-10 text-sm border-[#cbd5e0] rounded bg-white"
+                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
                             />
                           </div>
                         </div>
@@ -954,23 +940,31 @@ export const AttendancePage: React.FC = () => {
       {filteredRows.length > 0 && (
         <div
           data-sticky-validation-bar="true"
-          className="sticky bottom-4 z-10 bg-white border border-[#e2e8f0] rounded p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+          className="sticky bottom-4 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md print:hidden"
         >
-          <div className="text-xs text-[#5f6b7d]">
-            <span>التاريخ المحدد: </span>
-            <span className="font-bold text-[#1a202c] ml-3">{selectedDate}</span>
-            <span>عدد الموظفين: </span>
-            <span className="font-bold text-[#1a202c] ml-3">{attendanceRows.length}</span>
-            <span>الحاضرون: </span>
-            <span className="font-bold text-green-700 ml-3">{stats.presents}</span>
-            <span>الغائبون: </span>
-            <span className="font-bold text-red-700">{stats.absents}</span>
+          <div className="text-xs text-slate-600 dark:text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1 tabular-nums">
+            <span>
+              التاريخ المحدد:{' '}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedDate}</span>
+            </span>
+            <span>
+              عدد الموظفين:{' '}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{attendanceRows.length}</span>
+            </span>
+            <span>
+              الحاضرون:{' '}
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">{stats.presents}</span>
+            </span>
+            <span>
+              الغائبون:{' '}
+              <span className="font-bold text-red-700 dark:text-red-400">{stats.absents}</span>
+            </span>
           </div>
 
           <Button
             onClick={handleSaveAttendance}
             disabled={saving || loading || attendanceRows.length === 0}
-            className="bg-[#2c5282] hover:bg-[#2a4365] text-white rounded font-medium gap-2 h-11 px-6 text-sm transition-colors duration-200"
+            className="bg-[#2c5282] hover:bg-[#2a4365] dark:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-lg font-medium gap-2 h-10 px-6 text-sm transition-colors duration-200"
           >
             {saving ? (
               <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
-import { formatLocalizedDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
@@ -52,9 +52,9 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
               )}
             >
               <Calendar className="me-2 icon-responsive" />
-              <span className="flex-1 text-start">
+              <span className="flex-1 text-start tabular-nums">
                 {field.value ? (
-                  <bdi dir="auto">{formatLocalizedDate(field.value, lang)}</bdi>
+                  <bdi dir={lang === 'ar' ? 'rtl' : 'ltr'}>{formatLongDate(field.value, lang)}</bdi>
                 ) : (
                   <span className="text-muted-foreground">{selectDateText}</span>
                 )}

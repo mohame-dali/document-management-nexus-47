@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { IncomingDocument, OutgoingDocument } from '@/types';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentListProps {
@@ -43,10 +43,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents }) => {
               <p className="text-xs text-gray-500">
                 الرقم التسلسلي: <bdi dir="ltr">{doc.serialNumber}/{doc.year}</bdi>
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 tabular-nums">
                 {isIncomingDocument(doc) 
-                  ? <>تاريخ الوصول: <bdi dir="ltr">{formatArabicDate(doc.arrivalDate)}</bdi></>
-                  : <>تاريخ الإصدار: <bdi dir="ltr">{formatArabicDate(doc.issueDate)}</bdi></>
+                  ? <>تاريخ الوصول: <bdi dir="rtl" className="tabular-nums">{formatLongDate(doc.arrivalDate, 'ar')}</bdi></>
+                  : <>تاريخ الإصدار: <bdi dir="rtl" className="tabular-nums">{formatLongDate(doc.issueDate, 'ar')}</bdi></>
                 }
               </p>
             </div>

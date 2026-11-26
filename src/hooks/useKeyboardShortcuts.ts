@@ -2,18 +2,18 @@ import { useEffect } from 'react';
 
 /**
  * Global Keyboard Shortcuts hook
- * - Ctrl+K / Cmd+K: Focus search input
+ * - Ctrl+K / Cmd+K: Open global search palette (fallback: focus search input)
  * - Ctrl+S / Cmd+S: Prevent browser default save page dialog
- * - Escape: Close dialogs / clear focus
  */
 export function useKeyboardShortcuts() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+K or Cmd+K: Focus on search bar
+      // Ctrl+K or Cmd+K: Open global search palette
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
+        window.dispatchEvent(new CustomEvent('open-global-search'));
         const searchInput = document.querySelector<HTMLInputElement>(
-          '#global-search-input, input[type="search"], input[placeholder*="بحث"], input[placeholder*="ابحث"]'
+          '#global-search-input'
         );
         if (searchInput) {
           searchInput.focus();

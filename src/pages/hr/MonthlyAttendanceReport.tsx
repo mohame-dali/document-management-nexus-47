@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useDirection } from '@/i18n/useDirection';
 import {
   ArrowRight,
   ArrowLeft,
@@ -50,6 +51,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 export const MonthlyAttendanceReport: React.FC = () => {
   const { currentUser } = useAuth();
   const { language } = useLanguage();
+  const { dir } = useDirection();
   const isAr = language === 'ar';
 
   const now = useMemo(() => new Date(), []);
@@ -197,19 +199,19 @@ export const MonthlyAttendanceReport: React.FC = () => {
   const BackIcon = isAr ? ArrowRight : ArrowLeft;
 
   return (
-    <div className="space-y-5 pb-10">
+    <div className="space-y-5 pb-10 text-start" dir={dir}>
       {/* En-tête de contrôle (masqué à l'impression) */}
-      <div className="no-print bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
+      <div className="no-print bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 space-y-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#2c5282] text-white rounded">
+            <div className="p-2.5 bg-[#2c5282] dark:bg-sky-700 text-white rounded-lg shadow-sm">
               <FileSpreadsheet className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-[#1a202c]">
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
                 {isAr ? 'بطاقة الحضور الشهرية للطباعة' : 'Fiche de présence mensuelle'}
               </h1>
-              <p className="text-xs sm:text-sm text-[#5f6b7d]">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                 {isAr
                   ? 'إعداد وطباعة جدول المواظبة الشهري (A4 أفقي - 31 يوماً)'
                   : 'Générer et imprimer la grille mensuelle des présences (A4 Paysage - 31 jours)'}
@@ -217,7 +219,11 @@ export const MonthlyAttendanceReport: React.FC = () => {
             </div>
           </div>
 
-          <Button asChild variant="outline" className="border-[#e2e8f0] text-[#2c5282] rounded gap-2 h-10">
+          <Button
+            asChild
+            variant="outline"
+            className="border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg gap-2 h-10"
+          >
             <Link to="/dashboard/hr/attendance">
               <BackIcon className="h-4 w-4" />
               <span>{isAr ? 'العودة لتسجيل الحضور' : 'Retour aux présences'}</span>
@@ -228,22 +234,22 @@ export const MonthlyAttendanceReport: React.FC = () => {
         {/* Sélecteurs Mois / Année / Département + Bouton Générer */}
         <form
           onSubmit={handleGenerate}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[#edf2f7] items-end"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 items-end"
         >
           {/* Mois */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#4a5568] flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
               <span>{isAr ? 'الشهر' : 'Mois'}</span>
             </label>
             <Select
               value={String(selectedMonth)}
               onValueChange={(val) => setSelectedMonth(parseInt(val, 10))}
             >
-              <SelectTrigger className="h-10 border-[#e2e8f0] rounded bg-white text-sm">
+              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm tabular-nums">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir={dir}>
                 {MONTHS.map((m) => (
                   <SelectItem key={m.value} value={String(m.value)}>
                     {String(m.value).padStart(2, '0')} - {isAr ? `${m.ar} (${m.fr})` : `${m.fr} (${m.ar})`}
@@ -255,20 +261,20 @@ export const MonthlyAttendanceReport: React.FC = () => {
 
           {/* Année */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#4a5568] flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-[#2c5282]" />
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
               <span>{isAr ? 'السنة' : 'Année'}</span>
             </label>
             <Select
               value={String(selectedYear)}
               onValueChange={(val) => setSelectedYear(parseInt(val, 10))}
             >
-              <SelectTrigger className="h-10 border-[#e2e8f0] rounded bg-white text-sm font-mono">
+              <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm font-mono tabular-nums">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent dir={dir}>
                 {yearOptions.map((y) => (
-                  <SelectItem key={y} value={String(y)} className="font-mono">
+                  <SelectItem key={y} value={String(y)} className="font-mono tabular-nums">
                     {y}
                   </SelectItem>
                 ))}
@@ -278,8 +284,8 @@ export const MonthlyAttendanceReport: React.FC = () => {
 
           {/* Département */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[#4a5568] flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-[#2c5282]" />
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
               <span>{isAr ? 'القسم / المصلحة' : 'Département'}</span>
             </label>
             {isDepartmentRestricted ? (
@@ -287,17 +293,17 @@ export const MonthlyAttendanceReport: React.FC = () => {
                 type="text"
                 disabled
                 value={userDepartmentName || (isAr ? 'القسم المخصص' : 'Département assigné')}
-                className="h-10 border-[#e2e8f0] bg-gray-50 text-gray-700 rounded text-sm cursor-not-allowed"
+                className="h-10 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-sm cursor-not-allowed"
               />
             ) : (
               <Select
                 value={selectedDepartment}
                 onValueChange={(val) => setSelectedDepartment(val)}
               >
-                <SelectTrigger className="h-10 border-[#e2e8f0] rounded bg-white text-sm">
+                <SelectTrigger className="h-10 border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm">
                   <SelectValue placeholder={isAr ? 'جميع الأقسام' : 'Tous les départements'} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent dir={dir}>
                   <SelectItem value="all">
                     {isAr ? 'جميع الأقسام والمصالح' : 'Tous les départements'}
                   </SelectItem>
@@ -316,7 +322,7 @@ export const MonthlyAttendanceReport: React.FC = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-10 bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded font-medium gap-2"
+              className="w-full h-10 bg-[#2c5282] hover:bg-[#1e3a5f] dark:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-lg font-medium gap-2"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -331,9 +337,9 @@ export const MonthlyAttendanceReport: React.FC = () => {
 
       {/* Contenu généré */}
       {loading && !reportData ? (
-        <div className="no-print bg-white border border-[#e2e8f0] rounded py-20 text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] mx-auto" />
-          <p className="text-sm text-[#5f6b7d]">
+        <div className="no-print bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg py-20 text-center space-y-3 shadow-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] dark:text-sky-400 mx-auto" />
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {isAr ? 'جاري تحميل بيانات الحضور الشهري...' : 'Chargement de la fiche mensuelle...'}
           </p>
         </div>

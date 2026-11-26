@@ -3,6 +3,18 @@ import { User, Department } from './index';
 export type PersonnelStatut = 'en_attente' | 'actif' | 'inactif';
 export type PersonnelSexe = 'Homme' | 'Femme';
 
+export interface AffectationHistoryItem {
+  _id?: string;
+  poste?: string;
+  departement?: Department | string | null;
+  departementName?: string;
+  dateDebut?: string | null;
+  dateFin?: string | null;
+  reference?: string;
+  observations?: string;
+  isCurrent?: boolean;
+}
+
 export interface Personnel {
   _id: string;
   nom: string;
@@ -15,15 +27,27 @@ export interface Personnel {
   telephone?: string;
   emailPersonnel?: string;
   poste?: string;
+  posteActuel?: string;
+  fonction?: string;
   activeDepartment?: Department | string | null;
   departments?: (Department | string)[];
+  historiqueAffectations?: AffectationHistoryItem[];
   dateEmbauche?: string | null;
   statut: PersonnelStatut;
   userId?: User | string | null;
   notes?: string;
   photo?: string;
+  matricule?: string;
+  grade?: string;
+  categorie?: string;
+  echelon?: string;
+  etatCivil?: string;
+  enfants?: number | string;
+  dateTitularisation?: string | null;
+  dateFinService?: string | null;
   createdAt?: string;
   createdBy?: User | string | null;
+  [key: string]: unknown;
 }
 
 export interface PersonnelListResponse {

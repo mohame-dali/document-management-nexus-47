@@ -10,6 +10,11 @@ const User = require('../models/User');
 const OrganizationSettings = require('../models/OrganizationSettings');
 const { sanitizeSearchQuery } = require('../utils/regexUtils');
 const { logAuditAction } = require('../utils/auditLogger');
+const { extractId } = require('../utils/rhAuthHelper');
+const {
+  seedInitialAffectationIfEmpty,
+  recordCareerTransition
+} = require('../utils/personnelCareerHelper');
 
 // Helper pour vérifier si l'utilisateur est un chef de département non-RH
 const isNonRHAdminDepartment = async (user) => {
@@ -54,6 +59,7 @@ exports.createPersonnel = async (req, res, next) => {
       numeroUnite,
       numeroArmee,
       dateEngagement,
+      dateRecrutement,
       typeEngagement,
       origineEngagement,
       niveauEtude,
@@ -61,6 +67,7 @@ exports.createPersonnel = async (req, res, next) => {
       specialite,
       arme,
       posteActuel,
+      fonction,
       // Groupe C — Situation familiale
       etatCivil,
       nomConjoint,
@@ -82,6 +89,7 @@ exports.createPersonnel = async (req, res, next) => {
     }
 
     // Validation du département principal s'il est fourni
+    let deptExists = null;
     if (activeDepartment) {
       if (!mongoose.Types.ObjectId.isValid(activeDepartment)) {
         return res.status(400).json({
@@ -89,11 +97,29 @@ exports.createPersonnel = async (req, res, next) => {
           message: 'Identifiant de département invalide'
         });
       }
-      const deptExists = await Department.findById(activeDepartment);
+      deptExists = await Department.findById(activeDepartment);
       if (!deptExists) {
         return res.status(404).json({
           success: false,
           message: 'Le département spécifié est introuvable'
+        });
+      }
+    }
+
+    // Validation d'unicité de l'email professionnel (si non vide)
+    const normalizedEmail = typeof emailPersonnel === 'string'
+      ? emailPersonnel.trim().toLowerCase()
+      : '';
+    if (normalizedEmail) {
+      const existingEmailPersonnel = await Personnel.findOne({
+        emailPersonnel: normalizedEmail,
+        isDeleted: { $ne: true }
+      });
+      if (existingEmailPersonnel) {
+        return res.status(409).json({
+          success: false,
+          code: 'DUPLICATE_EMAIL',
+          message: 'Un agent avec cet email professionnel existe déjà.'
         });
       }
     }
@@ -113,6 +139,34 @@ exports.createPersonnel = async (req, res, next) => {
       }
     }
 
+    const resolvedPoste =
+      (typeof posteActuel === 'string' && posteActuel.trim()) ||
+      (typeof poste === 'string' && poste.trim()) ||
+      (typeof fonction === 'string' && fonction.trim()) ||
+      '';
+
+    const initialDepartments = Array.isArray(departments) ? [...departments] : [];
+    if (activeDepartment) {
+      const activeDeptStr = activeDepartment.toString();
+      if (!initialDepartments.some(d => extractId(d) === activeDeptStr)) {
+        initialDepartments.push(activeDepartment);
+      }
+    }
+
+    const initialHistory = [];
+    if (activeDepartment || resolvedPoste) {
+      initialHistory.push({
+        poste: resolvedPoste,
+        departement: activeDepartment || null,
+        departementName: deptExists?.name ? String(deptExists.name).trim() : '',
+        dateDebut: dateEngagement || dateEmbauche || dateRecrutement || new Date(),
+        dateFin: null,
+        reference: '',
+        observations: '',
+        isCurrent: true
+      });
+    }
+
     // Création de la fiche avec statut initial 'en_attente' et userId null
     const personnelData = {
       nom: nom.trim(),
@@ -123,10 +177,10 @@ exports.createPersonnel = async (req, res, next) => {
       cin: cin && cin.trim() ? cin.trim() : undefined,
       adresse: adresse ? adresse.trim() : '',
       telephone: telephone ? telephone.trim() : '',
-      emailPersonnel: emailPersonnel ? emailPersonnel.trim().toLowerCase() : '',
-      poste: poste ? poste.trim() : '',
+      emailPersonnel: normalizedEmail,
+      poste: typeof poste === 'string' && poste.trim() ? poste.trim() : resolvedPoste,
       activeDepartment: activeDepartment || null,
-      departments: Array.isArray(departments) ? departments : [],
+      departments: initialDepartments,
       dateEmbauche: dateEmbauche || null,
       statut: 'en_attente',
       userId: null,
@@ -148,7 +202,7 @@ exports.createPersonnel = async (req, res, next) => {
       diplomeBase: diplomeBase ? diplomeBase.trim() : '',
       specialite: specialite ? specialite.trim() : '',
       arme: arme ? arme.trim() : '',
-      posteActuel: posteActuel ? posteActuel.trim() : '',
+      posteActuel: typeof posteActuel === 'string' && posteActuel.trim() ? posteActuel.trim() : resolvedPoste,
       // Groupe C — Situation familiale
       etatCivil: etatCivil || '',
       nomConjoint: nomConjoint ? nomConjoint.trim() : '',
@@ -160,6 +214,8 @@ exports.createPersonnel = async (req, res, next) => {
       dateValiditePasseport: dateValiditePasseport || null,
       // Groupe E — 3 personnes à prévenir
       personnesAPrevenir: Array.isArray(personnesAPrevenir) ? personnesAPrevenir : [],
+      // Historique automatique des affectations
+      historiqueAffectations: initialHistory,
       createdBy: req.user ? (req.user._id || req.user.id) : null
     };
 
@@ -207,6 +263,13 @@ exports.createPersonnel = async (req, res, next) => {
     });
   } catch (error) {
     if (error.code === 11000) {
+      if (error.keyPattern?.emailPersonnel) {
+        return res.status(409).json({
+          success: false,
+          code: 'DUPLICATE_EMAIL',
+          message: 'Un agent avec cet email professionnel existe déjà.'
+        });
+      }
       return res.status(400).json({
         success: false,
         message: 'Un agent avec ce CIN existe déjà.'
@@ -282,14 +345,30 @@ exports.getPersonnelList = async (req, res, next) => {
     const personnelQuery = Personnel.find(query);
     if (!hasFullHRAccess) {
       personnelQuery.select('_id nom prenom activeDepartment poste posteActuel');
+    } else {
+      personnelQuery.populate({
+        path: 'userId',
+        select: 'username email role isActive isDeleted',
+        match: { isDeleted: { $ne: true } }
+      });
     }
 
     const personnelList = await personnelQuery
       .populate('activeDepartment', 'name code description')
       .populate('departments', 'name code')
+      .populate('historiqueAffectations.departement', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+
+    // Filtrer tout lien fantôme ou utilisateur supprimé
+    if (hasFullHRAccess) {
+      personnelList.forEach((doc) => {
+        if (doc.userId && (typeof doc.userId !== 'object' || doc.userId.isDeleted)) {
+          doc.userId = null;
+        }
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -326,13 +405,22 @@ exports.getPersonnelById = async (req, res, next) => {
     const personnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } })
       .populate('activeDepartment', 'name description')
       .populate('departments', 'name')
-      .populate('userId', 'username email role isActive');
+      .populate('historiqueAffectations.departement', 'name')
+      .populate({
+        path: 'userId',
+        select: 'username email role isActive isDeleted',
+        match: { isDeleted: { $ne: true } }
+      });
 
     if (!personnel) {
       return res.status(404).json({
         success: false,
         message: 'Fiche de personnel introuvable'
       });
+    }
+
+    if (personnel.userId && (typeof personnel.userId !== 'object' || personnel.userId.isDeleted)) {
+      personnel.userId = null;
     }
 
     res.status(200).json({
@@ -365,6 +453,80 @@ exports.updatePersonnel = async (req, res, next) => {
         success: false,
         message: 'Fiche de personnel introuvable'
       });
+    }
+
+    // Vérifier si la fiche est liée à un compte Admin purement technique
+    let linkedUser = null;
+    if (personnel.userId) {
+      linkedUser = await User.findOne({ _id: personnel.userId, isDeleted: { $ne: true } });
+      if (linkedUser && linkedUser.role === 'Admin') {
+        return res.status(403).json({
+          success: false,
+          code: 'ADMIN_TECHNICAL_ONLY',
+          message: 'Les comptes Admin sont purement techniques et ne peuvent pas être gérés ou mutés via un dossier du personnel.'
+        });
+      }
+    }
+
+    const prevDeptId = extractId(personnel.activeDepartment);
+    const prevPoste = (personnel.posteActuel || personnel.poste || '').trim();
+
+    // Validation emailPersonnel unique avant application (si modifié et non vide)
+    if (req.body.emailPersonnel !== undefined) {
+      const normalizedEmail = typeof req.body.emailPersonnel === 'string'
+        ? req.body.emailPersonnel.trim().toLowerCase()
+        : '';
+      if (normalizedEmail) {
+        const existingEmailPersonnel = await Personnel.findOne({
+          _id: { $ne: personnel._id },
+          emailPersonnel: normalizedEmail,
+          isDeleted: { $ne: true }
+        });
+        if (existingEmailPersonnel) {
+          return res.status(409).json({
+            success: false,
+            code: 'DUPLICATE_EMAIL',
+            message: 'Un agent avec cet email professionnel existe déjà.'
+          });
+        }
+      }
+    }
+
+    // Validation activeDepartment si mis à jour
+    let newDeptDoc = null;
+    if (req.body.activeDepartment !== undefined) {
+      if (req.body.activeDepartment === null || req.body.activeDepartment === '' || req.body.activeDepartment === 'NONE') {
+        req.body.activeDepartment = null;
+      } else {
+        if (!mongoose.Types.ObjectId.isValid(req.body.activeDepartment)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Identifiant de département invalide'
+          });
+        }
+        newDeptDoc = await Department.findById(req.body.activeDepartment);
+        if (!newDeptDoc) {
+          return res.status(404).json({
+            success: false,
+            message: 'Le département spécifié est introuvable'
+          });
+        }
+      }
+    }
+
+    // Validation croisée (CIN ↔ Username) si le CIN est mis à jour
+    if (req.body.cin && typeof req.body.cin === 'string' && req.body.cin.trim()) {
+      const trimmedCin = req.body.cin.trim();
+      const existingUserWithUsername = await User.findOne({
+        username: trimmedCin,
+        isDeleted: { $ne: true }
+      });
+      if (existingUserWithUsername && (!personnel.userId || existingUserWithUsername._id.toString() !== personnel.userId.toString())) {
+        return res.status(400).json({
+          success: false,
+          message: "Ce CIN correspond déjà à un nom d'utilisateur existant dans le système."
+        });
+      }
     }
 
     // Champs modifiables autorisés (statut et userId sont strictement exclus)
@@ -432,53 +594,78 @@ exports.updatePersonnel = async (req, res, next) => {
       }
     });
 
-    // Validation croisée (CIN ↔ Username) si le CIN est mis à jour
-    if (req.body.cin && req.body.cin.trim()) {
-      const trimmedCin = req.body.cin.trim();
-      const existingUserWithUsername = await User.findOne({
-        username: trimmedCin,
-        isDeleted: { $ne: true }
-      });
-      if (existingUserWithUsername && (!personnel.userId || existingUserWithUsername._id.toString() !== personnel.userId.toString())) {
-        return res.status(400).json({
-          success: false,
-          message: "Ce CIN correspond déjà à un nom d'utilisateur existant dans le système."
-        });
+    // Tolérer req.body.fonction comme alias et garder poste/posteActuel cohérents
+    if (typeof req.body.fonction === 'string') {
+      const trimmedFonction = req.body.fonction.trim();
+      if (req.body.posteActuel === undefined) {
+        personnel.posteActuel = trimmedFonction;
+      }
+      if (req.body.poste === undefined) {
+        personnel.poste = trimmedFonction;
+      }
+    } else {
+      if (req.body.posteActuel !== undefined && req.body.poste === undefined) {
+        personnel.poste = personnel.posteActuel;
+      } else if (req.body.poste !== undefined && req.body.posteActuel === undefined) {
+        personnel.posteActuel = personnel.poste;
       }
     }
 
-    // Validation activeDepartment si mis à jour
-    if (req.body.activeDepartment) {
-      if (!mongoose.Types.ObjectId.isValid(req.body.activeDepartment)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Identifiant de département invalide'
-        });
+    const newDeptId = extractId(personnel.activeDepartment);
+    const newPoste = (personnel.posteActuel || personnel.poste || '').trim();
+    const deptChanged = newDeptId !== prevDeptId;
+    const posteChanged = newPoste !== prevPoste;
+
+    if (deptChanged || posteChanged) {
+      await recordCareerTransition(personnel, {
+        prevDeptId,
+        prevPoste,
+        newDeptId,
+        newDeptName: newDeptDoc?.name ? String(newDeptDoc.name).trim() : '',
+        newPoste,
+        reference: typeof req.body.referenceAffectation === 'string' ? req.body.referenceAffectation.trim() : '',
+        observations: typeof req.body.observationsAffectation === 'string' ? req.body.observationsAffectation.trim() : ''
+      });
+
+      // Maintenir personnel.departments synchronisé si non fourni explicitement
+      if (req.body.departments === undefined && deptChanged) {
+        const currentDepts = Array.isArray(personnel.departments) ? [...personnel.departments] : [];
+        const filtered = prevDeptId
+          ? currentDepts.filter(d => extractId(d) !== prevDeptId)
+          : currentDepts;
+        if (newDeptId && !filtered.some(d => extractId(d) === newDeptId)) {
+          filtered.push(personnel.activeDepartment);
+        }
+        personnel.departments = filtered;
       }
     }
 
     await personnel.save();
 
-    // Synchronisation du département (Personnel → User)
-    if (personnel.userId && personnel.activeDepartment) {
+    // Synchronisation du département (Personnel → User) sans laisser d'accès obsolète à l'ancien département
+    if (personnel.userId) {
       try {
-        const user = await User.findOne({ _id: personnel.userId, isDeleted: { $ne: true } });
-        if (user) {
+        const user = linkedUser || await User.findOne({ _id: personnel.userId, isDeleted: { $ne: true } });
+        if (user && user.role !== 'Admin') {
           if (user.role !== 'AdminTuningDesk') {
-            user.activeDepartment = personnel.activeDepartment;
-            const newDeptId = personnel.activeDepartment.toString();
-            const deptExists = (user.departments || []).some(
-              d => (d._id || d).toString() === newDeptId
-            );
-            if (!deptExists) {
-              user.departments = user.departments || [];
-              user.departments.push(personnel.activeDepartment);
+            if (deptChanged || (newDeptId && extractId(user.activeDepartment) !== newDeptId)) {
+              const userCurrentDepts = Array.isArray(user.departments) ? [...user.departments] : [];
+              const cleanedDepts = prevDeptId
+                ? userCurrentDepts.filter(d => extractId(d) !== prevDeptId)
+                : userCurrentDepts;
+
+              if (newDeptId && !cleanedDepts.some(d => extractId(d) === newDeptId)) {
+                cleanedDepts.push(personnel.activeDepartment);
+              }
+              user.departments = cleanedDepts;
+              user.activeDepartment = personnel.activeDepartment || cleanedDepts[0] || null;
+              await user.save();
             }
           } else {
             user.departments = [];
             user.activeDepartment = null;
+            await user.save();
           }
-          await user.save();
         }
       } catch (syncErr) {
         console.warn('Erreur lors de la synchronisation département vers le User:', syncErr.message);
@@ -487,7 +674,8 @@ exports.updatePersonnel = async (req, res, next) => {
 
     const updatedPersonnel = await Personnel.findOne({ _id: id, isDeleted: { $ne: true } })
       .populate('activeDepartment', 'name description')
-      .populate('departments', 'name');
+      .populate('departments', 'name')
+      .populate('historiqueAffectations.departement', 'name');
 
     await logAuditAction(
       'personnel_update',
@@ -495,7 +683,7 @@ exports.updatePersonnel = async (req, res, next) => {
       personnel._id.toString(),
       req.user?._id || req.user?.id,
       req.user,
-      { nom: personnel.nom, prenom: personnel.prenom },
+      { nom: personnel.nom, prenom: personnel.prenom, activeDepartment: personnel.activeDepartment, poste: newPoste },
       req.ip
     );
 
@@ -505,6 +693,13 @@ exports.updatePersonnel = async (req, res, next) => {
     });
   } catch (error) {
     if (error.code === 11000) {
+      if (error.keyPattern?.emailPersonnel) {
+        return res.status(409).json({
+          success: false,
+          code: 'DUPLICATE_EMAIL',
+          message: 'Un agent avec cet email professionnel existe déjà.'
+        });
+      }
       return res.status(400).json({
         success: false,
         message: 'Un agent avec ce CIN existe déjà.'
@@ -656,7 +851,8 @@ exports.getMyProfile = async (req, res, next) => {
         isDeleted: { $ne: true }
       })
         .populate('activeDepartment', 'name description')
-        .populate('departments', 'name');
+        .populate('departments', 'name')
+        .populate('historiqueAffectations.departement', 'name');
     }
 
     // 2. Recherche par userId au cas où personnelId n'est pas encore synchronisé sur req.user
@@ -664,7 +860,8 @@ exports.getMyProfile = async (req, res, next) => {
       const userId = req.user._id || req.user.id;
       personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } })
         .populate('activeDepartment', 'name description')
-        .populate('departments', 'name');
+        .populate('departments', 'name')
+        .populate('historiqueAffectations.departement', 'name');
     }
 
     if (!personnel) {
@@ -807,20 +1004,69 @@ exports.linkUserToPersonnel = async (req, res, next) => {
       });
     }
 
-    // d. Vérifier que la fiche Personnel n'est pas déjà liée à un AUTRE compte
-    if (personnel.userId && personnel.userId.toString() !== userId.toString()) {
-      return res.status(400).json({
+    // c-bis. Garde RBAC : Admin est purement technique et ne peut jamais être lié à un dossier Personnel
+    if (user.role === 'Admin') {
+      return res.status(403).json({
         success: false,
-        message: 'Cette fiche Personnel est déjà associée à un autre compte utilisateur'
+        code: 'ADMIN_TECHNICAL_ONLY',
+        message: 'Les comptes Admin sont purement techniques et ne peuvent pas être liés à un dossier du personnel.'
       });
     }
 
-    // e. Vérifier que le User n'est pas déjà lié à une AUTRE fiche Personnel
+    // d. Nettoyer les liens orphelins / supprimés bloquants dans la base avant vérification
+    await User.updateMany(
+      { _id: { $ne: user._id }, personnelId: personnel._id, isDeleted: true },
+      { $set: { personnelId: null } }
+    );
+    await Personnel.updateMany(
+      { _id: { $ne: personnel._id }, userId: user._id, isDeleted: true },
+      { $set: { userId: null } }
+    );
+
+    // e. Vérifier/nettoyer personnel.userId s'il pointe vers un autre compte
+    if (personnel.userId && personnel.userId.toString() !== userId.toString()) {
+      const existingLinkedUser = await User.findById(personnel.userId)
+        .select('_id isDeleted personnelId')
+        .lean();
+
+      const isStalePersonnelLink =
+        !existingLinkedUser ||
+        existingLinkedUser.isDeleted === true ||
+        !existingLinkedUser.personnelId ||
+        existingLinkedUser.personnelId.toString() !== personnel._id.toString();
+
+      if (isStalePersonnelLink) {
+        personnel.userId = null;
+      } else {
+        return res.status(409).json({
+          success: false,
+          code: 'PERSONNEL_ALREADY_LINKED',
+          message: 'Cette fiche Personnel est déjà associée à un autre compte utilisateur'
+        });
+      }
+    }
+
+    // f. Vérifier/nettoyer user.personnelId s'il pointe vers une autre fiche Personnel
     if (user.personnelId && user.personnelId.toString() !== personnelId.toString()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cet utilisateur est déjà associé à une autre fiche Personnel'
-      });
+      const existingLinkedPersonnel = await Personnel.findById(user.personnelId)
+        .select('_id isDeleted userId')
+        .lean();
+
+      const isStaleUserLink =
+        !existingLinkedPersonnel ||
+        existingLinkedPersonnel.isDeleted === true ||
+        !existingLinkedPersonnel.userId ||
+        existingLinkedPersonnel.userId.toString() !== user._id.toString();
+
+      if (isStaleUserLink) {
+        user.personnelId = null;
+      } else {
+        return res.status(409).json({
+          success: false,
+          code: 'USER_ALREADY_LINKED',
+          message: 'Cet utilisateur est déjà associé à une autre fiche Personnel'
+        });
+      }
     }
 
     // Sauvegarder l'état initial pour le pattern de compensation
@@ -828,28 +1074,35 @@ exports.linkUserToPersonnel = async (req, res, next) => {
     const originalPersonnelStatut = personnel.statut;
     const originalUserPersonnelId = user.personnelId;
 
-    // f. Mettre à jour les références
+    // g. Mettre à jour les références
     personnel.userId = user._id;
-    personnel.statut = 'actif';
+    personnel.statut = user.isActive === false ? 'inactif' : 'actif';
     user.personnelId = personnel._id;
+
+    // Initialiser l'historique d'affectation si vide (compatibilité anciens dossiers)
+    await seedInitialAffectationIfEmpty(personnel);
 
     // Synchronisation du département lors de la liaison (non applicable à AdminTuningDesk)
     if (user.role !== 'AdminTuningDesk' && personnel.activeDepartment) {
       user.activeDepartment = personnel.activeDepartment;
       const deptIdStr = personnel.activeDepartment.toString();
-      const deptExists = (user.departments || []).some(
-        d => (d._id || d).toString() === deptIdStr
-      );
-      if (!deptExists) {
-        user.departments = user.departments || [];
-        user.departments.push(personnel.activeDepartment);
+      if (user.role === 'User' || user.role === 'Director') {
+        user.departments = [personnel.activeDepartment];
+      } else {
+        const deptExists = (user.departments || []).some(
+          d => (d._id || d).toString() === deptIdStr
+        );
+        if (!deptExists) {
+          user.departments = user.departments || [];
+          user.departments.push(personnel.activeDepartment);
+        }
       }
     } else if (user.role === 'AdminTuningDesk') {
       user.departments = [];
       user.activeDepartment = null;
     }
 
-    // g. Sauvegarde atomique avec Transaction Mongoose et Fallback par compensation
+    // h. Sauvegarde atomique avec Transaction Mongoose et Fallback par compensation
     let session = null;
     try {
       session = await mongoose.startSession();
@@ -875,10 +1128,14 @@ exports.linkUserToPersonnel = async (req, res, next) => {
         try {
           await user.save();
         } catch (userSaveErr) {
-          // Annulation de la première sauvegarde
+          // Annulation atomique directe de la première sauvegarde
+          await Personnel.updateOne(
+            { _id: personnel._id },
+            { $set: { userId: originalPersonnelUserId || null, statut: originalPersonnelStatut } }
+          ).catch(() => {});
           personnel.userId = originalPersonnelUserId;
           personnel.statut = originalPersonnelStatut;
-          await personnel.save().catch(() => {});
+          user.personnelId = originalUserPersonnelId;
           throw userSaveErr;
         }
       } else {
@@ -900,7 +1157,7 @@ exports.linkUserToPersonnel = async (req, res, next) => {
       req.ip
     );
 
-    // h. Retourner { success: true, data: { personnel, user } }
+    // i. Retourner { success: true, data: { personnel, user } }
     res.status(200).json({
       success: true,
       data: {
@@ -909,6 +1166,13 @@ exports.linkUserToPersonnel = async (req, res, next) => {
       }
     });
   } catch (error) {
+    if (error && (error.code === 11000 || (typeof error.message === 'string' && error.message.includes('E11000')))) {
+      return res.status(409).json({
+        success: false,
+        code: 'DUPLICATE_KEY_E11000',
+        message: 'Cet employé est déjà lié à un autre compte, ou un ancien compte supprimé bloque la liaison. Veuillez vérifier la base de données.'
+      });
+    }
     next(error);
   }
 };

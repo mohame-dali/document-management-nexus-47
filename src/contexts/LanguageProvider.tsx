@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../i18n/config';
 
@@ -15,6 +15,15 @@ export const useLanguage = () => {
   };
 };
 
-export const LanguageProvider = ({ children }: { children: React.ReactNode }) => (
-  <>{children}</>
-);
+export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    document.title =
+      i18n.language === 'fr'
+        ? 'Système de Gestion Documentaire'
+        : 'نظام إدارة الوثائق';
+  }, [i18n.language]);
+
+  return <>{children}</>;
+};

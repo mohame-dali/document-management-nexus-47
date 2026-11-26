@@ -1,11 +1,11 @@
 const path = require('path');
 const fs = require('fs');
+const { fork } = require('child_process');
 
 // ═══════════════════════════════════════════════════════════════
 function resolveModelPath(envPath, targetFilename) {
   if (envPath) {
     if (fs.existsSync(envPath)) return envPath;
-    // Si envPath omettait le préfixe ALLaM-AI_ ou inversement, vérifier le fichier physique correspondant
     const dir = path.dirname(envPath);
     const correctedPath = path.join(dir, targetFilename);
     if (fs.existsSync(correctedPath)) return correctedPath;
@@ -24,8 +24,8 @@ const EMBEDDING_MODEL_PATH = resolveModelPath(
   'bge-m3-q4_k_m.gguf'
 );
 
-const LLAMA_THREADS = parseInt(process.env.LLAMA_THREADS || '4', 10);
-const LLAMA_GPU_LAYERS = parseInt(process.env.LLAMA_GPU_LAYERS || '0', 10);
+const WORKER_SCRIPT_PATH = path.resolve(__dirname, '../workers/aiWorker.js');
+const WORKER_STARTUP_TIMEOUT_MS = Number(process.env.AI_WORKER_STARTUP_TIMEOUT_MS) || 10000;
 
 // Noms pour compatibilité
 const MODELS = {
@@ -36,150 +36,272 @@ const MODELS = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// Singleton Models & Contexts (node-llama-cpp)
+// Isolated AI Worker Process Manager (child_process.fork + IPC)
 // ═══════════════════════════════════════════════════════════════
-let llamaModule = null;
-let llamaInstance = null;
-let chatModel = null;
-let chatContext = null;
-let embeddingModel = null;
-let embeddingContext = null;
-let initPromise = null;
+let workerProcess = null;
+let workerReadyPromise = null;
+let isIntentionalShutdown = false;
+let requestCounter = 0;
+const pendingRequests = new Map();
 
-async function getLlamaModule() {
-  if (!llamaModule) {
-    // node-llama-cpp v3 est un package ESM avec top-level await
-    llamaModule = await import('node-llama-cpp');
+function rejectAllPending(reasonMessage, reasonCode = 'AI_SERVICE_DOWN') {
+  for (const [reqId, pending] of pendingRequests.entries()) {
+    clearTimeout(pending.timer);
+    const err = new Error(reasonMessage || reasonCode);
+    err.code = reasonCode;
+    pending.reject(err);
+    pendingRequests.delete(reqId);
   }
-  return llamaModule;
 }
 
-/**
- * Initialise le moteur node-llama-cpp et charge les deux modèles GGUF
- */
-async function initModels() {
-  if (initPromise) return initPromise;
+function handleWorkerMessage(msg) {
+  if (!msg || typeof msg !== 'object') return;
+  if (msg.type === 'ready') return;
 
-  initPromise = (async () => {
-    try {
-      console.log('[AI] Vérification du modèle Chat :', CHAT_MODEL_PATH);
-      if (!fs.existsSync(CHAT_MODEL_PATH)) {
-        console.error(`❌ FICHIER INTROUVABLE : ${CHAT_MODEL_PATH}`);
-        const err = new Error('AI_SERVICE_DOWN');
+  const { id, ok, result, error } = msg;
+  if (!id || !pendingRequests.has(id)) return;
+
+  const pending = pendingRequests.get(id);
+  clearTimeout(pending.timer);
+  pendingRequests.delete(id);
+
+  if (ok) {
+    pending.resolve(result);
+  } else {
+    const err = new Error(error?.message || 'AI_SERVICE_DOWN');
+    err.code = error?.code || 'AI_SERVICE_DOWN';
+    if (error?.original) err.original = error.original;
+    pending.reject(err);
+  }
+}
+
+function spawnWorker() {
+  if (workerProcess && workerProcess.connected && !workerProcess.killed) {
+    return workerReadyPromise;
+  }
+
+  isIntentionalShutdown = false;
+
+  workerReadyPromise = new Promise((resolve, reject) => {
+    const child = fork(WORKER_SCRIPT_PATH, [], {
+      env: {
+        ...process.env,
+        LLAMA_CHAT_MODEL_PATH: CHAT_MODEL_PATH,
+        LLAMA_EMBEDDING_MODEL_PATH: EMBEDDING_MODEL_PATH,
+      },
+      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+    });
+
+    workerProcess = child;
+    let settledReady = false;
+
+    const readyTimer = setTimeout(() => {
+      if (!settledReady) {
+        settledReady = true;
+        const err = new Error('AI worker startup timeout');
         err.code = 'AI_SERVICE_DOWN';
-        throw err;
+        reject(err);
       }
-      console.log('[AI] ✅ Modèle Chat trouvé, chargement en cours...');
+    }, WORKER_STARTUP_TIMEOUT_MS);
+    if (typeof readyTimer.unref === 'function') readyTimer.unref();
 
-      console.log('[AI] Vérification du modèle Embedding :', EMBEDDING_MODEL_PATH);
-      if (!fs.existsSync(EMBEDDING_MODEL_PATH)) {
-        console.error(`❌ FICHIER INTROUVABLE : ${EMBEDDING_MODEL_PATH}`);
-        const err = new Error('AI_SERVICE_DOWN');
-        err.code = 'AI_SERVICE_DOWN';
-        throw err;
-      }
-      console.log('[AI] ✅ Modèle Embedding trouvé, chargement en cours...');
-
-      const { getLlama } = await getLlamaModule();
-
-      llamaInstance = await getLlama({
-        gpu: LLAMA_GPU_LAYERS > 0 ? 'auto' : false,
+    if (child.stdout) {
+      child.stdout.on('data', (chunk) => {
+        const line = chunk.toString().trim();
+        if (line) console.log(line);
       });
-
-      console.log(`[AI] Chargement modèle chat : ${CHAT_MODEL_PATH} (threads: ${LLAMA_THREADS}, gpu: ${LLAMA_GPU_LAYERS})`);
-      chatModel = await llamaInstance.loadModel({
-        modelPath: CHAT_MODEL_PATH,
-        gpuLayers: LLAMA_GPU_LAYERS,
-      });
-
-      chatContext = await chatModel.createContext({
-        contextSize: 2048,
-        threads: LLAMA_THREADS,
-      });
-
-      console.log(`[AI] Chargement modèle embedding : ${EMBEDDING_MODEL_PATH}`);
-      embeddingModel = await llamaInstance.loadModel({
-        modelPath: EMBEDDING_MODEL_PATH,
-        gpuLayers: LLAMA_GPU_LAYERS,
-      });
-
-      embeddingContext = await embeddingModel.createEmbeddingContext({
-        threads: LLAMA_THREADS,
-      });
-
-      console.log('[AI] Modèles GGUF prêts via node-llama-cpp');
-      return true;
-    } catch (err) {
-      console.error('[AI] Échec initialisation node-llama-cpp :', err.message);
-      // Réinitialiser la promesse pour permettre une ré-initialisation ultérieure
-      initPromise = null;
-      if (err.code !== 'AI_SERVICE_DOWN') {
-        err.code = 'AI_SERVICE_DOWN';
-      }
-      throw err;
     }
-  })();
+    if (child.stderr) {
+      child.stderr.on('data', (chunk) => {
+        const line = chunk.toString().trim();
+        if (line) console.error(line);
+      });
+    }
 
-  return initPromise;
+    const onMessage = (msg) => {
+      if (msg && msg.type === 'ready' && !settledReady) {
+        settledReady = true;
+        clearTimeout(readyTimer);
+        resolve(child);
+        return;
+      }
+      handleWorkerMessage(msg);
+    };
+
+    child.on('message', onMessage);
+
+    child.on('error', (err) => {
+      console.error(`[AI] Erreur processus worker IA:`, err.message);
+      if (!settledReady) {
+        settledReady = true;
+        clearTimeout(readyTimer);
+        reject(err);
+      }
+    });
+
+    child.on('exit', (code, signal) => {
+      clearTimeout(readyTimer);
+      if (workerProcess === child) {
+        workerProcess = null;
+        workerReadyPromise = null;
+      }
+
+      if (!settledReady) {
+        settledReady = true;
+        const err = new Error(`AI worker exited during startup (code=${code}, signal=${signal})`);
+        err.code = 'AI_SERVICE_DOWN';
+        reject(err);
+      }
+
+      if (!isIntentionalShutdown) {
+        console.warn(`[AI] Worker IA arrêté de façon inattendue (code=${code}, signal=${signal}) — prêt pour redémarrage automatique`);
+      }
+
+      rejectAllPending('AI_SERVICE_DOWN', 'AI_SERVICE_DOWN');
+    });
+  });
+
+  return workerReadyPromise;
+}
+
+async function ensureWorker() {
+  if (workerProcess && workerProcess.connected && !workerProcess.killed && workerReadyPromise) {
+    return workerReadyPromise;
+  }
+  return spawnWorker();
+}
+
+async function sendWorkerRequest(type, payload = {}, timeoutMs = 120000) {
+  const child = await ensureWorker();
+  if (!child || !child.connected) {
+    const err = new Error('AI_SERVICE_DOWN');
+    err.code = 'AI_SERVICE_DOWN';
+    throw err;
+  }
+
+  const id = `ai_${++requestCounter}_${Date.now()}`;
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      if (pendingRequests.has(id)) {
+        pendingRequests.delete(id);
+        try {
+          if (child.connected) {
+            child.send({ id, type: 'cancel' });
+          }
+        } catch (_) {}
+        const timeoutErr = new Error('AI_TIMEOUT');
+        timeoutErr.code = 'AI_TIMEOUT';
+        reject(timeoutErr);
+      }
+    }, timeoutMs);
+    if (typeof timer.unref === 'function') timer.unref();
+
+    pendingRequests.set(id, { resolve, reject, timer });
+
+    try {
+      child.send({ id, type, payload });
+    } catch (sendErr) {
+      clearTimeout(timer);
+      pendingRequests.delete(id);
+      const err = new Error('AI_SERVICE_DOWN');
+      err.code = 'AI_SERVICE_DOWN';
+      err.original = sendErr.message;
+      reject(err);
+    }
+  });
 }
 
 /**
- * Chat avec le modèle GGUF local via node-llama-cpp
+ * Vérifie que le worker IA isolé répond via IPC (spawn automatique si arrêté/crashé)
+ */
+async function pingAIWorker() {
+  return sendWorkerRequest('ping', {}, 5000);
+}
+
+/**
+ * Arrête proprement le worker IA isolé
+ */
+async function shutdownAIWorker() {
+  const child = workerProcess;
+  if (!child) {
+    workerReadyPromise = null;
+    return { stopped: true };
+  }
+
+  isIntentionalShutdown = true;
+
+  const exitPromise = new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      return resolve();
+    }
+    child.once('exit', () => resolve());
+  });
+
+  try {
+    if (child.connected) {
+      await Promise.race([
+        sendWorkerRequest('shutdown', {}, 2000).catch(() => {}),
+        new Promise((r) => setTimeout(r, 2000)),
+      ]);
+    }
+  } catch (_) {}
+
+  try {
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill('SIGTERM');
+    }
+  } catch (_) {}
+
+  await Promise.race([exitPromise, new Promise((r) => setTimeout(r, 1000))]);
+
+  try {
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill('SIGKILL');
+    }
+  } catch (_) {}
+
+  workerProcess = null;
+  workerReadyPromise = null;
+  rejectAllPending('AI worker shut down', 'AI_SERVICE_DOWN');
+  return { stopped: true };
+}
+
+/**
+ * Chat avec le modèle GGUF local via le worker isolé node-llama-cpp
  * @param {string} prompt - Prompt utilisateur
  * @param {string} systemPrompt - Prompt système optionnel
  * @param {object} options - Options (temperature, maxTokens, timeoutMs)
  * @returns {Promise<string>} - Réponse texte
  */
 async function chat(prompt, systemPrompt = '', options = {}) {
-  await initModels();
-  const { LlamaChatSession } = await getLlamaModule();
+  const timeoutMs = Number(options.timeoutMs) || 120000;
+  return sendWorkerRequest('chat', { prompt, systemPrompt, options }, timeoutMs + 5000);
+}
 
-  const contextSequence = chatContext.getSequence();
-  const session = new LlamaChatSession({
-    contextSequence,
-    systemPrompt: systemPrompt || undefined,
-  });
+/**
+ * Retourne l'état instantané du worker IA et de la présence des modèles sans bloquer
+ */
+function getWorkerRuntimeStatus() {
+  const chatInstalled = fs.existsSync(CHAT_MODEL_PATH);
+  const embeddingInstalled = fs.existsSync(EMBEDDING_MODEL_PATH);
+  const alive = Boolean(workerProcess && workerProcess.connected && !workerProcess.killed);
 
-  const timeoutMs = options.timeoutMs || 120000;
-
-  try {
-    const promptPromise = session.prompt(prompt, {
-      temperature: options.temperature ?? 0.2,
-      maxTokens: options.maxTokens ?? 1024,
-    });
-
-    const timeoutPromise = new Promise((_, reject) => {
-      const timer = setTimeout(() => {
-        const err = new Error('AI_TIMEOUT');
-        err.code = 'AI_TIMEOUT';
-        reject(err);
-      }, timeoutMs);
-      if (timer.unref) timer.unref();
-    });
-
-    const response = await Promise.race([promptPromise, timeoutPromise]);
-    const cleanContent = typeof response === 'string' ? response : (response?.response || '');
-    return cleanContent;
-  } catch (err) {
-    if (err.code === 'AI_TIMEOUT') {
-      throw err;
-    }
-    const error = new Error('AI_SERVICE_DOWN');
-    error.code = 'AI_SERVICE_DOWN';
-    error.original = err.message;
-    throw error;
-  } finally {
-    try {
-      contextSequence.dispose();
-    } catch (_) {
-      // Ignorer l'erreur de libération de séquence
-    }
-  }
+  return {
+    alive,
+    pid: alive ? workerProcess.pid : null,
+    engine: 'node-llama-cpp',
+    chatModel: MODELS.chat,
+    embeddingModel: MODELS.embedding,
+    chatInstalled,
+    embeddingInstalled,
+    modelsReady: chatInstalled && embeddingInstalled,
+  };
 }
 
 /**
  * Vérifie l'état de fonctionnement du service IA et la présence des modèles
- * Conserve le nom 'checkOllamaHealth' pour une compatibilité absolue avec les appelants
+ * Conserve le nom 'checkOllamaHealth' pour compatibilité avec les appelants existants
  */
 async function checkOllamaHealth() {
   const chatExists = fs.existsSync(CHAT_MODEL_PATH);
@@ -189,34 +311,28 @@ async function checkOllamaHealth() {
     return {
       ok: false,
       engine: 'node-llama-cpp',
-      url: 'embedded (node-llama-cpp)',
-      chatModel: path.basename(CHAT_MODEL_PATH),
+      url: 'worker (node-llama-cpp)',
+      chatModel: MODELS.chat,
+      embeddingModel: MODELS.embedding,
       chatInstalled: chatExists,
       embeddingInstalled: embExists,
       installedModels: [
-        ...(chatExists ? [path.basename(CHAT_MODEL_PATH)] : []),
-        ...(embExists ? [path.basename(EMBEDDING_MODEL_PATH)] : [])
+        ...(chatExists ? [MODELS.chat] : []),
+        ...(embExists ? [MODELS.embedding] : []),
       ],
       error: 'MODELS_NOT_DOWNLOADED',
     };
   }
 
   try {
-    await initModels();
-    return {
-      ok: true,
-      engine: 'node-llama-cpp',
-      url: 'embedded (node-llama-cpp)',
-      chatModel: path.basename(CHAT_MODEL_PATH),
-      chatInstalled: true,
-      embeddingInstalled: true,
-      installedModels: [path.basename(CHAT_MODEL_PATH), path.basename(EMBEDDING_MODEL_PATH)],
-    };
+    return await sendWorkerRequest('health', {}, 120000);
   } catch (error) {
     return {
       ok: false,
       engine: 'node-llama-cpp',
-      url: 'embedded (node-llama-cpp)',
+      url: 'worker (node-llama-cpp)',
+      chatModel: MODELS.chat,
+      embeddingModel: MODELS.embedding,
       error: error.code || error.message || 'AI_SERVICE_DOWN',
     };
   }
@@ -224,7 +340,7 @@ async function checkOllamaHealth() {
 
 /**
  * Parser JSON robuste avec nettoyage thinking, markdown et trailing commas
- * @param {string} rawText 
+ * @param {string} rawText
  * @returns {object|null}
  */
 function parseRobustJson(rawText) {
@@ -234,7 +350,7 @@ function parseRobustJson(rawText) {
 
   // Nettoyer les préfixes typiques de thinking
   text = text.replace(/^(thinking|reasoning|answer|response|assistant)\s*:?\s*/i, '');
-  
+
   // Chercher la première accolade ouvrante
   const firstBrace = text.indexOf('{');
   if (firstBrace > 0) {
@@ -250,9 +366,7 @@ function parseRobustJson(rawText) {
   // 2. Essayer de parser directement
   try {
     return JSON.parse(text);
-  } catch (e) {
-    // Continuer avec les fallbacks
-  }
+  } catch (_) {}
 
   // 3. Extraire le premier objet JSON valide par regex
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -260,21 +374,17 @@ function parseRobustJson(rawText) {
     const jsonStr = jsonMatch[0];
     try {
       return JSON.parse(jsonStr);
-    } catch (e) {
-      // Continuer
-    }
+    } catch (_) {}
 
     // 4. Nettoyage : trailing commas, single quotes, undefined
-    let cleaned = jsonStr
+    const cleaned = jsonStr
       .replace(/,\s*([}\]])/g, '$1')
       .replace(/:\s*'([^']*)'/g, ': "$1"')
       .replace(/:\s*(undefined)\b/g, ': null');
 
     try {
       return JSON.parse(cleaned);
-    } catch (e) {
-      // Échec définitif
-    }
+    } catch (_) {}
   }
 
   return null;
@@ -282,7 +392,7 @@ function parseRobustJson(rawText) {
 
 /**
  * Extrait les informations structurées d'un texte OCR
- * @param {string} ocrText 
+ * @param {string} ocrText
  */
 async function extractDocumentInfo(ocrText) {
   if (!ocrText || ocrText.trim().length < 20) {
@@ -323,7 +433,7 @@ ${truncatedText}
 
 Réponds MAINTENANT avec UNIQUEMENT le JSON :`;
 
-  const response = await chat(userPrompt, systemPrompt, {
+  const response = await module.exports.chat(userPrompt, systemPrompt, {
     format: 'json',
     temperature: 0.1,
     maxTokens: 500,
@@ -342,9 +452,9 @@ Réponds MAINTENANT avec UNIQUEMENT le JSON :`;
   if (!parsed.subject && truncatedText) {
     const firstMeaningfulLine = truncatedText
       .split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 15 && l.length < 200)[0];
-    
+      .map((l) => l.trim())
+      .filter((l) => l.length > 15 && l.length < 200)[0];
+
     if (firstMeaningfulLine) {
       parsed.subject = firstMeaningfulLine.substring(0, 150);
     }
@@ -361,38 +471,39 @@ Réponds MAINTENANT avec UNIQUEMENT le JSON :`;
 }
 
 /**
- * Convertit un texte en vecteur d'embedding via node-llama-cpp
+ * Convertit un texte en vecteur d'embedding avec métadonnées (modèle & dimension)
  * @param {string} text - Texte à convertir
- * @returns {Promise<number[]>} - Vecteur d'embedding
+ * @returns {Promise<{ vector: number[], model: string, dimension: number }>}
  */
-async function getEmbedding(text) {
-  if (!text || text.trim().length === 0) {
+async function getEmbeddingWithMeta(text) {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
     const err = new Error('EMPTY_TEXT');
     err.code = 'EMPTY_TEXT';
     throw err;
   }
 
-  await initModels();
-  const truncated = text.trim().slice(0, 4000);
-
-  try {
-    const embedding = await embeddingContext.getEmbeddingFor(truncated);
-    if (!embedding || !embedding.vector) {
-      const err = new Error('EMBEDDING_INVALID');
-      err.code = 'EMBEDDING_INVALID';
-      throw err;
-    }
-
-    return Array.from(embedding.vector);
-  } catch (error) {
-    if (error.code === 'EMPTY_TEXT' || error.code === 'EMBEDDING_INVALID') {
-      throw error;
-    }
-    const err = new Error('EMBEDDING_ERROR');
-    err.code = 'EMBEDDING_ERROR';
-    err.original = error.message;
+  const res = await sendWorkerRequest('embedding', { text: text.trim().slice(0, 4000) }, 60000);
+  if (!res || !Array.isArray(res.vector) || res.vector.length === 0) {
+    const err = new Error('EMBEDDING_INVALID');
+    err.code = 'EMBEDDING_INVALID';
     throw err;
   }
+
+  return {
+    vector: res.vector,
+    model: res.model || MODELS.embedding,
+    dimension: res.dimension || res.vector.length,
+  };
+}
+
+/**
+ * Convertit un texte en vecteur d'embedding via le worker isolé node-llama-cpp
+ * @param {string} text - Texte à convertir
+ * @returns {Promise<number[]>} - Vecteur d'embedding
+ */
+async function getEmbedding(text) {
+  const { vector } = await module.exports.getEmbeddingWithMeta(text);
+  return vector;
 }
 
 /**
@@ -458,7 +569,7 @@ Réponds au format JSON strict :
   "urgency": "normal"
 }`;
 
-  const response = await chat(userPrompt, systemPrompt, {
+  const response = await module.exports.chat(userPrompt, systemPrompt, {
     format: 'json',
     temperature: 0.2,
     maxTokens: 800,
@@ -523,7 +634,7 @@ Réponds au format JSON strict :
   "targetLang": "${targetLang}"
 }`;
 
-  const response = await chat(userPrompt, systemPrompt, {
+  const response = await module.exports.chat(userPrompt, systemPrompt, {
     format: 'json',
     temperature: 0.1,
     maxTokens: 2000,
@@ -560,6 +671,10 @@ module.exports = {
   translateText,
   parseRobustJson,
   getEmbedding,
+  getEmbeddingWithMeta,
   cosineSimilarity,
+  pingAIWorker,
+  shutdownAIWorker,
+  getWorkerRuntimeStatus,
   MODELS,
 };

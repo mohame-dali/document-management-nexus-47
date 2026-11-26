@@ -50,7 +50,7 @@ export const createDocumentOption = async (optionData: {
 
 export const updateDocumentOption = async (
   id: string,
-  updateData: { value?: string; isActive?: boolean }
+  updateData: { value?: string; isActive?: boolean; category?: string; documentType?: string }
 ): Promise<DocumentOption> => {
   try {
     const response = await axios.put(`${API_URL}/document-options/${id}`, updateData);

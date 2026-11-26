@@ -36,7 +36,8 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
     return list.filter((p) => {
       const fullName = `${p.prenom || ''} ${p.nom || ''}`.toLowerCase();
       const poste = (p.poste || '').toLowerCase();
-      return fullName.includes(q) || poste.includes(q);
+      const username = (p.username || '').toLowerCase();
+      return fullName.includes(q) || poste.includes(q) || username.includes(q);
     });
   }, [data.personnel, modalSearch]);
 
@@ -144,9 +145,19 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                   size="xs"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-[#1a202c] truncate">
-                    {p.prenom} {p.nom}
-                  </p>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <p className="text-xs font-semibold text-[#1a202c] truncate">
+                      {p.prenom} {p.nom}
+                    </p>
+                    {p.username && (
+                      <span
+                        dir="ltr"
+                        className="inline-block shrink-0 max-w-[95px] truncate text-[10px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1 py-0"
+                      >
+                        @{p.username}
+                      </span>
+                    )}
+                  </div>
                   {p.poste ? (
                     <p className="text-[10px] text-[#5f6b7d] truncate">{p.poste}</p>
                   ) : (
@@ -224,9 +235,19 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                     size="sm"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#1a202c] truncate">
-                      {p.prenom} {p.nom}
-                    </p>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="text-sm font-semibold text-[#1a202c] truncate">
+                        {p.prenom} {p.nom}
+                      </p>
+                      {p.username && (
+                        <span
+                          dir="ltr"
+                          className="inline-block shrink-0 max-w-[140px] truncate text-[11px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5"
+                        >
+                          @{p.username}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-[#5f6b7d] truncate">
                       {p.poste || 'بدون خطة'}
                     </p>

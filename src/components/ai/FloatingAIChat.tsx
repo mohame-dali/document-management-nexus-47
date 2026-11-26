@@ -417,7 +417,7 @@ export const FloatingAIChat: React.FC = () => {
           }}
           className="fixed z-50 rounded-full bg-[#2c5282] hover:bg-[#234269] 
                      text-white shadow-lg flex items-center justify-center 
-                     transition-all duration-150 select-none
+                     transition-all duration-150 select-none print:hidden
                      focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2"
           aria-label={t('ai.assistant.openAria')}
           title={t('ai.assistant.iconTooltip')}
@@ -447,7 +447,7 @@ export const FloatingAIChat: React.FC = () => {
               }}
               className="fixed z-50 flex flex-col overflow-hidden bg-white 
                          shadow-2xl border border-slate-200 rounded-2xl 
-                         transition-all duration-150
+                         transition-all duration-150 print:hidden
                          max-sm:!top-0 max-sm:!bottom-0 max-sm:!inset-x-0 
                          max-sm:!w-full max-sm:!h-full 
                          max-sm:!max-h-full max-sm:!rounded-none"

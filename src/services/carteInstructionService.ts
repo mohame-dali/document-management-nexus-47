@@ -13,7 +13,6 @@ import {
 
 // Interface pour jsPDF avec plugins étendus
 interface ExtendedJsPdf extends jsPDF {
-  processArabic?: (text: string) => string;
   autoTable?: (options: UserOptions) => void;
   lastAutoTable?: {
     finalY: number;
@@ -55,6 +54,17 @@ export interface CarteInstructionPersonnel {
   unite?: string;
   unit?: string;
   activeDepartment?: unknown;
+  historiqueAffectations?: Array<{
+    poste?: string;
+    departement?: { _id?: string; name?: string } | string | null;
+    departementName?: string;
+    dateDebut?: string | null;
+    dateFin?: string | null;
+    reference?: string;
+    observations?: string;
+    isCurrent?: boolean;
+  }>;
+  posteActuel?: string;
   dateEngagement?: string | null;
   dateRecrutement?: string | null;
   dateEmbauche?: string | null;
@@ -595,14 +605,74 @@ export async function generateCarteInstruction(
     currentY
   );
 
-  const postesList = h.postes || [];
+  const affectationRows = Array.isArray(p.historiqueAffectations)
+    ? p.historiqueAffectations.map((aff) => {
+        const deptName =
+          aff.departementName ||
+          (aff.departement && typeof aff.departement === 'object'
+            ? (aff.departement as { name?: string }).name || ''
+            : '');
+        return {
+          poste: aff.poste || p.posteActuel || p.poste || '—',
+          lieu: deptName || '—',
+          dateDebut: aff.dateDebut || null,
+          dateFin: aff.dateFin || null,
+          reference: aff.reference || aff.observations || (aff.isCurrent || !aff.dateFin ? 'تعيين حالي' : 'نقلة قسم'),
+        };
+      })
+    : [];
+
+  const manualPosteRows = (h.postes || []).map((po) => ({
+    poste: po.poste,
+    lieu: po.lieu || '—',
+    dateDebut: po.dateDebut || null,
+    dateFin: po.dateFin || null,
+    reference: po.reference || po.observations || '',
+  }));
+
+  const combinedRowsMap = new Map<string, {
+    poste: string;
+    lieu: string;
+    dateDebut: string | null;
+    dateFin: string | null;
+    reference: string;
+  }>();
+
+  [...affectationRows, ...manualPosteRows].forEach((row) => {
+    const startKey = row.dateDebut ? String(row.dateDebut).slice(0, 10) : 'none';
+    const key = `${(row.poste || '').trim().toLowerCase()}|${(row.lieu || '').trim().toLowerCase()}|${startKey}`;
+    if (!combinedRowsMap.has(key)) {
+      combinedRowsMap.set(key, row);
+    }
+  });
+
+  const combinedPostesList = Array.from(combinedRowsMap.values()).sort((a, b) => {
+    const tA = a.dateDebut ? new Date(a.dateDebut).getTime() : 0;
+    const tB = b.dateDebut ? new Date(b.dateDebut).getTime() : 0;
+    return tA - tB;
+  });
+
+  if (combinedPostesList.length === 0 && (p.activeDepartment || p.posteActuel || p.poste)) {
+    const currentDeptName =
+      p.activeDepartment && typeof p.activeDepartment === 'object'
+        ? (p.activeDepartment as { name?: string }).name || '—'
+        : '—';
+    combinedPostesList.push({
+      poste: p.posteActuel || p.poste || '—',
+      lieu: currentDeptName,
+      dateDebut: p.dateEngagement || p.dateEmbauche || p.dateRecrutement || null,
+      dateFin: null,
+      reference: 'تعيين حالي',
+    });
+  }
+
   // Colonnes en RTL inversé :
   // [المرجع / ملاحظات (30mm), إلى تاريخ (25mm), من تاريخ (25mm), مكان التعيين / الوحدة (40mm), الخطة الوظيفية / المسؤولية (52mm), # (10mm)]
   const section4Head = ['المرجع / ملاحظات', 'إلى تاريخ', 'من تاريخ', 'مكان التعيين / الوحدة', 'الخطة الوظيفية / المسؤولية', '#'];
 
-  const section4Body = postesList.length > 0
-    ? postesList.map((po, idx) => [
-        safeVal(po.reference || po.observations),
+  const section4Body = combinedPostesList.length > 0
+    ? combinedPostesList.map((po, idx) => [
+        safeVal(po.reference),
         po.dateFin ? formatArabicDate(po.dateFin) : 'إلى الآن',
         po.dateDebut ? formatArabicDate(po.dateDebut) : '—',
         safeVal(po.lieu),

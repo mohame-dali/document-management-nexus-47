@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { Message, User } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 import ComposeMessage from '@/components/messages/ComposeMessage';
 import ContactsList from '@/components/messages/ContactsList';
 import MessageComposer from '@/components/messages/MessageComposer';
@@ -54,6 +55,7 @@ const MessagesPage: React.FC = () => {
 
   const { currentUser } = useAuth();
   const { t } = useLanguage();
+  const { dir } = useDirection();
   const queryClient = useQueryClient();
 
   const currentUserId = String(currentUser?._id || (currentUser as User & { id?: string })?.id || '');
@@ -295,37 +297,37 @@ const MessagesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 text-start">
-      {/* Top Header Bar */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-4 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div dir={dir} className="min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 p-3 sm:p-4 lg:p-5 text-start">
+      {/* Compact Top Header Bar */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-3.5 py-2.5 mb-2.5 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
           {/* Title & Stats Badges */}
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-slate-100 rounded text-[#2c5282]">
-              <MessageSquare className="h-5 w-5" />
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-md text-[#2c5282] dark:text-sky-400 shrink-0">
+              <MessageSquare className="h-4 w-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-slate-900">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
                   {t('messages.title')}
                 </h1>
                 {messageStats.unreadCount > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] tabular-nums">
                     {messageStats.unreadCount} {t('messages.unread')}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 {t('messages.pageSubtitle')}
               </p>
             </div>
           </div>
 
           {/* Top Actions */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button 
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button
               onClick={() => handleComposeMessage()}
-              className="h-11 px-3.5 text-xs font-medium rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 flex items-center gap-1.5"
+              className="h-9 px-3 text-xs font-medium rounded-md bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white transition-colors duration-200 flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>{t('messages.newMessage')}</span>
@@ -338,7 +340,7 @@ const MessagesPage: React.FC = () => {
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
                 aria-label={t('messages.markAllAsRead')}
-                className="h-11 px-2.5 text-xs rounded border-[#FFCB56] bg-[#FFD758]/15 text-[#78350f] hover:bg-[#FFD758]/30 transition-colors duration-200 flex items-center gap-1.5 font-medium"
+                className="h-9 px-2.5 text-xs rounded-md border-[#FFCB56] bg-[#FFD758]/15 dark:bg-amber-500/15 dark:border-amber-500/40 text-[#78350f] dark:text-amber-300 hover:bg-[#FFD758]/30 dark:hover:bg-amber-500/25 transition-colors duration-200 flex items-center gap-1.5 font-medium"
                 title={t('messages.markAllAsRead')}
               >
                 <MailCheck className="h-3.5 w-3.5" />
@@ -346,12 +348,12 @@ const MessagesPage: React.FC = () => {
               </Button>
             )}
 
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={handleRefresh}
               disabled={isLoading || isFetching}
-              className="h-11 px-2.5 text-xs rounded border-[#cbd5e1] text-slate-700 hover:bg-slate-100 transition-colors duration-200 flex items-center gap-1"
+              className="h-9 px-2.5 text-xs rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 flex items-center gap-1.5"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${(isLoading || isFetching) ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">{t('messages.refresh')}</span>
@@ -359,11 +361,11 @@ const MessagesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Onglets Reçus / Envoyés / Contacts */}
+        {/* Unified Tabs: Inbox / Sent / Contacts */}
         <div
           role="tablist"
           aria-label={t('messages.title')}
-          className="flex items-center gap-1.5 mt-4 pt-3 border-t border-[#edf2f7] flex-wrap"
+          className="flex items-center gap-1 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex-wrap"
         >
           <button
             id="messages-tab-inbox"
@@ -392,16 +394,16 @@ const MessagesPage: React.FC = () => {
                 document.getElementById(`messages-tab-${next}`)?.focus();
               }
             }}
-            className={`min-h-[44px] h-11 px-3.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
+            className={`h-9 px-3 text-xs font-medium rounded-md transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'inbox' && !isComposing
-                ? 'bg-[#2c5282] text-white'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-2xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Inbox className="h-3.5 w-3.5" />
             <span>{t('messages.conversationsAndInbox')}</span>
             {messageStats.unreadCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#FFCB56] text-[#78350f]">
+              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-[#FFCB56] text-[#78350f] tabular-nums">
                 {messageStats.unreadCount}
               </span>
             )}
@@ -434,10 +436,10 @@ const MessagesPage: React.FC = () => {
                 document.getElementById(`messages-tab-${next}`)?.focus();
               }
             }}
-            className={`min-h-[44px] h-11 px-3.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
+            className={`h-9 px-3 text-xs font-medium rounded-md transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'sent' && !isComposing
-                ? 'bg-[#2c5282] text-white'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-2xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Send className="h-3.5 w-3.5" />
@@ -471,10 +473,10 @@ const MessagesPage: React.FC = () => {
                 document.getElementById(`messages-tab-${next}`)?.focus();
               }
             }}
-            className={`min-h-[44px] h-11 px-3.5 text-xs font-medium rounded transition-colors duration-200 flex items-center gap-2 ${
+            className={`h-9 px-3 text-xs font-medium rounded-md transition-colors duration-200 flex items-center gap-2 ${
               activeTab === 'contacts' && !isComposing
-                ? 'bg-[#2c5282] text-white'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-2xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Users className="h-3.5 w-3.5" />
@@ -509,15 +511,15 @@ const MessagesPage: React.FC = () => {
             />
           ) : isError ? (
             <EmptyState
-              icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+              icon={<AlertCircle className="h-6 w-6 text-[#b91c1c] dark:text-red-400" />}
               title={t('messages.error.title')}
               description={t('messages.error.description')}
-              className="border-red-200 bg-red-50/40"
+              className="border-red-200 dark:border-red-900/60 bg-red-50/40 dark:bg-red-950/30"
               action={
                 <Button
                   type="button"
                   onClick={() => refetch()}
-                  className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-sm font-semibold rounded inline-flex items-center gap-2"
+                  className="h-10 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] dark:bg-sky-700 dark:hover:bg-sky-600 text-white text-sm font-semibold rounded-md inline-flex items-center gap-2"
                 >
                   <RefreshCw className="h-4 w-4" />
                   <span>{t('common.retry')}</span>
@@ -525,11 +527,11 @@ const MessagesPage: React.FC = () => {
               }
             />
           ) : (
-            /* Modern 2-Column Chat Layout */
-            <div className="flex h-[calc(100vh-250px)] min-h-[550px] border border-[#e2e8f0] rounded-lg overflow-hidden bg-white shadow-xs">
+            /* Modern 2-Column Chat Layout (>=70% viewport height) */
+            <div className="flex h-[calc(100vh-16rem)] md:h-[calc(100vh-14.5rem)] min-h-[520px] border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
               {/* Left Column: Conversations List (35%) */}
               <div
-                className={`w-full md:w-[35%] border-e border-[#e2e8f0] flex flex-col ${
+                className={`w-full md:w-[35%] lg:w-[34%] border-e border-slate-200/80 dark:border-slate-800 flex flex-col min-h-0 ${
                   mobileShowThread ? 'hidden md:flex' : 'flex'
                 }`}
               >
@@ -546,7 +548,7 @@ const MessagesPage: React.FC = () => {
 
               {/* Right Column: Chat Thread & Bubbles (65%) */}
               <div
-                className={`flex-1 flex flex-col ${
+                className={`flex-1 flex flex-col min-w-0 min-h-0 ${
                   mobileShowThread ? 'flex' : 'hidden md:flex'
                 }`}
               >
@@ -555,6 +557,11 @@ const MessagesPage: React.FC = () => {
                   currentUserId={currentUserId}
                   onSendMessage={handleSendMessageFromThread}
                   onBack={() => setMobileShowThread(false)}
+                  onNewMessage={() => handleComposeMessage()}
+                  onOpenContacts={() => {
+                    setActiveTab('contacts');
+                    setIsComposing(false);
+                  }}
                   isSending={isSending}
                 />
               </div>

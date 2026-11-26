@@ -2,6 +2,8 @@
 import axios from 'axios';
 import { ActivityNotification } from '@/types';
 
+export type { ActivityNotification };
+
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Set up axios defaults

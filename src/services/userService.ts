@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { User } from '@/types';
+import { Department, User } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -23,12 +23,23 @@ export interface GetUsersOptions {
   includeDeleted?: boolean;
 }
 
-export const getUsers = async (options?: GetUsersOptions | boolean): Promise<User[]> => {
+export interface UserMutationPayload extends Omit<Partial<User>, 'departments' | 'activeDepartment'> {
+  password?: string;
+  departments?: (Department | string)[];
+  activeDepartment?: Department | string | null;
+}
+
+export const getUsers = async (options?: GetUsersOptions | boolean | object): Promise<User[]> => {
   try {
     const includeDeleted =
       typeof options === 'boolean'
         ? options
-        : Boolean(options && 'includeDeleted' in options && options.includeDeleted);
+        : Boolean(
+            options &&
+              typeof options === 'object' &&
+              'includeDeleted' in options &&
+              (options as GetUsersOptions).includeDeleted
+          );
     const response = await api.get('/users', {
       params: includeDeleted ? { includeDeleted: true } : undefined,
     });
@@ -54,7 +65,7 @@ export const getUser = async (id: string): Promise<User> => {
   }
 };
 
-export const createUser = async (userData: Partial<User>): Promise<User> => {
+export const createUser = async (userData: UserMutationPayload): Promise<User> => {
   try {
     const response = await api.post('/users', userData);
     return response.data.data || response.data;
@@ -64,7 +75,7 @@ export const createUser = async (userData: Partial<User>): Promise<User> => {
   }
 };
 
-export const updateUser = async (id: string, userData: Partial<User>): Promise<User> => {
+export const updateUser = async (id: string, userData: UserMutationPayload): Promise<User> => {
   try {
     const response = await api.put(`/users/${id}`, userData);
     return response.data.data || response.data;
@@ -183,7 +194,7 @@ export const uploadUserPhoto = async (id: string, photoFile: File): Promise<User
 };
 
 // Create user with photo function (new)
-export const createUserWithPhoto = async (userData: Partial<User>, photoFile?: File): Promise<User> => {
+export const createUserWithPhoto = async (userData: UserMutationPayload, photoFile?: File): Promise<User> => {
   try {
     // First create the user
     const user = await createUser(userData);

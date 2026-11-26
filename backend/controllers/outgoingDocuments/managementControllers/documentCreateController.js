@@ -6,6 +6,10 @@ const ErrorResponse = require('../../../utils/errorResponse');
 const { getNextSerialNumber, createYearFolder, getDocumentPath } = require('../../../utils/documentHelper');
 const { handleUploadedFile } = require('../../../utils/fileUploadHandler');
 const { handleScannedDocument } = require('../../../utils/scannedDocumentHandler');
+const { buildInitialVersionState } = require('../../../utils/documentVersionHelper');
+const { computeFileSha256 } = require('../../../utils/fileSecurity');
+const fs = require('fs');
+const path = require('path');
 
 // @desc    Create new outgoing document
 // @route   POST /api/outgoing-documents
@@ -105,6 +109,27 @@ exports.createOutgoingDocument = async (req, res, next) => {
                       pourInfo.includes(',') ? pourInfo.split(',') : [pourInfo];
     }
 
+    let initialSha256 = null;
+    let initialFileSize = null;
+    if (finalDocumentPath) {
+      try {
+        const absFilePath = path.resolve(__dirname, '../../..', finalDocumentPath);
+        if (fs.existsSync(absFilePath) && fs.statSync(absFilePath).isFile()) {
+          initialFileSize = fs.statSync(absFilePath).size;
+          initialSha256 = computeFileSha256(absFilePath);
+        }
+      } catch (_) {}
+    }
+
+    const versionState = buildInitialVersionState(finalDocumentPath, {
+      ocrText,
+      ocrStatus,
+      ocrError,
+      sha256: initialSha256,
+      fileSize: initialFileSize,
+      uploadedBy: req.user._id,
+    });
+
     // Create document data
     const documentData = {
       serialNumber,
@@ -119,6 +144,8 @@ exports.createOutgoingDocument = async (req, res, next) => {
       pourInfo: pourInfoArray,
       subject,
       scannedDocument: finalDocumentPath,
+      currentVersion: versionState.currentVersion,
+      versions: versionState.versions,
       ocrText,
       ocrStatus,
       ocrError,

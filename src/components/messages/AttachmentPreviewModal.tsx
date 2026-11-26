@@ -150,17 +150,17 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[92vh] flex flex-col p-4 sm:p-6 gap-3">
-        <DialogHeader className="flex flex-row items-center justify-between gap-4 border-b pb-3 text-start">
+      <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[92vh] flex flex-col p-4 sm:p-6 gap-3 bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800">
+        <DialogHeader className="flex flex-row items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-3 text-start">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="p-1.5 bg-[#2c5282]/10 text-[#2c5282] rounded shrink-0">
+            <div className="p-1.5 bg-[#2c5282]/10 dark:bg-sky-950/60 text-[#2c5282] dark:text-sky-400 rounded-md shrink-0">
               <FileText className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-base font-semibold truncate text-slate-800" title={filename}>
+              <DialogTitle className="text-base font-semibold truncate text-slate-800 dark:text-slate-100" title={filename}>
                 {filename || t('common.preview')}
               </DialogTitle>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 {isPdf ? 'Document PDF' : isImage ? 'Image' : 'Fichier'}
               </p>
             </div>
@@ -175,7 +175,7 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
                   size="sm"
                   onClick={handleOpenExternal}
                   aria-label={t('common.view')}
-                  className="h-11 min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5"
+                  className="h-9 px-3 text-xs gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                   title={t('common.view')}
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -186,7 +186,7 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
                   size="sm"
                   onClick={handleDownload}
                   aria-label={t('common.download')}
-                  className="h-11 min-h-[44px] min-w-[44px] px-3 text-xs gap-1.5 bg-[#2c5282] hover:bg-[#234269] text-white"
+                  className="h-9 px-3 text-xs gap-1.5 bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white"
                   title={t('common.download')}
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -198,10 +198,10 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
         </DialogHeader>
 
         {/* Corps de la modale */}
-        <div className="flex-1 w-full min-h-[50vh] max-h-[72vh] overflow-auto flex items-center justify-center bg-slate-100 rounded-lg border border-slate-200 p-2">
+        <div className="flex-1 w-full min-h-[50vh] max-h-[72vh] overflow-auto flex items-center justify-center bg-slate-100 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 p-2">
           {isLoading && (
-            <div className="flex flex-col items-center justify-center gap-3 py-12 text-slate-500">
-              <Loader2 className="h-8 w-8 animate-spin text-[#2c5282]" />
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-slate-500 dark:text-slate-400">
+              <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] dark:text-sky-400" />
               <p className="text-sm font-medium">Chargement de l'aperçu...</p>
             </div>
           )}
@@ -209,8 +209,8 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
           {!isLoading && error && (
             <div className="flex flex-col items-center justify-center gap-3 py-12 text-center px-4">
               <AlertCircle className="h-10 w-10 text-amber-500" />
-              <p className="text-sm font-medium text-slate-700">Impossible de charger l'aperçu</p>
-              <p className="text-xs text-slate-400 max-w-sm">{error}</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Impossible de charger l'aperçu</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-sm">{error}</p>
             </div>
           )}
 
@@ -236,18 +236,18 @@ export const AttachmentPreviewModal: React.FC<AttachmentPreviewModalProps> = ({
 
               {!isPdf && !isImage && (
                 <div className="flex flex-col items-center justify-center gap-3 py-12 text-center px-4">
-                  <FileText className="h-12 w-12 text-slate-400" />
-                  <p className="text-sm font-medium text-slate-700">
+                  <FileText className="h-12 w-12 text-slate-400 dark:text-slate-500" />
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                     Aperçu non disponible pour ce type de fichier
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     Vous pouvez télécharger le fichier pour l'ouvrir avec l'application appropriée.
                   </p>
                   <Button
                     type="button"
                     size="sm"
                     onClick={handleDownload}
-                    className="mt-2 h-11 min-h-[44px] px-4 text-xs gap-2 bg-[#2c5282] hover:bg-[#234269] text-white"
+                    className="mt-2 h-10 px-4 text-xs gap-2 bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white"
                   >
                     <Download className="h-4 w-4" />
                     <span>{t('common.download')} ({filename})</span>

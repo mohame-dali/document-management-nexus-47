@@ -782,14 +782,16 @@ exports.getMyFullHistory = async (req, res, next) => {
         isDeleted: { $ne: true }
       })
         .populate('activeDepartment', 'name description')
-        .populate('departments', 'name');
+        .populate('departments', 'name')
+        .populate('historiqueAffectations.departement', 'name');
     }
 
     if (!personnel && req.user) {
       const userId = req.user._id || req.user.id;
       personnel = await Personnel.findOne({ userId, isDeleted: { $ne: true } })
         .populate('activeDepartment', 'name description')
-        .populate('departments', 'name');
+        .populate('departments', 'name')
+        .populate('historiqueAffectations.departement', 'name');
     }
 
     if (!personnel) {

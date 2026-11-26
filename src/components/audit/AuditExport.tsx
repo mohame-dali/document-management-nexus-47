@@ -14,7 +14,7 @@ import {
 import { exportAuditLogs, type AuditLogFilters } from '@/services/auditService';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { formatShortDate } from '@/utils/formatDate';
 
 interface AuditExportProps {
   filters: AuditLogFilters;
@@ -87,14 +87,24 @@ const AuditExport: React.FC<AuditExportProps> = ({ filters, totalRecords = 0 }) 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600">
-                من: {filters.startDate ? format(filters.startDate, 'dd/MM/yyyy', { locale: ar }) : 'البداية'}
+              <span className="text-gray-600 tabular-nums">
+                من:{' '}
+                {filters.startDate ? (
+                  <bdi dir="ltr">{formatShortDate(filters.startDate)}</bdi>
+                ) : (
+                  'البداية'
+                )}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600">
-                إلى: {filters.endDate ? format(filters.endDate, 'dd/MM/yyyy', { locale: ar }) : 'النهاية'}
+              <span className="text-gray-600 tabular-nums">
+                إلى:{' '}
+                {filters.endDate ? (
+                  <bdi dir="ltr">{formatShortDate(filters.endDate)}</bdi>
+                ) : (
+                  'النهاية'
+                )}
               </span>
             </div>
           </div>

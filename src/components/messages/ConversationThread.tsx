@@ -1,13 +1,15 @@
 import React, { useRef, useEffect } from 'react';
-import { ArrowRight, MessageSquare, MoreVertical } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MessageSquare, MoreVertical, Plus, Users } from 'lucide-react';
 import MessageBubble from '@/components/messages/MessageBubble';
 import MessageInput from '@/components/messages/MessageInput';
+import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { getDateGroup } from '@/utils/relativeTime';
+import { formatDayMonthLabel } from '@/utils/formatDate';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 import { Message } from '@/types';
 
 export interface ConversationData {
@@ -28,6 +30,8 @@ export interface ConversationThreadProps {
   currentUserId: string;
   onSendMessage: (content: string, attachments: File[]) => void;
   onBack?: () => void;
+  onNewMessage?: () => void;
+  onOpenContacts?: () => void;
   isSending?: boolean;
 }
 
@@ -36,9 +40,12 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
   currentUserId,
   onSendMessage,
   onBack,
+  onNewMessage,
+  onOpenContacts,
   isSending = false,
 }) => {
   const { t, language } = useLanguage();
+  const { isRTL } = useDirection();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { isUserOnline } = useOnlineUsers();
@@ -52,16 +59,44 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
 
   if (!conversation) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-[#f7fafc]">
-        <div className="p-4 bg-white border border-[#e2e8f0] rounded-full text-slate-400 shadow-xs mb-3">
-          <MessageSquare className="h-8 w-8 text-[#2c5282]" />
+      <div className="h-full flex flex-col items-center justify-center p-6 sm:p-8 text-center bg-slate-50/70 dark:bg-slate-950/60">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col items-center">
+          <div className="p-3.5 bg-[#ebf4ff] dark:bg-sky-950/60 border border-[#bee3f8] dark:border-sky-800/70 rounded-xl text-[#2c5282] dark:text-sky-400 mb-4">
+            <MessageSquare className="h-7 w-7" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1.5">
+            {t('messages.selectMessage')}
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed mb-5">
+            {t('messages.selectInterlocutorDesc')}
+          </p>
+
+          {(onNewMessage || onOpenContacts) && (
+            <div className="flex flex-wrap items-center justify-center gap-2.5 w-full">
+              {onNewMessage && (
+                <Button
+                  type="button"
+                  onClick={onNewMessage}
+                  className="h-9 px-4 text-xs font-medium rounded-lg bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white inline-flex items-center gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{t('messages.newMessage')}</span>
+                </Button>
+              )}
+              {onOpenContacts && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onOpenContacts}
+                  className="h-9 px-4 text-xs font-medium rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  <span>{t('messages.contactsDirectory')}</span>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
-        <h3 className="text-base font-bold text-slate-800 mb-1">
-          {t('messages.selectMessage')}
-        </h3>
-        <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-          {t('messages.selectInterlocutorDesc')}
-        </p>
       </div>
     );
   }
@@ -72,18 +107,21 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
   });
 
   const checkIsOwn = (msg: Message): boolean => {
-    if ((msg as Message & { isSender?: boolean }).isSender !== undefined) return Boolean((msg as Message & { isSender?: boolean }).isSender);
-    const senderId = typeof msg.sender === 'object' && msg.sender !== null ? (msg.sender as { _id?: string })._id : msg.sender;
+    if ((msg as Message & { isSender?: boolean }).isSender !== undefined) {
+      return Boolean((msg as Message & { isSender?: boolean }).isSender);
+    }
+    const senderId =
+      typeof msg.sender === 'object' && msg.sender !== null
+        ? (msg.sender as { _id?: string })._id
+        : msg.sender;
     return String(senderId) === String(currentUserId);
   };
 
-  const interlocutorInitial = (conversation.interlocutorName?.[0] || '?').toUpperCase();
-
   return (
-    <div className="h-full flex flex-col bg-[#f7fafc] overflow-hidden">
+    <div className="h-full flex flex-col bg-slate-50/70 dark:bg-slate-950/60 overflow-hidden">
       {/* Header Messenger */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white z-10 shadow-2xs">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm z-10 shadow-2xs">
+        <div className="flex items-center gap-3 min-w-0">
           {/* Mobile Back Button */}
           {onBack && (
             <Button
@@ -91,39 +129,39 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
               size="icon"
               onClick={onBack}
               aria-label={t('messages.backToList')}
-              className="md:hidden h-11 w-11 min-w-[44px] min-h-[44px] text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full p-0"
+              className="md:hidden h-10 w-10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full p-0 shrink-0"
               title={t('messages.backToList')}
             >
-              <ArrowRight className="h-5 w-5 ltr:rotate-180" />
+              {isRTL ? <ArrowRight className="h-5 w-5" /> : <ArrowLeft className="h-5 w-5" />}
             </Button>
           )}
 
           {/* Interlocutor Avatar */}
-          <div className="relative">
-            <Avatar className="w-10 h-10 ring-1 ring-slate-200">
-              <AvatarImage src={conversation.interlocutorPhoto || undefined} alt={conversation.interlocutorName} />
-              <AvatarFallback className="bg-[#2c5282]/10 text-[#2c5282] text-sm font-bold">
-                {interlocutorInitial}
-              </AvatarFallback>
-            </Avatar>
+          <div className="relative shrink-0">
+            <PersonnelAvatar
+              photo={conversation.interlocutorPhoto}
+              username={conversation.interlocutorUsername || conversation.interlocutorName}
+              size="md"
+              className="w-10 h-10 ring-1 ring-slate-200 dark:ring-slate-700"
+            />
             {isUserOnline(conversation.interlocutorId) && (
-              <span className="absolute bottom-0 end-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+              <span className="absolute bottom-0 end-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
             )}
           </div>
 
           {/* Interlocutor Info */}
-          <div>
-            <h3 className="text-sm font-bold text-[#1a202c] leading-tight">
+          <div className="min-w-0">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {conversation.interlocutorName}
             </h3>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <OnlineIndicator 
-                isOnline={isUserOnline(conversation.interlocutorId)} 
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <OnlineIndicator
+                isOnline={isUserOnline(conversation.interlocutorId)}
                 size="sm"
                 showLabel={true}
               />
               {conversation.interlocutorDepartment && (
-                <span className="text-[11px] text-slate-400 font-normal me-1">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal truncate">
                   • {conversation.interlocutorDepartment}
                 </span>
               )}
@@ -135,7 +173,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
         <button
           type="button"
           aria-label={t('messages.conversationOptions')}
-          className="h-11 w-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+          className="h-9 w-9 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors shrink-0"
           title={t('messages.conversationOptions')}
         >
           <MoreVertical className="w-4 h-4" />
@@ -143,19 +181,19 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
       </div>
 
       {/* Messages Thread Scroll Area */}
-      <div 
+      <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-4 bg-[#f7fafc] space-y-2 scroll-smooth"
+        className="flex-1 overflow-y-auto p-4 bg-slate-50/70 dark:bg-slate-950/60 space-y-2 scroll-smooth"
       >
         {sortedMessages.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 text-xs">
+          <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
             {t('messages.noPreviousMessages')}
           </div>
         ) : (
           sortedMessages.map((msg, idx) => {
             const isOwn = checkIsOwn(msg);
-            
-            // Calculer si on doit insérer un séparateur temporel
+
+            // Insert temporal separator when day changes
             const currentDateStr = new Date(msg.createdAt).toDateString();
             const prevDateStr = idx > 0 ? new Date(sortedMessages[idx - 1].createdAt).toDateString() : null;
             const showTimeSeparator = idx === 0 || currentDateStr !== prevDateStr;
@@ -165,14 +203,20 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
               ? t('common.today')
               : timeGroup === 'yesterday'
               ? t('common.yesterday')
-              : new Date(msg.createdAt).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'ar-TN', { day: 'numeric', month: 'short' });
+              : formatDayMonthLabel(msg.createdAt, language);
+            const labelDir =
+              timeGroup === 'today' || timeGroup === 'yesterday'
+                ? undefined
+                : language === 'fr'
+                  ? 'ltr'
+                  : 'rtl';
 
             return (
               <React.Fragment key={msg._id || msg.id || idx}>
                 {showTimeSeparator && (
                   <div className="flex items-center justify-center my-4 select-none">
-                    <div className="bg-slate-200/70 text-slate-600 text-[11px] px-3 py-1 rounded-full font-medium shadow-2xs">
-                      {timeLabel}
+                    <div className="bg-slate-200/80 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-300/40 dark:border-slate-700/60 text-[11px] px-3 py-1 rounded-full font-medium shadow-2xs tabular-nums">
+                      <bdi dir={labelDir}>{timeLabel}</bdi>
                     </div>
                   </div>
                 )}
@@ -187,7 +231,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area (style Messenger) */}
+      {/* Input Area */}
       <MessageInput
         onSend={onSendMessage}
         disabled={isSending}

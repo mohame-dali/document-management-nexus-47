@@ -92,7 +92,7 @@ const DocumentDataGrid: React.FC<DocumentDataGridProps> = ({ documents, type }) 
 
   return (
     <div className="relative" dir={dir}>
-      <div className="rounded border border-[#e2e8f0] bg-white shadow-xs overflow-hidden">
+      <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         <Table>
           <DocumentTableHeader type={type} translations={translations} />
           <TableBody>

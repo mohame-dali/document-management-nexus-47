@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadUserPhoto } from '@/services/userService';
@@ -63,18 +63,54 @@ import {
   Eye,
   EyeOff,
   Check,
-  Building2
+  Building2,
+  Scan
 } from 'lucide-react';
 import { useSetupStatus } from '@/hooks/useSetupStatus';
+import { formatLongDate } from '@/utils/formatDate';
+import ScannerWorkstationSettings from '@/components/scanner/ScannerWorkstationSettings';
+
+const VALID_SETTINGS_TABS = new Set([
+  'profile',
+  'security',
+  'notifications',
+  'preferences',
+  'scanner',
+  'backup',
+  'retention',
+  'organization',
+]);
 
 const SettingsPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
   const { isSetupComplete, settings: orgSettings } = useSetupStatus();
 
+  const initialTabParam = searchParams.get('tab');
   // Active tab state
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(
+    initialTabParam && VALID_SETTINGS_TABS.has(initialTabParam) ? initialTabParam : 'profile'
+  );
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && VALID_SETTINGS_TABS.has(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams, activeTab]);
+
+  const handleTabChange = (nextTab: string) => {
+    setActiveTab(nextTab);
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextTab === 'profile') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', nextTab);
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
 
   // Profile states
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
@@ -288,7 +324,7 @@ const SettingsPage = () => {
       </div>
 
       {/* 2. Main Tab Navigation & Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
         <TabsList className="w-full flex flex-wrap h-auto p-1.5 bg-[#edf2f7] border border-[#e2e8f0] rounded gap-1.5">
           <TabsTrigger
             value="profile"
@@ -320,6 +356,14 @@ const SettingsPage = () => {
           >
             <Sliders className="h-5 w-5" />
             <span>تفضيلات النظام</span>
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="scanner"
+            className="flex-1 min-w-[155px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-[#4a5568] flex items-center justify-center gap-2"
+          >
+            <Scan className="h-5 w-5" />
+            <span>إعدادات الماسح الضوئي</span>
           </TabsTrigger>
 
           <TabsTrigger
@@ -483,9 +527,9 @@ const SettingsPage = () => {
                       </Label>
                       <Input
                         id="account-created"
-                        value={currentUser?.createdAt ? new Date(currentUser.createdAt).toLocaleDateString('ar') : 'غير متوفر'}
+                        value={currentUser?.createdAt ? formatLongDate(currentUser.createdAt, 'ar') : 'غير متوفر'}
                         disabled
-                        className="h-11 text-base bg-gray-50 border-[#cbd5e1] rounded text-gray-700 font-medium"
+                        className="h-11 text-base bg-gray-50 border-[#cbd5e1] rounded text-gray-700 font-medium tabular-nums"
                       />
                     </div>
                   </div>
@@ -855,6 +899,13 @@ const SettingsPage = () => {
         </TabsContent>
 
         {/* ========================================================= */}
+        {/* TAB 4B: Scanner & OCR Workstation Configuration           */}
+        {/* ========================================================= */}
+        <TabsContent value="scanner" className="space-y-6 mt-0">
+          <ScannerWorkstationSettings />
+        </TabsContent>
+
+        {/* ========================================================= */}
         {/* TAB 5: Backup & Archiving Overview                        */}
         {/* ========================================================= */}
         <TabsContent value="backup" className="space-y-6 mt-0">
@@ -920,8 +971,10 @@ const SettingsPage = () => {
                     <Clock className="h-5 w-5" />
                     <span className="text-base font-semibold">آخر نسخة احتياطية</span>
                   </div>
-                  <div className="text-lg font-bold text-[#1a202c]">
-                    {backupStats?.lastBackupDate ? new Date(backupStats.lastBackupDate).toLocaleDateString('ar') : 'لا توجد بعد'}
+                  <div className="text-lg font-bold text-[#1a202c] tabular-nums">
+                    {backupStats?.lastBackupDate ? (
+                      <bdi dir="rtl" className="tabular-nums">{formatLongDate(backupStats.lastBackupDate, 'ar')}</bdi>
+                    ) : 'لا توجد بعد'}
                   </div>
                   <span className="inline-flex items-center mt-2 px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c]">
                     محفوظة محلياً

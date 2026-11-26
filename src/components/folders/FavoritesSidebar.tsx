@@ -17,11 +17,12 @@ import {
 import { getFavoriteFolders, removeFromFavorites } from '@/services/favoritesService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import DragDropWrapper from '@/components/common/DragDropWrapper';
+import DragDropWrapper, { DragItem } from '@/components/common/DragDropWrapper';
 import { handleDocumentDrop } from '@/services/dragDropService';
+import { Folder as FolderType } from '@/types';
 
 interface FavoritesSidebarProps {
-  onFolderSelect?: (folder: any) => void;
+  onFolderSelect?: (folder: FolderType) => void;
   selectedFolderId?: string;
 }
 
@@ -49,12 +50,14 @@ const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
     }
   });
 
-  const handleDocumentDropToFavorites = async (item: any) => {
+  const handleDocumentDropToFavorites = async (item: DragItem) => {
     if (item.type === 'document') {
+      const dropData = (item.data || {}) as { id?: string; type?: 'incoming' | 'outgoing' };
+      if (!dropData.id || !dropData.type) return;
       // Remove document from current folder (set to null)
       const result = await handleDocumentDrop(
-        item.data.id,
-        item.data.type,
+        dropData.id,
+        dropData.type,
         null,
         currentUser?._id || ''
       );
@@ -117,9 +120,11 @@ const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                     dropTypes={['document']}
                     onDrop={async (item) => {
                       if (item.type === 'document') {
+                        const dropData = (item.data || {}) as { id?: string; type?: 'incoming' | 'outgoing' };
+                        if (!dropData.id || !dropData.type) return;
                         const result = await handleDocumentDrop(
-                          item.data.id,
-                          item.data.type,
+                          dropData.id,
+                          dropData.type,
                           folder._id,
                           currentUser?._id || ''
                         );

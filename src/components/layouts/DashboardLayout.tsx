@@ -46,7 +46,7 @@ const DashboardLayout = () => {
             {/* Department Switcher for AdminDepartment with multiple departments */}
             {currentUser?.role === 'AdminDepartment' && 
              currentUser?.departments?.length > 1 && (
-              <div className="container-responsive py-2 border-b bg-gray-50 flex-shrink-0">
+              <div className="container-responsive py-2 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-sm flex-shrink-0 print:hidden">
                 <DepartmentSwitcher />
               </div>
             )}
@@ -60,7 +60,7 @@ const DashboardLayout = () => {
             )}
             
             {/* Main Content - Scrollable */}
-            <main className="flex-1 overflow-auto">
+            <main className="flex-1 overflow-auto custom-scrollbar bg-slate-50/70 dark:bg-slate-950">
               <div className="container-responsive padding-responsive min-h-full">
                 <Outlet />
               </div>

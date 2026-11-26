@@ -97,32 +97,32 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
     return (
       <div key={folderOption._id}>
         <div
-          className={`flex items-center gap-3 p-3 rounded cursor-pointer transition-colors duration-200 border text-base ${
+          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors duration-150 border text-base ${
             isSelected 
-              ? 'bg-amber-50/70 border-[#FFCB56] text-[#1a202c] font-bold' 
-              : 'hover:bg-gray-50 border-transparent text-gray-700 font-medium'
+              ? 'bg-amber-50/70 dark:bg-amber-950/35 border-amber-400/80 dark:border-amber-700 text-[#1a202c] dark:text-amber-100 font-bold' 
+              : 'hover:bg-slate-50 dark:hover:bg-slate-800/70 border-transparent text-slate-700 dark:text-slate-200 font-medium'
           }`}
           style={{ paddingRight: `${level * 24 + 12}px` }}
           onClick={() => setSelectedParentId(folderOption._id)}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Folder className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-[#2c5282]' : 'text-gray-400'}`} />
+            <Folder className={`h-5 w-5 flex-shrink-0 ${isSelected ? 'text-[#2c5282] dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'}`} />
             <span className="truncate">{folderOption.name}</span>
           </div>
           {folderOption.status === 'En cours' && (
-            <span className="text-xs px-2 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70">
               نشط
             </span>
           )}
           {isSelected && (
-            <span className="px-2 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70">
               محدد
             </span>
           )}
         </div>
         
         {hasChildren && (
-          <div className="mr-2 border-r border-[#e2e8f0]">
+          <div className="mr-2 border-r border-slate-200 dark:border-slate-700">
             {getSubfolders(folderOption._id).map(subfolder => 
               renderFolderOption(subfolder, level + 1)
             )}
@@ -134,15 +134,15 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-0 overflow-hidden shadow-sm text-base" dir="rtl">
-        <DialogHeader className="p-6 bg-[#f8fafc] border-b border-[#e2e8f0] text-right">
-          <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
-            <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
-              <ArrowRight className="h-5 w-5 rotate-180 text-[#2c5282]" />
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-0 overflow-hidden shadow-lg text-base" dir="rtl">
+        <DialogHeader className="p-6 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-right">
+          <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282] dark:text-sky-300">
+            <div className="w-10 h-10 rounded-lg bg-[#2c5282]/10 dark:bg-sky-900/40 flex items-center justify-center text-[#2c5282] dark:text-sky-300 shrink-0">
+              <ArrowRight className="h-5 w-5 rotate-180 text-[#2c5282] dark:text-sky-300" />
             </div>
             <span>نقل المجلد: {folder?.name}</span>
           </DialogTitle>
-          <p className="text-gray-600 text-base mt-1.5">
+          <p className="text-slate-600 dark:text-slate-400 text-base mt-1.5">
             اختر المجلد الأصل الجديد، أو انقر على الجذر لجعله مجلداً رئيسياً
           </p>
         </DialogHeader>
@@ -150,29 +150,29 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
         <div className="p-6 space-y-4">
           {/* Root option */}
           <div
-            className={`flex items-center gap-3 p-4 rounded cursor-pointer border transition-colors duration-200 ${
+            className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer border transition-colors duration-150 ${
               selectedParentId === null
-                ? 'bg-amber-50/70 border-[#FFCB56] text-[#1a202c] font-bold'
-                : 'bg-white border-[#e2e8f0] text-gray-700 hover:bg-gray-50'
+                ? 'bg-amber-50/70 dark:bg-amber-950/35 border-amber-400/80 dark:border-amber-700 text-[#1a202c] dark:text-amber-100 font-bold'
+                : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/70'
             }`}
             onClick={() => setSelectedParentId(null)}
           >
-            <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
-              <Home className="h-5 w-5 text-[#2c5282]" />
+            <div className="w-10 h-10 rounded-lg bg-[#2c5282]/10 dark:bg-sky-900/40 flex items-center justify-center text-[#2c5282] dark:text-sky-300 shrink-0">
+              <Home className="h-5 w-5 text-[#2c5282] dark:text-sky-300" />
             </div>
             <div className="flex-1">
-              <span className="block font-bold text-base text-[#1a202c]">المستوى الرئيسي (الجذر)</span>
-              <span className="text-sm text-gray-500 font-normal">جعل المجلد في المستوى الأول بدون مجلد أب</span>
+              <span className="block font-bold text-base text-[#1a202c] dark:text-slate-100">المستوى الرئيسي (الجذر)</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 font-normal">جعل المجلد في المستوى الأول بدون مجلد أب</span>
             </div>
             {selectedParentId === null && (
-              <span className="px-2.5 py-1 rounded text-sm font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70">
                 محدد
               </span>
             )}
           </div>
 
-          <div className="border border-[#e2e8f0] rounded p-3 bg-[#fcfcfc]">
-            <div className="text-sm font-bold text-gray-700 mb-2 px-1">المجلدات المتاحة:</div>
+          <div className="border border-slate-200/80 dark:border-slate-800 rounded-lg p-3 bg-slate-50/50 dark:bg-slate-950/50">
+            <div className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 px-1">المجلدات المتاحة:</div>
             <ScrollArea className="h-64">
               <div className="space-y-1">
                 {rootFolders.map(rootFolder => renderFolderOption(rootFolder))}
@@ -181,12 +181,12 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="p-4 sm:p-6 bg-[#f8fafc] border-t border-[#e2e8f0] flex flex-row-reverse justify-start gap-3">
+        <DialogFooter className="p-4 sm:p-6 bg-slate-50/90 dark:bg-slate-800/60 border-t border-slate-200/80 dark:border-slate-800 flex flex-row-reverse justify-start gap-3">
           <Button
             type="button"
             onClick={handleMove}
             disabled={moveFolderMutation.isPending}
-            className="h-11 px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-none"
+            className="h-11 px-7 rounded-lg bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-sm"
           >
             {moveFolderMutation.isPending ? 'جاري النقل...' : 'تأكيد النقل'}
           </Button>
@@ -194,7 +194,7 @@ const FolderMoveDialog: React.FC<FolderMoveDialogProps> = ({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="h-11 px-6 rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-100 text-base font-medium"
+            className="h-11 px-6 rounded-lg border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-base font-medium"
           >
             إلغاء
           </Button>

@@ -31,7 +31,7 @@ import {
  */
 export const MailHubLayout: React.FC = () => {
   const { currentUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { pendingIncoming } = useHubBadges();
 
   const tabs: HubTab[] = [
@@ -69,11 +69,16 @@ export const MailHubLayout: React.FC = () => {
   return (
     <HubLayout
       title={t('sidebar.mailAndDocuments')}
-      description="إدارة المراسلات الواردة والصادرة والمجلدات"
+      description={
+        language === 'fr'
+          ? 'Gestion du courrier entrant, sortant et des dossiers'
+          : 'إدارة المراسلات الواردة والصادرة والمجلدات'
+      }
       icon={FolderOpen}
       tabs={tabs}
       currentUserRole={currentUser?.role}
       breadcrumb={breadcrumb}
+      compact
     />
   );
 };

@@ -1,21 +1,22 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, 
-  Reply, 
-  Trash2, 
+import {
+  ArrowLeft,
+  ArrowRight,
+  Reply,
+  Trash2,
   Clock,
-  User,
-  Shield, 
-  Building2, 
-  Settings, 
+  Shield,
+  Building2,
+  Settings,
   User as UserIcon,
   AlertCircle
 } from 'lucide-react';
 import { Message } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
-import { formatArabicDateTime } from '@/utils/arabicDateFormatter';
+import { useDirection } from '@/i18n/useDirection';
+import { formatDateTime } from '@/utils/formatDate';
 
 interface MessageThreadHeaderProps {
   onBack: () => void;
@@ -31,6 +32,7 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
   message
 }) => {
   const { t } = useLanguage();
+  const { dir, isRTL } = useDirection();
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -43,10 +45,10 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Admin': return 'bg-red-50 text-red-700 border-red-200';
-      case 'AdminDepartment': return 'bg-blue-50 text-[#2c5282] border-blue-200';
-      case 'AdminTuningDesk': return 'bg-emerald-50 text-emerald-800 border-emerald-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'Admin': return 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/60';
+      case 'AdminDepartment': return 'bg-blue-50 dark:bg-sky-950/40 text-[#2c5282] dark:text-sky-300 border-blue-200 dark:border-sky-800/60';
+      case 'AdminTuningDesk': return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60';
+      default: return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
     }
   };
 
@@ -57,36 +59,36 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
   const senderInfo = message.sender && typeof message.sender === 'object' ? message.sender : null;
 
   return (
-    <div className="bg-white border-b border-[#e2e8f0] pb-4 mb-5" dir="rtl">
+    <div className="bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 pb-4 mb-5" dir={dir}>
       {/* Top Action Bar */}
       <div className="flex items-center justify-between gap-3 mb-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           onClick={onBack}
-          className="flex items-center gap-1.5 h-11 px-3.5 rounded border-[#cbd5e1] text-slate-700 hover:bg-slate-100 transition-colors duration-200 text-xs font-medium"
+          className="flex items-center gap-1.5 h-9 px-3 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 text-xs font-medium"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          {isRTL ? <ArrowRight className="h-3.5 w-3.5" /> : <ArrowLeft className="h-3.5 w-3.5" />}
           <span>{t('messages.backToMessages')}</span>
         </Button>
-        
+
         <div className="flex items-center gap-2">
           {onReply && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={() => onReply(message)}
-              className="flex items-center gap-1.5 h-11 px-3.5 rounded bg-[#2c5282] hover:bg-[#234269] text-white transition-colors duration-200 text-xs font-medium"
+              className="flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white transition-colors duration-200 text-xs font-medium"
             >
               <Reply className="h-3.5 w-3.5" />
               <span>{t('messages.reply')}</span>
             </Button>
           )}
           {onDelete && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => onDelete(message._id)}
-              className="flex items-center gap-1.5 h-11 px-3.5 rounded border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-200 text-xs font-medium"
+              className="flex items-center gap-1.5 h-9 px-3.5 rounded-lg border-red-200 dark:border-red-900/60 bg-white dark:bg-slate-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:border-red-300 dark:hover:border-red-800 transition-colors duration-200 text-xs font-medium"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>{t('messages.delete')}</span>
@@ -98,64 +100,70 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
       {/* Subject & Meta */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h2 className="text-lg font-bold text-slate-900 leading-snug">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
             {message.subject}
           </h2>
 
           <div className="flex flex-wrap items-center gap-2">
             {message.priority === 'urgent' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
                 <AlertCircle className="h-3 w-3" />
-                عاجل جداً
+                {isRTL ? 'عاجل جداً' : 'Très urgent'}
               </span>
             )}
             {message.priority === 'high' && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#FFD758]/25 text-[#92400e] border border-[#FFCB56]">
-                أولوية مرتفعة
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFD758]/25 dark:bg-amber-500/20 text-[#92400e] dark:text-amber-300 border border-[#FFCB56]">
+                {isRTL ? 'أولوية مرتفعة' : 'Priorité haute'}
               </span>
             )}
 
-            <Badge 
-              variant="outline" 
-              className="px-2 py-0.5 text-xs rounded border-slate-200 bg-slate-50 text-slate-700 font-normal"
+            <Badge
+              variant="outline"
+              className="px-2 py-0.5 text-xs rounded-md border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal"
             >
-              {message.messageType === 'one-to-many' ? 'رسالة جماعية' : 'رسالة فردية'}
+              {message.messageType === 'one-to-many'
+                ? (isRTL ? 'رسالة جماعية' : 'Message groupé')
+                : (isRTL ? 'رسالة فردية' : 'Message individuel')}
             </Badge>
 
             {message.crossDepartment && (
-              <Badge variant="outline" className="bg-blue-50 text-[#2c5282] border-blue-200 px-2 py-0.5 text-xs rounded font-normal">
-                عبر الأقسام
+              <Badge variant="outline" className="bg-blue-50 dark:bg-sky-950/40 text-[#2c5282] dark:text-sky-300 border-blue-200 dark:border-sky-800/60 px-2 py-0.5 text-xs rounded-md font-normal">
+                {isRTL ? 'عبر الأقسام' : 'Interservices'}
               </Badge>
             )}
           </div>
         </div>
 
         {/* Sender and Recipients Box */}
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-3 text-xs space-y-2">
+        <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3 text-xs space-y-2">
           {/* Sender */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-medium">المرسل:</span>
-              <span className="font-semibold text-slate-800">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">
+                {isRTL ? 'المرسل:' : 'Expéditeur :'}
+              </span>
+              <span className="font-semibold text-slate-800 dark:text-slate-100">
                 {senderInfo ? senderInfo.username : t('messages.unknownUser')}
               </span>
               {senderInfo && (
-                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 rounded ${getRoleColor(senderInfo.role)}`}>
+                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 rounded-md ${getRoleColor(senderInfo.role)}`}>
                   {getRoleIcon(senderInfo.role)}
-                  <span className="mr-1">{getRoleDisplayName(senderInfo.role)}</span>
+                  <span className="ms-1">{getRoleDisplayName(senderInfo.role)}</span>
                 </Badge>
               )}
             </div>
 
-            <div className="flex items-center gap-1 text-slate-500">
-              <Clock className="h-3.5 w-3.5 text-slate-400" />
-              <span>{formatArabicDateTime(message.createdAt)}</span>
+            <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 tabular-nums">
+              <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <bdi dir={isRTL ? 'rtl' : 'ltr'}>{formatDateTime(message.createdAt, language)}</bdi>
             </div>
           </div>
 
           {/* Recipients */}
-          <div className="flex items-start gap-2 pt-1 border-t border-[#edf2f7]">
-            <span className="text-slate-500 font-medium whitespace-nowrap mt-0.5">المستلمون:</span>
+          <div className="flex items-start gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+            <span className="text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap mt-0.5">
+              {isRTL ? 'المستلمون:' : 'Destinataires :'}
+            </span>
             <div className="flex flex-wrap items-center gap-1.5">
               {message.recipients?.map((recipient, index) => {
                 const recipientUser = recipient.user && typeof recipient.user === 'object' ? recipient.user : null;
@@ -163,18 +171,18 @@ const MessageThreadHeader: React.FC<MessageThreadHeaderProps> = ({
                 const isRead = recipient.read;
 
                 return (
-                  <span 
+                  <span
                     key={index}
-                    className="inline-flex items-center gap-1.5 bg-white border border-[#e2e8f0] px-2 py-0.5 rounded text-[11px] text-slate-700"
+                    className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md text-[11px] text-slate-700 dark:text-slate-200"
                   >
                     <span>{recipientName}</span>
                     {isRead ? (
-                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1 rounded border border-emerald-200">
-                        مقروءة
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-1 rounded border border-emerald-200 dark:border-emerald-800/60">
+                        {isRTL ? 'مقروءة' : 'Lu'}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-[#854d0e] bg-[#FFD758]/20 px-1 rounded border border-[#FFCB56]">
-                        غير مقروءة
+                      <span className="text-[10px] text-[#854d0e] dark:text-amber-300 bg-[#FFD758]/20 dark:bg-amber-500/20 px-1 rounded border border-[#FFCB56]/80 dark:border-amber-500/40">
+                        {isRTL ? 'غير مقروءة' : 'Non lu'}
                       </span>
                     )}
                   </span>

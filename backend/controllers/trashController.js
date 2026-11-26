@@ -7,6 +7,8 @@ const Personnel = require('../models/Personnel');
 const AuditLog = require('../models/AuditLog');
 const ErrorResponse = require('../utils/errorResponse');
 const { sanitizeSearchQuery } = require('../utils/regexUtils');
+const { removeFromIndex } = require('../services/semanticIndexer');
+const { extractId, isRHAdminDepartment } = require('../utils/rhAuthHelper');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,18 +20,10 @@ const MODEL_MAP = {
   'personnel': Personnel,
 };
 
-function extractId(value) {
-  if (!value) return null;
-  if (typeof value === 'string') return value.trim() || null;
-  if (typeof value === 'object') {
-    if (value._id) return value._id.toString();
-    if (value.id) return String(value.id);
-    if (typeof value.toString === 'function') {
-      const str = value.toString();
-      return str === '[object Object]' ? null : str;
-    }
-  }
-  return String(value);
+async function canManageTrashedPersonnel(user) {
+  if (!user) return false;
+  if (user.role === 'Admin') return true;
+  return isRHAdminDepartment(user);
 }
 
 // Helper to resolve absolute or relative file path on disk
@@ -78,6 +72,11 @@ const collectItemFiles = (item) => {
   const files = [];
   if (!item) return files;
   if (item.scannedDocument) files.push(item.scannedDocument);
+  if (Array.isArray(item.versions)) {
+    item.versions.forEach((v) => {
+      if (v && v.filePath) files.push(v.filePath);
+    });
+  }
   if (item.scannedFilePath) files.push(item.scannedFilePath);
   if (item.photo) files.push(item.photo);
   if (item.attachments && Array.isArray(item.attachments)) {
@@ -86,7 +85,7 @@ const collectItemFiles = (item) => {
       else if (typeof att === 'string') files.push(att);
     });
   }
-  return files;
+  return Array.from(new Set(files.filter(Boolean)));
 };
 
 // Helper to normalize item types
@@ -132,12 +131,17 @@ exports.getTrash = async (req, res, next) => {
     const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
     const skip = (pageNum - 1) * limitNum;
 
+    const canAccessPersonnelTrash = await canManageTrashedPersonnel(req.user);
+    if (type === 'personnel' && !canAccessPersonnelTrash) {
+      return next(new ErrorResponse('غير مصرح لك بالوصول إلى سلة مهملات الموظفين — الصلاحية محصورة في قسم الموارد البشرية', 403));
+    }
+
     // Department filtering
     let incomingQuery = { isDeleted: true };
     let outgoingQuery = { isDeleted: true };
     let folderQuery = { isDeleted: true };
     let messageQuery = { deletedBy: req.user._id };
-    let personnelQuery = { isDeleted: true };
+    let personnelQuery = canAccessPersonnelTrash ? { isDeleted: true } : null;
 
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
       const deptId = extractId(req.user.activeDepartment);
@@ -147,12 +151,16 @@ exports.getTrash = async (req, res, next) => {
       incomingQuery['assignedTo.id'] = deptId;
       outgoingQuery['source.id'] = deptId;
       folderQuery.department = deptId;
-      personnelQuery.activeDepartment = deptId;
+      if (personnelQuery && req.query.department) {
+        personnelQuery.activeDepartment = req.query.department;
+      }
     } else if (req.query.department) {
       incomingQuery['assignedTo.id'] = req.query.department;
       outgoingQuery['source.id'] = req.query.department;
       folderQuery.department = req.query.department;
-      personnelQuery.activeDepartment = req.query.department;
+      if (personnelQuery) {
+        personnelQuery.activeDepartment = req.query.department;
+      }
     }
 
     // Search filter
@@ -175,11 +183,13 @@ exports.getTrash = async (req, res, next) => {
           { subject: searchRegex },
           { content: searchRegex }
         ];
-        personnelQuery.$or = [
-          { nom: searchRegex },
-          { prenom: searchRegex },
-          { cin: searchRegex }
-        ];
+        if (personnelQuery) {
+          personnelQuery.$or = [
+            { nom: searchRegex },
+            { prenom: searchRegex },
+            { cin: searchRegex }
+          ];
+        }
       }
     }
 
@@ -189,7 +199,7 @@ exports.getTrash = async (req, res, next) => {
       OutgoingDocument.countDocuments(outgoingQuery),
       Folder.countDocuments(folderQuery),
       Message.countDocuments(messageQuery),
-      Personnel.countDocuments(personnelQuery)
+      personnelQuery ? Personnel.countDocuments(personnelQuery) : Promise.resolve(0)
     ]);
 
     let items = [];
@@ -296,11 +306,13 @@ exports.getTrash = async (req, res, next) => {
           .populate('recipients.user', 'username photo role activeDepartment')
           .sort({ updatedAt: -1 })
           .limit(limitNum),
-        Personnel.find(personnelQuery)
-          .populate('deletedBy', 'username role photo')
-          .populate('activeDepartment', 'name')
-          .sort({ deletedAt: -1 })
-          .limit(limitNum)
+        personnelQuery
+          ? Personnel.find(personnelQuery)
+              .populate('deletedBy', 'username role photo')
+              .populate('activeDepartment', 'name')
+              .sort({ deletedAt: -1 })
+              .limit(limitNum)
+          : Promise.resolve([])
       ]);
 
       const formattedIncoming = incomingDocs.map(d => ({ ...d.toObject(), itemType: 'incoming' }));
@@ -392,8 +404,13 @@ exports.restoreItem = async (req, res, next) => {
       return next(new ErrorResponse(`العنصر غير موجود في سلة المهملات برمز ${id}`, 404));
     }
 
-    // Permission check for AdminDepartment / User
-    if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
+    // Permission check for Personnel (strictly Admin or RH AdminDepartment across all operational departments)
+    if (resolvedType === 'personnel') {
+      const canRestorePersonnel = await canManageTrashedPersonnel(req.user);
+      if (!canRestorePersonnel) {
+        return next(new ErrorResponse('غير مصرح لك باسترجاع هذا الموظف — الصلاحية محصورة في قسم الموارد البشرية', 403));
+      }
+    } else if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
       const activeDeptId = extractId(req.user.activeDepartment);
       if (!activeDeptId) {
         return next(new ErrorResponse('لم يتم تحديد قسم نشط', 403));
@@ -416,11 +433,6 @@ exports.restoreItem = async (req, res, next) => {
         const folderDeptId = extractId(item.department);
         if (!folderDeptId || folderDeptId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك باسترجاع هذا المجلد', 403));
-        }
-      } else if (resolvedType === 'personnel') {
-        const persDeptId = extractId(item.activeDepartment);
-        if (!persDeptId || persDeptId !== activeDeptId) {
-          return next(new ErrorResponse('غير مصرح لك باسترجاع هذا الموظف', 403));
         }
       }
     }
@@ -540,8 +552,16 @@ exports.permanentDelete = async (req, res, next) => {
       return next(new ErrorResponse('العنصر غير موجود في سلة المهملات', 400));
     }
 
-    // Permission check for AdminDepartment / User
-    if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
+    // Permission check for Personnel (strictly Admin or RH AdminDepartment across all operational departments)
+    if (resolvedType === 'personnel') {
+      const canDeletePersonnel = await canManageTrashedPersonnel(req.user);
+      if (!canDeletePersonnel) {
+        return next(new ErrorResponse('غير مصرح لك بحذف هذا الموظف نهائياً — الصلاحية محصورة في قسم الموارد البشرية', 403));
+      }
+      if (item.userId) {
+        return next(new ErrorResponse('لا يمكن الحذف النهائي لبطاقة موظف مرتبطة بحساب مستخدم', 400));
+      }
+    } else if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
       const activeDeptId = extractId(req.user.activeDepartment);
       if (!activeDeptId) {
         return next(new ErrorResponse('لم يتم تحديد قسم نشط', 403));
@@ -564,11 +584,6 @@ exports.permanentDelete = async (req, res, next) => {
         const folderDeptId = extractId(item.department);
         if (!folderDeptId || folderDeptId !== activeDeptId) {
           return next(new ErrorResponse('غير مصرح لك بحذف هذا المجلد', 403));
-        }
-      } else if (resolvedType === 'personnel') {
-        const persDeptId = extractId(item.activeDepartment);
-        if (!persDeptId || persDeptId !== activeDeptId) {
-          return next(new ErrorResponse('غير مصرح لك بحذف هذا الموظف', 403));
         }
       }
     }
@@ -608,6 +623,9 @@ exports.permanentDelete = async (req, res, next) => {
     });
 
     await Model.findByIdAndDelete(id);
+    if (resolvedType === 'incoming' || resolvedType === 'outgoing') {
+      await removeFromIndex(item._id, resolvedType).catch(() => {});
+    }
 
     // Audit trail SÉCURISÉ
     try {
@@ -656,9 +674,18 @@ exports.emptyTrash = async (req, res, next) => {
       errors: []
     };
 
-    const typesToEmpty = resolvedType === 'all'
+    const canAccessPersonnelTrash = await canManageTrashedPersonnel(req.user);
+    if (resolvedType === 'personnel' && !canAccessPersonnelTrash) {
+      return next(new ErrorResponse('غير مصرح لك بإفراغ سلة مهملات الموظفين — الصلاحية محصورة في قسم الموارد البشرية', 403));
+    }
+
+    let typesToEmpty = resolvedType === 'all'
       ? Object.keys(MODEL_MAP)
       : (MODEL_MAP[resolvedType] ? [resolvedType] : []);
+
+    if (resolvedType === 'all' && !canAccessPersonnelTrash) {
+      typesToEmpty = typesToEmpty.filter(t => t !== 'personnel');
+    }
 
     if (typesToEmpty.length === 0) {
       return next(new ErrorResponse('نوع العنصر غير صالح', 400));
@@ -704,11 +731,12 @@ exports.emptyTrash = async (req, res, next) => {
 
         if (t === 'message') {
           filter = { deletedBy: req.user._id };
+        } else if (t === 'personnel') {
+          filter = { isDeleted: true, userId: null };
         } else if (deptId) {
           if (t === 'incoming') filter['assignedTo.id'] = deptId;
           else if (t === 'outgoing') filter['source.id'] = deptId;
           else if (t === 'folder') filter.department = deptId;
-          else if (t === 'personnel') filter.activeDepartment = deptId;
         }
 
         const items = await Model.find(filter);
@@ -718,6 +746,8 @@ exports.emptyTrash = async (req, res, next) => {
               results.skippedMessages++;
               continue;
             }
+          } else if (t === 'personnel' && item.userId) {
+            continue;
           } else if (t === 'incoming') {
             await OutgoingDocument.updateMany({ reference: item._id }, { reference: null });
           } else if (t === 'outgoing') {
@@ -739,6 +769,9 @@ exports.emptyTrash = async (req, res, next) => {
           });
 
           await Model.findByIdAndDelete(item._id);
+          if (t === 'incoming' || t === 'outgoing') {
+            await removeFromIndex(item._id, t).catch(() => {});
+          }
           results[t] = (results[t] || 0) + 1;
         }
       } catch (err) {

@@ -20,12 +20,17 @@ exports.getUser = async (req, res, next) => {
     
     // Check if AdminDepartment has access to this user
     if (req.user.role === 'AdminDepartment') {
+      const activeDeptId = (req.user.activeDepartment?._id || req.user.activeDepartment)?.toString();
+      if (!activeDeptId) {
+        return next(new ErrorResponse('No active department selected', 403));
+      }
+
       // Get the ids of the user's departments
-      const userDeptIds = user.departments.map(dept => dept._id.toString());
-      
+      const userDeptIds = (user.departments || []).map(dept => (dept._id || dept).toString());
+
       // Check if the AdminDepartment's active department is in the user's departments
-      const hasAccess = userDeptIds.includes(req.user.activeDepartment._id.toString());
-      
+      const hasAccess = userDeptIds.includes(activeDeptId);
+
       if (!hasAccess) {
         return next(
           new ErrorResponse(`Not authorized to access this user`, 403)

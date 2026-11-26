@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -31,7 +31,9 @@ import {
   Paperclip,
   Share2,
   FolderTree,
-  ChevronLeft
+  ChevronLeft,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -42,7 +44,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { getIncomingDocument, getOutgoingDocument, downloadDocument, getDocumentUrl } from '@/services/documentService';
 import { getDocumentTimeline, AuditLog } from '@/services/auditService';
-import { formatArabicDate, formatArabicDateTime } from '@/utils/arabicDateFormatter';
+import { formatLongDate, formatDateTime } from '@/utils/formatDate';
 import { getActivityUrgency } from '@/utils/activityUtils';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 
@@ -50,9 +52,11 @@ import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
 import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
 import PDFViewer from '@/components/documents/PDFViewer';
+import CopyReferenceButton from '@/components/documents/CopyReferenceButton';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import PersonnelAssociatedToDocument from '@/components/hr/PersonnelAssociatedToDocument';
 import DocumentAIAssistant from '@/components/ai/DocumentAIAssistant';
+import MailLifecycleStepper from '@/components/documents/MailLifecycleStepper';
 import { useLanguage } from '@/contexts/LanguageProvider';
 
 const ViewIncomingDocument: React.FC = () => {
@@ -73,7 +77,21 @@ const ViewIncomingDocument: React.FC = () => {
 
   // UI View states
   const [previewTab, setPreviewTab] = useState<'incoming' | 'answer' | 'split'>('incoming');
+  const [isPdfExpanded, setIsPdfExpanded] = useState(false);
   const [isCopiedOcr, setIsCopiedOcr] = useState(false);
+
+  const isFr = language === 'fr';
+  const dateLang = isFr ? 'fr' : 'ar';
+  const dateDir = isFr ? 'ltr' : 'rtl';
+
+  useEffect(() => {
+    if (!isPdfExpanded) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsPdfExpanded(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isPdfExpanded]);
 
   // User permissions
   const isDirector = currentUser?.role === 'Director';
@@ -161,9 +179,9 @@ const ViewIncomingDocument: React.FC = () => {
   if (isDocLoading) {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-10 w-10 text-[#2c5282] animate-spin" />
-        <h2 className="text-xl font-bold text-[#1a202c]">{t('documents.viewIncoming.loading.title')}</h2>
-        <p className="text-base text-[#4a5568]">{t('documents.viewIncoming.loading.description')}</p>
+        <Loader2 className="h-10 w-10 text-[#2c5282] dark:text-blue-400 animate-spin" />
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t('documents.viewIncoming.loading.title')}</h2>
+        <p className="text-base text-slate-600 dark:text-slate-300">{t('documents.viewIncoming.loading.description')}</p>
       </div>
     );
   }
@@ -171,19 +189,19 @@ const ViewIncomingDocument: React.FC = () => {
   // Error / Not Found state
   if (isDocError || !document) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8">
-        <div className="max-w-xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
+      <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-6 sm:p-8">
+        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-8 text-center space-y-4">
+          <div className="w-14 h-14 rounded-lg bg-red-50/90 dark:bg-red-950/50 border border-red-200/80 dark:border-red-800/60 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
             <AlertCircle className="h-7 w-7" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1a202c]">{t('documents.viewIncoming.notFound.title')}</h2>
-          <p className="text-base text-[#4a5568] leading-relaxed">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t('documents.viewIncoming.notFound.title')}</h2>
+          <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
             {t('documents.viewIncoming.notFound.description')}
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <Button
               onClick={() => navigate('/dashboard/incoming-documents')}
-              className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+              className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg transition-colors duration-200"
             >
               {t('documents.viewIncoming.notFound.backButton')}
             </Button>
@@ -202,26 +220,28 @@ const ViewIncomingDocument: React.FC = () => {
     : (document.folder ? t('documents.viewIncoming.fallback.specificFolder') : t('documents.viewIncoming.fallback.noFolder'));
 
   // Responsible user resolution
-  const responsibleName = typeof document.responsibleUser === 'object' && document.responsibleUser
+  const responsibleName: string = typeof document.responsibleUser === 'object' && document.responsibleUser
     ? document.responsibleUser.username
-    : (document.responsibleUser || t('documents.viewIncoming.fallback.noResponsible'));
+    : (typeof document.responsibleUser === 'string' && document.responsibleUser
+        ? document.responsibleUser
+        : t('documents.viewIncoming.fallback.noResponsible'));
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-4">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-4 sm:p-6 lg:p-8 space-y-4">
       
       {/* Fil d'Ariane (Breadcrumbs) */}
-      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500">
-        <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">{t('documents.viewIncoming.breadcrumb.home')}</Link>
-        <ChevronLeft className="w-4 h-4 text-gray-400 rtl:rotate-0 ltr:rotate-180" />
-        <Link to="/dashboard/incoming-documents" className="hover:text-[#2c5282] transition-colors">{t('documents.viewIncoming.breadcrumb.incomingDocuments')}</Link>
-        <ChevronLeft className="w-4 h-4 text-gray-400 rtl:rotate-0 ltr:rotate-180" />
-        <span className="text-[#1a202c] font-medium truncate max-w-md">
+      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('documents.viewIncoming.breadcrumb.home')}</Link>
+        <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+        <Link to="/dashboard/incoming-documents" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('documents.viewIncoming.breadcrumb.incomingDocuments')}</Link>
+        <ChevronLeft className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-0 ltr:rotate-180" />
+        <span className="text-slate-900 dark:text-slate-100 font-medium truncate max-w-md">
           {document.subject || t('documents.viewIncoming.fallback.untitled', { serialNumber: document.serialNumber })}
         </span>
       </nav>
 
       {/* 1. EN-TÊTE DE PAGE (Header with Navigation & Key Actions) */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         {/* Navigation & Titles */}
         <div className="flex items-start sm:items-center gap-3.5">
           <Button
@@ -229,24 +249,24 @@ const ViewIncomingDocument: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate('/dashboard/incoming-documents')}
-            className="h-10 px-4 text-base font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200"
+            className="h-10 px-4 text-base font-semibold text-[#2c5282] dark:text-blue-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 transition-colors duration-200"
           >
             <ArrowRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
             <span>{t('documents.viewIncoming.button.backToList')}</span>
           </Button>
 
-          <div className="h-6 w-px bg-[#e2e8f0] hidden sm:block" />
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
 
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-blue-300 leading-normal tabular-nums">
                 {t('documents.viewIncoming.title.incomingNumber', { serialNumber: document.serialNumber })}
               </h1>
-              <span className="text-base font-bold text-[#4a5568]">
+              <span className="text-base font-bold text-slate-600 dark:text-slate-400 tabular-nums">
                 {t('documents.viewIncoming.title.yearSuffix', { year: document.year })}
               </span>
             </div>
-            <p className="text-base text-[#4a5568] mt-0.5 leading-relaxed">
+            <p className="text-base text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
               {t('documents.viewIncoming.subtitle')}
             </p>
           </div>
@@ -259,9 +279,9 @@ const ViewIncomingDocument: React.FC = () => {
               type="button"
               variant="outline"
               onClick={handleScrollToPDF}
-              className="h-11 px-4 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/50 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-4 text-base font-semibold text-[#2c5282] dark:text-blue-300 border-blue-200/80 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg flex items-center gap-2 transition-colors duration-200"
             >
-              <Eye className="h-4 w-4 text-[#2c5282]" />
+              <Eye className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
               <span>{t('documents.viewIncoming.button.previewPdf')}</span>
             </Button>
           )}
@@ -270,7 +290,7 @@ const ViewIncomingDocument: React.FC = () => {
             <Button
               type="button"
               onClick={() => navigate(`/dashboard/incoming-documents/${id}/edit`)}
-              className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg flex items-center gap-2 transition-colors duration-200"
             >
               <Edit className="h-4 w-4" />
               <span>{t('documents.viewIncoming.button.editDocument')}</span>
@@ -279,20 +299,28 @@ const ViewIncomingDocument: React.FC = () => {
         </div>
       </div>
 
+      {/* Cycle de vie visuel du courrier */}
+      <MailLifecycleStepper
+        type="incoming"
+        document={document}
+        answerDocument={answerDocument || null}
+      />
+
       {/* 2. RÉSUMÉ EXÉCUTIF (Executive Summary Card) */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 sm:p-8 space-y-6">
         {/* Top Badges & Status Row */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center gap-2.5 flex-wrap">
             {/* Serial & Year Tag */}
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 tabular-nums">
               <FileInput className="h-4 w-4" />
-              {t('documents.viewIncoming.badge.incomingNumber', { serialNumber: document.serialNumber, year: document.year })}
-            </span>
+              <span>{t('documents.viewIncoming.badge.incomingNumber', { serialNumber: document.serialNumber, year: document.year })}</span>
+              <CopyReferenceButton value={`#${document.serialNumber} / ${document.year}`} />
+            </div>
 
             {/* Director Read-Only Badge */}
             {isDirector && (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] shadow-xs">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] shadow-xs">
                 <Building2 className="h-4 w-4 text-[#1a202c]" />
                 {t('documents.viewIncoming.badge.director')}
               </span>
@@ -300,25 +328,25 @@ const ViewIncomingDocument: React.FC = () => {
 
             {/* Answer Status Badge */}
             {isAnswerDeleted ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-amber-50 text-amber-900 border border-amber-300">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-semibold bg-amber-50/90 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60">
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 {t('documents.viewIncoming.badge.answerInTrash')}
               </span>
             ) : document.answer ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-semibold bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 {t('documents.viewIncoming.badge.processedAndReplied')}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-base font-bold bg-amber-50 text-[#1a202c] border border-[#FFD758]">
-                <Clock className="h-4 w-4 text-[#d69e2e]" />
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-base font-bold bg-amber-50/90 dark:bg-amber-950/50 text-[#1a202c] dark:text-amber-200 border border-[#FFD758] dark:border-amber-800/60">
+                <Clock className="h-4 w-4 text-[#d69e2e] dark:text-amber-400" />
                 {t('documents.viewIncoming.badge.pendingProcessing')}
               </span>
             )}
 
             {/* Document Type Badge (Institutional Gold with Dark Text) */}
             {document.typeDocument && (
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded text-base font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]">
+              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-base font-bold bg-[#FFCB56] text-[#1a202c] border border-[#FFD758]">
                 <Bookmark className="h-4 w-4 text-[#1a202c]" />
                 {document.typeDocument}
               </span>
@@ -326,7 +354,7 @@ const ViewIncomingDocument: React.FC = () => {
 
             {/* Urgency Alert Badge if applicable */}
             {urgency && (
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-bold ${urgency.badgeColor}`}>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-base font-bold ${urgency.badgeColor}`}>
                 <AlertTriangle className="h-4 w-4" />
                 {t('documents.viewIncoming.badge.priority', { priority: urgency.label })}
               </span>
@@ -334,18 +362,18 @@ const ViewIncomingDocument: React.FC = () => {
           </div>
 
           {/* Registration Date Pill */}
-          <div className="text-sm font-medium text-[#5f6b7d] flex items-center gap-1.5">
-            <Clock className="h-4 w-4 text-[#718096]" />
-            <span>{t('documents.viewIncoming.badge.registeredOn', { date: formatArabicDateTime(document.createdAt) })}</span>
+          <div className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5 tabular-nums">
+            <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+            <span>{t('documents.viewIncoming.badge.registeredOn', { date: formatDateTime(document.createdAt, dateLang) })}</span>
           </div>
         </div>
 
         {/* Document Main Subject (H2 display) */}
         <div className="space-y-2">
-          <span className="text-xs font-semibold text-[#5f6b7d] tracking-wider uppercase">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
             {t('documents.viewIncoming.subject.title')}
           </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] leading-relaxed">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 leading-relaxed">
             {document.subject}
           </h2>
         </div>
@@ -353,56 +381,57 @@ const ViewIncomingDocument: React.FC = () => {
         {/* 4 Key Metrics Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
           {/* 1. Source / Sender */}
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
-              <Building2 className="h-4 w-4 text-[#2c5282]" />
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <Building2 className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.source')}</span>
             </div>
-            <p className="text-base font-bold text-[#1a202c] truncate" title={document.source || t('documents.viewIncoming.fallback.unspecified')}>
+            <p className="text-base font-bold text-slate-900 dark:text-slate-100 truncate" title={document.source || t('documents.viewIncoming.fallback.unspecified')}>
               {document.source || t('documents.viewIncoming.fallback.unspecified')}
             </p>
           </div>
 
           {/* 2. Arrival Date */}
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
-              <Calendar className="h-4 w-4 text-[#2c5282]" />
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <Calendar className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.arrivalDate')}</span>
             </div>
-            <p className="text-base font-bold text-[#1a202c]">
-              <bdi dir="ltr">{formatArabicDate(document.arrivalDate)}</bdi>
+            <p className="text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+              <bdi dir={dateDir}>{formatLongDate(document.arrivalDate, dateLang)}</bdi>
             </p>
           </div>
 
           {/* 3. Original Correspondence */}
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
-              <Hash className="h-4 w-4 text-[#2c5282]" />
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <Hash className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.originalCorrespondence')}</span>
             </div>
-            <p className="text-base font-bold text-[#1a202c]">
+            <div className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 flex-wrap tabular-nums">
               {document.correspondenceNumber ? (
                 <>
                   <span><bdi dir="ltr">#{document.correspondenceNumber}</bdi></span>
+                  <CopyReferenceButton value={document.correspondenceNumber} />
                   {document.correspondenceDate && (
-                    <span className="text-xs text-[#5f6b7d] font-normal me-1.5">
-                      (<bdi dir="ltr">{formatArabicDate(document.correspondenceDate)}</bdi>)
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal me-1.5 tabular-nums">
+                      (<bdi dir={dateDir}>{formatLongDate(document.correspondenceDate, dateLang)}</bdi>)
                     </span>
                   )}
                 </>
               ) : (
                 t('documents.viewIncoming.fallback.notRecorded')
               )}
-            </p>
+            </div>
           </div>
 
           {/* 4. Responsible Officer */}
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-[#5f6b7d]">
-              <User className="h-4 w-4 text-[#2c5282]" />
+          <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <User className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <span className="font-semibold">{t('documents.viewIncoming.metric.responsible')}</span>
             </div>
-            <p className="text-base font-bold text-[#1a202c] truncate">
+            <p className="text-base font-bold text-slate-900 dark:text-slate-100 truncate">
               {responsibleName}
             </p>
           </div>
@@ -416,54 +445,66 @@ const ViewIncomingDocument: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Section: General & Correspondence Details */}
-          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-5">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-[#e2e8f0]">
-              <div className="w-9 h-9 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-5">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+              <div className="w-9 h-9 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/70 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">
                 <FileText className="h-5 w-5" />
               </div>
-              <h3 className="text-xl font-bold text-[#1a202c]">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 {t('documents.viewIncoming.adminInfo.sectionTitle')}
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-base">
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.internalSerial')}</span>
-                <span className="text-base font-bold text-[#1a202c]"><bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi></span>
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.internalSerial')}</span>
+                <div className="inline-flex items-center gap-1.5 text-base font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                  <bdi dir="ltr">#{document.serialNumber} / {document.year}</bdi>
+                  <CopyReferenceButton value={`#${document.serialNumber} / ${document.year}`} />
+                </div>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.arrivalDateAtInstitution')}</span>
-                <span className="text-base font-medium text-[#1a202c]"><bdi dir="ltr">{formatArabicDate(document.arrivalDate)}</bdi></span>
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.arrivalDateAtInstitution')}</span>
+                <span className="text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums"><bdi dir={dateDir}>{formatLongDate(document.arrivalDate, dateLang)}</bdi></span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.senderCorrespondenceNumber')}</span>
-                <span className="text-base font-medium text-[#1a202c]">{document.correspondenceNumber ? <bdi dir="ltr">{document.correspondenceNumber}</bdi> : t('documents.viewIncoming.fallback.none')}</span>
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.senderCorrespondenceNumber')}</span>
+                <div className="inline-flex items-center gap-1.5 text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums">
+                  {document.correspondenceNumber ? (
+                    <>
+                      <bdi dir="ltr">{document.correspondenceNumber}</bdi>
+                      <CopyReferenceButton value={document.correspondenceNumber} />
+                    </>
+                  ) : (
+                    t('documents.viewIncoming.fallback.none')
+                  )}
+                </div>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.originalIssueDate')}</span>
-                <span className="text-base font-medium text-[#1a202c]">
-                  {document.correspondenceDate ? <bdi dir="ltr">{formatArabicDate(document.correspondenceDate)}</bdi> : t('documents.viewIncoming.fallback.unspecified')}
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.originalIssueDate')}</span>
+                <span className="text-base font-medium text-slate-900 dark:text-slate-100 tabular-nums">
+                  {document.correspondenceDate ? <bdi dir={dateDir}>{formatLongDate(document.correspondenceDate, dateLang)}</bdi> : t('documents.viewIncoming.fallback.unspecified')}
                 </span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.documentType')}</span>
-                <span className="text-base font-medium text-[#1a202c]">{document.typeDocument || t('documents.viewIncoming.fallback.unclassified')}</span>
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.documentType')}</span>
+                <span className="text-base font-medium text-slate-900 dark:text-slate-100">{document.typeDocument || t('documents.viewIncoming.fallback.unclassified')}</span>
               </div>
 
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.adminInfo.relatedActivity')}</span>
-                <span className="text-base font-medium text-[#1a202c]">
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.adminInfo.relatedActivity')}</span>
+                <span className="text-base font-medium text-slate-900 dark:text-slate-100">
                   {document.activity ? (
-                    <span className="inline-flex items-center gap-1.5 text-[#2c5282] font-semibold">
+                    <span className="inline-flex items-center gap-1.5 text-[#2c5282] dark:text-blue-300 font-semibold">
                       <Bookmark className="h-4 w-4" />
                       {document.activity}
                       {document.dateActivity && (
-                        <span className="text-xs text-[#5f6b7d] font-normal">
-                          {t('documents.viewIncoming.adminInfo.onDate', { date: formatArabicDate(document.dateActivity) })}
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-normal tabular-nums">
+                          {t('documents.viewIncoming.adminInfo.onDate', { date: formatLongDate(document.dateActivity, dateLang) })}
                         </span>
                       )}
                     </span>
@@ -476,42 +517,42 @@ const ViewIncomingDocument: React.FC = () => {
           </div>
 
           {/* Section: Sender & Target Departments */}
-          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-5">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-[#e2e8f0]">
-              <div className="w-9 h-9 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-5">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+              <div className="w-9 h-9 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/70 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">
                 <Building2 className="h-5 w-5" />
               </div>
-              <h3 className="text-xl font-bold text-[#1a202c]">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 {t('documents.viewIncoming.sender.sectionTitle')}
               </h3>
             </div>
 
             <div className="space-y-4 text-base">
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.sender.sourceLabel')}</span>
-                <p className="text-base font-bold text-[#1a202c]">
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.sender.sourceLabel')}</span>
+                <p className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {document.source || t('documents.viewIncoming.fallback.unspecified')}
                 </p>
               </div>
 
-              <Separator />
+              <Separator className="dark:bg-slate-800" />
 
               <div>
-                <span className="text-sm font-semibold text-[#5f6b7d] block mb-2">{t('documents.viewIncoming.sender.assignedDepartments')}</span>
+                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 block mb-2">{t('documents.viewIncoming.sender.assignedDepartments')}</span>
                 {document.assignedTo && document.assignedTo.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {document.assignedTo.map((dept, index) => (
                       <span 
                         key={index} 
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-semibold bg-slate-100 text-[#2d3748] border border-slate-300"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700"
                       >
-                        <Users className="h-4 w-4 text-[#718096]" />
+                        <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                         {dept.name}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-base text-[#5f6b7d]">{t('documents.viewIncoming.sender.noDepartments')}</p>
+                  <p className="text-base text-slate-500 dark:text-slate-400">{t('documents.viewIncoming.sender.noDepartments')}</p>
                 )}
               </div>
             </div>
@@ -519,17 +560,17 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* Section: OCR Text (if present) */}
           {document.ocrText && (
-            <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded bg-amber-50 border border-[#FFD758] text-[#1a202c] flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-[#1a202c]" />
+                  <div className="w-9 h-9 rounded-lg bg-amber-50/90 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 flex items-center justify-center">
+                    <FileText className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-[#1a202c]">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                       {t('documents.viewIncoming.ocr.title')}
                     </h3>
-                    <p className="text-xs text-[#5f6b7d]">{t('documents.viewIncoming.ocr.subtitle')}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('documents.viewIncoming.ocr.subtitle')}</p>
                   </div>
                 </div>
 
@@ -538,23 +579,23 @@ const ViewIncomingDocument: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleCopyOcr}
-                  className="h-11 px-3 text-sm font-semibold border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-1.5"
+                  className="h-10 px-3 text-sm font-semibold border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg flex items-center gap-1.5"
                 >
                   {isCopiedOcr ? (
                     <>
-                      <Check className="h-4 w-4 text-emerald-600" />
-                      <span className="text-emerald-700">{t('documents.viewIncoming.ocr.copied')}</span>
+                      <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-700 dark:text-emerald-300">{t('documents.viewIncoming.ocr.copied')}</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="h-4 w-4 text-[#2c5282]" />
+                      <Copy className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
                       <span>{t('documents.viewIncoming.ocr.copy')}</span>
                     </>
                   )}
                 </Button>
               </div>
 
-              <div className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-base leading-relaxed text-[#2d3748] max-h-72 overflow-y-auto font-sans whitespace-pre-wrap">
+              <div className="p-4 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg text-base leading-relaxed text-slate-800 dark:text-slate-200 max-h-72 overflow-y-auto font-sans whitespace-pre-wrap">
                 {document.ocrText}
               </div>
             </div>
@@ -571,59 +612,60 @@ const ViewIncomingDocument: React.FC = () => {
 
           {/* Section: Linked Answer / Outgoing Document */}
           {isAnswerDeleted && populatedAnswer ? (
-            <div className="bg-amber-50/40 border border-amber-300 rounded p-6 space-y-4">
-              <div className="flex items-center justify-between gap-3 pb-3 border-b border-amber-200 flex-wrap">
+            <div className="bg-amber-50/50 dark:bg-amber-950/30 border border-amber-300/80 dark:border-amber-800/60 rounded-lg shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-amber-200/80 dark:border-amber-800/60 flex-wrap">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/50 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 flex items-center justify-center">
                     <AlertTriangle className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-amber-900">
+                    <h3 className="text-xl font-bold text-amber-900 dark:text-amber-200">
                       {t('documents.viewIncoming.answer.deletedInTrashTitle')}
                     </h3>
-                    <p className="text-xs text-amber-800">
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
                       {t('documents.viewIncoming.answer.deletedInTrashSubtitle')}
                     </p>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300/80 dark:border-amber-700">
                   {t('documents.viewIncoming.answer.deletedInTrashBadge')}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
                 <div>
-                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
-                  <span className="font-bold text-[#1a202c]">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
+                  <div className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                     <bdi dir="ltr">#{populatedAnswer.serialNumber} / {populatedAnswer.year}</bdi>
-                  </span>
+                    <CopyReferenceButton value={`#${populatedAnswer.serialNumber} / ${populatedAnswer.year}`} />
+                  </div>
                   {populatedAnswer.issueDate && (
-                    <span className="text-xs text-[#5f6b7d] me-1.5 block">
-                      {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatArabicDate(populatedAnswer.issueDate) })}
+                    <span className="text-xs text-slate-500 dark:text-slate-400 me-1.5 block tabular-nums">
+                      {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatLongDate(populatedAnswer.issueDate, dateLang) })}
                     </span>
                   )}
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
-                  <p className="font-medium text-[#1a202c] line-clamp-2">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
+                  <p className="font-medium text-slate-900 dark:text-slate-100 line-clamp-2">
                     {populatedAnswer.subject}
                   </p>
                 </div>
               </div>
             </div>
           ) : answerDocument && (
-            <div className="bg-white border border-emerald-200 rounded p-6 space-y-4 bg-emerald-50/20">
-              <div className="flex items-center justify-between pb-3 border-b border-emerald-200">
+            <div className="bg-emerald-50/40 dark:bg-emerald-950/25 border border-emerald-200/80 dark:border-emerald-800/60 rounded-lg shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-emerald-200/80 dark:border-emerald-800/60">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 flex items-center justify-center">
                     <FileOutput className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-emerald-900">
+                    <h3 className="text-xl font-bold text-emerald-900 dark:text-emerald-200">
                       {t('documents.viewIncoming.answer.title')}
                     </h3>
-                    <p className="text-xs text-emerald-700">{t('documents.viewIncoming.answer.subtitle')}</p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">{t('documents.viewIncoming.answer.subtitle')}</p>
                   </div>
                 </div>
 
@@ -631,7 +673,7 @@ const ViewIncomingDocument: React.FC = () => {
                   type="button"
                   size="sm"
                   onClick={() => navigate(`/dashboard/outgoing-documents/${answerDocument._id}`)}
-                  className="h-9 px-3.5 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-1.5"
+                  className="h-9 px-3.5 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg flex items-center gap-1.5"
                 >
                   <Eye className="h-4 w-4" />
                   <span>{t('documents.viewIncoming.answer.viewDetails')}</span>
@@ -640,18 +682,19 @@ const ViewIncomingDocument: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-base">
                 <div>
-                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
-                  <span className="font-bold text-[#1a202c]">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.outgoingNumberAndDate')}</span>
+                  <div className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                     <bdi dir="ltr">#{answerDocument.serialNumber} / {answerDocument.year}</bdi>
-                  </span>
-                  <span className="text-xs text-[#5f6b7d] me-1.5 block">
-                    {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatArabicDate(answerDocument.issueDate) })}
+                    <CopyReferenceButton value={`#${answerDocument.serialNumber} / ${answerDocument.year}`} />
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 me-1.5 block tabular-nums">
+                    {t('documents.viewIncoming.answer.issueDatePrefix', { date: formatLongDate(answerDocument.issueDate, dateLang) })}
                   </span>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <span className="text-xs font-semibold text-[#5f6b7d] block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
-                  <p className="font-medium text-[#1a202c] line-clamp-2">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('documents.viewIncoming.answer.subject')}</span>
+                  <p className="font-medium text-slate-900 dark:text-slate-100 line-clamp-2">
                     {answerDocument.subject}
                   </p>
                 </div>
@@ -664,11 +707,11 @@ const ViewIncomingDocument: React.FC = () => {
         <div className="space-y-6">
           
           {/* Card: Folder Categorization */}
-          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <FolderOpen className="h-5 w-5 text-[#2c5282]" />
-                <h3 className="text-lg font-bold text-[#1a202c]">{t('documents.viewIncoming.sidebar.folder.title')}</h3>
+                <FolderOpen className="h-5 w-5 text-[#2c5282] dark:text-blue-300" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('documents.viewIncoming.sidebar.folder.title')}</h3>
               </div>
               {canOrganizeDocuments && (
                 <Button
@@ -676,32 +719,32 @@ const ViewIncomingDocument: React.FC = () => {
                   variant="ghost"
                   size="default"
                   onClick={() => setIsFolderDialogOpen(true)}
-                  className="h-11 px-3 text-sm font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
+                  className="h-10 px-3 text-sm font-semibold text-[#2c5282] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg"
                 >
                   {t('documents.viewIncoming.sidebar.folder.change')}
                 </Button>
               )}
             </div>
 
-            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center gap-3">
-              <FolderTree className="h-6 w-6 text-[#718096] flex-shrink-0" />
+            <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg flex items-center gap-3">
+              <FolderTree className="h-6 w-6 text-slate-500 dark:text-slate-400 flex-shrink-0" />
               <div>
-                <span className="text-xs text-[#5f6b7d] block">{t('documents.viewIncoming.sidebar.folder.current')}</span>
-                <span className="text-base font-bold text-[#1a202c]">{folderName}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 block">{t('documents.viewIncoming.sidebar.folder.current')}</span>
+                <span className="text-base font-bold text-slate-900 dark:text-slate-100">{folderName}</span>
               </div>
             </div>
 
-            <p className="text-xs text-[#5f6b7d] leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               {t('documents.viewIncoming.sidebar.folder.description')}
             </p>
           </div>
 
           {/* Card: Responsible Officer */}
-          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-[#2c5282]" />
-                <h3 className="text-lg font-bold text-[#1a202c]">{t('documents.viewIncoming.sidebar.responsible.title')}</h3>
+                <User className="h-5 w-5 text-[#2c5282] dark:text-blue-300" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('documents.viewIncoming.sidebar.responsible.title')}</h3>
               </div>
               {canAssignOrRespond && (
                 <Button
@@ -709,44 +752,44 @@ const ViewIncomingDocument: React.FC = () => {
                   variant="ghost"
                   size="default"
                   onClick={() => setIsResponsibleDialogOpen(true)}
-                  className="h-11 px-3 text-sm font-semibold text-[#2c5282] hover:bg-blue-50 rounded"
+                  className="h-10 px-3 text-sm font-semibold text-[#2c5282] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg"
                 >
                   {t('documents.viewIncoming.sidebar.responsible.assign')}
                 </Button>
               )}
             </div>
 
-            <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center flex-shrink-0 font-bold">
+            <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/70 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center flex-shrink-0 font-bold">
                 {responsibleName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <span className="text-xs text-[#5f6b7d] block">{t('documents.viewIncoming.sidebar.responsible.assignedTo')}</span>
-                <span className="text-base font-bold text-[#1a202c]">{responsibleName}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 block">{t('documents.viewIncoming.sidebar.responsible.assignedTo')}</span>
+                <span className="text-base font-bold text-slate-900 dark:text-slate-100">{responsibleName}</span>
               </div>
             </div>
           </div>
 
           {/* Card: Document Stats & Timeline Highlights */}
-          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-[#e2e8f0]">
-              <History className="h-5 w-5 text-[#2c5282]" />
-              <h3 className="text-lg font-bold text-[#1a202c]">{t('documents.viewIncoming.sidebar.summary.title')}</h3>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+              <History className="h-5 w-5 text-[#2c5282] dark:text-blue-300" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('documents.viewIncoming.sidebar.summary.title')}</h3>
             </div>
 
-            <ul className="space-y-3 text-sm text-[#4a5568]">
+            <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <span className="font-semibold text-[#1a202c] block">{t('documents.viewIncoming.sidebar.summary.arrivalRegistration')}</span>
-                  <span><bdi dir="ltr">{formatArabicDate(document.arrivalDate)}</bdi></span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 block">{t('documents.viewIncoming.sidebar.summary.arrivalRegistration')}</span>
+                  <span className="tabular-nums"><bdi dir={dateDir}>{formatLongDate(document.arrivalDate, dateLang)}</bdi></span>
                 </div>
               </li>
 
               <li className="flex items-start gap-2.5">
-                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.responsibleUser ? 'text-emerald-600' : 'text-[#a0aec0]'}`} />
+                <CheckCircle2 className={`h-4 w-4 mt-0.5 flex-shrink-0 ${document.responsibleUser ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
                 <div>
-                  <span className="font-semibold text-[#1a202c] block">{t('documents.viewIncoming.sidebar.summary.responsibleAssignment')}</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 block">{t('documents.viewIncoming.sidebar.summary.responsibleAssignment')}</span>
                   <span>{document.responsibleUser ? responsibleName : t('documents.viewIncoming.sidebar.summary.pending')}</span>
                 </div>
               </li>
@@ -757,12 +800,12 @@ const ViewIncomingDocument: React.FC = () => {
                     isAnswerDeleted
                       ? 'text-amber-500'
                       : document.answer
-                        ? 'text-emerald-600'
-                        : 'text-[#a0aec0]'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-400 dark:text-slate-500'
                   }`}
                 />
                 <div>
-                  <span className="font-semibold text-[#1a202c] block">{t('documents.viewIncoming.sidebar.summary.outgoingAnswer')}</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 block">{t('documents.viewIncoming.sidebar.summary.outgoingAnswer')}</span>
                   <span>
                     {isAnswerDeleted
                       ? t('documents.viewIncoming.sidebar.summary.answerInTrash')
@@ -778,91 +821,177 @@ const ViewIncomingDocument: React.FC = () => {
       </div>
 
       {/* 4. PIÈCES JOINTES ET VISUALISATION PDF (Attachments & PDF Viewer) */}
-      <div ref={pdfSectionRef} className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+      {isPdfExpanded && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs"
+          onClick={() => setIsPdfExpanded(false)}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        ref={pdfSectionRef}
+        className={
+          isPdfExpanded
+            ? 'fixed inset-3 sm:inset-5 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-4 sm:p-6 space-y-4 overflow-y-auto'
+            : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 sm:p-8 space-y-6'
+        }
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0] dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+            <div className="w-10 h-10 rounded bg-[#ebf4ff] dark:bg-blue-950/50 border border-[#bee3f8] dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">
               <Paperclip className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100">
                 {t('documents.viewIncoming.attachments.title')}
               </h2>
-              <p className="text-base text-[#4a5568]">
+              <p className="text-base text-[#4a5568] dark:text-slate-300">
                 {t('documents.viewIncoming.attachments.subtitle')}
               </p>
             </div>
           </div>
 
-          {/* View Mode Tabs (if dual preview exists) */}
-          {document.scannedDocument && answerDocument?.scannedDocument && (
-            <div className="inline-flex items-center border border-[#cbd5e1] rounded bg-white overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setPreviewTab('incoming')}
-                className={`h-9 px-3 text-sm font-semibold transition-colors duration-200 ${
-                  previewTab === 'incoming' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
-                }`}
-              >
-                {t('documents.viewIncoming.viewer.tab.incoming')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreviewTab('answer')}
-                className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] transition-colors duration-200 ${
-                  previewTab === 'answer' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
-                }`}
-              >
-                {t('documents.viewIncoming.viewer.tab.answer')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreviewTab('split')}
-                className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] transition-colors duration-200 ${
-                  previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] hover:bg-gray-50'
-                }`}
-              >
-                {t('documents.viewIncoming.viewer.tab.split')}
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* View Mode Tabs (if dual preview exists) */}
+            {document.scannedDocument && answerDocument?.scannedDocument && (
+              <div className="inline-flex items-center border border-[#cbd5e1] dark:border-slate-700 rounded bg-white dark:bg-slate-900 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('incoming')}
+                  className={`h-9 px-3 text-sm font-semibold transition-colors duration-200 ${
+                    previewTab === 'incoming' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {t('documents.viewIncoming.viewer.tab.incoming')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('answer')}
+                  className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] dark:border-slate-700 transition-colors duration-200 ${
+                    previewTab === 'answer' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {t('documents.viewIncoming.viewer.tab.answer')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('split')}
+                  className={`h-9 px-3 text-sm font-semibold border-s border-[#cbd5e1] dark:border-slate-700 transition-colors duration-200 ${
+                    previewTab === 'split' ? 'bg-[#2c5282] text-white' : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {t('documents.viewIncoming.viewer.tab.split')}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* PDF Content Display */}
         {document.scannedDocument || answerDocument?.scannedDocument ? (
-          <div>
+          <div className="space-y-4">
+            {/* Expandable PDF Preview Toolbar */}
+            {(() => {
+              const activePdfPath =
+                previewTab === 'answer' && answerDocument?.scannedDocument
+                  ? answerDocument.scannedDocument
+                  : document.scannedDocument || answerDocument?.scannedDocument || '';
+
+              return (
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-lg border border-slate-200/80 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800/60">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    <Eye className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
+                    <span>
+                      {isFr
+                        ? previewTab === 'split'
+                          ? 'Vue comparative des documents'
+                          : previewTab === 'answer'
+                            ? 'Document de réponse'
+                            : 'Document entrant numérisé'
+                        : previewTab === 'split'
+                          ? 'عرض مقارن للوثيقتين'
+                          : previewTab === 'answer'
+                            ? 'وثيقة الرد الصادر'
+                            : 'الوثيقة الواردة الممسوحة'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsPdfExpanded((prev) => !prev)}
+                      className="h-9 px-3 text-xs sm:text-sm font-semibold border-slate-300 dark:border-slate-600 text-[#2c5282] dark:text-blue-200 bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-md flex items-center gap-1.5"
+                    >
+                      {isPdfExpanded ? (
+                        <>
+                          <Minimize2 className="h-4 w-4" />
+                          <span>{isFr ? "Réduire l'aperçu" : 'تصغير المعاينة'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="h-4 w-4" />
+                          <span>{isFr ? "Agrandir l'aperçu" : 'توسيع المعاينة'}</span>
+                        </>
+                      )}
+                    </Button>
+
+                    {activePdfPath && (
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-3 text-xs sm:text-sm font-semibold border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                      >
+                        <a
+                          href={getDocumentUrl(activePdfPath)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          <span>{isFr ? 'Ouvrir dans un nouvel onglet' : 'فتح في تبويب جديد'}</span>
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Split View for Dual Preview */}
             {previewTab === 'split' && document.scannedDocument && answerDocument?.scannedDocument ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left (Incoming) */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                  <div className="flex items-center justify-between p-3 bg-[#f8fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded">
                     <div className="flex items-center gap-2">
-                      <FileInput className="h-4 w-4 text-[#2c5282]" />
-                      <span className="text-base font-bold text-[#1a202c]">{t('documents.viewIncoming.viewer.label.originalIncoming')}</span>
+                      <FileInput className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
+                      <span className="text-base font-bold text-[#1a202c] dark:text-slate-100">{t('documents.viewIncoming.viewer.label.originalIncoming')}</span>
                     </div>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={handleDownloadPDF}
-                      className="h-11 px-3 text-xs font-semibold text-[#2c5282] border-[#cbd5e1]"
+                      className="h-10 px-3 text-xs font-semibold text-[#2c5282] dark:text-blue-200 border-[#cbd5e1] dark:border-slate-700"
                     >
                       <Download className="h-3.5 w-3.5 me-1" />
                       {t('documents.viewIncoming.viewer.button.download')}
                     </Button>
                   </div>
-                  <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[500px]">
-                    <PDFViewer documentPath={document.scannedDocument} />
+                  <div className="border border-[#e2e8f0] dark:border-slate-800 rounded overflow-hidden min-h-[500px]">
+                    <PDFViewer documentPath={document.scannedDocument} expanded={isPdfExpanded} />
                   </div>
                 </div>
 
                 {/* Right (Outgoing Answer) */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                  <div className="flex items-center justify-between p-3 bg-[#f8fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded">
                     <div className="flex items-center gap-2">
-                      <FileOutput className="h-4 w-4 text-emerald-700" />
-                      <span className="text-base font-bold text-emerald-900">{t('documents.viewIncoming.viewer.label.outgoingAnswer')}</span>
+                      <FileOutput className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                      <span className="text-base font-bold text-emerald-900 dark:text-emerald-200">{t('documents.viewIncoming.viewer.label.outgoingAnswer')}</span>
                     </div>
                     {answerDocument.scannedDocument && (
                       <Button
@@ -870,25 +999,25 @@ const ViewIncomingDocument: React.FC = () => {
                         variant="outline"
                         size="default"
                         onClick={() => downloadDocument(answerDocument.scannedDocument!, `answer-${answerDocument.serialNumber}.pdf`)}
-                        className="h-11 px-3 text-sm font-semibold text-emerald-800 border-[#cbd5e1] hover:bg-emerald-50 rounded flex items-center gap-1.5"
+                        className="h-10 px-3 text-sm font-semibold text-emerald-800 dark:text-emerald-200 border-[#cbd5e1] dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded flex items-center gap-1.5"
                       >
                         <Download className="h-4 w-4" />
                         <span>{t('documents.viewIncoming.viewer.button.download')}</span>
                       </Button>
                     )}
                   </div>
-                  <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[500px]">
-                    <PDFViewer documentPath={answerDocument.scannedDocument} />
+                  <div className="border border-[#e2e8f0] dark:border-slate-800 rounded overflow-hidden min-h-[500px]">
+                    <PDFViewer documentPath={answerDocument.scannedDocument} expanded={isPdfExpanded} />
                   </div>
                 </div>
               </div>
             ) : previewTab === 'answer' && answerDocument?.scannedDocument ? (
               /* Answer Document Viewer */
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                <div className="flex items-center justify-between p-3.5 bg-[#f8fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded">
                   <div className="flex items-center gap-2">
-                    <FileOutput className="h-5 w-5 text-emerald-700" />
-                    <span className="text-base font-bold text-[#1a202c]">
+                    <FileOutput className="h-5 w-5 text-emerald-700 dark:text-emerald-400" />
+                    <span className="text-base font-bold text-[#1a202c] dark:text-slate-100">
                       {t('documents.viewIncoming.viewer.label.answerAttachment', { serialNumber: answerDocument.serialNumber, year: answerDocument.year })}
                     </span>
                   </div>
@@ -897,23 +1026,23 @@ const ViewIncomingDocument: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => downloadDocument(answerDocument.scannedDocument!, `answer-${answerDocument.serialNumber}.pdf`)}
-                    className="h-9 px-3 text-sm font-semibold text-emerald-800 border-[#cbd5e1]"
+                    className="h-9 px-3 text-sm font-semibold text-emerald-800 dark:text-emerald-200 border-[#cbd5e1] dark:border-slate-700"
                   >
                     <Download className="h-4 w-4 me-1.5" />
                     {t('documents.viewIncoming.viewer.button.downloadPdf')}
                   </Button>
                 </div>
-                <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[600px]">
-                  <PDFViewer documentPath={answerDocument.scannedDocument} />
+                <div className="border border-[#e2e8f0] dark:border-slate-800 rounded overflow-hidden min-h-[600px]">
+                  <PDFViewer documentPath={answerDocument.scannedDocument} expanded={isPdfExpanded} />
                 </div>
               </div>
             ) : document.scannedDocument ? (
               /* Incoming Document Single Viewer */
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                <div className="flex items-center justify-between p-3.5 bg-[#f8fafc] dark:bg-slate-800/50 border border-[#e2e8f0] dark:border-slate-700 rounded">
                   <div className="flex items-center gap-2">
-                    <FileInput className="h-5 w-5 text-[#2c5282]" />
-                    <span className="text-base font-bold text-[#1a202c]">
+                    <FileInput className="h-5 w-5 text-[#2c5282] dark:text-blue-300" />
+                    <span className="text-base font-bold text-[#1a202c] dark:text-slate-100">
                       {t('documents.viewIncoming.viewer.label.incomingAttachment', { serialNumber: document.serialNumber, year: document.year })}
                     </span>
                   </div>
@@ -922,33 +1051,33 @@ const ViewIncomingDocument: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={handleDownloadPDF}
-                    className="h-11 px-3 text-sm font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-gray-50"
+                    className="h-10 px-3 text-sm font-semibold text-[#2c5282] dark:text-blue-200 border-[#cbd5e1] dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800"
                   >
                     <Download className="h-4 w-4 me-1.5" />
                     {t('documents.viewIncoming.viewer.button.downloadPdf')}
                   </Button>
                 </div>
-                <div className="border border-[#e2e8f0] rounded overflow-hidden min-h-[600px]">
-                  <PDFViewer documentPath={document.scannedDocument} />
+                <div className="border border-[#e2e8f0] dark:border-slate-800 rounded overflow-hidden min-h-[600px]">
+                  <PDFViewer documentPath={document.scannedDocument} expanded={isPdfExpanded} />
                 </div>
               </div>
             ) : null}
           </div>
         ) : (
           /* Empty Attachments State */
-          <div className="p-8 sm:p-12 text-center bg-[#f8fafc] border border-[#e2e8f0] rounded space-y-3">
-            <div className="w-14 h-14 rounded bg-white border border-[#e2e8f0] flex items-center justify-center mx-auto text-[#5f6b7d]">
-              <Paperclip className="h-7 w-7 text-[#718096]" />
+          <div className="p-8 sm:p-12 text-center bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700 rounded-lg space-y-3">
+            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center mx-auto text-slate-500 dark:text-slate-400">
+              <Paperclip className="h-7 w-7 text-slate-400 dark:text-slate-500" />
             </div>
-            <h3 className="text-lg font-bold text-[#1a202c]">{t('documents.viewIncoming.attachments.empty.title')}</h3>
-            <p className="text-base text-[#5f6b7d] max-w-md mx-auto leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t('documents.viewIncoming.attachments.empty.title')}</h3>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
               {t('documents.viewIncoming.attachments.empty.description')}
             </p>
             {canEdit && (
               <Button
                 type="button"
                 onClick={() => navigate(`/dashboard/incoming-documents/${id}/edit`)}
-                className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+                className="h-10 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg transition-colors duration-200"
               >
                 {t('documents.viewIncoming.attachments.empty.attachButton')}
               </Button>
@@ -958,12 +1087,12 @@ const ViewIncomingDocument: React.FC = () => {
       </div>
 
       {/* 5. ACTIONS DISPONIBLES (Dedicated Administrative Actions Bar) */}
-      <div ref={actionsSectionRef} className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-4">
-        <div className="pb-3 border-b border-[#e2e8f0]">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+      <div ref={actionsSectionRef} className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 sm:p-8 space-y-4">
+        <div className="pb-3 border-b border-slate-200/80 dark:border-slate-800">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
             {t('documents.viewIncoming.actions.title')}
           </h2>
-          <p className="text-base text-[#4a5568] mt-0.5">
+          <p className="text-base text-slate-600 dark:text-slate-300 mt-0.5">
             {t('documents.viewIncoming.actions.subtitle')}
           </p>
         </div>
@@ -975,7 +1104,7 @@ const ViewIncomingDocument: React.FC = () => {
               type="button"
               variant="outline"
               onClick={handleScrollToPDF}
-              className="h-11 px-5 text-base font-semibold text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-5 text-base font-semibold text-[#2c5282] dark:text-blue-300 border-blue-200/80 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg flex items-center gap-2 transition-colors duration-200"
             >
               <Eye className="h-4 w-4" />
               <span>{t('documents.viewIncoming.actions.previewPdf')}</span>
@@ -987,7 +1116,7 @@ const ViewIncomingDocument: React.FC = () => {
             <Button
               type="button"
               onClick={() => setIsResponseDialogOpen(true)}
-              className="h-11 px-5 text-base font-bold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-5 text-base font-bold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] border border-[#FFD758] rounded-lg flex items-center gap-2 transition-colors duration-200"
             >
               <MessageSquare className="h-4 w-4 text-[#1a202c]" />
               <span>{document.answer ? t('documents.viewIncoming.actions.editOrReplaceAnswer') : t('documents.viewIncoming.actions.processAndReply')}</span>
@@ -1000,9 +1129,9 @@ const ViewIncomingDocument: React.FC = () => {
               type="button"
               variant="outline"
               onClick={() => setIsFolderDialogOpen(true)}
-              className="h-11 px-5 text-base font-semibold text-[#4a5568] border-[#cbd5e1] bg-slate-50 hover:bg-slate-100 rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-5 text-base font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg flex items-center gap-2 transition-colors duration-200"
             >
-              <FolderOpen className="h-4 w-4 text-[#4a5568]" />
+              <FolderOpen className="h-4 w-4 text-slate-600 dark:text-slate-300" />
               <span>{t('documents.viewIncoming.actions.archiveInFolder')}</span>
             </Button>
           )}
@@ -1013,9 +1142,9 @@ const ViewIncomingDocument: React.FC = () => {
               type="button"
               variant="outline"
               onClick={() => setIsResponsibleDialogOpen(true)}
-              className="h-11 px-5 text-base font-semibold text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 rounded flex items-center gap-2 transition-colors duration-200"
+              className="h-11 px-5 text-base font-semibold text-purple-700 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/60 bg-purple-50/80 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-lg flex items-center gap-2 transition-colors duration-200"
             >
-              <UserPlus className="h-4 w-4 text-purple-700" />
+              <UserPlus className="h-4 w-4 text-purple-700 dark:text-purple-300" />
               <span>{t('documents.viewIncoming.actions.assignResponsible')}</span>
             </Button>
           )}
@@ -1025,7 +1154,7 @@ const ViewIncomingDocument: React.FC = () => {
             type="button"
             variant="outline"
             onClick={() => navigate('/dashboard/incoming-documents')}
-            className="h-11 px-5 text-base font-medium text-[#2d3748] border-[#cbd5e1] hover:bg-gray-50 rounded flex items-center gap-2 transition-colors duration-200 ms-auto"
+            className="h-11 px-5 text-base font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 transition-colors duration-200 ms-auto"
           >
             <ArrowRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
             <span>{t('documents.viewIncoming.actions.backToList')}</span>
@@ -1043,17 +1172,17 @@ const ViewIncomingDocument: React.FC = () => {
       )}
 
       {/* 6. HISTORIQUE DE TRAITEMENT (Processing History & Audit Trail) */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6">
-        <div className="pb-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="pb-3 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded bg-[#ebf4ff] border border-[#bee3f8] text-[#2c5282] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/70 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">
               <History className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {t('documents.viewIncoming.timeline.title')}
               </h2>
-              <p className="text-base text-[#4a5568]">
+              <p className="text-base text-slate-600 dark:text-slate-300">
                 {t('documents.viewIncoming.timeline.subtitle')}
               </p>
             </div>
@@ -1062,21 +1191,21 @@ const ViewIncomingDocument: React.FC = () => {
 
         {/* Timeline Content */}
         {auditTimeline.length > 0 ? (
-          <div className="relative border-s border-[#cbd5e1] ps-6 ms-3 space-y-6">
+          <div className="relative border-s border-slate-300 dark:border-slate-700 ps-6 ms-3 space-y-6">
             {auditTimeline.map((item, index) => (
               <div key={item._id || index} className="relative group">
-                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
-                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white dark:border-slate-900" />
+                <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-base font-bold text-[#1a202c]">
+                    <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {item.action || t('documents.viewIncoming.timeline.fallback.action')}
                     </span>
-                    <span className="text-xs text-[#5f6b7d] font-medium">
-                      <bdi dir="ltr">{formatArabicDateTime(item.createdAt)}</bdi>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
+                      <bdi dir={dateDir}>{formatDateTime(item.createdAt, dateLang)}</bdi>
                     </span>
                   </div>
-                  <p className="text-sm text-[#4a5568]">
-                    {t('documents.viewIncoming.timeline.performedBy')} <span className="font-semibold text-[#1a202c]">{item.userDetails?.username || t('documents.viewIncoming.timeline.fallback.systemUser')}</span>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                    {t('documents.viewIncoming.timeline.performedBy')} <span className="font-semibold text-slate-900 dark:text-slate-100">{item.userDetails?.username || t('documents.viewIncoming.timeline.fallback.systemUser')}</span>
                   </p>
                 </div>
               </div>
@@ -1084,20 +1213,20 @@ const ViewIncomingDocument: React.FC = () => {
           </div>
         ) : (
           /* Institutional Lifecycle Fallback Timeline */
-          <div className="relative border-s border-[#cbd5e1] ps-6 ms-3 space-y-6">
+          <div className="relative border-s border-slate-300 dark:border-slate-700 ps-6 ms-3 space-y-6">
             {/* Step 1: Document Arrival / Registration */}
             <div className="relative">
-              <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
-              <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
+              <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white dark:border-slate-900" />
+              <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-base font-bold text-[#1a202c]">
+                  <span className="text-base font-bold text-slate-900 dark:text-slate-100">
                     {t('documents.viewIncoming.timeline.lifecycle.step1.title')}
                   </span>
-                  <span className="text-xs text-[#5f6b7d] font-medium">
-                    <bdi dir="ltr">{formatArabicDateTime(document.createdAt || document.arrivalDate)}</bdi>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
+                    <bdi dir={dateDir}>{formatDateTime(document.createdAt || document.arrivalDate, dateLang)}</bdi>
                   </span>
                 </div>
-                <p className="text-sm text-[#4a5568]">
+                <p className="text-sm text-slate-600 dark:text-slate-300">
                   {t('documents.viewIncoming.timeline.lifecycle.step1.description', {
                     serialNumber: document.serialNumber,
                     year: document.year,
@@ -1110,12 +1239,12 @@ const ViewIncomingDocument: React.FC = () => {
             {/* Step 2: Department Assignment */}
             {document.assignedTo && document.assignedTo.length > 0 && (
               <div className="relative">
-                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
-                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-                  <span className="text-base font-bold text-[#1a202c] block">
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white dark:border-slate-900" />
+                <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
+                  <span className="text-base font-bold text-slate-900 dark:text-slate-100 block">
                     {t('documents.viewIncoming.timeline.lifecycle.step2.title')}
                   </span>
-                  <p className="text-sm text-[#4a5568]">
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
                     {t('documents.viewIncoming.timeline.lifecycle.step2.description', {
                       departments: document.assignedTo.map(d => d.name).join(listSeparator)
                     })}
@@ -1127,12 +1256,12 @@ const ViewIncomingDocument: React.FC = () => {
             {/* Step 3: Responsible Officer Assignment */}
             {document.responsibleUser && (
               <div className="relative">
-                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
-                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-                  <span className="text-base font-bold text-[#1a202c] block">
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white dark:border-slate-900" />
+                <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
+                  <span className="text-base font-bold text-slate-900 dark:text-slate-100 block">
                     {t('documents.viewIncoming.timeline.lifecycle.step3.title')}
                   </span>
-                  <p className="text-sm text-[#4a5568]">
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
                     {t('documents.viewIncoming.timeline.lifecycle.step3.description', {
                       name: responsibleName
                     })}
@@ -1144,12 +1273,12 @@ const ViewIncomingDocument: React.FC = () => {
             {/* Step 4: Folder Categorization */}
             {document.folder && (
               <div className="relative">
-                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white" />
-                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 space-y-1">
-                  <span className="text-base font-bold text-[#1a202c] block">
+                <div className="absolute -start-[31px] top-1.5 w-4 h-4 rounded-full bg-[#2c5282] border-2 border-white dark:border-slate-900" />
+                <div className="bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-4 space-y-1">
+                  <span className="text-base font-bold text-slate-900 dark:text-slate-100 block">
                     {t('documents.viewIncoming.timeline.lifecycle.step4.title')}
                   </span>
-                  <p className="text-sm text-[#4a5568]">
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
                     {t('documents.viewIncoming.timeline.lifecycle.step4.description', {
                       folder: folderName
                     })}
@@ -1162,30 +1291,30 @@ const ViewIncomingDocument: React.FC = () => {
             {document.answer && (
               <div className="relative">
                 <div
-                  className={`absolute -start-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-white ${
+                  className={`absolute -start-[31px] top-1.5 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 ${
                     isAnswerDeleted ? 'bg-amber-500' : 'bg-emerald-600'
                   }`}
                 />
                 <div
-                  className={`rounded p-4 space-y-1 border ${
+                  className={`rounded-lg p-4 space-y-1 border ${
                     isAnswerDeleted
-                      ? 'bg-amber-50/40 border-amber-200'
-                      : 'bg-emerald-50/40 border-emerald-200'
+                      ? 'bg-amber-50/50 dark:bg-amber-950/30 border-amber-200/80 dark:border-amber-800/60'
+                      : 'bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/60'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className={`text-base font-bold ${isAnswerDeleted ? 'text-amber-900' : 'text-emerald-900'}`}>
+                    <span className={`text-base font-bold ${isAnswerDeleted ? 'text-amber-900 dark:text-amber-200' : 'text-emerald-900 dark:text-emerald-200'}`}>
                       {isAnswerDeleted
                         ? t('documents.viewIncoming.answer.deletedInTrashTitle')
                         : t('documents.viewIncoming.timeline.lifecycle.step5.title')}
                     </span>
                     {!isAnswerDeleted && answerDocument?.issueDate && (
-                      <span className="text-xs text-emerald-700 font-medium">
-                        <bdi dir="ltr">{formatArabicDate(answerDocument.issueDate)}</bdi>
+                      <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium tabular-nums">
+                        <bdi dir={dateDir}>{formatLongDate(answerDocument.issueDate, dateLang)}</bdi>
                       </span>
                     )}
                   </div>
-                  <p className={`text-sm ${isAnswerDeleted ? 'text-amber-800' : 'text-emerald-800'}`}>
+                  <p className={`text-sm ${isAnswerDeleted ? 'text-amber-800 dark:text-amber-300' : 'text-emerald-800 dark:text-emerald-300'}`}>
                     {isAnswerDeleted
                       ? t('documents.viewIncoming.answer.deletedInTrashSubtitle')
                       : t('documents.viewIncoming.timeline.lifecycle.step5.description', {

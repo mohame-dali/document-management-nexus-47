@@ -32,7 +32,7 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Department } from '@/types';
+import { Department, User } from '@/types';
 import { getDepartments, createDepartment } from '@/services/departmentService';
 import { 
   getOrganizationSettings, 
@@ -52,10 +52,11 @@ interface AccountCreatedInfo {
   username: string;
 }
 
-interface UserRecord extends Partial<User> {
+interface UserRecord extends Omit<Partial<User>, 'activeDepartment' | 'personnelId'> {
   _id: string;
   username: string;
   role: 'Director' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
+  activeDepartment?: Department | string | null;
   isDeleted?: boolean;
   personnelId?: string | { _id: string; nom?: string; prenom?: string } | null;
 }
@@ -162,8 +163,8 @@ const SetupWizardPage: React.FC = () => {
           const existingRh = usersList.find((u) => 
             !u.isDeleted && (
               (u.role === 'AdminDepartment' && currentRhDept && (
-                (u.activeDepartment?._id && u.activeDepartment._id === currentRhDept) ||
-                (u.activeDepartment as unknown as string) === currentRhDept
+                (typeof u.activeDepartment === 'object' && u.activeDepartment?._id === currentRhDept) ||
+                u.activeDepartment === currentRhDept
               )) ||
               u.username === 'rh_manager'
             )

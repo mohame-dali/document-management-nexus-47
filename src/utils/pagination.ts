@@ -1,40 +1,39 @@
 export type PaginationItem = number | 'ellipsis';
 
 /**
- * Generates a truncated list of page numbers with 'ellipsis' markers
- * for accessible pagination controls (always keeps first, last, and a window around currentPage).
+ * Computes pagination page numbers and ellipsis markers for a pager bar.
  */
 export function getPaginationItems(
   currentPage: number,
   totalPages: number,
   siblingCount = 1
 ): PaginationItem[] {
-  if (totalPages <= 1) return totalPages === 1 ? [1] : [];
-
-  const totalNumbers = siblingCount * 2 + 5; // first + last + current + 2*siblings + 2 ellipses
-  if (totalPages <= totalNumbers) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  if (totalPages <= 0) {
+    return [];
   }
 
-  const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-  const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+  const totalPageNumbers = siblingCount * 2 + 5;
+  if (totalPages <= totalPageNumbers) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
 
-  const showLeftEllipsis = leftSiblingIndex > 2;
-  const showRightEllipsis = rightSiblingIndex < totalPages - 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const leftSiblingIndex = Math.max(safeCurrentPage - siblingCount, 1);
+  const rightSiblingIndex = Math.min(safeCurrentPage + siblingCount, totalPages);
 
-  if (!showLeftEllipsis && showRightEllipsis) {
-    const leftRangeEnd = 3 + siblingCount * 2;
-    const leftRange = Array.from({ length: leftRangeEnd }, (_, i) => i + 1);
+  const shouldShowLeftEllipsis = leftSiblingIndex > 2;
+  const shouldShowRightEllipsis = rightSiblingIndex < totalPages - 1;
+
+  if (!shouldShowLeftEllipsis && shouldShowRightEllipsis) {
+    const leftItemCount = 3 + 2 * siblingCount;
+    const leftRange = Array.from({ length: leftItemCount }, (_, i) => i + 1);
     return [...leftRange, 'ellipsis', totalPages];
   }
 
-  if (showLeftEllipsis && !showRightEllipsis) {
-    const rightRangeCount = 3 + siblingCount * 2;
-    const rightRangeStart = totalPages - rightRangeCount + 1;
-    const rightRange = Array.from(
-      { length: rightRangeCount },
-      (_, i) => rightRangeStart + i
-    );
+  if (shouldShowLeftEllipsis && !shouldShowRightEllipsis) {
+    const rightItemCount = 3 + 2 * siblingCount;
+    const startPage = totalPages - rightItemCount + 1;
+    const rightRange = Array.from({ length: rightItemCount }, (_, i) => startPage + i);
     return [1, 'ellipsis', ...rightRange];
   }
 
@@ -44,3 +43,5 @@ export function getPaginationItems(
   );
   return [1, 'ellipsis', ...middleRange, 'ellipsis', totalPages];
 }
+
+export default getPaginationItems;

@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { History, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { formatDateTime } from '@/utils/formatDate';
 
 interface OutgoingDocumentFormProps {
   t: OutgoingFormTranslations;
@@ -101,15 +102,9 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
             <Alert className="mb-6 border-blue-200 bg-blue-50/70 text-blue-950">
               <History className="h-4 w-4 text-[#2c5282]" />
               <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                <span>
+                <span className="tabular-nums">
                   {translate('documents.forms.draftRestored', {
-                    date: new Date(restoredDraftAt).toLocaleString(
-                      language === 'ar' ? 'ar-TN' : 'fr-FR',
-                      {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      }
-                    ),
+                    date: formatDateTime(restoredDraftAt, language),
                   })}
                 </span>
                 <Button
@@ -188,7 +183,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
           </Form>
         </CardContent>
         
-        <CardFooter className="bg-muted/20 border-t border-border/50 p-6">
+        <CardFooter className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-6 py-4 rounded-b shadow-[0_-6px_16px_-6px_rgba(15,23,42,0.08)]">
           <FormActions
             form={form}
             onSubmit={handleSubmit}

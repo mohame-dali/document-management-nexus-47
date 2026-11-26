@@ -1,5 +1,5 @@
 const SemanticIndex = require('../../models/SemanticIndex');
-const { getEmbedding, cosineSimilarity, chat } = require('../../services/ollamaService');
+const { getEmbeddingWithMeta, cosineSimilarity, chat } = require('../../services/ollamaService');
 
 // ═══════════════════════════════════════════════════════════════
 // RBAC — Rôles et portées d'accès
@@ -90,10 +90,18 @@ exports.chatSearch = async (req, res) => {
     const searchQuery = query.trim();
     console.log(`[AI Chat] Requête : "${searchQuery}"`);
 
-    // ─── 1. CONVERTIR LA REQUÊTE EN VECTEUR ───
+    // ─── 1. CONVERTIR LA REQUÊTE EN VECTEUR (AVEC MÉTADONNÉES MODÈLE/DIMENSION) ───
     let queryEmbedding;
+    let embeddingDimension = null;
+    let embeddingModel = null;
     try {
-      queryEmbedding = await getEmbedding(searchQuery);
+      const embMeta = await getEmbeddingWithMeta(searchQuery);
+      queryEmbedding = embMeta?.vector;
+      embeddingDimension = embMeta?.dimension || (Array.isArray(queryEmbedding) ? queryEmbedding.length : null);
+      embeddingModel = embMeta?.model || null;
+      if (!Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
+        throw new Error('EMBEDDING_INVALID');
+      }
     } catch (err) {
       console.error('[AI Chat] Erreur embedding:', err.message);
       return res.status(500).json({
@@ -103,18 +111,30 @@ exports.chatSearch = async (req, res) => {
       });
     }
 
-    // ─── 2. RÉCUPÉRER TOUS LES VECTEURS INDEXÉS ───
+    // ─── 2. RÉCUPÉRER TOUS LES VECTEURS INDEXÉS COMPATIBLES ───
     const securityFilter = buildSecurityFilter(req.user);
 
     const filter = {
       ...securityFilter,
     };
 
+    if (embeddingDimension) {
+      filter.embeddingDimension = embeddingDimension;
+    }
+    if (embeddingModel) {
+      filter.embeddingModel = embeddingModel;
+    }
+
     if (typeFilter === 'incoming' || typeFilter === 'outgoing') {
       filter.documentType = typeFilter;
     }
-    // Détection intelligente d'une année dans la requête utilisateur (ex: 2024, 2025, 2026)
-    if (!yearFilter) {
+    // Filtrage explicite ou détection d'une année dans la requête utilisateur (ex: 2024, 2025, 2026)
+    if (yearFilter !== undefined && yearFilter !== null && String(yearFilter).trim() !== '') {
+      const parsedYear = parseInt(yearFilter, 10);
+      if (Number.isFinite(parsedYear)) {
+        filter['metadata.year'] = parsedYear;
+      }
+    } else {
       const yearMatch = searchQuery.match(/\b(19\d{2}|20\d{2})\b/);
       if (yearMatch) {
         filter['metadata.year'] = parseInt(yearMatch[1], 10);
@@ -126,26 +146,55 @@ exports.chatSearch = async (req, res) => {
 
     // Récupérer un sous-ensemble sécurisé (max 500 vecteurs) avec projection stricte pour protéger la RAM
     const allIndexed = await SemanticIndex.find(filter)
-      .select('embedding documentId documentType metadata sourceText')
+      .select('embedding embeddingDimension embeddingModel documentId documentType metadata sourceText')
       .limit(500)
       .lean();
+
+    // Détecter d'éventuels anciens vecteurs incompatibles (dimension/modèle différent) sans bloquer les vecteurs valides
+    let mismatchedCount = 0;
+    const mismatchClauses = [];
+    if (embeddingDimension) {
+      mismatchClauses.push({ embeddingDimension: { $ne: embeddingDimension } });
+      mismatchClauses.push({ embeddingDimension: { $exists: false } });
+    }
+    if (embeddingModel) {
+      mismatchClauses.push({ embeddingModel: { $ne: embeddingModel } });
+    }
+    if (mismatchClauses.length > 0) {
+      try {
+        const mismatchFilter = Object.keys(securityFilter).length > 0
+          ? { $and: [securityFilter, { $or: mismatchClauses }] }
+          : { $or: mismatchClauses };
+        const mismatchedDocs = await SemanticIndex.find(mismatchFilter)
+          .select('_id')
+          .limit(50)
+          .lean();
+        mismatchedCount = Array.isArray(mismatchedDocs) ? mismatchedDocs.length : 0;
+        if (mismatchedCount > 0) {
+          console.warn(`[AI Chat] ⚠️ ${mismatchedCount} vecteur(s) d'ancienne dimension/modèle ignoré(s) — réindexation recommandée.`);
+        }
+      } catch (_) {}
+    }
 
     if (allIndexed.length === 0) {
       return res.json({
         success: true,
         data: {
           query: searchQuery,
-          summary: 'لا توجد وثائق مفهرسة بعد. يرجى فهرسة الوثائق أولاً.',
+          summary: mismatchedCount > 0
+            ? 'توجد وثائق مفهرسة بنموذج أبعاد مختلف. يرجى إعادة الفهرسة (--force) لتحديث الفهرس الدلالي.'
+            : 'لا توجد وثائق مفهرسة بعد. يرجى فهرسة الوثائق أولاً.',
           totalFound: 0,
           sources: [],
         },
       });
     }
 
-    console.log(`[AI Chat] ${allIndexed.length} vecteurs comparés`);
+    console.log(`[AI Chat] ${allIndexed.length} vecteurs comparés (${embeddingDimension}d)`);
 
     // ─── 3. CALCULER SIMILARITÉ COSINUS ───
     const scored = allIndexed
+      .filter((item) => Array.isArray(item.embedding) && item.embedding.length === queryEmbedding.length)
       .map(item => ({
         documentType: item.documentType,
         documentId: item.documentId.toString(),

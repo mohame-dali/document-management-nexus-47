@@ -585,22 +585,24 @@ const determineBestLanguageConfig = (requestedLanguages, availableLanguages) => 
 const enhancedArabicTextCleanup = (text) => {
   if (!text || text.trim().length === 0) return '';
 
-  if (text.trim().match(/^[\d\s\.\-\|\[\](){}_=+*&%$#@!~`^'"<>?/\\]+$/) && text.trim().length < 20) {
+  const trimmed = text.trim();
+  if (trimmed.match(/^[\d\s.\-|[\](){}_=+*&%$#@!~`^'"<>?/\\]+$/) && trimmed.length < 20) {
     return '';
   }
 
   if (
-    text.trim().match(/^[|lI1\[\](){}\s]+$/) ||
-    text.trim().match(/^[\d\s]{1,5}$/) ||
-    text.trim().length < 3
+    trimmed.match(/^[|lI1[\](){}\s]+$/) ||
+    trimmed.match(/^[\d\s]{1,5}$/) ||
+    trimmed.length < 3
   ) {
     return '';
   }
 
   const cleanedText = text
-    .replace(/\s{3,}/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '')
     .replace(/\r/g, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
     .replace(/ﻻ/g, 'لا')
     .replace(/ﷲ/g, 'الله')
     .replace(/ﱁ/g, 'تع')
@@ -608,7 +610,7 @@ const enhancedArabicTextCleanup = (text) => {
     .replace(/ﻷ/g, 'لأ')
     .replace(/ﻹ/g, 'لإ')
     .replace(/ﻩ/g, 'ه')
-    .replace(/ﻯ/g, 'ي')
+    .replace(/ﻯ/g, 'ى')
     .replace(/ﻱ/g, 'ي')
     .replace(/ﻙ/g, 'ك')
     .replace(/ﻝ/g, 'ل')
@@ -617,15 +619,11 @@ const enhancedArabicTextCleanup = (text) => {
     .replace(/ﻫ/g, 'ه')
     .replace(/ﻭ/g, 'و')
     .replace(/ﻳ/g, 'ي')
-    .replace(/[أإآ]/g, 'ا')
-    .replace(/[ى]/g, 'ي')
-    .replace(/[ة]/g, 'ة')
     .replace(/[،,]{2,}/g, '،')
     .replace(/[؛;]{2,}/g, '؛')
     .replace(/[؟?]{2,}/g, '؟')
-    .replace(/[:.]{2,}/g, ':')
+    .replace(/[:.]{3,}/g, '...')
     .replace(/(.)\1{4,}/g, '$1$1$1')
-    .replace(/\s+/g, ' ')
     .trim();
 
   const lines = cleanedText
@@ -633,10 +631,10 @@ const enhancedArabicTextCleanup = (text) => {
     .map((line) => line.trim())
     .filter((line) => {
       if (line.length < 2) return false;
-      if (line.match(/^[|lI1\[\](){}\s\d\.\-]+$/)) return false;
+      if (line.match(/^[|lI1[\](){}\s\d.\-—–_]+$/)) return false;
       return (
         /[\u0600-\u06FF\u0660-\u0669\u06F0-\u06F9]/.test(line) ||
-        (line.length > 5 && /[a-zA-Z]/.test(line))
+        (line.length > 5 && /[a-zA-Z\u00C0-\u024F]/.test(line))
       );
     });
 
@@ -650,8 +648,8 @@ const enhancedArabicTextCleanup = (text) => {
 
   if (
     totalCharCount > 10 &&
-    /[a-zA-Z]/.test(result) &&
-    !result.match(/^[\d\s\.\-\|\[\](){}_=+*&%$#@!~`^'"<>?/\\]+$/)
+    /[a-zA-Z\u00C0-\u024F]/.test(result) &&
+    !result.match(/^[\d\s.\-|[\](){}_=+*&%$#@!~`^'"<>?/\\]+$/)
   ) {
     return result;
   }
@@ -752,21 +750,20 @@ function normalizeArabicText(text) {
 function cleanOcrNoise(text) {
   if (!text || typeof text !== 'string') return '';
 
-  let cleaned = text
-    .replace(/^\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}(,\s*\d{1,2}:\d{2})?\s*$/gm, '')
-    .replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4},\s*\d{1,2}:\d{2}/g, '')
-    .replace(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}\b/g, '')
+  const cleaned = text
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '')
     .replace(/https?:\/\/[^\s]+/gi, '')
     .replace(/www\.[^\s]+/gi, '')
     .replace(/([،,.\u060C]){2,}/g, '$1')
     .replace(/([،,.\u060C\s]){5,}/g, ' ')
     .replace(/\b(\d+)(,\s*\d+){3,}\b/g, '')
-    .replace(/[^\w\s\u0600-\u06FF،.:!?'"()\-]{3,}/g, '')
+    .replace(/[^\w\s\u00C0-\u024F\u0600-\u06FF\u0660-\u0669\u06F0-\u06F9،.:!?'"()\-°/—–…«»]{3,}/g, '')
     .replace(/[\uFFFD\u25A1\u25A0]/g, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .split('\n')
     .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !/^[|lI1[\](){}\s\d.\-—–_]+$/.test(line))
     .join('\n')
     .trim();
 
@@ -787,10 +784,55 @@ function cleanArabicOcrText(text) {
   return cleaned;
 }
 
+function toAsciiDigits(text) {
+  return String(text || '')
+    .replace(/[\u0660-\u0669]/g, (ch) => String(ch.charCodeAt(0) - 0x0660))
+    .replace(/[\u06F0-\u06F9]/g, (ch) => String(ch.charCodeAt(0) - 0x06F0));
+}
+
+function extractDatesFromOcrText(text) {
+  if (!text || typeof text !== 'string') return [];
+
+  const normalized = toAsciiDigits(text);
+  const datePattern = /\b(?:(19\d{2}|20\d{2})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(\d{1,2})|(\d{1,2})\s*[-/.]\s*(\d{1,2})\s*[-/.]\s*(19\d{2}|20\d{2}))\b/g;
+
+  const results = [];
+  const seen = new Set();
+  let match;
+
+  while ((match = datePattern.exec(normalized)) !== null) {
+    let dayNum;
+    let monthNum;
+    let yearStr;
+
+    if (match[1]) {
+      yearStr = match[1];
+      monthNum = parseInt(match[2], 10);
+      dayNum = parseInt(match[3], 10);
+    } else {
+      dayNum = parseInt(match[4], 10);
+      monthNum = parseInt(match[5], 10);
+      yearStr = match[6];
+    }
+
+    if (dayNum >= 1 && dayNum <= 31 && monthNum >= 1 && monthNum <= 12) {
+      const formatted = `${String(dayNum).padStart(2, '0')}/${String(monthNum).padStart(2, '0')}/${yearStr}`;
+      if (!seen.has(formatted)) {
+        seen.add(formatted);
+        results.push(formatted);
+      }
+    }
+  }
+
+  return results;
+}
+
 module.exports = {
   extractTextFromPDF,
   checkLanguageSupport,
+  enhancedArabicTextCleanup,
   normalizeArabicText,
   cleanOcrNoise,
   cleanArabicOcrText,
+  extractDatesFromOcrText,
 };

@@ -1,6 +1,23 @@
 
 const mongoose = require('mongoose');
 
+const documentVersionSchema = new mongoose.Schema({
+  version: { type: Number, required: true },
+  filePath: { type: String, required: true },
+  ocrText: { type: String, default: null },
+  ocrStatus: {
+    type: String,
+    enum: ['pending', 'processing', 'completed', 'failed', null],
+    default: null,
+  },
+  ocrError: { type: String, default: null },
+  sha256: { type: String, default: null },
+  fileSize: { type: Number, default: null },
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  uploadedAt: { type: Date, default: Date.now },
+  note: { type: String, default: null },
+}, { _id: false });
+
 const outgoingDocumentSchema = new mongoose.Schema({
   serialNumber: { type: Number, required: true },
   year: { 
@@ -39,6 +56,8 @@ const outgoingDocumentSchema = new mongoose.Schema({
     default: null,
   },
   scannedDocument: { type: String, required: false, default: null },
+  currentVersion: { type: Number, default: 1, min: 1 },
+  versions: { type: [documentVersionSchema], default: [] },
   reference: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "IncomingDocument", 
@@ -107,7 +126,16 @@ outgoingDocumentSchema.index({ "source.id": 1, year: 1, createdAt: -1 });
 outgoingDocumentSchema.post('save', function (doc) {
   setImmediate(async () => {
     try {
-      const { indexDocument } = require('../services/semanticIndexer');
+      const { indexDocument, removeFromIndex } = require('../services/semanticIndexer');
+      if (doc.isDeleted) {
+        await removeFromIndex(doc._id, 'outgoing');
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          { $set: { isIndexed: false, indexError: null } }
+        );
+        console.log(`[RAG Auto-Index] 🗑️ Outgoing #${doc._id} supprimé de l'index (soft-delete)`);
+        return;
+      }
       const result = await indexDocument(doc, 'outgoing');
       if (result && result.success) {
         await doc.constructor.updateOne(
@@ -147,7 +175,16 @@ outgoingDocumentSchema.post('findOneAndUpdate', function (doc) {
   if (!doc) return;
   setImmediate(async () => {
     try {
-      const { indexDocument } = require('../services/semanticIndexer');
+      const { indexDocument, removeFromIndex } = require('../services/semanticIndexer');
+      if (doc.isDeleted) {
+        await removeFromIndex(doc._id, 'outgoing');
+        await doc.constructor.updateOne(
+          { _id: doc._id },
+          { $set: { isIndexed: false, indexError: null } }
+        );
+        console.log(`[RAG Auto-Index] 🗑️ Outgoing #${doc._id} retiré après update soft-delete`);
+        return;
+      }
       const result = await indexDocument(doc, 'outgoing');
       if (result && result.success) {
         await doc.constructor.updateOne(

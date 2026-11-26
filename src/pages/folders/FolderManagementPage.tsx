@@ -16,15 +16,15 @@ const FolderManagementPage: React.FC = () => {
 
   if (!canViewFolders) {
     return (
-      <div className="p-6 sm:p-8 lg:p-10 bg-[#f7fafc] min-h-[calc(100vh-4rem)] flex items-center justify-center">
-        <div className="bg-white border border-[#e2e8f0] rounded p-8 sm:p-10 max-w-lg w-full text-center space-y-4 shadow-xs">
-          <div className="w-16 h-16 rounded bg-gray-100 flex items-center justify-center mx-auto text-gray-500">
+      <div className="p-6 sm:p-8 lg:p-10 bg-slate-50/70 dark:bg-slate-950 min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-8 sm:p-10 max-w-lg w-full text-center space-y-4 shadow-sm">
+          <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-500 dark:text-slate-400">
             <Lock className="h-8 w-8" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100">
             {t('folders.page.accessDenied.title')}
           </h2>
-          <p className="text-base text-gray-600 leading-relaxed">
+          <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
             {t('folders.page.accessDenied.description')}
           </p>
         </div>
@@ -36,15 +36,15 @@ const FolderManagementPage: React.FC = () => {
   const readOnly = currentUser?.role === 'Director' || currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'User';
 
   return (
-    <div className="p-5 sm:p-6 lg:p-8 bg-[#f7fafc] min-h-[calc(100vh-4rem)] space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-5 sm:p-6 lg:p-8 bg-slate-50/70 dark:bg-slate-950 min-h-[calc(100vh-4rem)] space-y-6 max-w-[1600px] mx-auto">
       {/* Page Header - AdminLTE clean style */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] flex items-center gap-3">
-            <FolderTree className="h-7 w-7 text-[#2c5282] flex-shrink-0" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-sky-300 flex items-center gap-3">
+            <FolderTree className="h-7 w-7 text-[#2c5282] dark:text-sky-400 flex-shrink-0" />
             <span>{t('folders.page.title')}</span>
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1.5 leading-relaxed">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
             {readOnly 
               ? t('folders.page.subtitleReadOnly')
               : t('folders.page.subtitleManage')
@@ -53,15 +53,15 @@ const FolderManagementPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded text-sm font-semibold bg-white border border-[#cbd5e1] text-gray-700 shadow-xs">
-            <Building2 className="h-4 w-4 text-[#2c5282]" />
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm">
+            <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
             <span>
               {currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Director'
                 ? t('folders.page.allDepartments')
                 : currentUser?.activeDepartment?.name || t('folders.page.activeDepartmentFallback')}
             </span>
           </span>
-          <span className="inline-flex items-center px-3 py-1.5 rounded text-sm font-bold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] shadow-xs">
+          <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-sm font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70 shadow-sm">
             {readOnly ? t('folders.page.badgeReadOnly') : t('folders.page.badgeFullAccess')}
           </span>
         </div>

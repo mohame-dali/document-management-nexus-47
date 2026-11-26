@@ -31,11 +31,11 @@ router.post('/heartbeat', heartbeat);
 // Messaging route - accessible to ALL authenticated users for cross-role messaging
 router.get('/messaging', getUsers);
 
-// Main users routes - restricted to admin roles
+// Main users routes - restricted to admin roles (and RH manager checked in controllers)
 router.route('/')
   .get(authorize('Director', 'Admin', 'AdminDepartment', 'AdminTuningDesk'), getUsers)
   .post(
-    authorize('Admin'),
+    authorize('Admin', 'AdminDepartment'),
     auditDocumentActivity('user_create'), 
     createUser
   );
@@ -44,12 +44,12 @@ router.route('/')
 router.route('/:id')
   .get(authorize('Director', 'Admin', 'AdminDepartment'), getUser)
   .put(
-    authorize('Admin'),
+    authorize('Admin', 'AdminDepartment'),
     auditDocumentActivity('user_update'), 
     updateUser
   )
   .delete(
-    authorize('Admin'),
+    authorize('Admin', 'AdminDepartment'),
     auditDocumentActivity('user_delete'), 
     deleteUser
   );
@@ -57,24 +57,24 @@ router.route('/:id')
 // Additional routes
 router.route('/:id/restore')
   .patch(
-    authorize('Admin'),
+    authorize('Admin', 'AdminDepartment'),
     auditDocumentActivity('user_update'),
     restoreUser
   )
   .put(
-    authorize('Admin'),
+    authorize('Admin', 'AdminDepartment'),
     auditDocumentActivity('user_update'),
     restoreUser
   );
 
 router.delete('/:id/permanent',
-  authorize('Admin'),
+  authorize('Admin', 'AdminDepartment'),
   auditDocumentActivity('user_delete'),
   permanentDeleteUser
 );
 
 router.put('/:id/deactivate', 
-  authorize('Admin'),
+  authorize('Admin', 'AdminDepartment'),
   auditDocumentActivity('user_update'), 
   deactivateUser
 );

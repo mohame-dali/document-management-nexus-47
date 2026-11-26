@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 import { FileInput, AlertCircle, Calendar, Building, User, FileText, Hash, Mail, MapPin } from 'lucide-react';
 import { useDirection } from '@/i18n/useDirection';
+import { formatShortDate } from '@/utils/formatDate';
 
 interface DocumentPreviewProps {
   hoveredDoc: string | null;
@@ -31,7 +32,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ar-SA');
+    return formatShortDate(dateString);
   };
 
   const isIncomingDocument = (doc: unknown): doc is IncomingDocument => {
@@ -100,7 +101,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                   <Calendar className="h-3 w-3 inline me-1 text-[#718096]" />
                   التاريخ:
                 </td>
-                <td className="text-[#2d3748] py-1">
+                <td className="text-[#2d3748] py-1 tabular-nums">
                   <bdi dir="ltr">{formatDate(isIncomingDocument(document) ? document.arrivalDate : document.issueDate)}</bdi>
                 </td>
               </tr>
@@ -159,7 +160,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
                         <Calendar className="h-3 w-3 inline me-1 text-[#718096]" />
                         تاريخ المراسلة:
                       </td>
-                      <td className="text-[#2d3748] py-1"><bdi dir="ltr">{formatDate(document.correspondenceDate)}</bdi></td>
+                      <td className="text-[#2d3748] py-1 tabular-nums"><bdi dir="ltr">{formatDate(document.correspondenceDate)}</bdi></td>
                     </tr>
                   )}
                 </>

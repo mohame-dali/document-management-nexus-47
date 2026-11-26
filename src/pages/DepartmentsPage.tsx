@@ -73,7 +73,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import { Department, User } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getOrganizationSettings, setBureauDepartments, setRhDepartment } from '@/services/hr/personnelApi';
@@ -596,8 +596,10 @@ const DepartmentsPage: React.FC = () => {
                       </TableCell>
 
                       {/* Created At */}
-                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568]">
-                        {department.createdAt ? formatArabicDate(department.createdAt) : 'غير مسجل'}
+                      <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568] tabular-nums">
+                        {department.createdAt ? (
+                          <bdi dir="rtl" className="tabular-nums">{formatLongDate(department.createdAt, 'ar')}</bdi>
+                        ) : 'غير مسجل'}
                       </TableCell>
 
                       {/* Actions: View, Edit, Deactivate/Activate, Delete, Bureau / RH assignment */}
@@ -854,8 +856,10 @@ const DepartmentsPage: React.FC = () => {
 
             <div className="p-3.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-base space-y-1">
               <span className="text-xs font-semibold text-gray-500 block">تاريخ الإنشاء</span>
-              <p className="font-medium text-[#1a202c]">
-                {selectedDepartmentForView?.createdAt ? formatArabicDate(selectedDepartmentForView.createdAt) : 'غير مسجل'}
+              <p className="font-medium text-[#1a202c] tabular-nums">
+                {selectedDepartmentForView?.createdAt ? (
+                  <bdi dir="rtl" className="tabular-nums">{formatLongDate(selectedDepartmentForView.createdAt, 'ar')}</bdi>
+                ) : 'غير مسجل'}
               </p>
             </div>
           </div>

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { getPersonnelList, deletePersonnel, getOrganizationSettings } from '@/services/hr/personnelApi';
 import { getDepartments } from '@/services/departmentService';
 import { Personnel, PersonnelFilters } from '@/types/hr';
 import { Department } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDirection } from '@/i18n/useDirection';
 import { getErrorMessage } from '@/utils/errorMessages';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
 import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
@@ -55,6 +55,8 @@ import {
   Key,
   CheckCircle,
   AlertCircle,
+  UserCheck,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { InlineCreateUserModal } from '@/components/hr/InlineCreateUserModal';
@@ -63,6 +65,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 
 export const PersonnelListPage: React.FC = () => {
   const { t } = useTranslation();
+  const { dir, isRTL } = useDirection();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
@@ -174,20 +177,26 @@ export const PersonnelListPage: React.FC = () => {
   const hasActiveFilters =
     searchTerm.trim() !== '' || statutFilter !== 'ALL' || departmentFilter !== 'ALL';
 
+  const activeOnPageCount = personnelList.filter((p) => p.statut === 'actif').length;
+  const linkedOnPageCount = personnelList.filter(
+    (p) => p.userId && typeof p.userId === 'object' && !p.userId.isDeleted
+  ).length;
+  const awaitingAccountCount = personnelList.length - linkedOnPageCount;
+
   return (
-    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-right">
+    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-start" dir={dir}>
       {/* 1. En-tête de la page */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded bg-[#ebf4ff] text-[#2c5282]">
+            <div className="p-2.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/70">
               <Users className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#1a202c]">
+              <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">
                 {t('personnel.page.title')}
               </h1>
-              <p className="text-base text-gray-600 mt-1">
+              <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
                 {t('personnel.page.subtitle')}
               </p>
             </div>
@@ -200,7 +209,7 @@ export const PersonnelListPage: React.FC = () => {
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="h-11 px-4 text-sm font-medium text-gray-700 border-[#cbd5e1] rounded hover:bg-gray-50 flex items-center gap-2"
+            className="h-11 px-4 text-sm font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
             <span>{t('common.refresh')}</span>
@@ -209,7 +218,7 @@ export const PersonnelListPage: React.FC = () => {
           {canAddPersonnel && (
             <Button
               onClick={() => navigate('/dashboard/hr/personnel/new')}
-              className="h-11 px-5 text-base font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 shadow-sm"
+              className="h-11 px-5 text-base font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg flex items-center gap-2 shadow-sm"
             >
               <Plus className="w-5 h-5" />
               <span>{t('personnel.actions.create')}</span>
@@ -218,11 +227,70 @@ export const PersonnelListPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 1.5 Bandeau KPI synthétique */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-[#2c5282] dark:border-t-sky-500 rounded-lg p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {isRTL ? 'إجمالي الموظفين' : 'Total du personnel'}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
+              {pagination.total}
+            </p>
+          </div>
+          <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60">
+            <Users className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-emerald-500 dark:border-t-emerald-400 rounded-lg p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {isRTL ? 'نشطون (الصفحة الحالية)' : 'Actifs (page courante)'}
+            </p>
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums mt-1">
+              {activeOnPageCount}
+            </p>
+          </div>
+          <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
+            <UserCheck className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-amber-500 dark:border-t-amber-400 rounded-lg p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {isRTL ? 'بانتظار ربط حساب' : 'Sans compte lié'}
+            </p>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums mt-1">
+              {awaitingAccountCount}
+            </p>
+          </div>
+          <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
+            <Clock className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-slate-400 dark:border-t-slate-500 rounded-lg p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {isRTL ? 'الأقسام والإدارات' : 'Départements'}
+            </p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
+              {departments.length}
+            </p>
+          </div>
+          <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700">
+            <Building2 className="w-5 h-5" />
+          </div>
+        </div>
+      </div>
+
       {/* 2. Barre de filtres */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-base font-bold text-gray-700">
-            <Filter className="w-4 h-4 text-[#2c5282]" />
+          <div className="flex items-center gap-2 text-base font-bold text-slate-700 dark:text-slate-200">
+            <Filter className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />
             <span>{t('personnel.filters.title')}</span>
           </div>
 
@@ -231,7 +299,7 @@ export const PersonnelListPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-11 px-3 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded flex items-center gap-1.5"
+              className="h-11 px-3 text-sm text-slate-600 dark:text-slate-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg flex items-center gap-1.5"
             >
               <X className="w-4 h-4" />
               <span>{t('personnel.filters.reset')}</span>
@@ -242,7 +310,7 @@ export const PersonnelListPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Recherche par nom, prénom ou CIN */}
           <div className="relative">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
             <Input
               value={searchTerm}
               onChange={(e) => {
@@ -250,7 +318,7 @@ export const PersonnelListPage: React.FC = () => {
                 setCurrentPage(1);
               }}
               placeholder={t('personnel.filters.searchPlaceholder')}
-              className="h-11 text-base pr-10 pl-3 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+              className="h-11 text-base ps-10 pe-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
             />
           </div>
 
@@ -263,7 +331,7 @@ export const PersonnelListPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('personnel.filters.statusPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -284,7 +352,7 @@ export const PersonnelListPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('personnel.filters.departmentPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -301,27 +369,27 @@ export const PersonnelListPage: React.FC = () => {
       </div>
 
       {/* 3. Tableau des données */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto custom-scrollbar">
           <Table className="w-full">
-            <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <TableHeader className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[220px]">
+                <TableHead className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[220px] border-e border-slate-200/60 dark:border-slate-700/60">
                   {t('personnel.table.fullName')}
                 </TableHead>
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[130px]">
                   {t('personnel.table.cin')}
                 </TableHead>
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]">
                   {t('personnel.table.position')}
                 </TableHead>
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[180px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]">
                   {t('personnel.table.department')}
                 </TableHead>
-                <TableHead className="text-right py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[130px]">
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]">
                   {t('personnel.table.status')}
                 </TableHead>
-                <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[160px]">
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[160px]">
                   {t('common.actions')}
                 </TableHead>
               </TableRow>
@@ -385,17 +453,18 @@ export const PersonnelListPage: React.FC = () => {
                       : t('personnel.table.specificDept')
                     : '—';
 
-                  const canDeleteRow =
-                    canDeletePersonnel && p.statut !== 'actif';
+                  const hasLinkedAccount = Boolean(
+                    p.userId && typeof p.userId === 'object' && !p.userId.isDeleted
+                  );
 
                   return (
                     <TableRow
                       key={p._id}
-                      className="border-b border-[#f1f5f9] hover:bg-[#f8fafc] transition-colors"
+                      className="group border-b border-slate-200/70 dark:border-slate-800 hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors"
                       style={{ minHeight: '64px' }}
                     >
                       {/* Nom complet */}
-                      <TableCell className="py-3 px-4 font-bold text-[#1a202c] text-sm">
+                      <TableCell className="sticky start-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 py-3 px-4 font-bold text-[#1a202c] dark:text-slate-100 text-sm border-e border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-3">
                           <PersonnelAvatar
                             photo={p.photo}
@@ -406,7 +475,7 @@ export const PersonnelListPage: React.FC = () => {
                           <div>
                             <div>{p.nom} {p.prenom}</div>
                             {p.telephone && (
-                              <div className="text-xs text-gray-500 font-normal" dir="ltr">
+                              <div className="text-xs text-slate-500 dark:text-slate-400 font-normal tabular-nums" dir="ltr">
                                 {p.telephone}
                               </div>
                             )}
@@ -415,15 +484,15 @@ export const PersonnelListPage: React.FC = () => {
                       </TableCell>
 
                       {/* CIN */}
-                      <TableCell className="py-3 px-4 text-sm font-mono text-gray-700">
+                      <TableCell className="py-3 px-4 text-sm font-mono tabular-nums text-slate-700 dark:text-slate-300">
                         {p.cin || '—'}
                       </TableCell>
 
                       {/* Poste */}
-                      <TableCell className="py-3 px-4 text-sm text-gray-800">
+                      <TableCell className="py-3 px-4 text-sm text-slate-800 dark:text-slate-200">
                         {p.poste ? (
                           <span className="flex items-center gap-1.5">
-                            <Briefcase className="w-4 h-4 text-gray-400 shrink-0" />
+                            <Briefcase className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                             <span>{p.poste}</span>
                           </span>
                         ) : (
@@ -432,16 +501,36 @@ export const PersonnelListPage: React.FC = () => {
                       </TableCell>
 
                       {/* Département */}
-                      <TableCell className="py-3 px-4 text-sm text-gray-700">
-                        <span className="flex items-center gap-1.5">
-                          <Building2 className="w-4 h-4 text-gray-400 shrink-0" />
-                          <span>{deptName}</span>
-                        </span>
+                      <TableCell className="py-3 px-4 text-sm text-slate-700 dark:text-slate-300">
+                        {deptName !== '—' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                            <Building2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                            <span>{deptName}</span>
+                          </span>
+                        ) : (
+                          '—'
+                        )}
                       </TableCell>
 
-                      {/* Statut Badge */}
+                      {/* Statut Badge + Compte utilisateur */}
                       <TableCell className="py-3 px-4">
-                        <PersonnelStatusBadge statut={p.statut} />
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <PersonnelStatusBadge statut={p.statut} />
+                          {hasLinkedAccount ? (
+                            <span
+                              title={t('personnel.account.linkedActive')}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70 rounded-full text-xs font-medium"
+                            >
+                              <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              <span>{t('personnel.account.linkedBadge')}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700 rounded-full text-xs font-medium">
+                              <Clock className="w-3 h-3 shrink-0" />
+                              <span>{isRTL ? 'بدون حساب' : 'Sans compte'}</span>
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
 
                       {/* Actions */}
@@ -454,7 +543,7 @@ export const PersonnelListPage: React.FC = () => {
                             onClick={() => navigate(`/dashboard/hr/personnel/${p._id}`)}
                             title={t('personnel.actions.viewTooltip')}
                             aria-label={t('personnel.actions.viewTooltip')}
-                            className="h-11 w-11 p-0 text-gray-600 hover:text-[#2c5282] hover:bg-[#ebf4ff] rounded"
+                            className="h-11 w-11 p-0 text-slate-600 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-blue-50/90 dark:hover:bg-blue-950/50 rounded-lg"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -466,36 +555,26 @@ export const PersonnelListPage: React.FC = () => {
                             onClick={() => navigate(`/dashboard/hr/personnel/${p._id}/edit`)}
                             title={t('personnel.actions.editTooltip')}
                             aria-label={t('personnel.actions.editTooltip')}
-                            className="h-11 w-11 p-0 text-gray-600 hover:text-amber-600 hover:bg-amber-50 rounded"
+                            className="h-11 w-11 p-0 text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-amber-50/90 dark:hover:bg-amber-950/50 rounded-lg"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
 
-                          {/* Statut Compte Utilisateur / Création de compte (Admin uniquement) */}
-                          {p.userId ? (
-                            <span 
-                              title={t('personnel.account.linkedActive')}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-xs font-semibold"
+                          {/* Création rapide de compte utilisateur (Admin uniquement si non lié) */}
+                          {!hasLinkedAccount && currentUser?.role === 'Admin' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedPersonnelForUser(p);
+                                setShowCreateUserModal(true);
+                              }}
+                              title={t('personnel.account.createAccountTooltip')}
+                              aria-label={t('personnel.account.createAccountAria')}
+                              className="h-11 w-11 p-0 text-[#2c5282] dark:text-blue-300 hover:bg-blue-50/90 dark:hover:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/70 rounded-lg"
                             >
-                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span>{t('personnel.account.linkedBadge')}</span>
-                            </span>
-                          ) : (
-                            currentUser?.role === 'Admin' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedPersonnelForUser(p);
-                                  setShowCreateUserModal(true);
-                                }}
-                                title={t('personnel.account.createAccountTooltip')}
-                                aria-label={t('personnel.account.createAccountAria')}
-                                className="h-11 w-11 p-0 text-[#2c5282] hover:bg-blue-50 border border-blue-200 rounded"
-                              >
-                                <Key className="w-4 h-4 text-[#2c5282]" />
-                              </Button>
-                            )
+                              <Key className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />
+                            </Button>
                           )}
 
                           {/* Supprimer (si Admin ou Responsable RH et statut !== actif) */}
@@ -518,10 +597,10 @@ export const PersonnelListPage: React.FC = () => {
                                   ? t('personnel.actions.cannotDeleteActive')
                                   : t('personnel.actions.deleteTooltip')
                               }
-                              className={`h-11 w-11 p-0 rounded ${
+                              className={`h-11 w-11 p-0 rounded-lg ${
                                 p.statut === 'actif'
-                                  ? 'text-gray-300 cursor-not-allowed'
-                                  : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
+                                  ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
+                                  : 'text-slate-600 dark:text-slate-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
                               }`}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -538,10 +617,10 @@ export const PersonnelListPage: React.FC = () => {
         </div>
 
         {/* 4. Pagination */}
-        <div className="bg-[#f8fafc] border-t border-[#e2e8f0] px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-sm text-gray-600">
+        <div className="bg-slate-50/90 dark:bg-slate-800/50 border-t border-slate-200/80 dark:border-slate-800 px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300 tabular-nums">
             <span>
-              {t('personnel.pagination.totalResultsPrefix')} <strong className="text-[#1a202c]">{pagination.total}</strong> {t('personnel.pagination.employeeCount')}
+              {t('personnel.pagination.totalResultsPrefix')} <strong className="text-[#1a202c] dark:text-slate-100 tabular-nums">{pagination.total}</strong> {t('personnel.pagination.employeeCount')}
             </span>
             <span>•</span>
             <div className="flex items-center gap-2">
@@ -553,7 +632,7 @@ export const PersonnelListPage: React.FC = () => {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="h-11 w-20 text-sm bg-white border-[#cbd5e1] rounded">
+                <SelectTrigger className="h-11 w-20 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 rounded-lg tabular-nums">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -566,7 +645,7 @@ export const PersonnelListPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 ml-2">
+            <span className="text-sm text-slate-600 dark:text-slate-300 me-2 tabular-nums">
               {t('personnel.pagination.pageInfo', { current: pagination.page, total: pagination.pages || 1 })}
             </span>
 
@@ -575,9 +654,9 @@ export const PersonnelListPage: React.FC = () => {
               size="sm"
               disabled={currentPage <= 1 || isLoading}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="h-11 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
+              className="h-11 px-3 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-white dark:hover:bg-slate-800 flex items-center gap-1"
             >
-              <ChevronRight className="w-4 h-4" />
+              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               <span>{t('common.previous')}</span>
             </Button>
 
@@ -586,10 +665,10 @@ export const PersonnelListPage: React.FC = () => {
               size="sm"
               disabled={currentPage >= pagination.pages || isLoading}
               onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
-              className="h-11 px-3 border-[#cbd5e1] text-gray-700 rounded hover:bg-white flex items-center gap-1"
+              className="h-11 px-3 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-white dark:hover:bg-slate-800 flex items-center gap-1"
             >
               <span>{t('common.next')}</span>
-              <ChevronLeft className="w-4 h-4" />
+              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </Button>
           </div>
         </div>
@@ -597,12 +676,15 @@ export const PersonnelListPage: React.FC = () => {
 
       {/* Modal de confirmation de suppression */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="text-right">
+        <AlertDialogContent
+          className="text-start rounded-xl bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-lg"
+          dir={dir}
+        >
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-bold text-red-600">
+            <AlertDialogTitle className="text-xl font-bold text-red-600 dark:text-red-400">
               {t('personnel.delete.title')}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-gray-700 mt-2">
+            <AlertDialogDescription className="text-base text-slate-700 dark:text-slate-300 mt-2">
               {t('personnel.delete.description', {
                 name: `${personnelToDelete?.nom || ''} ${personnelToDelete?.prenom || ''}`.trim(),
                 cin: personnelToDelete?.cin ? ` (CIN: ${personnelToDelete.cin})` : ''
@@ -614,14 +696,14 @@ export const PersonnelListPage: React.FC = () => {
           <AlertDialogFooter className="flex gap-3 justify-end mt-4">
             <AlertDialogCancel
               disabled={deleteMutation.isPending}
-              className="h-11 px-4 rounded text-gray-700"
+              className="h-11 px-4 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={deleteMutation.isPending}
-              className="h-11 px-5 rounded bg-red-600 hover:bg-red-700 text-white font-bold"
+              className="h-11 px-5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
             >
               {deleteMutation.isPending ? t('personnel.delete.deleting') : t('personnel.delete.confirmButton')}
             </AlertDialogAction>

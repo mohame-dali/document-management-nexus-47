@@ -20,9 +20,26 @@ export interface ScannerConfig {
   format?: 'pdf' | 'jpg' | 'jpeg' | 'png' | 'PDF' | 'JPEG' | 'PNG';
   colorMode?: 'Color' | 'Grayscale' | 'BlackAndWhite' | 'color' | 'grayscale' | 'blackAndWhite';
   documentSource?: 'Flatbed' | 'Feeder' | 'flatbed' | 'feeder';
+  paperSize?: string;
   duplex?: boolean;
+  autoOcr?: boolean;
   scanId?: string;
   languages?: string;
+}
+
+export type ScannerConnectionState = 'connected' | 'service_only' | 'offline';
+
+export interface ScannerBridgeTestResult {
+  state: ScannerConnectionState;
+  reachable: boolean;
+  hardwareReady: boolean;
+  latencyMs: number;
+  deviceId?: string;
+  devicesCount?: number;
+  platform?: string;
+  messageFr: string;
+  messageAr: string;
+  endpointTested: string;
 }
 
 export interface ScannerDevice {
@@ -307,6 +324,196 @@ export const selectScanner = async (
   return response.data;
 };
 
+/**
+ * Test connectivity to either the configured app scanner API or a custom local scanner bridge URL.
+ */
+export const testScannerBridgeConnection = async (
+  customBridgeUrl?: string
+): Promise<ScannerBridgeTestResult> => {
+  const startedAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const elapsed = () =>
+    Math.max(
+      1,
+      Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - startedAt)
+    );
+
+  const rawUrl = (customBridgeUrl || '').trim().replace(/\/+$/, '');
+  const apiBase = String(import.meta.env.VITE_API_URL || '/api').trim().replace(/\/+$/, '');
+  const defaultApiScanUrl = `${apiBase}/scan`;
+  const isInternalBackendEndpoint =
+    !rawUrl || rawUrl === '/api/scan' || rawUrl === defaultApiScanUrl;
+
+  if (isInternalBackendEndpoint) {
+    try {
+      const status = await getScannerStatus();
+      const inner = status?.data || {};
+      const enabled = Boolean(inner?.enabled);
+      const deviceId =
+        typeof (inner?.deviceId ?? status?.deviceId) === 'string'
+          ? String(inner?.deviceId ?? status?.deviceId)
+          : undefined;
+      const hasSelectedDevice = Boolean(deviceId && deviceId !== 'Not selected');
+      const platform = typeof inner?.platform === 'string' ? inner.platform : undefined;
+
+      let devicesCount = 0;
+      if (enabled) {
+        try {
+          const devices = await listScanners({ refresh: false });
+          devicesCount = Array.isArray(devices) ? devices.length : 0;
+        } catch {
+          devicesCount = 0;
+        }
+      }
+
+      const latencyMs = elapsed();
+      if (enabled && (hasSelectedDevice || devicesCount > 0)) {
+        return {
+          state: 'connected',
+          reachable: true,
+          hardwareReady: true,
+          latencyMs,
+          deviceId: hasSelectedDevice ? deviceId : undefined,
+          devicesCount,
+          platform,
+          endpointTested: defaultApiScanUrl,
+          messageFr: hasSelectedDevice
+            ? `Service actif et scanner prêt (${deviceId}).`
+            : `Service actif — ${devicesCount} scanner(s) détecté(s).`,
+          messageAr: hasSelectedDevice
+            ? `الخدمة متصلة والماسح الضوئي جاهز (${deviceId}).`
+            : `الخدمة متصلة — تم العثور على ${devicesCount} ماسح ضوئي.`,
+        };
+      }
+
+      return {
+        state: 'service_only',
+        reachable: true,
+        hardwareReady: false,
+        latencyMs,
+        deviceId: hasSelectedDevice ? deviceId : undefined,
+        devicesCount,
+        platform,
+        endpointTested: defaultApiScanUrl,
+        messageFr: enabled
+          ? 'Service de numérisation joignable, mais aucun scanner physique sélectionné ou connecté.'
+          : 'Service serveur joignable, mais le module scanner matériel est actuellement désactivé.',
+        messageAr: enabled
+          ? 'خدمة المسح متاحة، لكن لم يتم تحديد أو توصيل أي ماسح ضوئي فعلي.'
+          : 'خدمة الخادم متاحة، لكن وحدة الماسح الضوئي الفعلي معطلة حالياً على الخادم.',
+      };
+    } catch (error: unknown) {
+      return {
+        state: 'offline',
+        reachable: false,
+        hardwareReady: false,
+        latencyMs: elapsed(),
+        endpointTested: defaultApiScanUrl,
+        messageFr: getScannerErrorMessage(error, null, 'fr'),
+        messageAr: getScannerErrorMessage(error, null, 'ar'),
+      };
+    }
+  }
+
+  // Validate custom URL scheme safely before probing
+  if (!/^https?:\/\/.+/i.test(rawUrl) && !rawUrl.startsWith('/')) {
+    return {
+      state: 'offline',
+      reachable: false,
+      hardwareReady: false,
+      latencyMs: elapsed(),
+      endpointTested: rawUrl,
+      messageFr: 'Adresse du service scanner invalide (doit commencer par http://, https:// ou /).',
+      messageAr: 'عنوان خدمة الماسح الضوئي غير صالح (يجب أن يبدأ بـ http:// أو https:// أو /).',
+    };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4500);
+  const statusUrl = rawUrl.endsWith('/status') ? rawUrl : `${rawUrl}/status`;
+
+  try {
+    let response = await fetch(statusUrl, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+
+    if (response.status === 404 && statusUrl !== rawUrl) {
+      response = await fetch(rawUrl, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      });
+    }
+
+    const latencyMs = elapsed();
+    if (!response.ok) {
+      return {
+        state: 'offline',
+        reachable: false,
+        hardwareReady: false,
+        latencyMs,
+        endpointTested: statusUrl,
+        messageFr: `Le service local a répondu avec le code HTTP ${response.status}.`,
+        messageAr: `استجابت الخدمة المحلية برمز الخطأ HTTP ${response.status}.`,
+      };
+    }
+
+    let parsed: Record<string, unknown> | null = null;
+    try {
+      parsed = (await response.json()) as Record<string, unknown>;
+    } catch {
+      parsed = null;
+    }
+
+    const innerData =
+      parsed?.data && typeof parsed.data === 'object'
+        ? (parsed.data as Record<string, unknown>)
+        : parsed;
+    const deviceId =
+      typeof innerData?.deviceId === 'string' && innerData.deviceId !== 'Not selected'
+        ? innerData.deviceId
+        : undefined;
+    const enabled = innerData?.enabled === undefined ? true : Boolean(innerData.enabled);
+
+    return {
+      state: enabled ? 'connected' : 'service_only',
+      reachable: true,
+      hardwareReady: enabled,
+      latencyMs,
+      deviceId,
+      endpointTested: statusUrl,
+      messageFr: enabled
+        ? deviceId
+          ? `Connexion réussie au service local (${deviceId}).`
+          : 'Connexion réussie au service local de numérisation.'
+        : 'Service local joignable mais scanner désactivé.',
+      messageAr: enabled
+        ? deviceId
+          ? `تم الاتصال بنجاح بالخدمة المحلية (${deviceId}).`
+          : 'تم الاتصال بنجاح بخدمة الماسح الضوئي المحلية.'
+        : 'الخدمة المحلية متصلة لكن الماسح معطل.',
+    };
+  } catch (err: unknown) {
+    const isAbort = (err as { name?: string })?.name === 'AbortError';
+    return {
+      state: 'offline',
+      reachable: false,
+      hardwareReady: false,
+      latencyMs: elapsed(),
+      endpointTested: statusUrl,
+      messageFr: isAbort
+        ? 'Délai dépassé : impossible de joindre le service local du scanner.'
+        : 'Service local hors ligne ou inaccessible depuis le navigateur (vérifiez que le pont local est démarré).',
+      messageAr: isAbort
+        ? 'انتهت مهلة الاتصال: تعذر الوصول إلى خدمة الماسح الضوئي المحلية.'
+        : 'خدمة الماسح المحلي غير متصلة أو يتعذر الوصول إليها (تأكد من تشغيل الخدمة المحلية).',
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 // Start a scan - Admin and AdminTuningDesk only
 export const startScan = async (config?: ScannerConfig): Promise<ScanResult> => {
   const response = await api.post('/scan/start', {
@@ -369,6 +576,18 @@ export const scanDocument = async (options: {
   if (options.scanId) {
     requestData.scanId = options.scanId;
   }
+  if (options.config?.colorMode) {
+    requestData.colorMode = options.config.colorMode;
+  }
+  if (options.config?.documentSource) {
+    requestData.documentSource = options.config.documentSource;
+  }
+  if (typeof options.config?.duplex === 'boolean') {
+    requestData.duplex = options.config.duplex;
+  }
+  if (options.config?.paperSize) {
+    requestData.paperSize = options.config.paperSize;
+  }
   if (options.config?.languages) {
     requestData.languages = options.config.languages;
   }
@@ -398,6 +617,18 @@ export const scanTemporaryDocument = async (
   };
   if (config?.scanId) {
     requestData.scanId = config.scanId;
+  }
+  if (config?.colorMode) {
+    requestData.colorMode = config.colorMode;
+  }
+  if (config?.documentSource) {
+    requestData.documentSource = config.documentSource;
+  }
+  if (typeof config?.duplex === 'boolean') {
+    requestData.duplex = config.duplex;
+  }
+  if (config?.paperSize) {
+    requestData.paperSize = config.paperSize;
   }
   if (config?.languages) {
     requestData.languages = config.languages;

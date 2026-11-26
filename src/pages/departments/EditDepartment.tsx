@@ -6,7 +6,7 @@ import DepartmentForm, { DepartmentFormData } from '@/components/forms/Departmen
 import { toast } from 'sonner';
 import { Building, ArrowRight, AlertCircle, Info, Calendar, ShieldCheck, Hash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 
 const EditDepartment: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -107,8 +107,10 @@ const EditDepartment: React.FC = () => {
                 <Calendar className="h-4 w-4 text-[#2c5282]" />
                 تاريخ الإنشاء
               </span>
-              <p className="font-medium text-[#1a202c]">
-                {department.createdAt ? formatArabicDate(department.createdAt) : 'غير مسجل'}
+              <p className="font-medium text-[#1a202c] tabular-nums">
+                {department.createdAt ? (
+                  <bdi dir="rtl" className="tabular-nums">{formatLongDate(department.createdAt, 'ar')}</bdi>
+                ) : 'غير مسجل'}
               </p>
             </div>
 

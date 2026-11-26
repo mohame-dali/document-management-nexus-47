@@ -19,11 +19,14 @@ import { AttendanceDeclarationDialog } from '@/components/attendance/AttendanceD
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useDirection } from '@/i18n/useDirection';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   CalendarCheck,
-  Calendar,
   Home,
   ChevronLeft,
+  ChevronRight,
   RefreshCw,
   Info,
   CalendarDays,
@@ -33,11 +36,7 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle,
   Trash2,
-  Building,
-  MapPin,
-  GraduationCap,
 } from 'lucide-react';
 import { useAttendanceExport } from '@/hooks/useAttendanceExport';
 import { MyLeaveBalanceCard, LeaveBalanceData } from '@/components/attendance/MyLeaveBalanceCard';
@@ -46,11 +45,14 @@ import { MyCalendarWeekView } from '@/components/attendance/MyCalendarWeekView';
 import { MyCalendarMonthView } from '@/components/attendance/MyCalendarMonthView';
 import { MyCalendarYearView } from '@/components/attendance/MyCalendarYearView';
 import { MyAttendanceLegend } from '@/components/attendance/MyAttendanceLegend';
+import { formatDateWithWeekday } from '@/utils/formatDate';
 
 type CalendarViewMode = 'day' | 'week' | 'month' | 'year';
 
 export const MyAttendanceCalendarPage: React.FC = () => {
   const { currentUser } = useAuth();
+  const { dir, isRTL } = useDirection();
+  const BreadcrumbChevron = isRTL ? ChevronLeft : ChevronRight;
 
   // Mode de vue actif
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
@@ -257,7 +259,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
       const att = dayAttendance;
       const isPresent = att?.statut === 'present';
       const isAbsent = att?.statut === 'absent';
-      const isUnrecorded = !att || att?.statut === 'unrecorded';
+      const isUnrecorded = !att || String(att.statut) === 'unrecorded';
 
       await exportDailyReport(
         {
@@ -392,10 +394,10 @@ export const MyAttendanceCalendarPage: React.FC = () => {
   // Gestion des états sans profil
   if (isProfileLoading) {
     return (
-      <div className="min-h-screen bg-[#f7fafc] p-8 flex items-center justify-center" dir="rtl">
-        <div className="bg-white border border-[#e2e8f0] rounded p-10 flex flex-col items-center gap-3">
-          <RefreshCw className="h-7 w-7 animate-spin text-[#2c5282]" />
-          <p className="text-sm font-semibold text-gray-700">جاري تحميل بيانات التقويم الشخصي...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8 flex items-center justify-center text-start" dir={dir}>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-10 flex flex-col items-center gap-3 shadow-sm">
+          <RefreshCw className="h-7 w-7 animate-spin text-[#2c5282] dark:text-sky-400" />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">جاري تحميل بيانات التقويم الشخصي...</p>
         </div>
       </div>
     );
@@ -403,26 +405,26 @@ export const MyAttendanceCalendarPage: React.FC = () => {
 
   if (!personnelId) {
     return (
-      <div className="min-h-screen bg-[#f7fafc] p-6 space-y-6" dir="rtl">
-        <div className="bg-white border border-[#e2e8f0] rounded p-8 max-w-xl mx-auto text-center space-y-4 shadow-none">
-          <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-200 text-[#2c5282] flex items-center justify-center mx-auto">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 space-y-6 text-start" dir={dir}>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 max-w-xl mx-auto text-center space-y-4 shadow-sm">
+          <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[#2c5282] dark:text-sky-300 flex items-center justify-center mx-auto">
             <Info className="h-7 w-7" />
           </div>
-          <h1 className="text-xl font-bold text-[#1a202c]">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             تقويم الحضور الشخصي (Mon Calendrier)
           </h1>
-          <div className="p-4 bg-gray-50 border border-[#e2e8f0] rounded text-gray-700 text-sm leading-relaxed">
-            <p className="font-semibold text-gray-900 mb-1">
+          <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
+            <p className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
               لا توجد بطاقة موظف مرتبطة بحسابك الحالي في الموارد البشرية.
             </p>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               يرجى التواصل مع إدارة الموارد البشرية أو مسؤول النظام لربط حسابك ببطاقتك المهنية لتتمكن من متابعة حضورك ورصيد إجازاتك.
             </p>
           </div>
           <Button
             variant="outline"
             onClick={() => refetchProfile()}
-            className="h-11 px-5 text-xs font-semibold border-[#cbd5e1] rounded text-[#2c5282] hover:bg-gray-50 inline-flex items-center gap-2"
+            className="h-10 px-5 text-xs font-semibold border-slate-300 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
             <span>إعادة المحاولة</span>
@@ -433,44 +435,44 @@ export const MyAttendanceCalendarPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] p-4 sm:p-6 space-y-5" dir="rtl">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 space-y-5 text-start" dir={dir}>
       {/* 1. Breadcrumbs + En-tête */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-none">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
-              <Link to="/dashboard" className="hover:text-[#2c5282] flex items-center gap-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
                 <Home className="h-3.5 w-3.5" />
                 <span>لوحة التحكم</span>
               </Link>
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
-              <Link to="/dashboard/hr/my-profile" className="hover:text-[#2c5282]">
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <Link to="/dashboard/hr/my-profile" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
                 <span>ملفي الشخصي</span>
               </Link>
-              <ChevronLeft className="h-3.5 w-3.5 text-gray-400" />
-              <span className="text-[#1a202c] font-semibold">تقويم حضوري</span>
+              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+              <span className="text-slate-900 dark:text-slate-100 font-semibold">تقويم حضوري</span>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#2c5282] text-white rounded">
+              <div className="p-2.5 bg-[#2c5282] dark:bg-sky-700 text-white rounded-lg shadow-sm">
                 <CalendarCheck className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-[#1a202c]">
+                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   حضوري — تقويم وسجل الحضور الشخصي
                 </h1>
-                <p className="text-sm text-[#5f6b7d]">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   متابعة حالة الحضور اليومي، فترات التكوين، المهمات، ورصيد الإجازات السنوية
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               onClick={() => setIsDeclarationDialogOpen(true)}
-              className="h-11 min-h-[44px] px-4 bg-[#2c5282] hover:bg-[#1a365d] text-white flex items-center gap-1.5 text-xs font-semibold rounded shadow-sm"
+              className="h-10 px-4 bg-[#2c5282] hover:bg-[#1a365d] dark:bg-sky-700 dark:hover:bg-sky-600 text-white flex items-center gap-1.5 text-xs font-semibold rounded-lg shadow-sm"
             >
               <FileCheck className="h-4 w-4 text-blue-200" />
               <span>تصريح بالحضور / الغياب</span>
@@ -480,7 +482,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
               size="sm"
               onClick={handleExport}
               disabled={isExporting || !profilePersonnel}
-              className="h-11 min-h-[44px] px-3.5 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
+              className="h-10 px-3.5 border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 text-xs font-medium rounded-lg"
             >
               {isExporting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -496,7 +498,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                 loadBalance();
                 loadCalendarData();
               }}
-              className="h-11 px-4 border-[#e2e8f0] rounded text-xs text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5"
+              className="h-10 px-4 border-slate-200 dark:border-slate-700 rounded-lg text-xs text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isCalendarLoading ? 'animate-spin' : ''}`} />
               <span>تحديث البيانات</span>
@@ -513,15 +515,15 @@ export const MyAttendanceCalendarPage: React.FC = () => {
       />
 
       {/* 3. Segment Control Sobre pour les 4 Vues */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-none">
-        <div className="flex items-center gap-1 bg-[#f7fafc] p-1 rounded border border-[#e2e8f0]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-1 bg-slate-50 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
           <button
             type="button"
             onClick={() => setViewMode('day')}
-            className={`h-11 px-4 rounded text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
+            className={`h-9 px-4 rounded-md text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
               viewMode === 'day'
-                ? 'bg-[#2c5282] text-white shadow-none'
-                : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-white'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+                : 'bg-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800'
             }`}
           >
             <span>يوم (Jour)</span>
@@ -530,10 +532,10 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setViewMode('week')}
-            className={`h-11 px-4 rounded text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
+            className={`h-9 px-4 rounded-md text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
               viewMode === 'week'
-                ? 'bg-[#2c5282] text-white shadow-none'
-                : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-white'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+                : 'bg-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800'
             }`}
           >
             <span>أسبوع (Semaine)</span>
@@ -542,10 +544,10 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setViewMode('month')}
-            className={`h-11 px-4 rounded text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
+            className={`h-9 px-4 rounded-md text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
               viewMode === 'month'
-                ? 'bg-[#2c5282] text-white shadow-none'
-                : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-white'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+                : 'bg-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800'
             }`}
           >
             <span>شهر (Mois)</span>
@@ -554,18 +556,18 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setViewMode('year')}
-            className={`h-11 px-4 rounded text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
+            className={`h-9 px-4 rounded-md text-xs font-bold transition-colors duration-200 flex items-center gap-1.5 ${
               viewMode === 'year'
-                ? 'bg-[#2c5282] text-white shadow-none'
-                : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-white'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+                : 'bg-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-800'
             }`}
           >
             <span>سنة (Année)</span>
           </button>
         </div>
 
-        <div className="text-xs text-[#5f6b7d] px-2 font-mono flex items-center gap-1.5">
-          <CalendarDays className="h-4 w-4 text-[#2c5282]" />
+        <div className="text-xs text-slate-600 dark:text-slate-400 px-2 font-mono tabular-nums flex items-center gap-1.5">
+          <CalendarDays className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
           <span>
             {viewMode === 'day' && `معاينة اليوم : ${selectedDate}`}
             {viewMode === 'week' && `معاينة الأسبوع`}
@@ -627,19 +629,19 @@ export const MyAttendanceCalendarPage: React.FC = () => {
       <MyAttendanceLegend leaveReasons={leaveReasons} />
 
       {/* 6. Section بياناتي والتصاريح المقدمة */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg p-5 shadow-none space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#e2e8f0]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <FileCheck className="w-5 h-5 text-[#2c5282]" />
-              تصاريحي السابقة والمعلقة (بياناتي)
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
+              <FileCheck className="w-5 h-5 text-[#2c5282] dark:text-sky-400" />
+              <span>تصاريحي السابقة والمعلقة (بياناتي)</span>
               {myDeclarations.filter((d) => d.validationStatus === 'en_attente').length > 0 && (
-                <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-xs px-2 py-0.5 font-bold">
+                <Badge className="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-800 text-xs px-2 py-0.5 font-bold tabular-nums">
                   {myDeclarations.filter((d) => d.validationStatus === 'en_attente').length} في انتظار الموافقة
                 </Badge>
               )}
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               متابعة حالة تصاريح الحضور أو الغياب أو المأموريات التي قدمتها للإدارة.
             </p>
           </div>
@@ -647,7 +649,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           <Button
             size="sm"
             onClick={() => setIsDeclarationDialogOpen(true)}
-            className="h-11 min-h-[44px] px-4 bg-[#2c5282] hover:bg-[#1a365d] text-white text-xs font-semibold gap-1.5 rounded"
+            className="h-10 px-4 bg-[#2c5282] hover:bg-[#1a365d] dark:bg-sky-700 dark:hover:bg-sky-600 text-white text-xs font-semibold gap-1.5 rounded-lg"
           >
             <FileCheck className="w-3.5 h-3.5" />
             <span>تقديم تصريح جديد</span>
@@ -655,51 +657,42 @@ export const MyAttendanceCalendarPage: React.FC = () => {
         </div>
 
         {isDeclarationsLoading ? (
-          <div className="py-8 text-center text-gray-400">
-            <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2c5282]" />
-            <span className="text-xs mt-2 block">جاري تحميل التصاريح...</span>
-          </div>
+          <TableSkeleton rows={4} columns={5} />
         ) : myDeclarations.length === 0 ? (
-          <div className="py-6 text-center text-gray-400 bg-gray-50/50 rounded border border-dashed border-gray-200">
-            <Clock className="w-6 h-6 mx-auto mb-1 text-gray-300" />
-            <p className="text-xs font-medium text-gray-600">لم تقدم أي تصريح مسبق حتى الآن</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              يمكنك استخدام زر "تصريح بالحضور / الغياب" لإشعار الإدارة بأي حضور أو مأمورية أو رخصة قادمة.
-            </p>
-          </div>
+          <EmptyState
+            className="py-8 border-dashed bg-slate-50/50 dark:bg-slate-950/40"
+            icon={<Clock className="w-6 h-6" />}
+            title="لم تقدم أي تصريح مسبق حتى الآن"
+            description={'يمكنك استخدام زر "تصريح بالحضور / الغياب" لإشعار الإدارة بأي حضور أو مأمورية أو رخصة قادمة.'}
+          />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-gray-50 border-b border-[#e2e8f0] text-gray-600 font-bold">
+          <div className="overflow-x-auto max-h-[55vh] rounded-lg border border-slate-200/80 dark:border-slate-800">
+            <table className="w-full text-start text-xs">
+              <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold">
                 <tr>
-                  <th className="py-2.5 px-3">التاريخ المعني</th>
-                  <th className="py-2.5 px-3">نوع التصريح / السبب</th>
-                  <th className="py-2.5 px-3">التفاصيل المقدمة</th>
-                  <th className="py-2.5 px-3">حالة المراجعة</th>
-                  <th className="py-2.5 px-3 text-center">إلغاء الطلب</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">التاريخ المعني</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">نوع التصريح / السبب</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">التفاصيل المقدمة</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">حالة المراجعة</th>
+                  <th className="py-2.5 px-3 text-center whitespace-nowrap">إلغاء الطلب</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e2e8f0]">
+              <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800">
                 {myDeclarations.map((decl) => {
-                  const formattedDate = new Date(decl.date).toLocaleDateString('fr-FR', {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  });
+                  const formattedDate = formatDateWithWeekday(decl.date, isRTL ? 'ar' : 'fr');
 
                   return (
-                    <tr key={decl._id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="py-2.5 px-3 whitespace-nowrap font-medium text-gray-800">
-                        {formattedDate}
+                    <tr key={decl._id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/60 transition-colors">
+                      <td className="py-2.5 px-3 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200 tabular-nums">
+                        <bdi dir={isRTL ? 'rtl' : 'ltr'} className="tabular-nums">{formattedDate}</bdi>
                       </td>
                       <td className="py-2.5 px-3">
                         {decl.statut === 'present' ? (
-                          <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1 tabular-nums">
                             حاضر {decl.heureArrivee ? `(${decl.heureArrivee})` : ''}
                           </span>
                         ) : (
-                          <span className="text-amber-800 font-semibold">
+                          <span className="text-amber-800 dark:text-amber-300 font-semibold">
                             {(() => {
                               const lrId = typeof decl.leaveReasonId === 'object' && decl.leaveReasonId !== null ? (decl.leaveReasonId as LeaveReason)._id : decl.leaveReasonId;
                               const found = leaveReasons.find((r) => r.code === decl.motif || r._id === lrId);
@@ -708,7 +701,7 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 max-w-xs text-gray-600">
+                      <td className="py-2.5 px-3 max-w-xs text-slate-600 dark:text-slate-300">
                         <div className="space-y-0.5 truncate">
                           {decl.detailsMotif?.nomService && (
                             <div>المصلحة: {decl.detailsMotif.nomService}</div>
@@ -717,37 +710,37 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                             <div>المكان: {decl.detailsMotif.lieuMission}</div>
                           )}
                           {decl.detailsMotif?.commentaire && (
-                            <div className="italic text-gray-400">"{decl.detailsMotif.commentaire}"</div>
+                            <div className="italic text-slate-400">"{decl.detailsMotif.commentaire}"</div>
                           )}
                           {decl.rejectionReason && (
-                            <div className="text-red-600 font-semibold">سبب الرفض: {decl.rejectionReason}</div>
+                            <div className="text-red-600 dark:text-red-400 font-semibold">سبب الرفض: {decl.rejectionReason}</div>
                           )}
                           {decl.adminComment && (
-                            <div className="text-blue-600">ملاحظة الإدارة: {decl.adminComment}</div>
+                            <div className="text-blue-600 dark:text-sky-400">ملاحظة الإدارة: {decl.adminComment}</div>
                           )}
                         </div>
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
                         {decl.validationStatus === 'en_attente' && (
-                          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border border-amber-300 font-medium px-2 py-0.5 gap-1">
-                            <Clock className="w-3 h-3 text-amber-600" />
+                          <Badge className="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60 border border-amber-300 dark:border-amber-800 font-medium px-2 py-0.5 gap-1">
+                            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                             قيد المراجعة
                           </Badge>
                         )}
                         {decl.validationStatus === 'approuvee' && (
-                          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 font-medium px-2 py-0.5 gap-1">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <Badge className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 font-medium px-2 py-0.5 gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                             مقبول ومعتمد
                           </Badge>
                         )}
                         {decl.validationStatus === 'rejetee' && (
-                          <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border border-red-300 font-medium px-2 py-0.5 gap-1">
-                            <XCircle className="w-3 h-3 text-red-600" />
+                          <Badge className="bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/60 border border-red-300 dark:border-red-800 font-medium px-2 py-0.5 gap-1">
+                            <XCircle className="w-3 h-3 text-red-600 dark:text-red-400" />
                             مرفوض
                           </Badge>
                         )}
                         {decl.validationStatus === 'modifiee' && (
-                          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 border border-blue-300 font-medium px-2 py-0.5 gap-1">
+                          <Badge className="bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/60 border border-blue-300 dark:border-blue-800 font-medium px-2 py-0.5 gap-1">
                             تم التعديل والاعتماد
                           </Badge>
                         )}
@@ -758,14 +751,14 @@ export const MyAttendanceCalendarPage: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteDeclaration(decl._id)}
-                            className="h-11 min-h-[44px] px-3 text-red-500 hover:text-red-700 hover:bg-red-50 text-xs gap-1"
+                            className="h-9 px-3 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg text-xs gap-1"
                             title="إلغاء التصريح"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>إلغاء</span>
                           </Button>
                         ) : (
-                          <span className="text-gray-300 text-xs">—</span>
+                          <span className="text-slate-300 dark:text-slate-600 text-xs">—</span>
                         )}
                       </td>
                     </tr>

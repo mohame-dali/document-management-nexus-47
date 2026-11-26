@@ -20,9 +20,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        cairo: ['"Cairo Variable"', '"Noto Sans Arabic"', '"Segoe UI"', 'Tahoma', 'system-ui', 'sans-serif'],
+        arabic: ['"Cairo Variable"', 'Cairo', '"Noto Sans Arabic"', '"Segoe UI"', 'Tahoma', 'system-ui', 'sans-serif'],
+        cairo: ['"Cairo Variable"', 'Cairo', '"Noto Sans Arabic"', '"Segoe UI"', 'Tahoma', 'system-ui', 'sans-serif'],
         inter: ['"Inter Variable"', '"Segoe UI"', 'system-ui', 'sans-serif'],
-        sans: ['"Inter Variable"', '"Cairo Variable"', '"Segoe UI"', 'system-ui', 'sans-serif'],
+        sans: ['"Cairo Variable"', 'Cairo', '"Inter Variable"', '"Segoe UI"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',

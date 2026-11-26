@@ -1,69 +1,56 @@
-# Welcome to your Lovable project
+# Système de Gestion Documentaire & Courrier (DMS)
 
-## Project info
+Application full-stack de gestion électronique de documents, courriers administratifs entrants/sortants, suivi RH, numérisation locale et recherche sémantique / IA locale (GGUF).
 
-**URL**: https://lovable.dev/projects/c7878052-77c0-4889-a72b-cfdf63e418fa
+---
 
-## How can I edit this code?
+## Pile technique
 
-There are several ways of editing your application.
+- **Frontend** : React 18, TypeScript, Vite 5, Tailwind CSS, React Router, i18next (FR / AR avec support RTL/LTR).
+- **Serveur unifié (`server.ts`)** : Node.js >= 22 (`tsx`), Express 5, Socket.IO 4, tâches planifiées `node-cron` (sauvegarde, nettoyage temporaire, notifications quotidiennes), service SPA Vite (`dev`) / `dist/` (`production`).
+- **Base de données** : MongoDB Community + Mongoose `^9.10.2` (client racine partagé).
+- **IA locale (GGUF)** : `node-llama-cpp` (`ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf` + `bge-m3-q4_k_m.gguf` par défaut, repli Qwen 2.5 / Nomic pris en charge).
+- **OCR & Numérisation** : `tesseract-ocr` (`ara`, `fra`, `eng`), `poppler-utils` (`pdftoppm`), `ImageMagick`, `pdf-parse`, scanner Linux SANE (`scanimage`, `img2pdf`) ou Windows WIA (`PowerShell`).
+- **Déploiement** : PM2 (`fork`, 1 instance, `ecosystem.config.cjs`), Nginx (`deploy/ubuntu/dms.nginx.conf`) ou IIS (`deploy/windows/web.config`), sauvegarde/restauration (`deploy/scripts/backup-all.sh`, `restore-all.sh`).
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c7878052-77c0-4889-a72b-cfdf63e418fa) and start prompting.
+## Démarrage rapide (développement local)
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+# 1. Installer les dépendances depuis la racine uniquement
+npm ci
 
-**Use your preferred IDE**
+# 2. Configurer l'unique fichier .env à la racine (voir .env.production.example)
+cp .env.production.example .env
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# 3. Télécharger et vérifier les modèles GGUF locaux (~4,7 Go)
+npm run download-models
+npm run check-models
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4. Lancer le serveur unifié (Express + Vite middlewares)
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Build et exploitation
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Compiler le bundle frontend dans dist/
+npm run build
 
-**Use GitHub Codespaces**
+# Contrôler l'environnement avant mise en production
+node --env-file=.env deploy/scripts/check-env.mjs
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Lancer avec PM2 (1 instance fork via tsx)
+pm2 start ecosystem.config.cjs
+```
 
-## What technologies are used for this project?
+> **Note de sécurité** : avant toute exposition réseau, consultez `docs/ARCHITECTURE_DMS.md` (section 0) et `docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md` pour vérifier l'état exact des contrôles de sécurité, du compte administrateur initial (`backend/scripts/create-superadmin.js`) et des règles Nginx/UFW.
 
-This project is built with .
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Documentation du dépôt
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c7878052-77c0-4889-a72b-cfdf63e418fa) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- [`docs/ARCHITECTURE_DMS.md`](docs/ARCHITECTURE_DMS.md) — Architecture réelle vérifiée dans le code source, flux réseau, chemins de stockage et points de vigilance sécurité.
+- [`docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md`](docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md) — Guide complet de préparation et de déploiement (VM QEMU/KVM Ubuntu Desktop, Ubuntu Server, Windows Server, recette et dépannage).
+- [`MODELS.md`](MODELS.md) — Guide des modèles IA GGUF (`node-llama-cpp`), variables `.env`, téléchargement et réindexation vectorielle RAG.

@@ -4,9 +4,9 @@ export interface ChartPersonnel {
   _id: string;
   nom: string;
   prenom: string;
+  username?: string | null;
   poste?: string;
   photo?: string;
-  cin?: string;
   emailPersonnel?: string;
 }
 
@@ -22,9 +22,9 @@ export interface Director {
   _id: string;
   nom: string;
   prenom: string;
+  username?: string | null;
   poste?: string;
   photo?: string;
-  cin?: string;
   emailPersonnel?: string;
 }
 

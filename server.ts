@@ -64,32 +64,37 @@ process.env.JWT_EXPIRE = process.env.JWT_EXPIRE || '30d';
 process.env.JWT_COOKIE_EXPIRE = process.env.JWT_COOKIE_EXPIRE || '30';
 
 // Warm-up de l'IA (non-bloquant)
-setTimeout(async () => {
-  try {
-    console.log('[AI Warm-up] Préchargement des modèles en cours...');
-    const { checkOllamaHealth } = require('./backend/services/ollamaService');
-    const health = await checkOllamaHealth();
-    if (health?.ok) {
-      console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
-    } else {
-      console.log('[AI Warm-up] ℹ️ Modèles IA non téléchargés (mode hors ligne).');
+if (process.env.DISABLE_AI_WARMUP !== 'true' && process.env.NODE_ENV !== 'test') {
+  setTimeout(async () => {
+    try {
+      console.log('[AI Warm-up] Préchargement des modèles en cours...');
+      const { checkOllamaHealth } = require('./backend/services/ollamaService');
+      const health = await checkOllamaHealth();
+      if (health?.ok) {
+        console.log('[AI Warm-up] ✅ Modèles chargés en mémoire.');
+      } else {
+        console.log('[AI Warm-up] ℹ️ Modèles IA non téléchargés (mode hors ligne).');
+      }
+    } catch (err: unknown) {
+      console.warn('[AI Warm-up] Erreur de préchargement:', (err as Error).message);
     }
-  } catch (err: unknown) {
-    console.warn('[AI Warm-up] Erreur de préchargement:', (err as Error).message);
-  }
-}, 5000); // Attendre 5 secondes que le serveur soit stable avant de charger les 5 Go
+  }, 5000); // Attendre 5 secondes que le serveur soit stable avant de charger les 5 Go
+}
 
-// Démarrer le scheduler de backup si MongoDB est connecté
+// Démarrer les schedulers de backup et de rattrapage RAG si MongoDB est connecté
 try {
   const { startBackupScheduler } = require('./backend/services/backupScheduler');
-  mongoose.connection.on('connected', () => {
+  const { startIndexRetryScheduler } = require('./backend/services/indexRetryScheduler');
+  const startDbSchedulers = () => {
     startBackupScheduler().catch((e: Error) => console.warn('[Backup Scheduler] Notice:', e.message));
-  });
+    startIndexRetryScheduler();
+  };
+  mongoose.connection.on('connected', startDbSchedulers);
   if (mongoose.connection.readyState === 1) {
-    startBackupScheduler().catch((e: Error) => console.warn('[Backup Scheduler] Notice:', e.message));
+    startDbSchedulers();
   }
 } catch (err: unknown) {
-  console.warn('[Server] Backup scheduler non démarré:', (err as Error).message);
+  console.warn('[Server] Schedulers DB non démarrés:', (err as Error).message);
 }
 
 // Démarrer le scheduler de nettoyage des fichiers temporaires (>24h)
@@ -116,14 +121,57 @@ try {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 const httpServer = createServer(app);
 
-// Socket.io setup
+// CORS Allowed Origins allowlist (Express & Socket.IO)
+const allowedOrigins = new Set<string>([
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+]);
+for (const envOrigin of [process.env.FRONTEND_URL, process.env.APP_URL, process.env.SHARED_APP_URL]) {
+  if (envOrigin && typeof envOrigin === 'string') {
+    allowedOrigins.add(envOrigin.trim().replace(/\/+$/, ''));
+  }
+}
+if (process.env.ALLOWED_ORIGINS) {
+  for (const item of process.env.ALLOWED_ORIGINS.split(',')) {
+    const trimmed = item.trim().replace(/\/+$/, '');
+    if (trimmed) allowedOrigins.add(trimmed);
+  }
+}
+
+function isOriginAllowed(origin: string | undefined, requestHost?: string): boolean {
+  if (!origin) return true;
+  const normalized = origin.trim().replace(/\/+$/, '');
+  if (allowedOrigins.has(normalized)) return true;
+  if (requestHost) {
+    try {
+      const parsed = new URL(normalized);
+      if (parsed.host === requestHost) return true;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+// Socket.io setup with strict CORS allowlist
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origine non autorisée par CORS'));
+      }
+    },
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires', 'X-Requested-With', 'Accept', 'Origin'],
+  },
 });
 
 try {
@@ -131,6 +179,20 @@ try {
 } catch (e: unknown) {
   console.warn('Socket handler initialization notice:', (e as Error).message);
 }
+
+// Security headers (Helmet)
+const helmet = require('helmet');
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false,
+  hsts: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  } : false,
+  frameguard: false,
+}));
 
 // Body & Cookie parsers
 app.use(express.json({ limit: '50mb' }));
@@ -152,17 +214,62 @@ app.use((req, _res, next) => {
   next();
 });
 
-// Enable CORS
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires', 'X-Requested-With', 'Accept', 'Origin']
+// Enable strict dynamic CORS allowlist
+app.use(cors((req, callback) => {
+  const origin = req.headers.origin as string | undefined;
+  const requestHost = ((req.headers['x-forwarded-host'] as string) || req.headers.host || '').split(',')[0].trim();
+  const allowed = isOriginAllowed(origin, requestHost);
+  if (allowed) {
+    callback(null, {
+      origin: true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma', 'Expires', 'X-Requested-With', 'Accept', 'Origin'],
+    });
+  } else {
+    callback(new Error('Origine non autorisée par CORS'));
+  }
 }));
+
+// Global & auth rate limiting
+const rateLimit = require('express-rate-limit');
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req: express.Request) => {
+    const isAuth = Boolean(
+      (req as express.Request & { user?: unknown }).user ||
+      (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) ||
+      (req.cookies && req.cookies.token)
+    );
+    return req.method === 'GET' && isAuth;
+  },
+  message: {
+    success: false,
+    message: 'Trop de requêtes. Réessayez dans une minute.',
+  },
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    success: false,
+    message: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.',
+  },
+});
+
+app.use('/api', globalLimiter);
+app.use('/api/auth/login', loginLimiter);
 
 // Static & Protected document files
 const backendDir = path.join(process.cwd(), 'backend');
-const { protect } = require('./backend/middleware/auth');
+const { protect, authorize } = require('./backend/middleware/auth');
 const fileController = require('./backend/controllers/fileController');
 
 // Protected document endpoint
@@ -171,17 +278,28 @@ app.get('/api/files/:type/:id/:filename', protect, fileController.serveProtected
 // Protect /courrier against unauthenticated access
 app.use('/courrier', protect, fileController.serveCourrierStatic);
 
-// Protect profile photos (avatars), sensitive uploads and templates
+// Explicitly block direct static access to sensitive internal upload folders
+app.use('/uploads/attachments', (_req: express.Request, res: express.Response) => {
+  res.status(403).json({ success: false, message: 'Accès direct refusé' });
+});
+app.use('/uploads/temp', (_req: express.Request, res: express.Response) => {
+  res.status(403).json({ success: false, message: 'Accès direct refusé' });
+});
+app.use('/uploads/templates', (_req: express.Request, res: express.Response) => {
+  res.status(403).json({ success: false, message: 'Accès direct refusé' });
+});
+
+// Protect profile photos (avatars) and remaining uploads
 app.use('/uploads/usersphoto', protect, express.static(path.join(backendDir, 'uploads/usersphoto')));
 app.use('/uploads/personnelphoto', protect, express.static(path.join(backendDir, 'uploads/personnelphoto')));
 app.use('/uploads', protect, express.static(path.join(backendDir, 'uploads')));
 
-// Swagger API Documentation
+// Swagger API Documentation (strictly Admin-only)
 try {
   const swaggerUi = require('swagger-ui-express');
   const swaggerSpec = require('./backend/config/swagger');
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-  app.get('/api-docs.json', (_req: express.Request, res: express.Response) => {
+  app.use('/api-docs', protect, authorize('Admin'), swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api-docs.json', protect, authorize('Admin'), (_req: express.Request, res: express.Response) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });
@@ -263,8 +381,8 @@ app.use((err: AppError, req: express.Request, res: express.Response, next: expre
     err.message?.includes('before initial connection is complete') ||
     err.message?.includes('connect ECONNREFUSED')
   ) {
-    console.warn(`[AI Studio] Database offline — returning fallback response for ${req.method} ${req.originalUrl}`);
-    if (req.method === 'GET') {
+    console.warn(`[AI Studio] Database offline — error for ${req.method} ${req.originalUrl}`);
+    if (process.env.NODE_ENV !== 'production' && req.method === 'GET') {
       if (req.path.includes('/organization-settings')) {
         return res.json({
           success: true,
@@ -411,6 +529,18 @@ async function shutdown(signal: string) {
   const forceExitTimer = setTimeout(() => process.exit(0), 1500);
   forceExitTimer.unref();
   try {
+    try {
+      const { stopIndexRetryScheduler } = require('./backend/services/indexRetryScheduler');
+      stopIndexRetryScheduler();
+    } catch (stopErr) {
+      console.warn('[Shutdown] Index retry scheduler stop warning:', (stopErr as Error).message);
+    }
+    try {
+      const { shutdownAIWorker } = require('./backend/services/ollamaService');
+      await shutdownAIWorker();
+    } catch (aiStopErr) {
+      console.warn('[Shutdown] AI worker stop warning:', (aiStopErr as Error).message);
+    }
     if (viteServer) {
       await viteServer.close();
       viteServer = null;

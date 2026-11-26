@@ -1,3 +1,5 @@
+import { formatShortDate } from './formatDate';
+
 export function getRelativeTime(date: string | Date): string {
   const now = new Date().getTime();
   const then = new Date(date).getTime();
@@ -8,7 +10,7 @@ export function getRelativeTime(date: string | Date): string {
   if (diff < 86400) return `منذ ${Math.floor(diff / 3600)} ساعة`;
   if (diff < 172800) return 'أمس';
   if (diff < 604800) return `منذ ${Math.floor(diff / 86400)} أيام`;
-  return new Date(date).toLocaleDateString('ar-TN');
+  return formatShortDate(date);
 }
 
 export function getDateGroup(date: string | Date): 'today' | 'yesterday' | 'older' {

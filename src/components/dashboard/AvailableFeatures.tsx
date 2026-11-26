@@ -29,6 +29,12 @@ const AvailableFeatures = ({ currentUser }: AvailableFeaturesProps) => {
         t('dashboard.features.advancedSearchAllDepts'),
         t('dashboard.features.systemSettings')
       );
+    } else if (role === 'Director') {
+      features.push(
+        t('dashboard.features.accessAllDocs'),
+        t('dashboard.features.advancedSearchAllDepts'),
+        t('dashboard.features.viewOrgChart')
+      );
     } else if (role === 'AdminTuningDesk') {
       features.push(
         t('dashboard.features.scanAndDigitizeDocs'),
@@ -58,10 +64,10 @@ const AvailableFeatures = ({ currentUser }: AvailableFeaturesProps) => {
   };
 
   return (
-    <Card className="bg-white shadow-sm border border-[#e2e8f0] rounded overflow-hidden">
-      <CardHeader className="bg-[#f7fafc] border-b border-[#e2e8f0] px-5 py-4">
-        <CardTitle className="flex items-center gap-3 text-base sm:text-lg text-[#1a202c]">
-          <div className="p-2 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282]">
+    <Card className="bg-white dark:bg-slate-900 shadow-sm border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden">
+      <CardHeader className="bg-slate-50/90 dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-5 py-4">
+        <CardTitle className="flex items-center gap-3 text-base sm:text-lg text-[#1a202c] dark:text-slate-100">
+          <div className="p-2 bg-[#ebf4ff] dark:bg-slate-800 rounded-lg border border-[#bee3f8] dark:border-slate-700 text-[#2c5282] dark:text-blue-400">
             <Activity className="h-5 w-5" />
           </div>
           {t('dashboard.features.titleForRole', { role: getRoleDisplayName(currentUser?.role) })}
@@ -70,9 +76,8 @@ const AvailableFeatures = ({ currentUser }: AvailableFeaturesProps) => {
       <CardContent className="p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {getAvailableFeatures().map((feature, index) => (
-            <div key={index} className="flex items-center gap-2.5 p-3 bg-[#f7fafc] rounded border border-[#e2e8f0] hover:bg-[#edf2f7] transition-colors duration-200">
-              <div className="w-1.5 h-1.5 bg-[#2c5282] rounded-full flex-shrink-0" />
-              <span className="text-[#2d3748] text-sm font-medium">{feature}</span>
+            <div key={index} className="flex items-center gap-2.5 p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-colors duration-200">
+              <span className="text-[#2d3748] dark:text-slate-200 text-sm font-medium">{feature}</span>
             </div>
           ))}
         </div>

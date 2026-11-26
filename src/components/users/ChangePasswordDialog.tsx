@@ -80,22 +80,22 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-7 bg-white border border-[#e2e8f0] rounded shadow-xl">
-        <DialogHeader className="pb-4 border-b border-[#e2e8f0] text-right">
-          <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282]">
-            <div className="w-10 h-10 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-lg">
+        <DialogHeader className="pb-4 border-b border-slate-200/80 dark:border-slate-800 text-right">
+          <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl font-bold text-[#2c5282] dark:text-sky-300">
+            <div className="w-10 h-10 rounded-lg bg-[#2c5282]/10 dark:bg-sky-950/60 text-[#2c5282] dark:text-sky-400 border border-[#2c5282]/20 dark:border-sky-800/70 flex items-center justify-center shrink-0">
               <Key className="h-5 w-5" />
             </div>
             تغيير كلمة المرور
           </DialogTitle>
-          <DialogDescription className="text-base text-gray-600 text-right mt-1.5">
-            تغيير كلمة المرور للمستخدم: <strong className="text-[#1a202c] font-bold">{user.username}</strong>
+          <DialogDescription className="text-base text-slate-600 dark:text-slate-400 text-right mt-1.5">
+            تغيير كلمة المرور للمستخدم: <strong className="text-[#1a202c] dark:text-slate-100 font-bold">{user.username}</strong>
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-5 pt-3">
           <div className="space-y-2">
-            <Label htmlFor="newPassword" className="text-base font-bold text-[#1a202c]">كلمة المرور الجديدة</Label>
+            <Label htmlFor="newPassword" className="text-base font-bold text-[#1a202c] dark:text-slate-100">كلمة المرور الجديدة</Label>
             <div className="relative">
               <Input
                 id="newPassword"
@@ -103,14 +103,14 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="أدخل كلمة المرور الجديدة"
-                className="h-12 text-base pl-12 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
+                className="h-12 text-base pl-12 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:border-[#2c5282] dark:focus:border-sky-400"
                 required
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-gray-100 rounded text-gray-500"
+                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -123,7 +123,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-base font-bold text-[#1a202c]">تأكيد كلمة المرور</Label>
+            <Label htmlFor="confirmPassword" className="text-base font-bold text-[#1a202c] dark:text-slate-100">تأكيد كلمة المرور</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
@@ -131,14 +131,14 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="أعد إدخال كلمة المرور للتأكيد"
-                className="h-12 text-base pl-12 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282]"
+                className="h-12 text-base pl-12 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:border-[#2c5282] dark:focus:border-sky-400"
                 required
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-gray-100 rounded text-gray-500"
+                className="absolute left-1 top-1 bottom-1 px-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
@@ -150,22 +150,22 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             </div>
           </div>
 
-          <div className="text-sm text-gray-700 bg-[#f8fafc] p-4 rounded border border-[#e2e8f0] space-y-1">
+          <div className="text-sm text-slate-700 dark:text-slate-200 bg-slate-50/90 dark:bg-slate-800/60 p-4 rounded-lg border border-slate-200/80 dark:border-slate-800 space-y-1">
             <p className="flex items-center gap-2 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282] inline-block"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282] dark:bg-sky-400 inline-block"></span>
               كلمة المرور يجب أن تتكون من 6 خانات على الأقل
             </p>
-            <p className="flex items-center gap-2 font-medium text-gray-600">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span>
+            <p className="flex items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 inline-block"></span>
               يُفضل استخدام مزيج متوازن من الحروف والأرقام لضمان حماية أفضل
             </p>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-[#e2e8f0] flex-row-reverse justify-start gap-3">
+          <DialogFooter className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex-row-reverse justify-start gap-3">
             <Button 
               type="submit" 
               disabled={updatePasswordMutation.isPending || !newPassword || !confirmPassword}
-              className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold rounded shadow-none"
+              className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold rounded-lg shadow-none"
             >
               {updatePasswordMutation.isPending ? 'جاري التحديث...' : 'تحديث كلمة المرور'}
             </Button>
@@ -173,7 +173,7 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
               type="button" 
               variant="outline" 
               onClick={handleClose}
-              className="h-11 px-6 border-[#cbd5e1] hover:bg-gray-100 text-base font-medium rounded text-gray-700"
+              className="h-11 px-6 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-base font-medium rounded-lg text-slate-700 dark:text-slate-200"
             >
               إلغاء
             </Button>

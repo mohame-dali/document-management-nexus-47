@@ -159,8 +159,8 @@ const CreateIncomingDocument = () => {
 
       {/* Form Container */}
       <div className="p-6 max-w-6xl mx-auto">
-        <div className="bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
-          <div className="bg-[#f8fafc] p-5 border-b border-[#e2e8f0]">
+        <div className="bg-white dark:bg-slate-900 rounded border border-[#e2e8f0] dark:border-slate-800 shadow-sm overflow-x-clip">
+          <div className="bg-[#f8fafc] dark:bg-slate-800/60 p-5 border-b border-[#e2e8f0] dark:border-slate-800 rounded-t">
             <div className="flex items-center gap-3">
               <FileDown className="h-5 w-5 text-[#2c5282]" />
               <h2 className="text-lg font-bold text-[#1a202c]">{t('documents.createIncoming.cardTitle')}</h2>

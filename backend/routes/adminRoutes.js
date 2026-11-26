@@ -3,31 +3,12 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { retryFailedIndexes } = require('../services/indexRetryScheduler');
 
-// Middleware d'authentification admin avec flexibilité dev pour tests curl
-const adminAuth = (req, res, next) => {
-  const hasToken =
-    (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) ||
-    (req.cookies && req.cookies.token);
-
-  if (hasToken) {
-    return protect(req, res, () => {
-      authorize('Admin', 'Director')(req, res, next);
-    });
-  }
-
-  // En dev local, autoriser les tests CLI directs si aucun token n'est fourni
-  if (process.env.NODE_ENV !== 'production') {
-    return next();
-  }
-
-  return protect(req, res, next);
-};
-
 /**
  * POST /api/admin/reindex-failed
  * Relance l'indexation des courriers entrants et sortants ayant échoué
+ * @access Private/Admin/Director
  */
-router.post('/reindex-failed', adminAuth, async (req, res) => {
+router.post('/reindex-failed', protect, authorize('Admin', 'Director'), async (req, res) => {
   try {
     const force = req.body?.force === true || req.query?.force === 'true';
     const maxAttempts = req.body?.maxAttempts ? Number(req.body.maxAttempts) : 3;

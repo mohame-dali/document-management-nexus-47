@@ -22,7 +22,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Personnel } from '@/types/hr';
 import { Department } from '@/types';
-import { createUser } from '@/services/userService';
+import { useDirection } from '@/i18n/useDirection';
+import { createUser, deleteUser, permanentDeleteUser } from '@/services/userService';
 import { linkUserToPersonnel } from '@/services/hr/personnelApi';
 import {
   generateUsername,
@@ -63,6 +64,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
   orgSettings,
 }) => {
   const queryClient = useQueryClient();
+  const { dir } = useDirection();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -117,17 +119,28 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
         username: username.trim(),
         password: password.trim(),
         role,
-        departments: departmentId ? [departmentId] : [],
-        activeDepartment: departmentId || undefined,
+        departments: role === 'AdminTuningDesk' ? [] : (departmentId ? [departmentId] : []),
+        activeDepartment: role === 'AdminTuningDesk' ? null : (departmentId || undefined),
         isActive: true,
       };
 
       // 2. Call POST /api/users
-      const newUser = await createUser(userPayload as Partial<User & { password?: string }>);
+      const newUser = await createUser(userPayload);
 
-      // 3. Call POST /api/hr/personnel/:id/link-user
+      // 3. Call POST /api/hr/personnel/:id/link-user (rollback if linking fails)
       if (newUser?._id) {
-        await linkUserToPersonnel(personnel._id, newUser._id);
+        try {
+          await linkUserToPersonnel(personnel._id, newUser._id);
+        } catch (linkError) {
+          console.error('Error linking user to personnel, rolling back created user:', linkError);
+          try {
+            await deleteUser(newUser._id);
+            await permanentDeleteUser(newUser._id);
+          } catch (rollbackError) {
+            console.error('Rollback failed for orphan user:', newUser._id, rollbackError);
+          }
+          throw linkError;
+        }
       }
 
       return newUser;
@@ -138,6 +151,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['personnels-for-user-form'] });
       queryClient.invalidateQueries({ queryKey: ['personnel-en-attente'] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
 
       toast.success(`تم إنشاء حساب المستخدم (${username}) وربطه بنجاح`);
 
@@ -168,8 +182,15 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
     },
     onError: (error: unknown) => {
       console.error('Erreur création utilisateur:', error);
-      const errObj = error as { response?: { data?: { message?: string } }; message?: string };
-      const msg = errObj?.response?.data?.message || errObj?.message || 'فشل في إنشاء حساب المستخدم';
+      const errObj = error as {
+        response?: { data?: { message?: string; error?: string } };
+        message?: string;
+      };
+      const msg =
+        errObj?.response?.data?.message ||
+        errObj?.response?.data?.error ||
+        errObj?.message ||
+        'فشل في إنشاء حساب المستخدم';
       toast.error(msg);
     },
   });
@@ -180,41 +201,41 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[540px] text-right">
-        <DialogHeader className="text-right sm:text-right border-b border-[#e2e8f0] pb-4">
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-[#1a202c]">
-            <div className="w-9 h-9 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+      <DialogContent className="sm:max-w-[540px] text-start bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800" dir={dir}>
+        <DialogHeader className="text-start sm:text-start border-b border-[#e2e8f0] dark:border-slate-800 pb-4">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-[#1a202c] dark:text-slate-100">
+            <div className="w-9 h-9 rounded-lg bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center shrink-0">
               <Key className="w-5 h-5" />
             </div>
             <span>إنشاء حساب مستخدم سريع للبطاقة</span>
           </DialogTitle>
-          <DialogDescription className="text-sm text-[#4a5568] mt-1">
+          <DialogDescription className="text-sm text-[#4a5568] dark:text-slate-400 mt-1">
             سيتم إنشاء حساب مستخدم للنظام وربطه تلقائياً ببطاقة الموظف:
             {' '}
-            <strong className="text-[#1a202c] font-bold">{personnel.prenom} {personnel.nom}</strong>
+            <strong className="text-[#1a202c] dark:text-slate-100 font-bold">{personnel.prenom} {personnel.nom}</strong>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-3">
           {/* Personnel Quick Info Banner */}
-          <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm flex items-center justify-between">
+          <div className="p-3 bg-[#f8fafc] dark:bg-slate-800/70 border border-[#e2e8f0] dark:border-slate-700 rounded-lg text-sm flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-[#2c5282]" />
-              <span className="text-gray-600">القسم:</span>
-              <span className="font-semibold text-[#1a202c]">
+              <Building2 className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
+              <span className="text-slate-600 dark:text-slate-400">القسم:</span>
+              <span className="font-semibold text-[#1a202c] dark:text-slate-100">
                 {resolvedDept?.name || '—'}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#2c5282]" />
-              <span className="text-gray-600">الرتبة / الخطة:</span>
-              <span className="font-semibold text-[#1a202c]">{personnel.poste || '—'}</span>
+              <Shield className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
+              <span className="text-slate-600 dark:text-slate-400">الرتبة / الخطة:</span>
+              <span className="font-semibold text-[#1a202c] dark:text-slate-100">{personnel.poste || '—'}</span>
             </div>
           </div>
 
           {/* Username */}
           <div className="space-y-1.5">
-            <Label htmlFor="quick-username" className="text-sm font-bold text-[#1a202c]">
+            <Label htmlFor="quick-username" className="text-sm font-bold text-[#1a202c] dark:text-slate-200">
               اسم المستخدم (Nom d'utilisateur)
             </Label>
             <div className="relative">
@@ -224,18 +245,18 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="prenom.nom"
                 dir="ltr"
-                className="h-10 pl-10 pr-3 font-mono text-sm bg-white border-[#cbd5e1] text-left"
+                className="h-10 pl-10 pr-3 font-mono text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 text-left rounded-lg"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => handleCopy(username, 'username')}
-                className="absolute left-1 top-1 h-8 w-8 text-gray-500 hover:text-[#2c5282]"
+                className="absolute left-1 top-1 h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-blue-300"
                 title="نسخ اسم المستخدم"
               >
                 {copiedField === 'username' ? (
-                  <Check className="w-4 h-4 text-emerald-600" />
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
@@ -246,7 +267,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
           {/* Password */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="quick-password" className="text-sm font-bold text-[#1a202c]">
+              <Label htmlFor="quick-password" className="text-sm font-bold text-[#1a202c] dark:text-slate-200">
                 كلمة المرور المؤقتة (Mot de passe)
               </Label>
               <Button
@@ -254,7 +275,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleRegeneratePassword}
-                className="h-7 px-2 text-xs text-[#2c5282] hover:bg-blue-50 flex items-center gap-1"
+                className="h-7 px-2 text-xs text-[#2c5282] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50 flex items-center gap-1"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>إعادة توليد</span>
@@ -266,18 +287,18 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 dir="ltr"
-                className="h-10 pl-10 pr-3 font-mono text-sm bg-amber-50/50 border-[#cbd5e1] text-left font-bold text-[#1a202c]"
+                className="h-10 pl-10 pr-3 font-mono text-sm bg-amber-50/50 dark:bg-amber-950/30 border-[#cbd5e1] dark:border-slate-700 text-left font-bold text-[#1a202c] dark:text-amber-200 rounded-lg"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => handleCopy(password, 'password')}
-                className="absolute left-1 top-1 h-8 w-8 text-gray-500 hover:text-[#2c5282]"
+                className="absolute left-1 top-1 h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-[#2c5282] dark:hover:text-blue-300"
                 title="نسخ كلمة المرور"
               >
                 {copiedField === 'password' ? (
-                  <Check className="w-4 h-4 text-emerald-600" />
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
@@ -287,41 +308,41 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
 
           {/* Role Selection */}
           <div className="space-y-1.5">
-            <Label htmlFor="quick-role" className="text-sm font-bold text-[#1a202c]">
+            <Label htmlFor="quick-role" className="text-sm font-bold text-[#1a202c] dark:text-slate-200">
               الدور الوظيفي في النظام (Rôle)
             </Label>
             <Select
               value={role}
               onValueChange={(val) => setRole(val as typeof role)}
             >
-              <SelectTrigger id="quick-role" className="h-10 bg-white border-[#cbd5e1] text-right">
+              <SelectTrigger id="quick-role" className="h-10 bg-white dark:bg-slate-800 border-[#cbd5e1] dark:border-slate-700 dark:text-slate-100 text-start rounded-lg">
                 <SelectValue placeholder="اختر الدور" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark:bg-slate-900 dark:border-slate-700">
                 <SelectItem value="Director">مدير الإدارة (Director)</SelectItem>
                 <SelectItem value="AdminTuningDesk">مكتب الضبط (AdminTuningDesk)</SelectItem>
                 <SelectItem value="AdminDepartment">مدير قسم (AdminDepartment)</SelectItem>
                 <SelectItem value="User">موظف عادي (User)</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               * تم اقتراح الدور تلقائياً بناءً على تبعية القسم الإداري.
             </p>
           </div>
 
           {/* Department Selection */}
           <div className="space-y-1.5">
-            <Label htmlFor="quick-dept" className="text-sm font-bold text-[#1a202c]">
+            <Label htmlFor="quick-dept" className="text-sm font-bold text-[#1a202c] dark:text-slate-200">
               القسم الإداري المرتبط
             </Label>
             <Select
               value={departmentId || 'none'}
               onValueChange={(val) => setDepartmentId(val === 'none' ? '' : val)}
             >
-              <SelectTrigger id="quick-dept" className="h-10 bg-white border-[#cbd5e1] text-right">
+              <SelectTrigger id="quick-dept" className="h-10 bg-white dark:bg-slate-800 border-[#cbd5e1] dark:border-slate-700 dark:text-slate-100 text-start rounded-lg">
                 <SelectValue placeholder="اختر القسم" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark:bg-slate-900 dark:border-slate-700">
                 <SelectItem value="none">بدون قسم محدد (تنسيق عام)</SelectItem>
                 {departments.map((d) => (
                   <SelectItem key={d._id} value={d._id}>
@@ -333,8 +354,8 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
           </div>
 
           {/* Option PDF Checkbox */}
-          <div className="pt-2 border-t border-[#e2e8f0]">
-            <div className="flex items-center gap-2.5 p-3 bg-blue-50/60 border border-blue-200/80 rounded cursor-pointer">
+          <div className="pt-2 border-t border-[#e2e8f0] dark:border-slate-800">
+            <div className="flex items-center gap-2.5 p-3 bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/70 rounded-lg cursor-pointer">
               <Checkbox
                 id="generate-pdf"
                 checked={generatePdf}
@@ -343,22 +364,22 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
               />
               <label
                 htmlFor="generate-pdf"
-                className="text-sm font-medium text-[#1a202c] cursor-pointer flex items-center gap-2 select-none"
+                className="text-sm font-medium text-[#1a202c] dark:text-slate-200 cursor-pointer flex items-center gap-2 select-none"
               >
-                <FileDown className="w-4 h-4 text-[#2c5282]" />
+                <FileDown className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
                 <span>تحميل بطاقة بيانات الدخول بصيغة PDF فور الحفظ (نصف صفحة A4)</span>
               </label>
             </div>
           </div>
         </div>
 
-        <DialogFooter className="border-t border-[#e2e8f0] pt-4 flex flex-row items-center justify-end gap-2">
+        <DialogFooter className="border-t border-[#e2e8f0] dark:border-slate-800 pt-4 flex flex-row items-center justify-end gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={createUserMutation.isPending}
-            className="h-10 px-5 text-gray-700 border-[#cbd5e1] hover:bg-gray-100"
+            className="h-10 px-5 text-slate-700 dark:text-slate-200 border-[#cbd5e1] dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
           >
             إلغاء
           </Button>
@@ -366,7 +387,7 @@ export const InlineCreateUserModal: React.FC<InlineCreateUserModalProps> = ({
             type="button"
             onClick={() => createUserMutation.mutate()}
             disabled={createUserMutation.isPending}
-            className="h-10 px-6 bg-[#2c5282] hover:bg-[#234269] text-white font-bold gap-2"
+            className="h-10 px-6 bg-[#2c5282] hover:bg-[#234269] text-white font-bold gap-2 rounded-lg"
           >
             {createUserMutation.isPending ? (
               <>

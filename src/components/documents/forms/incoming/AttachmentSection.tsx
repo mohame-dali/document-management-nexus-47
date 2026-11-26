@@ -5,6 +5,7 @@ import ScannerTab from '@/components/documents/forms/ScannerTab';
 import DocumentTypeTabSelector from '@/components/documents/forms/DocumentTypeTabSelector';
 import { ScanStage, LiveThumbnail } from '@/services/scannerService';
 import { ScanPreviewData } from '@/components/documents/forms/ScannedDocumentPreview';
+import { FormScanSettings } from '@/utils/scannerPreferences';
 
 interface AttachmentSectionProps {
   t: Record<string, string>;
@@ -12,10 +13,7 @@ interface AttachmentSectionProps {
   onTabChange: (value: string) => void;
   onFileSelect: (files: File[]) => void;
   onOcrComplete?: (ocrText: string, file: File) => void;
-  scanSettings: {
-    resolution: string;
-    format: string;
-  };
+  scanSettings: FormScanSettings;
   handleScanSettingChange: (key: string, value: string) => void;
   scanning: boolean;
   scanProgress: number;

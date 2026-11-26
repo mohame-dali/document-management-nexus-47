@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Bell, FileText, User, MessageSquare, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import { getActivityNotifications, markNotificationAsRead } from '@/services/activityNotificationService';
 import { getUnreadCount } from '@/services/messageService';
-import { formatArabicDateTime } from '@/utils/arabicDateFormatter';
+import { formatDateTime } from '@/utils/formatDate';
 import { useAuth } from '@/contexts/AuthContext';
 import { ActivityNotification } from '@/types';
 import { useDirection } from '@/i18n/useDirection';
@@ -74,7 +74,7 @@ const NotificationSystem: React.FC = () => {
     toast[getToastType() as 'success' | 'error' | 'warning' | 'info'](
       notification.message || 'إشعار جديد',
       {
-        description: `تاريخ النشاط: ${formatArabicDateTime(notification.createdAt)}`,
+        description: `تاريخ النشاط: ${formatDateTime(notification.createdAt, 'ar')}`,
         icon: getIcon(),
         duration: 8000,
         action: notification.notificationType === 'responsible_assigned' ? {

@@ -2,13 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { useDirection } from '@/i18n/useDirection';
 import {
-  Users,
   Calendar,
   CalendarDays,
   CalendarRange,
   CalendarCheck,
-  Building2,
   RefreshCw,
   ChevronRight,
   ChevronLeft,
@@ -38,6 +37,7 @@ import MyAttendanceLegend from '@/components/attendance/MyAttendanceLegend';
 type ViewMode = 'day' | 'week' | 'month' | 'year';
 
 export const AllPersonnelSituationPage: React.FC = () => {
+  const { dir, isRTL } = useDirection();
   const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
   const now = useMemo(() => new Date(), []);
 
@@ -76,8 +76,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
   const { data: leaveReasons = [] } = useQuery<LeaveReason[]>({
     queryKey: ['leave-reasons-active'],
     queryFn: async () => {
-      const res = await getLeaveReasons({ actif: true });
-      return res.data || [];
+      return await getLeaveReasons({ isActive: true });
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -190,7 +189,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
       if (selectedStatus !== 'all') {
         if (selectedStatus === 'present') return att?.statut === 'present';
         if (selectedStatus === 'absent') return att?.statut === 'absent';
-        if (selectedStatus === 'unrecorded') return !att || att?.statut === 'unrecorded';
+        if (selectedStatus === 'unrecorded') return !att || String(att.statut) === 'unrecorded';
         if (selectedStatus === 'formation') {
           return (
             att?.statut === 'absent' &&
@@ -298,7 +297,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
 
       items.forEach((item) => {
         const att = item.attendance;
-        if (!att || att.statut === 'unrecorded') {
+        if (!att || String(att.statut) === 'unrecorded') {
           unrecorded++;
         } else if (att.statut === 'present') {
           presents++;
@@ -453,7 +452,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
           attendance: r.attendance || undefined,
         }));
       const nonSaisis = recordsToExport
-        .filter((r) => !r.attendance || r.attendance?.statut === 'unrecorded')
+        .filter((r) => !r.attendance || String(r.attendance.statut) === 'unrecorded')
         .map((r) => ({
           personnel: r.personnel,
         }));
@@ -514,43 +513,47 @@ export const AllPersonnelSituationPage: React.FC = () => {
     }
   };
 
+  const BreadcrumbChevron = isRTL ? ChevronLeft : ChevronRight;
+  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
+
   return (
-    <div className="space-y-6 pb-12" dir="rtl">
+    <div className="space-y-6 pb-12 text-start" dir={dir}>
       {/* 1. Fil d'Ariane & En-tête */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-3">
-        <nav className="flex items-center gap-1.5 text-xs text-[#5f6b7d]">
-          <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 space-y-3 shadow-sm">
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 print:hidden">
+          <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
             الرئيسية
           </Link>
-          <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
           <span>الموارد البشرية</span>
-          <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
-          <span className="text-[#1a202c] font-bold">وضعية الموظفين</span>
+          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+          <span className="text-slate-900 dark:text-slate-100 font-bold">وضعية الموظفين</span>
         </nav>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
                 وضعية الموظفين
               </h1>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-sky-300 border border-blue-200 dark:border-blue-800/70">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>إدارة الموارد البشرية</span>
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#5f6b7d] mt-1">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
               متابعة شاملة ومجمّعة لحالة حضور وغياب كافة موظفي الإدارة حسب اليوم، الأسبوع، الشهر، أو السنة
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 print:hidden">
             <Button
               variant="outline"
               size="sm"
               onClick={handleExport}
               disabled={isExporting}
-              className="h-11 min-h-[44px] px-3.5 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
+              className="h-10 px-3.5 border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 text-xs font-medium rounded-lg"
             >
               {isExporting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -563,7 +566,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleRefresh}
-              className="h-11 px-3 border-[#e2e8f0] text-[#2c5282] hover:bg-gray-50 flex items-center gap-1.5 text-xs font-medium rounded"
+              className="h-10 px-3.5 border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 text-xs font-medium rounded-lg"
               title="تحديث البيانات"
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -590,14 +593,14 @@ export const AllPersonnelSituationPage: React.FC = () => {
       />
 
       {/* 3. Segment Control pour les 4 vues [يوم] [أسبوع] [شهر] [سنة] */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-2 flex items-center justify-center sm:justify-start gap-1">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-2 flex flex-wrap items-center justify-center sm:justify-start gap-1 shadow-sm print:hidden">
         <button
           type="button"
           onClick={() => setViewMode('day')}
-          className={`h-11 px-5 py-2 text-xs font-bold rounded transition-colors duration-150 flex items-center gap-2 ${
+          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
             viewMode === 'day'
-              ? 'bg-[#2c5282] text-white shadow-sm'
-              : 'text-[#4a5568] hover:bg-gray-100'
+              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <Calendar className="h-3.5 w-3.5" />
@@ -607,10 +610,10 @@ export const AllPersonnelSituationPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setViewMode('week')}
-          className={`h-11 px-5 py-2 text-xs font-bold rounded transition-colors duration-150 flex items-center gap-2 ${
+          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
             viewMode === 'week'
-              ? 'bg-[#2c5282] text-white shadow-sm'
-              : 'text-[#4a5568] hover:bg-gray-100'
+              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <CalendarDays className="h-3.5 w-3.5" />
@@ -620,10 +623,10 @@ export const AllPersonnelSituationPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setViewMode('month')}
-          className={`h-11 px-5 py-2 text-xs font-bold rounded transition-colors duration-150 flex items-center gap-2 ${
+          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
             viewMode === 'month'
-              ? 'bg-[#2c5282] text-white shadow-sm'
-              : 'text-[#4a5568] hover:bg-gray-100'
+              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <CalendarRange className="h-3.5 w-3.5" />
@@ -633,10 +636,10 @@ export const AllPersonnelSituationPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setViewMode('year')}
-          className={`h-11 px-5 py-2 text-xs font-bold rounded transition-colors duration-150 flex items-center gap-2 ${
+          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
             viewMode === 'year'
-              ? 'bg-[#2c5282] text-white shadow-sm'
-              : 'text-[#4a5568] hover:bg-gray-100'
+              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
           <CalendarCheck className="h-3.5 w-3.5" />
@@ -708,10 +711,11 @@ export const AllPersonnelSituationPage: React.FC = () => {
               onSearchChange={setSearchQuery}
             />
             {monthTotalPages > 1 && (
-              <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-xs text-[#4a5568]">
-                  المجموع: <strong>{monthTotal}</strong> موظف — صفحة <strong>{reportPage}</strong> من{' '}
-                  <strong>{monthTotalPages}</strong>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+                <div className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+                  المجموع: <strong className="text-slate-900 dark:text-slate-100">{monthTotal}</strong> موظف — صفحة{' '}
+                  <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
+                  <strong className="text-slate-900 dark:text-slate-100">{monthTotalPages}</strong>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -720,9 +724,9 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     size="sm"
                     onClick={() => setReportPage((p) => Math.max(1, p - 1))}
                     disabled={reportPage <= 1 || isLoadingMonth}
-                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                    className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <PrevIcon className="w-4 h-4" />
                     <span>السابق</span>
                   </Button>
                   <Button
@@ -731,10 +735,10 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     size="sm"
                     onClick={() => setReportPage((p) => Math.min(monthTotalPages, p + 1))}
                     disabled={reportPage >= monthTotalPages || isLoadingMonth}
-                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                    className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
                     <span>التالي</span>
-                    <ChevronLeft className="w-4 h-4" />
+                    <NextIcon className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -769,10 +773,11 @@ export const AllPersonnelSituationPage: React.FC = () => {
               onSearchChange={setSearchQuery}
             />
             {yearTotalPages > 1 && (
-              <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="text-xs text-[#4a5568]">
-                  المجموع: <strong>{yearTotal}</strong> موظف — صفحة <strong>{reportPage}</strong> من{' '}
-                  <strong>{yearTotalPages}</strong>
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+                <div className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+                  المجموع: <strong className="text-slate-900 dark:text-slate-100">{yearTotal}</strong> موظف — صفحة{' '}
+                  <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
+                  <strong className="text-slate-900 dark:text-slate-100">{yearTotalPages}</strong>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -781,9 +786,9 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     size="sm"
                     onClick={() => setReportPage((p) => Math.max(1, p - 1))}
                     disabled={reportPage <= 1 || isLoadingYear}
-                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                    className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <PrevIcon className="w-4 h-4" />
                     <span>السابق</span>
                   </Button>
                   <Button
@@ -792,10 +797,10 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     size="sm"
                     onClick={() => setReportPage((p) => Math.min(yearTotalPages, p + 1))}
                     disabled={reportPage >= yearTotalPages || isLoadingYear}
-                    className="h-9 px-3 border-[#e2e8f0] gap-1"
+                    className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
                     <span>التالي</span>
-                    <ChevronLeft className="w-4 h-4" />
+                    <NextIcon className="w-4 h-4" />
                   </Button>
                 </div>
               </div>

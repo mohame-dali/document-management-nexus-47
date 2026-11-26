@@ -9,8 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, Filter, X, RotateCcw } from 'lucide-react';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { formatShortDate } from '@/utils/formatDate';
 import type { AuditLogFilters } from '@/services/auditService';
 
 interface AuditFiltersProps {
@@ -75,9 +74,9 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
             <Label>من تاريخ</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <Button variant="outline" className="w-full justify-start text-left font-normal tabular-nums">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.startDate ? format(filters.startDate, 'dd/MM/yyyy', { locale: ar }) : 'اختر التاريخ'}
+                  {filters.startDate ? <bdi dir="ltr">{formatShortDate(filters.startDate)}</bdi> : 'اختر التاريخ'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -95,9 +94,9 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
             <Label>إلى تاريخ</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <Button variant="outline" className="w-full justify-start text-left font-normal tabular-nums">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.endDate ? format(filters.endDate, 'dd/MM/yyyy', { locale: ar }) : 'اختر التاريخ'}
+                  {filters.endDate ? <bdi dir="ltr">{formatShortDate(filters.endDate)}</bdi> : 'اختر التاريخ'}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -179,8 +178,8 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
         {getActiveFiltersCount() > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t">
             {filters.startDate && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                من: {format(filters.startDate, 'dd/MM/yyyy', { locale: ar })}
+              <Badge variant="secondary" className="flex items-center gap-1 tabular-nums">
+                من: <bdi dir="ltr">{formatShortDate(filters.startDate)}</bdi>
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => onFiltersChange({ ...filters, startDate: undefined })}
@@ -188,8 +187,8 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
               </Badge>
             )}
             {filters.endDate && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                إلى: {format(filters.endDate, 'dd/MM/yyyy', { locale: ar })}
+              <Badge variant="secondary" className="flex items-center gap-1 tabular-nums">
+                إلى: <bdi dir="ltr">{formatShortDate(filters.endDate)}</bdi>
                 <X 
                   className="h-3 w-3 cursor-pointer" 
                   onClick={() => onFiltersChange({ ...filters, endDate: undefined })}

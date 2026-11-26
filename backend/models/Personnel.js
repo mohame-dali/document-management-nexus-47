@@ -128,6 +128,24 @@ const personnelSchema = new mongoose.Schema({
       adresse: { type: String, default: '', trim: true }
     }
   ],
+  // Historique automatique des affectations (départements & postes)
+  historiqueAffectations: [
+    {
+      poste: { type: String, default: '', trim: true },
+      departement: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Department',
+        default: null
+      },
+      departementName: { type: String, default: '', trim: true },
+      dateDebut: { type: Date, default: Date.now },
+      dateFin: { type: Date, default: null },
+      reference: { type: String, default: '', trim: true },
+      observations: { type: String, default: '', trim: true },
+      isCurrent: { type: Boolean, default: true }
+    }
+  ],
+
   createdAt: {
     type: Date,
     default: Date.now
@@ -160,6 +178,16 @@ personnelSchema.index({ nom: 1, prenom: 1 });
 personnelSchema.index(
   { cin: 1 },
   { unique: true, partialFilterExpression: { isDeleted: false, cin: { $type: 'string' } } }
+);
+personnelSchema.index(
+  { emailPersonnel: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+      emailPersonnel: { $type: 'string', $gt: '' }
+    }
+  }
 );
 personnelSchema.index({ statut: 1 });
 personnelSchema.index({ activeDepartment: 1 });

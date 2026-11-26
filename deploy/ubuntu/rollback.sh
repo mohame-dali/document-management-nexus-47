@@ -22,6 +22,14 @@ echo "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
 
 cd "${APP_DIR}"
 
+if [ -f "${APP_DIR}/.env" ]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${APP_DIR}/.env"
+  set +a
+fi
+APP_PORT="${PORT:-5000}"
+
 # 1. Restauration du build frontend précédent
 if [ -d "${APP_DIR}/dist.bak" ]; then
   echo "[1/3] 🔙 Restauration du dossier frontend 'dist' précédent..."
@@ -34,13 +42,13 @@ fi
 
 # 2. Redémarrage de secours sous PM2
 echo "[2/3] 🔄 Redémarrage du processus PM2..."
-pm2 reload dms-backend || pm2 restart dms-backend || pm2 start ecosystem.config.cjs
+pm2 reload dms-backend --update-env || pm2 restart dms-backend --update-env || pm2 start ecosystem.config.cjs
 sleep 3
 
 # 3. Contrôle de santé basique
-echo "[3/3] 🔍 Vérification de la disponibilité du serveur..."
-if curl -s -f "http://127.0.0.1:5000/api/health" >/dev/null; then
-  echo "  ✅ Serveur opérationnel sur http://127.0.0.1:5000/api/health."
+echo "[3/3] 🔍 Vérification de la disponibilité du serveur (port ${APP_PORT})..."
+if curl -s -f "http://127.0.0.1:${APP_PORT}/api/health" >/dev/null; then
+  echo "  ✅ Serveur opérationnel sur http://127.0.0.1:${APP_PORT}/api/health."
   echo "🎉 ROLLBACK TERMINÉ : Le service a été rétabli dans son état antérieur."
 else
   echo "  ❌ ATTENTION : Le serveur ne répond pas sur /api/health après rollback !"

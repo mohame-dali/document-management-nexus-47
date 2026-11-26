@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Building, ArrowRight, Users, Shield, UserCheck, AlertCircle } from 'lucide-react';
 import { User } from '@/types';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 
 const DepartmentUsersPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -170,8 +170,10 @@ const DepartmentUsersPage: React.FC = () => {
                     </TableCell>
 
                     {/* Join Date */}
-                    <TableCell className="text-right py-3 px-4 text-sm text-gray-600 font-medium">
-                      {user.createdAt ? formatArabicDate(user.createdAt) : 'غير مسجل'}
+                    <TableCell className="text-right py-3 px-4 text-sm text-gray-600 font-medium tabular-nums">
+                      {user.createdAt ? (
+                        <bdi dir="rtl" className="tabular-nums">{formatLongDate(user.createdAt, 'ar')}</bdi>
+                      ) : 'غير مسجل'}
                     </TableCell>
 
                     {/* Status */}

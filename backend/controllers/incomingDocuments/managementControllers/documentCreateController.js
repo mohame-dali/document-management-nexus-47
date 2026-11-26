@@ -9,6 +9,10 @@ const {
   processDepartmentAssignments 
 } = require('../../../utils/documentValidation');
 const { createActivityNotifications } = require('../../../utils/activityNotificationHelper');
+const { buildInitialVersionState } = require('../../../utils/documentVersionHelper');
+const { computeFileSha256 } = require('../../../utils/fileSecurity');
+const fs = require('fs');
+const path = require('path');
 
 // @desc    Create new incoming document
 // @route   POST /api/incoming-documents
@@ -103,6 +107,27 @@ exports.createIncomingDocument = async (req, res, next) => {
     // Process department assignments
     const assignedTo = await processDepartmentAssignments(departmentIds);
     
+    let initialSha256 = null;
+    let initialFileSize = null;
+    if (finalDocumentPath) {
+      try {
+        const absFilePath = path.resolve(__dirname, '../../..', finalDocumentPath);
+        if (fs.existsSync(absFilePath) && fs.statSync(absFilePath).isFile()) {
+          initialFileSize = fs.statSync(absFilePath).size;
+          initialSha256 = computeFileSha256(absFilePath);
+        }
+      } catch (_) {}
+    }
+
+    const versionState = buildInitialVersionState(finalDocumentPath, {
+      ocrText,
+      ocrStatus,
+      ocrError,
+      sha256: initialSha256,
+      fileSize: initialFileSize,
+      uploadedBy: req.user._id,
+    });
+
     // Create document
     const documentData = {
       serialNumber,
@@ -115,6 +140,8 @@ exports.createIncomingDocument = async (req, res, next) => {
       source,
       subject,
       scannedDocument: finalDocumentPath,
+      currentVersion: versionState.currentVersion,
+      versions: versionState.versions,
       ocrText,
       ocrStatus,
       ocrError,

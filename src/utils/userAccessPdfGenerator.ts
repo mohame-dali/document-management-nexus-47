@@ -15,9 +15,7 @@ export interface UserAccessCredentialData {
 }
 
 // Interface for jsPDF with extended plugins
-interface ExtendedJsPdf extends jsPDF {
-  processArabic?: (text: string) => string;
-}
+type ExtendedJsPdf = jsPDF;
 
 // Cache fonts in memory
 let cachedAmiriRegular: string | null = null;

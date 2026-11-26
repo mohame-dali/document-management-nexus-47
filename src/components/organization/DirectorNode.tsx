@@ -8,6 +8,7 @@ interface DirectorNodeProps {
     _id?: string;
     nom: string;
     prenom: string;
+    username?: string | null;
     poste?: string;
     photo?: string;
     onDirectorClick?: (id: string) => void;
@@ -53,6 +54,14 @@ const DirectorNode: React.FC<DirectorNodeProps> = ({ data }) => {
           <h3 className="text-sm font-bold text-[#1a202c] truncate">
             {data.prenom} {data.nom}
           </h3>
+          {data.username && (
+            <span
+              dir="ltr"
+              className="inline-block max-w-full truncate text-[10px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5 mt-0.5"
+            >
+              @{data.username}
+            </span>
+          )}
           <p className="text-xs text-[#4a5568] flex items-center gap-1 mt-0.5 truncate">
             <Briefcase className="w-3 h-3 text-[#2c5282] shrink-0" />
             <span className="truncate">{data.poste || 'مدير الإدارة'}</span>

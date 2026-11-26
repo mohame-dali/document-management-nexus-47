@@ -1,44 +1,75 @@
-
+import axios from 'axios';
 import { User } from '@/types';
-import { setAuthToken } from './authApi';
+import api from '../apiService';
 
-// Get current user from localStorage
+const TOKEN_STORAGE_KEY = 'token';
+const USER_STORAGE_KEY = 'user';
+
+export const getAuthToken = (): string | null => {
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const saveAuthToken = (token: string | null): void => {
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      delete api.defaults.headers.common['Authorization'];
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  } catch (error) {
+    console.error('Failed to update stored auth token:', error);
+  }
+};
+
 export const getCurrentUser = (): User | null => {
-  const userStr = localStorage.getItem('user');
-  if (userStr) {
-    return JSON.parse(userStr);
+  try {
+    const rawUser = localStorage.getItem(USER_STORAGE_KEY);
+    if (!rawUser) {
+      return null;
+    }
+    return JSON.parse(rawUser) as User;
+  } catch (error) {
+    console.error('Failed to parse stored user:', error);
+    return null;
   }
-  return null;
 };
 
-// Initialize token from localStorage
-export const initializeAuth = (): void => {
-  const token = localStorage.getItem('token');
+export const saveCurrentUser = (user: User | null): void => {
+  try {
+    if (user) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error('Failed to store current user:', error);
+  }
+};
+
+export const initializeAuth = (): string | null => {
+  const token = getAuthToken();
   if (token) {
-    setAuthToken(token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
+  return token;
 };
 
-// Clear all authentication data completely
 export const clearAllAuthData = (): void => {
-  console.log('Clearing all authentication data');
-  
-  // Clear localStorage
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  
-  // Clear sessionStorage as backup
-  sessionStorage.removeItem('token');
-  sessionStorage.removeItem('user');
-  
-  // Clear axios auth token
-  setAuthToken(null);
-  
-  // Clear any cached user data
-  if (window.cachedUser) {
-    delete window.cachedUser;
+  try {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    delete api.defaults.headers.common['Authorization'];
+    delete axios.defaults.headers.common['Authorization'];
+  } catch (error) {
+    console.error('Failed to clear auth data:', error);
   }
-  
-  // Set explicit logout flag to prevent auto re-login
-  sessionStorage.setItem('explicit_logout', 'true');
 };

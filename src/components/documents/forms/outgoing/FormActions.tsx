@@ -26,16 +26,20 @@ const FormActions: React.FC<FormActionsProps> = ({
   const isDisabled = disabled || form.formState.isSubmitting;
   
   return (
-    <div className="flex justify-between">
+    <div className="w-full flex items-center justify-between gap-3">
       <Button 
+        type="button"
         variant="outline" 
         onClick={() => navigate(cancelRoute)}
+        className="h-10 px-5 font-medium border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
       >
         {cancelText}
       </Button>
       <Button 
+        type="button"
         onClick={form.handleSubmit(onSubmit)}
         disabled={isDisabled}
+        className="h-10 px-6 font-semibold bg-[#2c5282] hover:bg-[#234269] text-white shadow-sm"
       >
         {form.formState.isSubmitting ? (
           <>

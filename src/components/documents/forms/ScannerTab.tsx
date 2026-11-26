@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   XCircle,
   Settings,
+  SlidersHorizontal,
   RotateCcw,
   CheckCircle2,
   Images,
@@ -17,6 +18,14 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useDirection } from '@/i18n/useDirection';
 import {
@@ -25,6 +34,8 @@ import {
   getScanStageLabel,
   getScannerStatus,
 } from '@/services/scannerService';
+import { FormScanSettings } from '@/utils/scannerPreferences';
+import ScannerWorkstationSettings from '@/components/scanner/ScannerWorkstationSettings';
 import ScannedDocumentPreview, { ScanPreviewData } from './ScannedDocumentPreview';
 
 interface ScannerStatus {
@@ -39,10 +50,7 @@ interface ScannerStatus {
 
 interface ScannerTabProps {
   t: Record<string, string>;
-  scanSettings: {
-    resolution: string;
-    format: string;
-  };
+  scanSettings: FormScanSettings;
   handleScanSettingChange: (key: string, value: string) => void;
   scanning: boolean;
   scanProgress: number;
@@ -85,6 +93,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
   const { t: translate, language } = useLanguage();
   const { dir } = useDirection();
   const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
@@ -92,6 +101,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
   const [refreshedStatus, setRefreshedStatus] = useState<ScannerStatus | null>(null);
   const [isCheckingScanner, setIsCheckingScanner] = useState(false);
   const [noScannerAlertVisible, setNoScannerAlertVisible] = useState(false);
+  const [isWorkstationSettingsOpen, setIsWorkstationSettingsOpen] = useState(false);
 
   const tr = (key: string, frDefault: string, arDefault: string) => {
     const val = translate(key);
@@ -137,10 +147,20 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
     }
   };
 
+  const handleOpenScannerPreferences = () => {
+    if (currentUser?.role === 'Admin') {
+      navigate('/dashboard/admin/settings?tab=scanner');
+      return;
+    }
+    setIsWorkstationSettingsOpen(true);
+  };
+
   const normalizedSelectFormat =
     scanSettings.format?.toLowerCase() === 'jpeg'
       ? 'jpg'
       : scanSettings.format?.toLowerCase() || 'pdf';
+  const normalizedColorMode = scanSettings.colorMode || 'Color';
+  const normalizedSource = scanSettings.documentSource || 'Flatbed';
 
   const clampedProgress = Math.min(Math.max(scanProgress, 0), 100);
   const stageLabel = getScanStageLabel(scanStage || 'scanning', scanPage || 0, translate, lang);
@@ -220,7 +240,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
           </Button>
         </div>
 
-        {/* Format & Resolution Controls */}
+        {/* Format, Resolution & Quick Per-Scan Overrides + Settings Gear */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-zinc-400">
@@ -231,7 +251,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
               onValueChange={(value) => handleScanSettingChange('format', value)}
               disabled={scanning}
             >
-              <SelectTrigger className="w-[100px] h-8 bg-zinc-950 border-zinc-700 text-zinc-100 text-xs">
+              <SelectTrigger className="w-[88px] h-8 bg-zinc-950 border-zinc-700 text-zinc-100 text-xs">
                 <SelectValue placeholder={lang === 'ar' ? 'الصيغة' : 'Format'} />
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
@@ -251,7 +271,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
               onValueChange={(value) => handleScanSettingChange('resolution', value)}
               disabled={scanning}
             >
-              <SelectTrigger className="w-[110px] h-8 bg-zinc-950 border-zinc-700 text-zinc-100 text-xs">
+              <SelectTrigger className="w-[102px] h-8 bg-zinc-950 border-zinc-700 text-zinc-100 text-xs tabular-nums">
                 <SelectValue placeholder="DPI" />
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
@@ -261,6 +281,66 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex items-center gap-1.5">
+            <Select
+              value={normalizedColorMode}
+              onValueChange={(value) => handleScanSettingChange('colorMode', value)}
+              disabled={scanning}
+            >
+              <SelectTrigger
+                aria-label={lang === 'ar' ? 'وضع الألوان' : 'Mode couleur'}
+                className="w-[116px] h-8 bg-zinc-950 border-zinc-700 text-zinc-100 text-xs"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
+                <SelectItem value="Color">{lang === 'ar' ? 'ملون' : 'Couleur'}</SelectItem>
+                <SelectItem value="Grayscale">{lang === 'ar' ? 'رمادي' : 'Niveaux gris'}</SelectItem>
+                <SelectItem value="BlackAndWhite">{lang === 'ar' ? 'أبيض/أسود' : 'N&B'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Select
+              value={normalizedSource}
+              onValueChange={(value) => handleScanSettingChange('documentSource', value)}
+              disabled={scanning}
+            >
+              <SelectTrigger
+                aria-label={lang === 'ar' ? 'مصدر الورق' : 'Source'}
+                className="w-[104px] h-8 bg-zinc-950 border-zinc-700 text-zinc-100 text-xs"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
+                <SelectItem value="Flatbed">{lang === 'ar' ? 'مسطح' : 'Plateau'}</SelectItem>
+                <SelectItem value="Feeder">{lang === 'ar' ? 'ADF تلقائي' : 'ADF'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handleOpenScannerPreferences}
+            disabled={scanning}
+            title={
+              lang === 'ar'
+                ? 'إعدادات الماسح الضوئي الافتراضية و OCR'
+                : 'Paramètres par défaut Scanner & OCR'
+            }
+            aria-label={
+              lang === 'ar'
+                ? 'إعدادات الماسح الضوئي و OCR'
+                : 'Paramètres Scanner & OCR'
+            }
+            className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800 shrink-0"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -368,8 +448,38 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
                   <Badge className="bg-zinc-900 border border-zinc-700 text-zinc-200 uppercase">
                     {normalizedSelectFormat}
                   </Badge>
-                  <Badge className="bg-zinc-900 border border-zinc-700 text-zinc-200">
+                  <Badge className="bg-zinc-900 border border-zinc-700 text-zinc-200 tabular-nums">
                     <bdi dir="ltr">{scanSettings.resolution} DPI</bdi>
+                  </Badge>
+                  <Badge className="bg-zinc-900 border border-zinc-700 text-zinc-200">
+                    {normalizedColorMode === 'Color'
+                      ? lang === 'ar'
+                        ? 'ملون'
+                        : 'Couleur'
+                      : normalizedColorMode === 'Grayscale'
+                        ? lang === 'ar'
+                          ? 'تدرج رمادي'
+                          : 'Niveaux de gris'
+                        : lang === 'ar'
+                          ? 'أبيض وأسود'
+                          : 'N&B'}
+                  </Badge>
+                  {scanSettings.paperSize && (
+                    <Badge className="bg-zinc-900 border border-zinc-700 text-zinc-200">
+                      <bdi dir="ltr">{scanSettings.paperSize}</bdi>
+                    </Badge>
+                  )}
+                  {normalizedSource === 'Feeder' && (
+                    <Badge className="bg-zinc-900 border border-zinc-700 text-zinc-200">
+                      {scanSettings.duplex === 'true' ? 'ADF · Duplex' : 'ADF'}
+                    </Badge>
+                  )}
+                  <Badge className="bg-zinc-900 border border-zinc-700 text-zinc-300">
+                    {scanSettings.autoOcr === 'false'
+                      ? lang === 'ar'
+                        ? 'OCR متوقف'
+                        : 'OCR désactivé'
+                      : `OCR: ${scanSettings.languages || 'ara+fra'}`}
                   </Badge>
                 </div>
 
@@ -559,6 +669,36 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
           />
         )}
       </div>
+
+      {/* Workstation Scanner & OCR Modal for non-Admin scanner operators */}
+      <Dialog open={isWorkstationSettingsOpen} onOpenChange={setIsWorkstationSettingsOpen}>
+        <DialogContent
+          dir={dir}
+          className="w-[95vw] sm:max-w-[780px] max-h-[90vh] overflow-y-auto bg-white text-[#1a202c] border border-[#e2e8f0]"
+        >
+          <DialogHeader className="pb-3 border-b border-[#e2e8f0]">
+            <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
+              <Settings className="h-5 w-5 text-[#2c5282]" />
+              <span>
+                {lang === 'ar'
+                  ? 'إعدادات الماسح الضوئي و OCR لهذا الجهاز'
+                  : 'Configuration du Scanner et de l’OCR'}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-[#5f6b7d]">
+              {lang === 'ar'
+                ? 'اضبط الدقة الافتراضية، وضع الألوان، التغذية التلقائية وإعدادات OCR ليتم تطبيقها تلقائياً.'
+                : 'Définissez la résolution, le mode couleur, le chargeur ADF et les options OCR appliquées par défaut.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-2">
+            <ScannerWorkstationSettings
+              compact
+              onClose={() => setIsWorkstationSettingsOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

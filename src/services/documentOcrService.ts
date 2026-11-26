@@ -1,15 +1,15 @@
-import api from '@/services/apiService';
+import api from './apiService';
 
-export interface OcrUploadResult {
-  ocrText: string;
-  length: number;
-  filename: string;
+interface OcrUploadResponse {
+  success: boolean;
+  data?: {
+    ocrText?: string;
+    length?: number;
+    filename?: string;
+  };
+  message?: string;
 }
 
-/**
- * Envoie un fichier (PDF ou image) au serveur pour extraction OCR.
- * Le serveur utilise Tesseract natif (C++) avec support arabe+fra+eng.
- */
 export const extractOcrFromServer = async (
   file: File,
   onProgress?: (percent: number) => void
@@ -17,15 +17,22 @@ export const extractOcrFromServer = async (
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await api.post('/scan/ocr-upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 90000, // 90 sec
-    onUploadProgress: (event) => {
-      if (event.total && onProgress) {
-        onProgress(Math.round((event.loaded * 100) / event.total));
+  const response = await api.post<OcrUploadResponse>('/scan/ocr-upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    timeout: 180000,
+    onUploadProgress: (progressEvent) => {
+      if (onProgress && progressEvent.total) {
+        const percent = Math.round((progressEvent.loaded * 80) / progressEvent.total);
+        onProgress(Math.min(percent, 80));
       }
     },
   });
+
+  if (onProgress) {
+    onProgress(100);
+  }
 
   return response.data?.data?.ocrText || '';
 };

@@ -28,19 +28,32 @@ echo "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
 cd "${APP_DIR}"
 
 # 1. Vérification de l'environnement avec check-env.mjs
-echo "\n[1/6] 🔍 Contrôle préalable de l'environnement..."
+echo -e "\n[1/6] 🔍 Contrôle préalable de l'environnement..."
 if [ ! -f "${APP_DIR}/.env" ]; then
   echo "❌ ERREUR : Fichier .env absent dans ${APP_DIR}."
   echo "   Veuillez copier .env.production.example vers .env et configurer vos valeurs."
   exit 1
 fi
 
+if [ -f "${APP_DIR}/backend/.env" ]; then
+  echo "⚠️ AVERTISSEMENT : ${APP_DIR}/backend/.env existe et peut entrer en conflit avec ${APP_DIR}/.env."
+  echo "   Utilisez un unique fichier ${APP_DIR}/.env en production."
+fi
+
+set -a
+# shellcheck source=/dev/null
+source "${APP_DIR}/.env"
+set +a
+
+APP_PORT="${PORT:-5000}"
+TARGET_BACKUP_DIR="${BACKUP_DIR:-${BACKUP_PATH:-${BACKUP_ROOT:-/var/backups/dms}}}"
+
 node "${APP_DIR}/deploy/scripts/check-env.mjs"
 
 # 2. Sauvegarde de sécurité préalable
-echo "\n[2/6] 📦 Création d'une sauvegarde de pré-déploiement..."
+echo -e "\n[2/6] 📦 Création d'une sauvegarde de pré-déploiement (${TARGET_BACKUP_DIR})..."
 if [ -f "${APP_DIR}/deploy/scripts/backup-all.sh" ]; then
-  bash "${APP_DIR}/deploy/scripts/backup-all.sh" "${APP_DIR}/backups" 14 || echo "⚠️ Sauvegarde préalable avec avertissement, poursuite du déploiement."
+  bash "${APP_DIR}/deploy/scripts/backup-all.sh" "${TARGET_BACKUP_DIR}" 14 || echo "⚠️ Sauvegarde préalable avec avertissement, poursuite du déploiement."
 fi
 
 # Sauvegarde de la version précédente de dist/ au cas où
@@ -50,15 +63,15 @@ if [ -d "${APP_DIR}/dist" ]; then
 fi
 
 # 3. Installation des dépendances NPM
-echo "\n[3/6] 📥 Installation propre des dépendances (npm ci)..."
+echo -e "\n[3/6] 📥 Installation propre des dépendances (npm ci)..."
 npm ci
 
 # 4. Compilation des assets Frontend Vite
-echo "\n[4/6] 🏗️ Compilation du frontend Vite React (npm run build)..."
+echo -e "\n[4/6] 🏗️ Compilation du frontend Vite React (npm run build)..."
 npm run build
 
 # 5. Démarrage ou Rechargement PM2
-echo "\n[5/6] 🔄 Rechargement du service dms-backend sous PM2..."
+echo -e "\n[5/6] 🔄 Rechargement du service dms-backend sous PM2..."
 if pm2 describe dms-backend >/dev/null 2>&1; then
   echo "  Rechargement de l'instance existante..."
   pm2 reload ecosystem.config.cjs --update-env
@@ -73,19 +86,20 @@ echo "  Attente de stabilisation du serveur (5 secondes)..."
 sleep 5
 
 # 6. Exécution du Smoke Test Post-Déploiement
-echo "\n[6/6] 🧪 Exécution de la suite de validation (smoke-test)..."
+echo -e "\n[6/6] 🧪 Exécution de la suite de validation (smoke-test sur port ${APP_PORT})..."
 set +e
-node "${APP_DIR}/deploy/scripts/smoke-test.mjs" "http://127.0.0.1:5000"
+node "${APP_DIR}/deploy/scripts/smoke-test.mjs" "http://127.0.0.1:${APP_PORT}"
 TEST_EXIT_CODE=$?
 set -e
 
 if [ ${TEST_EXIT_CODE} -ne 0 ]; then
-  echo "\n🚨 ALERTE CRITIQUE : Échec du Smoke Test après déploiement !"
+  echo -e "\n🚨 ALERTE CRITIQUE : Échec du Smoke Test après déploiement !"
   echo "   Déclenchement immédiat de la procédure de ROLLBACK..."
   bash "${APP_DIR}/deploy/ubuntu/rollback.sh"
   exit 1
 fi
 
-echo "\n" + "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
-echo "🎉 DÉPLOIEMENT ACHEVÉ AVEC SUCCÈS SUR UBUNTU SERVER !"
-echo "═".repeat 78 2>/dev/null || printf '=%.0s' {1..78}; echo ""
+echo ""
+printf '=%.0s' {1..78}; echo ""
+echo "🎉 DÉPLOIEMENT ACHEVÉ AVEC SUCCÈS SUR UBUNTU !"
+printf '=%.0s' {1..78}; echo ""

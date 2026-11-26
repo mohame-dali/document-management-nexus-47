@@ -60,6 +60,7 @@ import {
   Loader2,
   Filter
 } from 'lucide-react';
+import { formatLongDate, formatDateTime } from '@/utils/formatDate';
 
 const BackupSettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -432,8 +433,10 @@ const BackupSettingsPage: React.FC = () => {
                 <div className="w-10 h-10 rounded bg-[#FFCB56]/20 text-[#1a202c] flex items-center justify-center mx-auto mb-2">
                   <Calendar className="h-5 w-5" />
                 </div>
-                <div className="text-xl font-bold text-[#1a202c]">
-                  {stats.lastBackupDate ? new Date(stats.lastBackupDate).toLocaleDateString('ar') : 'لا توجد بعد'}
+                <div className="text-xl font-bold text-[#1a202c] tabular-nums">
+                  {stats.lastBackupDate ? (
+                    <bdi dir="rtl" className="tabular-nums">{formatLongDate(stats.lastBackupDate, 'ar')}</bdi>
+                  ) : 'لا توجد بعد'}
                 </div>
                 <div className="text-base font-semibold text-[#4a5568] mt-1">آخر نسخة احتياطية</div>
               </div>
@@ -883,8 +886,8 @@ const BackupSettingsPage: React.FC = () => {
                 <TableBody>
                   {filteredHistory.map((backup) => (
                     <TableRow key={backup._id} className="hover:bg-[#f7fafc]">
-                      <TableCell className="text-sm whitespace-nowrap">
-                        {new Date(backup.createdAt).toLocaleString('ar-TN')}
+                      <TableCell className="text-sm whitespace-nowrap tabular-nums">
+                        <bdi dir="rtl" className="tabular-nums">{formatDateTime(backup.createdAt, 'ar')}</bdi>
                       </TableCell>
                       <TableCell className="text-sm max-w-[240px] truncate font-mono text-slate-700" title={backup.fileName}>
                         {backup.fileName}

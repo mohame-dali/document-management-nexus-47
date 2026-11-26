@@ -14,6 +14,7 @@ const initialLang: Lang = SUPPORTED.includes(stored as Lang)
 const applyHtmlAttributes = (lang: string) => {
   document.documentElement.setAttribute('lang', lang);
   document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+  document.title = lang === 'fr' ? 'Système de Gestion Documentaire' : 'نظام إدارة الوثائق';
 };
 
 i18n.use(initReactI18next).init({

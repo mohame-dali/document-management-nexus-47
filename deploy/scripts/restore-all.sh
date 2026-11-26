@@ -46,6 +46,18 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
+if [ -f "${PROJECT_ROOT}/.env" ]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${PROJECT_ROOT}/.env"
+  set +a
+fi
+
+DEFAULT_BACKUP_DIR="${BACKUP_DIR:-${BACKUP_PATH:-${BACKUP_ROOT:-/var/backups/dms}}}"
+export BACKUP_DIR="${DEFAULT_BACKUP_DIR}"
+export BACKUP_PATH="${DEFAULT_BACKUP_DIR}"
+export BACKUP_ROOT="${DEFAULT_BACKUP_DIR}"
+
 # 2. Vérification rigoureuse de l'intégrité de l'archive tar.gz
 printf '=%.0s' {1..78}; echo ""
 echo "🔍 ÉTAPE PRÉALABLE : VÉRIFICATION D'INTÉGRITÉ DE L'ARCHIVE..."
@@ -57,13 +69,7 @@ fi
 echo "✅ Intégrité de l'archive vérifiée avec succès (archive valide)."
 
 # 3. Détermination de la base de données cible
-MONGODB_CONN_URI="${MONGODB_URI:-}"
-if [ -z "${MONGODB_CONN_URI}" ] && [ -f "${PROJECT_ROOT}/.env" ]; then
-  MONGODB_CONN_URI=$(grep -E '^[[:space:]]*MONGODB_URI=' "${PROJECT_ROOT}/.env" | head -n1 | cut -d '=' -f2- | tr -d '"' | tr -d "'" || true)
-fi
-if [ -z "${MONGODB_CONN_URI}" ]; then
-  MONGODB_CONN_URI="mongodb://127.0.0.1:27017/document-management"
-fi
+MONGODB_CONN_URI="${MONGODB_URI:-mongodb://127.0.0.1:27017/document-management}"
 
 PROD_DB_NAME="document-management"
 TEST_DB_NAME="document-management-test"
@@ -81,6 +87,7 @@ printf '=%.0s' {1..78}; echo ""
 echo "⚠️  DMS — RESTAURATION DE LA BASE DE DONNÉES ET DES DOCUMENTS"
 printf '=%.0s' {1..78}; echo ""
 echo "  Archive source : ${ARCHIVE_PATH}"
+echo "  Dossier backup : ${DEFAULT_BACKUP_DIR}"
 echo "  Base cible     : ${TARGET_DB}"
 echo "  Mode cible     : $([ "${TARGET_PROD}" = true ] && echo "🔴 PRODUCTION (Écrasement avec --drop)" || echo "🟡 TEST / RECETTE (Sécurisé, pas de --drop sur prod)")"
 echo "  Racine projet  : ${PROJECT_ROOT}"
@@ -108,7 +115,7 @@ fi
 # 5. Extraction temporaire de l'archive
 RESTORE_WORK_DIR="/tmp/dms_restore_$(date +'%Y%m%d_%H%M%S')"
 mkdir -p "${RESTORE_WORK_DIR}"
-echo "\n[$(date +'%Y-%m-%d %H:%M:%S')] 📂 1/4 - Extraction de l'archive de transit..."
+echo -e "\n[$(date +'%Y-%m-%d %H:%M:%S')] 📂 1/4 - Extraction de l'archive de transit..."
 tar -xzf "${ARCHIVE_PATH}" -C "${RESTORE_WORK_DIR}"
 
 # 6. Restauration de la base MongoDB
@@ -117,11 +124,10 @@ DB_DUMP_FILE="${RESTORE_WORK_DIR}/database_dump.archive.gz"
 
 if [ -f "${DB_DUMP_FILE}" ]; then
   if command -v mongorestore >/dev/null 2>&1; then
-    # Construction de l'URI cible adaptée si base de test
+    # Construction de l'URI cible adaptée si base de test (sans modifier ?authSource=...)
     RESTORE_URI="${MONGODB_CONN_URI}"
     if [ "${TARGET_PROD}" != true ]; then
-      # Remplacement du nom de base dans l'URI pour cibler document-management-test
-      RESTORE_URI=$(echo "${MONGODB_CONN_URI}" | sed "s|/${PROD_DB_NAME}|/${TEST_DB_NAME}|g")
+      RESTORE_URI=$(echo "${MONGODB_CONN_URI}" | sed "s|/${PROD_DB_NAME}\([?/]\|$\)|/${TEST_DB_NAME}\1|")
     fi
 
     echo "  Application de mongorestore ${DROP_FLAG} vers la cible..."
@@ -144,7 +150,7 @@ fi
 
 # 7. Restauration des fichiers physiques (uniquement si target-prod ou validation)
 COURRIER_TARGET="${DOCUMENT_PATH:-${PROJECT_ROOT}/backend/courrier}"
-UPLOADS_TARGET="${UPLOAD_DIR:-${PROJECT_ROOT}/backend/uploads}"
+UPLOADS_TARGET="${UPLOAD_DIR:-${UPLOAD_PATH:-${PROJECT_ROOT}/backend/uploads}}"
 
 if [ "${TARGET_PROD}" = true ]; then
   echo "[$(date +'%Y-%m-%d %H:%M:%S')] 📁 3/4 - Restauration des documents administratifs physiques..."

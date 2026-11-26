@@ -54,17 +54,20 @@ import {
 } from "@/components/ui/context-menu";
 import ProfileSettingsDialog from '@/components/users/ProfileSettingsDialog';
 import { useHubBadges } from '@/hooks/useHubBadges';
+import { useServerConnection } from '@/hooks/useServerConnection';
 
 const Sidebar = () => {
   const { currentUser } = useAuth();
   const { isOpen, isMobileOpen, setIsMobileOpen, closeMobile } = useSidebar();
   const isMobile = useIsMobile();
   const { dir } = useDirection();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [profileDialogOpen, setProfileDialogOpen] = React.useState(false);
   const { unreadMessages } = useHubBadges();
+  const serverStatus = useServerConnection();
+  const isFr = language === 'fr';
 
   React.useEffect(() => {
     closeMobile();
@@ -243,7 +246,7 @@ const Sidebar = () => {
     <div
       data-surface="dark"
       className={cn(
-        "h-full flex flex-col bg-[#1a202c] text-slate-100 border-e border-slate-800 shadow-sm transition-all duration-200 ease-in-out select-none",
+        "h-full flex flex-col bg-[#1a202c] text-slate-100 border-e border-slate-800/90 shadow-sm transition-all duration-200 ease-in-out select-none",
         expanded ? "w-full md:w-64" : "w-16"
       )}
     >
@@ -253,8 +256,8 @@ const Sidebar = () => {
         expanded ? "p-4 sm:p-5" : "p-3"
       )}>
         <div>
-          <div className="flex flex-row items-center gap-3 mb-3">
-            <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded shadow-sm shrink-0">
+          <div className="flex flex-row items-center gap-3 mb-3.5">
+            <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded-lg shadow-sm shrink-0">
               <FileText className="h-5 w-5" />
             </div>
             {expanded && (
@@ -262,13 +265,13 @@ const Sidebar = () => {
                 <h1 className="text-base font-bold text-white truncate">
                   {t('sidebar.dmsSystem')}
                 </h1>
-                <p className="text-sm text-slate-400 truncate">{t('sidebar.documentManagement')}</p>
+                <p className="text-xs text-slate-400 truncate mt-0.5">{t('sidebar.documentManagement')}</p>
               </div>
             )}
           </div>
           
           {currentUser && (
-            <div className="flex flex-row items-center gap-3 p-2.5 bg-[#242d3d] rounded border border-slate-700/60 shadow-sm">
+            <div className="flex flex-row items-center gap-3 p-2.5 bg-slate-800/60 rounded-lg border border-slate-700/60 shadow-sm">
               <ContextMenu>
                 <ContextMenuTrigger asChild>
                   <button
@@ -328,8 +331,8 @@ const Sidebar = () => {
       {/* Scrollable Content Area */}
       <ScrollArea className="flex-1">
         <div className="flex flex-col h-full">
-          {/* Navigation with clean calm styling — 5-8 items directs, PAS d'accordéon */}
-          <nav className="flex-1 p-3 space-y-1">
+          {/* Navigation with refined pill highlights & spacing — 5-8 items directs, PAS d'accordéon */}
+          <nav className="flex-1 p-3 space-y-1.5">
             {directMenuItems.map((item) => {
               const active = item.isActive();
               const hasBadge = Boolean(item.badge && item.badge > 0);
@@ -338,18 +341,24 @@ const Sidebar = () => {
                   key={item.id}
                   type="button"
                   className={cn(
-                    "w-full h-11 text-sm font-medium rounded transition-colors duration-200 flex flex-row items-center group text-start relative focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]",
-                    expanded ? "justify-start gap-3 px-3" : "justify-center px-2",
+                    "w-full h-11 text-sm font-medium rounded-lg transition-all duration-200 flex flex-row items-center group text-start relative focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]",
+                    expanded ? "justify-start gap-3 px-3.5" : "justify-center px-2",
                     active 
-                      ? "bg-[#2c5282] text-white shadow-sm font-medium" 
-                      : "text-slate-300 hover:text-white hover:bg-[#2d3748]"
+                      ? "bg-[#2c5282]/95 text-white shadow-sm ring-1 ring-white/15 font-semibold" 
+                      : "text-slate-300 hover:text-white hover:bg-slate-800/80"
                   )}
                   onClick={() => handleNavClick(item.path)}
                   title={item.label}
                 >
+                  {active && expanded && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute start-1 top-2 bottom-2 w-1 rounded-full bg-[#FFCB56]"
+                    />
+                  )}
                   <item.icon className={cn(
                     "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                    active ? "text-white" : "text-gray-400 group-hover:text-gray-200"
+                    active ? "text-[#FFCB56]" : "text-slate-400 group-hover:text-slate-200"
                   )} />
                   {expanded ? (
                     <>
@@ -357,7 +366,7 @@ const Sidebar = () => {
                         {item.label}
                       </span>
                       {hasBadge && (
-                        <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold animate-pulse-subtle">
+                        <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold rounded-full tabular-nums animate-pulse-subtle">
                           <bdi dir="ltr">{(item.badge ?? 0) > 99 ? '99+' : item.badge}</bdi>
                         </Badge>
                       )}
@@ -380,13 +389,61 @@ const Sidebar = () => {
           )}
         </div>
       </ScrollArea>
+
+      {/* Subtle Live Server Connection Footer */}
+      <div
+        className={cn(
+          "flex-shrink-0 border-t border-slate-800/80 bg-[#161b24] px-3 py-2.5 flex items-center print:hidden",
+          expanded ? "justify-between gap-2" : "justify-center"
+        )}
+        title={
+          serverStatus === 'connected'
+            ? isFr
+              ? 'Système connecté'
+              : 'متصل بالنظام'
+            : isFr
+              ? 'Reconnexion en cours...'
+              : 'جاري إعادة الاتصال...'
+        }
+        aria-label={
+          serverStatus === 'connected'
+            ? isFr
+              ? 'Système connecté'
+              : 'متصل بالنظام'
+            : isFr
+              ? 'Reconnexion en cours'
+              : 'جاري إعادة الاتصال'
+        }
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={cn(
+              "h-2 w-2 rounded-full shrink-0",
+              serverStatus === 'connected'
+                ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.65)]"
+                : "bg-amber-400 animate-pulse"
+            )}
+          />
+          {expanded && (
+            <span className="text-[11px] font-medium text-slate-300 truncate">
+              {serverStatus === 'connected'
+                ? isFr
+                  ? 'Système connecté'
+                  : 'متصل بالنظام'
+                : isFr
+                  ? 'Reconnexion...'
+                  : 'جاري إعادة الاتصال...'}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 
   return (
     <>
       {/* Desktop Sidebar (>= 768px) */}
-      <aside className="hidden md:flex h-screen shrink-0">
+      <aside className="hidden md:flex h-screen shrink-0 print:hidden">
         {renderSidebarBody(isOpen)}
       </aside>
 

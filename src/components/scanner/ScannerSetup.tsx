@@ -5,11 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export interface ScannerDevice {
-  id: string;
-  name: string;
-  [key: string]: unknown;
-}
+import type { ScannerDevice } from '@/services/scannerService';
+export type { ScannerDevice };
 
 interface ScannerSetupProps {
   t: Record<string, string>;

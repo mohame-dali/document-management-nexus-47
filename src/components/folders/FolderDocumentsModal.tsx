@@ -130,23 +130,23 @@ export const FolderDocumentsModal: React.FC<FolderDocumentsModalProps> = ({
           transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
           transition: isDragging ? 'none' : undefined,
         }}
-        className="max-w-[90vw] w-[90vw] md:w-[80vw] lg:w-[70vw] max-h-[90vh] overflow-y-auto p-6 bg-white border border-[#e2e8f0] rounded shadow-sm"
+        className="max-w-[90vw] w-[90vw] md:w-[80vw] lg:w-[70vw] max-h-[90vh] overflow-y-auto p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-lg"
       >
         <DialogHeader
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
           style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-          className="pb-4 pr-12 border-b border-[#e2e8f0] bg-transparent select-none text-right"
+          className="pb-4 pr-12 border-b border-slate-200/80 dark:border-slate-800 bg-transparent select-none text-right"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-[#2c5282]/10 dark:bg-sky-900/40 flex items-center justify-center text-[#2c5282] dark:text-sky-300 shrink-0">
               <FolderOpen className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282]">
+              <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] dark:text-sky-300">
                 {selectedFolder ? `مستندات المجلد: ${selectedFolder.name}` : 'مستندات المجلد'}
               </DialogTitle>
-              <p className="text-sm text-gray-600 mt-0.5">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">عرض وإدارة الوثائق الإدارية المودعة في هذا المجلد</p>
             </div>
           </div>
         </DialogHeader>

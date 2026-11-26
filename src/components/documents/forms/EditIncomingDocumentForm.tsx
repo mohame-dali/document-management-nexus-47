@@ -10,6 +10,7 @@ import { Form } from '@/components/ui/form';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Loader2 } from 'lucide-react';
 import SerialInfoFields from './incoming/SerialInfoFields';
 import CorrespondenceFields from './incoming/CorrespondenceFields';
 import DocumentDetailsFields from './incoming/DocumentDetailsFields';
@@ -611,21 +612,29 @@ const EditIncomingDocumentForm: React.FC<EditIncomingDocumentFormProps> = ({
           </Form>
         </CardContent>
         
-        <CardFooter className="bg-muted/20 border-t border-border/50 p-6 flex justify-between">
+        <CardFooter className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-6 py-4 rounded-b flex items-center justify-between gap-3 shadow-[0_-6px_16px_-6px_rgba(15,23,42,0.08)]">
           <Button 
             type="button" 
             variant="outline" 
             onClick={handleCancel}
-            className="min-w-24 hover:bg-muted/50"
+            className="h-10 px-5 min-w-24 font-medium border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             {t.cancel}
           </Button>
           <Button 
-            type="submit" 
+            type="button"
             onClick={form.handleSubmit(onSubmit)}
-            className="min-w-32 bg-primary hover:bg-primary/90"
+            disabled={form.formState.isSubmitting || scanning}
+            className="h-10 px-6 min-w-32 font-semibold bg-[#2c5282] hover:bg-[#234269] text-white shadow-sm"
           >
-            {t.submit}
+            {form.formState.isSubmitting ? (
+              <>
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                {t.submit}
+              </>
+            ) : (
+              t.submit
+            )}
           </Button>
         </CardFooter>
       </Card>

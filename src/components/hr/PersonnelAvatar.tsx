@@ -34,6 +34,24 @@ const sizeConfig = {
   },
 };
 
+const PASTEL_PALETTES = [
+  'bg-gradient-to-br from-sky-100 to-blue-200 text-sky-900 border-sky-200/90 dark:from-sky-900/60 dark:to-blue-900/50 dark:text-sky-100 dark:border-sky-700/60',
+  'bg-gradient-to-br from-emerald-100 to-teal-200 text-emerald-900 border-emerald-200/90 dark:from-emerald-900/60 dark:to-teal-900/50 dark:text-emerald-100 dark:border-emerald-700/60',
+  'bg-gradient-to-br from-amber-100 to-orange-200 text-amber-900 border-amber-200/90 dark:from-amber-900/60 dark:to-orange-900/50 dark:text-amber-100 dark:border-amber-700/60',
+  'bg-gradient-to-br from-violet-100 to-indigo-200 text-violet-900 border-violet-200/90 dark:from-violet-900/60 dark:to-indigo-900/50 dark:text-violet-100 dark:border-violet-700/60',
+  'bg-gradient-to-br from-rose-100 to-pink-200 text-rose-900 border-rose-200/90 dark:from-rose-900/60 dark:to-pink-900/50 dark:text-rose-100 dark:border-rose-700/60',
+  'bg-gradient-to-br from-cyan-100 to-slate-200 text-cyan-900 border-cyan-200/90 dark:from-cyan-900/60 dark:to-slate-800 dark:text-cyan-100 dark:border-cyan-700/60',
+];
+
+const getAvatarPalette = (seed: string): string => {
+  if (!seed) return PASTEL_PALETTES[0];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return PASTEL_PALETTES[hash % PASTEL_PALETTES.length];
+};
+
 export const PersonnelAvatar: React.FC<PersonnelAvatarProps> = ({
   photo,
   nom,
@@ -58,10 +76,15 @@ export const PersonnelAvatar: React.FC<PersonnelAvatarProps> = ({
 
   const altText = [prenom, nom].filter(Boolean).join(' ') || username || 'Personnel';
   const config = sizeConfig[size] || sizeConfig.md;
+  const paletteClass = getAvatarPalette(altText);
 
   return (
     <div
-      className={`rounded-full border-[#cbd5e1] overflow-hidden bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0 ${config.container} ${className}`}
+      className={`rounded-full overflow-hidden flex items-center justify-center shrink-0 ${
+        photo && !photoError
+          ? 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800'
+          : paletteClass
+      } ${config.container} ${className}`}
     >
       {photo && !photoError ? (
         <img
@@ -75,7 +98,7 @@ export const PersonnelAvatar: React.FC<PersonnelAvatarProps> = ({
           {initials}
         </span>
       ) : (
-        <User className={`${config.icon} text-[#2c5282]`} />
+        <User className={`${config.icon} opacity-80`} />
       )}
     </div>
   );

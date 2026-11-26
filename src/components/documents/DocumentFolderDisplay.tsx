@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FolderOpen, Archive, Eye, Edit, Circle, Calendar, Clock } from 'lucide-react';
 import { Folder } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 
 interface DocumentFolderDisplayProps {
   folder: Folder | string | null;
@@ -102,8 +102,8 @@ const DocumentFolderDisplay: React.FC<DocumentFolderDisplayProps> = ({
                 <Clock className="h-4 w-4" />
                 تاريخ الإنشاء:
               </span>
-              <span className="text-sm font-medium text-gray-800">
-                <bdi dir="ltr">{formatArabicDate(folderData.createdAt)}</bdi>
+              <span className="text-sm font-medium text-gray-800 tabular-nums">
+                <bdi dir="rtl">{formatLongDate(folderData.createdAt, 'ar')}</bdi>
               </span>
             </div>
             <div className="flex justify-between items-center">

@@ -304,12 +304,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const canManageUsers = (): boolean => {
     if (!currentUser) return false;
-    return ['Admin', 'AdminDepartment'].includes(currentUser.role);
+    return currentUser.role === 'Admin';
   };
 
   const canCreateUsers = (): boolean => {
     if (!currentUser) return false;
-    return ['Admin', 'AdminDepartment'].includes(currentUser.role);
+    return currentUser.role === 'Admin';
   };
 
   const canViewAllDocuments = (): boolean => {

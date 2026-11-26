@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Building2, MessageSquare, Shield, Users, ChevronDown, ChevronUp } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageProvider';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDirection } from '@/i18n/useDirection';
 
 const CrossRoleMessagingInfo: React.FC = () => {
-  const { t } = useLanguage();
   const { currentUser } = useAuth();
+  const { dir, isRTL } = useDirection();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getUserRoleMessage = () => {
-    const currentDept = currentUser?.activeDepartment?.name || 'النظام';
-    
+    const currentDept = currentUser?.activeDepartment?.name || (isRTL ? 'النظام' : 'système');
+
+    if (!isRTL) {
+      switch (currentUser?.role) {
+        case 'User':
+          return `En tant qu'utilisateur du service ${currentDept}, vous pouvez échanger des messages officiels avec tous les services.`;
+        case 'AdminDepartment':
+          return `En tant que chef du service ${currentDept}, vous pouvez communiquer directement avec toutes les directions.`;
+        case 'AdminTuningDesk':
+          return `En tant que responsable du bureau de coordination, vous pouvez échanger avec tous les services du système.`;
+        case 'Admin':
+          return `En tant qu'administrateur général, vous disposez d'un accès complet à la messagerie interservices.`;
+        default:
+          return `Vous pouvez communiquer librement avec tous les services et interlocuteurs autorisés.`;
+      }
+    }
+
     switch (currentUser?.role) {
       case 'User':
         return `كمستخدم في قسم ${currentDept}، يمكنك إرسال واستقبال المراسلات الرسمية مع جميع الأقسام والأدوار بدون قيود`;
@@ -27,72 +42,91 @@ const CrossRoleMessagingInfo: React.FC = () => {
   };
 
   return (
-    <div className="mb-6 bg-white border border-[#e2e8f0] rounded text-right shadow-xs overflow-hidden" dir="rtl">
-      <div className="p-5 sm:p-6 lg:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-        <div className="flex items-start sm:items-center gap-4 min-w-0">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282] flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
-            <Building2 className="h-6 w-6 sm:h-7 sm:w-7" />
+    <div
+      className="mb-2.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg text-start shadow-xs overflow-hidden"
+      dir={dir}
+    >
+      <div className="px-3.5 py-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="w-8 h-8 bg-[#ebf4ff] dark:bg-sky-950/60 rounded-md border border-[#bee3f8] dark:border-sky-800/70 text-[#2c5282] dark:text-sky-300 flex items-center justify-center shrink-0">
+            <Building2 className="h-4 w-4" />
           </div>
-          <div className="min-w-0 space-y-1.5">
-            <p className="text-base sm:text-lg lg:text-xl font-bold text-[#1a202c] leading-relaxed">
-              {getUserRoleMessage()}
-            </p>
-            <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
-              نظام المراسلات الإدارية الموحدة — قناة آمنة وموثقة للمراسلات بين مختلف الإدارات والأقسام
-            </p>
-          </div>
+          <p className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+            {getUserRoleMessage()}
+          </p>
         </div>
 
         <Button
-          variant="outline"
+          variant="ghost"
+          size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="h-11 min-h-[44px] px-5 py-2.5 text-base font-semibold text-[#2c5282] border-[#cbd5e1] hover:bg-[#ebf4ff] hover:text-[#234269] hover:border-[#bee3f8] rounded flex items-center gap-2.5 flex-shrink-0 self-end sm:self-center transition-colors duration-200"
+          className="h-8 px-2.5 text-xs font-medium text-[#2c5282] dark:text-sky-300 hover:bg-[#ebf4ff] dark:hover:bg-slate-800 hover:text-[#234269] dark:hover:text-sky-200 rounded-md flex items-center gap-1.5 shrink-0 transition-colors"
         >
-          <span>{isExpanded ? 'إخفاء التفاصيل' : 'دليل الصلاحيات'}</span>
-          {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          <span>
+            {isExpanded
+              ? (isRTL ? 'إخفاء التفاصيل' : 'Masquer')
+              : (isRTL ? 'دليل الصلاحيات' : 'Guide des rôles')}
+          </span>
+          {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </Button>
       </div>
 
       {isExpanded && (
-        <div className="px-5 sm:px-6 lg:px-7 pb-6 pt-5 border-t border-[#e2e8f0] bg-[#f8fafc] space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
-              <div className="flex items-center gap-2.5">
-                <Shield className="h-5 w-5 text-[#9b2c2c] flex-shrink-0" />
-                <span className="text-base sm:text-lg font-bold text-[#9b2c2c]">الإدارة العامة (Admin)</span>
+        <div className="px-3.5 pb-3.5 pt-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-1">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-[#9b2c2c] dark:text-red-400 shrink-0" />
+                <span className="text-xs font-bold text-[#9b2c2c] dark:text-red-400">
+                  {isRTL ? 'الإدارة العامة (Admin)' : 'Direction Générale (Admin)'}
+                </span>
               </div>
-              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
-                مراسلات مركزية، توجيهات عامة وإعلانات رسمية لكافة المكاتب والأقسام.
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {isRTL
+                  ? 'مراسلات مركزية، توجيهات عامة وإعلانات رسمية لكافة المكاتب والأقسام.'
+                  : 'Correspondances centrales, directives et annonces officielles.'}
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
-              <div className="flex items-center gap-2.5">
-                <Building2 className="h-5 w-5 text-[#2c5282] flex-shrink-0" />
-                <span className="text-base sm:text-lg font-bold text-[#2c5282]">مديرو الأقسام (Department)</span>
+            <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-1">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400 shrink-0" />
+                <span className="text-xs font-bold text-[#2c5282] dark:text-sky-400">
+                  {isRTL ? 'مديرو الأقسام (Department)' : 'Chefs de service'}
+                </span>
               </div>
-              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
-                مراسلات رسمية متبادلة وتنسيق مباشر بين الإدارات والأقسام المعتمدة.
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {isRTL
+                  ? 'مراسلات رسمية متبادلة وتنسيق مباشر بين الإدارات والأقسام المعتمدة.'
+                  : 'Échanges officiels et coordination directe entre directions.'}
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
-              <div className="flex items-center gap-2.5">
-                <MessageSquare className="h-5 w-5 text-[#276749] flex-shrink-0" />
-                <span className="text-base sm:text-lg font-bold text-[#276749]">مكتب التنسيق (TuningDesk)</span>
+            <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-1">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-[#276749] dark:text-emerald-400 shrink-0" />
+                <span className="text-xs font-bold text-[#276749] dark:text-emerald-400">
+                  {isRTL ? 'مكتب التنسيق (TuningDesk)' : 'Bureau de coordination'}
+                </span>
               </div>
-              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
-                متابعة سير المعاملات الإدارية وتبادل المذكرات التنسيقية المشتركة.
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {isRTL
+                  ? 'متابعة سير المعاملات الإدارية وتبادل المذكرات التنسيقية المشتركة.'
+                  : 'Suivi des dossiers administratifs et notes de coordination.'}
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded border border-[#e2e8f0] shadow-xs space-y-2.5 hover:border-[#cbd5e1] transition-colors">
-              <div className="flex items-center gap-2.5">
-                <Users className="h-5 w-5 text-[#4a5568] flex-shrink-0" />
-                <span className="text-base sm:text-lg font-bold text-[#4a5568]">الموظفون (User)</span>
+            <div className="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-1">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-slate-600 dark:text-slate-300 shrink-0" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  {isRTL ? 'الموظفون (User)' : 'Collaborateurs (User)'}
+                </span>
               </div>
-              <p className="text-sm sm:text-base text-[#4a5568] leading-relaxed">
-                رفع التقارير الميدانية والمراسلة المباشرة مع المسؤولين والمصالح المعنية.
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {isRTL
+                  ? 'رفع التقارير الميدانية والمراسلة المباشرة مع المسؤولين والمصالح المعنية.'
+                  : 'Remontée de rapports et échanges directs avec les responsables.'}
               </p>
             </div>
           </div>

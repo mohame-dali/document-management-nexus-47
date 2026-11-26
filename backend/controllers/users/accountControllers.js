@@ -1,8 +1,10 @@
 
 const User = require('../../models/User');
+const Personnel = require('../../models/Personnel');
 const ErrorResponse = require('../../utils/errorResponse');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { extractId, isRHAdminDepartment } = require('../../utils/rhAuthHelper');
 
 // @desc    Deactivate user (soft delete)
 // @route   PUT /api/users/:id/deactivate
@@ -24,22 +26,19 @@ exports.deactivateUser = async (req, res, next) => {
       );
     }
     
-    // Enhanced authorization for Admin only
+    // Enhanced authorization: Admin OR RH AdminDepartment (cannot mutate Admin accounts)
     if (req.user.role === 'Admin') {
       console.log(`Admin user - can deactivate any user`);
-      // Admin can deactivate any user
     } else if (req.user.role === 'AdminDepartment') {
-      // Verify the user belongs to the AdminDepartment's active department
-      if (!req.user.activeDepartment) {
-        return next(new ErrorResponse('No active department selected', 400));
-      }
-      
-      const userDeptIds = user.departments.map(dept => dept._id.toString());
-      const hasAccess = userDeptIds.includes(req.user.activeDepartment._id.toString());
-      
-      if (!hasAccess) {
+      const isRH = await isRHAdminDepartment(req.user);
+      if (!isRH) {
         return next(
-          new ErrorResponse(`Not authorized to deactivate this user`, 403)
+          new ErrorResponse('Accès réservé à l\'administrateur ou au responsable RH', 403)
+        );
+      }
+      if (user.role === 'Admin') {
+        return next(
+          new ErrorResponse('Le responsable RH ne peut pas modifier le statut d\'un compte Admin', 403)
         );
       }
     } else {
@@ -55,31 +54,58 @@ exports.deactivateUser = async (req, res, next) => {
       );
     }
 
-    // Prevent deactivating the last Admin user
-    if (user.role === 'Admin') {
-      const activeAdminCount = await User.countDocuments({ 
-        role: 'Admin', 
-        isActive: true 
+    // Update user activation status based on request
+    const newStatus = req.body.isActive !== undefined ? Boolean(req.body.isActive) : false;
+
+    // Prevent deactivating the last active Admin user
+    if (user.role === 'Admin' && newStatus === false) {
+      const activeAdminCount = await User.countDocuments({
+        role: 'Admin',
+        isActive: true,
+        isDeleted: { $ne: true }
       });
-      
+
       if (activeAdminCount <= 1) {
         return next(
           new ErrorResponse('Cannot deactivate the last active Admin user', 400)
         );
       }
     }
-    
-    // Update user activation status based on request
-    const newStatus = req.body.isActive !== undefined ? req.body.isActive : false;
-    
+
+    const originalPersonnelId = user.personnelId;
+    // Préserver impérativement le lien User.personnelId <-> Personnel.userId lors de la désactivation / réactivation
+    const userUpdateFields = { isActive: newStatus };
+
     user = await User.findByIdAndUpdate(
       req.params.id,
-      { isActive: newStatus },
+      userUpdateFields,
       { new: true }
     ).populate('departments')
      .populate('activeDepartment')
      .populate('createdBy', 'username');
-    
+
+    try {
+      if (originalPersonnelId || user?._id) {
+        const personnelFilter = originalPersonnelId
+          ? { $or: [{ userId: user._id }, { _id: originalPersonnelId }], isDeleted: { $ne: true } }
+          : { userId: user._id, isDeleted: { $ne: true } };
+
+        if (newStatus === false) {
+          await Personnel.updateMany(
+            personnelFilter,
+            { $set: { statut: 'inactif' } }
+          );
+        } else {
+          await Personnel.updateMany(
+            personnelFilter,
+            { $set: { statut: 'actif' } }
+          );
+        }
+      }
+    } catch (syncErr) {
+      console.warn('Erreur lors de la synchronisation du statut Personnel pour utilisateur désactivé/réactivé:', syncErr.message);
+    }
+
     console.log(`User ${newStatus ? 'activated' : 'deactivated'} successfully: ${user.username}`);
     
     res.status(200).json({
@@ -118,12 +144,13 @@ exports.resetPassword = async (req, res, next) => {
       // Admin can reset password for any user
     } else if (req.user.role === 'AdminDepartment') {
       // Verify the user belongs to the AdminDepartment's active department
-      if (!req.user.activeDepartment) {
+      const activeDeptId = extractId(req.user.activeDepartment);
+      if (!activeDeptId) {
         return next(new ErrorResponse('No active department selected', 400));
       }
       
-      const userDeptIds = user.departments.map(dept => dept._id.toString());
-      const hasAccess = userDeptIds.includes(req.user.activeDepartment._id.toString());
+      const userDeptIds = (user.departments || []).map(dept => extractId(dept));
+      const hasAccess = userDeptIds.includes(activeDeptId);
       
       if (!hasAccess) {
         return next(

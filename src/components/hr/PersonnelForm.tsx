@@ -576,18 +576,18 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Wizard Header & Stepper */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
         {/* Step indicator header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#f1f5f9] pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-[#2c5282] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            <span className="w-8 h-8 rounded-full bg-[#2c5282] text-white flex items-center justify-center font-bold text-sm shadow-sm tabular-nums">
               {currentStep}
             </span>
             <div>
-              <h2 className="font-bold text-[#1e293b] text-base">
+              <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">
                 {steps[currentStep - 1]?.title}
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground tabular-nums">
                 {t('hr.form.steps.stepCount', { current: currentStep, total: 4 })}
               </p>
             </div>
@@ -611,10 +611,10 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
                 onClick={() => handleStepClick(step.id)}
                 className={`flex items-center gap-2.5 p-3 rounded-lg border text-start transition-all ${
                   isCurrent
-                    ? 'border-[#2c5282] bg-[#eff6ff] text-[#1e3a8a] shadow-xs'
+                    ? 'border-[#2c5282] dark:border-blue-600 bg-blue-50/90 dark:bg-blue-950/50 text-[#1e3a8a] dark:text-blue-200 shadow-xs'
                     : isCompleted
-                    ? 'border-[#cbd5e1] bg-[#f8fafc] text-emerald-800 hover:bg-[#f1f5f9]'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                    ? 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-emerald-800 dark:text-emerald-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
                 <div
@@ -623,13 +623,13 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
                       ? 'bg-[#2c5282] text-white'
                       : isCompleted
                       ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-100 text-slate-500'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
                 </div>
                 <div className="truncate">
-                  <span className="text-[11px] block font-medium opacity-75">
+                  <span className="text-[11px] block font-medium opacity-75 tabular-nums">
                     {t('hr.form.steps.stepCount', { current: step.id, total: 4 })}
                   </span>
                   <span className="text-xs font-semibold truncate block">
@@ -757,14 +757,14 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-4 border-t border-[#e2e8f0] bg-white rounded-xl p-4 shadow-sm">
+      <div className="flex items-center justify-between pt-4 border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm">
         {/* Annuler */}
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={isLoading}
-          className="h-11 px-5 text-sm font-medium text-gray-700 border-gray-300 hover:bg-gray-100 rounded-lg flex items-center gap-2"
+          className="h-11 px-5 text-sm font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"
         >
           <X className="w-4 h-4" />
           <span>{t('hr.form.nav.cancel')}</span>
@@ -777,7 +777,7 @@ export const PersonnelForm: React.FC<PersonnelFormProps> = ({
             variant="outline"
             onClick={handlePrevStep}
             disabled={currentStep === 1 || isLoading}
-            className="h-11 px-5 text-sm font-medium text-gray-700 border-gray-300 hover:bg-gray-100 rounded-lg flex items-center gap-2 disabled:opacity-40"
+            className="h-11 px-5 text-sm font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2 disabled:opacity-40"
           >
             {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             <span>{t('hr.form.nav.previous')}</span>

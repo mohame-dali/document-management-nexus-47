@@ -24,6 +24,7 @@ export interface HubLayoutProps {
   currentUserRole?: string;
   /** NOUVEAU : breadcrumb path (ex: [{label: 'الرئيسية', to: '/dashboard'}, {label: 'البريد'}]) */
   breadcrumb?: Array<{ label: string; to?: string }>;
+  compact?: boolean;
 }
 
 export const HubLayout: React.FC<HubLayoutProps> = ({
@@ -33,6 +34,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
   tabs,
   currentUserRole,
   breadcrumb,
+  compact = false,
 }) => {
   const { isRTL } = useDirection();
   const location = useLocation();
@@ -62,26 +64,26 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
   const Chevron = isRTL ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc]" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* En-tête du hub */}
-      <div className="bg-white border-b border-[#e2e8f0]">
-        <div className="px-5 sm:px-6 lg:px-8 pt-5 pb-0 max-w-[1600px] mx-auto">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800 shadow-xs print:hidden">
+        <div className={`px-5 sm:px-6 lg:px-8 ${compact ? 'pt-2.5' : 'pt-5'} pb-0 max-w-[1600px] mx-auto`}>
           {/* Breadcrumb */}
           {breadcrumb && breadcrumb.length > 0 && (
-            <nav className="flex items-center gap-1.5 text-xs text-[#5f6b7d] mb-3" aria-label="Breadcrumb">
-              <Link to="/dashboard" className="flex items-center gap-1 hover:text-[#2c5282] transition-colors">
+            <nav className={`flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 ${compact ? 'mb-1.5' : 'mb-3'}`} aria-label="Breadcrumb">
+              <Link to="/dashboard" className="flex items-center gap-1 hover:text-[#2c5282] dark:hover:text-blue-400 transition-colors">
                 <Home className="w-3.5 h-3.5" />
-                <span>الرئيسية</span>
+                <span>{isRTL ? 'الرئيسية' : 'Accueil'}</span>
               </Link>
               {breadcrumb.map((item, idx) => (
                 <React.Fragment key={idx}>
-                  <Chevron className="w-3 h-3 text-slate-400" />
+                  <Chevron className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                   {item.to ? (
-                    <Link to={item.to} className="hover:text-[#2c5282] transition-colors">
+                    <Link to={item.to} className="hover:text-[#2c5282] dark:hover:text-blue-400 transition-colors">
                       {item.label}
                     </Link>
                   ) : (
-                    <span className="text-[#1a202c] font-medium">{item.label}</span>
+                    <span className="text-slate-900 dark:text-slate-100 font-medium">{item.label}</span>
                   )}
                 </React.Fragment>
               ))}
@@ -89,18 +91,18 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
           )}
 
           {/* Titre */}
-          <div className="flex items-center gap-3 mb-4">
+          <div className={`flex items-center gap-3 ${compact ? 'mb-2' : 'mb-4'}`}>
             {HubIcon && (
-              <div className="p-2 bg-[#2c5282]/10 rounded-lg">
-                <HubIcon className="w-6 h-6 text-[#2c5282]" />
+              <div className={`${compact ? 'p-2' : 'p-2.5'} bg-[#2c5282]/10 dark:bg-blue-950/60 border border-[#2c5282]/15 dark:border-blue-800/50 rounded-lg`}>
+                <HubIcon className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} text-[#2c5282] dark:text-blue-400`} />
               </div>
             )}
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+              <h1 className={`${compact ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} font-bold text-slate-900 dark:text-slate-100`}>
                 {title}
               </h1>
               {description && (
-                <p className="text-sm text-[#5f6b7d] mt-0.5">
+                <p className={`${compact ? 'text-xs sm:text-sm' : 'text-sm mt-0.5'} text-slate-500 dark:text-slate-400`}>
                   {description}
                 </p>
               )}
@@ -121,25 +123,25 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
                   key={tab.to}
                   to={tab.to}
                   className={`
-                    relative flex items-center gap-2 px-4 py-3 text-sm font-medium
-                    whitespace-nowrap transition-all duration-200
+                    relative flex items-center gap-2 ${compact ? 'px-3.5 py-2' : 'px-4 py-3'} text-sm font-medium
+                    whitespace-nowrap shrink-0 transition-all duration-200
                     border-b-[3px] -mb-px
                     ${
                       isActive
-                        ? 'text-[#2c5282] border-[#2c5282] font-bold'
-                        : 'text-slate-600 border-transparent hover:text-[#2c5282] hover:border-slate-300'
+                        ? 'text-[#2c5282] dark:text-blue-400 border-[#2c5282] dark:border-blue-400 font-bold'
+                        : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-[#2c5282] dark:hover:text-blue-300 hover:border-slate-300 dark:hover:border-slate-700'
                     }
                   `}
                   role="tab"
                 >
                   <Icon
                     className={`w-4 h-4 shrink-0 transition-colors ${
-                      isActive ? tab.color || 'text-[#2c5282]' : 'text-slate-400'
+                      isActive ? tab.color || 'text-[#2c5282] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
                     }`}
                   />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold animate-pulse-subtle">
+                    <Badge className="bg-[#FFD758] text-[#1a202c] border border-[#FFCB56] text-xs px-1.5 py-0 h-5 font-bold rounded-full tabular-nums animate-pulse-subtle">
                       {tab.badge > 99 ? '99+' : tab.badge}
                     </Badge>
                   )}
@@ -153,7 +155,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
       {/* Contenu de l'onglet actif — avec animation fade+slide */}
       <div
         key={location.pathname}
-        className="p-5 sm:p-6 lg:p-8 max-w-[1600px] mx-auto animate-fade-slide-in"
+        className={`${compact ? 'px-4 sm:px-6 lg:px-8 py-3 sm:py-4' : 'p-5 sm:p-6 lg:p-8'} max-w-[1600px] mx-auto animate-fade-slide-in`}
       >
         <Outlet />
       </div>

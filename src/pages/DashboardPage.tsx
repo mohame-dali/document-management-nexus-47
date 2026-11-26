@@ -7,6 +7,7 @@ import { getUsers } from '@/services/userService';
 import { getFolders } from '@/services/folderService';
 import { getDepartments } from '@/services/departmentService';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import RoleExecutiveSection from '@/components/dashboard/RoleExecutiveSection';
 import StatsCards from '@/components/dashboard/StatsCards';
 import UserStatistics from '@/components/dashboard/UserStatistics';
 import AvailableFeatures from '@/components/dashboard/AvailableFeatures';
@@ -110,24 +111,27 @@ const DashboardPage = () => {
   if (!currentUser) return null;
 
   return (
-    <div className="min-h-screen bg-[#f7fafc]">
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950">
       <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
         {/* Dashboard Header */}
         <DashboardHeader currentUser={currentUser} currentYear={currentYear} />
 
+        {/* Role-Tailored Executive Overview & Quick Actions */}
+        <RoleExecutiveSection currentUser={currentUser} currentYear={currentYear} />
+
         {/* Error Banner */}
         {isError && (
-          <div className="bg-red-50 border-s-4 border-red-500 p-4 rounded-e-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 p-4 rounded-lg shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              <p className="text-sm font-medium text-red-800">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">
                 {t('dashboard.error.serverConnection')}
               </p>
             </div>
             <button
               type="button"
               onClick={handleRefetch}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded shadow-sm transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md shadow-sm transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               {t('common.retry')}

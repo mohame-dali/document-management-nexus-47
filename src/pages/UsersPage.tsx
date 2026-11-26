@@ -65,7 +65,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import ChangePasswordDialog from '@/components/users/ChangePasswordDialog';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
@@ -128,6 +128,7 @@ const UsersPage: React.FC = () => {
     mutationFn: deleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
       toast.success(t('users.delete.success'));
       setShowDeleteDialog(false);
       setUserToDelete(null);
@@ -153,6 +154,7 @@ const UsersPage: React.FC = () => {
     mutationFn: restoreUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
       toast.success(t('users.restore.success', 'Utilisateur restauré avec succès'));
     },
     onError: (error: unknown) => {
@@ -173,6 +175,7 @@ const UsersPage: React.FC = () => {
     mutationFn: permanentDeleteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
       toast.success(
         t('users.permanentDelete.success', 'Utilisateur supprimé définitivement avec succès')
       );
@@ -200,6 +203,7 @@ const UsersPage: React.FC = () => {
       deactivateUser(id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['organization-chart'] });
       toast.success(t('users.status.updateSuccess'));
     },
     onError: (error: unknown) => {
@@ -349,7 +353,7 @@ const UsersPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
           <TableSkeleton columns={7} rows={8} />
         </div>
       </div>
@@ -359,15 +363,15 @@ const UsersPage: React.FC = () => {
   return (
     <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#e2e8f0]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
         <div>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/60">
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">{t('users.page.title')}</h1>
-              <p className="text-base text-gray-600 mt-0.5">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c] dark:text-slate-100">{t('users.page.title')}</h1>
+              <p className="text-base text-slate-600 dark:text-slate-300 mt-0.5">
                 {t('users.page.subtitle')}
               </p>
             </div>
@@ -378,16 +382,16 @@ const UsersPage: React.FC = () => {
           <Button 
             variant="outline" 
             onClick={handleManualRefresh}
-            className="h-11 px-4 bg-white border-[#cbd5e1] hover:border-[#FFCB56] hover:bg-amber-50/40 text-base font-medium rounded text-[#1a202c] flex items-center gap-2 transition-colors"
+            className="h-11 px-4 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-[#FFCB56] hover:bg-amber-50/40 dark:hover:bg-slate-800 text-base font-medium rounded-lg text-[#1a202c] dark:text-slate-100 flex items-center gap-2 transition-colors"
           >
-            <RefreshCw className="h-4 w-4 text-[#2c5282]" />
+            <RefreshCw className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
             <span>{t('common.refresh')}</span>
           </Button>
 
           {currentUser?.role === 'Admin' && (
             <Button 
               onClick={() => navigate('/dashboard/users/create')} 
-              className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-bold rounded shadow-none flex items-center gap-2"
+              className="h-11 px-6 bg-[#2c5282] hover:bg-[#234269] text-white text-base font-bold rounded-lg shadow-sm flex items-center gap-2"
             >
               <Plus className="h-5 w-5" />
               <span>{t('users.create.title')}</span>
@@ -406,7 +410,7 @@ const UsersPage: React.FC = () => {
             <Button
               type="button"
               onClick={() => refetch()}
-              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+              className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded-lg inline-flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
               <span>{t('common.retry')}</span>
@@ -417,53 +421,53 @@ const UsersPage: React.FC = () => {
         <>
       {/* Metric Summary Indicators (Calm AdminLTE Cards, no gradients) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.total')}</span>
-            <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.total}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.total')}</span>
+            <span className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100 mt-1 block tabular-nums">{metrics.total}</span>
           </div>
-          <div className="w-10 h-10 rounded bg-[#2c5282]/10 text-[#2c5282] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center shrink-0">
             <Users className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.active')}</span>
-            <span className="text-xl sm:text-2xl font-bold text-emerald-700 mt-1 block">{metrics.active}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.active')}</span>
+            <span className="text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1 block tabular-nums">{metrics.active}</span>
           </div>
-          <div className="w-10 h-10 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-200">
+          <div className="w-10 h-10 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-200/80 dark:border-emerald-800/70">
             <UserCheck className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.inactive')}</span>
-            <span className="text-xl sm:text-2xl font-bold text-red-600 mt-1 block">{metrics.inactive}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.inactive')}</span>
+            <span className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400 mt-1 block tabular-nums">{metrics.inactive}</span>
           </div>
-          <div className="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+          <div className="w-10 h-10 rounded-lg bg-red-50/90 dark:bg-red-950/50 text-red-600 dark:text-red-300 flex items-center justify-center shrink-0 border border-red-200/80 dark:border-red-800/70">
             <UserX className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 shadow-sm flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-gray-500 block">{t('users.metrics.admins')}</span>
-            <span className="text-xl sm:text-2xl font-bold text-[#1a202c] mt-1 block">{metrics.admins}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 block">{t('users.metrics.admins')}</span>
+            <span className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100 mt-1 block tabular-nums">{metrics.admins}</span>
           </div>
           {/* Gold indicator with dark text/icon */}
-          <div className="w-10 h-10 rounded bg-[#FFCB56] text-[#1a202c] flex items-center justify-center shrink-0 border border-[#e2be40]">
+          <div className="w-10 h-10 rounded-lg bg-[#FFCB56] text-[#1a202c] flex items-center justify-center shrink-0 border border-[#e2be40]">
             <Shield className="h-5 w-5" />
           </div>
         </div>
       </div>
 
       {/* 2. Filters & Search Section */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-base font-bold text-[#1a202c]">
-            <Filter className="h-5 w-5 text-[#2c5282]" />
+          <div className="flex items-center gap-2 text-base font-bold text-[#1a202c] dark:text-slate-100">
+            <Filter className="h-5 w-5 text-[#2c5282] dark:text-blue-300" />
             <span>{t('users.filters.title')}</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -477,10 +481,10 @@ const UsersPage: React.FC = () => {
                   setCurrentPage(1);
                 }}
                 aria-pressed={showDeleted}
-                className={`h-11 px-3.5 text-sm font-semibold rounded flex items-center gap-2 transition-colors ${
+                className={`h-11 px-3.5 text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors ${
                   showDeleted
                     ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
-                    : 'border-[#cbd5e1] text-[#2d3748] hover:bg-slate-50'
+                    : 'border-slate-300 dark:border-slate-700 text-[#2d3748] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 {showDeleted ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -504,7 +508,7 @@ const UsersPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search by username */}
           <div className="relative">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
             <Input 
               placeholder={t('users.filters.searchPlaceholder')}
               value={searchTerm}
@@ -512,7 +516,7 @@ const UsersPage: React.FC = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-11 text-base pr-10 pl-3 bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+              className="h-11 text-base pr-10 pl-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
             />
           </div>
 
@@ -525,7 +529,7 @@ const UsersPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('users.filters.byRole')} />
               </SelectTrigger>
               <SelectContent>
@@ -548,7 +552,7 @@ const UsersPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('users.filters.byDepartment')} />
               </SelectTrigger>
               <SelectContent>
@@ -571,7 +575,7 @@ const UsersPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white border-[#cbd5e1] rounded focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('users.filters.byStatus')} />
               </SelectTrigger>
               <SelectContent>
@@ -585,88 +589,88 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* 3. Table Section */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
           <Table className="w-full">
-            <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <TableHeader className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200/80 dark:border-slate-800">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-start py-3 px-4 text-sm font-bold text-[#2d3748] w-16">{t('users.table.photo')}</TableHead>
+                <TableHead className="text-start py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 w-16">{t('users.table.photo')}</TableHead>
                 <TableHead
                   aria-sort={sortField === 'username' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[160px]"
+                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[160px]"
                 >
                   <button
                     type="button"
                     onClick={() => handleSort('username')}
-                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-slate-100/80 dark:hover:bg-slate-700/60 select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
                   >
                     <span>{t('users.table.username')}</span>
-                    {sortField === 'username' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField === 'username' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField !== 'username' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    {sortField === 'username' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField === 'username' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField !== 'username' && <ChevronsUpDown className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
                   </button>
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'role' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[130px]"
+                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[130px]"
                 >
                   <button
                     type="button"
                     onClick={() => handleSort('role')}
-                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-slate-100/80 dark:hover:bg-slate-700/60 select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
                   >
                     <span>{t('users.table.role')}</span>
-                    {sortField === 'role' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField === 'role' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField !== 'role' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    {sortField === 'role' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField === 'role' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField !== 'role' && <ChevronsUpDown className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
                   </button>
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'departments' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[180px]"
+                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[180px]"
                 >
                   <button
                     type="button"
                     onClick={() => handleSort('departments')}
-                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-slate-100/80 dark:hover:bg-slate-700/60 select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
                   >
                     <span>{t('users.table.departments')}</span>
-                    {sortField === 'departments' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField === 'departments' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField !== 'departments' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    {sortField === 'departments' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField === 'departments' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField !== 'departments' && <ChevronsUpDown className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
                   </button>
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'createdAt' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[140px]"
+                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[140px]"
                 >
                   <button
                     type="button"
                     onClick={() => handleSort('createdAt')}
-                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-slate-100/80 dark:hover:bg-slate-700/60 select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
                   >
                     <span>{t('users.table.createdAt')}</span>
-                    {sortField === 'createdAt' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField === 'createdAt' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField !== 'createdAt' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    {sortField === 'createdAt' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField === 'createdAt' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField !== 'createdAt' && <ChevronsUpDown className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
                   </button>
                 </TableHead>
                 <TableHead
                   aria-sort={sortField === 'isActive' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  className="p-0 text-start text-sm font-bold text-[#2d3748] min-w-[120px]"
+                  className="p-0 text-start text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[120px]"
                 >
                   <button
                     type="button"
                     onClick={() => handleSort('isActive')}
-                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-[#edf2f7] select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
+                    className="w-full min-h-[44px] py-3 px-4 flex items-center gap-1.5 font-bold text-sm text-start hover:bg-slate-100/80 dark:hover:bg-slate-700/60 select-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] focus-visible:ring-inset"
                   >
                     <span>{t('users.table.status')}</span>
-                    {sortField === 'isActive' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField === 'isActive' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
-                    {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                    {sortField === 'isActive' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField === 'isActive' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />}
+                    {sortField !== 'isActive' && <ChevronsUpDown className="w-4 h-4 text-slate-300 dark:text-slate-600" />}
                   </button>
                 </TableHead>
-                <TableHead className="text-center py-3 px-4 text-sm font-bold text-[#2d3748] min-w-[140px]">{t('users.table.actions')}</TableHead>
+                <TableHead className="text-center py-3 px-4 text-sm font-bold text-slate-700 dark:text-slate-200 min-w-[140px]">{t('users.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -698,13 +702,13 @@ const UsersPage: React.FC = () => {
                     key={user._id} 
                     className={
                       user.isDeleted
-                        ? 'bg-red-50/80 hover:bg-red-100/70 transition-colors border-b border-red-200 opacity-85'
-                        : 'hover:bg-[#f7fafc] transition-colors border-b border-[#e2e8f0]'
+                        ? 'bg-red-50/80 dark:bg-red-950/30 hover:bg-red-100/70 dark:hover:bg-red-950/50 transition-colors border-b border-red-200/80 dark:border-red-900/60 opacity-85'
+                        : 'hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-200/70 dark:border-slate-800'
                     }
                   >
                     {/* Photo */}
                     <TableCell className="text-right py-3 px-4 align-middle text-sm">
-                      <Avatar className="h-10 w-10 rounded-full border border-[#cbd5e1] overflow-hidden bg-gray-50">
+                      <Avatar className="h-10 w-10 rounded-full border border-slate-300 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-slate-800">
                         {user.photo ? (
                           <AvatarImage 
                             src={getPhotoUrl(user.photo)}
@@ -712,7 +716,7 @@ const UsersPage: React.FC = () => {
                             className="object-cover"
                           />
                         ) : (
-                          <AvatarFallback className="text-xs font-bold bg-[#2c5282]/10 text-[#2c5282]">
+                          <AvatarFallback className="text-xs font-bold bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300">
                             {user.username.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         )}
@@ -720,7 +724,7 @@ const UsersPage: React.FC = () => {
                     </TableCell>
 
                     {/* Username */}
-                    <TableCell className="text-right py-3 px-4 align-middle text-sm font-bold text-[#1a202c]">
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm font-bold text-[#1a202c] dark:text-slate-100">
                       {user.username}
                     </TableCell>
 
@@ -728,23 +732,23 @@ const UsersPage: React.FC = () => {
                     <TableCell className="text-right py-3 px-4 align-middle text-sm">
                       {user.role === 'Director' ? (
                         /* Strict WCAG AA: gold background MUST have dark text #1a202c */
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFD758] text-[#1a202c] border border-[#e2be40]">
                           {t('users.badge.director')}
                         </span>
                       ) : user.role === 'Admin' ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c] border border-[#e2be40]">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FFCB56] text-[#1a202c] border border-[#e2be40]">
                           {t('users.badge.admin')}
                         </span>
                       ) : user.role === 'AdminDepartment' ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-[#2c5282] text-white">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#2c5282] text-white border border-[#234269]">
                           {t('users.badge.adminDepartment')}
                         </span>
                       ) : user.role === 'AdminTuningDesk' ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-900 border border-purple-200">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50/90 dark:bg-purple-950/50 text-purple-900 dark:text-purple-200 border border-purple-200/80 dark:border-purple-800/70">
                           {t('users.badge.adminTuningDesk')}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
                           {t('users.badge.user')}
                         </span>
                       )}
@@ -757,36 +761,36 @@ const UsersPage: React.FC = () => {
                           {user.departments.map(dept => (
                             <span 
                               key={dept._id} 
-                              className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded border border-gray-200"
+                              className="inline-block px-2.5 py-0.5 text-xs font-medium bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-full border border-slate-200/80 dark:border-slate-700"
                             >
                               {dept.name}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-xs italic">{t('users.noDepartment')}</span>
+                        <span className="text-slate-400 dark:text-slate-500 text-xs italic">{t('users.noDepartment')}</span>
                       )}
                     </TableCell>
 
                     {/* Created Date */}
-                    <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568]">
-                      {formatArabicDate(user.createdAt)}
+                    <TableCell className="text-right py-3 px-4 align-middle text-sm text-[#4a5568] dark:text-slate-300 tabular-nums">
+                      <bdi dir="rtl" className="tabular-nums">{formatLongDate(user.createdAt, 'ar')}</bdi>
                     </TableCell>
 
                     {/* Status */}
                     <TableCell className="text-right py-3 px-4 align-middle text-sm">
                       {user.isDeleted ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100/90 dark:bg-red-950/50 text-red-800 dark:text-red-200 border border-red-300/80 dark:border-red-800/70">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-600 dark:bg-red-400"></span>
                           <span>{t('users.status.deleted', 'Supprimé')}</span>
                         </span>
                       ) : (
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           user.isActive 
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
-                            : 'bg-red-50 text-red-800 border border-red-200'
+                            ? 'bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70' 
+                            : 'bg-red-50/90 dark:bg-red-950/50 text-red-800 dark:text-red-200 border border-red-200/80 dark:border-red-800/70'
                         }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-600' : 'bg-red-500'}`}></span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-red-500 dark:bg-red-400'}`}></span>
                           <span>{user.isActive ? t('users.status.active') : t('users.status.inactive')}</span>
                         </span>
                       )}
@@ -919,8 +923,8 @@ const UsersPage: React.FC = () => {
 
         {/* 4. Pagination Section */}
         {filteredUsers.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[#e2e8f0] bg-[#f8fafc]">
-            <div className="text-base text-gray-600 font-medium">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/50">
+            <div className="text-base text-slate-600 dark:text-slate-300 font-medium tabular-nums">
               {t('users.paginationInfo', {
                 from: ((currentPage - 1) * itemsPerPage) + 1,
                 to: Math.min(currentPage * itemsPerPage, filteredUsers.length),
@@ -936,7 +940,7 @@ const UsersPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-slate-300 dark:border-slate-700 text-base rounded-lg font-medium disabled:opacity-50"
                 >
                   <ChevronLeft className="h-4 w-4 me-1 rtl-mirror" />
                   <span>{t('common.previous')}</span>
@@ -948,7 +952,7 @@ const UsersPage: React.FC = () => {
                       <span
                         key={`ellipsis-${idx}`}
                         aria-hidden="true"
-                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-gray-500 font-bold select-none"
+                        className="h-11 min-w-[32px] inline-flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold select-none"
                       >
                         …
                       </span>
@@ -959,10 +963,10 @@ const UsersPage: React.FC = () => {
                         onClick={() => setCurrentPage(item)}
                         aria-current={currentPage === item ? 'page' : undefined}
                         aria-label={t('common.pageNumber', { page: item })}
-                        className={`h-11 min-w-[44px] px-2 text-base font-bold rounded transition-colors ${
+                        className={`h-11 min-w-[44px] px-2 text-base font-bold tabular-nums rounded-lg transition-colors ${
                           currentPage === item
                             ? 'bg-[#2c5282] text-white'
-                            : 'bg-white text-gray-700 border border-[#cbd5e1] hover:bg-gray-100'
+                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         {item}
@@ -977,7 +981,7 @@ const UsersPage: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="h-11 min-h-[44px] px-3.5 border-[#cbd5e1] text-base rounded font-medium disabled:opacity-50"
+                  className="h-11 min-h-[44px] px-3.5 border-slate-300 dark:border-slate-700 text-base rounded-lg font-medium disabled:opacity-50"
                 >
                   <span>{t('common.next')}</span>
                   <ChevronRight className="h-4 w-4 ms-1 rtl-mirror" />

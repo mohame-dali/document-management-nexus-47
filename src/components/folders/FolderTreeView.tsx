@@ -28,6 +28,7 @@ import FolderContextMenu from './FolderContextMenu';
 import FolderMoveDialog from './FolderMoveDialog';
 import FolderDetailsDialog from './FolderDetailsDialog';
 import DragDropWrapper from '@/components/common/DragDropWrapper';
+import { formatShortDate } from '@/utils/formatDate';
 
 interface FolderTreeViewProps {
   onFolderSelect: (folder: FolderType | null) => void;
@@ -279,29 +280,29 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
           }`}
         >
           <Card 
-            className={`cursor-pointer transition-colors duration-200 border rounded ${
+            className={`cursor-pointer transition-colors duration-150 border rounded-lg shadow-sm ${
               isSelected 
-                ? 'border-[#FFCB56] bg-amber-50/50' 
-                : 'border-[#e2e8f0] bg-white hover:bg-gray-50'
+                ? 'border-amber-400/80 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/35' 
+                : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50/90 dark:hover:bg-slate-800/70'
             }`}
             onClick={() => onFolderSelect(folder)}
           >
             <CardContent className="p-3">
               <div className="flex items-center gap-2.5 mb-2">
-                <div className="p-2 bg-blue-50 border border-blue-200 text-[#2c5282] rounded">
+                <div className="p-2 bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/70 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 rounded-lg">
                   {folder.status === 'Fermé' ? (
-                    <Archive className="h-4 w-4 text-gray-500" />
+                    <Archive className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                   ) : (
-                    <Folder className="h-4 w-4 text-[#2c5282]" />
+                    <Folder className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-xs truncate text-[#1a202c]">{folder.name}</h3>
+                  <h3 className="font-semibold text-xs truncate text-[#1a202c] dark:text-slate-100">{folder.name}</h3>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-xs font-medium ${
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       folder.status === 'En cours'
-                        ? 'bg-green-50 text-green-700 border border-green-200'
-                        : 'bg-gray-100 text-gray-600 border border-gray-200'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700'
                     }`}>
                       {folder.status === 'En cours' ? 'نشط' : 'مؤرشف'}
                     </span>
@@ -309,15 +310,15 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
                 </div>
               </div>
               
-              <div className="flex items-center justify-between pt-1 border-t border-[#f1f5f9]">
-                <div className="flex items-center gap-1 text-xs text-[#78350f]">
+              <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-1 text-xs text-amber-800 dark:text-amber-300">
                   <FileText className="h-3 w-3" />
-                  <span className="font-semibold px-1 py-0.2 bg-[#FFCB56] text-[#78350f] rounded border border-[#FFD758]">
+                  <span className="font-semibold px-2 py-0.5 bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 rounded-full border border-amber-200/80 dark:border-amber-800/70 tabular-nums">
                     {documentCount} مستند
                   </span>
                 </div>
-                <div className="text-xs text-gray-400">
-                  {new Date(folder.createdAt).toLocaleDateString('ar-EG')}
+                <div className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">
+                  <bdi dir="ltr">{formatShortDate(folder.createdAt)}</bdi>
                 </div>
               </div>
             </CardContent>
@@ -349,10 +350,10 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
             dragType="folder"
             dragData={folder}
             dropTypes={['folder', 'document']}
-            className={`flex items-center gap-2 p-2 rounded border text-xs cursor-pointer transition-colors duration-200 ${
+            className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-colors duration-150 ${
               isSelected 
-                ? 'bg-amber-50/60 border-[#FFCB56] text-[#78350f]' 
-                : 'hover:bg-gray-50 bg-white border-[#e2e8f0] text-gray-800'
+                ? 'bg-amber-50/60 dark:bg-amber-950/35 border-amber-400/80 dark:border-amber-700 text-[#78350f] dark:text-amber-200' 
+                : 'hover:bg-slate-50/90 dark:hover:bg-slate-800/70 bg-white dark:bg-slate-900/90 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200'
             }`}
           >
             <div 
@@ -365,12 +366,12 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
                     e.stopPropagation();
                     toggleExpanded(folder._id);
                   }}
-                  className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"
+                  className="p-1 hover:bg-slate-200/80 dark:hover:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 transition-colors duration-150"
                 >
                   {isExpanded ? (
-                    <ChevronDown className="h-3.5 w-3.5 text-[#2c5282]" />
+                    <ChevronDown className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
                   ) : (
-                    <ChevronRight className="h-3.5 w-3.5 text-gray-500 rotate-180" />
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 rotate-180" />
                   )}
                 </button>
               ) : (
@@ -381,28 +382,28 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
                 className="flex items-center gap-2.5 flex-1 min-w-0"
                 onClick={() => onFolderSelect(folder)}
               >
-                <div className="text-[#2c5282]">
+                <div className="text-[#2c5282] dark:text-sky-400">
                   {folder.status === 'Fermé' ? (
-                    <Archive className="h-4 w-4 text-gray-400" />
+                    <Archive className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   ) : isExpanded || hasChildren ? (
-                    <FolderOpen className="h-4 w-4 text-[#2c5282]" />
+                    <FolderOpen className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                   ) : (
-                    <Folder className="h-4 w-4 text-[#2c5282]" />
+                    <Folder className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                   )}
                 </div>
                 
                 <div className="flex items-center justify-between flex-1 min-w-0 gap-2">
-                  <span className="font-semibold text-xs truncate">{folder.name}</span>
+                  <span className="font-semibold text-xs truncate text-[#1a202c] dark:text-slate-100">{folder.name}</span>
                   
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70 tabular-nums">
                       <FileText className="h-3 w-3" />
                       {documentCount}
                     </span>
-                    <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-xs font-medium ${
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       folder.status === 'En cours'
-                        ? 'bg-green-50 text-green-700 border border-green-200'
-                        : 'bg-gray-100 text-gray-600 border border-gray-200'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/70'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700'
                     }`}>
                       {folder.status === 'En cours' ? 'نشط' : 'مؤرشف'}
                     </span>
@@ -414,7 +415,7 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         </FolderContextMenu>
         
         {hasChildren && isExpanded && (
-          <div className="mt-1 space-y-1 pr-3 border-r-2 border-[#e2e8f0]">
+          <div className="mt-1 space-y-1 pr-3 border-r-2 border-slate-200 dark:border-slate-700">
             {getSubfolders(folder._id).map((subfolder, subIndex) => 
               renderFolderList(subfolder, level + 1, subIndex)
             )}
@@ -426,26 +427,26 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center text-xs">
-        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] mx-auto mb-3"></div>
-        <p className="text-gray-500">جاري تحميل شجرة المجلدات...</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 text-center text-xs shadow-sm">
+        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#2c5282] dark:border-sky-400 mx-auto mb-3"></div>
+        <p className="text-slate-500 dark:text-slate-400">جاري تحميل شجرة المجلدات...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-3" dir="rtl">
-      <div className="bg-white border border-[#e2e8f0] rounded p-3 flex items-center justify-between">
-        <h3 className="text-xs font-bold text-[#1a202c]">الهيكل الهرمي للمجلدات</h3>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3 flex items-center justify-between shadow-sm">
+        <h3 className="text-xs font-bold text-[#1a202c] dark:text-slate-100">الهيكل الهرمي للمجلدات</h3>
         <div className="flex items-center gap-2">
-          <div className="flex items-center border border-[#cbd5e1] rounded overflow-hidden">
+          <div className="flex items-center border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden">
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`h-7 px-2 text-xs flex items-center gap-1 ${
+              className={`h-7 px-2 text-xs flex items-center gap-1 transition-colors duration-150 ${
                 viewMode === 'list'
                   ? 'bg-[#2c5282] text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               <List className="h-3.5 w-3.5" />
@@ -454,10 +455,10 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              className={`h-7 px-2 text-xs flex items-center gap-1 border-r border-[#cbd5e1] ${
+              className={`h-7 px-2 text-xs flex items-center gap-1 border-r border-slate-300 dark:border-slate-700 transition-colors duration-150 ${
                 viewMode === 'grid'
                   ? 'bg-[#2c5282] text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               <Grid3X3 className="h-3.5 w-3.5" />
@@ -468,7 +469,7 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
             <Button
               size="sm"
               onClick={() => openCreateDialog()}
-              className="h-7 px-2.5 text-xs rounded bg-[#2c5282] hover:bg-[#234269] text-white flex items-center gap-1"
+              className="h-7 px-2.5 text-xs rounded-lg bg-[#2c5282] hover:bg-[#234269] text-white flex items-center gap-1"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>مجلد جديد</span>
@@ -477,19 +478,19 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         </div>
       </div>
 
-      <div className="bg-white border border-[#e2e8f0] rounded p-3 min-h-[300px]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3 min-h-[300px] shadow-sm">
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {rootFolders.length === 0 ? (
-              <div className="col-span-full text-center py-12 text-gray-400">
+              <div className="col-span-full text-center py-12 text-slate-400 dark:text-slate-500">
                 <Archive className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p className="text-xs font-medium text-gray-600 mb-2">لا توجد مجلدات</p>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">لا توجد مجلدات</p>
                 {canManageFolders && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openCreateDialog()}
-                    className="h-7 text-xs border border-[#FFCB56] bg-amber-50 text-[#78350f]"
+                    className="h-7 text-xs rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300"
                   >
                     إنشاء مجلد جديد
                   </Button>
@@ -502,15 +503,15 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         ) : (
           <div className="space-y-1.5">
             {rootFolders.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-12 text-slate-400 dark:text-slate-500">
                 <Archive className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p className="text-xs font-medium text-gray-600 mb-2">لا توجد مجلدات</p>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">لا توجد مجلدات</p>
                 {canManageFolders && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openCreateDialog()}
-                    className="h-7 text-xs border border-[#FFCB56] bg-amber-50 text-[#78350f]"
+                    className="h-7 text-xs rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300"
                   >
                     إنشاء مجلد جديد
                   </Button>
@@ -524,9 +525,9 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="rtl" className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-lg">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-slate-900 dark:text-slate-100">
               {parentFolderId ? 'إنشاء مجلد فرعي' : 'إنشاء مجلد جديد'}
             </DialogTitle>
           </DialogHeader>
@@ -535,20 +536,22 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
               placeholder="اسم المجلد"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
+              className="rounded-lg dark:bg-slate-950 dark:border-slate-700"
             />
             {parentFolderId && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 سيتم إنشاء هذا المجلد كمجلد فرعي
               </p>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button variant="outline" className="rounded-lg dark:border-slate-700" onClick={() => setIsCreateDialogOpen(false)}>
               إلغاء
             </Button>
             <Button 
               onClick={handleCreateFolder}
               disabled={createFolderMutation.isPending}
+              className="rounded-lg"
             >
               {createFolderMutation.isPending ? 'جاري الإنشاء...' : 'إنشاء'}
             </Button>
@@ -557,24 +560,26 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="rtl" className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-lg">
           <DialogHeader>
-            <DialogTitle>تعديل المجلد</DialogTitle>
+            <DialogTitle className="text-slate-900 dark:text-slate-100">تعديل المجلد</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Input
               placeholder="اسم المجلد"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
+              className="rounded-lg dark:bg-slate-950 dark:border-slate-700"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button variant="outline" className="rounded-lg dark:border-slate-700" onClick={() => setIsEditDialogOpen(false)}>
               إلغاء
             </Button>
             <Button 
               onClick={handleEditFolder}
               disabled={updateFolderMutation.isPending}
+              className="rounded-lg"
             >
               {updateFolderMutation.isPending ? 'جاري التحديث...' : 'تحديث'}
             </Button>
@@ -583,20 +588,20 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
       </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-slate-900 dark:text-slate-100">تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 dark:text-slate-400">
               هل أنت متأكد من حذف المجلد "{folderToDelete?.name}"؟ 
               لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-lg">إلغاء</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteFolder}
               disabled={deleteFolderMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
+              className="rounded-lg bg-red-600 hover:bg-red-700"
             >
               {deleteFolderMutation.isPending ? 'جاري الحذف...' : 'حذف'}
             </AlertDialogAction>

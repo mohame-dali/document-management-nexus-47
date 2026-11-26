@@ -2,7 +2,7 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { FileText, User, CheckCircle } from 'lucide-react';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 
 interface ResponsibleAssignmentNotificationProps {
   documentId: string;
@@ -31,8 +31,8 @@ export const showResponsibleAssignmentNotification = ({
             <User className="h-4 w-4" />
             <span className="text-sm text-gray-600">تم التعيين بواسطة: {assignedBy}</span>
           </div>
-          <div className="text-xs text-gray-500">
-            {formatArabicDate(new Date())}
+          <div className="text-xs text-gray-500 tabular-nums">
+            <bdi dir={docDir} className="tabular-nums">{formatLongDate(new Date(), docDir === 'ltr' ? 'fr' : 'ar')}</bdi>
           </div>
         </div>
       ),

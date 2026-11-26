@@ -41,6 +41,115 @@ export const getDashboardStatsAPI = async (year?: string | number): Promise<Dash
   }
 };
 
+export interface DashboardCriticalAuditItem {
+  _id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  username: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface DashboardSummaryData {
+  role: string;
+  isRHAdmin: boolean;
+  year: number;
+  timestamp: string;
+  admin?: {
+    system: {
+      mongodb: 'connected' | 'disconnected';
+      aiWorker: {
+        alive: boolean;
+        pid: number | null;
+        engine: string;
+        chatModel: string;
+        embeddingModel: string;
+        chatInstalled: boolean;
+        embeddingInstalled: boolean;
+        modelsReady: boolean;
+      };
+      semanticIndex: {
+        indexedDocs: number;
+        failedDocs: number;
+        totalVectors: number;
+      };
+    };
+    pendingPersonnelCount: number;
+    recentCriticalAudit: DashboardCriticalAuditItem[];
+  };
+  bureauOrdre?: {
+    todayIncoming: number;
+    todayOutgoing: number;
+    unroutedIncoming: number;
+    activeOcrJobs: number;
+  };
+  hr?: {
+    activePersonnel: number;
+    pendingAccounts: number;
+    todayAttendance: {
+      present: number;
+      absent: number;
+    };
+    pendingDeclarations: number;
+  };
+  director?: {
+    incomingTotal: number;
+    outgoingTotal: number;
+    unansweredIncoming: number;
+    unansweredUrgentIncoming: number;
+    activeDepartments: number;
+  };
+  department?: {
+    departmentId: string | null;
+    departmentName: string;
+    unansweredIncoming: number;
+    urgentIncoming: number;
+    unreadMessagesCount: number;
+    myPersonnelId: string | null;
+    recentMessages: Array<{
+      _id: string;
+      subject: string;
+      priority: 'normal' | 'high' | 'urgent';
+      senderUsername: string;
+      read: boolean;
+      createdAt: string;
+    }>;
+  };
+}
+
+export interface SystemHealthResponse {
+  success: boolean;
+  status: string;
+  database: 'connected' | 'disconnected';
+  uptime: number;
+  timestamp: string;
+}
+
+export const getDashboardSummaryAPI = async (year?: string | number): Promise<DashboardSummaryData> => {
+  const params = year ? `?year=${year}` : '';
+  const response = await api.get(`/dashboard/summary${params}`);
+  return response.data.data;
+};
+
+export const getSystemHealthAPI = async (): Promise<SystemHealthResponse> => {
+  const response = await api.get('/health');
+  return response.data;
+};
+
+export const triggerReindexFailedAPI = async (): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    status?: string;
+    totalSucceeded?: number;
+    totalFailed?: number;
+  };
+}> => {
+  const response = await api.post('/admin/reindex-failed', { force: false, limit: 200 });
+  return response.data;
+};
+
 // Advanced Search API calls
 export const getAvailableYears = async (type: 'all' | 'incoming' | 'outgoing' = 'all'): Promise<number[]> => {
   try {

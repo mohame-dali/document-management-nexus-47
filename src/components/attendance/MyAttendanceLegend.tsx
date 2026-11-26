@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LeaveReason, getLeaveReasons } from '@/services/leaveReasonService';
 import { AttendanceRecord } from '@/services/attendanceService';
+import { useDirection } from '@/i18n/useDirection';
 
 export interface StatusVisualInfo {
   label: string;
@@ -56,7 +57,7 @@ export const getStatusVisualInfo = (
   return {
     label,
     color: baseColor,
-    bgLight: `${baseColor}15`, // 10% opacity for gentle background
+    bgLight: `${baseColor}15`,
     borderColor: `${baseColor}40`,
     textColor: baseColor,
     impacteSolde,
@@ -70,6 +71,8 @@ interface MyAttendanceLegendProps {
 }
 
 export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveReasons: propLeaveReasons }) => {
+  const { dir, isRTL } = useDirection();
+
   const { data: leaveReasons = [] } = useQuery({
     queryKey: ['leave-reasons-active'],
     queryFn: async () => {
@@ -88,40 +91,45 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
   const activeReasons = safeReasons.filter((r) => r && r.isActive);
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4 space-y-3 shadow-none" dir="rtl">
-      <div className="flex items-center justify-between border-b border-[#edf2f7] pb-2">
-        <h3 className="text-xs font-bold text-[#1a202c]">
-          دليل الألوان والرموز (Légende des statuts)
+    <div
+      className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 space-y-3 shadow-sm"
+      dir={dir}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+        <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+          {isRTL ? 'دليل الألوان والرموز' : 'Légende des statuts'}
         </h3>
-        <span className="text-[11px] text-[#5f6b7d]">
-          يتم تحميل أسباب الغياب ديناميكياً بحسب إعدادات المؤسسة
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {isRTL
+            ? 'يتم تحميل أسباب الغياب ديناميكياً بحسب إعدادات المؤسسة'
+            : "Motifs d'absence chargés dynamiquement selon la configuration"}
         </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5 text-xs">
         {/* Présent */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#f0fff4] border border-[#c6f6d5] text-[#22543d]">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#2f855a] shrink-0" />
-          <span className="font-semibold">حاضر (Présent)</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" />
+          <span className="font-semibold">{isRTL ? 'حاضر' : 'Présent'}</span>
         </div>
 
         {/* Non saisi */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#f7fafc] border border-[#e2e8f0] text-[#5f6b7d]">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#a0aec0] shrink-0" />
-          <span>غير مسجل بعد</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" />
+          <span>{isRTL ? 'غير مسجل بعد' : 'Non saisi'}</span>
         </div>
 
         {/* Motifs dynamiques */}
         {activeReasons.map((reason) => {
           const color = reason.color || '#4a5568';
+          const reasonLabel = isRTL ? reason.labelAr : reason.labelFr || reason.labelAr;
           return (
             <div
               key={reason._id}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded border"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100"
               style={{
-                backgroundColor: `${color}12`,
-                borderColor: `${color}35`,
-                color: '#2d3748',
+                borderInlineStartWidth: '3px',
+                borderInlineStartColor: color,
               }}
               title={reason.description || undefined}
             >
@@ -129,14 +137,14 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: color }}
               />
-              <span className="font-medium">{reason.labelAr}</span>
+              <span className="font-medium">{reasonLabel}</span>
               {reason.impacteSolde ? (
-                <span className="text-[10px] text-amber-700 bg-amber-50 px-1 rounded border border-amber-200">
-                  مخصوم
+                <span className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 rounded border border-amber-200 dark:border-amber-800/60">
+                  {isRTL ? 'مخصوم' : 'Déduit'}
                 </span>
               ) : (
-                <span className="text-[10px] text-blue-700 bg-blue-50 px-1 rounded border border-blue-200">
-                  غير مخصوم
+                <span className="text-[11px] text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 rounded border border-blue-200 dark:border-blue-800/60">
+                  {isRTL ? 'غير مخصوم' : 'Non déduit'}
                 </span>
               )}
             </div>

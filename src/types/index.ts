@@ -1,7 +1,13 @@
 
 export interface User {
   _id: string;
+  id?: string;
   username: string;
+  name?: string;
+  nom?: string;
+  prenom?: string;
+  email?: string;
+  avatar?: string;
   role: 'Director' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User';
   departments: Department[];
   activeDepartment: Department | null;
@@ -16,6 +22,7 @@ export interface User {
 export interface Department {
   _id: string;
   name: string;
+  code?: string;
   description?: string;
   isActive: boolean;
   createdAt: string;
@@ -25,6 +32,7 @@ export interface Department {
 export interface Folder {
   _id: string;
   name: string;
+  description?: string;
   parent: string | null | Folder;
   department: string | Department;
   status: 'En cours' | 'Fermé';
@@ -46,7 +54,14 @@ export interface IncomingDocument {
   source?: string;
   subject: string;
   scannedDocument?: string;
+  currentVersion?: number;
   ocrText?: string;
+  ocrStatus?: 'pending' | 'processing' | 'completed' | 'failed' | null;
+  ocrError?: string | null;
+  isIndexed?: boolean;
+  indexError?: string | null;
+  status?: string;
+  referenceId?: string | null;
   assignedTo: Array<{
     id: Department | string;
     name: string;
@@ -70,10 +85,18 @@ export interface OutgoingDocument {
   };
   assignedTo?: string[];
   pourInfo?: string[];
+  recipients?: string[];
+  recipient?: string;
   subject: string;
   ocrText?: string;
+  ocrStatus?: 'pending' | 'processing' | 'completed' | 'failed' | null;
+  ocrError?: string | null;
+  isIndexed?: boolean;
+  indexError?: string | null;
   scannedDocument?: string;
+  currentVersion?: number;
   reference?: IncomingDocument | string | null;
+  referenceId?: string | null;
   folder?: Folder | string | null;
   isDeleted?: boolean;
   createdAt: string;
@@ -84,7 +107,7 @@ export interface ActivityNotification {
   documentId: IncomingDocument | string;
   activity: string;
   dateActivity: string;
-  notificationType: 'today' | 'tomorrow' | '2days' | '3days' | 'overdue';
+  notificationType: 'today' | 'tomorrow' | '2days' | '3days' | 'overdue' | 'document_assigned' | 'responsible_assigned';
   recipients: Array<{
     userId: User | string;
     read: boolean;
@@ -100,6 +123,7 @@ export interface ActivityNotification {
 
 export interface Message {
   _id: string;
+  id?: string;
   sender: User | string;
   recipients: {
     user: User | string;

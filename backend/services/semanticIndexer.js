@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const SemanticIndex = require('../models/SemanticIndex');
-const { getEmbedding } = require('./ollamaService');
+const { getEmbeddingWithMeta, MODELS } = require('./ollamaService');
 
 /**
  * Extrait le texte utile d'un document pour l'embedding
@@ -59,13 +59,25 @@ function extractDepartmentIds(doc, type) {
  */
 async function indexDocument(doc, type) {
   try {
+    if (!doc || !doc._id) {
+      return { skipped: true, reason: 'invalid_document' };
+    }
+
+    if (doc.isDeleted === true) {
+      await removeFromIndex(doc._id, type);
+      return { skipped: true, removed: true, reason: 'document_deleted' };
+    }
+
     const text = extractSearchableText(doc);
     
     if (!text || text.length < 20) {
       return { skipped: true, reason: 'text_too_short' };
     }
 
-    const embedding = await getEmbedding(text);
+    const embResult = await getEmbeddingWithMeta(text);
+    const embedding = Array.isArray(embResult) ? embResult : embResult.vector;
+    const embeddingModel = (!Array.isArray(embResult) && embResult.model) || MODELS.embedding;
+    const embeddingDimension = (!Array.isArray(embResult) && embResult.dimension) || (Array.isArray(embedding) ? embedding.length : 0);
 
     let sourceVal = '';
     if (doc.source) {
@@ -73,7 +85,7 @@ async function indexDocument(doc, type) {
     }
 
     const deptIds = extractDepartmentIds(doc, type);
-    console.log(`[Index] Doc #${doc.serialNumber} → depts: ${deptIds.length > 0 ? deptIds.join(', ') : 'N/A'}`);
+    console.log(`[Index] Doc #${doc.serialNumber} → depts: ${deptIds.length > 0 ? deptIds.join(', ') : 'N/A'} (${embeddingModel}, ${embeddingDimension}d)`);
 
     await SemanticIndex.findOneAndUpdate(
       { documentType: type, documentId: doc._id },
@@ -96,7 +108,8 @@ async function indexDocument(doc, type) {
             : { departmentId: extractDepartmentIds(doc, 'outgoing')[0] || null }
           ),
         },
-        embeddingModel: 'nomic-embed-text',
+        embeddingModel,
+        embeddingDimension,
         indexedAt: new Date(),
       },
       { upsert: true, new: true }

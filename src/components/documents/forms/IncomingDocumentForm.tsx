@@ -24,6 +24,7 @@ import { extractFromOcr, getAIErrorCode } from '@/services/aiExtractionService';
 import { Department } from '@/types';
 import { FieldValues } from 'react-hook-form';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { formatDateTime } from '@/utils/formatDate';
 
 interface IncomingDocumentFormProps {
   t: FormTranslations;
@@ -208,15 +209,9 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
             <Alert className="mb-6 border-blue-200 bg-blue-50/70 text-blue-950">
               <History className="h-4 w-4 text-[#2c5282]" />
               <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                <span>
+                <span className="tabular-nums">
                   {translate('documents.forms.draftRestored', {
-                    date: new Date(restoredDraftAt).toLocaleString(
-                      language === 'ar' ? 'ar-TN' : 'fr-FR',
-                      {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      }
-                    ),
+                    date: formatDateTime(restoredDraftAt, language),
                   })}
                 </span>
                 <Button
@@ -381,7 +376,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
           </Form>
         </CardContent>
         
-        <CardFooter className="bg-[#f8fafc] border-t border-[#e2e8f0] p-5 rounded-b">
+        <CardFooter className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-6 py-4 rounded-b shadow-[0_-6px_16px_-6px_rgba(15,23,42,0.08)]">
           <FormActions
             form={form}
             onSubmit={handleSubmit}

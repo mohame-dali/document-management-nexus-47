@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { formatShortDate, formatTime } from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -24,7 +23,8 @@ import {
   Edit,
   Trash2,
   Plus,
-  Activity
+  Activity,
+  type LucideIcon
 } from 'lucide-react';
 import type { AuditLog } from '@/services/auditService';
 
@@ -205,12 +205,12 @@ const AuditTable: React.FC<AuditTableProps> = ({ auditLogs, isLoading }) => {
                 >
                   <TableCell className="text-right py-5 px-6">
                     <div className="flex items-center gap-3 justify-end">
-                      <div className="text-right space-y-1">
-                        <div className="font-semibold text-sm text-gray-900 group-hover:text-blue-700 transition-colors">
-                          {format(new Date(log.createdAt), 'dd/MM/yyyy', { locale: ar })}
+                      <div className="text-right space-y-1 tabular-nums">
+                        <div className="font-semibold text-sm text-gray-900 group-hover:text-blue-700 transition-colors tabular-nums">
+                          <bdi dir="ltr">{formatShortDate(log.createdAt)}</bdi>
                         </div>
-                        <div className="text-xs text-gray-500 font-medium">
-                          {format(new Date(log.createdAt), 'HH:mm:ss')}
+                        <div className="text-xs text-gray-500 font-medium tabular-nums">
+                          <bdi dir="ltr">{formatTime(log.createdAt, true)}</bdi>
                         </div>
                       </div>
                       <div className="p-2 rounded-full bg-[#ebf4ff] border border-blue-200 shadow-sm group-hover:shadow-sm transition-all duration-200">

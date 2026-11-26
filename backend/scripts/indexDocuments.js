@@ -22,7 +22,8 @@ dotenv.config();
 const SemanticIndex = require('../models/SemanticIndex');
 const IncomingDocument = require('../models/IncomingDocument');
 const OutgoingDocument = require('../models/OutgoingDocument');
-const { getEmbedding } = require('../services/ollamaService');
+const { getEmbeddingWithMeta, shutdownAIWorker, MODELS } = require('../services/ollamaService');
+const { extractDepartmentIds } = require('../services/semanticIndexer');
 
 /**
  * Construit le texte représentatif d'un document pour l'embedding
@@ -79,14 +80,14 @@ function buildDocumentText(doc, type) {
  * @param {boolean} force - Forcer la ré-indexation
  */
 async function indexSingleDocument(doc, documentType, force = false) {
-  if (!doc || !doc._id) {
-    return { success: false, reason: 'INVALID_DOC' };
+  if (!doc || !doc._id || doc.isDeleted === true) {
+    return { success: false, reason: doc?.isDeleted ? 'DELETED' : 'INVALID_DOC' };
   }
 
   // Vérifier si déjà indexé
   if (!force) {
     const existing = await SemanticIndex.findOne({ documentType, documentId: doc._id });
-    if (existing) {
+    if (existing && existing.embeddingDimension && existing.embeddingModel === MODELS.embedding) {
       return { success: true, skipped: true };
     }
   }
@@ -96,7 +97,10 @@ async function indexSingleDocument(doc, documentType, force = false) {
     return { success: false, reason: 'EMPTY_TEXT' };
   }
 
-  const embedding = await getEmbedding(text);
+  const embResult = await getEmbeddingWithMeta(text);
+  const embedding = Array.isArray(embResult) ? embResult : embResult.vector;
+  const embeddingModel = (!Array.isArray(embResult) && embResult.model) || MODELS.embedding;
+  const embeddingDimension = (!Array.isArray(embResult) && embResult.dimension) || (Array.isArray(embedding) ? embedding.length : 0);
 
   let sourceVal = null;
   let docDate = null;
@@ -108,6 +112,8 @@ async function indexSingleDocument(doc, documentType, force = false) {
     sourceVal = doc.source?.name || (typeof doc.source === 'string' ? doc.source : null);
     docDate = doc.issueDate || null;
   }
+
+  const deptIds = extractDepartmentIds(doc, documentType);
 
   await SemanticIndex.findOneAndUpdate(
     { documentType, documentId: doc._id },
@@ -124,8 +130,13 @@ async function indexSingleDocument(doc, documentType, force = false) {
         status: doc.status || null,
         documentDate: docDate,
         createdAt: doc.createdAt || new Date(),
+        ...(documentType === 'incoming'
+          ? { departmentIds: deptIds }
+          : { departmentId: deptIds[0] || null }
+        ),
       },
-      embeddingModel: 'nomic-embed-text',
+      embeddingModel,
+      embeddingDimension,
       indexedAt: new Date(),
     },
     { upsert: true, new: true }
@@ -248,12 +259,14 @@ if (require.main === module) {
 
       await indexAllDocuments({ force });
 
+      await shutdownAIWorker().catch(() => {});
       await mongoose.connection.close();
       console.log('✅ Connexion MongoDB fermée proprement.');
       process.exit(0);
     } catch (error) {
       console.error('❌ Erreur fatale lors de l\'indexation :', error.message);
       try {
+        await shutdownAIWorker().catch(() => {});
         await mongoose.connection.close();
       } catch (_) {}
       process.exit(1);

@@ -16,7 +16,7 @@ import EnhancedFolderTree from './EnhancedFolderTree';
 import DocumentCategoryManager from './DocumentCategoryManager';
 import { FolderDocumentsModal } from './FolderDocumentsModal';
 import { Folder as FolderType } from '@/types';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useDirection } from '@/i18n/useDirection';
 import { Button } from '@/components/ui/button';
@@ -104,37 +104,37 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
       case 'AdminDepartment':
         return {
           text: t('folders.badge.manageDepartment'),
-          className: 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
+          className: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70'
         };
       case 'Director':
         return {
           text: t('folders.badge.director'),
-          className: 'bg-[#FFD758] text-[#1a202c] border border-[#FFCB56]'
+          className: 'bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800/70'
         };
       case 'AdminTuningDesk':
         return {
           text: t('folders.badge.allDepartmentsMonitoring'),
-          className: 'bg-blue-50 text-[#2c5282] border border-blue-200'
+          className: 'bg-blue-50 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/70'
         };
       case 'User':
         return {
           text: t('folders.badge.readOnly'),
-          className: 'bg-gray-100 text-gray-700 border border-gray-200'
+          className: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700'
         };
       default:
         return {
           text: t('folders.badge.leadership'),
-          className: 'bg-slate-100 text-slate-800 border border-slate-200'
+          className: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700'
         };
     }
   };
 
   if (!canViewFolders) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-8 sm:p-10 text-center shadow-xs space-y-3">
-        <ShieldCheck className="h-14 w-14 text-gray-400 mx-auto mb-2" />
-        <h3 className="text-xl font-bold text-[#1a202c]">{t('folders.accessDenied.title')}</h3>
-        <p className="text-base text-gray-600 leading-relaxed">{t('folders.accessDenied.description')}</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 sm:p-10 text-center shadow-sm space-y-3">
+        <ShieldCheck className="h-14 w-14 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+        <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">{t('folders.accessDenied.title')}</h3>
+        <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">{t('folders.accessDenied.description')}</p>
       </div>
     );
   }
@@ -144,21 +144,21 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
   return (
     <div className="space-y-5">
       {/* Header Block - AdminLTE Institutional Header */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded bg-[#2c5282]/10 border border-[#2c5282]/20 flex items-center justify-center flex-shrink-0 text-[#2c5282]">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-[#2c5282]/10 dark:bg-sky-900/40 border border-[#2c5282]/20 dark:border-sky-800/60 flex items-center justify-center flex-shrink-0 text-[#2c5282] dark:text-sky-300">
             <Folder className="h-6 w-6 sm:h-7 sm:w-7" />
           </div>
           <div>
             <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-lg sm:text-xl font-bold text-[#1a202c]">
+              <h2 className="text-lg sm:text-xl font-bold text-[#1a202c] dark:text-slate-100">
                 {t('folders.banner.title')}
               </h2>
-              <span className={`px-3 py-1 rounded text-xs sm:text-sm font-bold ${roleBadge.className}`}>
+              <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${roleBadge.className}`}>
                 {roleBadge.text}
               </span>
             </div>
-            <p className="text-sm sm:text-base text-gray-600 mt-1 leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
               {t('folders.banner.subtitle')}
             </p>
           </div>
@@ -166,8 +166,8 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
 
         {/* Department Info & Date Badges */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded bg-[#f8fafc] border border-[#e2e8f0] text-sm font-semibold text-gray-700 shadow-xs">
-            <Building2 className="h-4 w-4 text-[#2c5282]" />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-2xs">
+            <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
             <span>
               {currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Director'
                 ? t('folders.allDepartments')
@@ -175,9 +175,9 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
             </span>
           </div>
 
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded bg-[#f8fafc] border border-[#e2e8f0] text-sm font-semibold text-gray-700 shadow-xs">
-            <Calendar className="h-4 w-4 text-gray-500" />
-            <span>{formatArabicDate(new Date())}</span>
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-2xs tabular-nums">
+            <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+            <bdi dir={dir} className="tabular-nums">{formatLongDate(new Date(), dir === 'ltr' ? 'fr' : 'ar')}</bdi>
           </div>
         </div>
       </div>
@@ -186,7 +186,7 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
       <div
         role="tablist"
         aria-label={t('folders.banner.title')}
-        className="bg-white border border-[#e2e8f0] rounded p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-xs"
+        className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shadow-sm"
       >
         <button
           ref={(el) => { tabRefs.current.tree = el; }}
@@ -198,18 +198,18 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
           tabIndex={activeTab === 'tree' ? 0 : -1}
           onClick={() => setActiveTab('tree')}
           onKeyDown={(e) => handleTabKeyDown(e, 0)}
-          className={`h-11 min-h-[44px] px-5 py-2.5 rounded text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-colors duration-200 ${
+          className={`h-11 min-h-[44px] px-5 py-2.5 rounded-lg text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-colors duration-150 ${
             activeTab === 'tree'
-              ? 'bg-[#2c5282] text-white shadow-xs'
-              : 'text-gray-700 hover:bg-gray-100 hover:text-[#2c5282]'
+              ? 'bg-[#2c5282] text-white shadow-sm'
+              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#2c5282] dark:hover:text-sky-300'
           }`}
         >
           <FolderTree className="h-5 w-5" />
           <span>{t('folders.tab.tree')}</span>
-          <span className={`px-2.5 py-0.5 rounded text-xs sm:text-sm font-bold ${
+          <span className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold tabular-nums ${
             activeTab === 'tree' 
               ? 'bg-[#FFCB56] text-[#78350f]' 
-              : 'bg-gray-100 text-gray-700 border border-gray-200'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700'
           }`}>
             {folders?.length || 0}
           </span>
@@ -225,10 +225,10 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
           tabIndex={activeTab === 'categorization' ? 0 : -1}
           onClick={() => setActiveTab('categorization')}
           onKeyDown={(e) => handleTabKeyDown(e, 1)}
-          className={`h-11 min-h-[44px] px-5 py-2.5 rounded text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-colors duration-200 ${
+          className={`h-11 min-h-[44px] px-5 py-2.5 rounded-lg text-sm sm:text-base font-bold flex items-center justify-center gap-2.5 transition-colors duration-150 ${
             activeTab === 'categorization'
-              ? 'bg-[#2c5282] text-white shadow-xs'
-              : 'text-gray-700 hover:bg-gray-100 hover:text-[#2c5282]'
+              ? 'bg-[#2c5282] text-white shadow-sm'
+              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#2c5282] dark:hover:text-sky-300'
           }`}
         >
           <Tag className="h-5 w-5" />
@@ -250,22 +250,22 @@ const FolderManagement: React.FC<FolderManagementProps> = ({ readOnly = false })
             readOnly={!canManageFolders}
           />
         ) : isFoldersLoading ? (
-          <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 space-y-3 shadow-sm">
             {Array.from({ length: 5 }).map((_, idx) => (
               <Skeleton key={idx} className="h-12 w-full" />
             ))}
           </div>
         ) : isFoldersError ? (
           <EmptyState
-            icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+            icon={<AlertCircle className="h-6 w-6 text-[#b91c1c] dark:text-red-400" />}
             title={t('folders.error.title')}
             description={t('folders.error.description')}
-            className="border-red-200 bg-red-50/40"
+            className="border-red-200 dark:border-red-900/60 bg-red-50/40 dark:bg-red-950/30"
             action={
               <Button
                 type="button"
                 onClick={() => refetchFolders()}
-                className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded inline-flex items-center gap-2"
+                className="h-11 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-base font-semibold rounded-lg inline-flex items-center gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
                 <span>{t('common.retry')}</span>

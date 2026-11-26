@@ -19,9 +19,13 @@ exports.uploadPhoto = async (req, res, next) => {
     
     // Check authorization
     if (req.user.role === 'AdminDepartment') {
+      const activeDeptId = (req.user.activeDepartment?._id || req.user.activeDepartment)?.toString();
+      if (!activeDeptId) {
+        return next(new ErrorResponse('No active department selected', 403));
+      }
       // Verify the user belongs to the AdminDepartment's active department
-      const userDeptIds = user.departments.map(dept => dept.toString());
-      const hasAccess = userDeptIds.includes(req.user.activeDepartment._id.toString());
+      const userDeptIds = (user.departments || []).map(dept => (dept._id || dept).toString());
+      const hasAccess = userDeptIds.includes(activeDeptId);
       
       if (!hasAccess) {
         return next(

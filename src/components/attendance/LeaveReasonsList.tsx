@@ -27,6 +27,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useDirection } from '@/i18n/useDirection';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface LeaveReasonsListProps {
   reasons: LeaveReason[];
@@ -37,11 +40,11 @@ interface LeaveReasonsListProps {
 }
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
-  conge: { label: 'عطلة (Congé)', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  mission: { label: 'مهمة (Mission)', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  formation: { label: 'تكوين (Formation)', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  service: { label: 'خدمة (Service)', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  autre: { label: 'أخرى (Autre)', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+  conge: { label: 'عطلة (Congé)', color: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+  mission: { label: 'مهمة (Mission)', color: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
+  formation: { label: 'تكوين (Formation)', color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+  service: { label: 'خدمة (Service)', color: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+  autre: { label: 'أخرى (Autre)', color: 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700' },
 };
 
 export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
@@ -51,49 +54,52 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
   onToggle,
   onDelete,
 }) => {
+  const { dir } = useDirection();
+
   if (loading) {
     return (
-      <div className="p-12 text-center text-[#5f6b7d]">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#2c5282] mb-3"></div>
-        <p className="text-sm font-medium">جاري تحميل قائمة أنواع الغياب...</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+        <TableSkeleton rows={6} columns={7} />
       </div>
     );
   }
 
   if (reasons.length === 0) {
     return (
-      <div className="p-12 text-center bg-white border border-[#e2e8f0] rounded">
-        <Tag className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-        <h3 className="text-base font-bold text-[#1a202c]">لا توجد أنواع غياب مطابقة</h3>
-        <p className="text-sm text-[#5f6b7d] mt-1">قم بتعديل خيارات البحث أو الفلترة أو أضف نوع غياب جديد.</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+        <EmptyState
+          icon={<Tag className="h-10 w-10 text-slate-400 dark:text-slate-500" />}
+          title="لا توجد أنواع غياب مطابقة"
+          description="قم بتعديل خيارات البحث أو الفلترة أو أضف نوع غياب جديد."
+        />
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto bg-white border border-[#e2e8f0] rounded">
-      <Table dir="rtl" className="w-full text-right border-collapse">
-        <TableHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-16 text-[#4a5568] font-bold text-xs py-3 px-4">الترتيب</TableHead>
-            <TableHead className="text-[#4a5568] font-bold text-xs py-3 px-4">الرمز (Code)</TableHead>
-            <TableHead className="text-[#4a5568] font-bold text-xs py-3 px-4">المسمى بالعربية والفرنسية</TableHead>
-            <TableHead className="text-[#4a5568] font-bold text-xs py-3 px-4">التصنيف</TableHead>
-            <TableHead className="text-[#4a5568] font-bold text-xs py-3 px-4 text-center">خصم من الرصيد</TableHead>
-            <TableHead className="text-[#4a5568] font-bold text-xs py-3 px-4 text-center">الحالة</TableHead>
-            <TableHead className="w-36 text-[#4a5568] font-bold text-xs py-3 px-4 text-center">الإجراءات</TableHead>
+    <div className="overflow-x-auto max-h-[650px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+      <Table dir={dir} className="w-full text-start border-collapse">
+        <TableHeader className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur-sm">
+          <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-700">
+            <TableHead className="w-16 text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الترتيب</TableHead>
+            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الرمز (Code)</TableHead>
+            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">المسمى بالعربية والفرنسية</TableHead>
+            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">التصنيف</TableHead>
+            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">خصم من الرصيد</TableHead>
+            <TableHead className="text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الحالة</TableHead>
+            <TableHead className="w-36 text-slate-600 dark:text-slate-300 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="divide-y divide-[#e2e8f0]">
+        <TableBody className="divide-y divide-slate-200 dark:divide-slate-800">
           {reasons.map((reason) => {
             const catInfo = CATEGORY_LABELS[reason.category] || CATEGORY_LABELS.autre;
             return (
               <TableRow
                 key={reason._id}
-                className="hover:bg-[#f8fafc] transition-colors duration-150"
+                className="hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors duration-150 border-slate-200 dark:border-slate-800"
               >
                 {/* Order */}
-                <TableCell className="py-3 px-4 text-xs font-mono font-bold text-[#5f6b7d]">
+                <TableCell className="py-3 px-4 text-xs font-mono font-bold text-slate-500 dark:text-slate-400 tabular-nums">
                   {reason.order ?? 100}
                 </TableCell>
 
@@ -101,16 +107,16 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                 <TableCell className="py-3 px-4">
                   <div className="flex items-center gap-2">
                     <span
-                      className="w-3 h-3 rounded-full flex-shrink-0 border border-black/10"
+                      className="w-3 h-3 rounded-full flex-shrink-0 border border-black/10 dark:border-white/20"
                       style={{ backgroundColor: reason.color || '#e2e8f0' }}
                       title={reason.color}
                     />
-                    <span className="font-mono text-xs font-semibold text-[#2c5282] bg-slate-100 px-2 py-0.5 rounded" dir="ltr">
+                    <span className="font-mono text-xs font-semibold text-[#2c5282] dark:text-blue-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md tabular-nums" dir="ltr">
                       {reason.code}
                     </span>
                     {reason.isSystem && (
-                      <Badge variant="outline" className="text-[10px] bg-slate-100 text-slate-600 border-slate-300 gap-1 px-1.5 py-0 h-5 font-medium">
-                        <ShieldCheck className="h-3 w-3 text-slate-500" />
+                      <Badge variant="outline" className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 gap-1 px-1.5 py-0 h-5 font-medium">
+                        <ShieldCheck className="h-3 w-3 text-slate-500 dark:text-slate-400" />
                         نظامي
                       </Badge>
                     )}
@@ -120,16 +126,16 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                 {/* Labels */}
                 <TableCell className="py-3 px-4">
                   <div>
-                    <span className="font-bold text-sm text-[#1a202c]">
+                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
                       {reason.labelAr}
                     </span>
                     {reason.labelFr && (
-                      <span className="block text-xs text-[#5f6b7d] font-normal" dir="ltr">
+                      <span className="block text-xs text-slate-500 dark:text-slate-400 font-normal" dir="ltr">
                         {reason.labelFr}
                       </span>
                     )}
                     {reason.requiresDocument && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded mt-1">
+                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md mt-1">
                         <FileText className="h-3 w-3" />
                         يتطلب وثيقة
                       </span>
@@ -138,36 +144,36 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                 </TableCell>
 
                 {/* Category */}
-                <TableCell className="py-3 px-4">
-                  <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded border ${catInfo.color}`}>
+                <TableCell className="py-3 px-4 whitespace-nowrap">
+                  <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md border ${catInfo.color}`}>
                     {catInfo.label}
                   </span>
                 </TableCell>
 
                 {/* Deducts from balance */}
-                <TableCell className="py-3 px-4 text-center">
+                <TableCell className="py-3 px-4 text-center whitespace-nowrap">
                   {reason.impacteSolde ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-300 px-2 py-0.5 rounded">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 px-2 py-0.5 rounded-md">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       يخصم
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs text-[#5f6b7d] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-                      <XCircle className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
+                      <XCircle className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                       لا يخصم
                     </span>
                   )}
                 </TableCell>
 
                 {/* Status Toggle */}
-                <TableCell className="py-3 px-4 text-center">
+                <TableCell className="py-3 px-4 text-center whitespace-nowrap">
                   <div className="flex items-center justify-center gap-2">
                     <Switch
                       checked={reason.isActive}
                       onCheckedChange={() => onToggle(reason._id)}
                       aria-label="تغيير الحالة"
                     />
-                    <span className={`text-xs font-medium ${reason.isActive ? 'text-emerald-700' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-medium ${reason.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`}>
                       {reason.isActive ? 'نشط' : 'معطل'}
                     </span>
                   </div>
@@ -185,7 +191,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                             size="sm"
                             onClick={() => onEdit(reason)}
                             aria-label="تعديل نوع الغياب"
-                            className="h-11 w-11 p-0 text-[#2c5282] hover:bg-slate-100 rounded"
+                            className="h-9 w-9 p-0 text-[#2c5282] dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -209,10 +215,10 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                                   ? 'نوع نظامي محمي لا يمكن حذفه'
                                   : 'حذف نوع الغياب'
                               }
-                              className={`h-11 w-11 p-0 rounded ${
+                              className={`h-9 w-9 p-0 rounded-lg ${
                                 reason.isSystem
-                                  ? 'text-gray-300 cursor-not-allowed'
-                                  : 'text-red-600 hover:bg-red-50'
+                                  ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
+                                  : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50'
                               }`}
                             >
                               {reason.isSystem ? (

@@ -83,7 +83,7 @@ const Header = () => {
   const photoSource = myProfile?.photo || currentUser?.photo;
 
   return (
-    <header className="flex justify-between items-center h-16 px-3 sm:px-4 md:px-6 bg-white border-b border-[#e2e8f0] shadow-sm z-10 select-none gap-2 min-w-0 w-full">
+    <header className="sticky top-0 z-30 flex justify-between items-center h-16 px-3 sm:px-4 md:px-6 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-sm select-none gap-2 min-w-0 w-full transition-colors duration-200 print:hidden">
       {/* Branding à DROITE (RTL: premier élément) */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial sm:max-w-[240px] lg:max-w-[300px] xl:max-w-sm">
         <Button 
@@ -92,20 +92,20 @@ const Header = () => {
           onClick={toggle}
           title={t('header.toggleSidebar')}
           aria-label={t('header.toggleSidebar') || t('header.sidebarFallback')}
-          className="h-10 w-10 sm:min-w-[44px] sm:min-h-[44px] shrink-0 text-slate-600 hover:text-slate-900 hover:bg-[#f7fafc] rounded transition-colors duration-200"
+          className="h-10 w-10 sm:min-w-[44px] sm:min-h-[44px] shrink-0 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-lg transition-colors duration-200"
         >
           <Menu className="h-5 w-5" />
         </Button>
 
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="hidden lg:flex p-2 bg-[#ebf4ff] text-[#2c5282] rounded shrink-0">
+          <div className="hidden lg:flex p-2 bg-[#ebf4ff] dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 rounded-lg shrink-0">
             <FileText className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-sm sm:text-base md:text-lg font-bold text-[#2c5282] leading-tight truncate">
+            <h1 className="text-sm sm:text-base md:text-lg font-bold text-[#2c5282] dark:text-slate-100 leading-tight truncate">
               {nomAdmin || t('header.title')}
             </h1>
-            <p className="hidden md:block text-xs text-[#5f6b7d] truncate">
+            <p className="hidden md:block text-xs text-slate-500 dark:text-slate-400 truncate">
               {currentUser.role === 'AdminDepartment' && currentUser.activeDepartment
                 ? currentUser.activeDepartment.name
                 : t('header.subtitle')}
@@ -135,12 +135,12 @@ const Header = () => {
             onClick={handleNotificationClick}
             title={t('header.unreadMessagesCount')}
             aria-label={t('header.unreadMessagesCount')}
-            className="p-2 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] text-[#4a5568] hover:text-[#2c5282] hover:bg-[#f7fafc] rounded relative transition-colors duration-200 flex items-center justify-center"
+            className="p-2 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] text-slate-600 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-lg relative transition-colors duration-200 flex items-center justify-center"
           >
             <MessageSquare className="h-5 w-5" />
             {unreadCount > 0 && (
-              <div className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-[#2c5282] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white px-1 leading-none">
-                <span className="text-[10px] text-white font-bold leading-none">
+              <div className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-[#2c5282] dark:bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
+                <span className="text-[10px] text-white font-bold leading-none tabular-nums">
                   <bdi dir="ltr">{unreadCount > 9 ? '9+' : unreadCount}</bdi>
                 </span>
               </div>
@@ -149,12 +149,12 @@ const Header = () => {
         </div>
 
         {/* PROFIL UTILISATEUR (à gauche) */}
-        <div className="border-s border-[#e2e8f0] ps-1.5 sm:ps-3 md:ps-4">
+        <div className="border-s border-slate-200/80 dark:border-slate-800 ps-1.5 sm:ps-3 md:ps-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
                 aria-label={t('header.userMenu')}
-                className="flex items-center min-h-[40px] sm:min-h-[44px] gap-2 bg-white hover:bg-[#f7fafc] border border-[#e2e8f0] rounded p-1 lg:px-3 lg:py-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2"
+                className="flex items-center min-h-[40px] sm:min-h-[44px] gap-2 bg-white/90 dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-1 lg:px-3 lg:py-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2 shadow-xs"
               >
                 <PersonnelAvatar
                   photo={photoSource}
@@ -162,17 +162,17 @@ const Header = () => {
                   prenom={myProfile?.prenom}
                   username={currentUser.username}
                   size="md"
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[#e2e8f0] shrink-0"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-slate-200/80 dark:border-slate-700 shrink-0"
                 />
                 <div className="hidden lg:block text-start max-w-[140px] min-w-0">
-                  <p className="text-sm font-bold text-[#1a202c] leading-tight truncate">
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
                     {currentUser.username}
                   </p>
-                  <p className="text-xs text-[#5f6b7d] leading-tight mt-0.5 truncate">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
                     {t(`roles.${currentUser.role}`)}
                   </p>
                 </div>
-                <ChevronDown className="hidden lg:block h-4 w-4 text-[#718096] shrink-0" />
+                <ChevronDown className="hidden lg:block h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 text-start">

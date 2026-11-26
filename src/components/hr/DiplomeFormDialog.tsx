@@ -21,6 +21,7 @@ import {
 } from '@/services/rhPersonnelHistoryService';
 import { toast } from 'sonner';
 import { GraduationCap, Save, X, AlertCircle } from 'lucide-react';
+import { useDirection } from '@/i18n/useDirection';
 
 interface DiplomeFormDialogProps {
   open: boolean;
@@ -38,6 +39,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
   onSuccess,
 }) => {
   const queryClient = useQueryClient();
+  const { dir } = useDirection();
   const isEditing = Boolean(diplome);
 
   const [typeDiplome, setTypeDiplome] = useState('');
@@ -126,13 +128,13 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto text-right" dir="rtl">
-        <DialogHeader className="border-b border-[#e2e8f0] pb-3">
-          <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-[#2c5282]" />
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto text-start bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800" dir={dir}>
+        <DialogHeader className="border-b border-[#e2e8f0] dark:border-slate-800 pb-3 text-start">
+          <DialogTitle className="text-lg font-bold text-[#1a202c] dark:text-slate-100 flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
             <span>{isEditing ? 'تعديل بيانات الشهادة' : 'إضافة شهادة علمية / مهنية جديدة'}</span>
           </DialogTitle>
-          <DialogDescription className="text-xs text-gray-500">
+          <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
             سجل الشهادات الأكاديمية والمهنية والتكوينية المحرزة
           </DialogDescription>
         </DialogHeader>
@@ -140,7 +142,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 نوع الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -150,12 +152,12 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
                   if (errors.typeDiplome) setErrors((prev) => ({ ...prev, typeDiplome: '' }));
                 }}
                 placeholder="مثال: الإجازة / الماجستير / شهادة ختم تكوين"
-                className={`h-10 text-sm bg-white rounded ${
-                  errors.typeDiplome ? 'border-red-500' : 'border-[#cbd5e1]'
+                className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${
+                  errors.typeDiplome ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
                 }`}
               />
               {errors.typeDiplome && (
-                <p className="text-xs text-red-600 flex items-center gap-1 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>{errors.typeDiplome}</span>
                 </p>
@@ -163,7 +165,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 موضوع / اختصاص الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -173,12 +175,12 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
                   if (errors.sujetDiplome) setErrors((prev) => ({ ...prev, sujetDiplome: '' }));
                 }}
                 placeholder="مثال: علوم التصرف / حقوق / هندسة الإعلامية"
-                className={`h-10 text-sm bg-white rounded ${
-                  errors.sujetDiplome ? 'border-red-500' : 'border-[#cbd5e1]'
+                className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg ${
+                  errors.sujetDiplome ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
                 }`}
               />
               {errors.sujetDiplome && (
-                <p className="text-xs text-red-600 flex items-center gap-1 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>{errors.sujetDiplome}</span>
                 </p>
@@ -188,7 +190,7 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 تاريخ الحصول على الشهادة <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -198,12 +200,12 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
                   setDateObtention(e.target.value);
                   if (errors.dateObtention) setErrors((prev) => ({ ...prev, dateObtention: '' }));
                 }}
-                className={`h-10 text-sm bg-white rounded ${
-                  errors.dateObtention ? 'border-red-500' : 'border-[#cbd5e1]'
+                className={`h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg tabular-nums ${
+                  errors.dateObtention ? 'border-red-500' : 'border-[#cbd5e1] dark:border-slate-700'
                 }`}
               />
               {errors.dateObtention && (
-                <p className="text-xs text-red-600 flex items-center gap-1 mt-1">
+                <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>{errors.dateObtention}</span>
                 </p>
@@ -211,46 +213,46 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 المستوى التعليمي / الصنف
               </Label>
               <Input
                 value={niveau}
                 onChange={(e) => setNiveau(e.target.value)}
                 placeholder="مثال: صنف أ2 / بكالوريا + 3"
-                className="h-10 text-sm bg-white border-[#cbd5e1] rounded"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label className="text-sm font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 المؤسسة المانحة / الجامعة
               </Label>
               <Input
                 value={etablissement}
                 onChange={(e) => setEtablissement(e.target.value)}
                 placeholder="مثال: جامعة تونس المنار / معهد التكوين المستمر"
-                className="h-10 text-sm bg-white border-[#cbd5e1] rounded"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
               />
             </div>
 
             <div>
-              <Label className="text-sm font-bold text-gray-700 block mb-1">
+              <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
                 المرجع / رقم التسجيل
               </Label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="مثال: رقم الشهادة أو المرجع 9874/2021"
-                className="h-10 text-sm bg-white border-[#cbd5e1] rounded"
+                className="h-10 text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg"
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-sm font-bold text-gray-700 block mb-1">
+            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">
               ملاحظات إضافية
             </Label>
             <Textarea
@@ -258,26 +260,26 @@ export const DiplomeFormDialog: React.FC<DiplomeFormDialogProps> = ({
               onChange={(e) => setObservations(e.target.value)}
               placeholder="أي ملاحظات حول الشهادة أو المعادلة..."
               rows={3}
-              className="text-sm bg-white border-[#cbd5e1] rounded resize-none"
+              className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-[#cbd5e1] dark:border-slate-700 rounded-lg resize-none"
             />
           </div>
 
-          <DialogFooter className="flex flex-row justify-end gap-3 pt-3 border-t border-[#e2e8f0]">
+          <DialogFooter className="flex flex-row justify-end gap-3 pt-3 border-t border-[#e2e8f0] dark:border-slate-800">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="h-10 px-4 text-xs border-[#cbd5e1] rounded hover:bg-gray-100"
+              className="h-10 px-4 text-xs border-[#cbd5e1] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
             >
-              <X className="w-4 h-4 ml-1" />
+              <X className="w-4 h-4 me-1" />
               <span>إلغاء</span>
             </Button>
             <Button
               type="submit"
               disabled={mutation.isPending}
-              className="h-10 px-5 text-xs bg-[#2c5282] hover:bg-[#234269] text-white rounded font-bold"
+              className="h-10 px-5 text-xs bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg font-bold"
             >
-              <Save className="w-4 h-4 ml-1" />
+              <Save className="w-4 h-4 me-1" />
               <span>{mutation.isPending ? 'جاري الحفظ...' : 'حفظ الشهادة'}</span>
             </Button>
           </DialogFooter>

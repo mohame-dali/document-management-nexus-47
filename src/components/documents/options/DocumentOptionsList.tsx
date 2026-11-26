@@ -32,7 +32,7 @@ import {
   Bookmark
 } from 'lucide-react';
 import { DocumentOption } from '@/services/documentOptionsService';
-import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import { formatLongDate } from '@/utils/formatDate';
 import { useDirection } from '@/i18n/useDirection';
 
 interface DocumentOptionsListProps {
@@ -466,9 +466,9 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
                   {/* Created Date & Creator */}
                   <td className="py-4 px-4 whitespace-nowrap text-sm text-[#4a5568]">
                     <div className="flex flex-col gap-0.5">
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 tabular-nums">
                         <Clock className="h-3.5 w-3.5 text-[#718096]" />
-                        <bdi dir="ltr">{formatArabicDate(option.createdAt)}</bdi>
+                        <bdi dir="rtl">{formatLongDate(option.createdAt, 'ar')}</bdi>
                       </span>
                       {option.createdBy?.username && (
                         <span className="flex items-center gap-1 text-xs text-[#5f6b7d]">
@@ -594,9 +594,9 @@ export const DocumentOptionsList: React.FC<DocumentOptionsListProps> = ({
 
               {/* Metadata */}
               <div className="text-xs text-[#4a5568] pt-3 border-t border-[#f1f5f9] flex items-center justify-between">
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 tabular-nums">
                   <Clock className="h-3.5 w-3.5 text-[#718096]" />
-                  <bdi dir="ltr">{formatArabicDate(option.createdAt)}</bdi>
+                  <bdi dir="rtl">{formatLongDate(option.createdAt, 'ar')}</bdi>
                 </span>
                 {option.createdBy?.username && (
                   <span className="flex items-center gap-1 text-[#5f6b7d]">

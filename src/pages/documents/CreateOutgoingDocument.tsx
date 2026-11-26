@@ -141,8 +141,8 @@ const CreateOutgoingDocument = () => {
 
       {/* Form Container */}
       <div className="p-6 max-w-6xl mx-auto">
-        <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="bg-[#f8fafc] p-6 border-b border-[#e2e8f0]">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-gray-200 dark:border-slate-800 overflow-x-clip">
+          <div className="bg-[#f8fafc] dark:bg-slate-800/60 p-6 border-b border-[#e2e8f0] dark:border-slate-800 rounded-t-xl">
             <div className="flex items-center gap-3">
               <FileUp className="h-6 w-6 text-green-600" />
               <h2 className="text-xl font-bold text-gray-800">{t('documents.createOutgoing.cardTitle')}</h2>

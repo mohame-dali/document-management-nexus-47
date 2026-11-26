@@ -24,7 +24,7 @@ const semanticIndexSchema = new mongoose.Schema({
     required: true,
   },
   
-  // ─── Vecteur d'embedding (768 dimensions pour nomic-embed-text) ───
+  // ─── Vecteur d'embedding (dimensions dynamiques selon le modèle actif) ───
   embedding: {
     type: [Number],
     required: true,
@@ -57,7 +57,11 @@ const semanticIndexSchema = new mongoose.Schema({
   // ─── Versioning ───
   embeddingModel: {
     type: String,
-    default: 'nomic-embed-text',
+    default: 'bge-m3-q4_k_m.gguf',
+  },
+  embeddingDimension: {
+    type: Number,
+    index: true,
   },
   indexedAt: {
     type: Date,
@@ -74,8 +78,9 @@ semanticIndexSchema.index(
   { unique: true, name: 'unique_doc_idx' }
 );
 
-// ─── Index pour filtrage par année ───
+// ─── Index pour filtrage par année et compatibilité vectorielle ───
 semanticIndexSchema.index({ 'metadata.year': 1 });
+semanticIndexSchema.index({ embeddingDimension: 1, embeddingModel: 1 });
 
 // Index composé pour accélérer les requêtes filtrées
 semanticIndexSchema.index({ 

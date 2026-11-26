@@ -38,6 +38,7 @@ import {
   declareAttendance,
   AttendanceDeclarationInput,
 } from '@/services/attendanceDeclarationService';
+import { useDirection } from '@/i18n/useDirection';
 
 interface AttendanceDeclarationDialogProps {
   open: boolean;
@@ -81,6 +82,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
   leaveReasons: propReasons,
   onSuccess,
 }) => {
+  const { dir } = useDirection();
   const [reasonsList, setReasonsList] = useState<LeaveReason[]>(propReasons || []);
   const [loadingReasons, setLoadingReasons] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -201,10 +203,10 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden text-right border-[#e2e8f0] shadow-xl" dir="rtl">
+      <DialogContent className="sm:max-w-[560px] p-0 overflow-hidden text-start bg-white dark:bg-slate-900 border-[#e2e8f0] dark:border-slate-800 shadow-xl" dir={dir}>
         {/* En-tête style sobre institutionnel */}
         <div className="bg-[#2c5282] px-6 py-4 text-white">
-          <DialogHeader>
+          <DialogHeader className="text-start">
             <DialogTitle className="text-xl font-bold flex items-center justify-between text-white">
               <span className="flex items-center gap-2">
                 <FileCheck className="w-5 h-5 text-blue-200" />
@@ -217,12 +219,12 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5 bg-white">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5 bg-white dark:bg-slate-900">
           {/* Sélection Date & Heure */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                <CalendarIcon className="w-3.5 h-3.5 text-[#2c5282]" />
+              <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <CalendarIcon className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
                 التاريخ المعني <span className="text-red-500">*</span>
               </Label>
               <Controller
@@ -233,7 +235,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                     {...field}
                     type="date"
                     min={todayStr}
-                    className="h-11 border-[#e2e8f0] focus:border-[#2c5282] focus:ring-[#2c5282] text-sm text-gray-800 rounded bg-gray-50/50"
+                    className="h-11 border-[#e2e8f0] dark:border-slate-700 focus:border-[#2c5282] focus:ring-[#2c5282] text-sm text-slate-800 dark:text-slate-100 rounded-lg bg-slate-50/50 dark:bg-slate-800 tabular-nums"
                   />
                 )}
               />
@@ -243,8 +245,8 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#2c5282]" />
+              <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
                 ساعة الحضور المتوقعة
               </Label>
               <Controller
@@ -255,7 +257,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                     {...field}
                     type="time"
                     disabled={selectedStatut === 'absent'}
-                    className="h-11 border-[#e2e8f0] focus:border-[#2c5282] text-sm text-gray-800 rounded disabled:bg-gray-100 disabled:opacity-60"
+                    className="h-11 border-[#e2e8f0] dark:border-slate-700 focus:border-[#2c5282] text-sm text-slate-800 dark:text-slate-100 dark:bg-slate-800 rounded-lg disabled:bg-slate-100 dark:disabled:bg-slate-800/50 disabled:opacity-60 tabular-nums"
                   />
                 )}
               />
@@ -264,33 +266,33 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
 
           {/* Choix Statut (حاضر / غائب) */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-700">
+            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
               نوع التصريح <span className="text-red-500">*</span>
             </Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setValue('statut', 'present')}
-                className={`flex items-center justify-center gap-2.5 h-12 rounded border transition-all ${
+                className={`flex items-center justify-center gap-2.5 h-12 rounded-lg border transition-all ${
                   selectedStatut === 'present'
-                    ? 'border-emerald-600 bg-emerald-50/80 text-emerald-800 font-bold shadow-sm ring-1 ring-emerald-500'
-                    : 'border-[#e2e8f0] hover:bg-gray-50 text-gray-600'
+                    ? 'border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 font-bold shadow-sm ring-1 ring-emerald-500'
+                    : 'border-[#e2e8f0] dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}
               >
-                <UserCheck className={`w-5 h-5 ${selectedStatut === 'present' ? 'text-emerald-600' : 'text-gray-400'}`} />
+                <UserCheck className={`w-5 h-5 ${selectedStatut === 'present' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
                 <span>حاضر (مداومة عادية)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setValue('statut', 'absent')}
-                className={`flex items-center justify-center gap-2.5 h-12 rounded border transition-all ${
+                className={`flex items-center justify-center gap-2.5 h-12 rounded-lg border transition-all ${
                   selectedStatut === 'absent'
-                    ? 'border-amber-600 bg-amber-50/80 text-amber-800 font-bold shadow-sm ring-1 ring-amber-500'
-                    : 'border-[#e2e8f0] hover:bg-gray-50 text-gray-600'
+                    ? 'border-amber-600 bg-amber-50/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 font-bold shadow-sm ring-1 ring-amber-500'
+                    : 'border-[#e2e8f0] dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}
               >
-                <UserX className={`w-5 h-5 ${selectedStatut === 'absent' ? 'text-amber-600' : 'text-gray-400'}`} />
+                <UserX className={`w-5 h-5 ${selectedStatut === 'absent' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`} />
                 <span>غائب / مبرر / مصلحة</span>
               </button>
             </div>
@@ -298,12 +300,12 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
 
           {/* Section spécifique à l'absence */}
           {selectedStatut === 'absent' && (
-            <div className="p-4 bg-amber-50/40 rounded-lg border border-amber-200/80 space-y-4 animate-in fade-in-50 duration-200">
+            <div className="p-4 bg-amber-50/40 dark:bg-amber-950/30 rounded-lg border border-amber-200/80 dark:border-amber-800/70 space-y-4 animate-in fade-in-50 duration-200">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-gray-700 flex items-center justify-between">
+                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                   <span>سبب أو نوع الغياب <span className="text-red-500">*</span></span>
                   {currentReason?.impacteSolde && (
-                    <span className="text-[11px] text-red-600 font-normal">
+                    <span className="text-[11px] text-red-600 dark:text-red-400 font-normal">
                       ⚠️ يخصم من رصيد الإجازات السنوية
                     </span>
                   )}
@@ -322,16 +324,16 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                         }
                       }}
                     >
-                      <SelectTrigger className="h-11 border-[#e2e8f0] bg-white text-right focus:border-[#2c5282]">
+                      <SelectTrigger className="h-11 border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 text-start focus:border-[#2c5282] rounded-lg">
                         <SelectValue placeholder={loadingReasons ? 'جاري تحميل الأسباب...' : 'اختر سبب الغياب / المصلحة'} />
                       </SelectTrigger>
-                      <SelectContent dir="rtl">
+                      <SelectContent dir={dir} className="dark:bg-slate-900 dark:border-slate-700">
                         {reasonsList.map((reason) => (
                           <SelectItem key={reason._id} value={reason.code}>
                             <div className="flex items-center justify-between w-full gap-2">
                               <span>{reason.labelAr}</span>
                               {reason.labelFr && (
-                                <span className="text-xs text-gray-400 font-mono">({reason.labelFr})</span>
+                                <span className="text-xs text-slate-400 font-mono">({reason.labelFr})</span>
                               )}
                             </div>
                           </SelectItem>
@@ -348,8 +350,8 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
               {/* Champ conditionnel : Nom du service */}
               {(currentReason?.requiresServiceName || selectedMotif === 'service') && (
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                    <Building className="w-3.5 h-3.5 text-[#2c5282]" />
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Building className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
                     اسم المصلحة / الإدارة المستقبلة <span className="text-red-500">*</span>
                   </Label>
                   <Controller
@@ -359,7 +361,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                       <Input
                         {...field}
                         placeholder="مثال: مصلحة الضرائب، وزارة الشؤون الاجتماعية..."
-                        className="h-11 border-[#e2e8f0] bg-white text-sm"
+                        className="h-11 border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 text-sm rounded-lg"
                       />
                     )}
                   />
@@ -370,8 +372,8 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
               {(currentReason?.requiresLieu || selectedMotif === 'mission') && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#2c5282]" />
+                    <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
                       مكان المأمورية <span className="text-red-500">*</span>
                     </Label>
                     <Controller
@@ -381,13 +383,13 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                         <Input
                           {...field}
                           placeholder="المدينة / المقر"
-                          className="h-11 border-[#e2e8f0] bg-white text-sm"
+                          className="h-11 border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 text-sm rounded-lg"
                         />
                       )}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-semibold text-gray-700">موضوع المأمورية</Label>
+                    <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">موضوع المأمورية</Label>
                     <Controller
                       control={control}
                       name="objetMission"
@@ -395,7 +397,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                         <Input
                           {...field}
                           placeholder="طبيعة العمل المكلف به"
-                          className="h-11 border-[#e2e8f0] bg-white text-sm"
+                          className="h-11 border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 text-sm rounded-lg"
                         />
                       )}
                     />
@@ -406,8 +408,8 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
               {/* Champ conditionnel : Formation */}
               {(currentReason?.requiresFormationDetails || selectedMotif === 'formation') && (
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-[#2c5282]" />
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
                     عنوان الدورة التكوينية أو التدريب <span className="text-red-500">*</span>
                   </Label>
                   <Controller
@@ -417,7 +419,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                       <Input
                         {...field}
                         placeholder="مثال: دورة السلامة المهنية، تدريب إدارة النظم..."
-                        className="h-11 border-[#e2e8f0] bg-white text-sm"
+                        className="h-11 border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 text-sm rounded-lg"
                       />
                     )}
                   />
@@ -426,8 +428,8 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
 
               {/* Commentaire ou précisions */}
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                  <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
+                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   ملاحظات أو تفاصيل إضافية
                 </Label>
                 <Controller
@@ -438,7 +440,7 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
                       {...field}
                       rows={2}
                       placeholder="أية توضيحات إضافية للإدارة..."
-                      className="border-[#e2e8f0] bg-white text-sm resize-none"
+                      className="border-[#e2e8f0] dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-slate-100 text-sm resize-none rounded-lg"
                     />
                   )}
                 />
@@ -446,20 +448,20 @@ export const AttendanceDeclarationDialog: React.FC<AttendanceDeclarationDialogPr
             </div>
           )}
 
-          <DialogFooter className="flex items-center justify-between sm:justify-between gap-3 pt-3 border-t border-[#e2e8f0]">
+          <DialogFooter className="flex items-center justify-between sm:justify-between gap-3 pt-3 border-t border-[#e2e8f0] dark:border-slate-800">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-11 px-5 border-[#e2e8f0] text-gray-700 hover:bg-gray-100"
+              className="h-11 px-5 border-[#e2e8f0] dark:border-slate-700 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
             >
               إلغاء
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-11 px-6 bg-[#2c5282] hover:bg-[#1a365d] text-white font-medium gap-2 shadow"
+              className="h-11 px-6 bg-[#2c5282] hover:bg-[#1a365d] text-white font-medium gap-2 shadow rounded-lg"
             >
               {isSubmitting ? (
                 <>

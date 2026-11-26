@@ -17,8 +17,7 @@ import {
 } from 'lucide-react';
 import { getDocumentTimeline } from '@/services/auditService';
 import { useAuth } from '@/contexts/AuthContext';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import { formatDateTime } from '@/utils/formatDate';
 
 interface DocumentTimelineProps {
   documentId: string;
@@ -134,9 +133,9 @@ const DocumentTimeline: React.FC<DocumentTimelineProps> = ({
                             <Badge className={getActionColor(entry.action)}>
                               {getActionText(entry.action)}
                             </Badge>
-                            <div className="text-xs text-gray-500 flex items-center gap-1">
+                            <div className="text-xs text-gray-500 flex items-center gap-1 tabular-nums">
                               <Clock className="h-3 w-3" />
-                              {format(new Date(entry.createdAt), 'PPp', { locale: ar })}
+                              <bdi dir="rtl">{formatDateTime(entry.createdAt, 'ar')}</bdi>
                             </div>
                           </div>
                           

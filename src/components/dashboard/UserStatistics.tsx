@@ -32,13 +32,13 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
   }
 
   return (
-    <div className="bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
-      <div className="bg-[#f7fafc] border-b border-[#e2e8f0] px-5 py-4">
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-slate-50/90 dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#ebf4ff] rounded border border-[#bee3f8] text-[#2c5282]">
+          <div className="p-2 bg-[#ebf4ff] dark:bg-slate-800 rounded-lg border border-[#bee3f8] dark:border-slate-700 text-[#2c5282] dark:text-blue-400">
             <Users className="h-5 w-5" />
           </div>
-          <h2 className="text-base sm:text-lg font-bold text-[#1a202c]">
+          <h2 className="text-base sm:text-lg font-bold text-[#1a202c] dark:text-slate-100">
             {t('dashboard.userStats.title')}
           </h2>
         </div>
@@ -46,69 +46,77 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
       <div className="p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
           {/* Active Users */}
-          <Card className="bg-white rounded border border-[#bbf0d0] shadow-xs">
+          <Card className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-emerald-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#22543d]">
+              <CardTitle className="text-xs font-medium text-[#22543d] dark:text-emerald-300">
                 {t('dashboard.stats.activeUsers')}
               </CardTitle>
-              <UserCheck className="h-4 w-4 text-[#38a169]" />
+              <div className="p-1.5 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/50 border border-emerald-200/70 dark:border-emerald-800/60">
+                <UserCheck className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+              </div>
             </CardHeader>
             <CardContent className="p-4 pt-1">
               {isLoading ? (
                 <Skeleton className="h-7 w-16" />
               ) : (
-                <div className="text-2xl font-bold text-[#22543d]">{stats.activeUsers}</div>
+                <div className="text-2xl font-bold text-[#22543d] dark:text-emerald-400 tabular-nums">{stats.activeUsers}</div>
               )}
             </CardContent>
           </Card>
 
           {/* Inactive Users */}
-          <Card className="bg-white rounded border border-[#fed7d7] shadow-xs">
+          <Card className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-red-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#742a2a]">
+              <CardTitle className="text-xs font-medium text-[#742a2a] dark:text-red-300">
                 {t('dashboard.userStats.inactiveUsers')}
               </CardTitle>
-              <UserX className="h-4 w-4 text-[#e53e3e]" />
+              <div className="p-1.5 rounded-lg bg-red-50/90 dark:bg-red-950/50 border border-red-200/70 dark:border-red-800/60">
+                <UserX className="h-4 w-4 text-red-600 dark:text-red-400" />
+              </div>
             </CardHeader>
             <CardContent className="p-4 pt-1">
               {isLoading ? (
                 <Skeleton className="h-7 w-16" />
               ) : (
-                <div className="text-2xl font-bold text-[#742a2a]">{stats.inactiveUsers}</div>
+                <div className="text-2xl font-bold text-[#742a2a] dark:text-red-400 tabular-nums">{stats.inactiveUsers}</div>
               )}
             </CardContent>
           </Card>
 
           {/* Admin Users */}
-          <Card className="bg-white rounded border border-[#bee3f8] shadow-xs">
+          <Card className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-[#2c5282] dark:border-t-blue-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#2c5282]">
+              <CardTitle className="text-xs font-medium text-[#2c5282] dark:text-blue-300">
                 {t('dashboard.userStats.admins')}
               </CardTitle>
-              <Crown className="h-4 w-4 text-[#2c5282]" />
+              <div className="p-1.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/70 dark:border-blue-800/60">
+                <Crown className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
+              </div>
             </CardHeader>
             <CardContent className="p-4 pt-1">
               {isLoading ? (
                 <Skeleton className="h-7 w-16" />
               ) : (
-                <div className="text-2xl font-bold text-[#2c5282]">{stats.adminUsers}</div>
+                <div className="text-2xl font-bold text-[#2c5282] dark:text-blue-400 tabular-nums">{stats.adminUsers}</div>
               )}
             </CardContent>
           </Card>
 
           {/* Department Admins */}
-          <Card className="bg-white rounded border border-[#e2e8f0] shadow-xs">
+          <Card className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-slate-400 dark:border-t-slate-500 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-1">
-              <CardTitle className="text-xs font-medium text-[#4a5568]">
+              <CardTitle className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
                 {t('dashboard.userStats.departmentAdmins')}
               </CardTitle>
-              <Shield className="h-4 w-4 text-[#4a5568]" />
+              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
+                <Shield className="h-4 w-4 text-[#4a5568] dark:text-slate-400" />
+              </div>
             </CardHeader>
             <CardContent className="p-4 pt-1">
               {isLoading ? (
                 <Skeleton className="h-7 w-16" />
               ) : (
-                <div className="text-2xl font-bold text-[#1a202c]">{stats.adminDeptUsers}</div>
+                <div className="text-2xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{stats.adminDeptUsers}</div>
               )}
             </CardContent>
           </Card>
@@ -116,34 +124,25 @@ const UserStatistics = ({ currentUser, stats, isLoading }: UserStatisticsProps) 
 
         {/* User Roles Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="flex items-center justify-between p-3 bg-[#f7fafc] rounded border border-[#e2e8f0]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-2.5 h-2.5 bg-[#d69e2e] rounded-full"></div>
-              <span className="text-xs font-medium text-[#4a5568]">
-                {t('dashboard.userStats.tuningDeskAdmins')}
-              </span>
-            </div>
-            <span className="text-base font-bold text-[#1a202c]">{stats.adminTuningUsers}</span>
+          <div className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-800">
+            <span className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
+              {t('dashboard.userStats.tuningDeskAdmins')}
+            </span>
+            <span className="text-base font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{stats.adminTuningUsers}</span>
           </div>
           
-          <div className="flex items-center justify-between p-3 bg-[#f7fafc] rounded border border-[#e2e8f0]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-2.5 h-2.5 bg-[#2c5282] rounded-full"></div>
-              <span className="text-xs font-medium text-[#4a5568]">
-                {t('dashboard.userStats.regularUsers')}
-              </span>
-            </div>
-            <span className="text-base font-bold text-[#1a202c]">{stats.regularUsers}</span>
+          <div className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-800">
+            <span className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
+              {t('dashboard.userStats.regularUsers')}
+            </span>
+            <span className="text-base font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{stats.regularUsers}</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-[#f7fafc] rounded border border-[#e2e8f0]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-2.5 h-2.5 bg-[#38a169] rounded-full"></div>
-              <span className="text-xs font-medium text-[#4a5568]">
-                {t('dashboard.userStats.totalActive')}
-              </span>
-            </div>
-            <span className="text-base font-bold text-[#1a202c]">{stats.activeUsers}</span>
+          <div className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-lg border border-slate-200/80 dark:border-slate-800">
+            <span className="text-xs font-medium text-[#4a5568] dark:text-slate-300">
+              {t('dashboard.userStats.totalActive')}
+            </span>
+            <span className="text-base font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">{stats.activeUsers}</span>
           </div>
         </div>
       </div>
