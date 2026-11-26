@@ -20,7 +20,6 @@ import {
   RefreshCw,
   ScanLine,
   ShieldAlert,
-  Sparkles,
   UserPlus,
   Users,
 } from 'lucide-react';
@@ -285,7 +284,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             {/* Semantic Index */}
             <div className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <Sparkles className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                <Database className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate">
                   {t('dashboard.exec.ragIndexLabel')}
                 </span>

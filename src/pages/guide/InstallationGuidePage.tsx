@@ -13,8 +13,7 @@ import {
   FileText, 
   Network, 
   ShieldCheck,
-  RotateCcw,
-  Sparkles
+  RotateCcw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -240,7 +239,7 @@ const InstallationGuidePage: React.FC = () => {
 
           {progressPercent === 100 && (
             <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg mt-2">
-              <Sparkles className="w-4 h-4 shrink-0 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>تهانينا! لقد اكتملت جميع خطوات تهيئة وتثبيت النظام بنجاح. النظام جاهز للعمل بشكل متكامل.</span>
             </div>
           )}

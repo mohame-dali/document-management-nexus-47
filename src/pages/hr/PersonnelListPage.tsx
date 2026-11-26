@@ -55,7 +55,6 @@ import {
   Key,
   CheckCircle,
   AlertCircle,
-  UserCheck,
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -184,32 +183,30 @@ export const PersonnelListPage: React.FC = () => {
   const awaitingAccountCount = personnelList.length - linkedOnPageCount;
 
   return (
-    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-start" dir={dir}>
-      {/* 1. En-tête de la page */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/70">
-              <Users className="w-7 h-7" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">
-                {t('personnel.page.title')}
-              </h1>
-              <p className="text-base text-slate-600 dark:text-slate-300 mt-1">
-                {t('personnel.page.subtitle')}
-              </p>
-            </div>
+    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-5 text-start" dir={dir}>
+      {/* 1. Compact Unboxed Institutional Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/70 flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
+              {t('personnel.page.title')}
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5 truncate">
+              {t('personnel.page.subtitle')}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 self-start md:self-auto">
+        <div className="flex items-center gap-2.5 shrink-0 self-start md:self-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="h-11 px-4 text-sm font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
+            className="h-10 px-3.5 text-sm font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
             <span>{t('common.refresh')}</span>
@@ -218,80 +215,48 @@ export const PersonnelListPage: React.FC = () => {
           {canAddPersonnel && (
             <Button
               onClick={() => navigate('/dashboard/hr/personnel/new')}
-              className="h-11 px-5 text-base font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg flex items-center gap-2 shadow-sm"
+              className="h-10 px-4 text-sm font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg flex items-center gap-2"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               <span>{t('personnel.actions.create')}</span>
             </Button>
           )}
         </div>
       </div>
 
-      {/* 1.5 Bandeau KPI synthétique */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-[#2c5282] dark:border-t-sky-500 rounded-lg p-4 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {isRTL ? 'إجمالي الموظفين' : 'Total du personnel'}
-            </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
-              {pagination.total}
-            </p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60">
-            <Users className="w-5 h-5" />
-          </div>
-        </div>
+      {/* 2. Unified Operational Panel: Summary + Filters + Table + Pagination */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden">
+        {/* Toolbar & Inline Summary Strip */}
+        <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
+              <Filter className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />
+              <span>{t('personnel.filters.title')}</span>
+            </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-emerald-500 dark:border-t-emerald-400 rounded-lg p-4 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {isRTL ? 'نشطون (الصفحة الحالية)' : 'Actifs (page courante)'}
-            </p>
-            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums mt-1">
-              {activeOnPageCount}
-            </p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/60">
-            <UserCheck className="w-5 h-5" />
-          </div>
-        </div>
+            <div className="hidden sm:block h-4 w-px bg-slate-200 dark:bg-slate-700" />
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-amber-500 dark:border-t-amber-400 rounded-lg p-4 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {isRTL ? 'بانتظار ربط حساب' : 'Sans compte lié'}
-            </p>
-            <p className="text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums mt-1">
-              {awaitingAccountCount}
-            </p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60">
-            <Clock className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 border-t-2 border-t-slate-400 dark:border-t-slate-500 rounded-lg p-4 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {isRTL ? 'الأقسام والإدارات' : 'Départements'}
-            </p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-1">
-              {departments.length}
-            </p>
-          </div>
-          <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700">
-            <Building2 className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Barre de filtres */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-base font-bold text-slate-700 dark:text-slate-200">
-            <Filter className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />
-            <span>{t('personnel.filters.title')}</span>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+              <span>
+                {isRTL ? 'الإجمالي:' : 'Total :'}{' '}
+                <strong className="font-bold text-slate-900 dark:text-slate-100">{pagination.total}</strong>
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <span>
+                {isRTL ? 'نشطون:' : 'Actifs :'}{' '}
+                <strong className="font-bold text-emerald-700 dark:text-emerald-400">{activeOnPageCount}</strong>
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <span>
+                {isRTL ? 'بدون حساب:' : 'Sans compte :'}{' '}
+                <strong className="font-bold text-amber-700 dark:text-amber-400">{awaitingAccountCount}</strong>
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <span>
+                {isRTL ? 'الأقسام:' : 'Départements :'}{' '}
+                <strong className="font-bold text-slate-900 dark:text-slate-100">{departments.length}</strong>
+              </span>
+            </div>
           </div>
 
           {hasActiveFilters && (
@@ -299,15 +264,16 @@ export const PersonnelListPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-11 px-3 text-sm text-slate-600 dark:text-slate-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg flex items-center gap-1.5"
+              className="h-9 px-3 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg flex items-center gap-1.5"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
               <span>{t('personnel.filters.reset')}</span>
             </Button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Filter Inputs Row */}
+        <div className="px-4 sm:px-5 py-3.5 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-200/80 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Recherche par nom, prénom ou CIN */}
           <div className="relative">
             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
@@ -318,7 +284,7 @@ export const PersonnelListPage: React.FC = () => {
                 setCurrentPage(1);
               }}
               placeholder={t('personnel.filters.searchPlaceholder')}
-              className="h-11 text-base ps-10 pe-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+              className="h-10 text-sm ps-10 pe-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
             />
           </div>
 
@@ -331,14 +297,14 @@ export const PersonnelListPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-10 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('personnel.filters.statusPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL" className="text-base py-2 font-medium">{t('personnel.filters.allStatuses')}</SelectItem>
-                <SelectItem value="en_attente" className="text-base py-2">{t('personnel.filters.statusPending')}</SelectItem>
-                <SelectItem value="actif" className="text-base py-2">{t('personnel.filters.statusActive')}</SelectItem>
-                <SelectItem value="inactif" className="text-base py-2">{t('personnel.filters.statusInactive')}</SelectItem>
+                <SelectItem value="ALL" className="text-sm py-2 font-medium">{t('personnel.filters.allStatuses')}</SelectItem>
+                <SelectItem value="en_attente" className="text-sm py-2">{t('personnel.filters.statusPending')}</SelectItem>
+                <SelectItem value="actif" className="text-sm py-2">{t('personnel.filters.statusActive')}</SelectItem>
+                <SelectItem value="inactif" className="text-sm py-2">{t('personnel.filters.statusInactive')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -352,13 +318,13 @@ export const PersonnelListPage: React.FC = () => {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-base bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
+              <SelectTrigger className="h-10 text-sm bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-lg focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]">
                 <SelectValue placeholder={t('personnel.filters.departmentPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL" className="text-base py-2 font-medium">{t('personnel.filters.allDepartments')}</SelectItem>
+                <SelectItem value="ALL" className="text-sm py-2 font-medium">{t('personnel.filters.allDepartments')}</SelectItem>
                 {departments.map((dept) => (
-                  <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
+                  <SelectItem key={dept._id} value={dept._id} className="text-sm py-2">
                     {dept.name}
                   </SelectItem>
                 ))}
@@ -366,10 +332,8 @@ export const PersonnelListPage: React.FC = () => {
             </Select>
           </div>
         </div>
-      </div>
 
-      {/* 3. Tableau des données */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+        {/* Tableau des données */}
         <div className="overflow-x-auto max-h-[70vh] overflow-y-auto custom-scrollbar">
           <Table className="w-full">
             <TableHeader className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800">
@@ -503,8 +467,8 @@ export const PersonnelListPage: React.FC = () => {
                       {/* Département */}
                       <TableCell className="py-3 px-4 text-sm text-slate-700 dark:text-slate-300">
                         {deptName !== '—' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-                            <Building2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                          <span className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                            <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
                             <span>{deptName}</span>
                           </span>
                         ) : (

@@ -16,7 +16,6 @@ import {
   ExternalLink, 
   Hash, 
   Layers,
-  Sparkles,
   ArrowRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -162,7 +161,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           {document.ocrText && (
             <div className="space-y-2">
               <h3 className="text-base font-semibold text-[#1a202c] dark:text-slate-100 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
+                <FileText className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
                 النص المستخرج عبر القارئ الآلي (OCR)
               </h3>
               <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 max-h-56 overflow-y-auto">

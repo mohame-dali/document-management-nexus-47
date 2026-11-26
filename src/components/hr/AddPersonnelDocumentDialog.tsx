@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  FilePlus,
+  Link2,
   Search,
   FileInput,
   FileOutput,
@@ -157,7 +157,7 @@ export const AddPersonnelDocumentDialog: React.FC<AddPersonnelDocumentDialogProp
       <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto p-6 bg-white dark:bg-slate-900 text-start border border-[#e2e8f0] dark:border-slate-800 shadow-sm" dir={dir}>
         <DialogHeader className="text-start space-y-1.5 border-b border-[#e2e8f0] dark:border-slate-800 pb-3">
           <DialogTitle className="text-lg font-bold text-[#1a202c] dark:text-slate-100 flex items-center gap-2">
-            <FilePlus className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
+            <Link2 className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
             <span>ربط وثيقة بالملف الإداري للموظف</span>
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500 dark:text-slate-400">

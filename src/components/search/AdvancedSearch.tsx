@@ -10,7 +10,7 @@ import {
   FileText, 
   Hash, 
   Building2,
-  Sparkles,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Inbox,
@@ -270,7 +270,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({ onSearch, onClear }) =>
               <span className="font-medium">البحث أيضاً داخل النص المستخرج عبر قارئ النصوص (OCR)</span>
             </label>
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#2c5282] border border-blue-200">
-              <Sparkles className="h-3 w-3" />
+              <CheckCircle2 className="h-3 w-3" />
               مفهرس آلياً
             </span>
           </div>

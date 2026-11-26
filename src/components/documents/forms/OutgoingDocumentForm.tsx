@@ -89,7 +89,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-x-clip">
+      <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg shadow-none overflow-x-clip">
         <CardContent className="p-5 sm:p-6">
           {restoredDraftAt !== null && (
             <Alert className="mb-6 border-blue-200 dark:border-blue-800/70 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100">
@@ -117,66 +117,54 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               {/* Basic Information Section */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-1 h-5 bg-emerald-600 dark:bg-emerald-500 rounded"></div>
-                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
-                    {translate('documents.forms.sections.basicInfo')}
-                  </h3>
-                </div>
-                
-                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
-                  <BasicInfoFields
-                    form={form}
-                    t={t}
-                    departments={departments}
-                    onSerialNumberChange={handleSerialNumberChange}
-                  />
-                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {translate('documents.forms.sections.basicInfo')}
+                </h3>
+                <BasicInfoFields
+                  form={form}
+                  t={t}
+                  departments={departments}
+                  onSerialNumberChange={handleSerialNumberChange}
+                />
               </div>
 
-              <Separator className="my-6 bg-[#e2e8f0] dark:bg-slate-800" />
+              <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
 
               {/* Document Attachment Section */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-1 h-5 bg-emerald-600 dark:bg-emerald-500 rounded"></div>
-                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
-                    {translate('documents.forms.sections.attachments')}
-                  </h3>
-                </div>
-                
-                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
-                  <DocumentAttachmentSection
-                    t={t as Record<string, string>}
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    handleFileSelect={handleFileSelect}
-                    onOcrComplete={handleOcrComplete}
-                    scanSettings={scanSettings}
-                    handleScanSettingChange={handleScanSettingChange}
-                    scanning={scanning}
-                    scanProgress={scanProgress}
-                    scanResult={scanResult}
-                    scanError={scanError}
-                    liveThumbnails={liveThumbnails}
-                    scannerStatus={scannerStatus as Record<string, unknown> | null}
-                    loadingScannerStatus={loadingScannerStatus}
-                    handleStartScan={handleStartScan}
-                    onRemoveScan={handleRemoveScan}
-                    scanStage={scanStage}
-                    scanPage={scanPage}
-                    onCancelScan={handleCancelScan}
-                    onRescan={handleStartScan}
-                    onUseScan={handleUseScan}
-                    isScanAttached={isScanAttached}
-                  />
-                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {translate('documents.forms.sections.attachments')}
+                </h3>
+                <DocumentAttachmentSection
+                  t={t as Record<string, string>}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  handleFileSelect={handleFileSelect}
+                  onOcrComplete={handleOcrComplete}
+                  scanSettings={scanSettings}
+                  handleScanSettingChange={handleScanSettingChange}
+                  scanning={scanning}
+                  scanProgress={scanProgress}
+                  scanResult={scanResult}
+                  scanError={scanError}
+                  liveThumbnails={liveThumbnails}
+                  scannerStatus={scannerStatus as Record<string, unknown> | null}
+                  loadingScannerStatus={loadingScannerStatus}
+                  handleStartScan={handleStartScan}
+                  onRemoveScan={handleRemoveScan}
+                  scanStage={scanStage}
+                  scanPage={scanPage}
+                  onCancelScan={handleCancelScan}
+                  onRescan={handleStartScan}
+                  onUseScan={handleUseScan}
+                  isScanAttached={isScanAttached}
+                />
               </div>
             </form>
           </Form>
         </CardContent>
         
-        <CardFooter className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-6 py-4 rounded-b shadow-[0_-6px_16px_-6px_rgba(15,23,42,0.08)]">
+        <CardFooter className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-6 py-4 rounded-b-lg">
           <FormActions
             form={form}
             onSubmit={handleSubmit}

@@ -140,11 +140,11 @@ const CreateIncomingDocument = () => {
   return (
     <div className="min-h-screen bg-[#f7fafc] dark:bg-slate-950">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-8 space-y-4">
-        {/* Elevated Page Header Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs">
+        {/* Page Header */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-5 py-4">
           <FormSectionHeader
             icon={
-              <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">
                 <Inbox className="h-5 w-5" />
               </div>
             }

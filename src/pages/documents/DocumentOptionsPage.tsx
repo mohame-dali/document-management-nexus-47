@@ -1,30 +1,30 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { 
-  Plus, 
-  Sliders, 
-  Layers, 
-  Building2, 
-  FileText, 
-  Inbox, 
-  Send, 
-  Bookmark, 
-  ShieldAlert, 
-  CheckCircle2, 
-  XCircle,
+import {
+  Plus,
+  SlidersHorizontal,
+  Layers,
+  Building2,
+  FileText,
+  Inbox,
+  Send,
+  Bookmark,
+  ShieldAlert,
   AlertCircle,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  getDocumentOptions, 
-  createDocumentOption, 
-  updateDocumentOption, 
-  deleteDocumentOption, 
-  DocumentOption 
+import {
+  getDocumentOptions,
+  createDocumentOption,
+  updateDocumentOption,
+  deleteDocumentOption,
+  DocumentOption,
 } from '@/services/documentOptionsService';
-import DocumentOptionDialog, { DocumentOptionFormData } from '@/components/documents/options/DocumentOptionDialog';
+import DocumentOptionDialog, {
+  DocumentOptionFormData,
+} from '@/components/documents/options/DocumentOptionDialog';
 import DocumentOptionsList from '@/components/documents/options/DocumentOptionsList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDirection } from '@/i18n/useDirection';
@@ -60,12 +60,12 @@ const DocumentOptionsPage: React.FC = () => {
   const { data: options = [], isLoading, error, refetch } = useQuery({
     queryKey: ['documentOptions'],
     queryFn: () => getDocumentOptions(),
-    refetchInterval: 60 * 1000, // 1 minute
+    refetchInterval: 60 * 1000,
     refetchIntervalInBackground: false,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: { category: string; documentType: string; value: string }) => 
+    mutationFn: (data: { category: string; documentType: string; value: string }) =>
       createDocumentOption(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
@@ -74,12 +74,17 @@ const DocumentOptionsPage: React.FC = () => {
     },
     onError: (err: ApiError) => {
       toast.error(err.response?.data?.message || 'فشل في إنشاء خيار الوثيقة');
-    }
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { value?: string; isActive?: boolean; category?: string; documentType?: string } }) => 
-      updateDocumentOption(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { value?: string; isActive?: boolean; category?: string; documentType?: string };
+    }) => updateDocumentOption(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
       toast.success('تم تحديث خيار الوثيقة بنجاح');
@@ -88,7 +93,7 @@ const DocumentOptionsPage: React.FC = () => {
     },
     onError: (err: ApiError) => {
       toast.error(err.response?.data?.message || 'فشل في تحديث خيار الوثيقة');
-    }
+    },
   });
 
   const deleteMutation = useMutation({
@@ -100,11 +105,11 @@ const DocumentOptionsPage: React.FC = () => {
     },
     onError: (err: ApiError) => {
       toast.error(err.response?.data?.message || 'فشل في حذف خيار الوثيقة');
-    }
+    },
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => 
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       updateDocumentOption(id, { isActive }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentOptions'] });
@@ -112,20 +117,22 @@ const DocumentOptionsPage: React.FC = () => {
     },
     onError: (err: ApiError) => {
       toast.error(err.response?.data?.message || 'فشل في تحديث الحالة');
-    }
+    },
   });
 
   // Permission verification
   if (currentUser?.role !== 'AdminTuningDesk') {
     return (
       <div className="py-6" dir={dir}>
-        <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded bg-amber-50 border border-[#FFD758] flex items-center justify-center mx-auto text-[#78350f]">
-            <ShieldAlert className="h-7 w-7" />
+        <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/70 flex items-center justify-center mx-auto text-amber-800 dark:text-amber-300">
+            <ShieldAlert className="h-6 w-6" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1a202c]">الوصول مقيّد بالصلاحيات</h2>
-          <p className="text-base text-[#4a5568] leading-relaxed">
-            إدارة خيارات وحقول الوثائق تتطلب صلاحية مكتب الضبط (AdminTuningDesk). يرجى مراجعة مسؤول النظام للحصول على الصلاحيات المطلوبة.
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            الوصول مقيّد بالصلاحيات
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            إدارة خيارات وحقول الوثائق تتطلب صلاحية مكتب الضبط (AdminTuningDesk). يرجى مراجعة مسؤول النظام.
           </p>
         </div>
       </div>
@@ -159,63 +166,59 @@ const DocumentOptionsPage: React.FC = () => {
     toggleActiveMutation.mutate({ id, isActive: !isActive });
   };
 
-  // Metrics calculation
   const totalCount = options.length;
-  const activeCount = options.filter(o => o.isActive).length;
+  const activeCount = options.filter((o) => o.isActive).length;
   const inactiveCount = totalCount - activeCount;
 
-  const categoryStats = {
-    activity: options.filter(o => o.category === 'activity').length,
-    source: options.filter(o => o.category === 'source').length,
-    typeDocument: options.filter(o => o.category === 'typeDocument').length,
-    assignedTo: options.filter(o => o.category === 'assignedTo').length,
-    pourInfo: options.filter(o => o.category === 'pourInfo').length,
-  };
-
-  const categoryCards = [
+  const categoryTabs = [
+    {
+      id: 'all',
+      label: 'الكل',
+      icon: <Layers className="h-3.5 w-3.5" />,
+      count: totalCount,
+    },
     {
       id: 'activity',
       label: 'النشاط',
-      description: 'تصنيف مجالات الأنشطة والمهام',
-      icon: <Bookmark className="h-5 w-5" />,
-      count: categoryStats.activity,
+      icon: <Bookmark className="h-3.5 w-3.5" />,
+      count: options.filter((o) => o.category === 'activity').length,
     },
     {
       id: 'source',
       label: 'المصدر / الجهة',
-      description: 'الهيئات والمؤسسات المتعامل معها',
-      icon: <Building2 className="h-5 w-5" />,
-      count: categoryStats.source,
+      icon: <Building2 className="h-3.5 w-3.5" />,
+      count: options.filter((o) => o.category === 'source').length,
     },
     {
       id: 'typeDocument',
       label: 'نوع الوثيقة',
-      description: 'المراسلات، التقارير والمذكرات',
-      icon: <FileText className="h-5 w-5" />,
-      count: categoryStats.typeDocument,
+      icon: <FileText className="h-3.5 w-3.5" />,
+      count: options.filter((o) => o.category === 'typeDocument').length,
     },
     {
       id: 'assignedTo',
       label: 'مخصص إلى',
-      description: 'المصالح والوحدات المعنية بالتوجيه',
-      icon: <Inbox className="h-5 w-5" />,
-      count: categoryStats.assignedTo,
+      icon: <Inbox className="h-3.5 w-3.5" />,
+      count: options.filter((o) => o.category === 'assignedTo').length,
     },
     {
       id: 'pourInfo',
       label: 'للإعلام',
-      description: 'الجهات المعنية بالمتابعة والإعلام',
-      icon: <Send className="h-5 w-5" />,
-      count: categoryStats.pourInfo,
+      icon: <Send className="h-3.5 w-3.5" />,
+      count: options.filter((o) => o.category === 'pourInfo').length,
     },
   ];
 
   if (isLoading) {
     return (
-      <div className="py-16 flex flex-col items-center justify-center text-center space-y-4" dir={dir}>
-        <Loader2 className="h-10 w-10 text-[#2c5282] dark:text-blue-400 animate-spin" />
-        <h2 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">جاري تحميل خيارات الوثائق...</h2>
-        <p className="text-base text-[#4a5568] dark:text-slate-400">يتم استرجاع فئات وخيارات حقول الوثائق من قاعدة البيانات</p>
+      <div
+        className="py-16 flex flex-col items-center justify-center text-center space-y-3"
+        dir={dir}
+      >
+        <Loader2 className="h-9 w-9 text-[#2c5282] dark:text-blue-400 animate-spin" />
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          جاري تحميل خيارات الوثائق...
+        </h2>
       </div>
     );
   }
@@ -223,17 +226,19 @@ const DocumentOptionsPage: React.FC = () => {
   if (error) {
     return (
       <div className="py-8" dir={dir}>
-        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-600">
-            <AlertCircle className="h-7 w-7" />
+        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 flex items-center justify-center mx-auto text-red-600 dark:text-red-400">
+            <AlertCircle className="h-6 w-6" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1a202c]">تعذر تحميل البيانات</h2>
-          <p className="text-base text-[#4a5568] leading-relaxed">
-            حدث خطأ أثناء الاتصال بالخادم لجلب خيارات الوثائق. يرجى المحاولة مجدداً.
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            تعذر تحميل البيانات
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            حدث خطأ أثناء جلب خيارات الوثائق. يرجى المحاولة مجدداً.
           </p>
           <Button
             onClick={() => refetch()}
-            className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+            className="h-10 px-5 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-md"
           >
             إعادة المحاولة
           </Button>
@@ -243,152 +248,80 @@ const DocumentOptionsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6" dir={dir}>
-      {/* 1. Page Institutional Header (En-tête) */}
-      <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
-            <Sliders className="h-6 w-6" />
+    <div className="space-y-4" dir={dir}>
+      {/* Compact Institutional Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center flex-shrink-0">
+            <SlidersHorizontal className="h-5 w-5" />
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-blue-400 leading-normal flex items-center gap-2.5">
-              إدارة خيارات وحقول الوثائق
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
+              خيارات وحقول الوثائق
             </h1>
-            <p className="text-base text-[#4a5568] dark:text-slate-400 leading-relaxed mt-1">
-              تخصيص وضبط القوائم المنسدلة للأنشطة، المصادر، أنواع الوثائق والجهات المسؤولة للوثائق الإدارية
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+              إدارة القوائم المنسدلة للأنشطة والمصادر وأنواع المراسلات
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <Button 
-            onClick={() => {
-              setEditingOption(null);
-              setIsDialogOpen(true);
-            }}
-            className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded flex items-center gap-2 transition-colors duration-200"
-          >
-            <Plus className="h-5 w-5" />
-            <span>إضافة خيار جديد</span>
-          </Button>
-        </div>
+        <Button
+          onClick={() => {
+            setEditingOption(null);
+            setIsDialogOpen(true);
+          }}
+          className="h-10 px-4 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-md flex items-center gap-2 shrink-0 self-start sm:self-auto"
+        >
+          <Plus className="h-4 w-4" />
+          <span>إضافة خيار جديد</span>
+        </Button>
       </div>
 
-      {/* 2. Options Sections / Categories & Metrics Bar (Sections d'options) */}
-      <div className="space-y-4">
-        {/* Global Metric Indicators */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-5 flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-sm font-medium text-[#5f6b7d] dark:text-slate-400">إجمالي الخيارات المسجلة</span>
-              <div className="text-2xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">
-                <bdi dir="ltr">{totalCount}</bdi>
-              </div>
-            </div>
-            <span className="w-10 h-10 rounded bg-[#f7fafc] dark:bg-slate-800 border border-[#e2e8f0] dark:border-slate-700 flex items-center justify-center text-[#2c5282] dark:text-blue-400 flex-shrink-0">
-              <Layers className="h-5 w-5" />
-            </span>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-5 flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-sm font-medium text-[#5f6b7d] dark:text-slate-400">الخيارات المفعلة (نشطة)</span>
-              <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
-                <bdi dir="ltr">{activeCount}</bdi>
-              </div>
-            </div>
-            <span className="w-10 h-10 rounded bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-              <CheckCircle2 className="h-5 w-5" />
-            </span>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-5 flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-sm font-medium text-[#5f6b7d] dark:text-slate-400">الخيارات المعطلة</span>
-              <div className="text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
-                <bdi dir="ltr">{inactiveCount}</bdi>
-              </div>
-            </div>
-            <span className="w-10 h-10 rounded bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
-              <XCircle className="h-5 w-5" />
-            </span>
-          </div>
+      {/* Single Unified Surface: Category Strip + Toolbar + Filters + Table */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden">
+        {/* Category Filter Tabs */}
+        <div className="px-4 py-2.5 bg-slate-50/70 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          {categoryTabs.map((cat) => {
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                  isSelected
+                    ? 'bg-white dark:bg-slate-800 text-[#2c5282] dark:text-blue-300 border border-slate-200/90 dark:border-slate-700 shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 border border-transparent hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800/50'
+                }`}
+              >
+                {cat.icon}
+                <span>{cat.label}</span>
+                <span className="text-[11px] opacity-75 tabular-nums">
+                  (<bdi dir="ltr">{cat.count}</bdi>)
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Category Configuration Cards Grid */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#e2e8f0]">
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-[#1a202c]">
-                أقسام وتصنيفات خيارات الوثائق
-              </h2>
-              <p className="text-sm text-[#4a5568] mt-0.5">
-                اضغط على أي قسم للتصفية السريعة وعرض الخيارات التابعة له
-              </p>
-            </div>
-            
-            <button
-              type="button"
-              onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1.5 rounded text-sm font-semibold transition-colors duration-200 ${
-                selectedCategory === 'all'
-                  ? 'bg-[#2c5282] text-white'
-                  : 'bg-gray-100 text-[#4a5568] hover:bg-gray-200'
-              }`}
-            >
-              عرض الكل (<bdi dir="ltr">{totalCount}</bdi>)
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-            {categoryCards.map((cat) => {
-              const isSelected = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(isSelected ? 'all' : cat.id)}
-                  className={`text-start p-4 rounded border transition-colors duration-200 flex flex-col justify-between min-h-[105px] ${
-                    isSelected
-                      ? 'border-[#2c5282] bg-blue-50/70'
-                      : 'border-[#e2e8f0] bg-white hover:border-[#cbd5e1] hover:bg-slate-50/60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 w-full">
-                    <div className="flex items-center gap-2 text-[#2c5282]">
-                      {cat.icon}
-                      <span className="font-bold text-base text-[#1a202c]">{cat.label}</span>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                      isSelected 
-                        ? 'bg-[#FFCB56] text-[#78350f] border border-[#FFD758]'
-                        : 'bg-gray-100 text-[#4a5568] border border-gray-200'
-                    }`}>
-                      <bdi dir="ltr">{cat.count}</bdi>
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#5f6b7d] mt-2 line-clamp-1 leading-relaxed">
-                    {cat.description}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* Document Options List (flat inside unified surface) */}
+        <DocumentOptionsList
+          options={options}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggleActive={handleToggleActive}
+          isLoading={deleteMutation.isPending || toggleActiveMutation.isPending}
+          selectedCategoryFilter={selectedCategory}
+          onSelectCategoryFilter={setSelectedCategory}
+          summaryCounts={{
+            total: totalCount,
+            active: activeCount,
+            inactive: inactiveCount,
+          }}
+        />
       </div>
 
-      {/* 3. Document Options List Section (Actions / Tableau) */}
-      <DocumentOptionsList
-        options={options}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleActive={handleToggleActive}
-        isLoading={deleteMutation.isPending || toggleActiveMutation.isPending}
-        selectedCategoryFilter={selectedCategory}
-        onSelectCategoryFilter={setSelectedCategory}
-      />
-
-      {/* 4. Document Option Dialog (Création / Modification) */}
+      {/* Document Option Dialog */}
       <DocumentOptionDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}

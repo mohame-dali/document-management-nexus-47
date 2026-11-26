@@ -196,7 +196,7 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-x-clip">
+      <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg shadow-none overflow-x-clip">
         <CardContent className="p-5 sm:p-6">
           {restoredDraftAt !== null && (
             <Alert className="mb-6 border-blue-200 dark:border-blue-800/70 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100">
@@ -224,152 +224,128 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               {/* Serial Information Section */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-1 h-5 bg-[#2c5282] dark:bg-blue-500 rounded"></div>
-                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
-                    {translate('documents.forms.sections.serialInfo')}
-                  </h3>
-                </div>
-                
-                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
-                  <SerialInfoFields 
-                    form={form} 
-                    t={t} 
-                    onSerialNumberChange={handleSerialNumberChange}
-                  />
-                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {translate('documents.forms.sections.serialInfo')}
+                </h3>
+                <SerialInfoFields 
+                  form={form} 
+                  t={t} 
+                  onSerialNumberChange={handleSerialNumberChange}
+                />
               </div>
 
-              <Separator className="my-6 bg-[#e2e8f0] dark:bg-slate-800" />
+              <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
 
               {/* Correspondence Information Section */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-1 h-5 bg-[#2c5282] dark:bg-blue-500 rounded"></div>
-                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
-                    {translate('documents.forms.sections.correspondence')}
-                  </h3>
-                </div>
-                
-                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
-                  <CorrespondenceFields form={form} />
-                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {translate('documents.forms.sections.correspondence')}
+                </h3>
+                <CorrespondenceFields form={form} />
               </div>
 
-              <Separator className="my-6 bg-[#e2e8f0] dark:bg-slate-800" />
+              <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
 
               {/* Document Details Section */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-1 h-5 bg-[#2c5282] dark:bg-blue-500 rounded"></div>
-                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
-                    {translate('documents.forms.sections.details')}
-                  </h3>
-                </div>
-                
-                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
-                  <DocumentDetailsFields form={form} t={t} departments={departments} />
-                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {translate('documents.forms.sections.details')}
+                </h3>
+                <DocumentDetailsFields form={form} t={t} departments={departments} />
               </div>
 
-              <Separator className="my-6 bg-[#e2e8f0] dark:bg-slate-800" />
+              <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
 
               {/* Attachment Section */}
               <div className="space-y-4">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-1 h-5 bg-[#2c5282] dark:bg-blue-500 rounded"></div>
-                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
-                    {translate('documents.forms.sections.attachments')}
-                  </h3>
-                </div>
-                
-                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
-                  <AttachmentSection
-                    t={t as Record<string, string>}
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                    onFileSelect={handleFileSelect}
-                    onOcrComplete={handleOcrComplete}
-                    scanSettings={scanSettings}
-                    handleScanSettingChange={handleScanSettingChange}
-                    scanning={scanning}
-                    scanProgress={scanProgress}
-                    scanResult={scanResult}
-                    scanError={scanError}
-                    liveThumbnails={liveThumbnails}
-                    scannerStatus={scannerStatus}
-                    loadingScannerStatus={loadingScannerStatus}
-                    handleStartScan={handleScanStart}
-                    onRemoveScan={handleRemoveScan}
-                    scanStage={scanStage}
-                    scanPage={scanPage}
-                    onCancelScan={handleCancelScan}
-                    onRescan={handleScanStart}
-                    onUseScan={handleUseScan}
-                    isScanAttached={isScanAttached}
-                  />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                  {translate('documents.forms.sections.attachments')}
+                </h3>
+                <AttachmentSection
+                  t={t as Record<string, string>}
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  onFileSelect={handleFileSelect}
+                  onOcrComplete={handleOcrComplete}
+                  scanSettings={scanSettings}
+                  handleScanSettingChange={handleScanSettingChange}
+                  scanning={scanning}
+                  scanProgress={scanProgress}
+                  scanResult={scanResult}
+                  scanError={scanError}
+                  liveThumbnails={liveThumbnails}
+                  scannerStatus={scannerStatus}
+                  loadingScannerStatus={loadingScannerStatus}
+                  handleStartScan={handleScanStart}
+                  onRemoveScan={handleRemoveScan}
+                  scanStage={scanStage}
+                  scanPage={scanPage}
+                  onCancelScan={handleCancelScan}
+                  onRescan={handleScanStart}
+                  onUseScan={handleUseScan}
+                  isScanAttached={isScanAttached}
+                />
 
-                  {/* ─────────────────────────────────────────────────── */}
-                  {/* 🤖 Extraction intelligente IA (NOUVEAU)              */}
-                  {/* ─────────────────────────────────────────────────── */}
-                  {(ocrText || scanResult?.ocrText) && (
-                    <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex items-center gap-2 flex-wrap">
-                      {!isExtracting ? (
+                {/* ─────────────────────────────────────────────────── */}
+                {/* 🤖 Extraction intelligente IA (NOUVEAU)              */}
+                {/* ─────────────────────────────────────────────────── */}
+                {(ocrText || scanResult?.ocrText) && (
+                  <div className="mt-4 pt-4 border-t border-slate-200/80 dark:border-slate-800 flex items-center gap-2 flex-wrap">
+                    {!isExtracting ? (
+                      <Button
+                        type="button"
+                        onClick={handleAIExtraction}
+                        className="h-11 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white flex items-center gap-2"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        {translate('documents.forms.ai.button')}
+                      </Button>
+                    ) : (
+                      <>
                         <Button
                           type="button"
-                          onClick={handleAIExtraction}
-                          className="h-11 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white flex items-center gap-2"
+                          disabled
+                          className="h-11 bg-purple-600 text-white flex items-center gap-2"
                         >
-                          <Sparkles className="w-4 h-4" />
-                          {translate('documents.forms.ai.button')}
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {translate('documents.forms.ai.extracting')} (<bdi dir="ltr">{progressTime}s</bdi>)
                         </Button>
-                      ) : (
-                        <>
-                          <Button
-                            type="button"
-                            disabled
-                            className="h-11 bg-purple-600 text-white flex items-center gap-2"
-                          >
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            {translate('documents.forms.ai.extracting')} (<bdi dir="ltr">{progressTime}s</bdi>)
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleCancelExtraction}
-                            className="h-11 border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
-                          >
-                            <X className="w-4 h-4" />
-                            {translate('documents.forms.ai.cancel')}
-                          </Button>
-                        </>
-                      )}
-
-                      {extractionConfidence !== null && !isExtracting && (
-                        <Badge
-                          className={
-                            extractionConfidence > 0.8
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                              : 'bg-amber-100 text-amber-800 border-amber-300'
-                          }
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleCancelExtraction}
+                          className="h-11 border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2"
                         >
-                          <bdi dir="ltr">{Math.round(extractionConfidence * 100)}%</bdi>{' '}
-                          {translate('documents.forms.ai.confidence')}
-                        </Badge>
-                      )}
+                          <X className="w-4 h-4" />
+                          {translate('documents.forms.ai.cancel')}
+                        </Button>
+                      </>
+                    )}
 
-                      <p className="text-xs text-slate-500 ms-auto">
-                        {translate('documents.forms.ai.helperText')}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                    {extractionConfidence !== null && !isExtracting && (
+                      <Badge
+                        className={
+                          extractionConfidence > 0.8
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                            : 'bg-amber-100 text-amber-800 border-amber-300'
+                        }
+                      >
+                        <bdi dir="ltr">{Math.round(extractionConfidence * 100)}%</bdi>{' '}
+                        {translate('documents.forms.ai.confidence')}
+                      </Badge>
+                    )}
+
+                    <p className="text-xs text-slate-500 ms-auto">
+                      {translate('documents.forms.ai.helperText')}
+                    </p>
+                  </div>
+                )}
               </div>
             </form>
           </Form>
         </CardContent>
         
-        <CardFooter className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-6 py-4 rounded-b shadow-[0_-6px_16px_-6px_rgba(15,23,42,0.08)]">
+        <CardFooter className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-6 py-4 rounded-b-lg">
           <FormActions
             form={form}
             onSubmit={handleSubmit}
