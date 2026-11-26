@@ -16,14 +16,14 @@
 set -euo pipefail
 
 TARGET_HOST="${1:-127.0.0.1}"
-CERT_DIR="/etc/ssl/certs"
-KEY_DIR="/etc/ssl/private"
-CERT_FILE="${CERT_DIR}/dms-selfsigned.crt"
-KEY_FILE="${KEY_DIR}/dms-selfsigned.key"
+SSL_DIR="/etc/ssl/dms"
+CERT_FILE="${SSL_DIR}/dms-selfsigned.crt"
+KEY_FILE="${SSL_DIR}/dms-selfsigned.key"
 
 echo "🔐 Génération d'un certificat SSL d'administration pour : ${TARGET_HOST}..."
 
-mkdir -p "${CERT_DIR}" "${KEY_DIR}"
+mkdir -p "${SSL_DIR}"
+chmod 755 "${SSL_DIR}"
 
 OPENSSL_CONF=$(mktemp)
 cat <<EOF > "${OPENSSL_CONF}"

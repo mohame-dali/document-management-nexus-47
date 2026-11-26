@@ -15,7 +15,9 @@
 | **Compte système / connexion** | Utilisateur existant **`dms`** | Déploiement **strictement sous `/var/www/dms`** détenu par `dms:dms` — **ne jamais déployer dans `/home/dms/Desktop`**. |
 | **Interface réseau & IP** | Interface **`enp1s0`**, actuellement en `192.168.100.131/24` (DHCP) | Épinglage en **IP fixe `192.168.100.131/24`** via `nmcli` / Netplan à l'**Étape 0**, impérativement **avant** la génération des certificats TLS. |
 | **Base de données** | **MongoDB 8.0** pour Ubuntu 24.04 (`noble`) | Installée et durcie via `deploy/ubuntu/install-mongodb.sh` (`?authSource=document-management`, `bindIp: 127.0.0.1`). |
-| **URL d'accès & CORS** | **`https://192.168.100.131`** (port interne Node `5000`, HTTPS `443` via Nginx) | `ALLOWED_ORIGINS=https://192.168.100.131` dans `/var/www/dms/.env`, certificat SAN `IP:192.168.100.131`, UFW bloque `3000`, `5000`, `27017`. |
+| **URL d'accès & CORS** | **`https://192.168.100.131`** (port interne Node `5000`, HTTPS `443` via Nginx) | `ALLOWED_ORIGINS=https://192.168.100.131` dans `/var/www/dms/.env`, certificat SAN `IP:192.168.100.131` sous `/etc/ssl/dms/`, UFW bloque `3000`, `5000`, `27017`. |
+
+> **Variante Ubuntu 24.04 Server VM (sans bureau GNOME)** : consultez également la fiche synthétique dédiée en 7 étapes dans [`deploy/DEPLOY_KVM_UBUNTU.md`](../deploy/DEPLOY_KVM_UBUNTU.md).
 
 ---
 
@@ -107,8 +109,11 @@
 | `LLAMA_EMBEDDING_MODEL_PATH` | Recommandée | Modèle GGUF Embedding (`ollamaService.js:22-25`, `server.ts:445`, `check-env.mjs:174`). | `/var/www/dms/models/bge-m3-q4_k_m.gguf` |
 | `LLAMA_THREADS` | Non | Cœurs CPU pour `node-llama-cpp` (`server.ts:42-47`, défaut `os.cpus().length / 2`). | `4` |
 | `LLAMA_GPU_LAYERS` | Non | `0` = exécution 100 % CPU sans GPU (`aiWorker.js`). | `0` |
-| `DISABLE_AI_WARMUP` | Non | Si `true`, désactive le préchargement IA 5s après le boot (`server.ts:67`). *(Note : la variable s'appelle `DISABLE_AI_WARMUP`, pas `AI_WARMUP`.)* | `false` *(ou omis)* |
+| `LLAMA_CONTEXT_SIZE` / `AI_WORKER_*` | Non | Contexte GGUF (`2048`), concurrence (`1`), timeout démarrage (`10000` ms) (`aiWorker.js`, `ollamaService.js`). | `2048` / `1` / `10000` |
+| `DISABLE_AI_WARMUP` / `INDEX_RETRY_CRON` | Non | Si `DISABLE_AI_WARMUP=true`, désactive le préchargement IA 5s après le boot (`server.ts:67`). `INDEX_RETRY_CRON` planifie le rattrapage RAG (`indexRetryScheduler.js`). | `false` / `*/10 * * * *` |
+| `OCR_MAX_PAGES` / `OCR_PAGE_TIMEOUT_MS` | Non | Limite pages PDF (`50`) et timeout par page (`60000` ms) (`ocrProcessor.js:12-13`). | `50` / `60000` |
 | `SCANNER_ENABLED` / `SCANNER_DEVICE_ID` / `SCANNER_RESOLUTION` / `SCANNER_FORMAT` | Non | Pilotage SANE/WIA côté serveur (`scannerConfig.js:15-18`). Laisser `SCANNER_ENABLED=false` tant qu'aucun scanner USB n'est branché en passthrough. | `false` / *(vide)* / `300` / `pdf` |
+| `CLAMAV_ENABLED` | Non | Scan antivirus optionnel ClamAV (`false` par défaut). | `false` |
 | `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY` | Non | Proxy sortant éventuel pour `scripts/download-models.js`. | *(vide si accès direct)* |
 | `VITE_API_URL` | Non | Compilé dans le frontend Vite (`src/services/apiService.ts`, défaut `/api`). Laisser vide derrière Nginx même origine. | *(vide)* |
 
@@ -378,8 +383,17 @@ Attendu : `active`, `enabled`, écoute exclusivement sur `127.0.0.1:27017`, `con
 
 ### Commandes
 ```bash
+# 0) (Depuis le poste source) Transfert propre via rsync vers /var/www/dms
+#    Exclut node_modules, dist, .env, données locales, modèles .gguf et journaux :
+# rsync -avz --delete \
+#   --exclude='.git/' --exclude='node_modules/' --exclude='backend/node_modules/' \
+#   --exclude='dist/' --exclude='.env' --exclude='.env.*' --exclude='backend/.env*' \
+#   --exclude='models/*.gguf' --exclude='backend/courrier/' --exclude='backend/uploads/' \
+#   --exclude='backups/' --exclude='logs/' --exclude='*.log' \
+#   ./ dms@192.168.100.131:/var/www/dms/
+
 # 1) Vérifier l'emplacement, supprimer tout backend/.env concurrent et garantir dms:dms sur /var/www/dms
-sudo mkdir -p /var/www/dms/{backend/courrier,backend/uploads/attachments,backend/uploads/usersphoto,backend/uploads/personnelphoto,models,backups,logs}
+sudo mkdir -p /var/www/dms/{backend/courrier,backend/uploads/attachments,backend/uploads/usersphoto,backend/uploads/personnelphoto,backend/uploads/templates,backend/uploads/temp,models,backups,logs}
 sudo rm -f /var/www/dms/backend/.env
 sudo chown -R dms:dms /var/www/dms
 
@@ -393,12 +407,12 @@ sudo -u dms -H bash -c '
   npm ls mongoose
 '
 
-# 3) Générer une clé JWT_SECRET forte (96 car. hex) :
+# 3) Générer une clé JWT_SECRET forte (96 car. hex, ou openssl rand -hex 32 min 64 car.) :
 JWT_GEN="$(openssl rand -hex 48)"
 echo "JWT_SECRET généré (ne pas le partager) : ${JWT_GEN}"
 ```
 
-Créer l'unique fichier **`/var/www/dms/.env`** (remplacer `<MOT_DE_PASSE_APP>` par le mot de passe saisi pour `dms_app_user` à l'Étape 2, et `<JWT_SECRET_96_HEX>` par la sortie d'`openssl rand -hex 48`) :
+Créer l'unique fichier **`/var/www/dms/.env`** (remplacer `<MOT_DE_PASSE_APP>` par le mot de passe saisi pour `dms_app_user` à l'Étape 2, et `<JWT_SECRET_HEX>` par la sortie d'`openssl rand -hex 48` ou `32`) :
 ```bash
 sudo -u dms -H tee /var/www/dms/.env > /dev/null <<'EOF'
 NODE_ENV=production
@@ -406,11 +420,12 @@ PORT=5000
 
 MONGODB_URI=mongodb://dms_app_user:<MOT_DE_PASSE_APP>@127.0.0.1:27017/document-management?authSource=document-management
 
-JWT_SECRET=<JWT_SECRET_96_HEX>
+JWT_SECRET=<JWT_SECRET_HEX>
 JWT_EXPIRE=8h
 JWT_COOKIE_EXPIRE=1
 
 ALLOWED_ORIGINS=https://192.168.100.131
+FRONTEND_URL=https://192.168.100.131
 
 DOCUMENT_PATH=/var/www/dms/backend/courrier
 UPLOAD_DIR=/var/www/dms/backend/uploads
@@ -424,11 +439,21 @@ LLAMA_CHAT_MODEL_PATH=/var/www/dms/models/ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_
 LLAMA_EMBEDDING_MODEL_PATH=/var/www/dms/models/bge-m3-q4_k_m.gguf
 LLAMA_THREADS=4
 LLAMA_GPU_LAYERS=0
+LLAMA_CONTEXT_SIZE=2048
+DISABLE_AI_WARMUP=false
+AI_WORKER_MAX_CONCURRENCY=1
+AI_WORKER_STARTUP_TIMEOUT_MS=10000
+INDEX_RETRY_CRON=*/10 * * * *
+
+OCR_MAX_PAGES=50
+OCR_PAGE_TIMEOUT_MS=60000
 
 SCANNER_ENABLED=false
 SCANNER_DEVICE_ID=
 SCANNER_RESOLUTION=300
 SCANNER_FORMAT=pdf
+
+CLAMAV_ENABLED=false
 EOF
 
 sudo chown dms:dms /var/www/dms/.env
@@ -515,16 +540,16 @@ Attendu : `mongod` et `pm2-dms` `active`, `dms-backend` `online` (`1` instance `
 
 - **Fichiers sources (`FAIT`)** : `deploy/ubuntu/scripts/gen-selfsigned-cert.sh:1-73`, `deploy/ubuntu/dms.nginx.conf:1-148`.
 - **Points intégrés (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** :
-  - `gen-selfsigned-cert.sh 192.168.100.131` génère un certificat RSA 4096 bits valide 3 ans avec **`IP.2 = 192.168.100.131`** dans l'extension **Subject Alternative Name (SAN)** (`:55-63`), exigé par Chrome/Edge.
-  - `deploy/ubuntu/dms.nginx.conf:72,82` inclut le préfixe **`^~`** sur `location ^~ /courrier/` et `location ^~ /uploads/` afin qu'aucune règle regex statique (`:142`) ne contourne l'authentification Express (`protect`).
+  - `gen-selfsigned-cert.sh 192.168.100.131` génère un certificat RSA 4096 bits valide 3 ans dans **`/etc/ssl/dms/`** avec **`IP.2 = 192.168.100.131`** dans l'extension **Subject Alternative Name (SAN)** (`:19-63`), exigé par Chrome/Edge.
+  - `deploy/ubuntu/dms.nginx.conf` configure **`client_max_body_size 100M;`**, les en-têtes WebSocket `/socket.io/`, les certificats sous `/etc/ssl/dms/` et le préfixe **`^~`** sur `location ^~ /courrier/` et `location ^~ /uploads/` (`:72,82`) afin qu'aucune règle regex statique (`:142`) ne contourne l'authentification Express (`protect`).
 
 ### Commandes (dans la VM)
 ```bash
-# 1) Générer le certificat auto-signé SAN pour 192.168.100.131
+# 1) Générer le certificat auto-signé SAN pour 192.168.100.131 sous /etc/ssl/dms/
 sudo bash /var/www/dms/deploy/ubuntu/scripts/gen-selfsigned-cert.sh 192.168.100.131
 
 # Vérifier que IP Address:192.168.100.131 figure bien dans le SAN :
-openssl x509 -in /etc/ssl/certs/dms-selfsigned.crt -noout -text | grep -A3 "Subject Alternative Name"
+openssl x509 -in /etc/ssl/dms/dms-selfsigned.crt -noout -text | grep -A3 "Subject Alternative Name"
 
 # 2) Installer et adapter la configuration Nginx pour 192.168.100.131
 sudo cp /var/www/dms/deploy/ubuntu/dms.nginx.conf /etc/nginx/sites-available/dms.conf
@@ -544,8 +569,8 @@ sudo ufw status verbose
 ### Import obligatoire du certificat sur chaque poste client (et navigateur local)
 > `NODE_ENV=production` active `cookie.secure = true` (`backend/controllers/auth/utils.js:17-19`). Sans confiance TLS sur le certificat, le navigateur bloquera l'accès ou refusera les cookies/WebSockets (`wss://192.168.100.131`).
 
-- **Récupérer le certificat public depuis la VM** : `/etc/ssl/certs/dms-selfsigned.crt` (ne **jamais** copier `.key` !).
-  - Exemple depuis un poste admin : `scp dms@192.168.100.131:/etc/ssl/certs/dms-selfsigned.crt ./dms-selfsigned.crt`
+- **Récupérer le certificat public depuis la VM** : `/etc/ssl/dms/dms-selfsigned.crt` (ne **jamais** copier `.key` !).
+  - Exemple depuis un poste admin : `scp dms@192.168.100.131:/etc/ssl/dms/dms-selfsigned.crt ./dms-selfsigned.crt`
 - **Poste client Windows (PowerShell Administrateur)** :
   ```powershell
   certutil -addstore -f "Root" .\dms-selfsigned.crt
@@ -561,12 +586,13 @@ sudo ufw status verbose
 ### Vérification
 ```bash
 sudo nginx -t
-sudo nginx -T | grep -nE 'server_name|location \^~ /(courrier|uploads)'
+sudo nginx -T | grep -nE 'server_name|client_max_body_size|ssl_certificate|location \^~ /(courrier|uploads)'
 ss -ltnp | grep -E ':(80|443)\b'
 curl -skI https://192.168.100.131/api/health
 curl -sk -o /dev/null -w "%{http_code}\n" https://192.168.100.131/uploads/attachments/test.jpg
+curl -sk -i "https://192.168.100.131/socket.io/?EIO=4&transport=polling" | head -n 5
 ```
-Attendu : `/api/health` retourne `200` ; `/uploads/attachments/test.jpg` sans jeton retourne `401` ou `403` (jamais `404` Nginx).
+Attendu : `/api/health` retourne `200` ; `/uploads/attachments/test.jpg` sans jeton retourne `401` ou `403` (jamais `404` Nginx) ; `/socket.io/` répond sans `502`/`404` Nginx.
 
 ---
 
@@ -693,7 +719,7 @@ sudo -u dms -H bash /var/www/dms/deploy/ubuntu/rollback.sh
 | **HTTP `502 Bad Gateway` sur `https://192.168.100.131`** | `dms-backend` arrêté (crash `JWT_SECRET` absent, MongoDB arrêté, OOM) ou désaccord de port (`5000`). | `sudo -u dms -H pm2 status && tail -n 50 /var/www/dms/logs/err.log` ; `ss -ltnp \| grep ':5000'` ; `sudo systemctl status mongod`. |
 | **CORS bloqué (`Origine non autorisée par CORS`)** | Requête depuis une origine non listée dans `ALLOWED_ORIGINS` (`server.ts:139-159`). | Vérifier `grep ALLOWED_ORIGINS /var/www/dms/.env` (`https://192.168.100.131`) puis `sudo -u dms -H pm2 reload dms-backend --update-env`. |
 | **HTTP `429` au login après `smoke-test.mjs`** | `loginLimiter` (`server.ts:255-268`, max 5 échecs / 15 min) activé par `SEC-08`. | Attendre 15 min ou recharger PM2 (`sudo -u dms -H pm2 reload dms-backend`). |
-| **Cookie de session rejeté / TLS avertissement** | Certificat `dms-selfsigned.crt` non importé dans les autorités racines du poste client (`cookie.secure=true`). | Réimporter `/etc/ssl/certs/dms-selfsigned.crt` sur le poste client (Étape 6) et vérifier la présence de `IP:192.168.100.131` dans le SAN. |
+| **Cookie de session rejeté / TLS avertissement** | Certificat `dms-selfsigned.crt` non importé dans les autorités racines du poste client (`cookie.secure=true`). | Réimporter `/etc/ssl/dms/dms-selfsigned.crt` sur le poste client (Étape 6) et vérifier la présence de `IP:192.168.100.131` dans le SAN. |
 | **OOM / PM2 redémarre (`↺` augmente)** | GNOME Desktop + `.gguf` (~5 Go) + build Vite dépassent la RAM VM. | `free -h && sudo dmesg -T \| grep -iE 'oom|killed process'`. Basculer la VM en `sudo systemctl set-default multi-user.target` ou augmenter la RAM VM à 24 Go. |
 | **Écran noir console `virt-manager`** | Veille `gdm3` / pilote QXL/Virtio sous Wayland. | Tester en SSH (`ssh dms@192.168.100.131`), vérifier Étape 0.3 (cibles `sleep`/`suspend` masquées), basculer TTY (`Ctrl+Alt+F3`) ou passer en `multi-user.target`. |
 | **Scanner USB non vu sous `dms`** | Passthrough absent, droits `/dev/bus/usb`, ou conflit *Simple Scan* / `ipp-usb`. | `lsusb`, `sudo -u dms -H scanimage -L`, fermer *Simple Scan*, vérifier `id dms` (`scanner,lp`) et `SCANNER_ENABLED=true` dans `.env`. |
@@ -719,7 +745,7 @@ sudo -u dms -H bash /var/www/dms/deploy/ubuntu/rollback.sh
    - `deploy.sh`, `rollback.sh`, `backup-all.sh`, `restore-all.sh`, `check-env.mjs`, `create-superadmin.js`, `backend/package.json` alignés et prêts pour validation sur la VM cible.
 5. **Points résiduels à garder à l'esprit (hors périmètre bloquant VM)** :
    - Garder `DOCUMENT_PATH=/var/www/dms/backend/courrier` et `UPLOAD_DIR=/var/www/dms/backend/uploads` sur leurs dossiers natifs (l'écriture contrôleur/Multer pointe sur `backend/courrier` et `backend/uploads`).
-   - `backend/server.js` / `Dockerfile.backend` sont des artefacts secondaires non utilisés par le déploiement VM (`ecosystem.config.cjs` lance `server.ts` via `tsx`).
+   - `backend/server.js` est un artefact secondaire non utilisé par le déploiement VM (`ecosystem.config.cjs` lance `server.ts` via `tsx`).
 
 ---
 

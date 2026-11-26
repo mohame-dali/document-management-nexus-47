@@ -21,8 +21,8 @@ Application full-stack de gestion électronique de documents, courriers administ
 # 1. Installer les dépendances depuis la racine uniquement
 npm ci
 
-# 2. Configurer l'unique fichier .env à la racine (voir .env.production.example)
-cp .env.production.example .env
+# 2. Configurer l'unique fichier .env à la racine (voir .env.example et deploy/DEPLOY_KVM_UBUNTU.md)
+cp .env.example .env
 
 # 3. Télécharger et vérifier les modèles GGUF locaux (~4,7 Go)
 npm run download-models
@@ -52,5 +52,6 @@ pm2 start ecosystem.config.cjs
 ## Documentation du dépôt
 
 - [`docs/ARCHITECTURE_DMS.md`](docs/ARCHITECTURE_DMS.md) — Architecture réelle vérifiée dans le code source, flux réseau, chemins de stockage et points de vigilance sécurité.
-- [`docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md`](docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md) — Guide complet de préparation et de déploiement (VM QEMU/KVM Ubuntu Desktop, Ubuntu Server, Windows Server, recette et dépannage).
+- [`deploy/DEPLOY_KVM_UBUNTU.md`](deploy/DEPLOY_KVM_UBUNTU.md) — Guide synthétique de déploiement production sur Ubuntu 24.04 Server VM (KVM/QEMU, `192.168.100.131`).
+- [`docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md`](docs/GUIDE_INSTALLATION_UBUNTU_WINDOWS.md) — Guide complet de préparation et de déploiement (VM QEMU/KVM Ubuntu Desktop & Server, Windows Server, recette et dépannage).
 - [`MODELS.md`](MODELS.md) — Guide des modèles IA GGUF (`node-llama-cpp`), variables `.env`, téléchargement et réindexation vectorielle RAG.
