@@ -415,7 +415,7 @@ export const FloatingAIChat: React.FC = () => {
             width: `${ICON_SIZE}px`,
             height: `${ICON_SIZE}px`,
           }}
-          className={`fixed left-5 z-50 ${
+          className={`fixed left-5 z-40 ${
             hasStickyFooter ? 'bottom-20' : 'bottom-5'
           } rounded-full bg-[#2c5282] hover:bg-[#234269]
                      dark:bg-[#2c5282] dark:hover:bg-[#1e3a5f]

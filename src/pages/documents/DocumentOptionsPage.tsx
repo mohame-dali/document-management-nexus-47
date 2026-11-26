@@ -118,8 +118,8 @@ const DocumentOptionsPage: React.FC = () => {
   // Permission verification
   if (currentUser?.role !== 'AdminTuningDesk') {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir={dir}>
-        <div className="max-w-2xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
+      <div className="py-6" dir={dir}>
+        <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-amber-50 border border-[#FFD758] flex items-center justify-center mx-auto text-[#78350f]">
             <ShieldAlert className="h-7 w-7" />
           </div>
@@ -212,18 +212,18 @@ const DocumentOptionsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8 flex flex-col items-center justify-center text-center space-y-4" dir={dir}>
-        <Loader2 className="h-10 w-10 text-[#2c5282] animate-spin" />
-        <h2 className="text-xl font-bold text-[#1a202c]">جاري تحميل خيارات الوثائق...</h2>
-        <p className="text-base text-[#4a5568]">يتم استرجاع فئات وخيارات حقول الوثائق من قاعدة البيانات</p>
+      <div className="py-16 flex flex-col items-center justify-center text-center space-y-4" dir={dir}>
+        <Loader2 className="h-10 w-10 text-[#2c5282] dark:text-blue-400 animate-spin" />
+        <h2 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">جاري تحميل خيارات الوثائق...</h2>
+        <p className="text-base text-[#4a5568] dark:text-slate-400">يتم استرجاع فئات وخيارات حقول الوثائق من قاعدة البيانات</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-6 sm:p-8" dir={dir}>
-        <div className="max-w-xl mx-auto bg-white border border-[#e2e8f0] rounded p-8 text-center space-y-4">
+      <div className="py-8" dir={dir}>
+        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-600">
             <AlertCircle className="h-7 w-7" />
           </div>
@@ -243,18 +243,18 @@ const DocumentOptionsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6" dir={dir}>
+    <div className="space-y-6" dir={dir}>
       {/* 1. Page Institutional Header (En-tête) */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
             <Sliders className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-blue-400 leading-normal flex items-center gap-2.5">
               إدارة خيارات وحقول الوثائق
             </h1>
-            <p className="text-base text-[#4a5568] leading-relaxed mt-1">
+            <p className="text-base text-[#4a5568] dark:text-slate-400 leading-relaxed mt-1">
               تخصيص وضبط القوائم المنسدلة للأنشطة، المصادر، أنواع الوثائق والجهات المسؤولة للوثائق الإدارية
             </p>
           </div>
@@ -278,33 +278,39 @@ const DocumentOptionsPage: React.FC = () => {
       <div className="space-y-4">
         {/* Global Metric Indicators */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-5 flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#5f6b7d]">إجمالي الخيارات المسجلة</span>
-              <div className="text-2xl font-bold text-[#1a202c]"><bdi dir="ltr">{totalCount}</bdi></div>
+              <span className="text-sm font-medium text-[#5f6b7d] dark:text-slate-400">إجمالي الخيارات المسجلة</span>
+              <div className="text-2xl font-bold text-[#1a202c] dark:text-slate-100 tabular-nums">
+                <bdi dir="ltr">{totalCount}</bdi>
+              </div>
             </div>
-            <span className="w-10 h-10 rounded bg-[#f7fafc] border border-[#e2e8f0] flex items-center justify-center text-[#2c5282]">
+            <span className="w-10 h-10 rounded bg-[#f7fafc] dark:bg-slate-800 border border-[#e2e8f0] dark:border-slate-700 flex items-center justify-center text-[#2c5282] dark:text-blue-400 flex-shrink-0">
               <Layers className="h-5 w-5" />
             </span>
           </div>
 
-          <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-5 flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#5f6b7d]">الخيارات المفعلة (نشطة)</span>
-              <div className="text-2xl font-bold text-emerald-700"><bdi dir="ltr">{activeCount}</bdi></div>
+              <span className="text-sm font-medium text-[#5f6b7d] dark:text-slate-400">الخيارات المفعلة (نشطة)</span>
+              <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
+                <bdi dir="ltr">{activeCount}</bdi>
+              </div>
             </div>
-            <span className="w-10 h-10 rounded bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+            <span className="w-10 h-10 rounded bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
               <CheckCircle2 className="h-5 w-5" />
             </span>
           </div>
 
-          <div className="bg-white border border-[#e2e8f0] rounded p-5 flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded p-5 flex items-center justify-between gap-4">
             <div className="space-y-1">
-              <span className="text-sm font-medium text-[#5f6b7d]">الخيارات المعطلة</span>
-              <div className="text-2xl font-bold text-[#78350f]"><bdi dir="ltr">{inactiveCount}</bdi></div>
+              <span className="text-sm font-medium text-[#5f6b7d] dark:text-slate-400">الخيارات المعطلة</span>
+              <div className="text-2xl font-bold text-amber-700 dark:text-amber-400 tabular-nums">
+                <bdi dir="ltr">{inactiveCount}</bdi>
+              </div>
             </div>
-            <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758]">
-              <bdi dir="ltr">{inactiveCount}</bdi>&nbsp;خيار
+            <span className="w-10 h-10 rounded bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
+              <XCircle className="h-5 w-5" />
             </span>
           </div>
         </div>

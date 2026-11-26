@@ -1,5 +1,5 @@
-
-import { Outlet } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider } from '@/contexts/SidebarContext';
 import Sidebar from '../navigation/Sidebar';
@@ -14,6 +14,15 @@ import { useDirection } from '@/i18n/useDirection';
 const DashboardLayout = () => {
   const { currentUser } = useAuth();
   const { dir } = useDirection();
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   const getActiveDepartmentName = (): string => {
     if (!currentUser?.activeDepartment) return 'None';
@@ -60,7 +69,7 @@ const DashboardLayout = () => {
             )}
             
             {/* Main Content - Scrollable */}
-            <main className="flex-1 overflow-auto custom-scrollbar bg-slate-50/70 dark:bg-slate-950">
+            <main ref={mainRef} className="flex-1 overflow-auto custom-scrollbar bg-slate-50/70 dark:bg-slate-950">
               <div className="container-responsive padding-responsive min-h-full">
                 <Outlet />
               </div>

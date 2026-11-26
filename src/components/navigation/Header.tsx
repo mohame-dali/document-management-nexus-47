@@ -83,7 +83,7 @@ const Header = () => {
   const photoSource = myProfile?.photo || currentUser?.photo;
 
   return (
-    <header className="sticky top-0 z-30 flex justify-between items-center h-16 px-3 sm:px-4 md:px-6 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-sm select-none gap-2 min-w-0 w-full transition-colors duration-200 print:hidden">
+    <header className="sticky top-0 z-30 shrink-0 flex justify-between items-center h-16 px-3 sm:px-4 md:px-6 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-sm select-none gap-2 min-w-0 w-full transition-colors duration-200 print:hidden">
       {/* Branding à DROITE (RTL: premier élément) */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial sm:max-w-[240px] lg:max-w-[300px] xl:max-w-sm">
         <Button 

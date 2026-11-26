@@ -64,10 +64,10 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
   const Chevron = isRTL ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-full bg-slate-50/70 dark:bg-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* En-tête du hub */}
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800 shadow-xs print:hidden">
-        <div className={`px-5 sm:px-6 lg:px-8 ${compact ? 'pt-2.5' : 'pt-5'} pb-0 max-w-[1600px] mx-auto`}>
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/80 dark:border-slate-800 shadow-xs scroll-mt-20 print:hidden">
+        <div className={`px-5 sm:px-6 lg:px-8 ${compact ? 'pt-3.5' : 'pt-6'} pb-0 max-w-[1600px] mx-auto`}>
           {/* Breadcrumb */}
           {breadcrumb && breadcrumb.length > 0 && (
             <nav className={`flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 ${compact ? 'mb-1.5' : 'mb-3'}`} aria-label="Breadcrumb">
