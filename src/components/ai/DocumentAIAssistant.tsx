@@ -155,7 +155,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
   const renderUrgencyBadge = (urgency?: string) => {
     if (urgency === 'very_urgent') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800/60">
           <ShieldAlert className="h-3.5 w-3.5" />
           عاجل جداً
         </span>
@@ -163,14 +163,14 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
     }
     if (urgency === 'urgent') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
           <Clock className="h-3.5 w-3.5" />
           عاجل
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
         <FileCheck className="h-3.5 w-3.5" />
         عادي
       </span>
@@ -178,9 +178,9 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
   };
 
   return (
-    <div className="bg-white border border-[#cbd5e1] rounded-lg shadow-sm overflow-hidden text-right font-sans">
+    <div className="bg-white dark:bg-slate-900 border border-[#cbd5e1] dark:border-slate-800 rounded-lg shadow-sm overflow-hidden text-right font-sans">
       {/* En-tête AdminLTE Sobre */}
-      <div className="bg-[#2c5282] text-white px-5 py-3.5 flex items-center justify-between">
+      <div className="bg-[#2c5282] dark:bg-slate-950 text-white px-5 py-3.5 flex items-center justify-between border-b border-transparent dark:border-slate-800">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center text-white">
             <Bot className="h-5 w-5" />
@@ -234,17 +234,17 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
         {activeTab === 'summary' && (
           <div className="space-y-4">
             {/* Barre de contrôle du résumé */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-md">
-              <div className="flex items-center gap-2 text-sm text-[#4a5568]">
-                <span className="font-semibold text-[#2d3748]">طول الملخص :</span>
-                <div className="inline-flex rounded-md shadow-sm border border-[#cbd5e1] overflow-hidden bg-white text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#f8fafc] dark:bg-slate-800/60 border border-[#e2e8f0] dark:border-slate-800 rounded-md">
+              <div className="flex items-center gap-2 text-sm text-[#4a5568] dark:text-slate-300">
+                <span className="font-semibold text-[#2d3748] dark:text-slate-100">طول الملخص :</span>
+                <div className="inline-flex rounded-md shadow-sm border border-[#cbd5e1] dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 text-xs">
                   <button
                     type="button"
                     onClick={() => setSelectedLength(100)}
                     className={`px-2.5 py-1 font-medium transition ${
                       selectedLength === 100
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] hover:bg-gray-100'
+                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     موجز (~100 كلمة)
@@ -252,10 +252,10 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                   <button
                     type="button"
                     onClick={() => setSelectedLength(200)}
-                    className={`px-2.5 py-1 font-medium transition border-r border-[#cbd5e1] ${
+                    className={`px-2.5 py-1 font-medium transition border-r border-[#cbd5e1] dark:border-slate-700 ${
                       selectedLength === 200
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] hover:bg-gray-100'
+                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     عادي (~200 كلمة)
@@ -263,10 +263,10 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                   <button
                     type="button"
                     onClick={() => setSelectedLength(350)}
-                    className={`px-2.5 py-1 font-medium transition border-r border-[#cbd5e1] ${
+                    className={`px-2.5 py-1 font-medium transition border-r border-[#cbd5e1] dark:border-slate-700 ${
                       selectedLength === 350
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] hover:bg-gray-100'
+                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     مفصل (~350 كلمة)
@@ -298,15 +298,15 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* Affichage d'erreur éventuelle */}
             {summaryError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-xs flex items-center justify-between">
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/70 rounded text-red-700 dark:text-red-300 text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                  <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
                   <span>{summaryError}</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleGenerateSummary}
-                  className="text-red-800 underline font-semibold hover:text-red-900"
+                  className="text-red-800 dark:text-red-200 underline font-semibold hover:text-red-900 dark:hover:text-white"
                 >
                   إعادة المحاولة
                 </button>
@@ -315,14 +315,14 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* État de chargement élégant */}
             {isSummarizing && (
-              <div className="p-6 bg-slate-50 border border-slate-200 rounded-md text-center space-y-3">
-                <div className="inline-flex p-3 bg-blue-100/60 rounded-full text-[#2c5282]">
+              <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-md text-center space-y-3">
+                <div className="inline-flex p-3 bg-blue-100/60 dark:bg-blue-950/60 rounded-full text-[#2c5282] dark:text-blue-300">
                   <RotateCw className="h-6 w-6 animate-spin" />
                 </div>
-                <p className="text-sm font-bold text-[#2c5282]">
+                <p className="text-sm font-bold text-[#2c5282] dark:text-blue-300">
                   جاري تحليل النص واستخراج جوهر المراسلة الرسمية...
                 </p>
-                <p className="text-xs text-[#5f6b7d]">
+                <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
                   يتم المعالجة عبر النموذج الإداري المحلي (Qwen) في سرية وأمان تام
                 </p>
               </div>
@@ -330,15 +330,15 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* Résultat du résumé */}
             {!isSummarizing && summaryData && (
-              <div className="border border-[#cbd5e1] rounded-md bg-white p-4 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-[#e2e8f0]">
+              <div className="border border-[#cbd5e1] dark:border-slate-800 rounded-md bg-white dark:bg-slate-900 p-4 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#e2e8f0] dark:border-slate-800">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-[#1a202c]">
+                    <span className="font-bold text-sm text-[#1a202c] dark:text-slate-100">
                       ملخص المراسلة الرسمية :
                     </span>
                     {renderUrgencyBadge(summaryData.urgency)}
                     {summaryData.language && (
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-medium">
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-medium">
                         اللغة: {summaryData.language === 'ar' ? 'العربية' : summaryData.language === 'fr' ? 'الفرنسية' : 'مزدوجة'}
                       </span>
                     )}
@@ -349,12 +349,12 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => copyToClipboard(summaryData.summary, 'summary')}
-                    className="h-8 px-2.5 text-xs text-[#2c5282] border-[#cbd5e1] hover:bg-blue-50"
+                    className="h-8 px-2.5 text-xs text-[#2c5282] dark:text-blue-300 border-[#cbd5e1] dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-800"
                   >
                     {isSummaryCopied ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-emerald-600" />
-                        <span className="text-emerald-700 font-semibold">تم النسخ</span>
+                        <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-emerald-700 dark:text-emerald-400 font-semibold">تم النسخ</span>
                       </>
                     ) : (
                       <>
@@ -365,21 +365,21 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                   </Button>
                 </div>
 
-                <div className="p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-[#2d3748] leading-relaxed">
+                <div className="p-3 bg-[#f8fafc] dark:bg-slate-950/60 border border-[#e2e8f0] dark:border-slate-800 rounded text-sm text-[#2d3748] dark:text-slate-200 leading-relaxed">
                   {summaryData.summary}
                 </div>
 
                 {/* Points Clés */}
                 {Array.isArray(summaryData.keyPoints) && summaryData.keyPoints.length > 0 && (
                   <div className="pt-2">
-                    <h4 className="text-xs font-bold text-[#4a5568] mb-2 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282]"></span>
+                    <h4 className="text-xs font-bold text-[#4a5568] dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2c5282] dark:bg-blue-400"></span>
                       أهم النقاط والقرارات الواردة بالمراسلة :
                     </h4>
                     <ul className="space-y-1.5 pr-2">
                       {summaryData.keyPoints.map((point, index) => (
-                        <li key={index} className="text-xs text-[#4a5568] flex items-start gap-2">
-                          <span className="font-bold text-[#2c5282] shrink-0 mt-0.5">•</span>
+                        <li key={index} className="text-xs text-[#4a5568] dark:text-slate-300 flex items-start gap-2">
+                          <span className="font-bold text-[#2c5282] dark:text-blue-400 shrink-0 mt-0.5">•</span>
                           <span className="leading-normal">{point}</span>
                         </li>
                       ))}
@@ -391,8 +391,8 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* Message d'incitation initial */}
             {!isSummarizing && !summaryData && !summaryError && (
-              <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded text-center text-xs text-[#5f6b7d]">
-                اضغط على زر <strong className="text-[#2c5282]">"توليد ملخص المراسلة"</strong> للحصول على تحليل ذكي موجز لمحتوى النص المستخرج.
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded text-center text-xs text-[#5f6b7d] dark:text-slate-400">
+                اضغط على زر <strong className="text-[#2c5282] dark:text-blue-300">"توليد ملخص المراسلة"</strong> للحصول على تحليل ذكي موجز لمحتوى النص المستخرج.
               </div>
             )}
           </div>
@@ -404,17 +404,17 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
         {activeTab === 'translate' && (
           <div className="space-y-4">
             {/* Contrôles de traduction */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-md">
-              <div className="flex items-center gap-2 text-sm text-[#4a5568]">
-                <span className="font-semibold text-[#2d3748]">اتجاه الترجمة :</span>
-                <div className="inline-flex rounded-md shadow-sm border border-[#cbd5e1] overflow-hidden bg-white text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#f8fafc] dark:bg-slate-800/60 border border-[#e2e8f0] dark:border-slate-800 rounded-md">
+              <div className="flex items-center gap-2 text-sm text-[#4a5568] dark:text-slate-300">
+                <span className="font-semibold text-[#2d3748] dark:text-slate-100">اتجاه الترجمة :</span>
+                <div className="inline-flex rounded-md shadow-sm border border-[#cbd5e1] dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 text-xs">
                   <button
                     type="button"
                     onClick={() => setTargetLang('fr')}
                     className={`px-3 py-1 font-medium transition ${
                       targetLang === 'fr'
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] hover:bg-gray-100'
+                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     إلى الفرنسية (Vers le français)
@@ -422,10 +422,10 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                   <button
                     type="button"
                     onClick={() => setTargetLang('ar')}
-                    className={`px-3 py-1 font-medium transition border-r border-[#cbd5e1] ${
+                    className={`px-3 py-1 font-medium transition border-r border-[#cbd5e1] dark:border-slate-700 ${
                       targetLang === 'ar'
                         ? 'bg-[#2c5282] text-white'
-                        : 'text-[#4a5568] hover:bg-gray-100'
+                        : 'text-[#4a5568] dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     إلى العربية (Vers l'arabe)
@@ -457,15 +457,15 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* Affichage d'erreur */}
             {translationError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-xs flex items-center justify-between">
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/70 rounded text-red-700 dark:text-red-300 text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                  <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
                   <span>{translationError}</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleGenerateTranslation}
-                  className="text-red-800 underline font-semibold hover:text-red-900"
+                  className="text-red-800 dark:text-red-200 underline font-semibold hover:text-red-900 dark:hover:text-white"
                 >
                   إعادة المحاولة
                 </button>
@@ -474,14 +474,14 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* État de chargement */}
             {isTranslating && (
-              <div className="p-6 bg-slate-50 border border-slate-200 rounded-md text-center space-y-3">
-                <div className="inline-flex p-3 bg-blue-100/60 rounded-full text-[#2c5282]">
+              <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-md text-center space-y-3">
+                <div className="inline-flex p-3 bg-blue-100/60 dark:bg-blue-950/60 rounded-full text-[#2c5282] dark:text-blue-300">
                   <RotateCw className="h-6 w-6 animate-spin" />
                 </div>
-                <p className="text-sm font-bold text-[#2c5282]">
+                <p className="text-sm font-bold text-[#2c5282] dark:text-blue-300">
                   جاري ترجمة المراسلة الإدارية مع الحفاظ على الصياغة الرسمية...
                 </p>
-                <p className="text-xs text-[#5f6b7d]">
+                <p className="text-xs text-[#5f6b7d] dark:text-slate-400">
                   ترجمة مطابقة للمصطلحات الإدارية التونسية المعتمدة
                 </p>
               </div>
@@ -489,13 +489,13 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
 
             {/* Résultat Traduction */}
             {!isTranslating && translationData && (
-              <div className="border border-[#cbd5e1] rounded-md bg-white p-4 space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-[#e2e8f0]">
+              <div className="border border-[#cbd5e1] dark:border-slate-800 rounded-md bg-white dark:bg-slate-900 p-4 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#e2e8f0] dark:border-slate-800">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-[#1a202c]">
+                    <span className="font-bold text-sm text-[#1a202c] dark:text-slate-100">
                       النص المترجم ({translationData.targetLang === 'fr' ? 'باللغة الفرنسية' : 'باللغة العربية'}) :
                     </span>
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold">
                       {translationData.sourceLang === 'ar' ? 'عربي' : 'فرنسي'} ➔ {translationData.targetLang === 'ar' ? 'عربي' : 'فرنسي'}
                     </span>
                   </div>
@@ -505,12 +505,12 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => copyToClipboard(translationData.translatedText, 'translation')}
-                    className="h-8 px-2.5 text-xs text-[#2c5282] border-[#cbd5e1] hover:bg-blue-50"
+                    className="h-8 px-2.5 text-xs text-[#2c5282] dark:text-blue-300 border-[#cbd5e1] dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-800"
                   >
                     {isTranslationCopied ? (
                       <>
-                        <Check className="h-3.5 w-3.5 text-emerald-600" />
-                        <span className="text-emerald-700 font-semibold">تم النسخ</span>
+                        <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-emerald-700 dark:text-emerald-400 font-semibold">تم النسخ</span>
                       </>
                     ) : (
                       <>
@@ -522,7 +522,7 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
                 </div>
 
                 <div 
-                  className="p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-[#2d3748] leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap font-sans"
+                  className="p-4 bg-[#f8fafc] dark:bg-slate-950/60 border border-[#e2e8f0] dark:border-slate-800 rounded text-sm text-[#2d3748] dark:text-slate-200 leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap font-sans"
                   dir={translationData.targetLang === 'ar' ? 'rtl' : 'ltr'}
                 >
                   {translationData.translatedText}
@@ -531,8 +531,8 @@ export const DocumentAIAssistant: React.FC<DocumentAIAssistantProps> = ({
             )}
 
             {!isTranslating && !translationData && !translationError && (
-              <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded text-center text-xs text-[#5f6b7d]">
-                اختر اتجاه الترجمة واضغط على <strong className="text-[#2c5282]">"ترجمة نص الوثيقة"</strong> للحصول على ترجمة إدارية فورية.
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-300 dark:border-slate-700 rounded text-center text-xs text-[#5f6b7d] dark:text-slate-400">
+                اختر اتجاه الترجمة واضغط على <strong className="text-[#2c5282] dark:text-blue-300">"ترجمة نص الوثيقة"</strong> للحصول على ترجمة إدارية فورية.
               </div>
             )}
           </div>
