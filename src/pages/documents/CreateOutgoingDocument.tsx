@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertCircle, Loader2, FileUp, Send } from 'lucide-react';
+import { AlertCircle, Loader2, Send } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { getDepartments } from '@/services/departmentService';
@@ -97,10 +97,12 @@ const CreateOutgoingDocument = () => {
 
   if (loadingDepartments) {
     return (
-      <div className="flex justify-center items-center h-64 bg-[#f7fafc]">
+      <div className="flex justify-center items-center h-64 bg-[#f7fafc] dark:bg-slate-950">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-green-600 font-medium">{t('documents.createOutgoing.loadingData')}</p>
+          <Loader2 className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400 mx-auto mb-4" />
+          <p className="text-emerald-700 dark:text-emerald-300 font-medium text-base">
+            {t('documents.createOutgoing.loadingData')}
+          </p>
         </div>
       </div>
     );
@@ -108,7 +110,7 @@ const CreateOutgoingDocument = () => {
 
   if (departmentsError) {
     return (
-      <div className="p-6 min-h-screen bg-[#f7fafc]">
+      <div className="p-6 min-h-screen bg-[#f7fafc] dark:bg-slate-950">
         <Alert variant="destructive" className="max-w-md mx-auto">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{translations.errorLoading}</AlertDescription>
@@ -118,49 +120,33 @@ const CreateOutgoingDocument = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fafc]">
-      {/* Enhanced Header */}
-      <div className="bg-[#2c5282] shadow-sm">
-        <div className="p-6 max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
-            <div className="bg-white/20 p-3 rounded-full">
-              <Send className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <FormSectionHeader 
-                title={translations.title}
-                backUrl="/dashboard/outgoing-documents"
-                backText={translations.back}
-                className="text-white"
-              />
-              <p className="text-green-100 mt-2">{t('documents.createOutgoing.subtitle')}</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f7fafc] dark:bg-slate-950">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-8 space-y-4">
+        {/* Elevated Page Header Card */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs">
+          <FormSectionHeader
+            icon={
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                <Send className="h-5 w-5" />
+              </div>
+            }
+            title={translations.title}
+            subtitle={t('documents.createOutgoing.subtitle')}
+            backUrl="/dashboard/outgoing-documents"
+            backText={translations.back}
+          />
         </div>
-      </div>
 
-      {/* Form Container */}
-      <div className="p-6 max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-gray-200 dark:border-slate-800 overflow-x-clip">
-          <div className="bg-[#f8fafc] dark:bg-slate-800/60 p-6 border-b border-[#e2e8f0] dark:border-slate-800 rounded-t-xl">
-            <div className="flex items-center gap-3">
-              <FileUp className="h-6 w-6 text-green-600" />
-              <h2 className="text-xl font-bold text-gray-800">{t('documents.createOutgoing.cardTitle')}</h2>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            <OutgoingDocumentForm 
-              t={translations}
-              departments={distributableDepartments}
-              currentDepartmentId={currentUser?.activeDepartment?._id}
-              scanData={scanData}
-              scannerStatus={scannerStatus}
-              loadingScannerStatus={loadingScannerStatus}
-              scanTemporaryDocumentMutation={scanDocumentMutation}
-            />
-          </div>
-        </div>
+        {/* Form Container */}
+        <OutgoingDocumentForm
+          t={translations}
+          departments={distributableDepartments}
+          currentDepartmentId={currentUser?.activeDepartment?._id}
+          scanData={scanData}
+          scannerStatus={scannerStatus}
+          loadingScannerStatus={loadingScannerStatus}
+          scanTemporaryDocumentMutation={scanDocumentMutation}
+        />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import useOutgoingDocumentForm, {
   OutgoingFormTranslations,
   OutgoingScanResultData,
@@ -89,18 +89,11 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
 
   return (
     <div className="w-full max-w-5xl mx-auto">
-      <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-          <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-3">
-            <div className="w-2 h-8 bg-primary rounded-full"></div>
-            {t.title}
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent className="p-8">
+      <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-x-clip">
+        <CardContent className="p-5 sm:p-6">
           {restoredDraftAt !== null && (
-            <Alert className="mb-6 border-blue-200 bg-blue-50/70 text-blue-950">
-              <History className="h-4 w-4 text-[#2c5282]" />
+            <Alert className="mb-6 border-blue-200 dark:border-blue-800/70 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100">
+              <History className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
               <AlertDescription className="flex flex-wrap items-center justify-between gap-3 text-sm">
                 <span className="tabular-nums">
                   {translate('documents.forms.draftRestored', {
@@ -112,7 +105,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={clearDraft}
-                  className="h-8 border-blue-300 bg-white text-[#2c5282] hover:bg-blue-100"
+                  className="h-8 border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-[#2c5282] dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60"
                 >
                   <Trash2 className="h-3.5 w-3.5 me-1.5" />
                   {translate('documents.forms.clearDraft')}
@@ -121,17 +114,17 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
             </Alert>
           )}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               {/* Basic Information Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-1 h-5 bg-emerald-600 dark:bg-emerald-500 rounded"></div>
+                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
                     {translate('documents.forms.sections.basicInfo')}
                   </h3>
                 </div>
                 
-                <div className="bg-muted/30 rounded p-6 border border-border/50">
+                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
                   <BasicInfoFields
                     form={form}
                     t={t}
@@ -141,18 +134,18 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                 </div>
               </div>
 
-              <Separator className="my-8" />
+              <Separator className="my-6 bg-[#e2e8f0] dark:bg-slate-800" />
 
               {/* Document Attachment Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-6 bg-primary/70 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-foreground">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className="w-1 h-5 bg-emerald-600 dark:bg-emerald-500 rounded"></div>
+                  <h3 className="text-base font-bold text-[#1a202c] dark:text-slate-100">
                     {translate('documents.forms.sections.attachments')}
                   </h3>
                 </div>
                 
-                <div className="bg-muted/20 rounded p-6 border border-border/50">
+                <div className="bg-[#f8fafc] dark:bg-slate-800/40 rounded-lg p-5 border border-[#e2e8f0] dark:border-slate-800">
                   <DocumentAttachmentSection
                     t={t as Record<string, string>}
                     activeTab={activeTab}

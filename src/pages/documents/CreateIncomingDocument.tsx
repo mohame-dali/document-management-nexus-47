@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertCircle, Loader2, FileDown, Inbox } from 'lucide-react';
+import { AlertCircle, Loader2, Inbox } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { getDepartments } from '@/services/departmentService';
@@ -115,10 +115,12 @@ const CreateIncomingDocument = () => {
 
   if (loadingDepartments) {
     return (
-      <div className="flex justify-center items-center h-64 bg-[#f7fafc]">
+      <div className="flex justify-center items-center h-64 bg-[#f7fafc] dark:bg-slate-950">
         <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-[#2c5282] mx-auto mb-4" />
-          <p className="text-[#2c5282] font-medium text-base">{t('documents.createIncoming.loadingData')}</p>
+          <Loader2 className="h-10 w-10 animate-spin text-[#2c5282] dark:text-blue-400 mx-auto mb-4" />
+          <p className="text-[#2c5282] dark:text-blue-300 font-medium text-base">
+            {t('documents.createIncoming.loadingData')}
+          </p>
         </div>
       </div>
     );
@@ -126,7 +128,7 @@ const CreateIncomingDocument = () => {
 
   if (departmentsError) {
     return (
-      <div className="p-6 min-h-screen bg-[#f7fafc]">
+      <div className="p-6 min-h-screen bg-[#f7fafc] dark:bg-slate-950">
         <Alert variant="destructive" className="max-w-md mx-auto">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{translations.errorLoading}</AlertDescription>
@@ -136,49 +138,33 @@ const CreateIncomingDocument = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fafc]">
-      {/* Header card: carte blanche avec bordure #e2e8f0 */}
-      <div className="pt-6 px-6 max-w-6xl mx-auto">
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="bg-[#2c5282] p-3 rounded text-white flex-shrink-0">
-              <Inbox className="h-7 w-7 text-white" />
-            </div>
-            <div className="flex-1">
-              <FormSectionHeader 
-                title={translations.title}
-                backUrl="/dashboard/incoming-documents"
-                backText={translations.back}
-                className="text-[#1a202c] mb-1"
-              />
-              <p className="text-base text-[#4a5568]">{t('documents.createIncoming.subtitle')}</p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f7fafc] dark:bg-slate-950">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-8 space-y-4">
+        {/* Elevated Page Header Card */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 sm:p-5 shadow-xs">
+          <FormSectionHeader
+            icon={
+              <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">
+                <Inbox className="h-5 w-5" />
+              </div>
+            }
+            title={translations.title}
+            subtitle={t('documents.createIncoming.subtitle')}
+            backUrl="/dashboard/incoming-documents"
+            backText={translations.back}
+          />
         </div>
-      </div>
 
-      {/* Form Container */}
-      <div className="p-6 max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-slate-900 rounded border border-[#e2e8f0] dark:border-slate-800 shadow-sm overflow-x-clip">
-          <div className="bg-[#f8fafc] dark:bg-slate-800/60 p-5 border-b border-[#e2e8f0] dark:border-slate-800 rounded-t">
-            <div className="flex items-center gap-3">
-              <FileDown className="h-5 w-5 text-[#2c5282]" />
-              <h2 className="text-lg font-bold text-[#1a202c]">{t('documents.createIncoming.cardTitle')}</h2>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            <IncomingDocumentForm 
-              t={translations}
-              departments={distributableDepartments}
-              currentDepartmentId={currentUser?.activeDepartment?._id}
-              scanData={scanData}
-              scannerStatus={scannerStatus}
-              loadingScannerStatus={loadingScannerStatus}
-              scanTemporaryDocumentMutation={scanDocumentMutation}
-            />
-          </div>
-        </div>
+        {/* Form Container */}
+        <IncomingDocumentForm
+          t={translations}
+          departments={distributableDepartments}
+          currentDepartmentId={currentUser?.activeDepartment?._id}
+          scanData={scanData}
+          scannerStatus={scannerStatus}
+          loadingScannerStatus={loadingScannerStatus}
+          scanTemporaryDocumentMutation={scanDocumentMutation}
+        />
       </div>
     </div>
   );

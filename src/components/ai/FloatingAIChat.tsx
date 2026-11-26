@@ -41,8 +41,9 @@ const COLLAPSED_HEIGHT = 600;
 const EXPANDED_HEIGHT = 760;
 const MARGIN = 16;
 const GAP = 8;
-const DEFAULT_BOTTOM_Y = 104;
-const DEFAULT_END_X = 24;
+const BASE_LEFT = 20;
+const BASE_BOTTOM = 20;
+const STICKY_BOTTOM = 80;
 
 function isDocumentDetailRoute(pathname: string): boolean {
   if (/\/(create|edit)\/?$/.test(pathname)) return false;
@@ -168,30 +169,8 @@ export const FloatingAIChat: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const [position, setPosition] = useState<{ x: number; y: number }>(() => {
-    try {
-      const saved = localStorage.getItem('ai_chat_position');
-      if (saved) {
-        const p = JSON.parse(saved);
-        return {
-          x: Math.max(MARGIN, Math.min(window.innerWidth - ICON_SIZE - MARGIN, p.x)),
-          y: Math.max(MARGIN, Math.min(window.innerHeight - ICON_SIZE - MARGIN, p.y)),
-        };
-      }
-    } catch {
-      // Ignore invalid stored coordinates
-    }
-    return { x: DEFAULT_END_X, y: DEFAULT_BOTTOM_Y };
-  });
-  const [barClearance, setBarClearance] = useState<number>(0);
-
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const hasDraggedRef = useRef(false);
-
-  const [isPanelDragging, setIsPanelDragging] = useState(false);
-  const [panelDragOffset, setPanelDragOffset] = useState({ x: 0, y: 0 });
-  const panelHasDraggedRef = useRef(false);
+  const [hasStickyFooter, setHasStickyFooter] = useState(false);
+  const [stickyClearance, setStickyClearance] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -205,34 +184,41 @@ export const FloatingAIChat: React.FC = () => {
     }
   }, [messages]);
 
-  // Persist floating trigger position
+  // Clear legacy persisted drag position so the launcher stays anchored in bottom-left
   useEffect(() => {
     try {
-      localStorage.setItem('ai_chat_position', JSON.stringify(position));
+      localStorage.removeItem('ai_chat_position');
     } catch {
-      // Ignore storage write failure
+      // Ignore storage cleanup error
     }
-  }, [position]);
+  }, []);
 
-  // Dynamic clearance for sticky/fixed bottom bars (e.g. AttendancePage)
+  // Detect sticky/fixed bottom footer bars (e.g. Create/Edit form footers, AttendancePage validation bar)
   useEffect(() => {
     const measureBottomBars = () => {
-      const selectors =
-        '[data-sticky-validation-bar], .sticky.bottom-4, .sticky.bottom-0, .fixed.bottom-0, .fixed.bottom-4';
+      const selectors = '[data-sticky-validation-bar], .sticky.bottom-4, .sticky.bottom-0, .fixed.bottom-0';
       const nodes = document.querySelectorAll(selectors);
+      let stickyDetected = false;
       let requiredBottom = 0;
 
       nodes.forEach((node) => {
-        if ((node as HTMLElement).closest('[data-floating-ai-chat]')) return;
-        const rect = node.getBoundingClientRect();
+        const el = node as HTMLElement;
+        if (el.closest('[data-floating-ai-chat]')) return;
+        const rect = el.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return;
         const distanceFromBottom = window.innerHeight - rect.top;
-        if (distanceFromBottom > 0 && distanceFromBottom < window.innerHeight * 0.45) {
+        if (
+          rect.bottom >= window.innerHeight - 48 &&
+          distanceFromBottom > 0 &&
+          distanceFromBottom <= 140
+        ) {
+          stickyDetected = true;
           requiredBottom = Math.max(requiredBottom, Math.ceil(distanceFromBottom + 12));
         }
       });
 
-      setBarClearance(requiredBottom);
+      setHasStickyFooter(stickyDetected);
+      setStickyClearance(requiredBottom);
     };
 
     measureBottomBars();
@@ -252,12 +238,11 @@ export const FloatingAIChat: React.FC = () => {
     };
   }, [location.pathname, isOpen]);
 
-  const effectiveBottom = Math.min(
-    viewportSize.height - ICON_SIZE - MARGIN,
-    Math.max(position.y, barClearance)
-  );
+  const effectiveBottom = hasStickyFooter
+    ? Math.max(STICKY_BOTTOM, stickyClearance)
+    : BASE_BOTTOM;
 
-  // Intelligent viewport-clamped positioning using active expanded/collapsed size
+  // Viewport-clamped panel anchored above the bottom-left launcher
   const getPanelPosition = () => {
     const baseWidth = isExpanded
       ? EXPANDED_WIDTH
@@ -267,152 +252,29 @@ export const FloatingAIChat: React.FC = () => {
     const targetWidth = Math.min(baseWidth, viewportSize.width - 2 * MARGIN);
     const targetHeight = isExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT;
 
-    const iconTop = viewportSize.height - effectiveBottom - ICON_SIZE;
-    const iconInlineStart = viewportSize.width - position.x - ICON_SIZE;
-
-    const openDownward = iconTop < viewportSize.height / 2;
-    const alignInlineEnd = position.x < viewportSize.width / 2;
-
-    let top: number | undefined;
-    let bottom: number | undefined;
-    let insetInlineStart: number | undefined;
-    let insetInlineEnd: number | undefined;
-
-    if (openDownward) {
-      top = Math.max(MARGIN, iconTop + ICON_SIZE + GAP);
-      bottom = undefined;
-    } else {
-      bottom = Math.max(MARGIN, effectiveBottom + ICON_SIZE + GAP);
-      top = undefined;
-    }
-
-    if (alignInlineEnd) {
-      insetInlineEnd = Math.max(
-        MARGIN,
-        Math.min(position.x, viewportSize.width - targetWidth - MARGIN)
-      );
-      insetInlineStart = undefined;
-    } else {
-      insetInlineStart = Math.max(
-        MARGIN,
-        Math.min(iconInlineStart, viewportSize.width - targetWidth - MARGIN)
-      );
-      insetInlineEnd = undefined;
-    }
-
-    let availableHeight: number;
-    if (openDownward) {
-      availableHeight = viewportSize.height - (top ?? 0) - MARGIN;
-    } else {
-      availableHeight = viewportSize.height - (bottom ?? 0) - MARGIN;
-    }
+    const bottom = Math.max(
+      MARGIN,
+      Math.min(effectiveBottom + ICON_SIZE + GAP, viewportSize.height - 320 - MARGIN)
+    );
+    const left = Math.max(
+      MARGIN,
+      Math.min(BASE_LEFT, viewportSize.width - targetWidth - MARGIN)
+    );
+    const availableHeight = viewportSize.height - bottom - MARGIN;
     const maxHeight = Math.max(320, Math.min(targetHeight, availableHeight));
 
     return {
-      top,
       bottom,
-      insetInlineStart,
-      insetInlineEnd,
+      left,
       maxHeight,
       maxWidth: targetWidth,
     };
   };
 
-  // Drag floating icon
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (isOpen) return;
-    setIsDragging(true);
-    hasDraggedRef.current = false;
-    setDragOffset({ x: e.clientX, y: e.clientY });
-  };
-
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const onMove = (e: MouseEvent) => {
-      hasDraggedRef.current = true;
-      const dx = e.clientX - dragOffset.x;
-      const dy = e.clientY - dragOffset.y;
-      const inlineDelta = dir === 'rtl' ? dx : -dx;
-
-      setPosition((prev) => {
-        const newX = prev.x + inlineDelta;
-        const newY = prev.y - dy;
-        const maxX = window.innerWidth - ICON_SIZE - MARGIN;
-        const maxY = window.innerHeight - ICON_SIZE - MARGIN;
-        return {
-          x: Math.max(MARGIN, Math.min(maxX, newX)),
-          y: Math.max(MARGIN, Math.min(maxY, newY)),
-        };
-      });
-
-      setDragOffset({ x: e.clientX, y: e.clientY });
-    };
-
-    const onUp = () => setIsDragging(false);
-
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, [isDragging, dragOffset, dir]);
-
-  // Drag panel by header
-  const handlePanelDragStart = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button')) return;
-
-    setIsPanelDragging(true);
-    panelHasDraggedRef.current = false;
-    setPanelDragOffset({ x: e.clientX, y: e.clientY });
-  };
-
-  useEffect(() => {
-    if (!isPanelDragging) return;
-
-    const onMove = (e: MouseEvent) => {
-      panelHasDraggedRef.current = true;
-      const dx = e.clientX - panelDragOffset.x;
-      const dy = e.clientY - panelDragOffset.y;
-      const inlineDelta = dir === 'rtl' ? dx : -dx;
-
-      setPosition((prev) => {
-        const newX = prev.x + inlineDelta;
-        const newY = prev.y - dy;
-        const maxX = window.innerWidth - ICON_SIZE - MARGIN;
-        const maxY = window.innerHeight - ICON_SIZE - MARGIN;
-        return {
-          x: Math.max(MARGIN, Math.min(maxX, newX)),
-          y: Math.max(MARGIN, Math.min(maxY, newY)),
-        };
-      });
-
-      setPanelDragOffset({ x: e.clientX, y: e.clientY });
-    };
-
-    const onUp = () => setIsPanelDragging(false);
-
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, [isPanelDragging, panelDragOffset, dir]);
-
-  // Clamp coordinates & update viewport size on window resize
+  // Update viewport size on window resize
   useEffect(() => {
     const onResize = () => {
       setViewportSize({ width: window.innerWidth, height: window.innerHeight });
-      setPosition((prev) => {
-        const maxX = window.innerWidth - ICON_SIZE - MARGIN;
-        const maxY = window.innerHeight - ICON_SIZE - MARGIN;
-        return {
-          x: Math.max(MARGIN, Math.min(maxX, prev.x)),
-          y: Math.max(MARGIN, Math.min(maxY, prev.y)),
-        };
-      });
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
@@ -540,35 +402,29 @@ export const FloatingAIChat: React.FC = () => {
 
   return (
     <>
-      {/* Floating launcher button */}
+      {/* Floating launcher button anchored cleanly in bottom-left */}
       {!isOpen && (
         <button
           type="button"
           data-floating-ai-chat="true"
-          onClick={() => {
-            if (!hasDraggedRef.current) setIsOpen(true);
-          }}
-          onMouseDown={handleMouseDown}
-          onDoubleClick={() => {
-            setPosition({ x: DEFAULT_END_X, y: DEFAULT_BOTTOM_Y });
-            toast.success(t('ai.assistant.resetPosition'));
-          }}
+          onClick={() => setIsOpen(true)}
           style={{
-            insetInlineEnd: `${position.x}px`,
-            bottom: `${effectiveBottom}px`,
+            ...(hasStickyFooter && stickyClearance > STICKY_BOTTOM + 4
+              ? { bottom: `${stickyClearance}px` }
+              : {}),
             width: `${ICON_SIZE}px`,
             height: `${ICON_SIZE}px`,
-            cursor: isDragging ? 'grabbing' : 'grab',
-            touchAction: 'none',
           }}
-          className="fixed z-50 rounded-full bg-[#2c5282] hover:bg-[#234269]
+          className={`fixed left-5 z-50 ${
+            hasStickyFooter ? 'bottom-20' : 'bottom-5'
+          } rounded-full bg-[#2c5282] hover:bg-[#234269]
                      dark:bg-[#2c5282] dark:hover:bg-[#1e3a5f]
-                     text-white shadow-lg flex items-center justify-center
+                     text-white shadow-lg flex items-center justify-center cursor-pointer
                      ring-2 ring-white/20 dark:ring-slate-700/80
                      transition-all duration-150 select-none print:hidden
-                     focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2"
+                     focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2`}
           aria-label={t('ai.assistant.openAria')}
-          title={t('ai.assistant.iconTooltip')}
+          title={t('ai.assistant.title')}
         >
           <Sparkles className="w-6 h-6 animate-pulse" />
         </button>
@@ -585,37 +441,27 @@ export const FloatingAIChat: React.FC = () => {
               role="dialog"
               aria-label={t('ai.assistant.title')}
               style={{
-                top: pos.top !== undefined ? `${pos.top}px` : undefined,
-                bottom: pos.bottom !== undefined ? `${pos.bottom}px` : undefined,
-                insetInlineStart:
-                  pos.insetInlineStart !== undefined ? `${pos.insetInlineStart}px` : undefined,
-                insetInlineEnd:
-                  pos.insetInlineEnd !== undefined ? `${pos.insetInlineEnd}px` : undefined,
+                bottom: `${pos.bottom}px`,
+                left: `${pos.left}px`,
                 width: `${pos.maxWidth}px`,
                 maxHeight: `${pos.maxHeight}px`,
                 height: `${pos.maxHeight}px`,
               }}
-              className={`fixed z-50 flex flex-col overflow-hidden
+              className="fixed z-50 flex flex-col overflow-hidden
                          w-[380px] sm:w-[420px]
                          bg-white dark:bg-slate-900
                          shadow-2xl border border-slate-200 dark:border-slate-800 rounded-2xl
-                         ${isPanelDragging ? '' : 'transition-[width,height,box-shadow] duration-200'}
+                         transition-[width,height,box-shadow] duration-200
                          print:hidden
                          max-sm:!top-0 max-sm:!bottom-0 max-sm:!inset-x-0
                          max-sm:!w-full max-sm:!h-full
-                         max-sm:!max-h-full max-sm:!rounded-none`}
+                         max-sm:!max-h-full max-sm:!rounded-none"
             >
-              {/* Header (Draggable) */}
+              {/* Header */}
               <div
                 data-surface="dark"
-                onMouseDown={handlePanelDragStart}
-                style={{
-                  cursor: isPanelDragging ? 'grabbing' : 'grab',
-                  touchAction: 'none',
-                }}
                 className="bg-[#2c5282] dark:bg-slate-950 text-white px-4 py-2.5 flex items-center
                            justify-between gap-2 flex-shrink-0 select-none border-b border-white/10 dark:border-slate-800"
-                title={t('ai.assistant.dragTooltip')}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-white/15 border border-white/15 flex items-center justify-center flex-shrink-0">
