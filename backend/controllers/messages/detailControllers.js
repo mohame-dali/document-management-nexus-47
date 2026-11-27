@@ -18,8 +18,11 @@ exports.getMessage = async (req, res, next) => {
       );
     }
     
-    // Check if user has deleted this message for themselves
-    if (message.deletedBy && message.deletedBy.some(id => id.toString() === userId.toString())) {
+    // Check if user has deleted or permanently purged this message for themselves
+    const isHiddenForUser =
+      (message.deletedBy && message.deletedBy.some(id => id.toString() === userId.toString())) ||
+      (message.permanentlyDeletedBy && message.permanentlyDeletedBy.some(id => id.toString() === userId.toString()));
+    if (isHiddenForUser) {
       return next(
         new ErrorResponse(`Message not found with id of ${req.params.id}`, 404)
       );

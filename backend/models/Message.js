@@ -56,6 +56,10 @@ const messageSchema = new mongoose.Schema({
   deletedBy: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  }],
+  permanentlyDeletedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }]
 }, { 
   timestamps: true,
@@ -68,6 +72,7 @@ messageSchema.index({ sender: 1, createdAt: -1 });
 messageSchema.index({ 'recipients.user': 1, createdAt: -1 });
 messageSchema.index({ 'recipients.user': 1, 'recipients.read': 1 });
 messageSchema.index({ crossDepartment: 1, createdAt: -1 });
+messageSchema.index({ deletedBy: 1, permanentlyDeletedBy: 1 });
 
 const Message = mongoose.model('Message', messageSchema);
 module.exports = Message;

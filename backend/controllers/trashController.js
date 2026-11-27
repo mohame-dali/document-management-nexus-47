@@ -4,6 +4,7 @@ const OutgoingDocument = require('../models/OutgoingDocument');
 const Folder = require('../models/Folder');
 const Message = require('../models/Message');
 const Personnel = require('../models/Personnel');
+const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const ErrorResponse = require('../utils/errorResponse');
 const { sanitizeSearchQuery } = require('../utils/regexUtils');
@@ -100,9 +101,9 @@ const normalizeType = (type) => {
   return lower;
 };
 
-function isMessageDeletedByAllParties(message) {
-  const deletedBySet = new Set(
-    (message.deletedBy || []).map(dId => dId.toString())
+async function areAllActivePartiesPermanentlyDeleted(message) {
+  const permanentlyDeletedSet = new Set(
+    (message.permanentlyDeletedBy || []).map(dId => dId.toString())
   );
   const partyIds = new Set();
   if (message.sender) {
@@ -112,13 +113,16 @@ function isMessageDeletedByAllParties(message) {
     const recipientId = r && r.user ? r.user.toString() : (r ? r.toString() : null);
     if (recipientId) partyIds.add(recipientId);
   });
-  if (partyIds.size === 0) return false;
-  for (const pId of partyIds) {
-    if (!deletedBySet.has(pId)) {
-      return false;
-    }
-  }
-  return true;
+  if (partyIds.size === 0) return true;
+
+  const activeUsers = await User.find({
+    _id: { $in: Array.from(partyIds) },
+    isDeleted: { $ne: true }
+  }).select('_id').lean();
+
+  if (activeUsers.length === 0) return true;
+
+  return activeUsers.every(u => permanentlyDeletedSet.has(u._id.toString()));
 }
 
 // @desc    Get all trashed items (incoming, outgoing, folders)
@@ -140,7 +144,10 @@ exports.getTrash = async (req, res, next) => {
     let incomingQuery = { isDeleted: true };
     let outgoingQuery = { isDeleted: true };
     let folderQuery = { isDeleted: true };
-    let messageQuery = { deletedBy: req.user._id };
+    let messageQuery = {
+      deletedBy: req.user._id,
+      permanentlyDeletedBy: { $ne: req.user._id }
+    };
     let personnelQuery = canAccessPersonnelTrash ? { isDeleted: true } : null;
 
     if (req.user.role === 'AdminDepartment' || req.user.role === 'User') {
@@ -376,13 +383,21 @@ exports.restoreItem = async (req, res, next) => {
     }
 
     if (resolvedType === 'message') {
-      const message = await Message.findOne({ _id: id, deletedBy: req.user._id });
+      const message = await Message.findOne({
+        _id: id,
+        deletedBy: req.user._id,
+        permanentlyDeletedBy: { $ne: req.user._id }
+      });
       if (!message) {
         return next(new ErrorResponse(`الرسالة غير موجودة في سلة المهملات برمز ${id}`, 404));
       }
 
       await Message.updateOne(
-        { _id: id, deletedBy: req.user._id },
+        {
+          _id: id,
+          deletedBy: req.user._id,
+          permanentlyDeletedBy: { $ne: req.user._id }
+        },
         { $pull: { deletedBy: req.user._id } }
       );
 
@@ -501,23 +516,33 @@ exports.permanentDelete = async (req, res, next) => {
       const isInUserTrash = (message.deletedBy || []).some(
         dId => dId.toString() === currentUserId
       );
-      if (!isInUserTrash) {
+      const isAlreadyPermanentlyDeleted = (message.permanentlyDeletedBy || []).some(
+        dId => dId.toString() === currentUserId
+      );
+      if (!isInUserTrash || isAlreadyPermanentlyDeleted) {
         return next(new ErrorResponse('الرسالة غير موجودة في سلة المهملات الخاصة بك', 400));
       }
 
-      const deletedByAll = isMessageDeletedByAllParties(message);
-      if (!deletedByAll) {
-        return next(
-          new ErrorResponse('لا يمكن الحذف النهائي للرسالة قبل حذفها من سلة المهملات لدى جميع الأطراف', 409)
-        );
+      const updatedMessage = await Message.findByIdAndUpdate(
+        id,
+        { $addToSet: { permanentlyDeletedBy: req.user._id } },
+        { new: true }
+      );
+
+      if (!updatedMessage) {
+        return next(new ErrorResponse(`الرسالة غير موجودة برمز ${id}`, 404));
       }
 
       let deletedFilesCount = 0;
-      const files = collectItemFiles(message);
-      files.forEach(f => {
-        if (deleteFileFromDisk(f)) deletedFilesCount++;
-      });
-      await message.deleteOne();
+      const shouldHardDelete = await areAllActivePartiesPermanentlyDeleted(updatedMessage);
+
+      if (shouldHardDelete) {
+        const files = collectItemFiles(updatedMessage);
+        files.forEach(f => {
+          if (deleteFileFromDisk(f)) deletedFilesCount++;
+        });
+        await Message.findByIdAndDelete(id);
+      }
 
       // Audit trail SÉCURISÉ
       try {
@@ -530,7 +555,7 @@ exports.permanentDelete = async (req, res, next) => {
             username: req.user.username || 'Unknown',
             role: req.user.role || 'Unknown'
           },
-          details: { deletedFilesCount },
+          details: { deletedFilesCount, hardDeleted: shouldHardDelete },
           ipAddress: req.ip || 'unknown'
         });
       } catch (auditError) {
@@ -540,7 +565,7 @@ exports.permanentDelete = async (req, res, next) => {
       return res.status(200).json({
         success: true,
         message: 'تم الحذف النهائي للرسالة بنجاح',
-        data: { deletedFilesCount }
+        data: { deletedFilesCount, hardDeleted: shouldHardDelete }
       });
     }
 
@@ -730,7 +755,10 @@ exports.emptyTrash = async (req, res, next) => {
         let filter = { isDeleted: true };
 
         if (t === 'message') {
-          filter = { deletedBy: req.user._id };
+          filter = {
+            deletedBy: req.user._id,
+            permanentlyDeletedBy: { $ne: req.user._id }
+          };
         } else if (t === 'personnel') {
           filter = { isDeleted: true, userId: null };
         } else if (deptId) {
@@ -742,10 +770,25 @@ exports.emptyTrash = async (req, res, next) => {
         const items = await Model.find(filter);
         for (const item of items) {
           if (t === 'message') {
-            if (!isMessageDeletedByAllParties(item)) {
-              results.skippedMessages++;
-              continue;
+            const updatedMsg = await Message.findByIdAndUpdate(
+              item._id,
+              { $addToSet: { permanentlyDeletedBy: req.user._id } },
+              { new: true }
+            );
+            if (!updatedMsg) continue;
+
+            const shouldHardDelete = await areAllActivePartiesPermanentlyDeleted(updatedMsg);
+            if (shouldHardDelete) {
+              const files = collectItemFiles(updatedMsg);
+              files.forEach(f => {
+                if (deleteFileFromDisk(f)) {
+                  results.totalFilesDeleted++;
+                }
+              });
+              await Message.findByIdAndDelete(updatedMsg._id);
             }
+            results.message = (results.message || 0) + 1;
+            continue;
           } else if (t === 'personnel' && item.userId) {
             continue;
           } else if (t === 'incoming') {

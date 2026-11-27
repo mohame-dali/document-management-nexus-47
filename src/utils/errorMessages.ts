@@ -126,10 +126,15 @@ export function getErrorMessage(
   };
 
   // 1. Backend message (from response data)
+  const rawAxiosMessage =
+    err?.message && !/^Request failed with status code \d+$/i.test(err.message)
+      ? err.message
+      : undefined;
+
   const backendMsg =
     err?.response?.data?.message ||
     err?.response?.data?.error ||
-    err?.message;
+    rawAxiosMessage;
 
   if (backendMsg && typeof backendMsg === 'string') {
     // Try exact translation

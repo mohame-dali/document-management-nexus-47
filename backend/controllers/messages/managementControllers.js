@@ -291,7 +291,8 @@ exports.markAllAsRead = async (req, res, next) => {
             'read': false
           }
         },
-        deletedBy: { $ne: userId }
+        deletedBy: { $ne: userId },
+        permanentlyDeletedBy: { $ne: userId }
       },
       {
         $set: {

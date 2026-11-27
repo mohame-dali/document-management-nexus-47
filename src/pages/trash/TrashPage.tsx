@@ -41,6 +41,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useDirection } from '@/i18n/useDirection';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 const TrashPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -94,9 +95,7 @@ const TrashPage: React.FC = () => {
       invalidateQueries();
     },
     onError: (err: unknown) => {
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = e?.response?.data?.message || e?.message || t('trash.restoreError');
-      toast.error(message);
+      toast.error(getErrorMessage(err, t('trash.restoreError'), isFr ? 'fr' : 'ar'));
     },
   });
 
@@ -109,9 +108,7 @@ const TrashPage: React.FC = () => {
       invalidateQueries();
     },
     onError: (err: unknown) => {
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = e?.response?.data?.message || e?.message || t('trash.deleteError');
-      toast.error(message);
+      toast.error(getErrorMessage(err, t('trash.deleteError'), isFr ? 'fr' : 'ar'));
     },
   });
 
@@ -124,9 +121,7 @@ const TrashPage: React.FC = () => {
       invalidateQueries();
     },
     onError: (err: unknown) => {
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = e?.response?.data?.message || e?.message || t('trash.emptyError');
-      toast.error(message);
+      toast.error(getErrorMessage(err, t('trash.emptyError'), isFr ? 'fr' : 'ar'));
     },
   });
 
@@ -403,7 +398,7 @@ const TrashPage: React.FC = () => {
             <EmptyState
               icon={<AlertTriangle className="h-6 w-6 text-rose-600 dark:text-rose-400" />}
               title={t('trash.loadErrorTitle')}
-              description={(error as Error)?.message || t('trash.loadErrorDesc')}
+              description={getErrorMessage(error, t('trash.loadErrorDesc'), isFr ? 'fr' : 'ar')}
               className="border-0 rounded-none py-14"
               action={
                 <Button

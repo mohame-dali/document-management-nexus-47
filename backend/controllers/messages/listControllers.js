@@ -52,7 +52,8 @@ exports.getMessages = async (req, res, next) => {
     
     // Build query filter
     const query = {
-      deletedBy: { $ne: userId }
+      deletedBy: { $ne: userId },
+      permanentlyDeletedBy: { $ne: userId }
     };
     
     if (type === 'sent') {
@@ -110,15 +111,18 @@ exports.getMessages = async (req, res, next) => {
             'read': false
           }
         },
-        deletedBy: { $ne: userId }
+        deletedBy: { $ne: userId },
+        permanentlyDeletedBy: { $ne: userId }
       }),
       Message.countDocuments({
         'recipients.user': userId,
-        deletedBy: { $ne: userId }
+        deletedBy: { $ne: userId },
+        permanentlyDeletedBy: { $ne: userId }
       }),
       Message.countDocuments({
         sender: userId,
-        deletedBy: { $ne: userId }
+        deletedBy: { $ne: userId },
+        permanentlyDeletedBy: { $ne: userId }
       })
     ]);
     
@@ -186,6 +190,7 @@ exports.searchMessages = async (req, res, next) => {
 
     const query = {
       deletedBy: { $ne: userId },
+      permanentlyDeletedBy: { $ne: userId },
       $or: [
         { sender: userId },
         { 'recipients.user': userId }
@@ -249,6 +254,7 @@ exports.getConversation = async (req, res, next) => {
 
     const query = {
       deletedBy: { $ne: currentUserId },
+      permanentlyDeletedBy: { $ne: currentUserId },
       $or: [
         {
           sender: currentUserId,

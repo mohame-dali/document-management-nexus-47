@@ -14,7 +14,8 @@ exports.getUnreadCount = async (req, res, next) => {
           'read': false
         }
       },
-      deletedBy: { $ne: req.user._id }
+      deletedBy: { $ne: req.user._id },
+      permanentlyDeletedBy: { $ne: req.user._id }
     });
     
     res.status(200).json({

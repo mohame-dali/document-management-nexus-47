@@ -296,6 +296,7 @@ exports.getDashboardSummary = async (req, res, next) => {
         ? {
             'recipients.user': userId,
             deletedBy: { $ne: userId },
+            permanentlyDeletedBy: { $ne: userId },
           }
         : null;
 
@@ -313,6 +314,7 @@ exports.getDashboardSummary = async (req, res, next) => {
             ? Message.countDocuments({
                 recipients: { $elemMatch: { user: userId, read: false } },
                 deletedBy: { $ne: userId },
+                permanentlyDeletedBy: { $ne: userId },
               })
             : 0,
           inboxFilter
