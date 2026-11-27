@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import useOutgoingDocumentForm, {
   OutgoingFormTranslations,
@@ -7,17 +7,32 @@ import useOutgoingDocumentForm, {
   OutgoingScanMutationRunner,
   OutgoingFormValues
 } from '@/hooks/forms/useOutgoingDocumentForm';
-import { Form } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Department } from '@/types';
 import BasicInfoFields from './outgoing/BasicInfoFields';
 import DocumentAttachmentSection from './outgoing/DocumentAttachmentSection';
 import FormActions from './outgoing/FormActions';
+import { MultiOrganizationAutocomplete } from '@/components/documents/forms/OrganizationAutocomplete';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { History, Trash2 } from 'lucide-react';
+import { History, Trash2, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { formatDateTime } from '@/utils/formatDate';
+import { cn } from '@/lib/utils';
 
 interface OutgoingDocumentFormProps {
   t: OutgoingFormTranslations;
@@ -40,6 +55,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
 }) => {
   const { t: translate, language } = useLanguage();
   const [ocrText, setOcrText] = useState<string>('');
+  const [optionalOpen, setOptionalOpen] = useState(false);
   
   const {
     form,
@@ -66,6 +82,15 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
     restoredDraftAt,
     clearDraft
   } = useOutgoingDocumentForm(t, currentDepartmentId, scanData);
+
+  const watchPourInfo = form.watch('pourInfo');
+  const filledOptionalCount = Array.isArray(watchPourInfo) && watchPourInfo.length > 0 ? 1 : 0;
+
+  useEffect(() => {
+    if (form.formState.errors.pourInfo) {
+      setOptionalOpen(true);
+    }
+  }, [form.formState.errors]);
 
   const handleStartScan = () => {
     startScan(scanTemporaryDocumentMutation);
@@ -115,7 +140,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
           )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              {/* Basic Information Section */}
+              {/* Basic Information Section (Primary Essential Fields) */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   {translate('documents.forms.sections.basicInfo')}
@@ -125,6 +150,7 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                   t={t}
                   departments={departments}
                   onSerialNumberChange={handleSerialNumberChange}
+                  showOptionalFields={false}
                 />
               </div>
 
@@ -160,6 +186,81 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
                   isScanAttached={isScanAttached}
                 />
               </div>
+
+              <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
+
+              {/* Secondary / Optional Details (Collapsible, closed by default) */}
+              <Collapsible
+                open={optionalOpen}
+                onOpenChange={setOptionalOpen}
+                className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
+              >
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-start hover:bg-slate-100/70 dark:hover:bg-slate-900/60 transition-colors rounded-lg"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                          {translate('documents.forms.optionalSection.title')}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          {translate('documents.forms.optionalSection.subtitleOutgoing')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <span
+                        className={cn(
+                          'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium tabular-nums border',
+                          filledOptionalCount > 0
+                            ? 'bg-blue-50 text-[#2c5282] border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/70'
+                            : 'bg-slate-100 text-slate-600 border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                        )}
+                      >
+                        {filledOptionalCount > 0
+                          ? translate('documents.forms.optionalSection.filledCount', {
+                              count: filledOptionalCount,
+                            })
+                          : translate('documents.forms.optionalSection.emptyCount')}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          'h-4 w-4 text-slate-500 dark:text-slate-400 transition-transform duration-150',
+                          optionalOpen && 'rotate-180'
+                        )}
+                      />
+                    </div>
+                  </button>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent className="px-4 pb-4 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                  <div className="pt-2">
+                    <FormField
+                      control={form.control}
+                      name="pourInfo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{translate('documents.forms.pourInfo')}</FormLabel>
+                          <FormControl>
+                            <MultiOrganizationAutocomplete
+                              category="pourInfo"
+                              documentType="outgoing"
+                              values={field.value || []}
+                              onValuesChange={field.onChange}
+                              placeholder={translate('documents.forms.autocomplete.pourInfoPlaceholder')}
+                            />
+                          </FormControl>
+                          <FormDescription>{translate('documents.forms.pourInfoDesc')}</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </form>
           </Form>
         </CardContent>

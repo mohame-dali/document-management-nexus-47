@@ -58,6 +58,7 @@ const SerialInfoFields: React.FC<SerialInfoFieldsProps> = ({
             label={t.arrivalDate}
             description={t.arrivalDateDesc}
             selectDateText={t.selectDate}
+            keepSelected
           />
         )}
       />

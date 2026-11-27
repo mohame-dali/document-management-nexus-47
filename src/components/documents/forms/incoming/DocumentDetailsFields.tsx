@@ -13,6 +13,7 @@ import { UseFormReturn, FieldValues } from 'react-hook-form';
 import MultiDepartmentSelectField from '@/components/documents/forms/MultiDepartmentSelectField';
 import DocumentOptionSelect from '@/components/ui/document-option-select';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
+import { OrganizationAutocomplete } from '@/components/documents/forms/OrganizationAutocomplete';
 import { Department } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
 
@@ -20,12 +21,14 @@ interface DocumentDetailsFieldsProps<TFieldValues extends FieldValues = FieldVal
   form: UseFormReturn<TFieldValues>;
   t: Record<string, string>;
   departments: Department[];
+  showOptionalFields?: boolean;
 }
 
 const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
   form,
   t,
-  departments
+  departments,
+  showOptionalFields = true,
 }) => {
   const { t: translate } = useLanguage();
   const watchActivity = form.watch('activity');
@@ -55,12 +58,12 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
             <FormItem>
               <FormLabel>{t.source}</FormLabel>
               <FormControl>
-                <DocumentOptionSelect
+                <OrganizationAutocomplete
                   category="source"
                   documentType="incoming"
                   value={field.value || ''}
                   onValueChange={field.onChange}
-                  placeholder={translate('documents.forms.sourcePlaceholder')}
+                  placeholder={translate('documents.forms.autocomplete.sourcePlaceholder')}
                 />
               </FormControl>
               <FormDescription>{t.sourceDesc}</FormDescription>
@@ -92,36 +95,55 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="activity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{translate('documents.forms.activity')}</FormLabel>
-              <FormControl>
-                <DocumentOptionSelect
-                  category="activity"
-                  documentType="incoming"
-                  value={field.value || ''}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    // Clear dateActivity if no activity is selected
-                    if (!value) {
-                      form.setValue('dateActivity', undefined);
-                    }
-                  }}
-                  placeholder={translate('documents.forms.activityPlaceholder')}
+        {showOptionalFields ? (
+          <FormField
+            control={form.control}
+            name="activity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{translate('documents.forms.activity')}</FormLabel>
+                <FormControl>
+                  <DocumentOptionSelect
+                    category="activity"
+                    documentType="incoming"
+                    value={field.value || ''}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Clear dateActivity if no activity is selected
+                      if (!value) {
+                        form.setValue('dateActivity', undefined);
+                      }
+                    }}
+                    placeholder={translate('documents.forms.activityPlaceholder')}
+                  />
+                </FormControl>
+                <FormDescription>{translate('documents.forms.activityDesc')}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          departments &&
+          departments.length > 0 && (
+            <FormField
+              control={form.control}
+              name="departments"
+              render={({ field }) => (
+                <MultiDepartmentSelectField
+                  field={field}
+                  label={t.assignedTo || translate('documents.forms.assignedDepartments')}
+                  description={t.assignedToDesc || translate('documents.forms.assignedDepartmentsDesc')}
+                  departments={departments}
+                  placeholder={translate('documents.forms.assignedDepartmentsPlaceholder')}
                 />
-              </FormControl>
-              <FormDescription>{translate('documents.forms.activityDesc')}</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              )}
+            />
+          )
+        )}
       </div>
 
       {/* Activity Date Field - Only show if activity is selected */}
-      {watchActivity && (
+      {showOptionalFields && watchActivity && (
         <FormField
           control={form.control}
           name="dateActivity"
@@ -136,7 +158,7 @@ const DocumentDetailsFields: React.FC<DocumentDetailsFieldsProps> = ({
         />
       )}
 
-      {departments && departments.length > 0 && (
+      {showOptionalFields && departments && departments.length > 0 && (
         <FormField
           control={form.control}
           name="departments"

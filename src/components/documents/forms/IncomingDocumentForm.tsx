@@ -1,7 +1,23 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Form } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { Textarea } from '@/components/ui/textarea';
+import DocumentOptionSelect from '@/components/ui/document-option-select';
+import DatePickerField from '@/components/documents/forms/DatePickerField';
 import {
   useIncomingDocumentForm,
   FormTranslations,
@@ -15,7 +31,7 @@ import DocumentDetailsFields from '@/components/documents/forms/incoming/Documen
 import AttachmentSection from '@/components/documents/forms/incoming/AttachmentSection';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sparkles, Loader2, X, History, Trash2 } from 'lucide-react';
+import { Sparkles, Loader2, X, History, Trash2, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +41,7 @@ import { Department } from '@/types';
 import { FieldValues } from 'react-hook-form';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { formatDateTime } from '@/utils/formatDate';
+import { cn } from '@/lib/utils';
 
 interface IncomingDocumentFormProps {
   t: FormTranslations;
@@ -80,7 +97,25 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionConfidence, setExtractionConfidence] = useState<number | null>(null);
   const [progressTime, setProgressTime] = useState(0);
+  const [optionalOpen, setOptionalOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const [watchActivity, watchDateActivity, watchDescription] = form.watch([
+    'activity',
+    'dateActivity',
+    'description',
+  ]);
+  const filledOptionalCount =
+    (watchActivity && watchActivity.trim() !== '' ? 1 : 0) +
+    (watchDateActivity ? 1 : 0) +
+    (watchDescription && watchDescription.trim() !== '' ? 1 : 0);
+
+  useEffect(() => {
+    const errs = form.formState.errors;
+    if (errs.activity || errs.dateActivity || errs.description) {
+      setOptionalOpen(true);
+    }
+  }, [form.formState.errors]);
 
   // Timer visible pendant l'extraction
   useEffect(() => {
@@ -246,12 +281,17 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
 
               <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
 
-              {/* Document Details Section */}
+              {/* Document Details Section (Primary Essential Fields) */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                   {translate('documents.forms.sections.details')}
                 </h3>
-                <DocumentDetailsFields form={form} t={t} departments={departments} />
+                <DocumentDetailsFields
+                  form={form}
+                  t={t}
+                  departments={departments}
+                  showOptionalFields={false}
+                />
               </div>
 
               <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
@@ -341,6 +381,121 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                   </div>
                 )}
               </div>
+
+              <Separator className="my-6 bg-slate-200/80 dark:bg-slate-800" />
+
+              {/* Secondary / Optional Details (Collapsible, closed by default) */}
+              <Collapsible
+                open={optionalOpen}
+                onOpenChange={setOptionalOpen}
+                className="rounded-lg border border-slate-200/90 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
+              >
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-start hover:bg-slate-100/70 dark:hover:bg-slate-900/60 transition-colors rounded-lg"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <SlidersHorizontal className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                          {translate('documents.forms.optionalSection.title')}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          {translate('documents.forms.optionalSection.subtitleIncoming')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <span
+                        className={cn(
+                          'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium tabular-nums border',
+                          filledOptionalCount > 0
+                            ? 'bg-blue-50 text-[#2c5282] border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/70'
+                            : 'bg-slate-100 text-slate-600 border-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                        )}
+                      >
+                        {filledOptionalCount > 0
+                          ? translate('documents.forms.optionalSection.filledCount', {
+                              count: filledOptionalCount,
+                            })
+                          : translate('documents.forms.optionalSection.emptyCount')}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          'h-4 w-4 text-slate-500 dark:text-slate-400 transition-transform duration-150',
+                          optionalOpen && 'rotate-180'
+                        )}
+                      />
+                    </div>
+                  </button>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent className="px-4 pb-4 pt-2 border-t border-slate-200/80 dark:border-slate-800 space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    <FormField
+                      control={form.control}
+                      name="activity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{translate('documents.forms.activity')}</FormLabel>
+                          <FormControl>
+                            <DocumentOptionSelect
+                              category="activity"
+                              documentType="incoming"
+                              value={field.value || ''}
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                if (!value) {
+                                  form.setValue('dateActivity', undefined);
+                                }
+                              }}
+                              placeholder={translate('documents.forms.activityPlaceholder')}
+                            />
+                          </FormControl>
+                          <FormDescription>{translate('documents.forms.activityDesc')}</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {watchActivity && (
+                      <FormField
+                        control={form.control}
+                        name="dateActivity"
+                        render={({ field }) => (
+                          <DatePickerField
+                            field={field}
+                            label={translate('documents.forms.dateActivity')}
+                            description={translate('documents.forms.dateActivityDesc')}
+                            selectDateText={translate('documents.forms.selectActivityDate')}
+                          />
+                        )}
+                      />
+                    )}
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{translate('documents.forms.descriptionLabel')}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            rows={3}
+                            className="resize-none bg-white dark:bg-slate-900"
+                            placeholder={translate('documents.forms.descriptionPlaceholder')}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>{t.descriptionDesc}</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
             </form>
           </Form>
         </CardContent>

@@ -13,6 +13,7 @@ import { UseFormReturn, FieldValues } from 'react-hook-form';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
 import DocumentOptionSelect from '@/components/ui/document-option-select';
 import MultiDocumentOptionSelect from '@/components/ui/multi-document-option-select';
+import { MultiOrganizationAutocomplete } from '@/components/documents/forms/OrganizationAutocomplete';
 import { Department } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
 
@@ -21,13 +22,15 @@ interface BasicInfoFieldsProps<TFieldValues extends FieldValues = FieldValues> {
   t: Record<string, string>;
   departments: Department[];
   onSerialNumberChange?: (value: string) => void;
+  showOptionalFields?: boolean;
 }
 
 const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
   form,
   t,
   departments,
-  onSerialNumberChange
+  onSerialNumberChange,
+  showOptionalFields = true,
 }) => {
   const { t: translate } = useLanguage();
 
@@ -67,6 +70,7 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
               label={t.issueDate}
               description={t.issueDateDesc}
               selectDateText={t.selectDate}
+              keepSelected
             />
           )}
         />
@@ -94,12 +98,12 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
           <FormItem>
             <FormLabel>{t.destination || translate('documents.forms.outgoingDestination')}</FormLabel>
             <FormControl>
-              <MultiDocumentOptionSelect
+              <MultiOrganizationAutocomplete
                 category="assignedTo"
                 documentType="outgoing"
                 values={field.value || []}
                 onValuesChange={field.onChange}
-                placeholder={translate('documents.forms.outgoingDestinationPlaceholder')}
+                placeholder={translate('documents.forms.autocomplete.destinationPlaceholder')}
               />
             </FormControl>
             <FormDescription>
@@ -132,29 +136,58 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="pourInfo"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{translate('documents.forms.pourInfo')}</FormLabel>
-              <FormControl>
-                <MultiDocumentOptionSelect
-                  category="pourInfo"
-                  documentType="outgoing"
-                  values={field.value || []}
-                  onValuesChange={field.onChange}
-                  placeholder={translate('documents.forms.pourInfoPlaceholder')}
-                />
-              </FormControl>
-              <FormDescription>{translate('documents.forms.pourInfoDesc')}</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {showOptionalFields ? (
+          <FormField
+            control={form.control}
+            name="pourInfo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{translate('documents.forms.pourInfo')}</FormLabel>
+                <FormControl>
+                  <MultiDocumentOptionSelect
+                    category="pourInfo"
+                    documentType="outgoing"
+                    values={field.value || []}
+                    onValuesChange={field.onChange}
+                    placeholder={translate('documents.forms.pourInfoPlaceholder')}
+                  />
+                </FormControl>
+                <FormDescription>{translate('documents.forms.pourInfoDesc')}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          departments &&
+          departments.length > 0 && (
+            <FormField
+              control={form.control}
+              name="department"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t.department}</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-10 w-full rounded border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                      value={field.value}
+                      onChange={field.onChange}
+                    >
+                      <option value="">{t.selectDepartment}</option>
+                      {departments.map(dept => (
+                        <option key={dept._id} value={dept._id}>{dept.name}</option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormDescription>{t.departmentDesc}</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )
+        )}
       </div>
 
-      {departments && departments.length > 0 && (
+      {showOptionalFields && departments && departments.length > 0 && (
         <FormField
           control={form.control}
           name="department"

@@ -48,6 +48,7 @@ const CorrespondenceFields: React.FC<CorrespondenceFieldsProps> = ({
             label={t('documents.forms.correspondenceDate')}
             description={t('documents.forms.correspondenceDateDesc')}
             selectDateText={t('documents.createIncoming.selectDate')}
+            keepSelected
           />
         )}
       />

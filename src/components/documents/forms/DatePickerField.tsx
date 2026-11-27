@@ -24,13 +24,15 @@ interface DatePickerFieldProps<TFieldValues extends FieldValues = FieldValues> {
   label: string;
   description?: string;
   selectDateText: string;
+  keepSelected?: boolean;
 }
 
 const DatePickerField: React.FC<DatePickerFieldProps> = ({
   field,
   label,
   description,
-  selectDateText
+  selectDateText,
+  keepSelected = false
 }) => {
   const isMobile = useIsMobile();
   const { dir } = useDirection();
@@ -44,6 +46,7 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
         <Popover>
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               className={cn(
                 "w-full flex justify-start text-start font-normal touch-target input-responsive",
@@ -72,7 +75,13 @@ const DatePickerField: React.FC<DatePickerFieldProps> = ({
             <CalendarComponent
               mode="single"
               selected={field.value}
-              onSelect={(date) => field.onChange(date)}
+              onSelect={(date) => {
+                if (keepSelected) {
+                  field.onChange(date || field.value || new Date());
+                } else {
+                  field.onChange(date);
+                }
+              }}
               initialFocus
               locale={lang === 'ar' ? arTN : fr}
               className={cn(
