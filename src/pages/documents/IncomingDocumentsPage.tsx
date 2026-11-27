@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -76,6 +77,8 @@ import { formatLongDate } from '@/utils/formatDate';
 import { getActivityUrgency, getDocumentPriority } from '@/utils/activityUtils';
 import { extractDeptMeta, isBureauOrdreUserAccount } from '@/utils/departmentScope';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
+import FolderStatusPill from '@/components/documents/FolderStatusPill';
+import BulkClassificationBar from '@/components/documents/BulkClassificationBar';
 import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
 import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
 import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
@@ -153,8 +156,10 @@ const IncomingDocumentsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  // Dialogs State
+  // Dialogs & Bulk Selection State
   const [folderDoc, setFolderDoc] = useState<IncomingDocument | null>(null);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+  const [bulkFolderOpen, setBulkFolderOpen] = useState(false);
   const [responseDoc, setResponseDoc] = useState<IncomingDocument | null>(null);
   const [responsibleDoc, setResponsibleDoc] = useState<IncomingDocument | null>(null);
   const [deleteDoc, setDeleteDoc] = useState<IncomingDocument | null>(null);
@@ -212,7 +217,7 @@ const IncomingDocumentsPage: React.FC = () => {
   const canAddDocuments = isAdmin || isAdminTuningDesk;
   const canEdit = isAdmin || isAdminTuningDesk;
   const canDelete = isAdmin || isAdminTuningDesk;
-  const canOrganizeDocuments = isAdminDepartment && !isBureauOrdreUser;
+  const canOrganizeDocuments = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
   const canViewCategorization = isAdmin || isDirector || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
   const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk;
   const canAssignResponsible = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
@@ -298,6 +303,33 @@ const IncomingDocumentsPage: React.FC = () => {
   const startIndex = (clampedPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + sortedDocuments.length, totalCount);
   const paginatedDocuments = sortedDocuments;
+
+  useEffect(() => {
+    setSelectedDocIds([]);
+  }, [selectedYear, selectedDepartment, selectedSource, statusFilter, currentPage, pageSize, debouncedSearch]);
+
+  const selectedDocs = useMemo(
+    () => paginatedDocuments.filter((d) => selectedDocIds.includes(d._id)),
+    [paginatedDocuments, selectedDocIds]
+  );
+
+  const allVisibleSelected =
+    paginatedDocuments.length > 0 &&
+    paginatedDocuments.every((d) => selectedDocIds.includes(d._id));
+
+  const toggleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedDocIds([]);
+    } else {
+      setSelectedDocIds(paginatedDocuments.map((d) => d._id));
+    }
+  };
+
+  const toggleSelectOne = (docId: string) => {
+    setSelectedDocIds((prev) =>
+      prev.includes(docId) ? prev.filter((id) => id !== docId) : [...prev, docId]
+    );
+  };
 
   // Reset pagination on filter change
   const handleFilterReset = () => {
@@ -1018,6 +1050,15 @@ const IncomingDocumentsPage: React.FC = () => {
             <table className="w-full text-start border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200">
+                  {canOrganizeDocuments && (
+                    <th className="py-3 ps-4 pe-1 w-10 text-center">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        onCheckedChange={toggleSelectAllVisible}
+                        aria-label={isFr ? 'Tout sélectionner sur cette page' : 'تحديد الكل في هذه الصفحة'}
+                      />
+                    </th>
+                  )}
                   <th
                     className="p-0 font-bold text-sm whitespace-nowrap"
                     aria-sort={sortField === 'serialNumber' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
@@ -1091,8 +1132,22 @@ const IncomingDocumentsPage: React.FC = () => {
                   return (
                     <tr 
                       key={doc._id}
-                      className={`group hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors duration-150 min-h-[64px] ${priority.rowAccentClasses}`}
+                      className={`group hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors duration-150 min-h-[64px] ${
+                        selectedDocIds.includes(doc._id) ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
+                      } ${priority.rowAccentClasses}`}
                     >
+                      {canOrganizeDocuments && (
+                        <td
+                          className="py-3 ps-4 pe-1 w-10 text-center align-middle"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            checked={selectedDocIds.includes(doc._id)}
+                            onCheckedChange={() => toggleSelectOne(doc._id)}
+                            aria-label={isFr ? `Sélectionner ${doc.subject}` : `تحديد ${doc.subject}`}
+                          />
+                        </td>
+                      )}
                       {/* Serial Number & Year + External Correspondence Reference */}
                       <td className="py-3 px-4 whitespace-nowrap tabular-nums">
                         <div className="space-y-1">
@@ -1229,6 +1284,12 @@ const IncomingDocumentsPage: React.FC = () => {
                               {t('incoming.responsible.label', { name: doc.responsibleUser.username })}
                             </span>
                           )}
+
+                          <FolderStatusPill
+                            folder={doc.folder}
+                            canEdit={canOrganizeDocuments}
+                            onClick={() => setFolderDoc(doc)}
+                          />
                         </div>
                       </td>
 
@@ -1383,9 +1444,17 @@ const IncomingDocumentsPage: React.FC = () => {
                   className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-lg p-5 space-y-4 shadow-sm transition-all duration-200 flex flex-col justify-between ${priority.cardAccentClasses}`}
                 >
                   <div className="space-y-3">
-                    {/* Card Top: Serial + Copy and Status */}
+                    {/* Card Top: Selection + Serial + Copy and Status */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
+                        {canOrganizeDocuments && (
+                          <Checkbox
+                            checked={selectedDocIds.includes(doc._id)}
+                            onCheckedChange={() => toggleSelectOne(doc._id)}
+                            aria-label={isFr ? `Sélectionner ${doc.subject}` : `تحديد ${doc.subject}`}
+                            className="me-1"
+                          />
+                        )}
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-200 border border-blue-200/80 dark:border-blue-800/70 tabular-nums">
                           <bdi dir="ltr">{serialLabel}</bdi>
                         </span>
@@ -1453,6 +1522,12 @@ const IncomingDocumentsPage: React.FC = () => {
                           )}
                         </span>
                       )}
+
+                      <FolderStatusPill
+                        folder={doc.folder}
+                        canEdit={canOrganizeDocuments}
+                        onClick={() => setFolderDoc(doc)}
+                      />
                     </div>
 
                     {/* Source, External Ref & Date Info */}
@@ -1684,6 +1759,18 @@ const IncomingDocumentsPage: React.FC = () => {
         />
       )}
 
+      {/* 5b. Bulk Folder Categorization Dialog */}
+      {bulkFolderOpen && selectedDocs.length > 0 && (
+        <DocumentFolderDialog
+          open={bulkFolderOpen}
+          onOpenChange={setBulkFolderOpen}
+          documents={selectedDocs}
+          documentType="incoming"
+          readOnly={!canOrganizeDocuments}
+          onSuccess={() => setSelectedDocIds([])}
+        />
+      )}
+
       {/* 6. Assign Response Dialog (Traiter) */}
       {responseDoc && (
         <AssignResponseDialog
@@ -1770,6 +1857,14 @@ const IncomingDocumentsPage: React.FC = () => {
         direction="incoming"
         onOpenFullDetails={handleView}
       />
+
+      {canOrganizeDocuments && (
+        <BulkClassificationBar
+          selectedCount={selectedDocs.length}
+          onClassify={() => setBulkFolderOpen(true)}
+          onClear={() => setSelectedDocIds([])}
+        />
+      )}
 
       <ScrollToTop />
     </div>

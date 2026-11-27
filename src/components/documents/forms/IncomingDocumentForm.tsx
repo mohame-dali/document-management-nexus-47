@@ -39,10 +39,15 @@ import { extractFromOcr, getAIErrorCode } from '@/services/aiExtractionService';
 
 import { Department } from '@/types';
 import { FieldValues } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
+import { extractDeptMeta, isBureauOrdreUserAccount } from '@/utils/departmentScope';
 import { formatDateTime } from '@/utils/formatDate';
 import { cn } from '@/lib/utils';
 import OcrStatusPill from '@/components/documents/forms/OcrStatusPill';
+import OptionalArchiveFolderField from '@/components/documents/forms/OptionalArchiveFolderField';
 import {
   INITIAL_OCR_STATE,
   OcrState,
@@ -68,10 +73,23 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
   loadingScannerStatus,
   scanTemporaryDocumentMutation
 }) => {
+  const { currentUser } = useAuth();
   const { t: translate, language } = useLanguage();
   const [ocrText, setOcrText] = useState<string>('');
   const [ocrState, setOcrState] = useState<OcrState>(INITIAL_OCR_STATE);
   const [isSuggestingSubject, setIsSuggestingSubject] = useState(false);
+
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const bureauOrdreDeptId = extractDeptMeta(orgSettings?.bureauOrdreDepartmentId).id;
+  const isBureauOrdreUser = isBureauOrdreUserAccount(currentUser, bureauOrdreDeptId);
+  const canAssignFolderOnCreate =
+    (currentUser?.role === 'Admin' || currentUser?.role === 'AdminDepartment') &&
+    !isBureauOrdreUser;
   
   const {
     form,
@@ -96,7 +114,9 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
     handleSerialNumberChange,
     handleRemoveScan,
     restoredDraftAt,
-    clearDraft
+    clearDraft,
+    selectedFolderId,
+    setSelectedFolderId,
   } = useIncomingDocumentForm(t, currentDepartmentId, scanData);
 
   // ───────────────────────────────────────────────────────────
@@ -108,15 +128,24 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
   const [optionalOpen, setOptionalOpen] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const [watchActivity, watchDateActivity, watchDescription] = form.watch([
+  const [watchActivity, watchDateActivity, watchDescription, watchDepartments] = form.watch([
     'activity',
     'dateActivity',
     'description',
+    'departments',
   ]);
   const filledOptionalCount =
     (watchActivity && watchActivity.trim() !== '' ? 1 : 0) +
     (watchDateActivity ? 1 : 0) +
-    (watchDescription && watchDescription.trim() !== '' ? 1 : 0);
+    (watchDescription && watchDescription.trim() !== '' ? 1 : 0) +
+    (canAssignFolderOnCreate && selectedFolderId ? 1 : 0);
+
+  const scopedFolderDeptId =
+    currentUser?.role === 'Admin'
+      ? Array.isArray(watchDepartments) && watchDepartments.length === 1
+        ? watchDepartments[0]
+        : undefined
+      : currentDepartmentId;
 
   useEffect(() => {
     const errs = form.formState.errors;
@@ -560,6 +589,14 @@ const IncomingDocumentForm: React.FC<IncomingDocumentFormProps> = ({
                       </FormItem>
                     )}
                   />
+
+                  {canAssignFolderOnCreate && (
+                    <OptionalArchiveFolderField
+                      value={selectedFolderId}
+                      onChange={setSelectedFolderId}
+                      departmentId={scopedFolderDeptId}
+                    />
+                  )}
                 </CollapsibleContent>
               </Collapsible>
             </form>

@@ -4,10 +4,15 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { createIncomingDocument } from '@/services/documentService';
+import { assignDocumentToFolder } from '@/services/folderService';
 import { getNextSerialNumber, validateSerialNumber } from '@/services/serialNumberService';
 import { getErrorMessage } from '@/utils/errorMessages';
+import { recordRecentFolder } from '@/utils/recentFolders';
+import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { Folder } from '@/types';
 import {
   ScanStage,
   OcrStatus,
@@ -88,9 +93,12 @@ export const useIncomingDocumentForm = (
   isEditMode = false
 ) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
   const { t: translate, language } = useLanguage();
   const lang: 'fr' | 'ar' = language === 'ar' ? 'ar' : 'fr';
 
+  const [selectedFolderId, setSelectedFolderId] = useState<string>('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<string>(scanData ? 'scan' : 'upload');
   const [scanning, setScanning] = useState(false);
@@ -289,6 +297,7 @@ export const useIncomingDocumentForm = (
         const draft = JSON.parse(raw) as {
           values?: Record<string, unknown>;
           departments?: string[];
+          folderId?: string;
           isManualSerialNumber?: boolean;
           savedAt?: number;
         };
@@ -328,6 +337,8 @@ export const useIncomingDocumentForm = (
             description: typeof sanitized.description === 'string' ? sanitized.description : '',
           };
 
+          const restoredFolderId = typeof draft.folderId === 'string' ? draft.folderId : '';
+
           const hasMeaningfulContent = Boolean(
             nextValues.subject.trim() ||
               nextValues.source.trim() ||
@@ -335,6 +346,7 @@ export const useIncomingDocumentForm = (
               nextValues.description?.trim() ||
               nextValues.activity?.trim() ||
               nextValues.typeDocument?.trim() ||
+              restoredFolderId ||
               draft.isManualSerialNumber
           );
 
@@ -342,6 +354,9 @@ export const useIncomingDocumentForm = (
             if (draft.isManualSerialNumber && nextValues.serialNumber) {
               isManualSerialNumberRef.current = true;
               setIsManualSerialNumber(true);
+            }
+            if (restoredFolderId) {
+              setSelectedFolderId(restoredFolderId);
             }
             form.reset(nextValues);
             setRestoredDraftAt(draft.savedAt);
@@ -373,6 +388,7 @@ export const useIncomingDocumentForm = (
           values: sanitized,
           personnelId: (sanitized.personnelId as string | undefined) ?? undefined,
           departments: Array.isArray(sanitized.departments) ? sanitized.departments : [],
+          folderId: selectedFolderId || '',
           isManualSerialNumber,
           savedAt: Date.now(),
         };
@@ -383,7 +399,7 @@ export const useIncomingDocumentForm = (
     });
 
     return () => subscription.unsubscribe();
-  }, [form, isEditMode, isManualSerialNumber]);
+  }, [form, isEditMode, isManualSerialNumber, selectedFolderId]);
 
   const clearDraft = useCallback(() => {
     try {
@@ -392,6 +408,7 @@ export const useIncomingDocumentForm = (
       // Ignorer
     }
     setRestoredDraftAt(null);
+    setSelectedFolderId('');
     isManualSerialNumberRef.current = false;
     setIsManualSerialNumber(false);
     form.reset({
@@ -842,7 +859,29 @@ export const useIncomingDocumentForm = (
         }
       }
 
-      await createIncomingDocument(formData);
+      const createdDoc = await createIncomingDocument(formData);
+      if (selectedFolderId && createdDoc?._id) {
+        try {
+          await assignDocumentToFolder(createdDoc._id, selectedFolderId, 'incoming');
+          const cachedFolders = queryClient.getQueriesData<Folder[]>({ queryKey: ['folders'] });
+          for (const [, list] of cachedFolders) {
+            const matched = Array.isArray(list) ? list.find((f) => f._id === selectedFolderId) : undefined;
+            if (matched) {
+              recordRecentFolder(currentUser?._id, matched);
+              break;
+            }
+          }
+          queryClient.invalidateQueries({ queryKey: ['folders'] });
+        } catch (assignErr) {
+          console.error('Error assigning folder on incoming document creation:', assignErr);
+          toast.warning(
+            lang === 'ar'
+              ? 'تم حفظ الوثيقة، لكن تعذر تصنيفها في المجلد المختار'
+              : 'Document créé, mais le classement dans le dossier a échoué'
+          );
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['incomingDocuments'] });
       hasSubmittedRef.current = true;
       try {
         sessionStorage.removeItem(DRAFT_KEY);
@@ -888,5 +927,7 @@ export const useIncomingDocumentForm = (
     handleRemoveScan,
     restoredDraftAt,
     clearDraft,
+    selectedFolderId,
+    setSelectedFolderId,
   };
 };

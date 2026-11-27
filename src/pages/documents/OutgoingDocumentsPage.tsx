@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import {
@@ -79,12 +80,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { getDepartments } from '@/services/departmentService';
 import { getDocumentOptions } from '@/services/documentOptionsService';
 import { deleteOutgoingDocument, downloadDocument, getOutgoingDocuments } from '@/services/documentService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { OutgoingDocument, Department } from '@/types';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatLongDate } from '@/utils/formatDate';
 import { getDocumentPriority } from '@/utils/activityUtils';
+import { extractDeptMeta, isBureauOrdreUserAccount } from '@/utils/departmentScope';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
+import FolderStatusPill from '@/components/documents/FolderStatusPill';
+import BulkClassificationBar from '@/components/documents/BulkClassificationBar';
 import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
 import QuickPdfPreviewSheet from '@/components/documents/QuickPdfPreviewSheet';
 import RowQuickActionsToolbar from '@/components/documents/RowQuickActionsToolbar';
@@ -141,8 +146,10 @@ const OutgoingDocumentsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  // Dialogs State
+  // Dialogs & Bulk Selection State
   const [folderDoc, setFolderDoc] = useState<OutgoingDocument | null>(null);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+  const [bulkFolderOpen, setBulkFolderOpen] = useState(false);
   const [deleteDoc, setDeleteDoc] = useState<OutgoingDocument | null>(null);
   const [transferDoc, setTransferDoc] = useState<OutgoingDocument | null>(null);
   const [previewDoc, setPreviewDoc] = useState<OutgoingDocument | null>(null);
@@ -162,10 +169,19 @@ const OutgoingDocumentsPage: React.FC = () => {
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const bureauOrdreDeptId = extractDeptMeta(orgSettings?.bureauOrdreDepartmentId).id;
+  const isBureauOrdreUser = isBureauOrdreUserAccount(currentUser, bureauOrdreDeptId);
+
   const canAddDocuments = isAdmin || isAdminTuningDesk;
   const canEdit = isAdmin || isAdminTuningDesk;
   const canDelete = isAdmin || isAdminTuningDesk;
-  const canOrganizeDocuments = isAdminDepartment || isAdmin;
+  const canOrganizeDocuments = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
   const canViewCategorization = isAdmin || isDirector || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
 
   // Fetch departments
@@ -258,6 +274,33 @@ const OutgoingDocumentsPage: React.FC = () => {
   const startIndex = (clampedPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + sortedDocuments.length, totalCount);
   const paginatedDocuments = sortedDocuments;
+
+  useEffect(() => {
+    setSelectedDocIds([]);
+  }, [selectedYear, selectedDepartment, selectedType, folderFilter, currentPage, pageSize, debouncedSearch]);
+
+  const selectedDocs = useMemo(
+    () => paginatedDocuments.filter((d) => selectedDocIds.includes(d._id)),
+    [paginatedDocuments, selectedDocIds]
+  );
+
+  const allVisibleSelected =
+    paginatedDocuments.length > 0 &&
+    paginatedDocuments.every((d) => selectedDocIds.includes(d._id));
+
+  const toggleSelectAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedDocIds([]);
+    } else {
+      setSelectedDocIds(paginatedDocuments.map((d) => d._id));
+    }
+  };
+
+  const toggleSelectOne = (docId: string) => {
+    setSelectedDocIds((prev) =>
+      prev.includes(docId) ? prev.filter((id) => id !== docId) : [...prev, docId]
+    );
+  };
 
   // Reset filters
   const handleFilterReset = () => {
@@ -885,6 +928,15 @@ const OutgoingDocumentsPage: React.FC = () => {
               <table className="w-full text-start border-collapse text-sm">
                 <thead>
                   <tr className="bg-slate-50/90 dark:bg-slate-800/70 border-b border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200">
+                    {canOrganizeDocuments && (
+                      <th className="py-3 ps-4 pe-1 w-10 text-center">
+                        <Checkbox
+                          checked={allVisibleSelected}
+                          onCheckedChange={toggleSelectAllVisible}
+                          aria-label={isFr ? 'Tout sélectionner sur cette page' : 'تحديد الكل في هذه الصفحة'}
+                        />
+                      </th>
+                    )}
                     <th
                       className="p-0 font-bold text-sm whitespace-nowrap"
                       aria-sort={sortField === 'serialNumber' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
@@ -962,8 +1014,22 @@ const OutgoingDocumentsPage: React.FC = () => {
                     return (
                       <tr 
                         key={doc._id}
-                        className={`group hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors duration-150 min-h-[64px] ${priority.rowAccentClasses}`}
+                        className={`group hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors duration-150 min-h-[64px] ${
+                          selectedDocIds.includes(doc._id) ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
+                        } ${priority.rowAccentClasses}`}
                       >
+                        {canOrganizeDocuments && (
+                          <td
+                            className="py-3 ps-4 pe-1 w-10 text-center align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedDocIds.includes(doc._id)}
+                              onCheckedChange={() => toggleSelectOne(doc._id)}
+                              aria-label={isFr ? `Sélectionner ${doc.subject}` : `تحديد ${doc.subject}`}
+                            />
+                          </td>
+                        )}
                         {/* Serial Number & Year + Linked Reference */}
                         <td className="py-3 px-4 whitespace-nowrap tabular-nums">
                           <div className="space-y-1">
@@ -1079,16 +1145,12 @@ const OutgoingDocumentsPage: React.FC = () => {
 
                         {/* Folder / Classification */}
                         <td className="py-3 px-4 whitespace-nowrap">
-                          {doc.folder ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70">
-                              <FolderOpen className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                              {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorizedInFolder')}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
-                              {t('outgoing.status.uncategorized')}
-                            </span>
-                          )}
+                          <FolderStatusPill
+                            folder={doc.folder}
+                            canEdit={canOrganizeDocuments}
+                            onClick={() => setFolderDoc(doc)}
+                            size="md"
+                          />
                         </td>
 
                         {/* Actions: 2 primary actions + ... menu */}
@@ -1214,25 +1276,28 @@ const OutgoingDocumentsPage: React.FC = () => {
                     className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm transition-all duration-200 flex flex-col justify-between ${priority.cardAccentClasses}`}
                   >
                     <div>
-                      {/* Card Top: Serial + Copy & Folder */}
+                      {/* Card Top: Selection + Serial + Copy & Folder */}
                       <div className="flex items-start justify-between gap-2 mb-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
+                          {canOrganizeDocuments && (
+                            <Checkbox
+                              checked={selectedDocIds.includes(doc._id)}
+                              onCheckedChange={() => toggleSelectOne(doc._id)}
+                              aria-label={isFr ? `Sélectionner ${doc.subject}` : `تحديد ${doc.subject}`}
+                              className="me-1"
+                            />
+                          )}
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-200 border border-blue-200/80 dark:border-blue-800/70 tabular-nums">
                             <bdi dir="ltr">{serialLabel}</bdi>
                           </span>
                           <CopyReferenceButton value={serialLabel} />
                         </div>
 
-                        {doc.folder ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/70">
-                            <FolderOpen className="h-3 w-3" />
-                            {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorized')}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-                            {t('outgoing.status.uncategorized')}
-                          </span>
-                        )}
+                        <FolderStatusPill
+                          folder={doc.folder}
+                          canEdit={canOrganizeDocuments}
+                          onClick={() => setFolderDoc(doc)}
+                        />
                       </div>
 
                       {/* Subject */}
@@ -1490,6 +1555,18 @@ const OutgoingDocumentsPage: React.FC = () => {
         />
       )}
 
+      {/* Dialog 1b: Bulk Folder Classification Dialog */}
+      {bulkFolderOpen && selectedDocs.length > 0 && (
+        <DocumentFolderDialog
+          open={bulkFolderOpen}
+          onOpenChange={setBulkFolderOpen}
+          documents={selectedDocs}
+          documentType="outgoing"
+          readOnly={!canOrganizeDocuments}
+          onSuccess={() => setSelectedDocIds([])}
+        />
+      )}
+
       {/* Dialog 2: Delete Confirmation Dialog */}
       <AlertDialog 
         open={Boolean(deleteDoc)} 
@@ -1649,6 +1726,14 @@ const OutgoingDocumentsPage: React.FC = () => {
         direction="outgoing"
         onOpenFullDetails={handleView}
       />
+
+      {canOrganizeDocuments && (
+        <BulkClassificationBar
+          selectedCount={selectedDocs.length}
+          onClassify={() => setBulkFolderOpen(true)}
+          onClear={() => setSelectedDocIds([])}
+        />
+      )}
 
       <ScrollToTop />
     </div>

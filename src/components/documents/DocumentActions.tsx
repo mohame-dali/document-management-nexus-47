@@ -68,8 +68,8 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
   const canEdit = isAdminTuningDesk || isAdmin;
   const canDelete = isAdminTuningDesk || isAdmin;
 
-  // AdminDepartment can organize documents, others (and Bureau d'Ordre) can only view
-  const canOrganizeDocuments = isAdminDepartment && !isBureauOrdreUser;
+  // AdminDepartment and Admin (non-BO) can organize documents; others can only view
+  const canOrganizeDocuments = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
   const canAssignResponsible = isAdminDepartment && !isBureauOrdreUser;
   const canViewCategorization = isAdmin || 
                                isDirector ||

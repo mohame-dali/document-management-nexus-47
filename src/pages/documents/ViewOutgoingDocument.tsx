@@ -59,6 +59,8 @@ import {
   getDocumentUrl 
 } from '@/services/documentService';
 import { getDocumentTimeline, AuditLog } from '@/services/auditService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
+import { extractDeptMeta, isBureauOrdreUserAccount } from '@/utils/departmentScope';
 import { formatLongDate, formatDateTime } from '@/utils/formatDate';
 import { OutgoingDocument, IncomingDocument } from '@/types';
 
@@ -110,15 +112,23 @@ const ViewOutgoingDocument: React.FC = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isPdfExpanded]);
 
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // User role permissions
   const isDirector = currentUser?.role === 'Director';
   const isAdmin = currentUser?.role === 'Admin';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
+  const bureauOrdreDeptId = extractDeptMeta(orgSettings?.bureauOrdreDepartmentId).id;
+  const isBureauOrdreUser = isBureauOrdreUserAccount(currentUser, bureauOrdreDeptId);
 
   const canEdit = isAdminTuningDesk || isAdmin;
   const canDelete = isAdminTuningDesk || isAdmin;
-  const canOrganizeDocuments = isAdminDepartment || isAdmin;
+  const canOrganizeDocuments = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
 
   // 1. Fetch main outgoing document
   const { 
