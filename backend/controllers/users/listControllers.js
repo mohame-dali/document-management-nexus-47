@@ -1,6 +1,8 @@
 
 const mongoose = require('mongoose');
 const User = require('../../models/User');
+const Department = require('../../models/Department');
+const OrganizationSettings = require('../../models/OrganizationSettings');
 const ErrorResponse = require('../../utils/errorResponse');
 
 function extractObjectId(value) {
@@ -8,7 +10,11 @@ function extractObjectId(value) {
   if (typeof value === 'string') {
     return mongoose.Types.ObjectId.isValid(value) ? value : null;
   }
-  if (value._id) {
+  if (value._bsontype === 'ObjectId' || value.constructor?.name === 'ObjectId') {
+    const str = value.toString();
+    return mongoose.Types.ObjectId.isValid(str) ? str : null;
+  }
+  if (typeof value === 'object' && value._id && value._id !== value) {
     return extractObjectId(value._id);
   }
   if (typeof value.toString === 'function') {
@@ -17,6 +23,107 @@ function extractObjectId(value) {
   }
   return null;
 }
+
+function isBureauDirecteurDept(dept, orgSettings) {
+  if (!dept) return false;
+  if (
+    orgSettings?.bureauDirecteurDepartmentId &&
+    String(dept._id) === String(orgSettings.bureauDirecteurDepartmentId)
+  ) {
+    return true;
+  }
+  const code = typeof dept.code === 'string' ? dept.code.trim().toLowerCase() : '';
+  const name = typeof dept.name === 'string' ? dept.name.trim().toLowerCase() : '';
+  if (['dg', 'bd', 'dir'].includes(code)) return true;
+  return (
+    /^(dg|bd|dir)$/i.test(name) ||
+    /bureau\s*(du\s*)?directeur/i.test(name) ||
+    /^direction(\s+g[ée]n[ée]rale)?$/i.test(name) ||
+    /مكتب\s*المدير/i.test(name) ||
+    /المديرية/i.test(name)
+  );
+}
+
+function isRhDept(dept, orgSettings) {
+  if (!dept) return false;
+  if (orgSettings?.rhDepartmentId && String(dept._id) === String(orgSettings.rhDepartmentId)) {
+    return true;
+  }
+  const code = typeof dept.code === 'string' ? dept.code.trim().toLowerCase() : '';
+  const name = typeof dept.name === 'string' ? dept.name.trim().toLowerCase() : '';
+  if (['rh', 'hr'].includes(code)) return true;
+  return (
+    /\b(rh|hr)\b/i.test(name) ||
+    /ressources?\s*humaines?/i.test(name) ||
+    /الموارد\s*البشرية/i.test(name)
+  );
+}
+
+function isBureauOrdreDept(dept, orgSettings) {
+  if (!dept) return false;
+  if (
+    orgSettings?.bureauOrdreDepartmentId &&
+    String(dept._id) === String(orgSettings.bureauOrdreDepartmentId)
+  ) {
+    return true;
+  }
+  const code = typeof dept.code === 'string' ? dept.code.trim().toLowerCase() : '';
+  const name = typeof dept.name === 'string' ? dept.name.trim().toLowerCase() : '';
+  if (['bo'].includes(code)) return true;
+  return (
+    /\bbo\b/i.test(name) ||
+    /bureau\s*d['’]?\s*ordre/i.test(name) ||
+    /bureau\s*ordre/i.test(name) ||
+    /مكتب\s*الضبط/i.test(name) ||
+    /مكتب\s*التنسيق/i.test(name)
+  );
+}
+
+async function resolveAssignableDepartmentScope(baseDeptIds, activeDeptHint = null) {
+  const normalizedBaseIds = (Array.isArray(baseDeptIds) ? baseDeptIds : [])
+    .map((id) => extractObjectId(id))
+    .filter(Boolean);
+
+  const [allDepts, orgSettings] = await Promise.all([
+    Department.find({ isActive: { $ne: false } }).lean(),
+    OrganizationSettings.findOne().lean(),
+  ]);
+
+  const allowedDepartmentIds = new Set(normalizedBaseIds);
+
+  // Always include Bureau Directeur departments for assignable scope
+  for (const dept of allDepts) {
+    if (isBureauDirecteurDept(dept, orgSettings)) {
+      allowedDepartmentIds.add(String(dept._id));
+    }
+  }
+
+  // Check if any base department (or populated hint) is RH
+  const isRhScope =
+    normalizedBaseIds.some((deptId) => {
+      const matched = allDepts.find((d) => String(d._id) === deptId);
+      return matched ? isRhDept(matched, orgSettings) : false;
+    }) ||
+    (activeDeptHint && typeof activeDeptHint === 'object' ? isRhDept(activeDeptHint, orgSettings) : false);
+
+  // If manager is in RH, also include Bureau d'Ordre departments
+  if (isRhScope) {
+    for (const dept of allDepts) {
+      if (isBureauOrdreDept(dept, orgSettings)) {
+        allowedDepartmentIds.add(String(dept._id));
+      }
+    }
+  }
+
+  return {
+    allowedDepartmentIds: Array.from(allowedDepartmentIds),
+    isRhScope,
+  };
+}
+
+exports.extractObjectId = extractObjectId;
+exports.isBureauOrdreDept = isBureauOrdreDept;
+exports.resolveAssignableDepartmentScope = resolveAssignableDepartmentScope;
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -110,9 +217,9 @@ exports.getUsers = async (req, res, next) => {
 exports.getAssignableUsers = async (req, res, next) => {
   try {
     const filter = {
-      isActive: true,
+      isActive: { $ne: false },
       isDeleted: { $ne: true },
-      role: { $nin: ['Admin', 'AdminTuningDesk'] }
+      role: { $ne: 'Admin' }
     };
 
     if (req.user.role === 'AdminDepartment') {
@@ -126,7 +233,15 @@ exports.getAssignableUsers = async (req, res, next) => {
         return next(new ErrorResponse('No active department selected. Please contact administrator.', 400));
       }
 
-      filter.$or = [{ departments: activeDeptId }, { activeDepartment: activeDeptId }];
+      const { allowedDepartmentIds } = await resolveAssignableDepartmentScope(
+        [activeDeptId],
+        req.user.activeDepartment
+      );
+
+      filter.$or = [
+        { departments: { $in: allowedDepartmentIds } },
+        { activeDepartment: { $in: allowedDepartmentIds } }
+      ];
     } else if (req.user.role === 'Admin' || req.user.role === 'Director') {
       const rawDeptParam = typeof req.query.departmentId === 'string' ? req.query.departmentId.trim() : '';
       if (rawDeptParam && rawDeptParam !== 'all') {
@@ -141,11 +256,14 @@ exports.getAssignableUsers = async (req, res, next) => {
         }
 
         if (deptIds.length > 0) {
+          const { allowedDepartmentIds } = await resolveAssignableDepartmentScope(deptIds);
           filter.$or = [
-            { departments: { $in: deptIds } },
-            { activeDepartment: { $in: deptIds } }
+            { departments: { $in: allowedDepartmentIds } },
+            { activeDepartment: { $in: allowedDepartmentIds } }
           ];
         }
+      } else {
+        filter.role = { $nin: ['Admin', 'AdminTuningDesk'] };
       }
     } else {
       return next(new ErrorResponse('Not authorized to access assignable users', 403));

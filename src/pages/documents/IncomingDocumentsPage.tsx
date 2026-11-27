@@ -74,6 +74,7 @@ import { IncomingDocument, Department } from '@/types';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
 import { formatLongDate } from '@/utils/formatDate';
 import { getActivityUrgency, getDocumentPriority } from '@/utils/activityUtils';
+import { extractDeptMeta, isBureauOrdreUserAccount } from '@/utils/departmentScope';
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
 import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
@@ -202,19 +203,8 @@ const IncomingDocumentsPage: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const bureauOrdreDeptId =
-    typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings.bureauOrdreDepartmentId
-      ? String(orgSettings.bureauOrdreDepartmentId._id || '')
-      : String(orgSettings?.bureauOrdreDepartmentId || '');
-  const activeDeptId = currentUser?.activeDepartment
-    ? String(
-        (currentUser.activeDepartment as { _id?: string; id?: string })._id ||
-          (currentUser.activeDepartment as { id?: string }).id ||
-          currentUser.activeDepartment
-      )
-    : '';
-  const isBureauOrdreUser =
-    isAdminTuningDesk || Boolean(bureauOrdreDeptId && activeDeptId && bureauOrdreDeptId === activeDeptId);
+  const bureauOrdreDeptId = extractDeptMeta(orgSettings?.bureauOrdreDepartmentId).id;
+  const isBureauOrdreUser = isBureauOrdreUserAccount(currentUser, bureauOrdreDeptId);
 
   const canAddDocuments = isAdmin || isAdminTuningDesk;
   const canEdit = isAdmin || isAdminTuningDesk;

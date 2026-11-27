@@ -8,44 +8,25 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { assignResponsible } from '@/services/documentService';
 import { getAssignableUsers } from '@/services/userService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { showResponsibleAssignmentNotification } from '@/components/notifications/ResponsibleAssignmentNotification';
 import { Department, IncomingDocument, ResponsibleUserRef } from '@/types';
-import { UserPlus, Users, CheckCircle2, User as UserIcon, Shield } from 'lucide-react';
+import {
+  extractDeptMeta,
+  getUserDepartmentLabel,
+  isBureauDirecteurDepartment,
+  isBureauOrdreDepartment,
+  isRhDepartment,
+  NormalizedDeptMeta,
+} from '@/utils/departmentScope';
+import { UserPlus, Users, CheckCircle2, User as UserIcon, Shield, Building2 } from 'lucide-react';
 
 interface AssignResponsibleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   document: IncomingDocument;
-}
-
-interface NormalizedDept {
-  id: string;
-  name: string;
-  code: string;
-}
-
-function extractDeptMeta(dept: unknown): NormalizedDept {
-  if (!dept) return { id: '', name: '', code: '' };
-  if (typeof dept === 'string') {
-    const trimmed = dept.trim();
-    const looksLikeObjectId = /^[a-f0-9]{24}$/i.test(trimmed);
-    return {
-      id: looksLikeObjectId ? trimmed : trimmed,
-      name: looksLikeObjectId ? '' : trimmed.toLowerCase(),
-      code: looksLikeObjectId ? '' : trimmed.toLowerCase(),
-    };
-  }
-  if (typeof dept === 'object') {
-    const obj = dept as { _id?: unknown; id?: unknown; name?: unknown; code?: unknown };
-    const rawId = obj._id ?? (typeof obj.id === 'object' ? (obj.id as { _id?: unknown })?._id : obj.id);
-    const id = rawId ? String(rawId).trim() : '';
-    const name = typeof obj.name === 'string' ? obj.name.trim().toLowerCase() : '';
-    const code = typeof obj.code === 'string' ? obj.code.trim().toLowerCase() : '';
-    return { id, name, code };
-  }
-  return { id: String(dept).trim(), name: '', code: '' };
 }
 
 function getUserDisplayName(user: ResponsibleUserRef): { primary: string; secondary?: string } {
@@ -71,8 +52,19 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState<string>('');
 
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+    enabled: open,
+  });
+
+  const rhDeptId = extractDeptMeta(orgSettings?.rhDepartmentId).id;
+  const bdDeptId = extractDeptMeta(orgSettings?.bureauDirecteurDepartmentId).id;
+  const boDeptId = extractDeptMeta(orgSettings?.bureauOrdreDepartmentId).id;
+
   // Determine target departments from activeDepartment (for AdminDepartment) or document.assignedTo (for Admin)
-  const targetDepartments = useMemo<NormalizedDept[]>(() => {
+  const targetDepartments = useMemo<NormalizedDeptMeta[]>(() => {
     const activeMeta = extractDeptMeta(
       currentUser?.activeDepartment ||
         (currentUser?.role === 'AdminDepartment' ? currentUser?.departments?.[0] : null)
@@ -85,10 +77,12 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
       return document.assignedTo
         .map((entry) => {
           const innerMeta = extractDeptMeta(entry.id);
+          const fallbackName = typeof entry.name === 'string' ? entry.name.trim() : '';
           return {
             id: innerMeta.id,
-            name: innerMeta.name || (typeof entry.name === 'string' ? entry.name.trim().toLowerCase() : ''),
+            name: innerMeta.name || fallbackName.toLowerCase(),
             code: innerMeta.code,
+            displayName: innerMeta.displayName || fallbackName,
           };
         })
         .filter((meta) => Boolean(meta.id || meta.name || meta.code));
@@ -97,14 +91,19 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
     return [];
   }, [currentUser?.activeDepartment, currentUser?.departments, currentUser?.role, document?.assignedTo]);
 
+  const isRhScope = useMemo(
+    () => targetDepartments.some((dept) => isRhDepartment(dept, rhDeptId)),
+    [targetDepartments, rhDeptId]
+  );
+
   const targetDeptIdParam = useMemo(() => {
     const ids = targetDepartments.map((d) => d.id).filter(Boolean);
     return ids.length > 0 ? ids.join(',') : undefined;
   }, [targetDepartments]);
 
-  // Fetch assignable users for the active/target department
+  // Fetch assignable users for the active/target department scope
   const { data: users = [], isLoading } = useQuery<ResponsibleUserRef[]>({
-    queryKey: ['assignableUsers', targetDeptIdParam || 'all'],
+    queryKey: ['assignableUsers', currentUser?.role || 'guest', targetDeptIdParam || 'all'],
     queryFn: () => getAssignableUsers(targetDeptIdParam),
     enabled: open,
   });
@@ -153,11 +152,11 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
     });
   };
 
-  // Filter users cleanly with normalized ID, name, and code comparisons across departments and activeDepartment
+  // Filter users cleanly with normalized ID, name, and code comparisons plus Bureau Directeur / BO scope rules
   const departmentUsers = useMemo(() => {
     return users.filter((user) => {
       if (user.isActive === false || user.isDeleted) return false;
-      if (user.role === 'Admin' || user.role === 'AdminTuningDesk') return false;
+      if (user.role === 'Admin') return false;
 
       if (targetDepartments.length === 0) {
         return currentUser?.role === 'Admin';
@@ -170,15 +169,19 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
 
       return userDepts.some((uDept) => {
         const uMeta = extractDeptMeta(uDept);
-        return targetDepartments.some((target) => {
+        const matchesDirectTarget = targetDepartments.some((target) => {
           if (target.id && uMeta.id && uMeta.id === target.id) return true;
           if (target.code && uMeta.code && uMeta.code === target.code) return true;
           if (target.name && uMeta.name && uMeta.name === target.name) return true;
           return false;
         });
+        if (matchesDirectTarget) return true;
+        if (isBureauDirecteurDepartment(uDept, bdDeptId)) return true;
+        if (isRhScope && isBureauOrdreDepartment(uDept, boDeptId)) return true;
+        return false;
       });
     });
-  }, [users, targetDepartments, currentUser?.role]);
+  }, [users, targetDepartments, currentUser?.role, bdDeptId, boDeptId, isRhScope]);
 
   const activeDepartmentLabel =
     currentUser?.activeDepartment?.name ||
@@ -256,6 +259,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
                     departmentUsers.map((user) => {
                       const display = getUserDisplayName(user);
                       const roleLabel = user.role ? t(`roles.${user.role}`, { defaultValue: user.role }) : '';
+                      const deptLabel = getUserDepartmentLabel(user);
                       return (
                         <SelectItem key={user._id} value={user._id} className="py-2.5 text-base">
                           <div className="flex items-center gap-3">
@@ -267,6 +271,15 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
                                 <span className="font-bold text-slate-900 dark:text-slate-100">{display.primary}</span>
                                 {display.secondary && (
                                   <span className="text-xs text-slate-500 dark:text-slate-400" dir="ltr">@{display.secondary}</span>
+                                )}
+                                {deptLabel && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-[#2c5282] border border-blue-200/80 dark:bg-blue-950/60 dark:text-blue-200 dark:border-blue-800/60"
+                                  >
+                                    <Building2 className="h-3 w-3 me-1" />
+                                    {deptLabel}
+                                  </Badge>
                                 )}
                                 {roleLabel && (
                                   <Badge variant="outline" className="text-xs px-2 py-0.5 rounded-full border-slate-200/80 dark:border-slate-700">
@@ -302,7 +315,9 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
               <span>{t('documents.assignResponsible.activeDepartment', { department: activeDepartmentLabel })}</span>
             </div>
             <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
-              {t('documents.assignResponsible.departmentConstraintNotice')}
+              {isRhScope
+                ? t('documents.assignResponsible.scopeNoticeRh')
+                : t('documents.assignResponsible.scopeNoticeStandard')}
             </p>
           </div>
         </div>

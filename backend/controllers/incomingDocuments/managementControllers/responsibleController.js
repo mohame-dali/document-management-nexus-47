@@ -2,15 +2,18 @@
 const mongoose = require('mongoose');
 const IncomingDocument = require('../../../models/IncomingDocument');
 const User = require('../../../models/User');
+const Department = require('../../../models/Department');
+const OrganizationSettings = require('../../../models/OrganizationSettings');
 const ResponsibleNotification = require('../../../models/ResponsibleNotification');
 const ErrorResponse = require('../../../utils/errorResponse');
+const {
+  extractObjectId,
+  isBureauOrdreDept,
+  resolveAssignableDepartmentScope,
+} = require('../../users/listControllers');
 
 function extractId(value) {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  if (value._id) return value._id.toString();
-  if (value.id) return extractId(value.id);
-  return typeof value.toString === 'function' ? value.toString() : '';
+  return extractObjectId(value) || '';
 }
 
 // @desc    Assign responsible user to document
@@ -39,15 +42,33 @@ exports.assignResponsible = async (req, res, next) => {
       );
     }
 
-    const activeDeptId = extractId(req.user.activeDepartment);
+    const activeDeptId =
+      extractId(req.user.activeDepartment) ||
+      (Array.isArray(req.user.departments) && req.user.departments.length > 0
+        ? extractId(req.user.departments[0])
+        : '');
     const docAssignedDeptIds = Array.isArray(document.assignedTo)
       ? document.assignedTo.map((dept) => extractId(dept.id || dept)).filter(Boolean)
       : [];
 
-    // Department managers can only assign on documents assigned to their active department
+    // Department managers can only assign on documents assigned to their active department (and BO cannot assign)
     if (req.user.role !== 'Admin') {
       if (!activeDeptId) {
         return next(new ErrorResponse('No active department selected', 403));
+      }
+
+      const [activeDeptDoc, orgSettings] = await Promise.all([
+        Department.findById(activeDeptId).lean(),
+        OrganizationSettings.findOne().lean(),
+      ]);
+      const actorDeptCandidate = activeDeptDoc || req.user.activeDepartment;
+      if (
+        isBureauOrdreDept(actorDeptCandidate, orgSettings) ||
+        req.user.username?.trim().toLowerCase() === 'bo'
+      ) {
+        return next(
+          new ErrorResponse("Bureau d'Ordre users are not authorized to assign document responsible", 403)
+        );
       }
 
       if (!docAssignedDeptIds.includes(activeDeptId)) {
@@ -66,7 +87,7 @@ exports.assignResponsible = async (req, res, next) => {
       );
     }
 
-    if (user.role === 'Admin' || user.role === 'AdminTuningDesk') {
+    if (user.role === 'Admin') {
       return next(
         new ErrorResponse('Selected user role cannot be assigned as document responsible', 400)
       );
@@ -80,13 +101,19 @@ exports.assignResponsible = async (req, res, next) => {
     );
 
     if (req.user.role !== 'Admin') {
-      if (!userDeptIds.has(activeDeptId)) {
+      const { allowedDepartmentIds } = await resolveAssignableDepartmentScope(
+        [activeDeptId],
+        req.user.activeDepartment
+      );
+      const matchesAllowedDept = allowedDepartmentIds.some((deptId) => userDeptIds.has(deptId));
+      if (!matchesAllowedDept) {
         return next(
-          new ErrorResponse('User does not belong to your department', 403)
+          new ErrorResponse('User does not belong to an assignable department', 403)
         );
       }
     } else if (docAssignedDeptIds.length > 0) {
-      const matchesDocDepartment = docAssignedDeptIds.some((deptId) => userDeptIds.has(deptId));
+      const { allowedDepartmentIds } = await resolveAssignableDepartmentScope(docAssignedDeptIds);
+      const matchesDocDepartment = allowedDepartmentIds.some((deptId) => userDeptIds.has(deptId));
       if (!matchesDocDepartment) {
         return next(
           new ErrorResponse('User does not belong to the assigned department(s) of this document', 403)

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { MoreHorizontal, Eye, Download, Edit, FolderOpen, UserPlus, MessageSquare, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -23,8 +23,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { downloadDocument, deleteIncomingDocument, deleteOutgoingDocument } from '@/services/documentService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { extractDeptMeta, isBureauOrdreUserAccount } from '@/utils/departmentScope';
 import DocumentFolderDialog from './DocumentFolderDialog';
 import AssignResponseDialog from './AssignResponseDialog';
 import AssignResponsibleDialog from './AssignResponsibleDialog';
@@ -48,17 +50,27 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
   const [showResponsibleDialog, setShowResponsibleDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdmin = currentUser?.role === 'Admin';
   const isDirector = currentUser?.role === 'Director';
+
+  const bureauOrdreDeptId = extractDeptMeta(orgSettings?.bureauOrdreDepartmentId).id;
+  const isBureauOrdreUser = isBureauOrdreUserAccount(currentUser, bureauOrdreDeptId);
   
   // AdminTuningDesk and Admin can edit and delete documents (Director is read-only)
   const canEdit = isAdminTuningDesk || isAdmin;
   const canDelete = isAdminTuningDesk || isAdmin;
 
-  // AdminDepartment can organize documents, others can only view
-  const canOrganizeDocuments = isAdminDepartment;
+  // AdminDepartment can organize documents, others (and Bureau d'Ordre) can only view
+  const canOrganizeDocuments = isAdminDepartment && !isBureauOrdreUser;
+  const canAssignResponsible = isAdminDepartment && !isBureauOrdreUser;
   const canViewCategorization = isAdmin || 
                                isDirector ||
                                isAdminTuningDesk || 
@@ -173,10 +185,12 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
                 إضافة رد
               </DropdownMenuItem>
               
-              <DropdownMenuItem onClick={() => setShowResponsibleDialog(true)}>
-                <UserPlus className="me-2 h-4 w-4" />
-                تعيين مسؤول
-              </DropdownMenuItem>
+              {canAssignResponsible && (
+                <DropdownMenuItem onClick={() => setShowResponsibleDialog(true)}>
+                  <UserPlus className="me-2 h-4 w-4" />
+                  تعيين مسؤول
+                </DropdownMenuItem>
+              )}
             </>
           )}
         </DropdownMenuContent>
@@ -226,8 +240,8 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ doc, type, translatio
         />
       )}
 
-      {/* Responsible Assignment Dialog - Only for incoming documents and AdminDepartment */}
-      {type === 'incoming' && isAdminDepartment && (
+      {/* Responsible Assignment Dialog - Only for incoming documents and non-BO AdminDepartment */}
+      {type === 'incoming' && canAssignResponsible && (
         <AssignResponsibleDialog
           open={showResponsibleDialog}
           onOpenChange={setShowResponsibleDialog}

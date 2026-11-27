@@ -44,6 +44,7 @@ import { getDocumentTimeline, AuditLog } from '@/services/auditService';
 import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { formatLongDate, formatDateTime } from '@/utils/formatDate';
 import { getActivityUrgency } from '@/utils/activityUtils';
+import { extractDeptMeta, isBureauOrdreUserAccount } from '@/utils/departmentScope';
 import { IncomingDocument, OutgoingDocument } from '@/types';
 
 import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
@@ -106,19 +107,8 @@ const ViewIncomingDocument: React.FC = () => {
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
-  const bureauOrdreDeptId =
-    typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings.bureauOrdreDepartmentId
-      ? String(orgSettings.bureauOrdreDepartmentId._id || '')
-      : String(orgSettings?.bureauOrdreDepartmentId || '');
-  const activeDeptId = currentUser?.activeDepartment
-    ? String(
-        (currentUser.activeDepartment as { _id?: string; id?: string })._id ||
-          (currentUser.activeDepartment as { id?: string }).id ||
-          currentUser.activeDepartment
-      )
-    : '';
-  const isBureauOrdreUser =
-    isAdminTuningDesk || Boolean(bureauOrdreDeptId && activeDeptId && bureauOrdreDeptId === activeDeptId);
+  const bureauOrdreDeptId = extractDeptMeta(orgSettings?.bureauOrdreDepartmentId).id;
+  const isBureauOrdreUser = isBureauOrdreUserAccount(currentUser, bureauOrdreDeptId);
 
   const canEdit = isAdminTuningDesk || isAdmin;
   const canOrganizeDocuments = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
