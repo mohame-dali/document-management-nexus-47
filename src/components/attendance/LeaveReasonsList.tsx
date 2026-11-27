@@ -39,12 +39,12 @@ interface LeaveReasonsListProps {
   onDelete: (reason: LeaveReason) => void;
 }
 
-const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
-  conge: { label: 'عطلة (Congé)', color: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
-  mission: { label: 'مهمة (Mission)', color: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
-  formation: { label: 'تكوين (Formation)', color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
-  service: { label: 'خدمة (Service)', color: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
-  autre: { label: 'أخرى (Autre)', color: 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700' },
+const CATEGORY_LABELS: Record<string, { ar: string; fr: string; color: string }> = {
+  conge: { ar: 'عطلة', fr: 'Congé', color: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+  mission: { ar: 'مهمة', fr: 'Mission', color: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
+  formation: { ar: 'تكوين', fr: 'Formation', color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+  service: { ar: 'خدمة', fr: 'Service', color: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+  autre: { ar: 'أخرى', fr: 'Autre', color: 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700' },
 };
 
 export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
@@ -54,7 +54,7 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
   onToggle,
   onDelete,
 }) => {
-  const { dir } = useDirection();
+  const { dir, isRTL } = useDirection();
 
   if (loading) {
     return (
@@ -69,25 +69,39 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
         <EmptyState
           icon={<Tag className="h-10 w-10 text-slate-700 dark:text-slate-300" />}
-          title="لا توجد أنواع غياب مطابقة"
-          description="قم بتعديل خيارات البحث أو الفلترة أو أضف نوع غياب جديد."
+          title={isRTL ? 'لا توجد أنواع غياب مطابقة' : "Aucun type d'absence correspondant"}
+          description={isRTL ? 'قم بتعديل خيارات البحث أو الفلترة أو أضف نوع غياب جديد.' : 'Ajustez vos filtres ou ajoutez un nouveau type.'}
         />
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto max-h-[650px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+    <div className="overflow-x-auto max-h-[650px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xs">
       <Table dir={dir} className="w-full text-start border-collapse">
         <TableHeader className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-700 backdrop-blur-sm">
           <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-700">
-            <TableHead className="w-16 text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الترتيب</TableHead>
-            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">الرمز (Code)</TableHead>
-            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">المسمى بالعربية والفرنسية</TableHead>
-            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">التصنيف</TableHead>
-            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">خصم من الرصيد</TableHead>
-            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الحالة</TableHead>
-            <TableHead className="w-36 text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">الإجراءات</TableHead>
+            <TableHead className="w-16 text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">
+              {isRTL ? 'الترتيب' : 'Ordre'}
+            </TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">
+              {isRTL ? 'الرمز' : 'Code'}
+            </TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">
+              {isRTL ? 'المسمى' : 'Libellé'}
+            </TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-start whitespace-nowrap">
+              {isRTL ? 'التصنيف' : 'Catégorie'}
+            </TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">
+              {isRTL ? 'خصم من الرصيد' : 'Impact solde'}
+            </TableHead>
+            <TableHead className="text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">
+              {isRTL ? 'الحالة' : 'Statut'}
+            </TableHead>
+            <TableHead className="w-36 text-slate-800 dark:text-slate-200 font-bold text-xs py-3 px-4 text-center whitespace-nowrap">
+              {isRTL ? 'الإجراءات' : 'Actions'}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -98,12 +112,10 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                 key={reason._id}
                 className="hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors duration-150 border-slate-200 dark:border-slate-800"
               >
-                {/* Order */}
                 <TableCell className="py-3 px-4 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 tabular-nums">
                   {reason.order ?? 100}
                 </TableCell>
 
-                {/* Code */}
                 <TableCell className="py-3 px-4">
                   <div className="flex items-center gap-2">
                     <span
@@ -117,69 +129,69 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                     {reason.isSystem && (
                       <Badge variant="outline" className="text-[13px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 gap-1 px-1.5 py-0 h-5 font-medium">
                         <ShieldCheck className="h-3 w-3 text-slate-700 dark:text-slate-300" />
-                        نظامي
+                        {isRTL ? 'نظامي' : 'Système'}
                       </Badge>
                     )}
                   </div>
                 </TableCell>
 
-                {/* Labels */}
                 <TableCell className="py-3 px-4">
                   <div>
                     <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
-                      {reason.labelAr}
+                      {isRTL ? reason.labelAr : reason.labelFr || reason.labelAr}
                     </span>
-                    {reason.labelFr && (
-                      <span className="block text-xs text-slate-700 dark:text-slate-300 font-normal" dir="ltr">
+                    {isRTL && reason.labelFr && (
+                      <span className="block text-xs text-slate-600 dark:text-slate-400 font-normal" dir="ltr">
                         {reason.labelFr}
+                      </span>
+                    )}
+                    {!isRTL && reason.labelAr && reason.labelFr && (
+                      <span className="block text-xs text-slate-600 dark:text-slate-400 font-normal" dir="rtl">
+                        {reason.labelAr}
                       </span>
                     )}
                     {reason.requiresDocument && (
                       <span className="inline-flex items-center gap-1 text-[13px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-md mt-1">
                         <FileText className="h-3 w-3" />
-                        يتطلب وثيقة
+                        {isRTL ? 'يتطلب وثيقة' : 'Justificatif requis'}
                       </span>
                     )}
                   </div>
                 </TableCell>
 
-                {/* Category */}
                 <TableCell className="py-3 px-4 whitespace-nowrap">
                   <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-md border ${catInfo.color}`}>
-                    {catInfo.label}
+                    {isRTL ? catInfo.ar : catInfo.fr}
                   </span>
                 </TableCell>
 
-                {/* Deducts from balance */}
                 <TableCell className="py-3 px-4 text-center whitespace-nowrap">
                   {reason.impacteSolde ? (
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 px-2 py-0.5 rounded-md">
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                      يخصم
+                      {isRTL ? 'يخصم' : 'Déduit'}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
                       <XCircle className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-                      لا يخصم
+                      {isRTL ? 'لا يخصم' : 'Non déduit'}
                     </span>
                   )}
                 </TableCell>
 
-                {/* Status Toggle */}
                 <TableCell className="py-3 px-4 text-center whitespace-nowrap">
                   <div className="flex items-center justify-center gap-2">
                     <Switch
                       checked={reason.isActive}
                       onCheckedChange={() => onToggle(reason._id)}
-                      aria-label="تغيير الحالة"
+                      aria-label={isRTL ? 'تغيير الحالة' : 'Changer le statut'}
                     />
                     <span className={`text-xs font-medium ${reason.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                      {reason.isActive ? 'نشط' : 'معطل'}
+                      {reason.isActive ? (isRTL ? 'نشط' : 'Actif') : isRTL ? 'معطل' : 'Inactif'}
                     </span>
                   </div>
                 </TableCell>
 
-                {/* Actions */}
                 <TableCell className="py-3 px-4 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <TooltipProvider>
@@ -190,13 +202,13 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => onEdit(reason)}
-                            aria-label="تعديل نوع الغياب"
+                            aria-label={isRTL ? 'تعديل نوع الغياب' : 'Modifier'}
                             className="h-9 w-9 p-0 text-[#2c5282] dark:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>تعديل</TooltipContent>
+                        <TooltipContent>{isRTL ? 'تعديل' : 'Modifier'}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
 
@@ -212,8 +224,12 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                               onClick={() => onDelete(reason)}
                               aria-label={
                                 reason.isSystem
-                                  ? 'نوع نظامي محمي لا يمكن حذفه'
-                                  : 'حذف نوع الغياب'
+                                  ? isRTL
+                                    ? 'نوع نظامي محمي لا يمكن حذفه'
+                                    : 'Type système protégé'
+                                  : isRTL
+                                  ? 'حذف نوع الغياب'
+                                  : 'Supprimer'
                               }
                               className={`h-9 w-9 p-0 rounded-lg ${
                                 reason.isSystem
@@ -230,7 +246,13 @@ export const LeaveReasonsList: React.FC<LeaveReasonsListProps> = ({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent>
-                          {reason.isSystem ? 'الأنواع النظامية محمية من الحذف' : 'حذف النوع'}
+                          {reason.isSystem
+                            ? isRTL
+                              ? 'الأنواع النظامية محمية من الحذف'
+                              : 'Protégé (type système)'
+                            : isRTL
+                            ? 'حذف النوع'
+                            : 'Supprimer'}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

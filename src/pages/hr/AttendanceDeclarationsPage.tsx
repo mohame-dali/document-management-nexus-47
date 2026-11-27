@@ -52,6 +52,8 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 import { getErrorMessage } from '@/utils/errorMessages';
 import { formatDateWithWeekday, formatShortDate } from '@/utils/formatDate';
 
@@ -151,11 +153,11 @@ export const AttendanceDeclarationsPage: React.FC = () => {
       }
     } catch (error: unknown) {
       console.error('Erreur récupération déclarations:', error);
-      toast.error(getErrorMessage(error, 'تعذر تحميل قائمة التصاريح'));
+      toast.error(getErrorMessage(error, isRTL ? 'تعذر تحميل قائمة التصاريح' : 'Impossible de charger les déclarations'));
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, departmentFilter, dateFilter, page]);
+  }, [statusFilter, departmentFilter, dateFilter, page, isRTL]);
 
   useEffect(() => {
     fetchDeclarations();
@@ -300,28 +302,28 @@ export const AttendanceDeclarationsPage: React.FC = () => {
         return (
           <Badge className="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60 border border-amber-300 dark:border-amber-800 font-medium px-2.5 py-0.5 gap-1">
             <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-            قيد المراجعة
+            {isRTL ? 'قيد المراجعة' : 'En attente'}
           </Badge>
         );
       case 'approuvee':
         return (
           <Badge className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 font-medium px-2.5 py-0.5 gap-1">
             <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-            مقبول ومعتمد
+            {isRTL ? 'مقبول ومعتمد' : 'Approuvée'}
           </Badge>
         );
       case 'rejetee':
         return (
           <Badge className="bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-950/60 border border-red-300 dark:border-red-800 font-medium px-2.5 py-0.5 gap-1">
             <XCircle className="w-3 h-3 text-red-600 dark:text-red-400" />
-            مرفوض
+            {isRTL ? 'مرفوض' : 'Rejetée'}
           </Badge>
         );
       case 'modifiee':
         return (
           <Badge className="bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/60 border border-blue-300 dark:border-blue-800 font-medium px-2.5 py-0.5 gap-1">
             <Edit3 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-            تم التعديل
+            {isRTL ? 'تم التعديل' : 'Modifiée'}
           </Badge>
         );
       default:
@@ -335,7 +337,7 @@ export const AttendanceDeclarationsPage: React.FC = () => {
       return (
         <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium tabular-nums">
           <UserCheck className="w-3.5 h-3.5" />
-          حاضر {decl.heureArrivee ? `(${decl.heureArrivee})` : ''}
+          {isRTL ? 'حاضر' : 'Présent'} {decl.heureArrivee ? `(${decl.heureArrivee})` : ''}
         </span>
       );
     }
@@ -344,129 +346,111 @@ export const AttendanceDeclarationsPage: React.FC = () => {
     return (
       <span className="inline-flex items-center gap-1 text-amber-800 dark:text-amber-300 font-medium">
         <UserX className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-        {found ? found.labelAr : decl.motif || 'غياب مبرر'}
+        {found ? (isRTL ? found.labelAr : found.labelFr || found.labelAr) : decl.motif || (isRTL ? 'غياب مبرر' : 'Absence')}
       </span>
     );
   };
 
   const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
   const NextIcon = isRTL ? ChevronLeft : ChevronRight;
+  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto text-start" dir={dir}>
-      {/* En-tête de la page */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#2c5282]/10 dark:bg-sky-900/40 rounded-lg text-[#2c5282] dark:text-sky-300">
-              <ClipboardList className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
-                <span>الإعلانات والتصاريح في انتظار الموافقة</span>
-                {kpis.pending > 0 && (
-                  <span className="text-xs bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-bold px-2.5 py-0.5 rounded-full tabular-nums">
-                    {kpis.pending} معلقة
-                  </span>
-                )}
-              </h1>
-              <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
-                مراجعة تصاريح الحضور والغياب والمأموريات المقدمة مسبقاً من طرف الموظفين واعتمادها في السجل اليومي.
-              </p>
-            </div>
-          </div>
+    <div className="space-y-3.5 text-start" dir={dir}>
+      {/* Compact Single-Row KPI Strip + Back & Refresh Actions */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs tabular-nums">
+          <span className="inline-flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100 me-1">
+            <ClipboardList className="w-4 h-4 text-[#2c5282] dark:text-sky-300 shrink-0" />
+            <span>{isRTL ? 'الإعلانات المعلقة' : 'Déclarations'}</span>
+          </span>
+          <span className="text-slate-300 dark:text-slate-700 me-1">|</span>
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('en_attente');
+              setPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-md font-semibold transition-colors whitespace-nowrap ${
+              statusFilter === 'en_attente'
+                ? 'bg-amber-600 text-white'
+                : 'text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+            }`}
+          >
+            {isRTL ? 'قيد المراجعة' : 'En attente'} ({kpis.pending})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('approuvee');
+              setPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-md font-semibold transition-colors whitespace-nowrap ${
+              statusFilter === 'approuvee'
+                ? 'bg-emerald-700 text-white'
+                : 'text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+            }`}
+          >
+            {isRTL ? 'مقبولة' : 'Approuvées'} ({kpis.approved})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('rejetee');
+              setPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-md font-semibold transition-colors whitespace-nowrap ${
+              statusFilter === 'rejetee'
+                ? 'bg-red-700 text-white'
+                : 'text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40'
+            }`}
+          >
+            {isRTL ? 'مرفوضة' : 'Rejetées'} ({kpis.rejected})
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter('all');
+              setPage(1);
+            }}
+            className={`px-2.5 py-1 rounded-md font-semibold transition-colors whitespace-nowrap ${
+              statusFilter === 'all'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {isRTL ? 'الكل' : 'Toutes'}
+          </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 px-3 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-xs font-medium gap-1.5 whitespace-nowrap shrink-0"
+          >
+            <Link to="/dashboard/hr/attendance">
+              <BackIcon className="w-3.5 h-3.5" />
+              <span>{isRTL ? 'تسجيل الحضور' : 'Pointage'}</span>
+            </Link>
+          </Button>
+
           <Button
             variant="outline"
+            size="sm"
             onClick={fetchDeclarations}
             disabled={loading}
-            className="h-10 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg gap-2"
+            className="h-9 px-3 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-medium gap-1.5 whitespace-nowrap shrink-0"
           >
-            <RotateCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>تحديث</span>
+            <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>{isRTL ? 'تحديث' : 'Actualiser'}</span>
           </Button>
         </div>
       </div>
 
-      {/* 3 Cartes KPI */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* KPI 1 : En attente */}
-        <div
-          onClick={() => {
-            setStatusFilter('en_attente');
-            setPage(1);
-          }}
-          className={`cursor-pointer p-4 rounded-lg border border-t-2 border-t-amber-500 dark:border-t-amber-400 shadow-sm transition-all ${
-            statusFilter === 'en_attente'
-              ? 'bg-amber-50/80 dark:bg-amber-950/35 border-amber-300 dark:border-amber-700 ring-2 ring-amber-400/50 dark:ring-amber-600/40'
-              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-800'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">قيد المراجعة (معلقة)</span>
-            <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg text-amber-700 dark:text-amber-300">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-amber-900 dark:text-amber-200 tabular-nums">{kpis.pending}</span>
-            <span className="text-xs text-amber-700 dark:text-amber-400">تتطلب اتخاذ قرار</span>
-          </div>
-        </div>
-
-        {/* KPI 2 : Approuvées */}
-        <div
-          onClick={() => {
-            setStatusFilter('approuvee');
-            setPage(1);
-          }}
-          className={`cursor-pointer p-4 rounded-lg border border-t-2 border-t-emerald-500 dark:border-t-emerald-400 shadow-sm transition-all ${
-            statusFilter === 'approuvee'
-              ? 'bg-emerald-50/80 dark:bg-emerald-950/35 border-emerald-300 dark:border-emerald-700 ring-2 ring-emerald-400/50 dark:ring-emerald-600/40'
-              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-800'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">المقبولة والمعتمدة</span>
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg text-emerald-700 dark:text-emerald-300">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-emerald-900 dark:text-emerald-200 tabular-nums">{kpis.approved}</span>
-            <span className="text-xs text-emerald-700 dark:text-emerald-400">تم ترحيلها للسجل</span>
-          </div>
-        </div>
-
-        {/* KPI 3 : Rejetées */}
-        <div
-          onClick={() => {
-            setStatusFilter('rejetee');
-            setPage(1);
-          }}
-          className={`cursor-pointer p-4 rounded-lg border border-t-2 border-t-red-500 dark:border-t-red-400 shadow-sm transition-all ${
-            statusFilter === 'rejetee'
-              ? 'bg-red-50/80 dark:bg-red-950/35 border-red-300 dark:border-red-700 ring-2 ring-red-400/50 dark:ring-red-600/40'
-              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-red-300 dark:hover:border-red-800'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-red-800 dark:text-red-300">المرفوضة</span>
-            <div className="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg text-red-700 dark:text-red-300">
-              <XCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-red-900 dark:text-red-200 tabular-nums">{kpis.rejected}</span>
-            <span className="text-xs text-red-700 dark:text-red-400">تم إشعار أصحابها</span>
-          </div>
-        </div>
-      </div>
-
       {/* Barre des filtres */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+      <div className="bg-white dark:bg-slate-900 p-3.5 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           {/* Recherche */}
           <div className="relative">

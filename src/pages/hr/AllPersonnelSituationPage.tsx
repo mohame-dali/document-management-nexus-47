@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useDirection } from '@/i18n/useDirection';
 import {
@@ -11,9 +12,9 @@ import {
   RefreshCw,
   ChevronRight,
   ChevronLeft,
-  ShieldCheck,
   FileDown,
   Loader2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import {
   getDailyAttendance,
@@ -26,7 +27,6 @@ import { getLeaveReasons, LeaveReason } from '@/services/leaveReasonService';
 import { Department } from '@/types';
 import { useAttendanceExport } from '@/hooks/useAttendanceExport';
 
-// Composants de la page
 import AllPersonnelKPICards, { KPICounts } from '@/components/attendance/AllPersonnelKPICards';
 import AllPersonnelDayView, { DayPersonnelItem } from '@/components/attendance/AllPersonnelDayView';
 import AllPersonnelWeekView, { WeekPersonnelSummary } from '@/components/attendance/AllPersonnelWeekView';
@@ -37,9 +37,12 @@ import MyAttendanceLegend from '@/components/attendance/MyAttendanceLegend';
 type ViewMode = 'day' | 'week' | 'month' | 'year';
 
 export const AllPersonnelSituationPage: React.FC = () => {
+  const { currentUser } = useAuth();
   const { dir, isRTL } = useDirection();
   const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
   const now = useMemo(() => new Date(), []);
+
+  const canManageLeaveReasons = ['Admin', 'AdminDepartment'].includes(currentUser?.role || '');
 
   // États principaux
   const [viewMode, setViewMode] = useState<ViewMode>('day');
@@ -57,7 +60,6 @@ export const AllPersonnelSituationPage: React.FC = () => {
     setReportPage(1);
   }, [viewMode, selectedDepartment, currentYear, currentMonth]);
 
-  // Hook d'export PDF
   const {
     isExporting,
     exportDailyReport,
@@ -65,23 +67,21 @@ export const AllPersonnelSituationPage: React.FC = () => {
     exportYearlyReport,
   } = useAttendanceExport();
 
-  // 1. Charger les départements
+  // 1. Départements
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ['departments'],
     queryFn: getDepartments,
     staleTime: 10 * 60 * 1000,
   });
 
-  // 2. Charger les motifs de congé dynamiques
+  // 2. Motifs de congé actifs
   const { data: leaveReasons = [] } = useQuery<LeaveReason[]>({
     queryKey: ['leave-reasons-active'],
-    queryFn: async () => {
-      return await getLeaveReasons({ isActive: true });
-    },
+    queryFn: async () => await getLeaveReasons({ isActive: true }),
     staleTime: 5 * 60 * 1000,
   });
 
-  // 3. Requête Vue Jour
+  // 3. Vue Jour
   const {
     data: dayData,
     isLoading: isLoadingDay,
@@ -97,10 +97,10 @@ export const AllPersonnelSituationPage: React.FC = () => {
     staleTime: 60 * 1000,
   });
 
-  // 4. Requête Vue Semaine (7 jours)
+  // 4. Vue Semaine
   const weekDates = useMemo(() => {
     const d = new Date(selectedDate);
-    const dayOfWeek = d.getDay(); // 0 = Dimanche
+    const dayOfWeek = d.getDay();
     const sunday = new Date(d);
     sunday.setDate(d.getDate() - dayOfWeek);
 
@@ -128,7 +128,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
     staleTime: 60 * 1000,
   });
 
-  // 5. Requête Vue Mois
+  // 5. Vue Mois
   const {
     data: monthReportData,
     isLoading: isLoadingMonth,
@@ -146,7 +146,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
     staleTime: 2 * 60 * 1000,
   });
 
-  // 6. Requête Vue Année
+  // 6. Vue Année
   const {
     data: yearReportData,
     isLoading: isLoadingYear,
@@ -163,18 +163,37 @@ export const AllPersonnelSituationPage: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // ─────────────────────────────────────────────────────────────
-  // TRANSFORMATION DES DONNÉES PAR VUE
-  // ─────────────────────────────────────────────────────────────
+  const isFormationAtt = (att?: AttendanceRecord | null) => {
+    if (!att || att.statut !== 'absent') return false;
+    const m = (att.motif || '').toLowerCase();
+    return Boolean(
+      m === 'formation' ||
+        m.includes('formation') ||
+        att.detailsMotif?.intituleFormation ||
+        att.detailsMotif?.formationIntitule
+    );
+  };
 
-  // A. Données Vue Jour filtrées
+  const isServiceOrMissionAtt = (att?: AttendanceRecord | null) => {
+    if (!att || att.statut !== 'absent') return false;
+    const m = (att.motif || '').toLowerCase();
+    return Boolean(
+      m === 'mission' ||
+        m === 'service' ||
+        att.detailsMotif?.nomService ||
+        att.detailsMotif?.serviceNom ||
+        att.detailsMotif?.lieuMission ||
+        att.detailsMotif?.missionLieu
+    );
+  };
+
+  // A. Vue Jour filtrée
   const filteredDayRecords = useMemo((): DayPersonnelItem[] => {
     const items: DayPersonnelItem[] = dayData?.data || [];
     return items.filter((item) => {
       const p = item.personnel;
       const att = item.attendance;
 
-      // Filtre Recherche
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const fullName = `${p.nom} ${p.prenom}`.toLowerCase();
@@ -185,35 +204,19 @@ export const AllPersonnelSituationPage: React.FC = () => {
         }
       }
 
-      // Filtre État
       if (selectedStatus !== 'all') {
         if (selectedStatus === 'present') return att?.statut === 'present';
         if (selectedStatus === 'absent') return att?.statut === 'absent';
         if (selectedStatus === 'unrecorded') return !att || String(att.statut) === 'unrecorded';
-        if (selectedStatus === 'formation') {
-          return (
-            att?.statut === 'absent' &&
-            (att.motif === 'FORMATION' ||
-              att.detailsMotif?.intituleFormation ||
-              att.motif?.toLowerCase().includes('formation'))
-          );
-        }
-        if (selectedStatus === 'service') {
-          return (
-            att?.statut === 'absent' &&
-            (att.motif === 'MISSION' ||
-              att.motif === 'SERVICE' ||
-              att.detailsMotif?.nomService ||
-              att.detailsMotif?.lieuMission)
-          );
-        }
+        if (selectedStatus === 'formation') return isFormationAtt(att);
+        if (selectedStatus === 'service') return isServiceOrMissionAtt(att);
       }
 
       return true;
     });
   }, [dayData, searchQuery, selectedStatus]);
 
-  // B. Données Vue Semaine
+  // B. Vue Semaine
   const { weekPersonnelList, weekAttendanceMap } = useMemo(() => {
     const pMap = new Map<string, WeekPersonnelSummary>();
     const aMap = new Map<string, AttendanceRecord>();
@@ -243,7 +246,6 @@ export const AllPersonnelSituationPage: React.FC = () => {
       });
     }
 
-    // Filtrer la liste des personnels par recherche
     let list = Array.from(pMap.values());
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
@@ -257,7 +259,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
     return { weekPersonnelList: list, weekAttendanceMap: aMap };
   }, [weekResults, weekDates, searchQuery]);
 
-  // C. Données Vue Mois
+  // C. Vue Mois
   const filteredMonthRecords = useMemo((): MonthPersonnelRecord[] => {
     const raw = (monthReportData as { data?: { records?: MonthPersonnelRecord[] } })?.data?.records || [];
     if (!searchQuery.trim()) return raw;
@@ -270,7 +272,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
     });
   }, [monthReportData, searchQuery]);
 
-  // D. Données Vue Année
+  // D. Vue Année
   const filteredYearRecords = useMemo((): YearPersonnelRecord[] => {
     const raw = (yearReportData as { data?: { records?: YearPersonnelRecord[] } })?.data?.records || [];
     if (!searchQuery.trim()) return raw;
@@ -283,9 +285,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
     });
   }, [yearReportData, searchQuery]);
 
-  // ─────────────────────────────────────────────────────────────
-  // CALCUL DES COMPTEURS KPI (6 CARTES)
-  // ─────────────────────────────────────────────────────────────
+  // Compteurs KPI
   const kpiCounts = useMemo((): KPICounts => {
     if (viewMode === 'day') {
       const items: DayPersonnelItem[] = dayData?.data || [];
@@ -303,38 +303,18 @@ export const AllPersonnelSituationPage: React.FC = () => {
           presents++;
         } else if (att.statut === 'absent') {
           absents++;
-          if (
-            att.motif === 'FORMATION' ||
-            att.detailsMotif?.intituleFormation ||
-            att.motif?.toLowerCase().includes('formation')
-          ) {
-            formation++;
-          } else if (
-            att.motif === 'MISSION' ||
-            att.motif === 'SERVICE' ||
-            att.detailsMotif?.nomService ||
-            att.detailsMotif?.lieuMission
-          ) {
-            service++;
-          }
+          if (isFormationAtt(att)) formation++;
+          else if (isServiceOrMissionAtt(att)) service++;
         }
       });
 
-      return {
-        total: items.length,
-        presents,
-        absents,
-        formation,
-        service,
-        unrecorded,
-      };
+      return { total: items.length, presents, absents, formation, service, unrecorded };
     }
 
     if (viewMode === 'week') {
       const total = weekPersonnelList.length;
       let presents = 0;
       let absents = 0;
-      let unrecorded = 0;
       let formation = 0;
       let service = 0;
 
@@ -342,25 +322,13 @@ export const AllPersonnelSituationPage: React.FC = () => {
         if (att.statut === 'present') presents++;
         else if (att.statut === 'absent') {
           absents++;
-          if (att.motif === 'FORMATION' || att.detailsMotif?.intituleFormation) {
-            formation++;
-          } else if (att.motif === 'MISSION' || att.motif === 'SERVICE') {
-            service++;
-          }
+          if (isFormationAtt(att)) formation++;
+          else if (isServiceOrMissionAtt(att)) service++;
         }
       });
 
-      const totalSlots = total * 7;
-      unrecorded = Math.max(0, totalSlots - (presents + absents));
-
-      return {
-        total,
-        presents,
-        absents,
-        formation,
-        service,
-        unrecorded,
-      };
+      const unrecorded = Math.max(0, total * 7 - (presents + absents));
+      return { total, presents, absents, formation, service, unrecorded };
     }
 
     if (viewMode === 'month') {
@@ -375,23 +343,16 @@ export const AllPersonnelSituationPage: React.FC = () => {
         totalAbsents += r.joursAbsents || 0;
         if (r.parMotif) {
           Object.entries(r.parMotif).forEach(([code, count]) => {
-            if (code.includes('FORMATION')) formation += count;
-            if (code.includes('MISSION') || code.includes('SERVICE')) service += count;
+            const c = code.toLowerCase();
+            if (c.includes('formation')) formation += count;
+            if (c.includes('mission') || c.includes('service')) service += count;
           });
         }
       });
 
-      return {
-        total: recs.length,
-        presents: totalPresents,
-        absents: totalAbsents,
-        formation,
-        service,
-        unrecorded: 0,
-      };
+      return { total: recs.length, presents: totalPresents, absents: totalAbsents, formation, service, unrecorded: 0 };
     }
 
-    // Année
     const recs = (yearReportData as { data?: { records?: YearPersonnelRecord[] } })?.data?.records || [];
     let totalPresents = 0;
     let totalAbsents = 0;
@@ -403,28 +364,15 @@ export const AllPersonnelSituationPage: React.FC = () => {
       totalAbsents += r.joursAbsents || 0;
       if (r.parMotif) {
         Object.entries(r.parMotif).forEach(([code, count]) => {
-          if (code.includes('FORMATION')) formation += count;
-          if (code.includes('MISSION') || code.includes('SERVICE')) service += count;
+          const c = code.toLowerCase();
+          if (c.includes('formation')) formation += count;
+          if (c.includes('mission') || c.includes('service')) service += count;
         });
       }
     });
 
-    return {
-      total: recs.length,
-      presents: totalPresents,
-      absents: totalAbsents,
-      formation,
-      service,
-      unrecorded: 0,
-    };
-  }, [
-    viewMode,
-    dayData,
-    weekPersonnelList,
-    weekAttendanceMap,
-    monthReportData,
-    yearReportData,
-  ]);
+    return { total: recs.length, presents: totalPresents, absents: totalAbsents, formation, service, unrecorded: 0 };
+  }, [viewMode, dayData, weekPersonnelList, weekAttendanceMap, monthReportData, yearReportData]);
 
   const handleRefresh = () => {
     if (viewMode === 'day') refetchDay();
@@ -441,21 +389,13 @@ export const AllPersonnelSituationPage: React.FC = () => {
       const recordsToExport = filteredDayRecords;
       const presents = recordsToExport
         .filter((r) => r.attendance?.statut === 'present')
-        .map((r) => ({
-          personnel: r.personnel,
-          attendance: r.attendance || undefined,
-        }));
+        .map((r) => ({ personnel: r.personnel, attendance: r.attendance || undefined }));
       const absents = recordsToExport
         .filter((r) => r.attendance?.statut === 'absent')
-        .map((r) => ({
-          personnel: r.personnel,
-          attendance: r.attendance || undefined,
-        }));
+        .map((r) => ({ personnel: r.personnel, attendance: r.attendance || undefined }));
       const nonSaisis = recordsToExport
         .filter((r) => !r.attendance || String(r.attendance.statut) === 'unrecorded')
-        .map((r) => ({
-          personnel: r.personnel,
-        }));
+        .map((r) => ({ personnel: r.personnel }));
 
       await exportDailyReport(
         {
@@ -469,9 +409,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
           absents,
           nonSaisis,
         },
-        {
-          departmentName,
-        }
+        { departmentName }
       );
     } else if (viewMode === 'month') {
       const rawRecords = (monthReportData as { data?: { records?: MonthPersonnelRecord[] } })?.data?.records || [];
@@ -485,9 +423,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
           totalPersonnel: recordsToExport.length,
           records: recordsToExport,
         },
-        {
-          departmentName,
-        }
+        { departmentName }
       );
     } else if (viewMode === 'year') {
       const rawRecords = (yearReportData as { data?: { records?: YearPersonnelRecord[] } })?.data?.records || [];
@@ -500,9 +436,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
           totalPersonnel: recordsToExport.length,
           records: recordsToExport,
         },
-        {
-          departmentName,
-        }
+        { departmentName }
       );
     }
   };
@@ -513,70 +447,119 @@ export const AllPersonnelSituationPage: React.FC = () => {
     }
   };
 
-  const BreadcrumbChevron = isRTL ? ChevronLeft : ChevronRight;
   const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
   const NextIcon = isRTL ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="space-y-6 pb-12 text-start" dir={dir}>
-      {/* 1. Fil d'Ariane & En-tête */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 space-y-3 shadow-sm">
-        <nav className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 print:hidden">
-          <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
-            الرئيسية
-          </Link>
-          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-          <span>الموارد البشرية</span>
-          <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-          <span className="text-slate-900 dark:text-slate-100 font-bold">وضعية الموظفين</span>
-        </nav>
+    <div className="space-y-3.5 pb-6 text-start" dir={dir}>
+      {/* 1. Compact View Switcher + Secondary Settings / Export / Refresh */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-xs print:hidden">
+        <div className="flex flex-wrap items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setViewMode('day')}
+            className={`h-9 px-4 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'day'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{isRTL ? 'عرض اليوم' : 'Jour'}</span>
+          </button>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                وضعية الموظفين
-              </h1>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[13px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-sky-300 border border-blue-200 dark:border-blue-800/70">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>إدارة الموارد البشرية</span>
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mt-1">
-              متابعة شاملة ومجمّعة لحالة حضور وغياب كافة موظفي الإدارة حسب اليوم، الأسبوع، الشهر، أو السنة
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setViewMode('week')}
+            className={`h-9 px-4 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'week'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <CalendarDays className="h-3.5 w-3.5" />
+            <span>{isRTL ? 'عرض الأسبوع' : 'Semaine'}</span>
+          </button>
 
-          <div className="flex items-center gap-2 print:hidden">
+          <button
+            type="button"
+            onClick={() => setViewMode('month')}
+            className={`h-9 px-4 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'month'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <CalendarRange className="h-3.5 w-3.5" />
+            <span>{isRTL ? 'عرض الشهر' : 'Mois'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewMode('year')}
+            className={`h-9 px-4 text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              viewMode === 'year'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <CalendarCheck className="h-3.5 w-3.5" />
+            <span>{isRTL ? 'عرض السنة' : 'Année'}</span>
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {canManageLeaveReasons && (
             <Button
+              asChild
               variant="outline"
               size="sm"
-              onClick={handleExport}
-              disabled={isExporting}
-              className="h-10 px-3.5 border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 text-xs font-medium rounded-lg"
+              className="h-9 px-3 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 text-xs font-medium rounded-lg whitespace-nowrap shrink-0"
             >
-              {isExporting ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <FileDown className="h-3.5 w-3.5" />
-              )}
-              <span>{isExporting ? 'جاري التصدير...' : 'تصدير PDF'}</span>
+              <Link to="/dashboard/hr/leave-reasons">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                <span>{isRTL ? 'أنواع الغياب' : "Types d'absence"}</span>
+              </Link>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="h-10 px-3.5 border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 text-xs font-medium rounded-lg"
-              title="تحديث البيانات"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              <span>تحديث</span>
-            </Button>
-          </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="h-9 px-3 border-slate-300 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 text-xs font-medium rounded-lg whitespace-nowrap shrink-0"
+          >
+            {isExporting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <FileDown className="h-3.5 w-3.5" />
+            )}
+            <span>
+              {isExporting
+                ? isRTL
+                  ? 'جاري التصدير...'
+                  : 'Export...'
+                : isRTL
+                ? 'تصدير PDF'
+                : 'Exporter PDF'}
+            </span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="h-9 px-3 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 text-xs font-medium rounded-lg whitespace-nowrap shrink-0"
+            title={isRTL ? 'تحديث البيانات' : 'Actualiser'}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>{isRTL ? 'تحديث' : 'Actualiser'}</span>
+          </Button>
         </div>
       </div>
 
-      {/* 2. Cartes KPI consolidées */}
+      {/* 2. Single-Row Compact KPI Strip */}
       <AllPersonnelKPICards
         counts={kpiCounts}
         isLoading={
@@ -592,62 +575,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
         onFilterClick={viewMode === 'day' ? handleKPIClick : undefined}
       />
 
-      {/* 3. Segment Control pour les 4 vues [يوم] [أسبوع] [شهر] [سنة] */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-2 flex flex-wrap items-center justify-center sm:justify-start gap-1 shadow-sm print:hidden">
-        <button
-          type="button"
-          onClick={() => setViewMode('day')}
-          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
-            viewMode === 'day'
-              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Calendar className="h-3.5 w-3.5" />
-          <span>عرض اليوم</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setViewMode('week')}
-          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
-            viewMode === 'week'
-              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <CalendarDays className="h-3.5 w-3.5" />
-          <span>عرض الأسبوع</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setViewMode('month')}
-          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
-            viewMode === 'month'
-              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <CalendarRange className="h-3.5 w-3.5" />
-          <span>عرض الشهر</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setViewMode('year')}
-          className={`h-10 px-5 py-2 text-xs font-bold rounded-lg transition-colors duration-150 flex items-center gap-2 ${
-            viewMode === 'year'
-              ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <CalendarCheck className="h-3.5 w-3.5" />
-          <span>عرض السنة</span>
-        </button>
-      </div>
-
-      {/* 4. Zone d'affichage active */}
+      {/* 3. Active View */}
       {viewMode === 'day' && (
         <AllPersonnelDayView
           date={selectedDate}
@@ -687,7 +615,6 @@ export const AllPersonnelSituationPage: React.FC = () => {
             totalPersonnel?: number;
             page?: number;
             totalPages?: number;
-            paginated?: boolean;
           };
         })?.data;
         const monthTotalPages = monthMeta?.totalPages || 1;
@@ -711,11 +638,21 @@ export const AllPersonnelSituationPage: React.FC = () => {
               onSearchChange={setSearchQuery}
             />
             {monthTotalPages > 1 && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
                 <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
-                  المجموع: <strong className="text-slate-900 dark:text-slate-100">{monthTotal}</strong> موظف — صفحة{' '}
-                  <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
-                  <strong className="text-slate-900 dark:text-slate-100">{monthTotalPages}</strong>
+                  {isRTL ? (
+                    <>
+                      المجموع: <strong className="text-slate-900 dark:text-slate-100">{monthTotal}</strong> موظف — صفحة{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{monthTotalPages}</strong>
+                    </>
+                  ) : (
+                    <>
+                      Total : <strong className="text-slate-900 dark:text-slate-100">{monthTotal}</strong> — Page{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> /{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{monthTotalPages}</strong>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -727,7 +664,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
                     <PrevIcon className="w-4 h-4" />
-                    <span>السابق</span>
+                    <span>{isRTL ? 'السابق' : 'Précédent'}</span>
                   </Button>
                   <Button
                     type="button"
@@ -737,7 +674,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     disabled={reportPage >= monthTotalPages || isLoadingMonth}
                     className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
-                    <span>التالي</span>
+                    <span>{isRTL ? 'التالي' : 'Suivant'}</span>
                     <NextIcon className="w-4 h-4" />
                   </Button>
                 </div>
@@ -753,7 +690,6 @@ export const AllPersonnelSituationPage: React.FC = () => {
             totalPersonnel?: number;
             page?: number;
             totalPages?: number;
-            paginated?: boolean;
           };
         })?.data;
         const yearTotalPages = yearMeta?.totalPages || 1;
@@ -773,11 +709,21 @@ export const AllPersonnelSituationPage: React.FC = () => {
               onSearchChange={setSearchQuery}
             />
             {yearTotalPages > 1 && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
                 <div className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
-                  المجموع: <strong className="text-slate-900 dark:text-slate-100">{yearTotal}</strong> موظف — صفحة{' '}
-                  <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
-                  <strong className="text-slate-900 dark:text-slate-100">{yearTotalPages}</strong>
+                  {isRTL ? (
+                    <>
+                      المجموع: <strong className="text-slate-900 dark:text-slate-100">{yearTotal}</strong> موظف — صفحة{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> من{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{yearTotalPages}</strong>
+                    </>
+                  ) : (
+                    <>
+                      Total : <strong className="text-slate-900 dark:text-slate-100">{yearTotal}</strong> — Page{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{reportPage}</strong> /{' '}
+                      <strong className="text-slate-900 dark:text-slate-100">{yearTotalPages}</strong>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -789,7 +735,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
                     <PrevIcon className="w-4 h-4" />
-                    <span>السابق</span>
+                    <span>{isRTL ? 'السابق' : 'Précédent'}</span>
                   </Button>
                   <Button
                     type="button"
@@ -799,7 +745,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
                     disabled={reportPage >= yearTotalPages || isLoadingYear}
                     className="h-9 px-3 border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 rounded-lg gap-1"
                   >
-                    <span>التالي</span>
+                    <span>{isRTL ? 'التالي' : 'Suivant'}</span>
                     <NextIcon className="w-4 h-4" />
                   </Button>
                 </div>
@@ -809,7 +755,7 @@ export const AllPersonnelSituationPage: React.FC = () => {
         );
       })()}
 
-      {/* 5. Légende des couleurs */}
+      {/* Légende des couleurs */}
       <MyAttendanceLegend />
     </div>
   );

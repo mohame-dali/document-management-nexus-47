@@ -32,113 +32,108 @@ export const AllPersonnelKPICards: React.FC<AllPersonnelKPICardsProps> = ({
   activeFilter,
   onFilterClick,
 }) => {
-  const { dir } = useDirection();
+  const { dir, isRTL } = useDirection();
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" dir={dir}>
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-lg bg-slate-100 dark:bg-slate-800" />
-        ))}
+      <div
+        className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-2.5 shadow-xs"
+        dir={dir}
+      >
+        <Skeleton className="h-6 w-full rounded bg-slate-100 dark:bg-slate-800" />
       </div>
     );
   }
 
-  const cards = [
+  const items = [
     {
       key: 'all',
-      title: 'إجمالي الموظفين',
+      label: isRTL ? 'الإجمالي' : 'Total',
       value: counts.total,
-      unit: 'موظف',
       icon: Users,
-      iconColor: 'text-[#2c5282] dark:text-blue-300',
-      bgIcon: 'bg-blue-50 border-blue-100 dark:bg-blue-950/60 dark:border-blue-800/70',
-      activeBorder: 'ring-2 ring-[#2c5282] dark:ring-blue-400',
+      textColor: 'text-slate-900 dark:text-slate-100',
+      activeBg: 'bg-[#2c5282] dark:bg-sky-700 text-white',
     },
     {
       key: 'present',
-      title: 'الحاضرون',
+      label: isRTL ? 'حاضر' : 'Présents',
       value: counts.presents,
-      unit: 'حاضر',
       icon: CheckCircle2,
-      iconColor: 'text-[#2f855a] dark:text-emerald-300',
-      bgIcon: 'bg-emerald-50 border-emerald-100 dark:bg-emerald-950/60 dark:border-emerald-800/70',
-      activeBorder: 'ring-2 ring-[#2f855a] dark:ring-emerald-400',
+      textColor: 'text-emerald-700 dark:text-emerald-400',
+      activeBg: 'bg-emerald-700 text-white',
     },
     {
       key: 'absent',
-      title: 'الغائبون',
+      label: isRTL ? 'غائب' : 'Absents',
       value: counts.absents,
-      unit: 'غائب',
       icon: XCircle,
-      iconColor: 'text-[#c53030] dark:text-red-300',
-      bgIcon: 'bg-red-50 border-red-100 dark:bg-red-950/60 dark:border-red-800/70',
-      activeBorder: 'ring-2 ring-[#c53030] dark:ring-red-400',
+      textColor: 'text-red-700 dark:text-red-400',
+      activeBg: 'bg-red-700 text-white',
     },
     {
       key: 'formation',
-      title: 'في تكوين',
+      label: isRTL ? 'تكوين' : 'Formation',
       value: counts.formation,
-      unit: 'موظف',
       icon: GraduationCap,
-      iconColor: 'text-indigo-600 dark:text-indigo-300',
-      bgIcon: 'bg-indigo-50 border-indigo-100 dark:bg-indigo-950/60 dark:border-indigo-800/70',
-      activeBorder: 'ring-2 ring-indigo-600 dark:ring-indigo-400',
+      textColor: 'text-indigo-700 dark:text-indigo-400',
+      activeBg: 'bg-indigo-700 text-white',
     },
     {
       key: 'service',
-      title: 'في خدمة / مهمة',
+      label: isRTL ? 'خدمة / مهمة' : 'Service / Mission',
       value: counts.service,
-      unit: 'موظف',
       icon: Briefcase,
-      iconColor: 'text-teal-600 dark:text-teal-300',
-      bgIcon: 'bg-teal-50 border-teal-100 dark:bg-teal-950/60 dark:border-teal-800/70',
-      activeBorder: 'ring-2 ring-teal-600 dark:ring-teal-400',
+      textColor: 'text-teal-700 dark:text-teal-400',
+      activeBg: 'bg-teal-700 text-white',
     },
     {
       key: 'unrecorded',
-      title: 'غير مسجل',
+      label: isRTL ? 'غير مسجل' : 'Non saisi',
       value: counts.unrecorded,
-      unit: 'موظف',
       icon: HelpCircle,
-      iconColor: 'text-slate-700 dark:text-slate-300',
-      bgIcon: 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-700',
-      activeBorder: 'ring-2 ring-[#718096] dark:ring-slate-400',
+      textColor: 'text-slate-600 dark:text-slate-300',
+      activeBg: 'bg-slate-700 text-white',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" dir={dir}>
-      {cards.map((card) => {
-        const Icon = card.icon;
-        const isActive = activeFilter === card.key;
+    <div
+      className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap items-center gap-1.5 shadow-xs"
+      dir={dir}
+    >
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = activeFilter === item.key;
+        const clickable = Boolean(onFilterClick);
+
+        if (clickable) {
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onFilterClick && onFilterClick(isActive ? null : item.key)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors tabular-nums whitespace-nowrap ${
+                isActive
+                  ? item.activeBg
+                  : `${item.textColor} hover:bg-slate-100 dark:hover:bg-slate-800`
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span>{item.label}:</span>
+              <strong className="font-bold font-mono">{item.value}</strong>
+            </button>
+          );
+        }
 
         return (
-          <div
-            key={card.key}
-            onClick={() => onFilterClick && onFilterClick(isActive ? null : card.key)}
-            className={`bg-white dark:bg-slate-900 border border-[#e2e8f0] dark:border-slate-800 rounded-lg p-3.5 flex items-center justify-between transition-all duration-200 shadow-sm ${
-              onFilterClick ? 'cursor-pointer hover:border-[#2c5282] dark:hover:border-blue-500 hover:shadow-md' : ''
-            } ${isActive ? card.activeBorder : ''}`}
+          <span
+            key={item.key}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold tabular-nums whitespace-nowrap ${item.textColor}`}
           >
-            <div>
-              <span className="text-xs text-slate-700 dark:text-slate-300 font-medium block truncate">
-                {card.title}
-              </span>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[#1a202c] dark:text-slate-100 font-mono tabular-nums leading-none">
-                  {card.value}
-                </span>
-                <span className="text-xs text-slate-700 dark:text-slate-300 font-normal">
-                  {card.unit}
-                </span>
-              </div>
-            </div>
-
-            <div className={`p-2 rounded-lg border ${card.bgIcon} ${card.iconColor} shrink-0`}>
-              <Icon className="h-4 w-4" />
-            </div>
-          </div>
+            <Icon className="h-3.5 w-3.5 shrink-0" />
+            <span>{item.label}:</span>
+            <strong className="font-bold font-mono">{item.value}</strong>
+          </span>
         );
       })}
     </div>

@@ -13,25 +13,28 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useDirection } from '@/i18n/useDirection';
+import { useHubBadges } from '@/hooks/useHubBadges';
 import { PersonnelAvatar } from '@/components/hr/PersonnelAvatar';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { formatDateWithWeekday } from '@/utils/formatDate';
 import {
-  CalendarCheck,
   Calendar,
   Building2,
   Users,
   Search,
   CheckCircle2,
   XCircle,
-  Save,
   Clock,
   ChevronLeft,
   ChevronRight,
-  Home,
   AlertCircle,
   Check,
   Printer,
+  ClipboardList,
+  MessageSquare,
+  Briefcase,
+  Loader2,
 } from 'lucide-react';
 import {
   getDailyAttendance,
@@ -42,6 +45,9 @@ import {
 import { LeaveReason, getLeaveReasons } from '@/services/leaveReasonService';
 import { getDepartments } from '@/services/departmentService';
 import { Department } from '@/types';
+
+type AttendancePillMode = 'present' | 'late' | 'absent' | 'leave_mission';
+type StatusFilterMode = 'all' | AttendancePillMode;
 
 interface AgentAttendanceRow {
   personnel: {
@@ -67,11 +73,20 @@ interface AgentAttendanceRow {
   hasSavedRecord: boolean;
 }
 
+const ABSENCE_ONLY_CODES = new Set(['absence_injustifiee', 'greve', 'autre']);
+
+function getDefaultTimeHHMM(): string {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
 export const AttendancePage: React.FC = () => {
   const { currentUser } = useAuth();
   const { dir, isRTL } = useDirection();
+  const { pendingDeclarations, refetch: refetchBadges } = useHubBadges();
 
-  // Date du jour au format YYYY-MM-DD
   const todayStr = useMemo(() => {
     const d = new Date();
     const year = d.getFullYear();
@@ -86,10 +101,12 @@ export const AttendancePage: React.FC = () => {
   const [leaveReasons, setLeaveReasons] = useState<LeaveReason[]>([]);
   const [attendanceRows, setAttendanceRows] = useState<AgentAttendanceRow[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'present' | 'absent'>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilterMode>('all');
 
   const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
+  const [bulkSaving, setBulkSaving] = useState<boolean>(false);
+  const [rowSaveStatus, setRowSaveStatus] = useState<Record<string, 'saving' | 'saved' | 'error'>>({});
+  const [expandedNoteIds, setExpandedNoteIds] = useState<Record<string, boolean>>({});
 
   // Rôles et département de l'utilisateur connecté
   const userRole = currentUser?.role;
@@ -113,7 +130,6 @@ export const AttendancePage: React.FC = () => {
     departments.find((d) => String(d._id) === String(userDeptId))?.code ||
     '';
 
-  // Déterminer si l'utilisateur est rattaché aux RH
   const isRHDepartment =
     userDepartmentName === 'RH' ||
     userDepartmentCode === 'RH' ||
@@ -121,13 +137,11 @@ export const AttendancePage: React.FC = () => {
     userDepartmentName === 'الموارد البشرية' ||
     currentUser?.username === 'RHadmin';
 
-  // Déterminer si l'utilisateur peut voir tous les départements
   const canSeeAllDepartments =
     userRole === 'Admin' ||
     userRole === 'Director' ||
     (userRole === 'AdminDepartment' && (userDepartmentName === 'RH' || isRHDepartment));
 
-  // Vérifier si l'utilisateur est restreint à un département
   const isDepartmentRestricted = !canSeeAllDepartments;
 
   // 1. Charger les départements
@@ -143,22 +157,20 @@ export const AttendancePage: React.FC = () => {
     fetchDepts();
   }, []);
 
-  // 2. Charger les motifs de congé dynamiquement (actifs uniquement)
+  // 2. Charger les motifs actifs
   useEffect(() => {
     const fetchReasons = async () => {
       try {
         const data = await getLeaveReasons({ isActive: true });
-        // Filtrer strictement les motifs actifs
         setLeaveReasons((data || []).filter((r) => r.isActive));
       } catch (err) {
         console.error('Erreur chargement types de motifs:', err);
-        toast.error('حدث خطأ أثناء تحميل أنواع وأسباب الغياب');
+        toast.error(isRTL ? 'حدث خطأ أثناء تحميل أنواع وأسباب الغياب' : 'Erreur lors du chargement des motifs');
       }
     };
     fetchReasons();
-  }, []);
+  }, [isRTL]);
 
-  // Initialiser le département si restreint
   useEffect(() => {
     if (isDepartmentRestricted && userDeptId) {
       setSelectedDepartment(userDeptId);
@@ -169,8 +181,6 @@ export const AttendancePage: React.FC = () => {
   const loadDailyAttendance = useCallback(async () => {
     try {
       setLoading(true);
-      // Si l'utilisateur peut voir tous les départements, ne pas filtrer sauf sélection spécifique
-      // Sinon, filtrer sur son propre département
       const effectiveDept = canSeeAllDepartments
         ? selectedDepartment !== 'all'
           ? selectedDepartment
@@ -180,7 +190,6 @@ export const AttendancePage: React.FC = () => {
       const res = await getDailyAttendance(selectedDate, effectiveDept);
       const agentList = res.data || [];
 
-      // Mapper la liste des agents vers notre état local
       const rows: AgentAttendanceRow[] = agentList.map((item) => {
         const att = item.attendance;
         const statut = att ? att.statut : 'present';
@@ -215,81 +224,201 @@ export const AttendancePage: React.FC = () => {
       });
 
       setAttendanceRows(rows);
+      setRowSaveStatus({});
+      setExpandedNoteIds({});
     } catch (err: unknown) {
       console.error('Erreur chargement des présences:', err);
-      toast.error('حدث خطأ أثناء تحميل لائحة الحضور');
+      toast.error(isRTL ? 'حدث خطأ أثناء تحميل لائحة الحضور' : 'Erreur lors du chargement des présences');
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, selectedDepartment, canSeeAllDepartments, userDeptId]);
+  }, [selectedDate, selectedDepartment, canSeeAllDepartments, userDeptId, isRTL]);
 
   useEffect(() => {
     loadDailyAttendance();
   }, [loadDailyAttendance]);
 
-  // Modification du statut Présent/Absent pour un agent
-  const handleToggleStatut = (index: number, isPresent: boolean) => {
-    setAttendanceRows((prev) => {
-      const updated = [...prev];
-      const row = { ...updated[index] };
+  // Helper: classifier une ligne vers l'un des 4 boutons segmentés
+  const getRowPillMode = useCallback(
+    (row: AgentAttendanceRow): AttendancePillMode => {
+      if (row.statut === 'present') {
+        return row.heureArrivee && row.heureArrivee.trim() !== '' ? 'late' : 'present';
+      }
+      const code = (row.motif || '').toLowerCase();
+      if (!code || ABSENCE_ONLY_CODES.has(code)) {
+        return 'absent';
+      }
+      const found = leaveReasons.find((r) => r.code.toLowerCase() === code);
+      if (found && found.category === 'autre' && code !== 'recuperation' && code !== 'detachement_externe' && code !== 'disponibilite') {
+        return 'absent';
+      }
+      return 'leave_mission';
+    },
+    [leaveReasons]
+  );
 
-      if (isPresent) {
-        row.statut = 'present';
-        row.motif = '';
-        row.leaveReasonId = null;
-        row.impacteSolde = false;
-        row.detailsMotif = {};
-      } else {
-        row.statut = 'absent';
-        // Si aucun motif n'était sélectionné, laisser vide pour forcer le choix
-        if (!row.motif && leaveReasons.length > 0) {
-          // Par défaut premier motif ou conge_annuel si existant
-          const defaultReason =
-            leaveReasons.find((r) => r.code === 'conge_annuel') || leaveReasons[0];
-          if (defaultReason) {
-            row.motif = defaultReason.code;
-            row.leaveReasonId = defaultReason._id;
-            row.impacteSolde = Boolean(defaultReason.impacteSolde);
-          }
-        }
+  // Construire payload API pour une ligne
+  const buildEntryPayload = (r: AgentAttendanceRow): AttendanceEntry => ({
+    personnelId: r.personnel._id,
+    statut: r.statut,
+    motif: r.statut === 'present' ? null : r.motif || null,
+    leaveReasonId: r.statut === 'present' ? null : r.leaveReasonId || null,
+    impacteSolde: r.statut === 'present' ? false : r.impacteSolde,
+    detailsMotif:
+      r.statut === 'present'
+        ? {}
+        : {
+            serviceNom: r.detailsMotif.serviceNom || '',
+            missionLieu: r.detailsMotif.missionLieu || '',
+            missionObjet: r.detailsMotif.missionObjet || '',
+            formationIntitule: r.detailsMotif.formationIntitule || '',
+            formationOrganisme: r.detailsMotif.formationOrganisme || '',
+            formationDuree: r.detailsMotif.formationDuree || '',
+            formationDocumentId: r.detailsMotif.formationDocumentId,
+            commentaire: r.detailsMotif.commentaire || '',
+          },
+    heureArrivee: r.statut === 'present' ? r.heureArrivee || null : null,
+  });
+
+  // Sauvegarde immédiate d'une ligne (1 clic)
+  const persistSingleRow = useCallback(
+    async (updatedRow: AgentAttendanceRow) => {
+      const id = updatedRow.personnel._id;
+      if (updatedRow.statut === 'absent' && (!updatedRow.motif || updatedRow.motif.trim() === '')) {
+        return;
       }
 
-      updated[index] = row;
+      setRowSaveStatus((prev) => ({ ...prev, [id]: 'saving' }));
+      try {
+        await saveBatchAttendance(selectedDate, [buildEntryPayload(updatedRow)]);
+        setAttendanceRows((prev) =>
+          prev.map((r) => (r.personnel._id === id ? { ...r, hasSavedRecord: true } : r))
+        );
+        setRowSaveStatus((prev) => ({ ...prev, [id]: 'saved' }));
+        refetchBadges();
+      } catch (err: unknown) {
+        console.error('Erreur sauvegarde ligne:', err);
+        setRowSaveStatus((prev) => ({ ...prev, [id]: 'error' }));
+        const msg =
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+          (isRTL ? 'تعذر حفظ حالة الموظف' : 'Échec de l’enregistrement');
+        toast.error(msg);
+      }
+    },
+    [selectedDate, isRTL, refetchBadges]
+  );
+
+  // Changement immédiat par clic sur l'un des 4 boutons segmentés
+  const handleSelectPill = (index: number, mode: AttendancePillMode) => {
+    const current = attendanceRows[index];
+    if (!current) return;
+
+    let nextRow: AgentAttendanceRow = { ...current };
+
+    if (mode === 'present') {
+      nextRow = {
+        ...nextRow,
+        statut: 'present',
+        heureArrivee: '',
+        motif: '',
+        leaveReasonId: null,
+        impacteSolde: false,
+        detailsMotif: {},
+      };
+    } else if (mode === 'late') {
+      nextRow = {
+        ...nextRow,
+        statut: 'present',
+        heureArrivee: current.heureArrivee || getDefaultTimeHHMM(),
+        motif: '',
+        leaveReasonId: null,
+        impacteSolde: false,
+        detailsMotif: {},
+      };
+    } else if (mode === 'absent') {
+      const currentMode = getRowPillMode(current);
+      const preferredAbsence =
+        (currentMode === 'absent' && current.motif
+          ? leaveReasons.find((r) => r.code === current.motif)
+          : undefined) ||
+        leaveReasons.find((r) => r.code === 'absence_injustifiee') ||
+        leaveReasons.find((r) => ABSENCE_ONLY_CODES.has(r.code.toLowerCase())) ||
+        leaveReasons[0];
+
+      nextRow = {
+        ...nextRow,
+        statut: 'absent',
+        heureArrivee: '',
+        motif: preferredAbsence?.code || 'absence_injustifiee',
+        leaveReasonId: preferredAbsence?._id || null,
+        impacteSolde: Boolean(preferredAbsence?.impacteSolde ?? true),
+      };
+    } else {
+      // leave_mission
+      const currentMode = getRowPillMode(current);
+      const preferredLeave =
+        (currentMode === 'leave_mission' && current.motif
+          ? leaveReasons.find((r) => r.code === current.motif)
+          : undefined) ||
+        leaveReasons.find((r) => r.code === 'conge_annuel') ||
+        leaveReasons.find((r) => !ABSENCE_ONLY_CODES.has(r.code.toLowerCase())) ||
+        leaveReasons[0];
+
+      nextRow = {
+        ...nextRow,
+        statut: 'absent',
+        heureArrivee: '',
+        motif: preferredLeave?.code || 'conge_annuel',
+        leaveReasonId: preferredLeave?._id || null,
+        impacteSolde: Boolean(preferredLeave?.impacteSolde ?? true),
+      };
+    }
+
+    setAttendanceRows((prev) => {
+      const updated = [...prev];
+      updated[index] = nextRow;
       return updated;
     });
+
+    void persistSingleRow(nextRow);
   };
 
-  // Modification du motif d'absence
+  // Changement du motif d'absence / congé / mission
   const handleMotifChange = (index: number, motifCode: string) => {
+    const current = attendanceRows[index];
+    if (!current) return;
+
+    const foundReason = leaveReasons.find((r) => r.code === motifCode);
+    const cleanedDetails: AttendanceEntryDetails = { ...current.detailsMotif };
+    if (motifCode !== 'service') delete cleanedDetails.serviceNom;
+    if (motifCode !== 'mission') {
+      delete cleanedDetails.missionLieu;
+      delete cleanedDetails.missionObjet;
+    }
+    if (motifCode !== 'formation') {
+      delete cleanedDetails.formationIntitule;
+      delete cleanedDetails.formationOrganisme;
+      delete cleanedDetails.formationDuree;
+    }
+
+    const nextRow: AgentAttendanceRow = {
+      ...current,
+      motif: motifCode,
+      leaveReasonId: foundReason ? foundReason._id : null,
+      impacteSolde: foundReason ? Boolean(foundReason.impacteSolde) : false,
+      detailsMotif: cleanedDetails,
+    };
+
     setAttendanceRows((prev) => {
       const updated = [...prev];
-      const row = { ...updated[index] };
-
-      const foundReason = leaveReasons.find((r) => r.code === motifCode);
-      row.motif = motifCode;
-      row.leaveReasonId = foundReason ? foundReason._id : null;
-      row.impacteSolde = foundReason ? Boolean(foundReason.impacteSolde) : false;
-
-      // Nettoyer les détails si le motif ne correspond plus
-      if (motifCode !== 'service') {
-        delete row.detailsMotif.serviceNom;
-      }
-      if (motifCode !== 'mission') {
-        delete row.detailsMotif.missionLieu;
-        delete row.detailsMotif.missionObjet;
-      }
-      if (motifCode !== 'formation') {
-        delete row.detailsMotif.formationIntitule;
-        delete row.detailsMotif.formationOrganisme;
-        delete row.detailsMotif.formationDuree;
-      }
-
-      updated[index] = row;
+      updated[index] = nextRow;
       return updated;
     });
+
+    void persistSingleRow(nextRow);
   };
 
-  // Modification des champs de détails spécifiques
+  // Mise à jour locale d'un champ détail ou heure
   const handleDetailChange = (
     index: number,
     field: keyof AttendanceEntryDetails,
@@ -307,81 +436,63 @@ export const AttendancePage: React.FC = () => {
     });
   };
 
-  // Action rapide : Marquer tous comme présents
-  const handleMarkAllPresent = () => {
-    setAttendanceRows((prev) =>
-      prev.map((row) => ({
-        ...row,
-        statut: 'present',
-        motif: '',
-        leaveReasonId: null,
-        impacteSolde: false,
-        detailsMotif: {},
-      }))
-    );
-    toast.info('تم تحديد جميع الموظفين كحاضرين');
+  // Navigation rapide des dates
+  const shiftDate = (daysDelta: number) => {
+    const d = new Date(`${selectedDate}T00:00:00`);
+    d.setDate(d.getDate() + daysDelta);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    setSelectedDate(`${y}-${m}-${day}`);
   };
 
-  // Enregistrement par lot
-  const handleSaveAttendance = async () => {
-    // Vérification des absences sans motif
-    const invalidAbsent = attendanceRows.find(
-      (r) => r.statut === 'absent' && (!r.motif || r.motif.trim() === '')
-    );
-    if (invalidAbsent) {
-      toast.error(
-        `يرجى تحديد سبب الغياب للموظف: ${invalidAbsent.personnel.nom} ${invalidAbsent.personnel.prenom}`
-      );
-      return;
-    }
+  // Action rapide : Tout marquer présent & enregistrer immédiatement
+  const handleMarkAllPresentAndSave = async () => {
+    if (attendanceRows.length === 0) return;
+
+    const nextRows: AgentAttendanceRow[] = attendanceRows.map((row) => ({
+      ...row,
+      statut: 'present',
+      heureArrivee: '',
+      motif: '',
+      leaveReasonId: null,
+      impacteSolde: false,
+      detailsMotif: {},
+    }));
+
+    setAttendanceRows(nextRows);
 
     try {
-      setSaving(true);
-      const entries: AttendanceEntry[] = attendanceRows.map((r) => ({
-        personnelId: r.personnel._id,
-        statut: r.statut,
-        motif: r.statut === 'present' ? null : r.motif || null,
-        leaveReasonId: r.statut === 'present' ? null : r.leaveReasonId || null,
-        impacteSolde: r.statut === 'present' ? false : r.impacteSolde,
-        detailsMotif:
-          r.statut === 'present'
-            ? {}
-            : {
-                serviceNom: r.detailsMotif.serviceNom || '',
-                missionLieu: r.detailsMotif.missionLieu || '',
-                missionObjet: r.detailsMotif.missionObjet || '',
-                formationIntitule: r.detailsMotif.formationIntitule || '',
-                formationOrganisme: r.detailsMotif.formationOrganisme || '',
-                formationDuree: r.detailsMotif.formationDuree || '',
-                formationDocumentId: r.detailsMotif.formationDocumentId,
-                commentaire: r.detailsMotif.commentaire || '',
-              },
-        heureArrivee: r.statut === 'present' ? r.heureArrivee || null : null,
-      }));
+      setBulkSaving(true);
+      const entries = nextRows.map(buildEntryPayload);
+      await saveBatchAttendance(selectedDate, entries);
 
-      const res = await saveBatchAttendance(selectedDate, entries);
-      toast.success(res.message || 'تم حفظ جدول الحضور بنجاح');
-      // Recharger pour synchroniser
-      await loadDailyAttendance();
+      const savedMap: Record<string, 'saved'> = {};
+      nextRows.forEach((r) => {
+        savedMap[r.personnel._id] = 'saved';
+      });
+      setAttendanceRows((prev) => prev.map((r) => ({ ...r, hasSavedRecord: true })));
+      setRowSaveStatus(savedMap);
+      refetchBadges();
+      toast.success(
+        isRTL
+          ? `تم تحديد وحفظ جميع الموظفين (${nextRows.length}) كحاضرين`
+          : `Tous les agents (${nextRows.length}) ont été marqués présents et enregistrés`
+      );
     } catch (err: unknown) {
-      console.error('Erreur lors de la sauvegarde:', err);
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        'حدث خطأ أثناء حفظ الحضور';
-      toast.error(msg);
+      console.error('Erreur lors de la sauvegarde groupée:', err);
+      toast.error(isRTL ? 'حدث خطأ أثناء الحفظ الجماعي' : 'Erreur lors de l’enregistrement groupé');
     } finally {
-      setSaving(false);
+      setBulkSaving(false);
     }
   };
 
-  // Filtrage de la liste
+  // Filtrage
   const filteredRows = useMemo(() => {
     return attendanceRows.filter((item) => {
-      // Filtre statut
-      if (statusFilter === 'present' && item.statut !== 'present') return false;
-      if (statusFilter === 'absent' && item.statut !== 'absent') return false;
-
-      // Filtre recherche
+      if (statusFilter !== 'all') {
+        if (getRowPillMode(item) !== statusFilter) return false;
+      }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const nom = (item.personnel.nom || '').toLowerCase();
@@ -398,127 +509,275 @@ export const AttendancePage: React.FC = () => {
       }
       return true;
     });
-  }, [attendanceRows, searchQuery, statusFilter]);
+  }, [attendanceRows, searchQuery, statusFilter, getRowPillMode]);
 
-  // Statistiques
+  // Statistiques compactes
   const stats = useMemo(() => {
-    const total = attendanceRows.length;
-    const presents = attendanceRows.filter((r) => r.statut === 'present').length;
-    const absents = attendanceRows.filter((r) => r.statut === 'absent').length;
-    const saved = attendanceRows.filter((r) => r.hasSavedRecord).length;
-    return { total, presents, absents, saved };
-  }, [attendanceRows]);
+    let presents = 0;
+    let lates = 0;
+    let absents = 0;
+    let leaveMissions = 0;
+    let saved = 0;
 
-  const BreadcrumbChevron = isRTL ? ChevronLeft : ChevronRight;
+    attendanceRows.forEach((r) => {
+      if (r.hasSavedRecord) saved++;
+      const mode = getRowPillMode(r);
+      if (mode === 'present') presents++;
+      else if (mode === 'late') lates++;
+      else if (mode === 'absent') absents++;
+      else leaveMissions++;
+    });
+
+    return {
+      total: attendanceRows.length,
+      presents,
+      lates,
+      absents,
+      leaveMissions,
+      saved,
+    };
+  }, [attendanceRows, getRowPillMode]);
+
+  // Listes de motifs pour « غائب » vs « إجازة / مهمة »
+  const absenceOnlyReasons = useMemo(() => {
+    const filtered = leaveReasons.filter(
+      (r) =>
+        ABSENCE_ONLY_CODES.has(r.code.toLowerCase()) ||
+        (r.category === 'autre' &&
+          r.code !== 'recuperation' &&
+          r.code !== 'detachement_externe' &&
+          r.code !== 'disponibilite')
+    );
+    return filtered.length > 0 ? filtered : leaveReasons;
+  }, [leaveReasons]);
+
+  const leaveMissionReasons = useMemo(() => {
+    const filtered = leaveReasons.filter(
+      (r) =>
+        !ABSENCE_ONLY_CODES.has(r.code.toLowerCase()) &&
+        !(
+          r.category === 'autre' &&
+          r.code !== 'recuperation' &&
+          r.code !== 'detachement_externe' &&
+          r.code !== 'disponibilite'
+        )
+    );
+    return filtered.length > 0 ? filtered : leaveReasons;
+  }, [leaveReasons]);
+
+  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 pb-24 space-y-5 text-start" dir={dir}>
-      {/* 1. En-tête sobre */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            {/* Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 print:hidden">
-              <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
-                <Home className="h-3.5 w-3.5" />
-                <span>لوحة التحكم</span>
-              </Link>
-              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-              <Link to="/dashboard/hr/personnel" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">
-                <span>الموارد البشرية</span>
-              </Link>
-              <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-              <span className="text-slate-900 dark:text-slate-100 font-semibold">تسجيل الحضور</span>
-            </div>
+    <div className="space-y-3.5 text-start" dir={dir}>
+      {/* 1. Single-Row Compact KPI Strip + Secondary HR Actions */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-xs print:hidden">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs tabular-nums">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('all')}
+            className={`px-2.5 py-1 rounded-md font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'all'
+                ? 'bg-[#2c5282] dark:bg-sky-700 text-white font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {isRTL ? 'الكل' : 'Tous'} ({stats.total})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'present' ? 'all' : 'present')}
+            className={`px-2.5 py-1 rounded-md font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'present'
+                ? 'bg-emerald-700 text-white font-bold'
+                : 'text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+            }`}
+          >
+            {isRTL ? 'حاضر' : 'Présent'} ({stats.presents})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'late' ? 'all' : 'late')}
+            className={`px-2.5 py-1 rounded-md font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'late'
+                ? 'bg-amber-600 text-white font-bold'
+                : 'text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+            }`}
+          >
+            {isRTL ? 'متأخر' : 'En retard'} ({stats.lates})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'absent' ? 'all' : 'absent')}
+            className={`px-2.5 py-1 rounded-md font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'absent'
+                ? 'bg-red-700 text-white font-bold'
+                : 'text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40'
+            }`}
+          >
+            {isRTL ? 'غائب' : 'Absent'} ({stats.absents})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'leave_mission' ? 'all' : 'leave_mission')}
+            className={`px-2.5 py-1 rounded-md font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'leave_mission'
+                ? 'bg-indigo-700 text-white font-bold'
+                : 'text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40'
+            }`}
+          >
+            {isRTL ? 'إجازة / مهمة' : 'Congé / Mission'} ({stats.leaveMissions})
+          </button>
 
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-[#2c5282] dark:bg-sky-700 text-white rounded-lg shadow-sm">
-                <CalendarCheck className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                  ورقة تسجيل الحضور اليومي
-                </h1>
-                <p className="text-sm text-slate-700 dark:text-slate-300">
-                  تسجيل إثبات الحضور والغياب واحتساب الخصم من الرصيد ديناميكياً
-                </p>
-              </div>
-            </div>
-          </div>
+          <span className="hidden md:inline-flex items-center text-slate-500 dark:text-slate-400 ms-2">
+            · {isRTL ? `مسجل اليوم: ${stats.saved}/${stats.total}` : `Enregistrés : ${stats.saved}/${stats.total}`}
+          </span>
+        </div>
 
-          {/* Bouton Enregistrer en haut */}
-          <div className="flex flex-wrap items-center gap-2 print:hidden">
-            <Button
-              asChild
-              variant="outline"
-              className="border-[#2c5282] dark:border-sky-600 text-[#2c5282] dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/50 rounded-lg font-medium gap-2 h-10 px-4 transition-colors duration-200"
-            >
-              <Link to="/dashboard/hr/attendance/report">
-                <Printer className="h-4 w-4" />
-                <span>{isRTL ? 'طباعة الكشف الشهري' : 'Imprimer la fiche mensuelle'}</span>
-              </Link>
-            </Button>
-
-            <Button
-              onClick={handleSaveAttendance}
-              disabled={saving || loading || attendanceRows.length === 0}
-              className="bg-[#2c5282] hover:bg-[#2a4365] dark:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-lg font-medium gap-2 h-10 px-5 transition-colors duration-200"
-            >
-              {saving ? (
-                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 px-3 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-xs font-medium gap-1.5 whitespace-nowrap shrink-0"
+          >
+            <Link to="/dashboard/hr/attendance-declarations">
+              <ClipboardList className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              <span>{isRTL ? 'الإعلانات المعلقة' : 'Déclarations'}</span>
+              {pendingDeclarations > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[11px] font-bold bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-200 rounded-full tabular-nums">
+                  {pendingDeclarations}
+                </span>
               )}
-              <span>حفظ التسجيلات</span>
-            </Button>
-          </div>
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-9 px-3 border-slate-300 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/50 rounded-lg text-xs font-medium gap-1.5 whitespace-nowrap shrink-0"
+          >
+            <Link to="/dashboard/hr/attendance/report">
+              <Printer className="h-3.5 w-3.5" />
+              <span>{isRTL ? 'طباعة الكشف الشهري' : 'Fiche mensuelle'}</span>
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* 2. Filtres & Sélecteurs */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 space-y-4 shadow-sm print:hidden">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3.5 items-end">
-          {/* Sélecteur de date */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
-              <span>تاريخ الحضور :</span>
-            </label>
+      {/* 2. Date Switcher, Filters & Bulk Mark-All-Present Action */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-3 space-y-3 shadow-xs print:hidden">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          {/* Quick Date Switcher */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-0.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => shiftDate(-1)}
+                className="h-8 px-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded-md gap-1 whitespace-nowrap"
+              >
+                <PrevIcon className="h-3.5 w-3.5" />
+                <span>{isRTL ? 'اليوم السابق' : 'Hier'}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedDate(todayStr)}
+                className={`h-8 px-3 text-xs font-bold rounded-md whitespace-nowrap ${
+                  selectedDate === todayStr
+                    ? 'bg-[#2c5282] dark:bg-sky-700 text-white hover:bg-[#2c5282] dark:hover:bg-sky-700'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800'
+                }`}
+              >
+                {isRTL ? 'اليوم' : "Aujourd'hui"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => shiftDate(1)}
+                className="h-8 px-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 rounded-md gap-1 whitespace-nowrap"
+              >
+                <span>{isRTL ? 'اليوم الموالي' : 'Demain'}</span>
+                <NextIcon className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                aria-label={isRTL ? 'تاريخ الحضور' : 'Date de présence'}
+                className="h-9 w-40 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
+              />
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
+                <Calendar className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
+                <bdi dir={dir}>{formatDateWithWeekday(selectedDate, isRTL ? 'ar' : 'fr')}</bdi>
+              </span>
+            </div>
+          </div>
+
+          {/* Primary Bulk Action */}
+          <Button
+            type="button"
+            onClick={handleMarkAllPresentAndSave}
+            disabled={loading || bulkSaving || attendanceRows.length === 0}
+            className="h-9 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-xs gap-1.5 whitespace-nowrap shrink-0 self-start xl:self-auto"
+          >
+            {bulkSaving ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+            <span>{isRTL ? 'تحديد الكل كـ حاضر' : 'Tout marquer présent'}</span>
+          </Button>
+        </div>
+
+        {/* Department & Search Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="relative">
+            <Search className="absolute start-3 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400 pointer-events-none" />
             <Input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="h-10 border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
+              type="text"
+              placeholder={
+                isRTL ? 'بحث بالاسم، اللقب أو رقم ب.ت.و...' : 'Rechercher par nom, prénom ou CIN...'
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 border-slate-300 dark:border-slate-700 rounded-lg text-xs ps-9 bg-white dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
-          {/* Sélecteur de département */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
-              <span>القسم / المصلحة :</span>
-            </label>
+          <div>
             {isDepartmentRestricted ? (
-              <Input
-                type="text"
-                disabled
-                value={
-                  typeof currentUser?.activeDepartment === 'object'
-                    ? (currentUser.activeDepartment as { name?: string })?.name || 'القسم المخصص'
-                    : 'القسم المخصص'
-                }
-                className="h-10 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-sm cursor-not-allowed"
-              />
+              <div className="h-9 px-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-xs flex items-center gap-2">
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">
+                  {typeof currentUser?.activeDepartment === 'object'
+                    ? (currentUser.activeDepartment as { name?: string })?.name ||
+                      (isRTL ? 'القسم المخصص' : 'Département assigné')
+                    : isRTL
+                    ? 'القسم المخصص'
+                    : 'Département assigné'}
+                </span>
+              </div>
             ) : (
-              <Select
-                value={selectedDepartment}
-                onValueChange={(val) => setSelectedDepartment(val)}
-              >
-                <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-950 dark:text-slate-100">
-                  <SelectValue placeholder="اختر القسم" />
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="h-9 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Building2 className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400 shrink-0" />
+                    <SelectValue placeholder={isRTL ? 'جميع الأقسام' : 'Tous les départements'} />
+                  </div>
                 </SelectTrigger>
                 <SelectContent dir={dir}>
-                  <SelectItem value="all">جميع الأقسام</SelectItem>
+                  <SelectItem value="all">
+                    {isRTL ? 'جميع الأقسام' : 'Tous les départements'}
+                  </SelectItem>
                   {departments.map((d) => (
                     <SelectItem key={d._id} value={d._id}>
                       {d.name}
@@ -528,145 +787,56 @@ export const AttendancePage: React.FC = () => {
               </Select>
             )}
           </div>
-
-          {/* Recherche textuelle */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Search className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-              <span>بحث عن موظف :</span>
-            </label>
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="الاسم، اللقب، رقم ب.ت.و..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 border-slate-300 dark:border-slate-700 rounded-lg text-sm ps-9 bg-white dark:bg-slate-950 dark:text-slate-100"
-              />
-              <Search className="absolute start-3 top-3 h-4 w-4 text-slate-700 dark:text-slate-300" />
-            </div>
-          </div>
-
-          {/* Bouton action rapide */}
-          <div className="space-y-2 flex flex-col justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleMarkAllPresent}
-              disabled={loading || attendanceRows.length === 0}
-              className="h-10 border-slate-200 dark:border-slate-700 text-[#2c5282] dark:text-sky-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg font-medium gap-2 text-sm"
-            >
-              <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span>تحديد الكل كحاضر</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Barre de stats et filtre d'affichage */}
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex flex-wrap items-center gap-2 tabular-nums">
-            <span className="text-slate-700 dark:text-slate-300">إجمالي الموظفين:</span>
-            <span className="font-bold text-slate-900 dark:text-slate-100 px-2.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md">
-              {stats.total}
-            </span>
-
-            <span className="text-slate-700 dark:text-slate-300 ms-2">الحاضرون:</span>
-            <span className="font-bold text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/50 rounded-md border border-emerald-200 dark:border-emerald-800/70">
-              {stats.presents}
-            </span>
-
-            <span className="text-slate-700 dark:text-slate-300 ms-2">الغائبون:</span>
-            <span className="font-bold text-red-700 dark:text-red-300 px-2.5 py-0.5 bg-red-50 dark:bg-red-950/50 rounded-md border border-red-200 dark:border-red-800/70">
-              {stats.absents}
-            </span>
-
-            {stats.saved > 0 && (
-              <span className="text-slate-700 dark:text-slate-300 text-xs ms-2">
-                (تم حفظ {stats.saved} مسبقاً لهذا اليوم)
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-slate-700 dark:text-slate-300">تصفية العرض:</span>
-            <Button
-              size="sm"
-              variant={statusFilter === 'all' ? 'default' : 'ghost'}
-              onClick={() => setStatusFilter('all')}
-              className={`h-9 text-xs px-3.5 rounded-lg tabular-nums ${
-                statusFilter === 'all'
-                  ? 'bg-[#2c5282] dark:bg-sky-700 text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              الكل ({stats.total})
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === 'present' ? 'default' : 'ghost'}
-              onClick={() => setStatusFilter('present')}
-              className={`h-9 text-xs px-3.5 rounded-lg tabular-nums ${
-                statusFilter === 'present'
-                  ? 'bg-emerald-700 text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-              }`}
-            >
-              الحاضرون ({stats.presents})
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === 'absent' ? 'default' : 'ghost'}
-              onClick={() => setStatusFilter('absent')}
-              className={`h-9 text-xs px-3.5 rounded-lg tabular-nums ${
-                statusFilter === 'absent'
-                  ? 'bg-red-700 text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40'
-              }`}
-            >
-              الغائبون ({stats.absents})
-            </Button>
-          </div>
         </div>
       </div>
 
-      {/* 3. Liste du personnel */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
+      {/* 3. Fluid Daily Attendance Matrix */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden shadow-xs">
         {loading ? (
           <TableSkeleton rows={6} columns={4} />
         ) : filteredRows.length === 0 ? (
           <EmptyState
             className="border-0 rounded-none py-14"
             icon={<Users className="h-6 w-6" />}
-            title="لا يوجد موظفون للعرض"
-            description="تأكد من اختيار القسم المناسب أو إضافة موظفين في قسم الموارد البشرية"
+            title={isRTL ? 'لا يوجد موظفون للعرض' : 'Aucun employé à afficher'}
+            description={
+              isRTL
+                ? 'تأكد من اختيار القسم المناسب أو ضبط معايير البحث'
+                : 'Vérifiez le département sélectionné ou ajustez votre recherche'
+            }
           />
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {filteredRows.map((row) => {
-              // Trouver l'index original dans attendanceRows
               const originalIndex = attendanceRows.findIndex(
                 (r) => r.personnel._id === row.personnel._id
               );
-              const isPresent = row.statut === 'present';
+              const pillMode = getRowPillMode(row);
+              const isAbsentMode = pillMode === 'absent' || pillMode === 'leave_mission';
+              const saveStatus = rowSaveStatus[row.personnel._id];
+              const isNoteOpen = Boolean(expandedNoteIds[row.personnel._id]);
+              const reasonsPool = pillMode === 'absent' ? absenceOnlyReasons : leaveMissionReasons;
 
               return (
                 <div
                   key={row.personnel._id}
-                  className={`p-4 transition-colors duration-150 ${
-                    isPresent
-                      ? 'bg-white dark:bg-slate-900 hover:bg-slate-50/70 dark:hover:bg-slate-800/50'
-                      : 'bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-50/80 dark:hover:bg-amber-950/30'
+                  className={`px-4 py-3 transition-colors duration-150 ${
+                    pillMode === 'present'
+                      ? 'bg-white dark:bg-slate-900 hover:bg-slate-50/70 dark:hover:bg-slate-800/40'
+                      : pillMode === 'late'
+                      ? 'bg-amber-50/30 dark:bg-amber-950/15 hover:bg-amber-50/50 dark:hover:bg-amber-950/25'
+                      : 'bg-slate-50/50 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                   }`}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    {/* Infos Agent */}
-                    <div className="flex items-center gap-3.5 min-w-[260px] flex-1">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                    {/* Employee Info */}
+                    <div className="flex items-center gap-3 min-w-[230px] flex-1">
                       <PersonnelAvatar
                         photo={row.personnel.photo}
                         nom={row.personnel.nom}
                         prenom={row.personnel.prenom}
-                        size="md"
-                        className="h-11 w-11"
+                        size="sm"
+                        className="h-10 w-10"
                       />
 
                       <div className="min-w-0">
@@ -674,30 +844,35 @@ export const AttendancePage: React.FC = () => {
                           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                             {row.personnel.nom} {row.personnel.prenom}
                           </h3>
-                          {row.hasSavedRecord && (
-                            <span
-                              className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/70"
-                              title="تم تسجيل هذه الحالة مسبقاً"
-                            >
-                              مُسجل
+
+                          {saveStatus === 'saving' ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                              <Loader2 className="h-3 w-3 animate-spin" />
                             </span>
-                          )}
+                          ) : saveStatus === 'saved' || row.hasSavedRecord ? (
+                            <span
+                              className="inline-flex items-center gap-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+                              title={isRTL ? 'تم الحفظ' : 'Enregistré'}
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </span>
+                          ) : null}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-700 dark:text-slate-300 mt-0.5">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                           {row.personnel.cin && (
-                            <span className="font-mono tabular-nums">ب.ت.و: {row.personnel.cin}</span>
+                            <span className="font-mono tabular-nums">{row.personnel.cin}</span>
                           )}
                           {row.personnel.poste && (
                             <>
-                              <span>•</span>
-                              <span>{row.personnel.poste}</span>
+                              {row.personnel.cin && <span>·</span>}
+                              <span className="truncate max-w-[180px]">{row.personnel.poste}</span>
                             </>
                           )}
                           {row.personnel.activeDepartment && (
                             <>
-                              <span>•</span>
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800/60 font-medium">
+                              <span>·</span>
+                              <span className="text-slate-700 dark:text-slate-300 font-medium">
                                 {row.personnel.activeDepartment.name}
                               </span>
                             </>
@@ -706,43 +881,83 @@ export const AttendancePage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Contrôle Présent / Absent */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-1 rounded-lg">
+                    {/* 4-Pill Instant Segmented Toggle + Time / Note */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div
+                        role="radiogroup"
+                        aria-label={`${row.personnel.nom} ${row.personnel.prenom}`}
+                        className="inline-flex flex-wrap items-center gap-1 bg-slate-100/90 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-1 rounded-lg"
+                      >
+                        {/* 1. حاضر / Présent */}
                         <button
                           type="button"
-                          onClick={() => handleToggleStatut(originalIndex, true)}
-                          className={`h-9 px-3.5 rounded-md text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                            isPresent
-                              ? 'bg-emerald-700 text-white shadow-sm'
-                              : 'text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                          role="radio"
+                          aria-checked={pillMode === 'present'}
+                          onClick={() => handleSelectPill(originalIndex, 'present')}
+                          className={`h-8 px-3 rounded-md text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] ${
+                            pillMode === 'present'
+                              ? 'bg-emerald-700 text-white shadow-xs'
+                              : 'text-slate-700 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-white dark:hover:bg-slate-800'
                           }`}
                         >
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span>حاضر</span>
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          <span>{isRTL ? 'حاضر' : 'Présent'}</span>
                         </button>
 
+                        {/* 2. متأخر / En retard */}
                         <button
                           type="button"
-                          onClick={() => handleToggleStatut(originalIndex, false)}
-                          className={`h-9 px-3.5 rounded-md text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                            !isPresent
-                              ? 'bg-red-700 text-white shadow-sm'
-                              : 'text-slate-700 dark:text-slate-300 hover:text-red-700 dark:hover:text-red-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                          role="radio"
+                          aria-checked={pillMode === 'late'}
+                          onClick={() => handleSelectPill(originalIndex, 'late')}
+                          className={`h-8 px-3 rounded-md text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 ${
+                            pillMode === 'late'
+                              ? 'bg-amber-600 text-white shadow-xs'
+                              : 'text-slate-700 dark:text-slate-300 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-white dark:hover:bg-slate-800'
                           }`}
                         >
-                          <XCircle className="h-4 w-4" />
-                          <span>غائب</span>
+                          <Clock className="h-3.5 w-3.5 shrink-0" />
+                          <span>{isRTL ? 'متأخر' : 'En retard'}</span>
+                        </button>
+
+                        {/* 3. غائب / Absent */}
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={pillMode === 'absent'}
+                          onClick={() => handleSelectPill(originalIndex, 'absent')}
+                          className={`h-8 px-3 rounded-md text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
+                            pillMode === 'absent'
+                              ? 'bg-red-700 text-white shadow-xs'
+                              : 'text-slate-700 dark:text-slate-300 hover:text-red-700 dark:hover:text-red-300 hover:bg-white dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <XCircle className="h-3.5 w-3.5 shrink-0" />
+                          <span>{isRTL ? 'غائب' : 'Absent'}</span>
+                        </button>
+
+                        {/* 4. إجازة / مهمة / Congé / Mission */}
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={pillMode === 'leave_mission'}
+                          onClick={() => handleSelectPill(originalIndex, 'leave_mission')}
+                          className={`h-8 px-3 rounded-md text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 ${
+                            pillMode === 'leave_mission'
+                              ? 'bg-indigo-700 text-white shadow-xs'
+                              : 'text-slate-700 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-white dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <Briefcase className="h-3.5 w-3.5 shrink-0" />
+                          <span>{isRTL ? 'إجازة / مهمة' : 'Congé / Mission'}</span>
                         </button>
                       </div>
 
-                      {/* Si présent : heure d'arrivée optionnelle */}
-                      {isPresent && (
-                        <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
-                          <Clock className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
+                      {/* Arrival time input when Late */}
+                      {pillMode === 'late' && (
+                        <div className="flex items-center gap-1.5">
                           <Input
                             type="time"
-                            placeholder="وقت الوصول"
                             value={row.heureArrivee}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -752,179 +967,209 @@ export const AttendancePage: React.FC = () => {
                                 return u;
                               });
                             }}
-                            className="h-9 w-28 text-xs border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
+                            onBlur={(e) => {
+                              const val = e.target.value || getDefaultTimeHHMM();
+                              const updated = { ...row, heureArrivee: val };
+                              setAttendanceRows((prev) => {
+                                const u = [...prev];
+                                u[originalIndex] = updated;
+                                return u;
+                              });
+                              void persistSingleRow(updated);
+                            }}
+                            aria-label={isRTL ? 'ساعة الوصول' : "Heure d'arrivée"}
+                            className="h-8 w-24 text-xs border-amber-300 dark:border-amber-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
                           />
                         </div>
                       )}
+
+                      {/* Optional Inline Note Icon */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setExpandedNoteIds((prev) => ({
+                            ...prev,
+                            [row.personnel._id]: !prev[row.personnel._id],
+                          }))
+                        }
+                        title={isRTL ? 'ملاحظة' : 'Remarque'}
+                        aria-label={isRTL ? 'إضافة ملاحظة' : 'Ajouter une remarque'}
+                        className={`h-8 w-8 p-0 rounded-md shrink-0 ${
+                          row.detailsMotif.commentaire
+                            ? 'text-[#2c5282] dark:text-sky-300 bg-blue-50 dark:bg-blue-950/50'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
 
-                  {/* Section Spécifique si ABSENT */}
-                  {!isPresent && (
-                    <div className="mt-3.5 pt-3.5 bg-white dark:bg-slate-900/90 p-4 rounded-lg border border-amber-300/70 dark:border-amber-800/60 space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        {/* Sélection du Motif */}
-                        <div className="flex-1 min-w-[240px]">
-                          <label className="text-sm font-medium text-amber-900 dark:text-amber-300 mb-1.5 block">
-                            سبب الغياب <span className="text-red-600 dark:text-red-400">*</span> :
-                          </label>
+                  {/* Inline Leave / Absence Reason Row when Absent or Leave/Mission */}
+                  {isAbsentMode && (
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200/70 dark:border-slate-800 space-y-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2 flex-1 min-w-[220px]">
+                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            {isRTL ? 'السبب:' : 'Motif :'}
+                          </span>
                           <Select
                             value={row.motif || ''}
                             onValueChange={(val) => handleMotifChange(originalIndex, val)}
                           >
-                            <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-950 dark:text-slate-100">
-                              <SelectValue placeholder="اختر سبب الغياب" />
+                            <SelectTrigger className="h-8 border-slate-300 dark:border-slate-700 rounded-md text-xs bg-white dark:bg-slate-950 dark:text-slate-100 max-w-xs">
+                              <SelectValue placeholder={isRTL ? 'اختر السبب' : 'Choisir le motif'} />
                             </SelectTrigger>
                             <SelectContent className="max-h-60" dir={dir}>
-                              {leaveReasons.map((lr) => (
-                                <SelectItem key={lr._id} value={lr.code} className="text-sm py-2">
-                                  <div className="flex items-center justify-between gap-3 w-full">
-                                    <span className="font-semibold text-slate-900 dark:text-slate-100">{lr.labelAr}</span>
-                                    {lr.labelFr && (
-                                      <span className="text-slate-700 dark:text-slate-300 text-xs font-mono">
-                                        ({lr.labelFr})
-                                      </span>
-                                    )}
-                                  </div>
+                              {reasonsPool.map((lr) => (
+                                <SelectItem key={lr._id} value={lr.code} className="text-xs py-1.5">
+                                  {isRTL ? lr.labelAr : lr.labelFr || lr.labelAr}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
 
-                        {/* Badge Impact Solde */}
-                        <div className="sm:text-end flex flex-col justify-end">
-                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
-                            تأثير الغياب على الرصيد :
-                          </label>
-                          <div>
-                            {row.impacteSolde ? (
-                              <Badge
-                                variant="outline"
-                                className="bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800 px-3 py-1 text-xs font-bold gap-1.5"
-                              >
-                                <AlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                                <span>يؤثر على الرصيد : نعم (مخصوم)</span>
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800 px-3 py-1 text-xs font-semibold gap-1.5"
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                <span>يؤثر على الرصيد : لا (غير مخصوم)</span>
-                              </Badge>
-                            )}
-                          </div>
+                        <div>
+                          {row.impacteSolde ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800 px-2.5 py-0.5 text-xs font-semibold gap-1"
+                            >
+                              <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                              <span>{isRTL ? 'يخصم من الرصيد' : 'Déduit du solde'}</span>
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800 px-2.5 py-0.5 text-xs font-medium gap-1"
+                            >
+                              <CheckCircle2 className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                              <span>{isRTL ? 'لا يخصم من الرصيد' : 'Non déduit'}</span>
+                            </Badge>
+                          )}
                         </div>
                       </div>
 
-                      {/* Champs conditionnels selon le motif */}
-                      {/* Cas 1: Motif "service" */}
+                      {/* Conditional Details: Service / Mission / Formation */}
                       {row.motif === 'service' && (
-                        <div className="bg-amber-50/60 dark:bg-slate-950/70 p-4 rounded-lg border border-amber-200/80 dark:border-amber-800/50 space-y-2">
-                          <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                            اسم المصلحة أو الوجهة الإدارية :
-                          </label>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                           <Input
                             type="text"
-                            placeholder="حدد اسم المصلحة المكلف بها..."
+                            placeholder={
+                              isRTL ? 'اسم المصلحة أو الوجهة الإدارية...' : 'Service ou destination...'
+                            }
                             value={row.detailsMotif.serviceNom || ''}
                             onChange={(e) =>
                               handleDetailChange(originalIndex, 'serviceNom', e.target.value)
                             }
-                            className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
+                            onBlur={() => void persistSingleRow(row)}
+                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100 max-w-md"
                           />
                         </div>
                       )}
 
-                      {/* Cas 2: Motif "mission" */}
                       {row.motif === 'mission' && (
-                        <div className="bg-amber-50/60 dark:bg-slate-950/70 p-4 rounded-lg border border-amber-200/80 dark:border-amber-800/50 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                              مكان المهمة :
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder="المدينة / المؤسسة..."
-                              value={row.detailsMotif.missionLieu || ''}
-                              onChange={(e) =>
-                                handleDetailChange(originalIndex, 'missionLieu', e.target.value)
-                              }
-                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                              موضوع المهمة :
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder="الهدف من المهمة..."
-                              value={row.detailsMotif.missionObjet || ''}
-                              onChange={(e) =>
-                                handleDetailChange(originalIndex, 'missionObjet', e.target.value)
-                              }
-                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
-                            />
-                          </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-2xl">
+                          <Input
+                            type="text"
+                            placeholder={isRTL ? 'مكان المهمة...' : 'Lieu de mission...'}
+                            value={row.detailsMotif.missionLieu || ''}
+                            onChange={(e) =>
+                              handleDetailChange(originalIndex, 'missionLieu', e.target.value)
+                            }
+                            onBlur={() => void persistSingleRow(row)}
+                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100"
+                          />
+                          <Input
+                            type="text"
+                            placeholder={isRTL ? 'موضوع المهمة...' : 'Objet de mission...'}
+                            value={row.detailsMotif.missionObjet || ''}
+                            onChange={(e) =>
+                              handleDetailChange(originalIndex, 'missionObjet', e.target.value)
+                            }
+                            onBlur={() => void persistSingleRow(row)}
+                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100"
+                          />
                         </div>
                       )}
 
-                      {/* Cas 3: Motif "formation" */}
                       {row.motif === 'formation' && (
-                        <div className="bg-amber-50/60 dark:bg-slate-950/70 p-4 rounded-lg border border-amber-200/80 dark:border-amber-800/50 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                              عنوان التكوين :
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder="موضوع الدورة التكوينية..."
-                              value={row.detailsMotif.formationIntitule || ''}
-                              onChange={(e) =>
-                                handleDetailChange(
-                                  originalIndex,
-                                  'formationIntitule',
-                                  e.target.value
-                                )
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-3xl">
+                          <Input
+                            type="text"
+                            placeholder={isRTL ? 'عنوان التكوين...' : 'Intitulé de formation...'}
+                            value={row.detailsMotif.formationIntitule || ''}
+                            onChange={(e) =>
+                              handleDetailChange(originalIndex, 'formationIntitule', e.target.value)
+                            }
+                            onBlur={() => void persistSingleRow(row)}
+                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100"
+                          />
+                          <Input
+                            type="text"
+                            placeholder={isRTL ? 'الهيئة المؤطرة...' : 'Organisme...'}
+                            value={row.detailsMotif.formationOrganisme || ''}
+                            onChange={(e) =>
+                              handleDetailChange(originalIndex, 'formationOrganisme', e.target.value)
+                            }
+                            onBlur={() => void persistSingleRow(row)}
+                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100"
+                          />
+                          <Input
+                            type="text"
+                            placeholder={isRTL ? 'المدة (مثال: 3 أيام)...' : 'Durée...'}
+                            value={row.detailsMotif.formationDuree || ''}
+                            onChange={(e) =>
+                              handleDetailChange(originalIndex, 'formationDuree', e.target.value)
+                            }
+                            onBlur={() => void persistSingleRow(row)}
+                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Optional Inline Note Row */}
+                  {isNoteOpen && (
+                    <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center gap-2">
+                      {isAbsentMode ? (
+                        <>
+                          <Input
+                            type="text"
+                            placeholder={isRTL ? 'أضف ملاحظة حول الحالة...' : 'Ajouter une remarque...'}
+                            value={row.detailsMotif.commentaire || ''}
+                            onChange={(e) =>
+                              handleDetailChange(originalIndex, 'commentaire', e.target.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                void persistSingleRow(row);
                               }
-                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                              الهيئة المؤطرة :
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder="الجهة أو المركز المنظم..."
-                              value={row.detailsMotif.formationOrganisme || ''}
-                              onChange={(e) =>
-                                handleDetailChange(
-                                  originalIndex,
-                                  'formationOrganisme',
-                                  e.target.value
-                                )
-                              }
-                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                              مدة التكوين :
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder="مثال: 3 أيام، أسبوع..."
-                              value={row.detailsMotif.formationDuree || ''}
-                              onChange={(e) =>
-                                handleDetailChange(originalIndex, 'formationDuree', e.target.value)
-                              }
-                              className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-100"
-                            />
-                          </div>
+                            }}
+                            onBlur={() => void persistSingleRow(row)}
+                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100 flex-1 max-w-lg"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => void persistSingleRow(row)}
+                            className="h-8 px-3 text-xs rounded-md whitespace-nowrap shrink-0"
+                          >
+                            {isRTL ? 'حفظ الملاحظة' : 'Enregistrer'}
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                          <span>
+                            {isRTL
+                              ? 'تُحفظ الملاحظات النصية مع حالات الغياب أو الإجازة / المهمة. لحالة التأخر، حدد ساعة الوصول أعلاه.'
+                              : 'Les remarques s’enregistrent avec les absences, congés ou missions. Pour un retard, saisissez l’heure d’arrivée.'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -935,46 +1180,6 @@ export const AttendancePage: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* 4. Bouton "Enregistrer" en bas */}
-      {filteredRows.length > 0 && (
-        <div
-          data-sticky-validation-bar="true"
-          className="sticky bottom-4 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md print:hidden"
-        >
-          <div className="text-xs text-slate-700 dark:text-slate-300 flex flex-wrap items-center gap-x-3 gap-y-1 tabular-nums">
-            <span>
-              التاريخ المحدد:{' '}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{selectedDate}</span>
-            </span>
-            <span>
-              عدد الموظفين:{' '}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{attendanceRows.length}</span>
-            </span>
-            <span>
-              الحاضرون:{' '}
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">{stats.presents}</span>
-            </span>
-            <span>
-              الغائبون:{' '}
-              <span className="font-bold text-red-700 dark:text-red-400">{stats.absents}</span>
-            </span>
-          </div>
-
-          <Button
-            onClick={handleSaveAttendance}
-            disabled={saving || loading || attendanceRows.length === 0}
-            className="bg-[#2c5282] hover:bg-[#2a4365] dark:bg-sky-700 dark:hover:bg-sky-600 text-white rounded-lg font-medium gap-2 h-10 px-6 text-sm transition-colors duration-200"
-          >
-            {saving ? (
-              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            <span>حفظ جدول الحضور لليوم</span>
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

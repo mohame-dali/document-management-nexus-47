@@ -50,7 +50,6 @@ import {
   ChevronRight,
   ChevronLeft,
   X,
-  Filter,
   RefreshCw,
   Key,
   CheckCircle,
@@ -183,97 +182,77 @@ export const PersonnelListPage: React.FC = () => {
   const awaitingAccountCount = personnelList.length - linkedOnPageCount;
 
   return (
-    <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-5 text-start" dir={dir}>
-      {/* 1. Compact Unboxed Institutional Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/70 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
+    <div className="space-y-3.5 text-start" dir={dir}>
+      {/* Unified Operational Panel: Compact KPI + Actions + Filters + Table + Pagination */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden shadow-xs">
+        {/* Compact Single-Row KPI Strip + Primary Actions */}
+        <div className="px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
+            <span className="inline-flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100">
+              <Users className="w-4 h-4 text-[#2c5282] dark:text-blue-300 shrink-0" />
+              <span>{isRTL ? 'قائمة الموظفين' : 'Personnel'}</span>
+            </span>
+            <span className="text-slate-300 dark:text-slate-700">|</span>
+            <span>
+              {isRTL ? 'الإجمالي:' : 'Total :'}{' '}
+              <strong className="font-bold text-slate-900 dark:text-slate-100">{pagination.total}</strong>
+            </span>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <span>
+              {isRTL ? 'نشطون:' : 'Actifs :'}{' '}
+              <strong className="font-bold text-emerald-700 dark:text-emerald-400">{activeOnPageCount}</strong>
+            </span>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <span>
+              {isRTL ? 'بدون حساب:' : 'Sans compte :'}{' '}
+              <strong className="font-bold text-amber-700 dark:text-amber-400">{awaitingAccountCount}</strong>
+            </span>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <span>
+              {isRTL ? 'الأقسام:' : 'Départements :'}{' '}
+              <strong className="font-bold text-slate-900 dark:text-slate-100">{departments.length}</strong>
+            </span>
           </div>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 leading-tight">
-              {t('personnel.page.title')}
-            </h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 truncate">
-              {t('personnel.page.subtitle')}
-            </p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 self-start md:self-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="h-10 px-3.5 text-sm font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>{t('common.refresh')}</span>
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetFilters}
+                className="h-9 px-2.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>{t('personnel.filters.reset')}</span>
+              </Button>
+            )}
 
-          {canAddPersonnel && (
             <Button
-              onClick={() => navigate('/dashboard/hr/personnel/new')}
-              className="h-10 px-4 text-sm font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t('personnel.actions.create')}</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* 2. Unified Operational Panel: Summary + Filters + Table + Pagination */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg overflow-hidden">
-        {/* Toolbar & Inline Summary Strip */}
-        <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-              <Filter className="w-4 h-4 text-[#2c5282] dark:text-blue-300" />
-              <span>{t('personnel.filters.title')}</span>
-            </div>
-
-            <div className="hidden sm:block h-4 w-px bg-slate-200 dark:bg-slate-700" />
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
-              <span>
-                {isRTL ? 'الإجمالي:' : 'Total :'}{' '}
-                <strong className="font-bold text-slate-900 dark:text-slate-100">{pagination.total}</strong>
-              </span>
-              <span className="text-slate-300 dark:text-slate-700">·</span>
-              <span>
-                {isRTL ? 'نشطون:' : 'Actifs :'}{' '}
-                <strong className="font-bold text-emerald-700 dark:text-emerald-400">{activeOnPageCount}</strong>
-              </span>
-              <span className="text-slate-300 dark:text-slate-700">·</span>
-              <span>
-                {isRTL ? 'بدون حساب:' : 'Sans compte :'}{' '}
-                <strong className="font-bold text-amber-700 dark:text-amber-400">{awaitingAccountCount}</strong>
-              </span>
-              <span className="text-slate-300 dark:text-slate-700">·</span>
-              <span>
-                {isRTL ? 'الأقسام:' : 'Départements :'}{' '}
-                <strong className="font-bold text-slate-900 dark:text-slate-100">{departments.length}</strong>
-              </span>
-            </div>
-          </div>
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={resetFilters}
-              className="h-9 px-3 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg flex items-center gap-1.5"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="h-9 px-3 text-xs font-medium text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
             >
-              <X className="w-3.5 h-3.5" />
-              <span>{t('personnel.filters.reset')}</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              <span>{t('common.refresh')}</span>
             </Button>
-          )}
+
+            {canAddPersonnel && (
+              <Button
+                size="sm"
+                onClick={() => navigate('/dashboard/hr/personnel/new')}
+                className="h-9 px-3.5 text-xs font-bold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t('personnel.actions.create')}</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filter Inputs Row */}
-        <div className="px-4 sm:px-5 py-3.5 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-200/80 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-200/80 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Recherche par nom, prénom ou CIN */}
           <div className="relative">
             <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-700 dark:text-slate-300 pointer-events-none" />

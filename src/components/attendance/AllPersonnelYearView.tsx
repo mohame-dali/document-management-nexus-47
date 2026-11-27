@@ -89,11 +89,14 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
   };
 
   const sortedRecords = useMemo(() => {
+    const locale = isRTL ? 'ar' : 'fr';
     return [...records].sort((a, b) => {
       if (sortField === 'nom') {
         const nameA = `${a.personnel.nom} ${a.personnel.prenom}`;
         const nameB = `${b.personnel.nom} ${b.personnel.prenom}`;
-        return sortOrder === 'asc' ? nameA.localeCompare(nameB, 'ar') : nameB.localeCompare(nameA, 'ar');
+        return sortOrder === 'asc'
+          ? nameA.localeCompare(nameB, locale)
+          : nameB.localeCompare(nameA, locale);
       }
       if (sortField === 'taux') {
         const tA = getTauxPresence(a);
@@ -108,7 +111,7 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
       }
       return 0;
     });
-  }, [records, sortField, sortOrder]);
+  }, [records, sortField, sortOrder, isRTL]);
 
   const toggleSort = (field: 'nom' | 'taux' | 'restant' | 'deduits') => {
     if (sortField === field) {
@@ -120,49 +123,45 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm space-y-4 p-5 text-start" dir={dir}>
-      {/* Contrôles Année */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xs space-y-3.5 p-4 text-start" dir={dir}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrevYear}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
-            title="السنة السابقة"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
           >
             {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            <span>السنة السابقة</span>
+            <span>{isRTL ? 'السنة السابقة' : 'Année précédente'}</span>
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleCurrentYear}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
           >
-            السنة الحالية
+            {isRTL ? 'السنة الحالية' : 'Année en cours'}
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleNextYear}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
-            title="السنة الموالية"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
           >
-            <span>السنة الموالية</span>
+            <span>{isRTL ? 'السنة الموالية' : 'Année suivante'}</span>
             {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-[#2c5282] dark:text-blue-400" />
-          <span className="text-xs text-slate-700 dark:text-slate-300">السنة المالية / الإدارية:</span>
-          <Select
-            value={String(year)}
-            onValueChange={(val) => onYearChange(parseInt(val, 10))}
-          >
+          <span className="text-xs text-slate-700 dark:text-slate-300">
+            {isRTL ? 'السنة المالية / الإدارية:' : 'Exercice :'}
+          </span>
+          <Select value={String(year)} onValueChange={(val) => onYearChange(parseInt(val, 10))}>
             <SelectTrigger className="h-9 w-28 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 font-mono tabular-nums font-bold text-[#2c5282] dark:text-blue-400">
               <SelectValue />
             </SelectTrigger>
@@ -177,13 +176,12 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
         </div>
       </div>
 
-      {/* Barre de filtres (Département & Recherche) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
         <div className="relative">
           <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-700 dark:text-slate-300" />
           <Input
             type="text"
-            placeholder="بحث بالاسم أو اللقب أو ب.ت.و..."
+            placeholder={isRTL ? 'بحث بالاسم أو اللقب أو ب.ت.و...' : 'Rechercher par nom, prénom ou CIN...'}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-9 ps-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
@@ -195,12 +193,12 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
             <SelectTrigger className="h-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <div className="flex items-center gap-1.5 truncate">
                 <Building2 className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-                <SelectValue placeholder="كل الأقسام والمصالح" />
+                <SelectValue placeholder={isRTL ? 'كل الأقسام والمصالح' : 'Tous les départements'} />
               </div>
             </SelectTrigger>
             <SelectContent dir={dir}>
               <SelectItem value="all" className="text-xs">
-                كل الأقسام والمصالح
+                {isRTL ? 'كل الأقسام والمصالح' : 'Tous les départements'}
               </SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept._id} value={dept._id} className="text-xs">
@@ -212,7 +210,6 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
         </div>
       </div>
 
-      {/* Tableau récapitulatif annuel par employé */}
       {isLoading ? (
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4">
           <TableSkeleton rows={6} columns={7} />
@@ -221,7 +218,7 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
         <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
           <EmptyState
             icon={<Users className="h-8 w-8 text-slate-700 dark:text-slate-300" />}
-            title="لا يوجد موظفون مطابقون لمعايير البحث"
+            title={isRTL ? 'لا يوجد موظفون مطابقون لمعايير البحث' : 'Aucun employé correspondant'}
           />
         </div>
       ) : (
@@ -234,18 +231,18 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
                   className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 py-3 px-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
-                    <span>الموظف</span>
+                    <span>{isRTL ? 'الموظف' : 'Employé'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
-                <th className="py-3 px-3 whitespace-nowrap">القسم / المصلحة</th>
-                <th className="py-3 px-3 text-center whitespace-nowrap">الرصيد الأولي</th>
+                <th className="py-3 px-3 whitespace-nowrap">{isRTL ? 'القسم / المصلحة' : 'Département'}</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">{isRTL ? 'الرصيد الأولي' : 'Solde initial'}</th>
                 <th
                   onClick={() => toggleSort('deduits')}
                   className="py-3 px-3 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <span>المستهلك (خصم)</span>
+                    <span>{isRTL ? 'المستهلك (خصم)' : 'Déduit'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
@@ -254,17 +251,19 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
                   className="py-3 px-3 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <span>الرصيد المتبقي</span>
+                    <span>{isRTL ? 'الرصيد المتبقي' : 'Solde restant'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
-                <th className="py-3 px-3 text-center whitespace-nowrap">أيام الحضور الفعلية</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">
+                  {isRTL ? 'أيام الحضور الفعلية' : 'Jours présents'}
+                </th>
                 <th
                   onClick={() => toggleSort('taux')}
                   className="py-3 px-3 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <span>نسبة الانضباط والحضور</span>
+                    <span>{isRTL ? 'نسبة الانضباط والحضور' : 'Assiduité'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
@@ -277,15 +276,9 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
 
                 return (
                   <tr key={p._id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors">
-                    {/* Employé */}
                     <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 py-2.5 px-3 whitespace-nowrap transition-colors">
                       <div className="flex items-center gap-2.5">
-                        <PersonnelAvatar
-                          photo={p.photo}
-                          nom={p.nom}
-                          prenom={p.prenom}
-                          size="sm"
-                        />
+                        <PersonnelAvatar photo={p.photo} nom={p.nom} prenom={p.prenom} size="sm" />
                         <div>
                           <div className="font-bold text-slate-900 dark:text-slate-100">
                             {p.nom} {p.prenom}
@@ -297,26 +290,22 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
                       </div>
                     </td>
 
-                    {/* Département */}
                     <td className="py-2.5 px-3">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[13px] whitespace-nowrap">
                         {getDepartmentName(p.activeDepartment)}
                       </span>
                     </td>
 
-                    {/* Solde initial */}
                     <td className="py-2.5 px-3 text-center font-mono tabular-nums text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                      {item.soldeInitial} يوماً
+                      {item.soldeInitial} {isRTL ? 'يوماً' : 'j'}
                     </td>
 
-                    {/* Jours déduits */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <span className="font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800 font-mono tabular-nums">
-                        {item.joursDeduits} يوماً
+                        {item.joursDeduits} {isRTL ? 'يوماً' : 'j'}
                       </span>
                     </td>
 
-                    {/* Solde restant */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <span
                         className={`font-bold px-2 py-0.5 rounded-md border font-mono tabular-nums ${
@@ -327,16 +316,14 @@ export const AllPersonnelYearView: React.FC<AllPersonnelYearViewProps> = ({
                             : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800'
                         }`}
                       >
-                        {item.soldeRestant} يوماً
+                        {item.soldeRestant} {isRTL ? 'يوماً' : 'j'}
                       </span>
                     </td>
 
-                    {/* Jours présents */}
                     <td className="py-2.5 px-3 text-center font-mono tabular-nums text-emerald-700 dark:text-emerald-400 font-semibold whitespace-nowrap">
-                      {item.joursPresents} يوم
+                      {item.joursPresents} {isRTL ? 'يوم' : 'j'}
                     </td>
 
-                    {/* Taux présence */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">

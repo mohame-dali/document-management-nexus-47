@@ -52,19 +52,19 @@ interface AllPersonnelMonthViewProps {
   onSearchChange: (q: string) => void;
 }
 
-const ARABIC_MONTHS = [
-  { value: 1, label: 'جانفي (Janvier)' },
-  { value: 2, label: 'فيفري (Février)' },
-  { value: 3, label: 'مارس (Mars)' },
-  { value: 4, label: 'أفريل (Avril)' },
-  { value: 5, label: 'ماي (Mai)' },
-  { value: 6, label: 'جوان (Juin)' },
-  { value: 7, label: 'جويلية (Juillet)' },
-  { value: 8, label: 'أوت (Août)' },
-  { value: 9, label: 'سبتمبر (Septembre)' },
-  { value: 10, label: 'أكتوبر (Octobre)' },
-  { value: 11, label: 'نوفمبر (Novembre)' },
-  { value: 12, label: 'ديسمبر (Décembre)' },
+const MONTHS = [
+  { value: 1, ar: 'جانفي', fr: 'Janvier' },
+  { value: 2, ar: 'فيفري', fr: 'Février' },
+  { value: 3, ar: 'مارس', fr: 'Mars' },
+  { value: 4, ar: 'أفريل', fr: 'Avril' },
+  { value: 5, ar: 'ماي', fr: 'Mai' },
+  { value: 6, ar: 'جوان', fr: 'Juin' },
+  { value: 7, ar: 'جويلية', fr: 'Juillet' },
+  { value: 8, ar: 'أوت', fr: 'Août' },
+  { value: 9, ar: 'سبتمبر', fr: 'Septembre' },
+  { value: 10, ar: 'أكتوبر', fr: 'Octobre' },
+  { value: 11, ar: 'نوفمبر', fr: 'Novembre' },
+  { value: 12, ar: 'ديسمبر', fr: 'Décembre' },
 ];
 
 export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
@@ -99,32 +99,40 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
     onYearMonthChange(now.getFullYear(), now.getMonth() + 1);
   };
 
-  const getDepartmentName = useCallback((dept: unknown): string => {
-    if (!dept) return '-';
-    if (typeof dept === 'object' && 'name' in (dept as Record<string, unknown>)) {
-      return String((dept as { name: string }).name);
-    }
-    const found = departments.find((d) => d._id === String(dept));
-    return found?.name || '-';
-  }, [departments]);
+  const getDepartmentName = useCallback(
+    (dept: unknown): string => {
+      if (!dept) return '-';
+      if (typeof dept === 'object' && 'name' in (dept as Record<string, unknown>)) {
+        return String((dept as { name: string }).name);
+      }
+      const found = departments.find((d) => d._id === String(dept));
+      return found?.name || '-';
+    },
+    [departments]
+  );
 
   const getMotifLabel = (code: string) => {
     const r = leaveReasons.find((reason) => reason.code === code);
-    return r?.labelAr || code;
+    if (!r) return code;
+    return isRTL ? r.labelAr : r.labelFr || r.labelAr;
   };
 
-  // Tri des enregistrements
   const sortedRecords = useMemo(() => {
+    const locale = isRTL ? 'ar' : 'fr';
     return [...records].sort((a, b) => {
       if (sortField === 'nom') {
         const nameA = `${a.personnel.nom} ${a.personnel.prenom}`;
         const nameB = `${b.personnel.nom} ${b.personnel.prenom}`;
-        return sortOrder === 'asc' ? nameA.localeCompare(nameB, 'ar') : nameB.localeCompare(nameA, 'ar');
+        return sortOrder === 'asc'
+          ? nameA.localeCompare(nameB, locale)
+          : nameB.localeCompare(nameA, locale);
       }
       if (sortField === 'dept') {
         const deptA = getDepartmentName(a.personnel.activeDepartment);
         const deptB = getDepartmentName(b.personnel.activeDepartment);
-        return sortOrder === 'asc' ? deptA.localeCompare(deptB, 'ar') : deptB.localeCompare(deptA, 'ar');
+        return sortOrder === 'asc'
+          ? deptA.localeCompare(deptB, locale)
+          : deptB.localeCompare(deptA, locale);
       }
       if (sortField === 'presents') {
         return sortOrder === 'asc' ? a.joursPresents - b.joursPresents : b.joursPresents - a.joursPresents;
@@ -134,7 +142,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
       }
       return 0;
     });
-  }, [records, sortField, sortOrder, getDepartmentName]);
+  }, [records, sortField, sortOrder, getDepartmentName, isRTL]);
 
   const toggleSort = (field: 'nom' | 'dept' | 'presents' | 'absents') => {
     if (sortField === field) {
@@ -146,55 +154,51 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm space-y-4 p-5 text-start" dir={dir}>
-      {/* Contrôles Mois & Année */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xs space-y-3.5 p-4 text-start" dir={dir}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrevMonth}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
-            title="الشهر السابق"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
           >
             {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            <span>الشهر السابق</span>
+            <span>{isRTL ? 'الشهر السابق' : 'Mois précédent'}</span>
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleCurrentMonth}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
           >
-            الشهر الحالي
+            {isRTL ? 'الشهر الحالي' : 'Mois en cours'}
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleNextMonth}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
-            title="الشهر الموالي"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
           >
-            <span>الشهر الموالي</span>
+            <span>{isRTL ? 'الشهر الموالي' : 'Mois suivant'}</span>
             {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
 
-        {/* Dropdowns Mois & Année */}
         <div className="flex items-center gap-2">
           <Select
             value={String(month)}
             onValueChange={(val) => onYearMonthChange(year, parseInt(val, 10))}
           >
-            <SelectTrigger className="h-9 w-44 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
+            <SelectTrigger className="h-9 w-36 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
               <SelectValue />
             </SelectTrigger>
             <SelectContent dir={dir}>
-              {ARABIC_MONTHS.map((m) => (
+              {MONTHS.map((m) => (
                 <SelectItem key={m.value} value={String(m.value)} className="text-xs">
-                  {m.label}
+                  {isRTL ? m.ar : m.fr}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -218,13 +222,12 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
         </div>
       </div>
 
-      {/* Barre de filtres (Département & Recherche) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
         <div className="relative">
           <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-700 dark:text-slate-300" />
           <Input
             type="text"
-            placeholder="بحث بالاسم أو اللقب أو ب.ت.و..."
+            placeholder={isRTL ? 'بحث بالاسم أو اللقب أو ب.ت.و...' : 'Rechercher par nom, prénom ou CIN...'}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-9 ps-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
@@ -236,12 +239,12 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
             <SelectTrigger className="h-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <div className="flex items-center gap-1.5 truncate">
                 <Building2 className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-                <SelectValue placeholder="كل الأقسام والمصالح" />
+                <SelectValue placeholder={isRTL ? 'كل الأقسام والمصالح' : 'Tous les départements'} />
               </div>
             </SelectTrigger>
             <SelectContent dir={dir}>
               <SelectItem value="all" className="text-xs">
-                كل الأقسام والمصالح
+                {isRTL ? 'كل الأقسام والمصالح' : 'Tous les départements'}
               </SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept._id} value={dept._id} className="text-xs">
@@ -253,7 +256,6 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
         </div>
       </div>
 
-      {/* Tableau récapitulatif mensuel par employé */}
       {isLoading ? (
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4">
           <TableSkeleton rows={6} columns={6} />
@@ -262,7 +264,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
         <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
           <EmptyState
             icon={<Users className="h-8 w-8 text-slate-700 dark:text-slate-300" />}
-            title="لا يوجد موظفون مطابقون لمعايير البحث"
+            title={isRTL ? 'لا يوجد موظفون مطابقون لمعايير البحث' : 'Aucun employé correspondant'}
           />
         </div>
       ) : (
@@ -275,7 +277,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                   className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 py-3 px-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
-                    <span>الموظف</span>
+                    <span>{isRTL ? 'الموظف' : 'Employé'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
@@ -284,7 +286,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                   className="py-3 px-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
-                    <span>القسم / المصلحة</span>
+                    <span>{isRTL ? 'القسم / المصلحة' : 'Département'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
@@ -293,7 +295,7 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                   className="py-3 px-3 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <span>أيام الحضور</span>
+                    <span>{isRTL ? 'أيام الحضور' : 'Jours présents'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
@@ -302,34 +304,29 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                   className="py-3 px-3 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/80 whitespace-nowrap"
                 >
                   <div className="flex items-center justify-center gap-1">
-                    <span>أيام الغياب</span>
+                    <span>{isRTL ? 'أيام الغياب' : 'Jours absents'}</span>
                     <ArrowUpDown className="h-3 w-3 text-slate-700 dark:text-slate-300" />
                   </div>
                 </th>
-                <th className="py-3 px-3 whitespace-nowrap">تفاصيل أسباب الغياب خلال الشهر</th>
-                <th className="py-3 px-3 text-center whitespace-nowrap">نسبة الحضور</th>
+                <th className="py-3 px-3 whitespace-nowrap">
+                  {isRTL ? 'تفاصيل أسباب الغياب خلال الشهر' : 'Détail des motifs'}
+                </th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">
+                  {isRTL ? 'نسبة الحضور' : 'Taux de présence'}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
               {sortedRecords.map((item) => {
                 const p = item.personnel;
                 const totalRecorded = item.joursPresents + item.joursAbsents;
-                const rate =
-                  totalRecorded > 0
-                    ? Math.round((item.joursPresents / totalRecorded) * 100)
-                    : 0;
+                const rate = totalRecorded > 0 ? Math.round((item.joursPresents / totalRecorded) * 100) : 0;
 
                 return (
                   <tr key={p._id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors">
-                    {/* Employé */}
                     <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 py-2.5 px-3 whitespace-nowrap transition-colors">
                       <div className="flex items-center gap-2.5">
-                        <PersonnelAvatar
-                          photo={p.photo}
-                          nom={p.nom}
-                          prenom={p.prenom}
-                          size="sm"
-                        />
+                        <PersonnelAvatar photo={p.photo} nom={p.nom} prenom={p.prenom} size="sm" />
                         <div>
                           <div className="font-bold text-slate-900 dark:text-slate-100">
                             {p.nom} {p.prenom}
@@ -341,21 +338,18 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                       </div>
                     </td>
 
-                    {/* Département */}
                     <td className="py-2.5 px-3">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[13px] whitespace-nowrap">
                         {getDepartmentName(p.activeDepartment)}
                       </span>
                     </td>
 
-                    {/* Présents */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <span className="font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 font-mono tabular-nums">
-                        {item.joursPresents} يوم
+                        {item.joursPresents} {isRTL ? 'يوم' : 'j'}
                       </span>
                     </td>
 
-                    {/* Absents */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <span
                         className={`font-bold px-2 py-0.5 rounded-md border font-mono tabular-nums ${
@@ -364,11 +358,10 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                             : 'text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                         }`}
                       >
-                        {item.joursAbsents} يوم
+                        {item.joursAbsents} {isRTL ? 'يوم' : 'j'}
                       </span>
                     </td>
 
-                    {/* Détails motifs */}
                     <td className="py-2.5 px-3">
                       {item.parMotif && Object.keys(item.parMotif).length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -387,7 +380,6 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                       )}
                     </td>
 
-                    {/* Taux présence */}
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
                         <div className="w-12 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
@@ -398,7 +390,9 @@ export const AllPersonnelMonthView: React.FC<AllPersonnelMonthViewProps> = ({
                             style={{ width: `${rate}%` }}
                           />
                         </div>
-                        <span className="font-mono text-xs font-semibold tabular-nums text-slate-800 dark:text-slate-200">{rate}%</span>
+                        <span className="font-mono text-xs font-semibold tabular-nums text-slate-800 dark:text-slate-200">
+                          {rate}%
+                        </span>
                       </div>
                     </td>
                   </tr>

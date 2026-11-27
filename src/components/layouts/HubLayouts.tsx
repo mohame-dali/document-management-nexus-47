@@ -10,11 +10,8 @@ import {
   Search,
   UserCheck,
   Users2,
-  UserPlus,
   CalendarCheck,
   CalendarRange,
-  ClipboardList,
-  CalendarDays,
   GraduationCap,
   Sliders,
   FileText,
@@ -78,12 +75,11 @@ export const MailHubLayout: React.FC = () => {
 };
 
 /**
- * Hub 2 : الموارد البشرية (Ressources Humaines - 7 onglets)
+ * Hub 2 : الموارد البشرية (Ressources Humaines - 4 onglets principaux)
  */
 export const HRHubLayout: React.FC = () => {
   const { currentUser } = useAuth();
-  const { t } = useLanguage();
-  const { pendingDeclarations } = useHubBadges();
+  const { t, language } = useLanguage();
 
   const tabs: HubTab[] = [
     {
@@ -92,15 +88,6 @@ export const HRHubLayout: React.FC = () => {
       icon: Users2,
       color: 'text-green-500',
     },
-    ...(currentUser?.role !== 'Director' ? [
-      {
-        to: '/dashboard/hr/personnel/new',
-        label: t('sidebar.addEmployee'),
-        icon: UserPlus,
-        color: 'text-blue-500',
-        allowedRoles: ['Admin', 'AdminDepartment'],
-      },
-    ] : []),
     {
       to: '/dashboard/hr/attendance',
       label: t('sidebar.attendanceRecord'),
@@ -112,19 +99,6 @@ export const HRHubLayout: React.FC = () => {
       label: t('sidebar.employeeStatus'),
       icon: CalendarRange,
       color: 'text-indigo-500',
-    },
-    {
-      to: '/dashboard/hr/attendance-declarations',
-      label: t('sidebar.pendingAnnouncements'),
-      icon: ClipboardList,
-      color: 'text-amber-500',
-      badge: pendingDeclarations,
-    },
-    {
-      to: '/dashboard/hr/leave-reasons',
-      label: t('sidebar.absenceTypes'),
-      icon: CalendarDays,
-      color: 'text-purple-500',
     },
     {
       to: '/dashboard/hr/stages',
@@ -141,11 +115,16 @@ export const HRHubLayout: React.FC = () => {
   return (
     <HubLayout
       title={t('sidebar.humanResources')}
-      description="إدارة الموظفين والحضور والتربصات"
+      description={
+        language === 'fr'
+          ? 'Gestion du personnel, pointage quotidien, situation globale et stages'
+          : 'إدارة الموظفين وتسجيل الحضور والوضعية والتربصات'
+      }
       icon={UserCheck}
       tabs={tabs}
       currentUserRole={currentUser?.role}
       breadcrumb={breadcrumb}
+      compact
     />
   );
 };

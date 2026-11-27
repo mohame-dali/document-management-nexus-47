@@ -35,10 +35,10 @@ export interface WeekPersonnelSummary {
 }
 
 interface AllPersonnelWeekViewProps {
-  currentDate: string; // YYYY-MM-DD
+  currentDate: string;
   onDateChange: (date: string) => void;
   personnelList: WeekPersonnelSummary[];
-  attendanceMap: Map<string, AttendanceRecord>; // key: `${personnelId}_${date}`
+  attendanceMap: Map<string, AttendanceRecord>;
   leaveReasons: LeaveReason[];
   isLoading: boolean;
   departments: Array<{ _id: string; name: string }>;
@@ -48,15 +48,8 @@ interface AllPersonnelWeekViewProps {
   onSearchChange: (q: string) => void;
 }
 
-const ARABIC_WEEKDAYS = [
-  'الأحد',
-  'الإثنين',
-  'الثلاثاء',
-  'الأربعاء',
-  'الخميس',
-  'الجمعة',
-  'السبت',
-];
+const ARABIC_WEEKDAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const FRENCH_WEEKDAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
 export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
   currentDate,
@@ -73,10 +66,9 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
 }) => {
   const { dir, isRTL } = useDirection();
 
-  // Calcul des 7 jours de la semaine (commençant Dimanche)
   const weekDays = useMemo(() => {
     const d = new Date(currentDate);
-    const dayOfWeek = d.getDay(); // 0 = Dimanche
+    const dayOfWeek = d.getDay();
     const sunday = new Date(d);
     sunday.setDate(d.getDate() - dayOfWeek);
 
@@ -89,13 +81,13 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
         date: iso,
         dayNumber: day.getDate(),
         month: day.getMonth() + 1,
-        dayName: ARABIC_WEEKDAYS[i],
+        dayName: isRTL ? ARABIC_WEEKDAYS[i] : FRENCH_WEEKDAYS[i],
         isWeekend: i === 5 || i === 6,
         isToday: iso === new Date().toISOString().split('T')[0],
       });
     }
     return days;
-  }, [currentDate]);
+  }, [currentDate, isRTL]);
 
   const handlePrevWeek = () => {
     const d = new Date(currentDate);
@@ -115,8 +107,10 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
 
   const weekRangeLabel = useMemo(() => {
     if (weekDays.length === 0) return '';
-    return `من ${weekDays[0].date} إلى ${weekDays[6].date}`;
-  }, [weekDays]);
+    return isRTL
+      ? `من ${weekDays[0].date} إلى ${weekDays[6].date}`
+      : `Du ${weekDays[0].date} au ${weekDays[6].date}`;
+  }, [weekDays, isRTL]);
 
   const getDepartmentName = (dept: unknown): string => {
     if (!dept) return '-';
@@ -127,7 +121,6 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
     return found?.name || '-';
   };
 
-  // Résumé quotidien (total présences / absences par colonne)
   const dailyTotals = useMemo(() => {
     return weekDays.map((day) => {
       let presents = 0;
@@ -136,13 +129,9 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
 
       personnelList.forEach((p) => {
         const att = attendanceMap.get(`${p._id}_${day.date}`);
-        if (!att) {
-          unrecorded++;
-        } else if (att.statut === 'present') {
-          presents++;
-        } else {
-          absents++;
-        }
+        if (!att) unrecorded++;
+        else if (att.statut === 'present') presents++;
+        else absents++;
       });
 
       return { presents, absents, unrecorded };
@@ -150,38 +139,35 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
   }, [weekDays, personnelList, attendanceMap]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm space-y-4 p-5 text-start" dir={dir}>
-      {/* Contrôles Navigation Semaine */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xs space-y-3.5 p-4 text-start" dir={dir}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrevWeek}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
-            title="الأسبوع السابق"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
           >
             {isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            <span>الأسبوع السابق</span>
+            <span>{isRTL ? 'الأسبوع السابق' : 'Semaine précédente'}</span>
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleCurrentWeek}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold"
           >
-            الأسبوع الحالي
+            {isRTL ? 'الأسبوع الحالي' : 'Semaine en cours'}
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleNextWeek}
-            className="h-10 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
-            title="الأسبوع الموالي"
+            className="h-9 px-3 border-slate-200 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 text-xs"
           >
-            <span>الأسبوع الموالي</span>
+            <span>{isRTL ? 'الأسبوع الموالي' : 'Semaine suivante'}</span>
             {isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
@@ -192,32 +178,29 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
         </div>
       </div>
 
-      {/* Barre de filtres (Département & Recherche) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
-        {/* Recherche */}
         <div className="relative">
           <Search className="h-4 w-4 absolute start-3 top-2.5 text-slate-700 dark:text-slate-300" />
           <Input
             type="text"
-            placeholder="بحث بالاسم أو اللقب أو ب.ت.و..."
+            placeholder={isRTL ? 'بحث بالاسم أو اللقب أو ب.ت.و...' : 'Rechercher par nom, prénom ou CIN...'}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-9 ps-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg"
           />
         </div>
 
-        {/* Filtre Département */}
         <div>
           <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
             <SelectTrigger className="h-9 text-xs border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 dark:text-slate-100 rounded-lg">
               <div className="flex items-center gap-1.5 truncate">
                 <Building2 className="h-3.5 w-3.5 text-slate-700 dark:text-slate-300" />
-                <SelectValue placeholder="كل الأقسام والمصالح" />
+                <SelectValue placeholder={isRTL ? 'كل الأقسام والمصالح' : 'Tous les départements'} />
               </div>
             </SelectTrigger>
             <SelectContent dir={dir}>
               <SelectItem value="all" className="text-xs">
-                كل الأقسام والمصالح
+                {isRTL ? 'كل الأقسام والمصالح' : 'Tous les départements'}
               </SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept._id} value={dept._id} className="text-xs">
@@ -229,7 +212,6 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
         </div>
       </div>
 
-      {/* Grille de la semaine */}
       {isLoading ? (
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4">
           <TableSkeleton rows={6} columns={8} />
@@ -238,7 +220,7 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
         <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
           <EmptyState
             icon={<Users className="h-8 w-8 text-slate-700 dark:text-slate-300" />}
-            title="لا يوجد موظفون مطابقون لمعايير البحث"
+            title={isRTL ? 'لا يوجد موظفون مطابقون لمعايير البحث' : 'Aucun employé correspondant'}
           />
         </div>
       ) : (
@@ -246,7 +228,9 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
           <table className="w-full text-start text-xs divide-y divide-slate-200 dark:divide-slate-800">
             <thead className="sticky top-0 z-20 bg-slate-50 dark:bg-slate-800/95 text-slate-600 dark:text-slate-300 font-bold backdrop-blur-sm">
               <tr>
-                <th className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 py-3 px-3 min-w-[210px] whitespace-nowrap">الموظف</th>
+                <th className="sticky start-0 z-30 bg-slate-50 dark:bg-slate-800 py-3 px-3 min-w-[210px] whitespace-nowrap">
+                  {isRTL ? 'الموظف' : 'Employé'}
+                </th>
                 {weekDays.map((day) => (
                   <th
                     key={day.date}
@@ -263,15 +247,9 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
               {personnelList.map((p) => (
                 <tr key={p._id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors">
-                  {/* Employé info */}
                   <td className="sticky start-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 py-2.5 px-3 transition-colors">
                     <div className="flex items-center gap-2.5">
-                      <PersonnelAvatar
-                        photo={p.photo}
-                        nom={p.nom}
-                        prenom={p.prenom}
-                        size="sm"
-                      />
+                      <PersonnelAvatar photo={p.photo} nom={p.nom} prenom={p.prenom} size="sm" />
                       <div className="min-w-0">
                         <div className="font-bold text-slate-900 dark:text-slate-100 truncate">
                           {p.nom} {p.prenom}
@@ -283,7 +261,6 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
                     </div>
                   </td>
 
-                  {/* 7 Cellules de jours */}
                   {weekDays.map((day) => {
                     const att = attendanceMap.get(`${p._id}_${day.date}`);
 
@@ -312,11 +289,10 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
               ))}
             </tbody>
 
-            {/* Résumé en bas : total par jour */}
             <tfoot className="bg-slate-50 dark:bg-slate-800/95 border-t-2 border-slate-200 dark:border-slate-700 font-bold">
               <tr>
                 <td className="sticky start-0 z-10 bg-slate-50 dark:bg-slate-800 py-3 px-3 text-xs text-slate-900 dark:text-slate-100">
-                  إجمالي الحضور والغياب اليومي :
+                  {isRTL ? 'إجمالي الحضور والغياب اليومي :' : 'Totaux journaliers :'}
                 </td>
                 {dailyTotals.map((tot, idx) => (
                   <td
@@ -324,11 +300,15 @@ export const AllPersonnelWeekView: React.FC<AllPersonnelWeekViewProps> = ({
                     className="py-2 px-1.5 text-center border-s border-slate-200 dark:border-slate-700 text-[13px]"
                   >
                     <div className="space-y-0.5 tabular-nums">
-                      <div className="text-emerald-700 dark:text-emerald-400 font-mono">ح: {tot.presents}</div>
-                      <div className="text-red-700 dark:text-red-400 font-mono">غ: {tot.absents}</div>
+                      <div className="text-emerald-700 dark:text-emerald-400 font-mono">
+                        {isRTL ? 'ح' : 'P'}: {tot.presents}
+                      </div>
+                      <div className="text-red-700 dark:text-red-400 font-mono">
+                        {isRTL ? 'غ' : 'A'}: {tot.absents}
+                      </div>
                       {tot.unrecorded > 0 && (
                         <div className="text-slate-700 dark:text-slate-300 font-mono text-[13px]">
-                          غ.م: {tot.unrecorded}
+                          {isRTL ? 'غ.م' : 'N.S'}: {tot.unrecorded}
                         </div>
                       )}
                     </div>
