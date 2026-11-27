@@ -75,7 +75,7 @@ router.put('/:id/folder',
 );
 
 router.put('/:id/responsible', 
-  authorize('AdminDepartment'), 
+  authorize('AdminDepartment', 'Admin'), 
   checkDepartmentAccess(),
   auditDocumentActivity('document_update'),
   assignResponsible

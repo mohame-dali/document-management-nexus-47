@@ -9,6 +9,7 @@ const photoControllers = require('./photoControllers');
 module.exports = {
   // List controllers
   getUsers: listControllers.getUsers,
+  getAssignableUsers: listControllers.getAssignableUsers,
   
   // Detail controllers
   getUser: detailControllers.getUser,

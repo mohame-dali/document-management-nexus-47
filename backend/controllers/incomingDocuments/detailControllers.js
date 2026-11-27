@@ -27,7 +27,11 @@ exports.getIncomingDocument = async (req, res, next) => {
     
     const document = await IncomingDocument.findById(documentId)
       .populate('assignedTo.id')
-      .populate('responsibleUser', 'username photo')
+      .populate({
+        path: 'responsibleUser',
+        select: 'username role photo personnelId',
+        populate: { path: 'personnelId', select: 'nom prenom poste' }
+      })
       .populate('answer') // This will populate the full outgoing document
       .populate('folder');
     

@@ -41,6 +41,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useAuth } from '@/contexts/AuthContext';
 import { getIncomingDocument, getOutgoingDocument, downloadDocument, getDocumentUrl } from '@/services/documentService';
 import { getDocumentTimeline, AuditLog } from '@/services/auditService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { formatLongDate, formatDateTime } from '@/utils/formatDate';
 import { getActivityUrgency } from '@/utils/activityUtils';
 import { IncomingDocument, OutgoingDocument } from '@/types';
@@ -93,15 +94,36 @@ const ViewIncomingDocument: React.FC = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isPdfExpanded]);
 
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // User permissions
   const isDirector = currentUser?.role === 'Director';
   const isAdmin = currentUser?.role === 'Admin';
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
+  const bureauOrdreDeptId =
+    typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings.bureauOrdreDepartmentId
+      ? String(orgSettings.bureauOrdreDepartmentId._id || '')
+      : String(orgSettings?.bureauOrdreDepartmentId || '');
+  const activeDeptId = currentUser?.activeDepartment
+    ? String(
+        (currentUser.activeDepartment as { _id?: string; id?: string })._id ||
+          (currentUser.activeDepartment as { id?: string }).id ||
+          currentUser.activeDepartment
+      )
+    : '';
+  const isBureauOrdreUser =
+    isAdminTuningDesk || Boolean(bureauOrdreDeptId && activeDeptId && bureauOrdreDeptId === activeDeptId);
+
   const canEdit = isAdminTuningDesk || isAdmin;
-  const canOrganizeDocuments = isAdminDepartment || isAdmin;
+  const canOrganizeDocuments = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
   const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk;
+  const canAssignResponsible = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
 
   // 1. Fetch main incoming document
   const { 
@@ -271,11 +293,27 @@ const ViewIncomingDocument: React.FC = () => {
     : (document.folder ? t('documents.viewIncoming.fallback.specificFolder') : t('documents.viewIncoming.fallback.noFolder'));
 
   // Responsible user resolution
-  const responsibleName: string = typeof document.responsibleUser === 'object' && document.responsibleUser
-    ? document.responsibleUser.username
+  const responsibleObj =
+    typeof document.responsibleUser === 'object' && document.responsibleUser
+      ? document.responsibleUser
+      : null;
+  const responsiblePersonnel =
+    responsibleObj && typeof responsibleObj.personnelId === 'object' && responsibleObj.personnelId
+      ? responsibleObj.personnelId
+      : null;
+  const responsibleFullName = responsiblePersonnel
+    ? [responsiblePersonnel.prenom, responsiblePersonnel.nom].filter(Boolean).join(' ').trim()
+    : responsibleObj
+      ? [responsibleObj.prenom, responsibleObj.nom].filter(Boolean).join(' ').trim() || responsibleObj.name || ''
+      : '';
+  const responsibleName: string = responsibleObj
+    ? responsibleFullName || responsibleObj.username
     : (typeof document.responsibleUser === 'string' && document.responsibleUser
         ? document.responsibleUser
         : t('documents.viewIncoming.fallback.noResponsible'));
+  const responsibleRoleLabel: string = responsibleObj?.role
+    ? t(`roles.${responsibleObj.role}`, { defaultValue: responsibleObj.role })
+    : '';
 
   // Fallback lifecycle steps passed into DocumentAuditDrawer when raw logs are empty
   const lifecycleSteps: LifecycleFallbackStep[] = [
@@ -832,6 +870,11 @@ const ViewIncomingDocument: React.FC = () => {
                 <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                   {responsibleName}
                 </p>
+                {responsibleRoleLabel && (
+                  <p className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                    {responsibleRoleLabel}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -871,7 +914,7 @@ const ViewIncomingDocument: React.FC = () => {
                 </Button>
               )}
 
-              {canAssignOrRespond && (
+              {canAssignResponsible && (
                 <Button
                   type="button"
                   variant="outline"
@@ -1032,7 +1075,7 @@ const ViewIncomingDocument: React.FC = () => {
                     {t('documents.viewIncoming.sidebar.responsible.title')}
                   </h3>
                 </div>
-                {canAssignOrRespond && (
+                {canAssignResponsible && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -1052,6 +1095,18 @@ const ViewIncomingDocument: React.FC = () => {
                 <div className="min-w-0">
                   <span className="text-xs text-slate-600 dark:text-slate-300 block">{t('documents.viewIncoming.sidebar.responsible.assignedTo')}</span>
                   <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate block">{responsibleName}</span>
+                  {(responsibleRoleLabel || (responsibleFullName && responsibleObj?.username && responsibleFullName.toLowerCase() !== responsibleObj.username.toLowerCase())) && (
+                    <span className="text-xs text-slate-600 dark:text-slate-300 truncate block mt-0.5">
+                      {[
+                        responsibleRoleLabel,
+                        responsibleFullName && responsibleObj?.username && responsibleFullName.toLowerCase() !== responsibleObj.username.toLowerCase()
+                          ? `@${responsibleObj.username}`
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' • ')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -1238,7 +1293,7 @@ const ViewIncomingDocument: React.FC = () => {
       )}
 
       {/* 3. Assign Responsible Dialog */}
-      {document && (
+      {document && canAssignResponsible && (
         <AssignResponsibleDialog
           open={isResponsibleDialogOpen}
           onOpenChange={setIsResponsibleDialogOpen}

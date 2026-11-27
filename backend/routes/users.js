@@ -2,6 +2,7 @@
 const express = require('express');
 const { 
   getUsers, 
+  getAssignableUsers,
   getUser, 
   createUser, 
   updateUser, 
@@ -30,6 +31,9 @@ router.post('/heartbeat', heartbeat);
 // IMPORTANT: Place specific routes BEFORE parameterized routes
 // Messaging route - accessible to ALL authenticated users for cross-role messaging
 router.get('/messaging', getUsers);
+
+// Assignable department users route - restricted to department managers, Admin, and Director
+router.get('/assignable', authorize('Director', 'Admin', 'AdminDepartment'), getAssignableUsers);
 
 // Main users routes - restricted to admin roles (and RH manager checked in controllers)
 router.route('/')

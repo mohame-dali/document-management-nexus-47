@@ -19,6 +19,29 @@ export interface User {
   personnelId?: string | null;
 }
 
+export interface PersonnelSummary {
+  _id: string;
+  nom?: string;
+  prenom?: string;
+  poste?: string;
+}
+
+export interface ResponsibleUserRef {
+  _id: string;
+  id?: string;
+  username: string;
+  name?: string;
+  nom?: string;
+  prenom?: string;
+  role?: UserRole;
+  photo?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  departments?: Array<Department | string>;
+  activeDepartment?: Department | string | null;
+  personnelId?: string | PersonnelSummary | null;
+}
+
 export interface Department {
   _id: string;
   name: string;
@@ -67,7 +90,7 @@ export interface IncomingDocument {
     name: string;
   }>;
   answer?: OutgoingDocument | string | null;
-  responsibleUser?: User | string | null;
+  responsibleUser?: ResponsibleUserRef | string | null;
   folder?: Folder | string | null;
   isDeleted?: boolean;
   createdAt: string;

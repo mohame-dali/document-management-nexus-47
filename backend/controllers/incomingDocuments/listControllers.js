@@ -133,7 +133,11 @@ exports.getIncomingDocuments = async (req, res, next) => {
 
     const documents = await IncomingDocument.find(query)
       .populate('assignedTo.id')
-      .populate('responsibleUser', 'username photo')
+      .populate({
+        path: 'responsibleUser',
+        select: 'username role photo personnelId',
+        populate: { path: 'personnelId', select: 'nom prenom poste' }
+      })
       .populate('answer')
       .populate('folder')
       .sort(sortObj)

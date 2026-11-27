@@ -68,6 +68,7 @@ import {
 import { getDepartments } from '@/services/departmentService';
 import { getDocumentOptions } from '@/services/documentOptionsService';
 import { deleteIncomingDocument, downloadDocument, getIncomingDocuments } from '@/services/documentService';
+import { getOrganizationSettings } from '@/services/organizationSettingsService';
 import { useAuth } from '@/contexts/AuthContext';
 import { IncomingDocument, Department } from '@/types';
 import { useYearPersistence } from '@/hooks/useYearPersistence';
@@ -195,12 +196,33 @@ const IncomingDocumentsPage: React.FC = () => {
   const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
   const isAdminDepartment = currentUser?.role === 'AdminDepartment';
 
+  const { data: orgSettings } = useQuery({
+    queryKey: ['organization-settings'],
+    queryFn: getOrganizationSettings,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const bureauOrdreDeptId =
+    typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings.bureauOrdreDepartmentId
+      ? String(orgSettings.bureauOrdreDepartmentId._id || '')
+      : String(orgSettings?.bureauOrdreDepartmentId || '');
+  const activeDeptId = currentUser?.activeDepartment
+    ? String(
+        (currentUser.activeDepartment as { _id?: string; id?: string })._id ||
+          (currentUser.activeDepartment as { id?: string }).id ||
+          currentUser.activeDepartment
+      )
+    : '';
+  const isBureauOrdreUser =
+    isAdminTuningDesk || Boolean(bureauOrdreDeptId && activeDeptId && bureauOrdreDeptId === activeDeptId);
+
   const canAddDocuments = isAdmin || isAdminTuningDesk;
   const canEdit = isAdmin || isAdminTuningDesk;
   const canDelete = isAdmin || isAdminTuningDesk;
-  const canOrganizeDocuments = isAdminDepartment;
+  const canOrganizeDocuments = isAdminDepartment && !isBureauOrdreUser;
   const canViewCategorization = isAdmin || isDirector || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
   const canAssignOrRespond = isAdminDepartment || isAdmin || isAdminTuningDesk;
+  const canAssignResponsible = (isAdminDepartment || isAdmin) && !isBureauOrdreUser;
 
   // Fetch departments for AdminTuningDesk filtering and document assignment
   const { data: departments = [] } = useQuery({
@@ -1286,7 +1308,7 @@ const IncomingDocumentsPage: React.FC = () => {
                                   </DropdownMenuItem>
                                 )}
 
-                                {canAssignOrRespond && (
+                                {canAssignResponsible && (
                                   <DropdownMenuItem
                                     onClick={() => setResponsibleDoc(doc)}
                                     className="text-sm py-2.5 cursor-pointer"
@@ -1528,7 +1550,7 @@ const IncomingDocumentsPage: React.FC = () => {
                               {t('incoming.actions.archive')}
                             </DropdownMenuItem>
                           )}
-                          {canAssignOrRespond && (
+                          {canAssignResponsible && (
                             <DropdownMenuItem
                               onClick={() => setResponsibleDoc(doc)}
                               className="text-sm py-2.5 cursor-pointer"
@@ -1671,7 +1693,7 @@ const IncomingDocumentsPage: React.FC = () => {
       )}
 
       {/* 7. Assign Responsible Dialog (Transférer) */}
-      {responsibleDoc && (
+      {responsibleDoc && canAssignResponsible && (
         <AssignResponsibleDialog
           open={Boolean(responsibleDoc)}
           onOpenChange={(open) => {

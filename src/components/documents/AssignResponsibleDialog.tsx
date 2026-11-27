@@ -1,25 +1,64 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { assignResponsible } from '@/services/documentService';
-import { getUsers } from '@/services/userService';
+import { getAssignableUsers } from '@/services/userService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { showResponsibleAssignmentNotification } from '@/components/notifications/ResponsibleAssignmentNotification';
-import { IncomingDocument, User } from '@/types';
+import { Department, IncomingDocument, ResponsibleUserRef } from '@/types';
 import { UserPlus, Users, CheckCircle2, User as UserIcon, Shield } from 'lucide-react';
 
 interface AssignResponsibleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   document: IncomingDocument;
+}
+
+interface NormalizedDept {
+  id: string;
+  name: string;
+  code: string;
+}
+
+function extractDeptMeta(dept: unknown): NormalizedDept {
+  if (!dept) return { id: '', name: '', code: '' };
+  if (typeof dept === 'string') {
+    const trimmed = dept.trim();
+    const looksLikeObjectId = /^[a-f0-9]{24}$/i.test(trimmed);
+    return {
+      id: looksLikeObjectId ? trimmed : trimmed,
+      name: looksLikeObjectId ? '' : trimmed.toLowerCase(),
+      code: looksLikeObjectId ? '' : trimmed.toLowerCase(),
+    };
+  }
+  if (typeof dept === 'object') {
+    const obj = dept as { _id?: unknown; id?: unknown; name?: unknown; code?: unknown };
+    const rawId = obj._id ?? (typeof obj.id === 'object' ? (obj.id as { _id?: unknown })?._id : obj.id);
+    const id = rawId ? String(rawId).trim() : '';
+    const name = typeof obj.name === 'string' ? obj.name.trim().toLowerCase() : '';
+    const code = typeof obj.code === 'string' ? obj.code.trim().toLowerCase() : '';
+    return { id, name, code };
+  }
+  return { id: String(dept).trim(), name: '', code: '' };
+}
+
+function getUserDisplayName(user: ResponsibleUserRef): { primary: string; secondary?: string } {
+  const personnel =
+    user.personnelId && typeof user.personnelId === 'object' ? user.personnelId : null;
+  const fullName = personnel
+    ? [personnel.prenom, personnel.nom].filter(Boolean).join(' ').trim()
+    : [user.prenom, user.nom].filter(Boolean).join(' ').trim() || user.name?.trim() || '';
+
+  if (fullName && fullName.toLowerCase() !== user.username.toLowerCase()) {
+    return { primary: fullName, secondary: user.username };
+  }
+  return { primary: fullName || user.username };
 }
 
 const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
@@ -32,17 +71,48 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState<string>('');
 
-  // Fetch users from the current user's active department
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
+  // Determine target departments from activeDepartment (for AdminDepartment) or document.assignedTo (for Admin)
+  const targetDepartments = useMemo<NormalizedDept[]>(() => {
+    const activeMeta = extractDeptMeta(
+      currentUser?.activeDepartment ||
+        (currentUser?.role === 'AdminDepartment' ? currentUser?.departments?.[0] : null)
+    );
+    if (activeMeta.id || activeMeta.name || activeMeta.code) {
+      return [activeMeta];
+    }
+
+    if (Array.isArray(document?.assignedTo) && document.assignedTo.length > 0) {
+      return document.assignedTo
+        .map((entry) => {
+          const innerMeta = extractDeptMeta(entry.id);
+          return {
+            id: innerMeta.id,
+            name: innerMeta.name || (typeof entry.name === 'string' ? entry.name.trim().toLowerCase() : ''),
+            code: innerMeta.code,
+          };
+        })
+        .filter((meta) => Boolean(meta.id || meta.name || meta.code));
+    }
+
+    return [];
+  }, [currentUser?.activeDepartment, currentUser?.departments, currentUser?.role, document?.assignedTo]);
+
+  const targetDeptIdParam = useMemo(() => {
+    const ids = targetDepartments.map((d) => d.id).filter(Boolean);
+    return ids.length > 0 ? ids.join(',') : undefined;
+  }, [targetDepartments]);
+
+  // Fetch assignable users for the active/target department
+  const { data: users = [], isLoading } = useQuery<ResponsibleUserRef[]>({
+    queryKey: ['assignableUsers', targetDeptIdParam || 'all'],
+    queryFn: () => getAssignableUsers(targetDeptIdParam),
     enabled: open,
   });
 
   const assignResponsibleMutation = useMutation({
     mutationFn: ({ documentId, userId }: { documentId: string, userId: string }) =>
       assignResponsible(documentId, userId),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incomingDocument'] });
       queryClient.invalidateQueries({ queryKey: ['incomingDocuments'] });
       
@@ -50,7 +120,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['unreadResponsibleNotifications'] });
       
       // Find the assigned user
-      const assignedUser = users?.find((user: User) => user._id === variables.userId);
+      const assignedUser = users.find((user) => user._id === variables.userId);
       
       // Show instant notification for the assignment
       if (assignedUser) {
@@ -83,12 +153,39 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
     });
   };
 
-  // Filter users to show only those from the active department
-  const departmentUsers = users?.filter((user: User) => 
-    user.departments?.some(dept => 
-      dept._id === currentUser?.activeDepartment?._id
-    )
-  ) || [];
+  // Filter users cleanly with normalized ID, name, and code comparisons across departments and activeDepartment
+  const departmentUsers = useMemo(() => {
+    return users.filter((user) => {
+      if (user.isActive === false || user.isDeleted) return false;
+      if (user.role === 'Admin' || user.role === 'AdminTuningDesk') return false;
+
+      if (targetDepartments.length === 0) {
+        return currentUser?.role === 'Admin';
+      }
+
+      const userDepts: Array<Department | string> = [
+        ...(Array.isArray(user.departments) ? user.departments : []),
+        ...(user.activeDepartment ? [user.activeDepartment] : []),
+      ];
+
+      return userDepts.some((uDept) => {
+        const uMeta = extractDeptMeta(uDept);
+        return targetDepartments.some((target) => {
+          if (target.id && uMeta.id && uMeta.id === target.id) return true;
+          if (target.code && uMeta.code && uMeta.code === target.code) return true;
+          if (target.name && uMeta.name && uMeta.name === target.name) return true;
+          return false;
+        });
+      });
+    });
+  }, [users, targetDepartments, currentUser?.role]);
+
+  const activeDepartmentLabel =
+    currentUser?.activeDepartment?.name ||
+    (Array.isArray(document?.assignedTo)
+      ? document.assignedTo.map((d) => d.name).filter(Boolean).join(', ')
+      : '') ||
+    t('dashboard.header.defaultDepartment');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -156,24 +253,33 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
                       </div>
                     </SelectItem>
                   ) : (
-                    departmentUsers.map((user: User) => (
-                      <SelectItem key={user._id} value={user._id} className="py-2.5 text-base">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 rounded-lg">
-                            <UserIcon className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 text-start">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-900 dark:text-slate-100">{user.username}</span>
-                              <Badge variant="outline" className="text-xs px-2 py-0.5 rounded-full border-slate-200/80 dark:border-slate-700">
-                                <Shield className="h-3 w-3 me-1" />
-                                {user.role}
-                              </Badge>
+                    departmentUsers.map((user) => {
+                      const display = getUserDisplayName(user);
+                      const roleLabel = user.role ? t(`roles.${user.role}`, { defaultValue: user.role }) : '';
+                      return (
+                        <SelectItem key={user._id} value={user._id} className="py-2.5 text-base">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-blue-50/90 dark:bg-blue-950/50 text-[#2c5282] dark:text-blue-300 rounded-lg shrink-0">
+                              <UserIcon className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1 text-start">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-slate-900 dark:text-slate-100">{display.primary}</span>
+                                {display.secondary && (
+                                  <span className="text-xs text-slate-500 dark:text-slate-400" dir="ltr">@{display.secondary}</span>
+                                )}
+                                {roleLabel && (
+                                  <Badge variant="outline" className="text-xs px-2 py-0.5 rounded-full border-slate-200/80 dark:border-slate-700">
+                                    <Shield className="h-3 w-3 me-1" />
+                                    {roleLabel}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </SelectItem>
-                    ))
+                        </SelectItem>
+                      );
+                    })
                   )}
                 </SelectContent>
               </Select>
@@ -193,7 +299,7 @@ const AssignResponsibleDialog: React.FC<AssignResponsibleDialogProps> = ({
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 text-base shadow-sm">
             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
               <Shield className="h-4 w-4 text-[#2c5282] dark:text-blue-300" />
-              <span>{t('documents.assignResponsible.activeDepartment', { department: currentUser?.activeDepartment?.name })}</span>
+              <span>{t('documents.assignResponsible.activeDepartment', { department: activeDepartmentLabel })}</span>
             </div>
             <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
               {t('documents.assignResponsible.departmentConstraintNotice')}

@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { Department, User } from '@/types';
+import { Department, ResponsibleUserRef, User } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -51,6 +51,18 @@ export const getUsers = async (options?: GetUsersOptions | boolean | object): Pr
     return users;
   } catch (error) {
     console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+export const getAssignableUsers = async (departmentId?: string): Promise<ResponsibleUserRef[]> => {
+  try {
+    const response = await api.get('/users/assignable', {
+      params: departmentId ? { departmentId } : undefined,
+    });
+    return response.data.data || response.data || [];
+  } catch (error) {
+    console.error('Error fetching assignable users:', error);
     throw error;
   }
 };
