@@ -26,12 +26,12 @@ import { useDirection } from '@/i18n/useDirection';
 import ComposeMessage from '@/components/messages/ComposeMessage';
 import ContactsList from '@/components/messages/ContactsList';
 import MessageComposer from '@/components/messages/MessageComposer';
-import MessageHistoryStats from '@/components/messages/MessageHistoryStats';
 import CrossRoleMessagingInfo from '@/components/messages/CrossRoleMessagingInfo';
 import ConversationList from '@/components/messages/ConversationList';
 import ConversationThread, { ConversationData } from '@/components/messages/ConversationThread';
 
 type ActiveTab = 'inbox' | 'sent' | 'contacts';
+type MessageFilter = 'all' | 'unread' | 'oneToOne' | 'group';
 const MESSAGE_TABS: ActiveTab[] = ['inbox', 'sent', 'contacts'];
 
 interface InterlocutorDetails {
@@ -46,6 +46,7 @@ interface InterlocutorDetails {
 
 const MessagesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('inbox');
+  const [messageFilter, setMessageFilter] = useState<MessageFilter>('all');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [mobileShowThread, setMobileShowThread] = useState<boolean>(false);
   const [isComposing, setIsComposing] = useState<boolean>(false);
@@ -169,10 +170,15 @@ const MessagesPage: React.FC = () => {
     });
   }, [messages, currentUserId, t]);
 
-  // Filter conversations according to tab (if 'sent', show conversations where user sent messages)
+  // Filter conversations according to active tab and inline filter pill
   const conversations = useMemo(() => {
+    const isGroupMsg = (m: Message) =>
+      m.messageType === 'one-to-many' ||
+      (Array.isArray(m.recipients) && m.recipients.length > 1);
+
+    let base = allConversations;
     if (activeTab === 'sent') {
-      return allConversations.filter((conv) =>
+      base = base.filter((conv) =>
         conv.messages.some((m: Message) => {
           if (m.isSender !== undefined) return m.isSender;
           const senderId = typeof m.sender === 'object' ? m.sender?._id : m.sender;
@@ -180,8 +186,18 @@ const MessagesPage: React.FC = () => {
         })
       );
     }
-    return allConversations;
-  }, [allConversations, activeTab, currentUserId]);
+
+    if (messageFilter === 'unread') {
+      return base.filter((conv) => (conv.unreadCount || 0) > 0);
+    }
+    if (messageFilter === 'oneToOne') {
+      return base.filter((conv) => conv.messages.some((m: Message) => !isGroupMsg(m)));
+    }
+    if (messageFilter === 'group') {
+      return base.filter((conv) => conv.messages.some((m: Message) => isGroupMsg(m)));
+    }
+    return base;
+  }, [allConversations, activeTab, currentUserId, messageFilter]);
 
   // Selected conversation object
   const selectedConversation = useMemo(() => {
@@ -296,14 +312,23 @@ const MessagesPage: React.FC = () => {
     }
   };
 
+  const filterPills: { key: MessageFilter; label: string; count: number }[] = [
+    { key: 'all', label: t('messages.filterAll'), count: messageStats.totalMessages },
+    { key: 'unread', label: t('messages.filterUnread'), count: messageStats.unreadCount },
+    { key: 'oneToOne', label: t('messages.filterOneToOne'), count: messageStats.oneToOneCount },
+    { key: 'group', label: t('messages.filterGroup'), count: messageStats.groupCount },
+  ];
+
+  const isEmptyInbox = allConversations.length === 0 && !isLoading && activeTab === 'inbox' && messageFilter === 'all';
+
   return (
-    <div dir={dir} className="min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 p-3 sm:p-4 lg:p-5 text-start">
+    <div dir={dir} className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-3 sm:p-4 lg:p-5 text-start">
       {/* Compact Top Header Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-3.5 py-2.5 mb-2.5 shadow-xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl px-4 py-3 mb-2.5 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-          {/* Title & Stats Badges */}
+          {/* Title & Subtitle */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-md text-[#2c5282] dark:text-sky-400 shrink-0">
+            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 shrink-0">
               <MessageSquare className="h-4 w-4" />
             </div>
             <div className="min-w-0">
@@ -312,12 +337,12 @@ const MessagesPage: React.FC = () => {
                   {t('messages.title')}
                 </h1>
                 {messageStats.unreadCount > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[13px] font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] tabular-nums">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#FFCB56] text-[#78350f] border border-[#FFD758] tabular-nums">
                     {messageStats.unreadCount} {t('messages.unread')}
                   </span>
                 )}
               </div>
-              <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate">
+              <p className="text-[13px] text-slate-600 dark:text-slate-300 truncate">
                 {t('messages.pageSubtitle')}
               </p>
             </div>
@@ -327,7 +352,7 @@ const MessagesPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Button
               onClick={() => handleComposeMessage()}
-              className="h-9 px-3 text-xs font-medium rounded-md bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white transition-colors duration-200 flex items-center gap-1.5"
+              className="h-9 px-3.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 transition-colors duration-200 flex items-center gap-1.5 whitespace-nowrap shrink-0"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>{t('messages.newMessage')}</span>
@@ -340,7 +365,7 @@ const MessagesPage: React.FC = () => {
                 onClick={() => markAllAsReadMutation.mutate()}
                 disabled={markAllAsReadMutation.isPending}
                 aria-label={t('messages.markAllAsRead')}
-                className="h-9 px-2.5 text-xs rounded-md border-[#FFCB56] bg-[#FFD758]/15 dark:bg-amber-500/15 dark:border-amber-500/40 text-[#78350f] dark:text-amber-300 hover:bg-[#FFD758]/30 dark:hover:bg-amber-500/25 transition-colors duration-200 flex items-center gap-1.5 font-medium"
+                className="h-9 px-2.5 text-xs rounded-lg border-[#FFCB56] bg-[#FFD758]/15 dark:bg-amber-500/15 dark:border-amber-500/40 text-[#78350f] dark:text-amber-300 hover:bg-[#FFD758]/30 dark:hover:bg-amber-500/25 transition-colors duration-200 flex items-center gap-1.5 font-medium whitespace-nowrap shrink-0"
                 title={t('messages.markAllAsRead')}
               >
                 <MailCheck className="h-3.5 w-3.5" />
@@ -353,7 +378,7 @@ const MessagesPage: React.FC = () => {
               size="sm"
               onClick={handleRefresh}
               disabled={isLoading || isFetching}
-              className="h-9 px-2.5 text-xs rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 flex items-center gap-1.5"
+              className="h-9 px-2.5 text-xs rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 flex items-center gap-1.5 whitespace-nowrap shrink-0"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${(isLoading || isFetching) ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">{t('messages.refresh')}</span>
@@ -361,135 +386,175 @@ const MessagesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Unified Tabs: Inbox / Sent / Contacts */}
-        <div
-          role="tablist"
-          aria-label={t('messages.title')}
-          className="flex items-center gap-1 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex-wrap"
-        >
-          <button
-            id="messages-tab-inbox"
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'inbox' && !isComposing}
-            aria-controls="messages-tabpanel"
-            tabIndex={activeTab === 'inbox' ? 0 : -1}
-            onClick={() => {
-              setActiveTab('inbox');
-              setIsComposing(false);
-            }}
-            onKeyDown={(e) => {
-              const isRtl = document.documentElement.dir === 'rtl';
-              const idx = 0;
-              let nextIdx: number | null = null;
-              if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
-              else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
-              else if (e.key === 'Home') nextIdx = 0;
-              else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
-              if (nextIdx !== null) {
-                e.preventDefault();
-                const next = MESSAGE_TABS[nextIdx];
-                setActiveTab(next);
-                setIsComposing(false);
-                document.getElementById(`messages-tab-${next}`)?.focus();
-              }
-            }}
-            className={`h-9 px-3 text-xs font-medium rounded-md transition-colors duration-200 flex items-center gap-2 ${
-              activeTab === 'inbox' && !isComposing
-                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-2xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-            }`}
+        {/* Unified Toolbar: View Tabs + Compact Inline Filter Pills */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+          <div
+            role="tablist"
+            aria-label={t('messages.title')}
+            className="flex items-center gap-1.5 flex-wrap"
           >
-            <Inbox className="h-3.5 w-3.5" />
-            <span>{t('messages.conversationsAndInbox')}</span>
-            {messageStats.unreadCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-md text-[13px] font-bold bg-[#FFCB56] text-[#78350f] tabular-nums">
-                {messageStats.unreadCount}
-              </span>
-            )}
-          </button>
+            <button
+              id="messages-tab-inbox"
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'inbox' && !isComposing}
+              aria-controls="messages-tabpanel"
+              tabIndex={activeTab === 'inbox' ? 0 : -1}
+              onClick={() => {
+                setActiveTab('inbox');
+                setIsComposing(false);
+              }}
+              onKeyDown={(e) => {
+                const isRtl = document.documentElement.dir === 'rtl';
+                const idx = 0;
+                let nextIdx: number | null = null;
+                if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
+                else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
+                else if (e.key === 'Home') nextIdx = 0;
+                else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
+                if (nextIdx !== null) {
+                  e.preventDefault();
+                  const next = MESSAGE_TABS[nextIdx];
+                  setActiveTab(next);
+                  setIsComposing(false);
+                  document.getElementById(`messages-tab-${next}`)?.focus();
+                }
+              }}
+              className={`h-9 px-3 text-xs font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeTab === 'inbox' && !isComposing
+                  ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Inbox className="h-3.5 w-3.5" />
+              <span>{t('messages.conversationsAndInbox')}</span>
+              {messageStats.unreadCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-md text-xs font-bold bg-[#FFCB56] text-[#78350f] tabular-nums">
+                  {messageStats.unreadCount}
+                </span>
+              )}
+            </button>
 
-          <button
-            id="messages-tab-sent"
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'sent' && !isComposing}
-            aria-controls="messages-tabpanel"
-            tabIndex={activeTab === 'sent' ? 0 : -1}
-            onClick={() => {
-              setActiveTab('sent');
-              setIsComposing(false);
-            }}
-            onKeyDown={(e) => {
-              const isRtl = document.documentElement.dir === 'rtl';
-              const idx = 1;
-              let nextIdx: number | null = null;
-              if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
-              else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
-              else if (e.key === 'Home') nextIdx = 0;
-              else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
-              if (nextIdx !== null) {
-                e.preventDefault();
-                const next = MESSAGE_TABS[nextIdx];
-                setActiveTab(next);
+            <button
+              id="messages-tab-sent"
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'sent' && !isComposing}
+              aria-controls="messages-tabpanel"
+              tabIndex={activeTab === 'sent' ? 0 : -1}
+              onClick={() => {
+                setActiveTab('sent');
                 setIsComposing(false);
-                document.getElementById(`messages-tab-${next}`)?.focus();
-              }
-            }}
-            className={`h-9 px-3 text-xs font-medium rounded-md transition-colors duration-200 flex items-center gap-2 ${
-              activeTab === 'sent' && !isComposing
-                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-2xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Send className="h-3.5 w-3.5" />
-            <span>{t('messages.sentTab')}</span>
-          </button>
+              }}
+              onKeyDown={(e) => {
+                const isRtl = document.documentElement.dir === 'rtl';
+                const idx = 1;
+                let nextIdx: number | null = null;
+                if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
+                else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
+                else if (e.key === 'Home') nextIdx = 0;
+                else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
+                if (nextIdx !== null) {
+                  e.preventDefault();
+                  const next = MESSAGE_TABS[nextIdx];
+                  setActiveTab(next);
+                  setIsComposing(false);
+                  document.getElementById(`messages-tab-${next}`)?.focus();
+                }
+              }}
+              className={`h-9 px-3 text-xs font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeTab === 'sent' && !isComposing
+                  ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Send className="h-3.5 w-3.5" />
+              <span>{t('messages.sentTab')}</span>
+            </button>
 
-          <button
-            id="messages-tab-contacts"
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'contacts' && !isComposing}
-            aria-controls="messages-tabpanel"
-            tabIndex={activeTab === 'contacts' ? 0 : -1}
-            onClick={() => {
-              setActiveTab('contacts');
-              setIsComposing(false);
-            }}
-            onKeyDown={(e) => {
-              const isRtl = document.documentElement.dir === 'rtl';
-              const idx = 2;
-              let nextIdx: number | null = null;
-              if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
-              else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
-              else if (e.key === 'Home') nextIdx = 0;
-              else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
-              if (nextIdx !== null) {
-                e.preventDefault();
-                const next = MESSAGE_TABS[nextIdx];
-                setActiveTab(next);
+            <button
+              id="messages-tab-contacts"
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'contacts' && !isComposing}
+              aria-controls="messages-tabpanel"
+              tabIndex={activeTab === 'contacts' ? 0 : -1}
+              onClick={() => {
+                setActiveTab('contacts');
                 setIsComposing(false);
-                document.getElementById(`messages-tab-${next}`)?.focus();
-              }
-            }}
-            className={`h-9 px-3 text-xs font-medium rounded-md transition-colors duration-200 flex items-center gap-2 ${
-              activeTab === 'contacts' && !isComposing
-                ? 'bg-[#2c5282] dark:bg-sky-700 text-white shadow-2xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-            }`}
+              }}
+              onKeyDown={(e) => {
+                const isRtl = document.documentElement.dir === 'rtl';
+                const idx = 2;
+                let nextIdx: number | null = null;
+                if (e.key === 'ArrowRight') nextIdx = isRtl ? (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length : (idx + 1) % MESSAGE_TABS.length;
+                else if (e.key === 'ArrowLeft') nextIdx = isRtl ? (idx + 1) % MESSAGE_TABS.length : (idx - 1 + MESSAGE_TABS.length) % MESSAGE_TABS.length;
+                else if (e.key === 'Home') nextIdx = 0;
+                else if (e.key === 'End') nextIdx = MESSAGE_TABS.length - 1;
+                if (nextIdx !== null) {
+                  e.preventDefault();
+                  const next = MESSAGE_TABS[nextIdx];
+                  setActiveTab(next);
+                  setIsComposing(false);
+                  document.getElementById(`messages-tab-${next}`)?.focus();
+                }
+              }}
+              className={`h-9 px-3 text-xs font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap shrink-0 ${
+                activeTab === 'contacts' && !isComposing
+                  ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span>{t('messages.contactsDirectory')}</span>
+            </button>
+          </div>
+
+          {/* Compact Inline Count Filter Pills */}
+          <div
+            role="group"
+            aria-label={t('messages.filterAria')}
+            className="flex items-center gap-1.5 flex-wrap"
           >
-            <Users className="h-3.5 w-3.5" />
-            <span>{t('messages.contactsDirectory')}</span>
-          </button>
+            {filterPills.map((pill) => {
+              const isActive = messageFilter === pill.key && activeTab !== 'contacts' && !isComposing;
+              return (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => {
+                    setMessageFilter(pill.key);
+                    if (activeTab === 'contacts') {
+                      setActiveTab('inbox');
+                    }
+                    setIsComposing(false);
+                  }}
+                  aria-pressed={isActive}
+                  className={`h-8 px-2.5 rounded-full text-xs font-medium transition-colors duration-150 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 border ${
+                    isActive
+                      ? 'bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100'
+                      : 'bg-slate-100/70 text-slate-700 border-slate-200/80 hover:bg-slate-200/70 dark:bg-slate-800/70 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <span>{pill.label}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[11px] font-semibold tabular-nums ${
+                      isActive
+                        ? 'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900'
+                        : 'bg-white text-slate-600 dark:bg-slate-900/80 dark:text-slate-300'
+                    }`}
+                  >
+                    {pill.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Role Messaging Info Banner */}
       <CrossRoleMessagingInfo />
-
-      {/* Stats Cards */}
-      <MessageHistoryStats {...messageStats} />
 
       {/* Main View Area */}
       {isComposing ? (
@@ -519,7 +584,7 @@ const MessagesPage: React.FC = () => {
                 <Button
                   type="button"
                   onClick={() => refetch()}
-                  className="h-10 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] dark:bg-sky-700 dark:hover:bg-sky-600 text-white text-sm font-semibold rounded-md inline-flex items-center gap-2"
+                  className="h-10 px-5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 text-sm font-semibold rounded-lg inline-flex items-center gap-2"
                 >
                   <RefreshCw className="h-4 w-4" />
                   <span>{t('common.retry')}</span>
@@ -527,12 +592,12 @@ const MessagesPage: React.FC = () => {
               }
             />
           ) : (
-            /* Modern 2-Column Chat Layout (>=70% viewport height) */
-            <div className="flex h-[calc(100vh-16rem)] md:h-[calc(100vh-14.5rem)] min-h-[520px] border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
+            /* Modern 2-Column Chat Layout */
+            <div className="flex h-[calc(100vh-13.5rem)] md:h-[calc(100vh-12.5rem)] min-h-[520px] border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
               {/* Left Column: Conversations List (35%) */}
               <div
-                className={`w-full md:w-[35%] lg:w-[34%] border-e border-slate-200/80 dark:border-slate-800 flex flex-col min-h-0 ${
-                  mobileShowThread ? 'hidden md:flex' : 'flex'
+                className={`w-full md:w-[35%] lg:w-[34%] border-e border-slate-200/80 dark:border-slate-800 flex-col min-h-0 ${
+                  mobileShowThread || isEmptyInbox ? 'hidden md:flex' : 'flex'
                 }`}
               >
                 <ConversationList
@@ -543,13 +608,14 @@ const MessagesPage: React.FC = () => {
                     setMobileShowThread(true);
                   }}
                   loading={isLoading}
+                  hasAnyConversations={allConversations.length > 0 || messageFilter !== 'all' || activeTab !== 'inbox'}
                 />
               </div>
 
               {/* Right Column: Chat Thread & Bubbles (65%) */}
               <div
-                className={`flex-1 flex flex-col min-w-0 min-h-0 ${
-                  mobileShowThread ? 'flex' : 'hidden md:flex'
+                className={`flex-1 flex-col min-w-0 min-h-0 ${
+                  mobileShowThread || isEmptyInbox ? 'flex' : 'hidden md:flex'
                 }`}
               >
                 <ConversationThread

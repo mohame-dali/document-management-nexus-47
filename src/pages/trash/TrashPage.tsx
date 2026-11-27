@@ -40,10 +40,12 @@ import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 
 const TrashPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { t, language } = useLanguage();
+  const { dir } = useDirection();
   const isFr = language === 'fr';
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,12 +90,12 @@ const TrashPage: React.FC = () => {
   const restoreMutation = useMutation({
     mutationFn: ({ type, id }: { type: TrashItemType; id: string }) => restoreItem(type, id),
     onSuccess: () => {
-      toast.success('تمت استعادة العنصر بنجاح');
+      toast.success(t('trash.restoreSuccess'));
       invalidateQueries();
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = e?.response?.data?.message || e?.message || 'حدث خطأ أثناء استعادة العنصر';
+      const message = e?.response?.data?.message || e?.message || t('trash.restoreError');
       toast.error(message);
     },
   });
@@ -102,13 +104,13 @@ const TrashPage: React.FC = () => {
   const permanentDeleteMutation = useMutation({
     mutationFn: ({ type, id }: { type: TrashItemType; id: string }) => permanentDeleteItem(type, id),
     onSuccess: () => {
-      toast.success('تم الحذف النهائي للعنصر بنجاح');
+      toast.success(t('trash.deleteSuccess'));
       setItemToDelete(null);
       invalidateQueries();
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = e?.response?.data?.message || e?.message || 'حدث خطأ أثناء الحذف النهائي';
+      const message = e?.response?.data?.message || e?.message || t('trash.deleteError');
       toast.error(message);
     },
   });
@@ -117,13 +119,13 @@ const TrashPage: React.FC = () => {
   const emptyTrashMutation = useMutation({
     mutationFn: () => emptyTrash(filterType),
     onSuccess: () => {
-      toast.success('تم إفراغ سلة المحذوفات بنجاح');
+      toast.success(t('trash.emptySuccess'));
       setIsEmptyTrashOpen(false);
       invalidateQueries();
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const message = e?.response?.data?.message || e?.message || 'حدث خطأ أثناء إفراغ السلة';
+      const message = e?.response?.data?.message || e?.message || t('trash.emptyError');
       toast.error(message);
     },
   });
@@ -159,263 +161,286 @@ const TrashPage: React.FC = () => {
       case 'incoming':
       case 'IncomingDocument':
         return (
-          <Badge className="rounded-full bg-[#2c5282]/10 dark:bg-sky-950/60 text-[#2c5282] dark:text-sky-300 hover:bg-[#2c5282]/15 dark:hover:bg-sky-950/80 border border-[#2c5282]/30 dark:border-sky-800/70 gap-1.5 py-1 px-3 font-medium text-xs">
+          <Badge className="rounded-full bg-[#2c5282]/10 dark:bg-sky-950/60 text-[#2c5282] dark:text-sky-300 hover:bg-[#2c5282]/15 dark:hover:bg-sky-950/80 border border-[#2c5282]/30 dark:border-sky-800/70 gap-1.5 py-1 px-3 font-medium text-xs whitespace-nowrap">
             <FileInput className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
-            <span>بريد وارد</span>
+            <span>{t('trash.typeIncoming')}</span>
           </Badge>
         );
       case 'outgoing':
       case 'OutgoingDocument':
         return (
-          <Badge className="rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 border border-emerald-300/80 dark:border-emerald-800/70 gap-1.5 py-1 px-3 font-medium text-xs">
+          <Badge className="rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 border border-emerald-300/80 dark:border-emerald-800/70 gap-1.5 py-1 px-3 font-medium text-xs whitespace-nowrap">
             <FileOutput className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>بريد صادر</span>
+            <span>{t('trash.typeOutgoing')}</span>
           </Badge>
         );
       case 'folder':
       case 'Folder':
         return (
-          <Badge className="rounded-full bg-[#FFCB56]/20 dark:bg-amber-950/50 text-[#744210] dark:text-amber-300 hover:bg-[#FFCB56]/30 dark:hover:bg-amber-950/70 border border-[#d69e2e]/40 dark:border-amber-800/70 gap-1.5 py-1 px-3 font-medium text-xs">
+          <Badge className="rounded-full bg-[#FFCB56]/20 dark:bg-amber-950/50 text-[#744210] dark:text-amber-300 hover:bg-[#FFCB56]/30 dark:hover:bg-amber-950/70 border border-[#d69e2e]/40 dark:border-amber-800/70 gap-1.5 py-1 px-3 font-medium text-xs whitespace-nowrap">
             <Folder className="h-3.5 w-3.5 text-[#b7791f] dark:text-amber-400" />
-            <span>مجلد</span>
+            <span>{t('trash.typeFolder')}</span>
           </Badge>
         );
       case 'message':
       case 'Message':
         return (
-          <Badge className="rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800/70 gap-1.5 py-1 px-3 font-medium text-xs">
+          <Badge className="rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800/70 gap-1.5 py-1 px-3 font-medium text-xs whitespace-nowrap">
             <MessageCircle className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>رسالة</span>
+            <span>{t('trash.typeMessage')}</span>
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="rounded-full text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 text-xs px-3 py-1">
+          <Badge variant="outline" className="rounded-full text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 text-xs px-3 py-1 whitespace-nowrap">
             {type}
           </Badge>
         );
     }
   };
 
+  const isTrashEmpty = items.length === 0;
+  const isEmptyButtonDisabled = isTrashEmpty || isLoading || emptyTrashMutation.isPending;
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950">
+    <div dir={dir} className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 text-start">
       <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-5">
         <PageBreadcrumb
           showHomeIcon
           homeTo="/dashboard"
           homeLabel={t('common.home')}
           items={[
-            { label: isFr ? 'Corbeille' : 'سلة المحذوفات' },
+            { label: t('trash.title') },
           ]}
         />
 
         {/* Header */}
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-[#e53e3e]/10 dark:bg-red-950/50 text-[#e53e3e] dark:text-red-400 border border-[#e53e3e]/20 dark:border-red-900/60 rounded-lg">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-900/60 rounded-lg shrink-0">
               <Trash2 className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">سلة المحذوفات</h1>
-              <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
-                إدارة العناصر المحذوفة واستعادتها أو حذفها نهائياً من النظام
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t('trash.title')}</h1>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                {t('trash.subtitle')}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               type="button"
               variant="outline"
-              className="h-11 min-h-[44px] px-4 gap-2 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="h-11 min-h-[44px] px-4 gap-2 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
               onClick={() => refetch()}
               disabled={isFetching}
             >
               <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-              <span>تحديث</span>
+              <span>{t('trash.refresh')}</span>
             </Button>
 
             <Button
               type="button"
-              variant="destructive"
-              className="h-11 min-h-[44px] px-5 gap-2 rounded-lg bg-[#e53e3e] hover:bg-[#c53030] text-white font-medium shadow-xs"
+              variant="outline"
+              className={`h-11 min-h-[44px] px-5 gap-2 rounded-lg font-medium whitespace-nowrap shrink-0 transition-colors ${
+                isTrashEmpty
+                  ? 'bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-800/80 dark:text-slate-500 dark:border-slate-700 hover:bg-slate-100 hover:text-slate-400 cursor-not-allowed opacity-100'
+                  : 'bg-rose-600 hover:bg-rose-700 text-white border-rose-600 hover:border-rose-700 hover:text-white shadow-xs'
+              }`}
               onClick={() => setIsEmptyTrashOpen(true)}
-              disabled={items.length === 0 || isLoading || emptyTrashMutation.isPending}
+              disabled={isEmptyButtonDisabled}
             >
               <Trash2 className="h-4 w-4" />
-              <span>إفراغ السلة</span>
+              <span>{t('trash.emptyTrash')}</span>
             </Button>
           </div>
         </div>
 
         {/* Filters and Search Bar */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Type Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant={filterType === 'all' ? 'default' : 'outline'}
-            className={`h-11 min-h-[44px] px-4 rounded-lg text-sm font-medium gap-2 ${
-              filterType === 'all'
-                ? 'bg-[#2c5282] hover:bg-[#2a4365] text-white'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-            onClick={() => setFilterType('all')}
-          >
-            <span>الكل</span>
-            {counts.total > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
-                filterType === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-              }`}>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-3 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* Type Tabs */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant={filterType === 'all' ? 'default' : 'outline'}
+              className={`h-10 min-h-[40px] px-3.5 rounded-lg text-sm font-medium gap-2 whitespace-nowrap shrink-0 ${
+                filterType === 'all'
+                  ? 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+              onClick={() => setFilterType('all')}
+            >
+              <span>{t('trash.filterAll')}</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
+                  filterType === 'all'
+                    ? 'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {counts.total}
               </span>
-            )}
-          </Button>
+            </Button>
 
-          <Button
-            type="button"
-            variant={filterType === 'incoming' ? 'default' : 'outline'}
-            className={`h-11 min-h-[44px] px-4 rounded-lg text-sm font-medium gap-2 ${
-              filterType === 'incoming'
-                ? 'bg-[#2c5282] hover:bg-[#2a4365] text-white'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-            onClick={() => setFilterType('incoming')}
-          >
-            <FileInput className="h-4 w-4" />
-            <span>البريد الوارد</span>
-            {counts.incoming > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
-                filterType === 'incoming' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-              }`}>
+            <Button
+              type="button"
+              variant={filterType === 'incoming' ? 'default' : 'outline'}
+              className={`h-10 min-h-[40px] px-3.5 rounded-lg text-sm font-medium gap-2 whitespace-nowrap shrink-0 ${
+                filterType === 'incoming'
+                  ? 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+              onClick={() => setFilterType('incoming')}
+            >
+              <FileInput className="h-4 w-4" />
+              <span>{t('trash.filterIncoming')}</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
+                  filterType === 'incoming'
+                    ? 'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {counts.incoming}
               </span>
-            )}
-          </Button>
+            </Button>
 
-          <Button
-            type="button"
-            variant={filterType === 'outgoing' ? 'default' : 'outline'}
-            className={`h-11 min-h-[44px] px-4 rounded-lg text-sm font-medium gap-2 ${
-              filterType === 'outgoing'
-                ? 'bg-[#2c5282] hover:bg-[#2a4365] text-white'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-            onClick={() => setFilterType('outgoing')}
-          >
-            <FileOutput className="h-4 w-4" />
-            <span>البريد الصادر</span>
-            {counts.outgoing > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
-                filterType === 'outgoing' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-              }`}>
+            <Button
+              type="button"
+              variant={filterType === 'outgoing' ? 'default' : 'outline'}
+              className={`h-10 min-h-[40px] px-3.5 rounded-lg text-sm font-medium gap-2 whitespace-nowrap shrink-0 ${
+                filterType === 'outgoing'
+                  ? 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+              onClick={() => setFilterType('outgoing')}
+            >
+              <FileOutput className="h-4 w-4" />
+              <span>{t('trash.filterOutgoing')}</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
+                  filterType === 'outgoing'
+                    ? 'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {counts.outgoing}
               </span>
-            )}
-          </Button>
+            </Button>
 
-          <Button
-            type="button"
-            variant={filterType === 'folder' ? 'default' : 'outline'}
-            className={`h-11 min-h-[44px] px-4 rounded-lg text-sm font-medium gap-2 ${
-              filterType === 'folder'
-                ? 'bg-[#2c5282] hover:bg-[#2a4365] text-white'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-            onClick={() => setFilterType('folder')}
-          >
-            <Folder className="h-4 w-4" />
-            <span>المجلدات</span>
-            {counts.folder > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
-                filterType === 'folder' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-              }`}>
+            <Button
+              type="button"
+              variant={filterType === 'folder' ? 'default' : 'outline'}
+              className={`h-10 min-h-[40px] px-3.5 rounded-lg text-sm font-medium gap-2 whitespace-nowrap shrink-0 ${
+                filterType === 'folder'
+                  ? 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+              onClick={() => setFilterType('folder')}
+            >
+              <Folder className="h-4 w-4" />
+              <span>{t('trash.filterFolders')}</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
+                  filterType === 'folder'
+                    ? 'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {counts.folder}
               </span>
-            )}
-          </Button>
+            </Button>
 
-          <Button
-            type="button"
-            variant={filterType === 'message' ? 'default' : 'outline'}
-            className={`h-11 min-h-[44px] px-4 rounded-lg text-sm font-medium gap-2 ${
-              filterType === 'message'
-                ? 'bg-[#2c5282] hover:bg-[#2a4365] text-white'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-            onClick={() => setFilterType('message')}
-          >
-            <MessageCircle className={`h-4 w-4 ${filterType === 'message' ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
-            <span>الرسائل</span>
-            {counts.message > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
-                filterType === 'message' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-              }`}>
+            <Button
+              type="button"
+              variant={filterType === 'message' ? 'default' : 'outline'}
+              className={`h-10 min-h-[40px] px-3.5 rounded-lg text-sm font-medium gap-2 whitespace-nowrap shrink-0 ${
+                filterType === 'message'
+                  ? 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+              onClick={() => setFilterType('message')}
+            >
+              <MessageCircle
+                className={`h-4 w-4 ${
+                  filterType === 'message'
+                    ? 'text-white dark:text-slate-900'
+                    : 'text-indigo-600 dark:text-indigo-400'
+                }`}
+              />
+              <span>{t('trash.filterMessages')}</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-bold tabular-nums ${
+                  filterType === 'message'
+                    ? 'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
                 {counts.message}
               </span>
-            )}
-          </Button>
+            </Button>
+          </div>
+
+          {/* Local Search input */}
+          <div className="relative w-full lg:w-72">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 dark:text-slate-400 pointer-events-none" />
+            <Input
+              type="text"
+              placeholder={t('trash.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-10 min-h-[40px] ps-9 pe-4 rounded-lg bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus-visible:ring-1 focus-visible:ring-slate-400"
+            />
+          </div>
         </div>
 
-        {/* Local Search input */}
-        <div className="relative w-full lg:w-72">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-700 dark:text-slate-300 pointer-events-none" />
-          <Input
-            type="text"
-            placeholder="بحث في العناصر المحذوفة..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-11 min-h-[44px] pr-9 pl-4 rounded-lg bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus-visible:ring-1 focus-visible:ring-[#2c5282]"
-          />
-        </div>
-      </div>
-
-      {/* Main Table / Content Area */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
-        {isLoading ? (
-          <TableSkeleton columns={5} rows={6} />
-        ) : isError ? (
-          <EmptyState
-            icon={<AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
-            title="تعذر تحميل سلة المحذوفات"
-            description={(error as Error)?.message || 'حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
-            className="border-0 rounded-none py-14"
-            action={
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 min-h-[44px] px-4 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 inline-flex items-center gap-2"
-                onClick={() => refetch()}
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span>إعادة المحاولة</span>
-              </Button>
-            }
-          />
-        ) : filteredItems.length === 0 ? (
-          <EmptyState
-            icon={<Trash2 className="h-6 w-6 text-slate-600 dark:text-slate-300" />}
-            title="السلة فارغة"
-            description={
-              searchQuery.trim()
-                ? 'لا توجد نتائج تطابق معايير البحث الحالية.'
-                : 'لا توجد عناصر محذوفة حالياً.'
-            }
-            className="border-0 rounded-none py-14"
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
-              <thead>
-                <tr className="bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold">
-                  <th className="py-3 px-4 sm:px-6 text-right w-36 font-bold text-sm">النوع</th>
-                  <th className="py-3 px-4 sm:px-6 text-right font-bold text-sm">الاسم / الموضوع</th>
-                  <th className="py-3 px-4 sm:px-6 text-right w-52 font-bold text-sm">تاريخ الحذف</th>
-                  <th className="py-3 px-4 sm:px-6 text-right w-48 font-bold text-sm">تم الحذف بواسطة</th>
-                  <th className="py-3 px-4 sm:px-6 text-center w-56 font-bold text-sm">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800">
+        {/* Main Table / Content Area */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+          {isLoading ? (
+            <TableSkeleton columns={5} rows={6} />
+          ) : isError ? (
+            <EmptyState
+              icon={<AlertTriangle className="h-6 w-6 text-rose-600 dark:text-rose-400" />}
+              title={t('trash.loadErrorTitle')}
+              description={(error as Error)?.message || t('trash.loadErrorDesc')}
+              className="border-0 rounded-none py-14"
+              action={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 min-h-[44px] px-4 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 inline-flex items-center gap-2"
+                  onClick={() => refetch()}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>{t('trash.retry')}</span>
+                </Button>
+              }
+            />
+          ) : filteredItems.length === 0 ? (
+            <EmptyState
+              icon={<Trash2 className="h-6 w-6 text-slate-600 dark:text-slate-300" />}
+              title={t('trash.emptyTitle')}
+              description={
+                searchQuery.trim()
+                  ? t('trash.emptyNoResults')
+                  : t('trash.emptyDesc')
+              }
+              className="border-0 rounded-none py-14"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-start border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold">
+                    <th className="py-3 px-4 sm:px-6 text-start w-36 font-bold text-sm">{t('trash.colType')}</th>
+                    <th className="py-3 px-4 sm:px-6 text-start font-bold text-sm">{t('trash.colName')}</th>
+                    <th className="py-3 px-4 sm:px-6 text-start w-52 font-bold text-sm">{t('trash.colDeletedAt')}</th>
+                    <th className="py-3 px-4 sm:px-6 text-start w-48 font-bold text-sm">{t('trash.colDeletedBy')}</th>
+                    <th className="py-3 px-4 sm:px-6 text-center w-56 font-bold text-sm">{t('trash.colActions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800">
                 {filteredItems.map((item) => {
                   const isRestoring = restoreMutation.isPending && restoreMutation.variables?.id === item._id;
                   const isDeleting = permanentDeleteMutation.isPending && permanentDeleteMutation.variables?.id === item._id;
@@ -436,17 +461,17 @@ const TrashPage: React.FC = () => {
                         {isMessage ? (
                           <div className="space-y-1">
                             <p className="text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-1">
-                              {item.subject || item.label || 'بدون موضوع'}
+                              {item.subject || item.label || t('trash.noSubject')}
                             </p>
                             {item.content && (
-                              <p className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                              <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                                 {item.content}
                               </p>
                             )}
                             {item.attachments && item.attachments.length > 0 && (
-                              <span className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300 tabular-nums">
+                              <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 tabular-nums">
                                 <span>📎</span>
-                                <span>{item.attachments.length} مرفق</span>
+                                <span>{t('trash.attachmentCount', { count: item.attachments.length })}</span>
                               </span>
                             )}
                           </div>
@@ -456,8 +481,8 @@ const TrashPage: React.FC = () => {
                               {item.label}
                             </p>
                             {item.documentId && (
-                              <p className="text-xs text-slate-700 dark:text-slate-300 font-mono tabular-nums">
-                                رقم المرجع: {item.documentId}
+                              <p className="text-xs text-slate-600 dark:text-slate-300 font-mono tabular-nums">
+                                {t('trash.referenceNumber')} {item.documentId}
                               </p>
                             )}
                           </div>
@@ -466,7 +491,9 @@ const TrashPage: React.FC = () => {
 
                       {/* Column 3: Deletion Date */}
                       <td className="py-3 px-4 sm:px-6 align-middle text-sm text-slate-600 dark:text-slate-300 tabular-nums">
-                        <bdi dir="rtl" className="tabular-nums">{formatDateTime(item.deletedAt, 'ar')}</bdi>
+                        <bdi dir={isFr ? 'ltr' : 'rtl'} className="tabular-nums">
+                          {formatDateTime(item.deletedAt, isFr ? 'fr' : 'ar')}
+                        </bdi>
                       </td>
 
                       {/* Column 4: Deleted By / Sender & Recipients */}
@@ -474,16 +501,16 @@ const TrashPage: React.FC = () => {
                         {isMessage ? (
                           <div className="space-y-1 text-xs">
                             <div className="flex items-center gap-1 text-slate-700 dark:text-slate-200 font-medium">
-                              <span className="text-slate-700 dark:text-slate-300">من:</span>
+                              <span className="text-slate-600 dark:text-slate-300">{t('trash.from')}</span>
                               <span className="truncate max-w-[140px]">{item.sender?.username || '—'}</span>
                             </div>
                             {item.recipients && item.recipients.length > 0 && (
-                              <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
-                                <span className="text-slate-700 dark:text-slate-300">إلى:</span>
+                              <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                <span>{t('trash.to')}</span>
                                 <span className="truncate max-w-[140px]">
                                   {item.recipients
-                                    .map((r: { user?: { username?: string }; username?: string }) => r.user?.username || r.username || 'مستخدم')
-                                    .join('، ')}
+                                    .map((r: { user?: { username?: string }; username?: string }) => r.user?.username || r.username || t('trash.userFallback'))
+                                    .join(isFr ? ', ' : '، ')}
                                 </span>
                               </div>
                             )}
@@ -500,20 +527,20 @@ const TrashPage: React.FC = () => {
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="h-11 min-h-[44px] px-3.5 gap-1.5 rounded-lg text-[#2c5282] dark:text-sky-300 border-[#2c5282]/30 dark:border-sky-800/70 bg-white dark:bg-slate-900 hover:bg-[#2c5282] dark:hover:bg-sky-700 hover:text-white transition-colors duration-150"
+                            className="h-10 min-h-[40px] px-3.5 gap-1.5 rounded-lg text-[#2c5282] dark:text-sky-300 border-[#2c5282]/30 dark:border-sky-800/70 bg-white dark:bg-slate-900 hover:bg-[#2c5282] dark:hover:bg-sky-700 hover:text-white transition-colors duration-150 whitespace-nowrap"
                             onClick={() => handleRestore(item)}
                             disabled={isRestoring || isDeleting}
-                            title="استعادة العنصر"
+                            title={t('trash.restoreTitle')}
                           >
                             <RotateCcw className={`h-4 w-4 ${isRestoring ? 'animate-spin' : ''}`} />
-                            <span className="text-sm font-semibold">استعادة</span>
+                            <span className="text-sm font-semibold">{t('trash.restore')}</span>
                           </Button>
 
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="h-11 min-h-[44px] px-3.5 gap-1.5 rounded-lg text-[#e53e3e] dark:text-red-400 border-[#e53e3e]/30 dark:border-red-900/70 bg-white dark:bg-slate-900 hover:bg-[#e53e3e] dark:hover:bg-red-700 hover:text-white transition-colors duration-150"
+                            className="h-10 min-h-[40px] px-3.5 gap-1.5 rounded-lg text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/70 bg-white dark:bg-slate-900 hover:bg-rose-600 dark:hover:bg-rose-700 hover:text-white transition-colors duration-150 whitespace-nowrap"
                             onClick={() =>
                               setItemToDelete({
                                 id: item._id,
@@ -522,10 +549,10 @@ const TrashPage: React.FC = () => {
                               })
                             }
                             disabled={isRestoring || isDeleting}
-                            title="حذف نهائي"
+                            title={t('trash.permanentDelete')}
                           >
                             <Trash2 className="h-4 w-4" />
-                            <span className="text-sm font-semibold">حذف نهائي</span>
+                            <span className="text-sm font-semibold">{t('trash.permanentDelete')}</span>
                           </Button>
                         </div>
                       </td>
@@ -543,45 +570,46 @@ const TrashPage: React.FC = () => {
         open={Boolean(itemToDelete)}
         onOpenChange={(open) => !open && setItemToDelete(null)}
       >
-        <AlertDialogContent className="text-right rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-lg">
-          <AlertDialogHeader className="text-right sm:text-right">
+        <AlertDialogContent dir={dir} className="text-start rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-lg">
+          <AlertDialogHeader className="text-start sm:text-start">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 rounded-lg border border-red-200/70 dark:border-red-900/60">
+              <div className="p-3 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-200/70 dark:border-rose-900/60">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <AlertDialogTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                تأكيد الحذف النهائي
+                {t('trash.confirmDeleteTitle')}
               </AlertDialogTitle>
             </div>
             <AlertDialogDescription className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-              هل أنت متأكد من رغبتك في حذف{' '}
-              <strong className="text-slate-900 dark:text-slate-100 font-bold">"{itemToDelete?.label}"</strong> بشكل نهائي؟
+              {t('trash.confirmDeleteDesc')}{' '}
+              <strong className="text-slate-900 dark:text-slate-100 font-bold">"{itemToDelete?.label}"</strong>{' '}
+              {t('trash.confirmDeleteDescSuffix')}
               <br />
-              <span className="text-red-600 dark:text-red-400 font-medium mt-1 block">
-                تحذير: هذا الإجراء لا يمكن التراجع عنه نهائياً وسيتم إزالة كافة الملفات المرتبطة به من القرص.
+              <span className="text-rose-600 dark:text-rose-400 font-medium mt-1 block">
+                {t('trash.confirmDeleteWarning')}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse justify-start gap-2 mt-4 sm:justify-start">
             <AlertDialogAction
-              className="h-11 min-h-[44px] px-5 rounded-lg bg-[#e53e3e] hover:bg-[#c53030] text-white font-medium"
+              className="h-11 min-h-[44px] px-5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium"
               onClick={handleConfirmPermanentDelete}
               disabled={permanentDeleteMutation.isPending}
             >
               {permanentDeleteMutation.isPending ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>جاري الحذف...</span>
+                  <span>{t('trash.deleting')}</span>
                 </div>
               ) : (
-                <span>حذف نهائي</span>
+                <span>{t('trash.permanentDelete')}</span>
               )}
             </AlertDialogAction>
             <AlertDialogCancel
               className="h-11 min-h-[44px] px-4 rounded-lg border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               disabled={permanentDeleteMutation.isPending}
             >
-              إلغاء
+              {t('trash.cancel')}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -592,44 +620,44 @@ const TrashPage: React.FC = () => {
         open={isEmptyTrashOpen}
         onOpenChange={setIsEmptyTrashOpen}
       >
-        <AlertDialogContent className="text-right rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-lg">
-          <AlertDialogHeader className="text-right sm:text-right">
+        <AlertDialogContent dir={dir} className="text-start rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-lg">
+          <AlertDialogHeader className="text-start sm:text-start">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 rounded-lg border border-red-200/70 dark:border-red-900/60">
+              <div className="p-3 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-200/70 dark:border-rose-900/60">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <AlertDialogTitle className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                تأكيد إفراغ سلة المحذوفات
+                {t('trash.confirmEmptyTitle')}
               </AlertDialogTitle>
             </div>
             <AlertDialogDescription className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-              تحذير شديد: سيتم حذف جميع العناصر الموجودة في سلة المحذوفات نهائياً مع كافة المرفقات والملفات من الخادم.
+              {t('trash.confirmEmptyDesc')}
               <br />
-              <span className="text-red-600 dark:text-red-400 font-bold mt-1 block">
-                لا يمكن استرجاع أي من هذه العناصر أو التراجع عن هذه العملية بأي شكل!
+              <span className="text-rose-600 dark:text-rose-400 font-bold mt-1 block">
+                {t('trash.confirmEmptyWarning')}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse justify-start gap-2 mt-4 sm:justify-start">
             <AlertDialogAction
-              className="h-11 min-h-[44px] px-5 rounded-lg bg-[#e53e3e] hover:bg-[#c53030] text-white font-bold"
+              className="h-11 min-h-[44px] px-5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold"
               onClick={() => emptyTrashMutation.mutate()}
               disabled={emptyTrashMutation.isPending}
             >
               {emptyTrashMutation.isPending ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>جاري الإفراغ...</span>
+                  <span>{t('trash.emptying')}</span>
                 </div>
               ) : (
-                <span>نعم، إفراغ السلة الآن</span>
+                <span>{t('trash.confirmEmptyAction')}</span>
               )}
             </AlertDialogAction>
             <AlertDialogCancel
               className="h-11 min-h-[44px] px-4 rounded-lg border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               disabled={emptyTrashMutation.isPending}
             >
-              تراجع
+              {t('trash.back')}
             </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>

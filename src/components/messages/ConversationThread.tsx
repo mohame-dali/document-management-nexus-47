@@ -61,13 +61,13 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
     return (
       <div className="h-full flex flex-col items-center justify-center p-6 sm:p-8 text-center bg-slate-50/70 dark:bg-slate-950/60">
         <div className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col items-center">
-          <div className="p-3.5 bg-[#ebf4ff] dark:bg-sky-950/60 border border-[#bee3f8] dark:border-sky-800/70 rounded-xl text-[#2c5282] dark:text-sky-400 mb-4">
+          <div className="p-3.5 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 mb-4">
             <MessageSquare className="h-7 w-7" />
           </div>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1.5">
             {t('messages.selectMessage')}
           </h3>
-          <p className="text-xs text-slate-700 dark:text-slate-300 max-w-xs leading-relaxed mb-5">
+          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xs leading-relaxed mb-5">
             {t('messages.selectInterlocutorDesc')}
           </p>
 
@@ -77,7 +77,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
                 <Button
                   type="button"
                   onClick={onNewMessage}
-                  className="h-9 px-4 text-xs font-medium rounded-lg bg-[#2c5282] hover:bg-[#234269] dark:bg-sky-700 dark:hover:bg-sky-600 text-white inline-flex items-center gap-1.5"
+                  className="h-10 px-4 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>{t('messages.newMessage')}</span>
@@ -88,7 +88,7 @@ export const ConversationThread: React.FC<ConversationThreadProps> = ({
                   type="button"
                   variant="outline"
                   onClick={onOpenContacts}
-                  className="h-9 px-4 text-xs font-medium rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5"
+                  className="h-10 px-4 text-xs font-medium rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <Users className="h-3.5 w-3.5" />
                   <span>{t('messages.contactsDirectory')}</span>

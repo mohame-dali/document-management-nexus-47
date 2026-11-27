@@ -13,6 +13,7 @@ export interface ConversationListProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   loading?: boolean;
+  hasAnyConversations?: boolean;
 }
 
 export const ConversationList: React.FC<ConversationListProps> = ({
@@ -20,8 +21,9 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   selectedId,
   onSelect,
   loading = false,
+  hasAnyConversations = true,
 }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const formatConversationTime = (dateStr?: Date | string): string => {
@@ -54,7 +56,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             placeholder={t('messages.searchConversationsOrNames')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-9 text-xs text-start ps-10 pe-3 border-slate-300 dark:border-slate-800 focus:border-[#2c5282] dark:focus:border-sky-500 focus:ring-1 focus:ring-[#2c5282] dark:focus:ring-sky-500 rounded-lg bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            className="h-9 text-xs text-start ps-10 pe-3 border-slate-200 dark:border-slate-800 focus:border-slate-400 dark:focus:border-slate-600 focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600 rounded-lg bg-slate-50/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
         </div>
       </div>
@@ -77,12 +79,16 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             ))}
           </div>
         ) : filteredConversations.length === 0 ? (
-          <EmptyState
-            icon={<MessageSquare className="h-6 w-6 text-[#2c5282] dark:text-sky-400" />}
-            title={searchTerm ? t('messages.noMatchingResults') : t('messages.noConversationsYet')}
-            description={searchTerm ? t('messages.tryOtherSearch') : t('messages.clickNewMessageToStart')}
-            className="border-0 bg-transparent py-10 px-4"
-          />
+          hasAnyConversations || searchTerm.trim() ? (
+            <EmptyState
+              icon={<MessageSquare className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
+              title={t('messages.noMatchingResults')}
+              description={t('messages.tryOtherSearch')}
+              className="border-0 bg-transparent py-10 px-4"
+            />
+          ) : (
+            <div className="h-full" aria-hidden="true" />
+          )
         ) : (
           filteredConversations.map((conv) => {
             const isSelected = selectedId === conv.interlocutorId;
@@ -94,7 +100,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                 onClick={() => onSelect(conv.interlocutorId)}
                 className={`min-h-[68px] p-2.5 flex items-start gap-3 cursor-pointer rounded-lg border transition-colors duration-150 ${
                   isSelected
-                    ? 'bg-[#ebf4ff]/90 dark:bg-sky-950/45 border-sky-200 dark:border-sky-800/70 shadow-2xs'
+                    ? 'bg-slate-100/90 dark:bg-slate-800/80 border-slate-300/80 dark:border-slate-700 shadow-2xs'
                     : hasUnread
                       ? 'bg-amber-50/35 dark:bg-amber-950/15 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/70'
                       : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/70'

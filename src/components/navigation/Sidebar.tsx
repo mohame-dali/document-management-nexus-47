@@ -4,9 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageProvider';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sheet,
@@ -16,43 +14,21 @@ import {
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useDirection } from '@/i18n/useDirection';
-import { 
-  Building2, 
-  Users2, 
-  FileText, 
-  FolderOpen, 
+import {
+  Building2,
+  FileText,
+  FolderOpen,
   MessageCircle,
   LayoutDashboard,
-  FileInput,
-  FileOutput,
   User,
-  Search,
-  Settings,
   UserCheck,
-  UserPlus,
-  CalendarDays,
-  CalendarCheck,
-  CalendarRange,
-  GraduationCap,
-  ClipboardList,
-  ChevronDown,
-  ChevronLeft,
   Trash2,
   Sliders,
-  History,
   Network,
-  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
 import FolderSidebar from '@/components/folders/FolderSidebar';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import ProfileSettingsDialog from '@/components/users/ProfileSettingsDialog';
 import { useHubBadges } from '@/hooks/useHubBadges';
 import { useServerConnection } from '@/hooks/useServerConnection';
 
@@ -64,7 +40,6 @@ const Sidebar = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const [profileDialogOpen, setProfileDialogOpen] = React.useState(false);
   const { unreadMessages } = useHubBadges();
   const serverStatus = useServerConnection();
   const isFr = language === 'fr';
@@ -202,41 +177,6 @@ const Sidebar = () => {
     }] : []),
   ];
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'Director':
-        return 'border-[#d69e2e]/40 bg-[#d69e2e]/15 text-[#fbd38d]';
-      case 'Admin':
-        return 'border-[#e53e3e]/40 bg-[#e53e3e]/15 text-[#feb2b2]';
-      case 'AdminTuningDesk':
-        return 'border-[#2c5282]/40 bg-[#2c5282]/30 text-[#bee3f8]';
-      case 'AdminDepartment':
-        return 'border-purple-400/30 bg-purple-500/15 text-purple-200';
-      case 'User':
-        return 'border-[#38a169]/40 bg-[#38a169]/15 text-[#9ae6b4]';
-      default:
-        return 'border-slate-600 bg-slate-700/50 text-slate-300';
-    }
-  };
-
-  const getRoleLabel = (role: string) => {
-    return t(`roles.${role}`);
-  };
-
-  const getUserInitials = (username: string) => {
-    return username ? username.charAt(0).toUpperCase() : 'U';
-  };
-
-  const getUserPhotoUrl = (user: { photo?: string } | null | undefined) => {
-    if (user?.photo) {
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      // Remove leading slash if it exists to avoid double slashes
-      const photoPath = user.photo.startsWith('/') ? user.photo.slice(1) : user.photo;
-      return `${API_URL}/${photoPath}`;
-    }
-    return null;
-  };
-
   const handleNavClick = (path: string) => {
     navigate(path);
     closeMobile();
@@ -250,79 +190,21 @@ const Sidebar = () => {
         expanded ? "w-full md:w-64" : "w-16"
       )}
     >
-      {/* Header - Fixed */}
+      {/* Header - Fixed compact brand only */}
       <div className={cn(
-        "flex-shrink-0 border-b border-slate-800/80 bg-[#161b24] transition-all duration-200",
-        expanded ? "p-4 sm:p-5" : "p-3"
+        "flex-shrink-0 border-b border-slate-800 bg-[#161b24] transition-all duration-200",
+        expanded ? "px-4 py-4" : "p-3"
       )}>
-        <div>
-          <div className="flex flex-row items-center gap-3 mb-3.5">
-            <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded-lg shadow-sm shrink-0">
-              <FileText className="h-5 w-5" />
-            </div>
-            {expanded && (
-              <div className="min-w-0 pe-8 md:pe-0">
-                <h1 className="text-base font-bold text-white truncate">
-                  {t('sidebar.dmsSystem')}
-                </h1>
-                <p className="text-xs text-slate-300 truncate mt-0.5">{t('sidebar.documentManagement')}</p>
-              </div>
-            )}
+        <div className={cn("flex flex-row items-center gap-3", !expanded && "justify-center")}>
+          <div className="p-2 bg-[#2c5282]/25 text-[#90cdf4] border border-[#2c5282]/40 rounded-lg shadow-sm shrink-0">
+            <FileText className="h-5 w-5" />
           </div>
-          
-          {currentUser && (
-            <div className="flex flex-row items-center gap-3 p-2.5 bg-slate-800/60 rounded-lg border border-slate-700/60 shadow-sm">
-              <ContextMenu>
-                <ContextMenuTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() => setProfileDialogOpen(true)}
-                    aria-label={t('sidebar.profileSettings')}
-                    title={!expanded ? currentUser.username : t('sidebar.profileSettings')}
-                    className="rounded-full shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]"
-                  >
-                    <Avatar className="h-10 w-10 ring-1 ring-slate-600 hover:ring-[#2c5282] transition-colors duration-200">
-                      <AvatarImage 
-                        src={getUserPhotoUrl(currentUser)} 
-                        alt={currentUser.username}
-                        className="object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                      <AvatarFallback className="bg-[#2c5282] text-white font-medium text-xs">
-                        {getUserInitials(currentUser.username)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="text-start">
-                  <ContextMenuItem onClick={() => setProfileDialogOpen(true)}>
-                    <User className="h-4 w-4 ms-2" />
-                    {t('sidebar.profileSettings')}
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
-              {expanded && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
-                    {currentUser.username}
-                  </p>
-                  <div className="mt-1">
-                    <Badge 
-                      variant="outline" 
-                      className={cn("text-[13px] px-2 py-0.5 rounded font-medium", getRoleBadgeColor(currentUser.role))}
-                    >
-                      {getRoleLabel(currentUser.role)}
-                    </Badge>
-                  </div>
-                  {currentUser.activeDepartment && (
-                    <p className="text-[13px] text-slate-300 mt-1 truncate">
-                      {currentUser.activeDepartment.name}
-                    </p>
-                  )}
-                </div>
-              )}
+          {expanded && (
+            <div className="min-w-0 pe-8 md:pe-0">
+              <h1 className="text-base font-bold text-white truncate">
+                {t('sidebar.dmsSystem')}
+              </h1>
+              <p className="text-xs text-slate-300 truncate mt-0.5">{t('sidebar.documentManagement')}</p>
             </div>
           )}
         </div>
@@ -332,7 +214,7 @@ const Sidebar = () => {
       <ScrollArea className="flex-1">
         <div className="flex flex-col h-full">
           {/* Navigation with refined pill highlights & spacing — 5-8 items directs, PAS d'accordéon */}
-          <nav className="flex-1 p-3 space-y-1.5">
+          <nav className="flex-1 px-3 py-4 space-y-1.5">
             {directMenuItems.map((item) => {
               const active = item.isActive();
               const hasBadge = Boolean(item.badge && item.badge > 0);
@@ -462,12 +344,6 @@ const Sidebar = () => {
           </SheetContent>
         </Sheet>
       )}
-
-      {/* Profile Settings Dialog */}
-      <ProfileSettingsDialog 
-        open={profileDialogOpen} 
-        onOpenChange={setProfileDialogOpen} 
-      />
     </>
   );
 };
