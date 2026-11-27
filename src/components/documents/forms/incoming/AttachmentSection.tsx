@@ -6,6 +6,7 @@ import DocumentTypeTabSelector from '@/components/documents/forms/DocumentTypeTa
 import { ScanStage, LiveThumbnail } from '@/services/scannerService';
 import { ScanPreviewData } from '@/components/documents/forms/ScannedDocumentPreview';
 import { FormScanSettings } from '@/utils/scannerPreferences';
+import { OcrState } from '@/utils/ocrSubjectHelper';
 
 interface AttachmentSectionProps {
   t: Record<string, string>;
@@ -13,6 +14,7 @@ interface AttachmentSectionProps {
   onTabChange: (value: string) => void;
   onFileSelect: (files: File[]) => void;
   onOcrComplete?: (ocrText: string, file: File) => void;
+  onOcrStateChange?: (state: OcrState) => void;
   scanSettings: FormScanSettings;
   handleScanSettingChange: (key: string, value: string) => void;
   scanning: boolean;
@@ -38,6 +40,7 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   onTabChange,
   onFileSelect,
   onOcrComplete,
+  onOcrStateChange,
   scanSettings,
   handleScanSettingChange,
   scanning,
@@ -73,6 +76,7 @@ const AttachmentSection: React.FC<AttachmentSectionProps> = ({
             <DocumentUploadWithOcr
               onFileSelect={onFileSelect}
               onOcrComplete={onOcrComplete}
+              onOcrStateChange={onOcrStateChange}
               fieldName="document"
             />
           </TabsContent>

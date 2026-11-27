@@ -33,6 +33,14 @@ import { History, Trash2, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { formatDateTime } from '@/utils/formatDate';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { extractFromOcr } from '@/services/aiExtractionService';
+import OcrStatusPill from '@/components/documents/forms/OcrStatusPill';
+import {
+  INITIAL_OCR_STATE,
+  OcrState,
+  extractSubjectHeuristic,
+} from '@/utils/ocrSubjectHelper';
 
 interface OutgoingDocumentFormProps {
   t: OutgoingFormTranslations;
@@ -55,6 +63,8 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
 }) => {
   const { t: translate, language } = useLanguage();
   const [ocrText, setOcrText] = useState<string>('');
+  const [ocrState, setOcrState] = useState<OcrState>(INITIAL_OCR_STATE);
+  const [isSuggestingSubject, setIsSuggestingSubject] = useState(false);
   const [optionalOpen, setOptionalOpen] = useState(false);
   
   const {
@@ -102,11 +112,58 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
     console.log('Extracted text length:', extractedText.length);
   };
 
+  const handleOcrStateChange = (nextState: OcrState) => {
+    setOcrState(nextState);
+    if (nextState.status === 'idle') {
+      setOcrText('');
+    }
+  };
+
+  const extractedDocumentText = (ocrText || scanResult?.ocrText || '').trim();
+
+  const effectiveOcrState: OcrState =
+    ocrState.status !== 'idle'
+      ? ocrState
+      : scanning && (scanStage === 'ocr' || scanStage === 'processing')
+        ? { status: 'processing', progress: scanProgress, text: '' }
+        : scanResult?.ocrText
+          ? { status: 'completed', progress: 100, text: scanResult.ocrText }
+          : INITIAL_OCR_STATE;
+
+  const handleSuggestSubject = async () => {
+    if (!extractedDocumentText) return;
+    setIsSuggestingSubject(true);
+    try {
+      let suggested = '';
+      if (extractedDocumentText.length >= 20) {
+        try {
+          const extracted = await extractFromOcr(extractedDocumentText);
+          if (extracted?.subject && extracted.subject.trim()) {
+            suggested = extracted.subject.trim();
+          }
+        } catch {
+          // Seamless fallback to deterministic OCR line extraction
+        }
+      }
+      if (!suggested) {
+        suggested = extractSubjectHeuristic(extractedDocumentText);
+      }
+      if (suggested) {
+        form.setValue('subject', suggested, { shouldDirty: true, shouldValidate: true });
+        toast.success(translate('documents.forms.ai.subjectSuggested'));
+      } else {
+        toast.info(translate('documents.forms.ai.noSubjectFound'));
+      }
+    } finally {
+      setIsSuggestingSubject(false);
+    }
+  };
+
   const handleSubmit = async (data: OutgoingFormValues) => {
     // Add OCR text to the form data
     const formDataWithOcr = {
       ...data,
-      ocrText: ocrText || ''
+      ocrText: ocrText || scanResult?.ocrText || ''
     };
     
     await onSubmit(formDataWithOcr);
@@ -142,15 +199,21 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               {/* Basic Information Section (Primary Essential Fields) */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  {translate('documents.forms.sections.basicInfo')}
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                    {translate('documents.forms.sections.basicInfo')}
+                  </h3>
+                  <OcrStatusPill state={effectiveOcrState} compact />
+                </div>
                 <BasicInfoFields
                   form={form}
                   t={t}
                   departments={departments}
                   onSerialNumberChange={handleSerialNumberChange}
                   showOptionalFields={false}
+                  hasExtractedText={extractedDocumentText.length > 0}
+                  isSuggestingSubject={isSuggestingSubject}
+                  onSuggestSubject={handleSuggestSubject}
                 />
               </div>
 
@@ -158,15 +221,19 @@ const OutgoingDocumentForm: React.FC<OutgoingDocumentFormProps> = ({
 
               {/* Document Attachment Section */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                  {translate('documents.forms.sections.attachments')}
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                    {translate('documents.forms.sections.attachments')}
+                  </h3>
+                  <OcrStatusPill state={effectiveOcrState} />
+                </div>
                 <DocumentAttachmentSection
                   t={t as Record<string, string>}
                   activeTab={activeTab}
                   setActiveTab={setActiveTab}
                   handleFileSelect={handleFileSelect}
                   onOcrComplete={handleOcrComplete}
+                  onOcrStateChange={handleOcrStateChange}
                   scanSettings={scanSettings}
                   handleScanSettingChange={handleScanSettingChange}
                   scanning={scanning}

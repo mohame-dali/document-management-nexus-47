@@ -9,6 +9,7 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { UseFormReturn, FieldValues } from 'react-hook-form';
 import DatePickerField from '@/components/documents/forms/DatePickerField';
 import DocumentOptionSelect from '@/components/ui/document-option-select';
@@ -16,6 +17,7 @@ import MultiDocumentOptionSelect from '@/components/ui/multi-document-option-sel
 import { MultiOrganizationAutocomplete } from '@/components/documents/forms/OrganizationAutocomplete';
 import { Department } from '@/types';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 interface BasicInfoFieldsProps<TFieldValues extends FieldValues = FieldValues> {
   form: UseFormReturn<TFieldValues>;
@@ -23,6 +25,9 @@ interface BasicInfoFieldsProps<TFieldValues extends FieldValues = FieldValues> {
   departments: Department[];
   onSerialNumberChange?: (value: string) => void;
   showOptionalFields?: boolean;
+  hasExtractedText?: boolean;
+  isSuggestingSubject?: boolean;
+  onSuggestSubject?: () => void;
 }
 
 const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
@@ -31,6 +36,9 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
   departments,
   onSerialNumberChange,
   showOptionalFields = true,
+  hasExtractedText = false,
+  isSuggestingSubject = false,
+  onSuggestSubject,
 }) => {
   const { t: translate } = useLanguage();
 
@@ -81,7 +89,31 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
         name="subject"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t.subject}</FormLabel>
+            <div className="flex flex-wrap items-center justify-between gap-2 min-h-[24px]">
+              <FormLabel>{t.subject}</FormLabel>
+              {hasExtractedText && onSuggestSubject && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onSuggestSubject}
+                  disabled={isSuggestingSubject}
+                  className="h-7 px-2.5 text-xs font-medium rounded-md border-purple-200 dark:border-purple-800/80 bg-purple-50/70 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60"
+                >
+                  {isSuggestingSubject ? (
+                    <>
+                      <Loader2 className="h-3 w-3 me-1.5 animate-spin" />
+                      {translate('documents.forms.ai.suggestingSubject')}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3 me-1.5" />
+                      {translate('documents.forms.ai.suggestSubject')}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
             <FormControl>
               <Input {...field} />
             </FormControl>

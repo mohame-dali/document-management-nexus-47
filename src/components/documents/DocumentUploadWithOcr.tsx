@@ -8,10 +8,12 @@ import { Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { useOfflineOcr } from '@/hooks/useOfflineOcr';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { OcrState } from '@/utils/ocrSubjectHelper';
 
 interface DocumentUploadWithOcrProps {
   onFileSelect: (files: File[]) => void;
   onOcrComplete?: (ocrText: string, file: File) => void;
+  onOcrStateChange?: (state: OcrState) => void;
   fieldName?: string;
   accept?: string;
   maxSize?: number;
@@ -21,6 +23,7 @@ interface DocumentUploadWithOcrProps {
 const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
   onFileSelect,
   onOcrComplete,
+  onOcrStateChange,
   fieldName = 'document',
   accept = '.pdf,.jpg,.jpeg,.png',
   maxSize = 50 * 1024 * 1024, // 50MB
@@ -31,6 +34,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
   const [ocrResults, setOcrResults] = useState<Map<string, string>>(new Map());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
   const { extractText, isProcessing, error, progress, cleanup } = useOfflineOcr();
+  const activeOcrFileRef = React.useRef<string | undefined>(undefined);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -38,6 +42,18 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
       cleanup();
     };
   }, [cleanup]);
+
+  // Forward live progress updates while OCR is processing
+  useEffect(() => {
+    if (isProcessing && onOcrStateChange) {
+      onOcrStateChange({
+        status: 'processing',
+        progress,
+        text: '',
+        fileName: activeOcrFileRef.current,
+      });
+    }
+  }, [isProcessing, progress, onOcrStateChange]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -48,7 +64,14 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
     // Process OCR for each file
     for (const file of acceptedFiles) {
       try {
+        activeOcrFileRef.current = file.name;
         setProcessingFiles(prev => new Set(prev).add(file.name));
+        onOcrStateChange?.({
+          status: 'processing',
+          progress: 0,
+          text: '',
+          fileName: file.name,
+        });
         
         toast.info(t('documents.upload.ocrStartToast', { fileName: file.name }), {
           duration: 3000
@@ -61,16 +84,32 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
         if (onOcrComplete) {
           onOcrComplete(ocrText, file);
         }
+
+        onOcrStateChange?.({
+          status: 'completed',
+          progress: 100,
+          text: ocrText,
+          fileName: file.name,
+        });
         
         toast.success(t('documents.upload.ocrSuccessToast', { fileName: file.name }), {
           duration: 3000
         });
       } catch (err) {
         console.error('OCR failed for file:', file.name, err);
+        const errorMessage = err instanceof Error ? err.message : 'OCR processing failed';
+        onOcrStateChange?.({
+          status: 'error',
+          progress: 0,
+          text: '',
+          fileName: file.name,
+          error: errorMessage,
+        });
         toast.error(t('documents.upload.ocrErrorToast', { fileName: file.name }), {
           duration: 5000
         });
       } finally {
+        activeOcrFileRef.current = undefined;
         setProcessingFiles(prev => {
           const newSet = new Set(prev);
           newSet.delete(file.name);
@@ -78,7 +117,7 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
         });
       }
     }
-  }, [extractText, onFileSelect, onOcrComplete, t]);
+  }, [extractText, onFileSelect, onOcrComplete, onOcrStateChange, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -94,18 +133,40 @@ const DocumentUploadWithOcr: React.FC<DocumentUploadWithOcrProps> = ({
   const removeFile = useCallback((fileName: string) => {
     const newFiles = selectedFiles.filter(file => file.name !== fileName);
     setSelectedFiles(newFiles);
-    setOcrResults(prev => {
-      const newMap = new Map(prev);
-      newMap.delete(fileName);
-      return newMap;
-    });
+    const nextResults = new Map(ocrResults);
+    nextResults.delete(fileName);
+    setOcrResults(nextResults);
     setProcessingFiles(prev => {
       const newSet = new Set(prev);
       newSet.delete(fileName);
       return newSet;
     });
+    if (newFiles.length === 0) {
+      onOcrStateChange?.({
+        status: 'idle',
+        progress: 0,
+        text: '',
+      });
+    } else {
+      const remainingFile = newFiles[0];
+      const remainingText = nextResults.get(remainingFile.name) || '';
+      onOcrStateChange?.(
+        remainingText
+          ? {
+              status: 'completed',
+              progress: 100,
+              text: remainingText,
+              fileName: remainingFile.name,
+            }
+          : {
+              status: 'idle',
+              progress: 0,
+              text: '',
+            }
+      );
+    }
     onFileSelect(newFiles);
-  }, [selectedFiles, onFileSelect]);
+  }, [selectedFiles, ocrResults, onFileSelect, onOcrStateChange]);
 
   return (
     <div className="space-y-4">

@@ -21,6 +21,9 @@ import {
   Network,
   Trash2,
   ClipboardList,
+  Plus,
+  Zap,
+  Info,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -97,6 +100,17 @@ interface QuickAccessItem {
 interface NavigableItem {
   id: string;
   url: string;
+}
+
+interface QuickActionShortcut {
+  id: string;
+  url: string;
+  labelAr: string;
+  labelFr: string;
+  badgeAr: string;
+  badgeFr: string;
+  tone: 'primary' | 'emerald' | 'slate';
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const GlobalSearch: React.FC = () => {
@@ -341,9 +355,70 @@ const GlobalSearch: React.FC = () => {
     return items;
   }, [currentUser?.role, canAccessHR]);
 
+  const canCreateMail =
+    currentUser?.role === 'Admin' || currentUser?.role === 'AdminTuningDesk';
+
+  // Top 1-click Quick-Action Shortcuts shown when query is empty
+  const quickActionShortcuts: QuickActionShortcut[] = useMemo(() => {
+    const actions: QuickActionShortcut[] = [];
+    if (canCreateMail) {
+      actions.push(
+        {
+          id: 'act-create-incoming',
+          url: '/dashboard/mail/incoming/create',
+          labelAr: '+ تسجيل مراسلة واردة جديدة',
+          labelFr: '+ Enregistrer un courrier entrant',
+          badgeAr: 'جديد',
+          badgeFr: 'Nouveau',
+          tone: 'primary',
+          icon: Plus,
+        },
+        {
+          id: 'act-create-outgoing',
+          url: '/dashboard/mail/outgoing/create',
+          labelAr: '+ تسجيل مراسلة صادرة جديدة',
+          labelFr: '+ Enregistrer un courrier sortant',
+          badgeAr: 'جديد',
+          badgeFr: 'Nouveau',
+          tone: 'emerald',
+          icon: Plus,
+        }
+      );
+    }
+    actions.push(
+      {
+        id: 'act-mail-incoming',
+        url: '/dashboard/mail/incoming',
+        labelAr: 'البريد الوارد',
+        labelFr: 'Courriers entrants',
+        badgeAr: 'الوارد',
+        badgeFr: 'Entrants',
+        tone: 'slate',
+        icon: Inbox,
+      },
+      {
+        id: 'act-mail-outgoing',
+        url: '/dashboard/mail/outgoing',
+        labelAr: 'البريد الصادر',
+        labelFr: 'Courriers sortants',
+        badgeAr: 'الصادر',
+        badgeFr: 'Sortants',
+        tone: 'slate',
+        icon: Send,
+      }
+    );
+    return actions;
+  }, [canCreateMail]);
+
+  const showQuickActions = searchTerm.trim().length === 0;
+
   const filteredQuickAccess = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    if (!q) return quickAccessAll.slice(0, 6);
+    if (!q) {
+      return quickAccessAll
+        .filter((item) => item.id !== 'qa-incoming' && item.id !== 'qa-outgoing')
+        .slice(0, 5);
+    }
     return quickAccessAll.filter(
       (item) =>
         item.labelAr.toLowerCase().includes(q) ||
@@ -362,6 +437,11 @@ const GlobalSearch: React.FC = () => {
 
   const flatItems: NavigableItem[] = useMemo(() => {
     const list: NavigableItem[] = [];
+    if (showQuickActions) {
+      quickActionShortcuts.forEach((act) =>
+        list.push({ id: act.id, url: act.url })
+      );
+    }
     results.incoming.forEach((doc) =>
       list.push({ id: `inc-${doc._id}`, url: `/dashboard/mail/incoming/${doc._id}` })
     );
@@ -378,7 +458,7 @@ const GlobalSearch: React.FC = () => {
       list.push({ id: qa.id, url: qa.url })
     );
     return list;
-  }, [results, filteredQuickAccess]);
+  }, [showQuickActions, quickActionShortcuts, results, filteredQuickAccess]);
 
   const itemIndexMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -526,8 +606,79 @@ const GlobalSearch: React.FC = () => {
             </div>
           </div>
 
+          {/* Search Capabilities Helper Hint */}
+          <div className="border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/70 px-3 py-1.5 flex items-center gap-2 text-[12px] text-slate-600 dark:text-slate-300">
+            <Info className="h-3.5 w-3.5 text-[#2c5282] dark:text-blue-400 shrink-0" />
+            <span className="leading-snug">
+              {isRtl
+                ? 'يمكنك البحث برقم المراسلة (#2/2026)، اسم المرسل أو المرسل إليه، أو النص المستخرج من ملفات PDF الممسوحة ضوئياً.'
+                : 'Recherchez par référence (#2/2026), nom d’expéditeur/destinataire, ou texte extrait d’un PDF numérisé.'}
+            </span>
+          </div>
+
           {/* Categorized Results List */}
           <div className="max-h-[430px] overflow-y-auto custom-scrollbar p-2.5 space-y-3 text-start">
+            {/* 0. إجراءات سريعة (تظهر عند فتح البحث بدون نص) */}
+            {showQuickActions && quickActionShortcuts.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between px-2.5 py-1.5 text-[13px] font-bold text-[#1e3a5f] dark:text-blue-300 bg-blue-50/75 dark:bg-blue-950/40 rounded-md">
+                  <span className="flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
+                    {isRtl ? 'إجراءات سريعة' : 'Actions rapides'}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="text-[12px] leading-tight px-1.5 py-0 bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-800 text-[#2c5282] dark:text-blue-300 tabular-nums"
+                  >
+                    <bdi dir="ltr">{quickActionShortcuts.length}</bdi>
+                  </Badge>
+                </div>
+                <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                  {quickActionShortcuts.map((act) => {
+                    const idx = itemIndexMap.get(act.id) ?? -1;
+                    const isActive = idx === activeIndex;
+                    const Icon = act.icon;
+                    const toneIconClass =
+                      act.tone === 'primary'
+                        ? 'text-[#2c5282] dark:text-blue-400 bg-blue-100/80 dark:bg-blue-900/50'
+                        : act.tone === 'emerald'
+                          ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-900/50'
+                          : 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800';
+                    return (
+                      <button
+                        key={act.id}
+                        ref={(el) => {
+                          itemRefs.current[act.id] = el;
+                        }}
+                        type="button"
+                        onMouseEnter={() => idx >= 0 && setActiveIndex(idx)}
+                        onClick={() => handleSelect(act.url)}
+                        className={`w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-md text-start border transition-colors ${
+                          isActive
+                            ? 'bg-blue-50/85 dark:bg-blue-950/45 border-[#2c5282]/35 dark:border-blue-500/45'
+                            : 'border-slate-200/70 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded shrink-0 ${toneIconClass}`}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </span>
+                          <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                            {isRtl ? act.labelAr : act.labelFr}
+                          </span>
+                        </div>
+                        <CornerDownLeft
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            isActive ? 'text-[#2c5282] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {showLoading && remoteCount === 0 && (
               <div className="py-5 flex items-center justify-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                 <Loader2 className="w-4 h-4 animate-spin text-[#2c5282] dark:text-blue-400" />
