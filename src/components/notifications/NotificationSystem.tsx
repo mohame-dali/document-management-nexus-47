@@ -1,18 +1,21 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Bell, FileText, User, MessageSquare, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { FileText, MessageSquare, AlertCircle, Info } from 'lucide-react';
 import { getActivityNotifications, markNotificationAsRead } from '@/services/activityNotificationService';
 import { getUnreadCount } from '@/services/messageService';
 import { formatDateTime } from '@/utils/formatDate';
 import { useAuth } from '@/contexts/AuthContext';
 import { ActivityNotification } from '@/types';
 import { useDirection } from '@/i18n/useDirection';
+import { resolveNotificationTarget } from '@/utils/notificationRoute';
 
 const NotificationSystem: React.FC = () => {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { dir } = useDirection();
+  const { dir, isRTL } = useDirection();
+  const isFr = !isRTL;
   const queryClient = useQueryClient();
   const [lastNotificationCheck, setLastNotificationCheck] = useState(Date.now());
   const [shownNotifications, setShownNotifications] = useState<Set<string>>(new Set());
@@ -35,6 +38,7 @@ const NotificationSystem: React.FC = () => {
     try {
       await markNotificationAsRead(notificationId);
       queryClient.invalidateQueries({ queryKey: ['activityNotifications'] });
+      queryClient.invalidateQueries({ queryKey: ['activityNotificationCount'] });
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -61,7 +65,7 @@ const NotificationSystem: React.FC = () => {
         case 'overdue':
           return 'error';
         case 'today':
-          case 'tomorrow':
+        case 'tomorrow':
           return 'warning';
         case 'responsible_assigned':
         case 'document_assigned':
@@ -71,21 +75,39 @@ const NotificationSystem: React.FC = () => {
       }
     };
 
+    const target = resolveNotificationTarget(
+      notification as unknown as Partial<ActivityNotification> & Record<string, unknown>
+    );
+
+    const action = target
+      ? {
+          label: isFr ? 'Ouvrir le document' : 'فتح الوثيقة',
+          onClick: () => {
+            void handleMarkAsRead(notification._id);
+            navigate(target);
+          },
+        }
+      : notification.notificationType === 'responsible_assigned'
+        ? {
+            label: isFr ? 'Marquer comme lu' : 'تم قراءته',
+            onClick: () => handleMarkAsRead(notification._id),
+          }
+        : undefined;
+
     toast[getToastType() as 'success' | 'error' | 'warning' | 'info'](
-      notification.message || 'إشعار جديد',
+      notification.message || (isFr ? 'Nouvelle notification' : 'إشعار جديد'),
       {
-        description: `تاريخ النشاط: ${formatDateTime(notification.createdAt, 'ar')}`,
+        description: isFr
+          ? `Date d'activité : ${formatDateTime(notification.createdAt, 'fr')}`
+          : `تاريخ النشاط: ${formatDateTime(notification.createdAt, 'ar')}`,
         icon: getIcon(),
         duration: 8000,
-        action: notification.notificationType === 'responsible_assigned' ? {
-          label: 'تم قراءته',
-          onClick: () => handleMarkAsRead(notification._id)
-        } : undefined,
+        action,
         className: 'text-start',
         style: { direction: dir }
       }
     );
-  }, [handleMarkAsRead, dir]);
+  }, [handleMarkAsRead, dir, isFr, navigate]);
 
   // Check for new notifications and show instant pop-ups
   useEffect(() => {
@@ -118,8 +140,10 @@ const NotificationSystem: React.FC = () => {
   useEffect(() => {
     if (messageCount?.count > 0) {
       const interval = setInterval(() => {
-        toast.info('لديك رسائل غير مقروءة', {
-          description: `${messageCount.count} رسالة غير مقروءة`,
+        toast.info(isFr ? 'Messages non lus' : 'لديك رسائل غير مقروءة', {
+          description: isFr
+            ? `${messageCount.count} message(s) non lu(s)`
+            : `${messageCount.count} رسالة غير مقروءة`,
           icon: <MessageSquare className="h-5 w-5 text-blue-500" />,
           duration: 5000,
           className: 'text-start',
@@ -129,7 +153,7 @@ const NotificationSystem: React.FC = () => {
 
       return () => clearInterval(interval);
     }
-  }, [messageCount?.count, dir]);
+  }, [messageCount?.count, dir, isFr]);
 
   return null; // This component only manages notifications, doesn't render anything
 };

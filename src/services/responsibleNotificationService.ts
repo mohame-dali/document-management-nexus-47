@@ -25,7 +25,9 @@ export interface ResponsibleNotification {
     subject: string;
     serialNumber: number;
     year: number;
+    documentType?: 'IncomingDocument' | 'OutgoingDocument' | string;
   };
+  documentType?: 'IncomingDocument' | 'OutgoingDocument' | string;
   assignedUserId: string;
   assignedBy: {
     _id: string;

@@ -7,10 +7,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { getNotificationCount } from '@/services/activityNotificationService';
 import ActivityNotifications from './ActivityNotifications';
 import { useDirection } from '@/i18n/useDirection';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 const NotificationBell: React.FC = () => {
   const [open, setOpen] = useState(false);
   const { dir } = useDirection();
+  const { language } = useLanguage();
+  const isFr = language === 'fr';
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ['activityNotificationCount'],
     queryFn: getNotificationCount,
@@ -25,8 +28,8 @@ const NotificationBell: React.FC = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            title="إشعارات النظام"
-            aria-label="إشعارات النظام"
+            title={isFr ? 'Notifications système' : 'إشعارات النظام'}
+            aria-label={isFr ? 'Notifications système' : 'إشعارات النظام'}
             className="h-9 w-9 sm:h-10 sm:w-10 text-slate-600 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors duration-200 flex items-center justify-center"
           >
             <Bell className="h-4 w-4 sm:h-5 sm:w-5" />

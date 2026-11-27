@@ -13,6 +13,7 @@ import {
   Clock,
   Check,
   FileText,
+  ExternalLink,
 } from 'lucide-react';
 import {
   getActivityNotifications,
@@ -24,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getRelativeTime, getDateGroup } from '@/utils/relativeTime';
 import { useDirection } from '@/i18n/useDirection';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import { resolveNotificationTarget } from '@/utils/notificationRoute';
 
 interface ActivityNotificationsProps {
   onClose?: () => void;
@@ -34,58 +36,6 @@ interface TransformedNotification extends Omit<ActivityNotification, 'type'> {
   title: string;
   type: string;
 }
-
-const resolveNotificationTarget = (notification: TransformedNotification): string | null => {
-  const extra = notification as unknown as Record<string, unknown>;
-
-  if (typeof extra.link === 'string' && extra.link.startsWith('/')) {
-    return extra.link;
-  }
-
-  const entityType = typeof extra.entityType === 'string' ? extra.entityType.toLowerCase() : '';
-  const entityId =
-    typeof extra.entityId === 'string'
-      ? extra.entityId
-      : extra.entityId && typeof extra.entityId === 'object' && '_id' in extra.entityId
-        ? String((extra.entityId as { _id?: unknown })._id || '')
-        : '';
-
-  if (entityId) {
-    if (entityType.includes('outgoing')) return `/dashboard/mail/outgoing/${entityId}`;
-    if (entityType.includes('incoming') || entityType.includes('document')) {
-      return `/dashboard/mail/incoming/${entityId}`;
-    }
-    if (entityType.includes('personnel')) return `/dashboard/hr/personnel/${entityId}`;
-    if (entityType.includes('declaration')) return '/dashboard/hr/attendance-declarations';
-    if (entityType.includes('stage')) return '/dashboard/hr/stages';
-    if (entityType.includes('message')) return '/dashboard/messages';
-  }
-
-  const rawDoc = notification.documentId;
-  const docId =
-    typeof rawDoc === 'string'
-      ? rawDoc
-      : rawDoc && typeof rawDoc === 'object' && '_id' in rawDoc
-        ? String(rawDoc._id)
-        : '';
-
-  if (docId) {
-    const docType = typeof extra.documentType === 'string' ? extra.documentType.toLowerCase() : '';
-    if (docType.includes('outgoing')) {
-      return `/dashboard/mail/outgoing/${docId}`;
-    }
-    return `/dashboard/mail/incoming/${docId}`;
-  }
-
-  if (notification.type === 'user_created' || notification.type === 'user_updated') {
-    return '/dashboard/admin/users';
-  }
-  if (notification.type === 'department_created' || notification.type === 'department_updated') {
-    return '/dashboard/admin/departments';
-  }
-
-  return null;
-};
 
 const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }) => {
   const navigate = useNavigate();
@@ -146,6 +96,7 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
     try {
       await markNotificationAsRead(notificationId);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['activityNotifications'] });
       queryClient.invalidateQueries({ queryKey: ['activityNotificationCount'] });
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -158,6 +109,7 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
       if (unread.length === 0) return;
       await Promise.all(unread.map((n) => markNotificationAsRead(n._id)));
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['activityNotifications'] });
       queryClient.invalidateQueries({ queryKey: ['activityNotificationCount'] });
     } catch (error) {
       console.error('Error marking all as read:', error);
@@ -168,6 +120,7 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
     try {
       await deleteNotification(notificationId);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['activityNotifications'] });
       queryClient.invalidateQueries({ queryKey: ['activityNotificationCount'] });
     } catch (error) {
       console.error('Error deleting notification:', error);
@@ -178,7 +131,9 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
     if (!notification.isRead) {
       void handleMarkAsRead(notification._id);
     }
-    const target = resolveNotificationTarget(notification);
+    const target = resolveNotificationTarget(
+      notification as unknown as Partial<ActivityNotification> & Record<string, unknown>
+    );
     if (target) {
       navigate(target);
       onClose?.();
@@ -242,7 +197,9 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
         </div>
         <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
           {items.map((notification) => {
-            const target = resolveNotificationTarget(notification);
+            const target = resolveNotificationTarget(
+              notification as unknown as Partial<ActivityNotification> & Record<string, unknown>
+            );
             return (
               <div
                 key={notification._id}
@@ -255,10 +212,12 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
                     handleNotificationClick(notification);
                   }
                 }}
-                className={`p-3 transition-colors cursor-pointer flex items-start gap-2.5 text-start relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] ${
+                className={`group p-3 transition-colors cursor-pointer flex items-start gap-2.5 text-start relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282] ${
                   !notification.isRead
-                    ? 'bg-blue-50/75 dark:bg-blue-950/35 hover:bg-blue-100/75 dark:hover:bg-blue-950/55'
-                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    ? 'bg-blue-50/75 dark:bg-blue-950/35 hover:bg-blue-100/80 dark:hover:bg-blue-950/55'
+                    : target
+                      ? 'hover:bg-blue-50/60 dark:hover:bg-slate-800/70'
+                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
                 {/* Unread indicator dot */}
@@ -294,8 +253,8 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
                     </span>
                   </div>
 
-                  {notification.documentId && typeof notification.documentId === 'object' && (
-                    <div className="flex items-center gap-1 text-[13px] text-[#2c5282] dark:text-blue-400 font-semibold mt-1">
+                  {notification.documentId && typeof notification.documentId === 'object' ? (
+                    <div className="flex items-center gap-1.5 text-[13px] text-[#2c5282] dark:text-blue-400 font-semibold mt-1">
                       <FileText className="w-3 h-3 shrink-0" />
                       <span>
                         {isFr ? 'Document ' : 'الوثيقة '}
@@ -304,17 +263,24 @@ const ActivityNotifications: React.FC<ActivityNotificationsProps> = ({ onClose }
                         </bdi>
                       </span>
                       {target && (
-                        <span className="text-[13px] font-normal text-slate-700 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-[#2c5282] dark:text-blue-300 group-hover:underline">
                           · {isFr ? 'Ouvrir' : 'فتح'}
+                          <ExternalLink className="w-3 h-3 shrink-0" />
                         </span>
                       )}
                     </div>
-                  )}
+                  ) : target && notification.documentId ? (
+                    <div className="inline-flex items-center gap-1 text-[13px] text-[#2c5282] dark:text-blue-400 font-semibold mt-1 group-hover:underline">
+                      <FileText className="w-3 h-3 shrink-0" />
+                      <span>{isFr ? 'Ouvrir le document' : 'فتح الوثيقة'}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </div>
+                  ) : null}
 
                   {notification.documentId &&
                     typeof notification.documentId === 'object' &&
                     notification.documentId.subject && (
-                      <p className="text-[13px] text-slate-600 dark:text-slate-300 line-clamp-1 mt-0.5">
+                      <p className="text-[13px] text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 line-clamp-1 mt-0.5 transition-colors">
                         {isFr ? 'Objet : ' : 'الموضوع: '}
                         {notification.documentId.subject}
                       </p>

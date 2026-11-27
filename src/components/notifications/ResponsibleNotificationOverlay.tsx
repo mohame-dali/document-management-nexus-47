@@ -1,15 +1,17 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  getUnreadResponsibleNotifications, 
-  markResponsibleNotificationAsRead, 
+import {
+  getUnreadResponsibleNotifications,
+  markResponsibleNotificationAsRead,
   dismissResponsibleNotification,
-  ResponsibleNotification 
+  ResponsibleNotification
 } from '@/services/responsibleNotificationService';
+import { resolveDocumentDetailRoute } from '@/utils/notificationRoute';
 import ResponsibleNotificationPopup from './ResponsibleNotificationPopup';
 
 const ResponsibleNotificationOverlay: React.FC = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Fetch unread notifications every 30 seconds
@@ -42,21 +44,36 @@ const ResponsibleNotificationOverlay: React.FC = () => {
     dismissMutation.mutate({ notificationId, minutes: 60 }); // Dismiss for 1 hour
   };
 
+  const handleOpenDocument = (notification: ResponsibleNotification) => {
+    const docObj = typeof notification.documentId === 'object' ? notification.documentId : null;
+    const docId = docObj?._id || (typeof notification.documentId === 'string' ? notification.documentId : '');
+    const docType = notification.documentType || docObj?.documentType || 'IncomingDocument';
+
+    markAsReadMutation.mutate(notification._id);
+
+    const target = resolveDocumentDetailRoute(docId, docType);
+    if (target) {
+      navigate(target);
+    }
+  };
+
   // Only show the most recent notification to avoid cluttering the screen
   const latestNotification = notifications[0];
 
-  if (!latestNotification) {
+  if (!latestNotification || !latestNotification.documentId) {
     return null;
   }
 
   return (
     <ResponsibleNotificationPopup
       documentId={latestNotification.documentId._id}
+      documentType={latestNotification.documentType || latestNotification.documentId.documentType}
       documentSubject={latestNotification.documentId.subject}
       documentSerialNumber={latestNotification.documentId.serialNumber}
       documentYear={latestNotification.documentId.year}
-      assignedBy={latestNotification.assignedBy.username}
+      assignedBy={latestNotification.assignedBy?.username || ''}
       assignedAt={latestNotification.createdAt}
+      onOpenDocument={() => handleOpenDocument(latestNotification)}
       onMarkAsRead={() => handleMarkAsRead(latestNotification._id)}
       onTemporaryDismiss={() => handleTemporaryDismiss(latestNotification._id)}
     />
