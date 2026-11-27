@@ -17,15 +17,16 @@ export interface StatusVisualInfo {
 
 export const getStatusVisualInfo = (
   attendance: AttendanceRecord | null | undefined,
-  leaveReasons: LeaveReason[]
+  leaveReasons: LeaveReason[],
+  isRTL: boolean = true
 ): StatusVisualInfo => {
   if (!attendance) {
     return {
-      label: 'غير مسجل',
-      color: '#a0aec0',
-      bgLight: '#f7fafc',
+      label: isRTL ? 'غير مسجل' : 'Non saisi',
+      color: '#94a3b8',
+      bgLight: '#f8fafc',
       borderColor: '#e2e8f0',
-      textColor: '#718096',
+      textColor: '#64748b',
       impacteSolde: false,
       statut: 'unrecorded',
       motifCode: null,
@@ -34,11 +35,11 @@ export const getStatusVisualInfo = (
 
   if (attendance.statut === 'present') {
     return {
-      label: 'حاضر',
-      color: '#2f855a',
-      bgLight: '#f0fff4',
-      borderColor: '#c6f6d5',
-      textColor: '#22543d',
+      label: isRTL ? 'حاضر' : 'Présent',
+      color: '#15803d',
+      bgLight: '#f0fdf4',
+      borderColor: '#bbf7d0',
+      textColor: '#166534',
       impacteSolde: false,
       statut: 'present',
       motifCode: null,
@@ -50,15 +51,17 @@ export const getStatusVisualInfo = (
   const safeReasonsList = Array.isArray(leaveReasons) ? leaveReasons : [];
   const reason = safeReasonsList.find((r) => r.code === motif || r._id === attendance.leaveReasonId);
 
-  const label = reason?.labelAr || (motif ? motif.replace(/_/g, ' ') : 'غائب');
-  const baseColor = reason?.color || '#dd6b20';
+  const label = isRTL
+    ? reason?.labelAr || (motif ? motif.replace(/_/g, ' ') : 'غائب')
+    : reason?.labelFr || reason?.labelAr || (motif ? motif.replace(/_/g, ' ') : 'Absent');
+  const baseColor = reason?.color || '#d97706';
   const impacteSolde = attendance.impacteSolde ?? reason?.impacteSolde ?? false;
 
   return {
     label,
     color: baseColor,
-    bgLight: `${baseColor}15`,
-    borderColor: `${baseColor}40`,
+    bgLight: `${baseColor}14`,
+    borderColor: `${baseColor}38`,
     textColor: baseColor,
     impacteSolde,
     statut: 'absent',
@@ -92,45 +95,34 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
 
   return (
     <div
-      className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-4 space-y-3 shadow-sm"
+      className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl px-5 py-3.5 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3"
       dir={dir}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-        <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
-          {isRTL ? 'دليل الألوان والرموز' : 'Légende des statuts'}
-        </h3>
-        <span className="text-xs text-slate-700 dark:text-slate-300">
-          {isRTL
-            ? 'يتم تحميل أسباب الغياب ديناميكياً بحسب إعدادات المؤسسة'
-            : "Motifs d'absence chargés dynamiquement selon la configuration"}
-        </span>
-      </div>
+      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap shrink-0">
+        {isRTL ? 'دليل الحالات:' : 'Légende :'}
+      </span>
 
-      <div className="flex flex-wrap items-center gap-2.5 text-xs">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
         {/* Présent */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/70 text-emerald-900 dark:text-emerald-200">
+        <div className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-200">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 dark:bg-emerald-400 shrink-0" />
-          <span className="font-semibold">{isRTL ? 'حاضر' : 'Présent'}</span>
+          <span className="font-medium">{isRTL ? 'حاضر' : 'Présent'}</span>
         </div>
 
-        {/* Non saisi */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" />
-          <span>{isRTL ? 'غير مسجل بعد' : 'Non saisi'}</span>
+        {/* Jour ouvré passé non saisi */}
+        <div className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0" />
+          <span>{isRTL ? 'غير مسجل (سابق)' : 'Non saisi (passé)'}</span>
         </div>
 
         {/* Motifs dynamiques */}
         {activeReasons.map((reason) => {
-          const color = reason.color || '#4a5568';
+          const color = reason.color || '#475569';
           const reasonLabel = isRTL ? reason.labelAr : reason.labelFr || reason.labelAr;
           return (
             <div
               key={reason._id}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100"
-              style={{
-                borderInlineStartWidth: '3px',
-                borderInlineStartColor: color,
-              }}
+              className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-200"
               title={reason.description || undefined}
             >
               <span
@@ -138,15 +130,15 @@ export const MyAttendanceLegend: React.FC<MyAttendanceLegendProps> = ({ leaveRea
                 style={{ backgroundColor: color }}
               />
               <span className="font-medium">{reasonLabel}</span>
-              {reason.impacteSolde ? (
-                <span className="text-[13px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 rounded border border-amber-200 dark:border-amber-800/60">
-                  {isRTL ? 'مخصوم' : 'Déduit'}
-                </span>
-              ) : (
-                <span className="text-[13px] text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 rounded border border-blue-200 dark:border-blue-800/60">
-                  {isRTL ? 'غير مخصوم' : 'Non déduit'}
-                </span>
-              )}
+              <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+                {reason.impacteSolde
+                  ? isRTL
+                    ? '· مخصوم'
+                    : '· Déduit'
+                  : isRTL
+                  ? '· غير مخصوم'
+                  : '· Non déduit'}
+              </span>
             </div>
           );
         })}
