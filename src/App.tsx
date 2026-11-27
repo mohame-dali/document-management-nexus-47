@@ -232,7 +232,7 @@ function App() {
                               <EditOutgoingDocument />
                             </ProtectedRoute>
                           } />
-                          <Route path="folders" element={<FoldersPage />} />
+                          <Route path="folders" element={<Navigate to="/dashboard/folders" replace />} />
                           <Route path="search" element={<AdvancedSearchPage />} />
                         </Route>
 
@@ -525,15 +525,11 @@ function App() {
                           )
                         } />
                         
-                        {/* Folder routes */}
+                        {/* Folder routes (promoted primary route) */}
                         <Route path="folders" element={
-                          ENABLE_REDIRECTS ? (
-                            <Navigate to="/dashboard/mail/folders" replace />
-                          ) : (
-                            <ProtectedRoute>
-                              <FoldersPage />
-                            </ProtectedRoute>
-                          )
+                          <ProtectedRoute>
+                            <FoldersPage />
+                          </ProtectedRoute>
                         } />
                         
                         {/* Advanced Search route */}

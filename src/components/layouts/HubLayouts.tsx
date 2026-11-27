@@ -49,12 +49,6 @@ export const MailHubLayout: React.FC = () => {
       color: 'text-red-500',
     },
     {
-      to: '/dashboard/mail/folders',
-      label: t('sidebar.folders'),
-      icon: FolderOpen,
-      color: 'text-yellow-500',
-    },
-    {
       to: '/dashboard/mail/search',
       label: t('sidebar.advancedSearch'),
       icon: Search,
@@ -71,8 +65,8 @@ export const MailHubLayout: React.FC = () => {
       title={t('sidebar.mailAndDocuments')}
       description={
         language === 'fr'
-          ? 'Gestion du courrier entrant, sortant et des dossiers'
-          : 'إدارة المراسلات الواردة والصادرة والمجلدات'
+          ? 'Gestion du courrier entrant, sortant et recherche avancée'
+          : 'إدارة المراسلات الواردة والصادرة والبحث المتقدم'
       }
       icon={FolderOpen}
       tabs={tabs}

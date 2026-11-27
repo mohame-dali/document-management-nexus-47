@@ -74,13 +74,6 @@ export const MAIL_HUB: HubDefinition = {
       icon: 'FileOutput',
     },
     {
-      id: 'folders',
-      labelAr: 'المجلدات',
-      labelFr: 'Dossiers',
-      path: '/dashboard/mail/folders',
-      icon: 'FolderOpen',
-    },
-    {
       id: 'search',
       labelAr: 'البحث المتقدم',
       labelFr: 'Recherche avancée',

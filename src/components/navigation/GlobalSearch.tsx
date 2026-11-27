@@ -241,7 +241,7 @@ const GlobalSearch: React.FC = () => {
       },
       {
         id: 'qa-folders',
-        url: '/dashboard/mail/folders',
+        url: '/dashboard/folders',
         labelAr: 'المجلدات والأرشيف',
         labelFr: 'Dossiers et archives',
         badgeAr: 'مجلدات',

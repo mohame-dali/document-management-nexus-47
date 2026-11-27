@@ -33,7 +33,7 @@ export const PRIMARY_REDIRECTS: RouteRedirect[] = [
   // Hub 1 — البريد والمستندات
   { from: 'incoming-documents',  to: '/dashboard/mail/incoming' },
   { from: 'outgoing-documents',  to: '/dashboard/mail/outgoing' },
-  { from: 'folders',             to: '/dashboard/mail/folders' },
+  { from: 'mail/folders',        to: '/dashboard/folders' },
   { from: 'advanced-search',     to: '/dashboard/mail/search' },
 
   // Hub 3 — الأدوات

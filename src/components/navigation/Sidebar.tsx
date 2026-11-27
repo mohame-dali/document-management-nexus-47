@@ -18,6 +18,7 @@ import {
   Building2,
   FileText,
   FolderOpen,
+  FolderTree,
   MessageCircle,
   LayoutDashboard,
   User,
@@ -94,8 +95,16 @@ const Sidebar = () => {
         location.pathname.startsWith('/dashboard/mail') ||
         location.pathname.startsWith('/dashboard/incoming-documents') ||
         location.pathname.startsWith('/dashboard/outgoing-documents') ||
-        location.pathname.startsWith('/dashboard/folders') ||
         location.pathname.startsWith('/dashboard/advanced-search'),
+    },
+
+    // 2b. 🗂️ الأرشيف والمجلدات (direct primary item)
+    {
+      id: 'folders',
+      path: '/dashboard/folders',
+      label: t('sidebar.archivesAndFolders'),
+      icon: FolderTree,
+      isActive: () => location.pathname.startsWith('/dashboard/folders'),
     },
 
     // 3. 🏛️ الموارد البشرية (hub 2) — affiché UNIQUEMENT si canAccessHR
