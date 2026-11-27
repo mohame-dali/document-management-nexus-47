@@ -79,6 +79,8 @@ import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
 import AssignResponseDialog from '@/components/documents/AssignResponseDialog';
 import AssignResponsibleDialog from '@/components/documents/AssignResponsibleDialog';
 import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
+import QuickPdfPreviewSheet from '@/components/documents/QuickPdfPreviewSheet';
+import RowQuickActionsToolbar from '@/components/documents/RowQuickActionsToolbar';
 import CopyReferenceButton from '@/components/documents/CopyReferenceButton';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
@@ -157,6 +159,7 @@ const IncomingDocumentsPage: React.FC = () => {
   const [responsibleDoc, setResponsibleDoc] = useState<IncomingDocument | null>(null);
   const [deleteDoc, setDeleteDoc] = useState<IncomingDocument | null>(null);
   const [previewDoc, setPreviewDoc] = useState<IncomingDocument | null>(null);
+  const [quickPdfDoc, setQuickPdfDoc] = useState<IncomingDocument | null>(null);
 
   // Year persistence hook
   const { selectedYear, setSelectedYear, isValidYear } = useYearPersistence('incomingDocumentsSelectedYear');
@@ -1088,7 +1091,7 @@ const IncomingDocumentsPage: React.FC = () => {
                   return (
                     <tr 
                       key={doc._id}
-                      className={`hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors duration-150 min-h-[64px] ${priority.rowAccentClasses}`}
+                      className={`group hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors duration-150 min-h-[64px] ${priority.rowAccentClasses}`}
                     >
                       {/* Serial Number & Year + External Correspondence Reference */}
                       <td className="py-3 px-4 whitespace-nowrap tabular-nums">
@@ -1124,15 +1127,25 @@ const IncomingDocumentsPage: React.FC = () => {
 
                       {/* Subject, Document Type, Priority & Due-Date Cues */}
                       <td className="py-3 px-4">
-                        <div className="max-w-[360px] space-y-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleView(doc._id)}
-                            className="text-start font-bold text-base text-[#1a202c] dark:text-slate-100 hover:text-[#2c5282] dark:hover:text-blue-300 cursor-pointer leading-relaxed transition-colors duration-200 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
-                            title={doc.subject}
-                          >
-                            {highlightMatch(doc.subject, searchQuery)}
-                          </button>
+                        <div className="max-w-[380px] space-y-1.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleView(doc._id)}
+                              className="text-start font-bold text-base text-[#1a202c] dark:text-slate-100 hover:text-[#2c5282] dark:hover:text-blue-300 cursor-pointer leading-relaxed transition-colors duration-200 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
+                              title={doc.subject}
+                            >
+                              {highlightMatch(doc.subject, searchQuery)}
+                            </button>
+
+                            <RowQuickActionsToolbar
+                              hasAttachment={Boolean(doc.scannedDocument)}
+                              referenceValue={serialLabel}
+                              canAssignResponsible={canAssignResponsible}
+                              onPreviewPdf={() => setQuickPdfDoc(doc)}
+                              onAssignResponsible={() => setResponsibleDoc(doc)}
+                            />
+                          </div>
 
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${priority.pillClasses}`}>
@@ -1745,6 +1758,17 @@ const IncomingDocumentsPage: React.FC = () => {
         onClose={() => setPreviewDoc(null)}
         document={previewDoc}
         direction="incoming"
+      />
+
+      {/* Quick Slide-Over PDF Preview Sheet */}
+      <QuickPdfPreviewSheet
+        open={Boolean(quickPdfDoc)}
+        onOpenChange={(open) => {
+          if (!open) setQuickPdfDoc(null);
+        }}
+        document={quickPdfDoc}
+        direction="incoming"
+        onOpenFullDetails={handleView}
       />
 
       <ScrollToTop />

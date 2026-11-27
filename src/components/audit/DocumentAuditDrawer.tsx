@@ -219,7 +219,78 @@ export const DocumentAuditDrawer: React.FC<DocumentAuditDrawerProps> = ({
     [auditTimeline]
   );
 
-  const visibleLogs = filterMode === 'admin' ? adminLogs : auditTimeline;
+  interface GroupedAuditEntry {
+    item: AuditLog;
+    count: number;
+    latestCreatedAt: string | Date;
+    actorKey: string;
+    dayKey: string;
+  }
+
+  const getActorKey = (item: AuditLog): string => {
+    const rawUser = item.userId as unknown;
+    if (rawUser && typeof rawUser === 'object' && '_id' in rawUser) {
+      return String((rawUser as { _id?: string })._id || '');
+    }
+    if (typeof rawUser === 'string' && rawUser) {
+      return rawUser;
+    }
+    return item.userDetails?.username || 'system';
+  };
+
+  const getDayKey = (value: string | Date): string => {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  };
+
+  const groupedAllLogs = useMemo<GroupedAuditEntry[]>(() => {
+    const groups: GroupedAuditEntry[] = [];
+    for (const entry of auditTimeline) {
+      const actorKey = getActorKey(entry);
+      const dayKey = getDayKey(entry.createdAt);
+
+      if (entry.action === 'document_view' && groups.length > 0) {
+        const prev = groups[groups.length - 1];
+        if (
+          prev.item.action === 'document_view' &&
+          prev.actorKey === actorKey &&
+          prev.dayKey !== '' &&
+          prev.dayKey === dayKey
+        ) {
+          prev.count += 1;
+          if (new Date(entry.createdAt).getTime() > new Date(prev.latestCreatedAt).getTime()) {
+            prev.latestCreatedAt = entry.createdAt;
+            prev.item = entry;
+          }
+          continue;
+        }
+      }
+
+      groups.push({
+        item: entry,
+        count: 1,
+        latestCreatedAt: entry.createdAt,
+        actorKey,
+        dayKey,
+      });
+    }
+    return groups;
+  }, [auditTimeline]);
+
+  const visibleGroups: GroupedAuditEntry[] = useMemo(
+    () =>
+      filterMode === 'admin'
+        ? adminLogs.map((entry) => ({
+            item: entry,
+            count: 1,
+            latestCreatedAt: entry.createdAt,
+            actorKey: getActorKey(entry),
+            dayKey: getDayKey(entry.createdAt),
+          }))
+        : groupedAllLogs,
+    [filterMode, adminLogs, groupedAllLogs]
+  );
 
   const getActionMeta = (action: string) => {
     const mapped = ACTION_META_MAP[action];
@@ -364,11 +435,13 @@ export const DocumentAuditDrawer: React.FC<DocumentAuditDrawerProps> = ({
                 </div>
               ))}
             </div>
-          ) : visibleLogs.length > 0 ? (
+          ) : visibleGroups.length > 0 ? (
             <div className="relative border-s border-slate-200 dark:border-slate-700 ps-5 ms-2.5 space-y-2.5 pb-4">
-              {visibleLogs.map((item, index) => {
+              {visibleGroups.map((group, index) => {
+                const { item, count, latestCreatedAt } = group;
                 const meta = getActionMeta(item.action);
                 const ActionIcon = meta.icon;
+                const showViewCount = item.action === 'document_view' && count > 1;
 
                 return (
                   <div key={item._id || index} className="relative">
@@ -387,19 +460,28 @@ export const DocumentAuditDrawer: React.FC<DocumentAuditDrawerProps> = ({
                       )}
                     >
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span
-                          className={cn(
-                            'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold border',
-                            meta.badgeClass
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold border',
+                              meta.badgeClass
+                            )}
+                          >
+                            <ActionIcon className="h-3.5 w-3.5 shrink-0" />
+                            <span>{meta.label}</span>
+                          </span>
+                          {showViewCount && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-200/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-300/70 dark:border-slate-600/70 tabular-nums">
+                              <bdi dir={isFr ? 'ltr' : 'rtl'}>
+                                ({t('documents.auditDrawer.actions.document_view_count', { count })})
+                              </bdi>
+                            </span>
                           )}
-                        >
-                          <ActionIcon className="h-3.5 w-3.5 shrink-0" />
-                          <span>{meta.label}</span>
-                        </span>
+                        </div>
 
                         <span className="text-xs text-slate-600 dark:text-slate-300 font-medium tabular-nums flex items-center gap-1">
                           <Clock className="h-3 w-3 shrink-0 opacity-75" />
-                          <bdi dir={dateDir}>{formatDateTime(item.createdAt, dateLang)}</bdi>
+                          <bdi dir={dateDir}>{formatDateTime(latestCreatedAt, dateLang)}</bdi>
                         </span>
                       </div>
 

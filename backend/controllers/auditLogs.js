@@ -1,5 +1,6 @@
 
 const AuditLog = require('../models/AuditLog');
+const { findRecentDocumentView } = require('../utils/auditLogger');
 const asyncHandler = require('express-async-handler');
 const PDFDocument = require('pdfkit');
 
@@ -305,6 +306,22 @@ const createAuditLog = asyncHandler(async (req, res) => {
   const { action, entityType, entityId, details, ipAddress } = req.body;
 
   try {
+    if (action === 'document_view') {
+      const recentView = await findRecentDocumentView({
+        action,
+        entityType: entityType || 'document',
+        entityId,
+        userId: req.user.id
+      });
+      if (recentView) {
+        return res.status(200).json({
+          success: true,
+          deduplicated: true,
+          data: recentView
+        });
+      }
+    }
+
     const auditLog = await AuditLog.create({
       action,
       entityType,
