@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Lock, FolderTree, Building2 } from 'lucide-react';
 import FolderManagement from '@/components/folders/FolderManagement';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 
 const FolderManagementPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -36,9 +37,20 @@ const FolderManagementPage: React.FC = () => {
   const readOnly = currentUser?.role === 'Director' || currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'User';
 
   return (
-    <div className="p-5 sm:p-6 lg:p-8 bg-slate-50/70 dark:bg-slate-950 min-h-[calc(100vh-4rem)] space-y-6 max-w-[1600px] mx-auto">
-      {/* Page Header - AdminLTE clean style */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
+    <div className="p-5 sm:p-6 lg:p-8 bg-slate-50/70 dark:bg-slate-950 min-h-[calc(100vh-4rem)] space-y-5 max-w-[1600px] mx-auto">
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        showHomeIcon
+        homeTo="/dashboard"
+        homeLabel={t('common.home')}
+        items={[
+          { label: t('documents.viewIncoming.breadcrumb.mailHub'), to: '/dashboard/mail/incoming' },
+          { label: t('folders.page.title') },
+        ]}
+      />
+
+      {/* Page Header */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-sky-300 flex items-center gap-3">
             <FolderTree className="h-7 w-7 text-[#2c5282] dark:text-sky-400 flex-shrink-0" />
@@ -53,7 +65,7 @@ const FolderManagementPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm">
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200">
             <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
             <span>
               {currentUser?.role === 'AdminTuningDesk' || currentUser?.role === 'Director'
@@ -61,7 +73,7 @@ const FolderManagementPage: React.FC = () => {
                 : currentUser?.activeDepartment?.name || t('folders.page.activeDepartmentFallback')}
             </span>
           </span>
-          <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-sm font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70 shadow-sm">
+          <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-sm font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/70">
             {readOnly ? t('folders.page.badgeReadOnly') : t('folders.page.badgeFullAccess')}
           </span>
         </div>

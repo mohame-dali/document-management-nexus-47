@@ -444,21 +444,21 @@ const GlobalSearch: React.FC = () => {
 
   return (
     <div className="relative w-full" dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Header Trigger Bar */}
+      {/* Header Trigger Pill */}
       <button
         id="global-search-trigger"
         type="button"
         onClick={() => setIsOpen(true)}
-        className="relative flex items-center justify-between h-9 w-full ps-9 pe-2.5 text-xs bg-slate-50/80 dark:bg-slate-800/70 border border-slate-300 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-[#2c5282]/50 dark:hover:border-blue-500/50 transition-colors rounded-lg text-slate-700 dark:text-slate-300 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
+        className="relative flex items-center justify-between h-9 w-full ps-9 pe-2.5 text-xs bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-200/60 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-colors rounded-full text-slate-600 dark:text-slate-300 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2c5282]"
         aria-label={isRtl ? 'فتح البحث الشامل (Ctrl+K)' : 'Ouvrir la recherche globale (Ctrl+K)'}
       >
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 dark:text-slate-300 pointer-events-none select-none" />
-        <span className="truncate">
-          {isRtl ? 'بحث شامل في النظام... (Ctrl+K)' : 'Recherche globale... (Ctrl+K)'}
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 dark:text-slate-300 pointer-events-none select-none" />
+        <span className="truncate font-medium">
+          {isRtl ? 'بحث شامل في النظام...' : 'Recherche globale...'}
         </span>
         <kbd
           dir="ltr"
-          className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[13px] leading-none font-mono font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded shadow-2xs pointer-events-none select-none tabular-nums shrink-0"
+          className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-[12px] leading-none font-mono font-semibold text-slate-600 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 rounded-full shadow-2xs pointer-events-none select-none tabular-nums shrink-0"
         >
           <span>Ctrl</span>K
         </kbd>

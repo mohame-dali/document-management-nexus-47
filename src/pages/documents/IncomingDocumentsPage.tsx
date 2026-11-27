@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -82,6 +82,9 @@ import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import { exportToCsv } from '@/utils/exportCsv';
 
 const isAnswerDeleted = (doc: IncomingDocument) =>
@@ -497,7 +500,26 @@ const IncomingDocumentsPage: React.FC = () => {
   if (isLoading && isValidYear) {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-3 sm:p-4 lg:p-5 space-y-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+        <Skeleton className="h-5 w-52 rounded-md" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <Skeleton className="w-12 h-12 rounded-lg shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-7 w-56" />
+              <Skeleton className="h-4 w-72 max-w-full" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-28 rounded-lg" />
+            <Skeleton className="h-10 w-36 rounded-lg" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          ))}
+        </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
           <TableSkeleton columns={6} rows={8} />
         </div>
       </div>
@@ -508,20 +530,23 @@ const IncomingDocumentsPage: React.FC = () => {
   if (isError && isValidYear) {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-6 sm:p-8">
-        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-red-200/80 dark:border-red-900/60 rounded-lg shadow-sm p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200/80 dark:border-red-800/70 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
-            <AlertCircle className="h-7 w-7" />
-          </div>
-          <h2 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">{t('incoming.error.title')}</h2>
-          <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed">
-            {t('incoming.error.description')}
-          </p>
-          <Button
-            onClick={() => refetch()}
-            className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg transition-colors duration-200"
-          >
-            {t('incoming.error.retry')}
-          </Button>
+        <div className="max-w-xl mx-auto">
+          <EmptyState
+            icon={<AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />}
+            title={t('incoming.error.title')}
+            description={t('incoming.error.description')}
+            className="rounded-xl border-red-200/80 dark:border-red-900/60 shadow-xs py-12"
+            action={
+              <Button
+                type="button"
+                onClick={() => refetch()}
+                className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg inline-flex items-center gap-2 transition-colors duration-200"
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span>{t('incoming.error.retry')}</span>
+              </Button>
+            }
+          />
         </div>
       </div>
     );
@@ -529,15 +554,19 @@ const IncomingDocumentsPage: React.FC = () => {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-2 sm:p-4 lg:p-5 space-y-4">
-      {/* Fil d'Ariane (Breadcrumbs) */}
-      <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 print:hidden">
-        <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('common.home')}</Link>
-        <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
-        <span className="text-[#1a202c] dark:text-slate-100 font-medium">{t('incoming.page.breadcrumb')}</span>
-      </nav>
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        showHomeIcon
+        homeTo="/dashboard"
+        homeLabel={t('common.home')}
+        items={[
+          { label: t('documents.viewIncoming.breadcrumb.mailHub'), to: '/dashboard/mail/incoming' },
+          { label: t('incoming.page.breadcrumb') },
+        ]}
+      />
 
       {/* 1. Page Header (En-tête) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3.5">
           <div className="w-12 h-12 rounded-lg bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
             <FileInput className="h-6 w-6" />
@@ -698,7 +727,7 @@ const IncomingDocumentsPage: React.FC = () => {
       </div>
 
       {/* 2. Filters and Sorting Section (Filtres / Tri) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-4 sm:p-5 space-y-4 print:hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-4 sm:p-5 space-y-4 print:hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search Input */}
           <div className="relative lg:col-span-2">
@@ -934,31 +963,40 @@ const IncomingDocumentsPage: React.FC = () => {
       </div>
 
       {/* 3. Main Documents Content: Table or Grid */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-6 sm:p-8 space-y-6">
         {totalFiltered === 0 ? (
           /* Empty State */
-          <div className="border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 sm:p-12 text-center bg-slate-50/70 dark:bg-slate-800/40 space-y-4">
-            <div className="w-14 h-14 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center mx-auto text-slate-700 dark:text-slate-300">
-              <FileText className="h-7 w-7 text-[#2c5282] dark:text-blue-300" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">{t('incoming.empty.title')}</h3>
-              <p className="text-base text-slate-700 dark:text-slate-300 max-w-md mx-auto mt-1 leading-relaxed">
-                {hasActiveFilters
-                  ? t('incoming.empty.filtered')
-                  : t('incoming.empty.noDocsYear', { year: selectedYear })}
-              </p>
-            </div>
-            {hasActiveFilters && (
-              <Button
-                type="button"
-                onClick={handleFilterReset}
-                className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg transition-colors duration-200"
-              >
-                {t('incoming.empty.showAllYear', { year: selectedYear })}
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            icon={<FileText className="h-6 w-6 text-[#2c5282] dark:text-sky-400" />}
+            title={t('incoming.empty.title')}
+            description={
+              hasActiveFilters
+                ? t('incoming.empty.filtered')
+                : t('incoming.empty.noDocsYear', { year: selectedYear })
+            }
+            className="bg-slate-50/50 dark:bg-slate-800/30 rounded-xl py-12"
+            action={
+              hasActiveFilters ? (
+                <Button
+                  type="button"
+                  onClick={handleFilterReset}
+                  className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg inline-flex items-center gap-2 transition-colors duration-200"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  <span>{t('incoming.empty.showAllYear', { year: selectedYear })}</span>
+                </Button>
+              ) : canAddDocuments ? (
+                <Button
+                  type="button"
+                  onClick={() => navigate('/dashboard/mail/incoming/create')}
+                  className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg inline-flex items-center gap-2 transition-colors duration-200"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>{t('incoming.actions.addShort')}</span>
+                </Button>
+              ) : undefined
+            }
+          />
         ) : viewMode === 'table' ? (
           /* TABULAR VIEW (AdminLTE style, 8h/day professional ergonomics) */
           <div className="overflow-x-auto custom-scrollbar border border-slate-200/80 dark:border-slate-800 rounded-lg">

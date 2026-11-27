@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -91,6 +91,8 @@ import ScrollToTop from '@/components/common/ScrollToTop';
 import { useLocalStorageState } from '@/hooks/useLocalStorageState';
 import { usePdfExport } from '@/hooks/usePdfExport';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { Skeleton } from '@/components/ui/skeleton';
+import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 import { exportToCsv } from '@/utils/exportCsv';
 
 const OutgoingDocumentsPage: React.FC = () => {
@@ -375,7 +377,26 @@ const OutgoingDocumentsPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 text-[#1a202c] dark:text-slate-100 py-3 sm:py-4">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-4 max-w-7xl">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 space-y-4 shadow-sm">
+          <Skeleton className="h-5 w-52 rounded-md" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-12 h-12 rounded-lg shrink-0" />
+              <div className="space-y-2">
+                <Skeleton className="h-7 w-56" />
+                <Skeleton className="h-4 w-72 max-w-full" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-10 w-28 rounded-lg" />
+              <Skeleton className="h-10 w-36 rounded-lg" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            ))}
+          </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
             <TableSkeleton columns={7} rows={8} />
           </div>
         </div>
@@ -387,15 +408,19 @@ const OutgoingDocumentsPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950 text-[#1a202c] dark:text-slate-100 py-3 sm:py-4">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-4 max-w-7xl">
         
-        {/* Fil d'Ariane (Breadcrumbs) */}
-        <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 print:hidden">
-          <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors">{t('common.home')}</Link>
-          <ChevronLeft className="w-4 h-4 text-slate-700 dark:text-slate-300 rtl:rotate-0 ltr:rotate-180" />
-          <span className="text-[#1a202c] dark:text-slate-100 font-medium">{t('outgoing.page.title')}</span>
-        </nav>
+        {/* Breadcrumb */}
+        <PageBreadcrumb
+          showHomeIcon
+          homeTo="/dashboard"
+          homeLabel={t('common.home')}
+          items={[
+            { label: t('documents.viewOutgoing.breadcrumb.mailHub'), to: '/dashboard/mail/outgoing' },
+            { label: t('outgoing.page.title') },
+          ]}
+        />
 
         {/* 1. Header Section */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 sm:p-6 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-5 sm:p-6 shadow-xs">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/70 flex items-center justify-center text-[#276749] dark:text-emerald-300 flex-shrink-0 mt-0.5">
@@ -526,7 +551,7 @@ const OutgoingDocumentsPage: React.FC = () => {
         </div>
 
         {/* 2. Filters & Controls Bar */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-5 print:hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 shadow-xs space-y-5 print:hidden">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
             
             {/* Search Input */}
@@ -791,25 +816,22 @@ const OutgoingDocumentsPage: React.FC = () => {
         </div>
 
         {/* 3. Main Documents Content: Table or Grid */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-6 sm:p-8 space-y-6 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 sm:p-8 space-y-6 shadow-xs">
           
           {/* Validation on year */}
           {!isValidYear ? (
-            <div className="border border-slate-200/80 dark:border-slate-800 rounded-lg p-12 text-center bg-slate-50/70 dark:bg-slate-800/40 space-y-3">
-              <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-[#e5b836] flex items-center justify-center mx-auto text-[#1a202c] dark:text-amber-200">
-                <Calendar className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">{t('outgoing.yearValidation.title')}</h3>
-              <p className="text-base text-slate-700 dark:text-slate-300 max-w-md mx-auto">
-                {t('outgoing.yearValidation.description')}
-              </p>
-            </div>
+            <EmptyState
+              icon={<Calendar className="h-6 w-6 text-amber-600 dark:text-amber-300" />}
+              title={t('outgoing.yearValidation.title')}
+              description={t('outgoing.yearValidation.description')}
+              className="bg-slate-50/50 dark:bg-slate-800/30 rounded-xl py-12"
+            />
           ) : isError ? (
             <EmptyState
-              icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+              icon={<AlertCircle className="h-6 w-6 text-[#b91c1c] dark:text-red-400" />}
               title={t('outgoing.error.title')}
               description={t('outgoing.error.description')}
-              className="border-red-200 bg-red-50/40"
+              className="border-red-200/80 dark:border-red-900/60 bg-red-50/40 dark:bg-red-950/20 rounded-xl py-12"
               action={
                 <Button
                   type="button"
@@ -824,21 +846,32 @@ const OutgoingDocumentsPage: React.FC = () => {
           ) : totalFiltered === 0 ? (
             /* Empty State */
             <EmptyState
-              icon={<FileOutput className="h-6 w-6 text-[#2c5282]" />}
+              icon={<FileOutput className="h-6 w-6 text-[#2c5282] dark:text-sky-400" />}
               title={t('outgoing.empty.title')}
               description={
                 hasActiveFilters
                   ? t('outgoing.empty.filtered')
                   : t('outgoing.empty.noDocsYear', { year: selectedYear })
               }
+              className="bg-slate-50/50 dark:bg-slate-800/30 rounded-xl py-12"
               action={
                 hasActiveFilters ? (
                   <Button
                     type="button"
                     onClick={handleFilterReset}
-                    className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg transition-colors duration-200"
+                    className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg inline-flex items-center gap-2 transition-colors duration-200"
                   >
-                    {t('outgoing.empty.showAll', { year: selectedYear })}
+                    <RotateCcw className="h-4 w-4" />
+                    <span>{t('outgoing.empty.showAll', { year: selectedYear })}</span>
+                  </Button>
+                ) : canAddDocuments ? (
+                  <Button
+                    type="button"
+                    onClick={() => navigate('/dashboard/mail/outgoing/create')}
+                    className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg inline-flex items-center gap-2 transition-colors duration-200"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    <span>{t('outgoing.actions.addShort')}</span>
                   </Button>
                 ) : undefined
               }

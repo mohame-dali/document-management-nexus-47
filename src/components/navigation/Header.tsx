@@ -120,41 +120,38 @@ const Header = () => {
       </div>
 
       {/* Actions & Profil à GAUCHE */}
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
-        {/* Language Switcher */}
-        <LanguageSwitcher />
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Utility Controls Cluster */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <LanguageSwitcher />
+          <NotificationBell />
 
-        {/* Activity Notifications Bell */}
-        <NotificationBell />
-
-        {/* Message Notifications */}
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleNotificationClick}
-            title={t('header.unreadMessagesCount')}
-            aria-label={t('header.unreadMessagesCount')}
-            className="p-2 min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] text-slate-600 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-lg relative transition-colors duration-200 flex items-center justify-center"
-          >
-            <MessageSquare className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <div className="absolute -top-0.5 -end-0.5 min-w-[20px] h-[20px] bg-[#2c5282] dark:bg-blue-600 text-white text-[13px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
-                <span className="text-[13px] text-white font-bold leading-none tabular-nums">
+          <div className="relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleNotificationClick}
+              title={t('header.unreadMessagesCount')}
+              aria-label={t('header.unreadMessagesCount')}
+              className="h-9 w-9 sm:h-10 sm:w-10 text-slate-600 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors duration-200 flex items-center justify-center"
+            >
+              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-[#2c5282] dark:bg-blue-600 text-white text-[12px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
                   <bdi dir="ltr">{unreadCount > 9 ? '9+' : unreadCount}</bdi>
                 </span>
-              </div>
-            )}
-          </Button>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* PROFIL UTILISATEUR (à gauche) */}
-        <div className="border-s border-slate-200/80 dark:border-slate-800 ps-1.5 sm:ps-3 md:ps-4">
+        <div className="border-s border-slate-200/80 dark:border-slate-800 ps-2 sm:ps-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button 
                 aria-label={t('header.userMenu')}
-                className="flex items-center min-h-[40px] sm:min-h-[44px] gap-2 bg-white/90 dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-1 lg:px-3 lg:py-1.5 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2 shadow-xs"
+                className="flex items-center min-h-[40px] gap-2 bg-white/90 dark:bg-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-lg p-1 lg:px-2.5 lg:py-1 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#2c5282] focus-visible:ring-offset-2 shadow-2xs"
               >
                 <PersonnelAvatar
                   photo={photoSource}

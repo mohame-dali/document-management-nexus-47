@@ -2,8 +2,10 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertCircle, Loader2, Inbox } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Inbox } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 
 import { getDepartments } from '@/services/departmentService';
 import { getOrganizationSettings } from '@/services/organizationSettingsService';
@@ -115,12 +117,29 @@ const CreateIncomingDocument = () => {
 
   if (loadingDepartments) {
     return (
-      <div className="flex justify-center items-center h-64 bg-[#f7fafc] dark:bg-slate-950">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-[#2c5282] dark:text-blue-400 mx-auto mb-4" />
-          <p className="text-[#2c5282] dark:text-blue-300 font-medium text-base">
-            {t('documents.createIncoming.loadingData')}
-          </p>
+      <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-8 space-y-4">
+          <Skeleton className="h-5 w-64 rounded-md" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs px-5 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <Skeleton className="w-10 h-10 rounded-lg shrink-0" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-64 max-w-full" />
+              </div>
+            </div>
+            <Skeleton className="h-9 w-24 rounded-lg" />
+          </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-6 space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Skeleton className="h-11 w-full rounded-lg" />
+              <Skeleton className="h-11 w-full rounded-lg" />
+              <Skeleton className="h-11 w-full rounded-lg" />
+              <Skeleton className="h-11 w-full rounded-lg" />
+            </div>
+            <Skeleton className="h-28 w-full rounded-lg" />
+            <Skeleton className="h-40 w-full rounded-lg" />
+          </div>
         </div>
       </div>
     );
@@ -128,20 +147,36 @@ const CreateIncomingDocument = () => {
 
   if (departmentsError) {
     return (
-      <div className="p-6 min-h-screen bg-[#f7fafc] dark:bg-slate-950">
-        <Alert variant="destructive" className="max-w-md mx-auto">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{translations.errorLoading}</AlertDescription>
-        </Alert>
+      <div className="p-6 min-h-screen bg-slate-50/70 dark:bg-slate-950">
+        <div className="max-w-xl mx-auto">
+          <EmptyState
+            icon={<AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />}
+            title={translations.title}
+            description={translations.errorLoading}
+            className="rounded-xl border-red-200/80 dark:border-red-900/60 shadow-xs py-12"
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f7fafc] dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50/70 dark:bg-slate-950">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-8 space-y-4">
+        {/* Breadcrumb */}
+        <PageBreadcrumb
+          showHomeIcon
+          homeTo="/dashboard"
+          homeLabel={t('common.home')}
+          items={[
+            { label: t('documents.viewIncoming.breadcrumb.mailHub'), to: '/dashboard/mail/incoming' },
+            { label: t('documents.viewIncoming.breadcrumb.incomingDocuments'), to: '/dashboard/mail/incoming' },
+            { label: translations.title },
+          ]}
+        />
+
         {/* Page Header */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-5 py-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs px-5 py-4">
           <FormSectionHeader
             icon={
               <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 text-[#2c5282] dark:text-blue-300 flex items-center justify-center">

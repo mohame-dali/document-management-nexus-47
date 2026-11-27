@@ -27,15 +27,12 @@ const NotificationBell: React.FC = () => {
             size="icon" 
             title="إشعارات النظام"
             aria-label="إشعارات النظام"
-            className="p-2.5 min-w-[44px] min-h-[44px] text-[#2c5282] dark:text-blue-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-lg relative transition-colors duration-200 flex items-center justify-center"
+            className="h-9 w-9 sm:h-10 sm:w-10 text-slate-600 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors duration-200 flex items-center justify-center"
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
             {notificationCount > 0 && (
-              <span className="absolute -top-0.5 -end-0.5 flex h-[18px] min-w-[18px]">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative min-w-[18px] h-[18px] bg-red-500 text-white text-[13px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
-                  <bdi dir="ltr">{notificationCount > 9 ? '9+' : notificationCount}</bdi>
-                </span>
+              <span className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] bg-red-600 text-white text-[12px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-1 leading-none tabular-nums">
+                <bdi dir="ltr">{notificationCount > 9 ? '9+' : notificationCount}</bdi>
               </span>
             )}
           </Button>

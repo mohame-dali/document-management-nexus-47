@@ -16,6 +16,11 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
 import DocumentPreviewModal from './DocumentPreviewModal';
 import { formatShortDate } from '@/utils/formatDate';
 
@@ -45,6 +50,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   searchedKeyword = ''
 }) => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const { dir } = useDirection();
+  const isFr = language === 'fr';
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [previewDoc, setPreviewDoc] = useState<(IncomingDocument | OutgoingDocument) | null>(null);
   const [previewType, setPreviewType] = useState<'incoming' | 'outgoing' | null>(null);
@@ -68,12 +76,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   // State: Loading initial search
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-8 sm:p-12 min-h-[300px] flex flex-col items-center justify-center text-center" dir="rtl">
-        <Loader2 className="h-8 w-8 text-[#2c5282] dark:text-sky-400 animate-spin mb-4" />
-        <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">جاري معالجة البحث المتقدم...</h3>
-        <p className="text-base text-slate-700 dark:text-slate-300 mt-2 leading-relaxed">
-          يتم فحص الوثائق الواردة والصادرة وقواعد بيانات النصوص المفهرسة عبر OCR
-        </p>
+      <div
+        className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden"
+        dir={dir}
+      >
+        <div className="p-5 sm:p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 rounded-lg shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-44" />
+              <Skeleton className="h-4 w-64 max-w-full" />
+            </div>
+          </div>
+          <Skeleton className="h-9 w-28 rounded-lg" />
+        </div>
+        <TableSkeleton columns={6} rows={6} />
       </div>
     );
   }
@@ -81,39 +98,39 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   // State: Initial - Search not performed yet
   if (!searchPerformed) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-8 sm:p-12 min-h-[300px] flex flex-col items-center justify-center text-center space-y-4" dir="rtl">
-        <div className="w-14 h-14 rounded-lg bg-[#f7fafc] dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-[#2c5282] dark:text-sky-400">
-          <Search className="h-7 w-7" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">جاهز للبحث المتقدم</h3>
-          <p className="text-base text-slate-700 dark:text-slate-300 mt-2 max-w-lg mx-auto leading-relaxed">
-            استخدم النموذج أعلاه لتحديد الكلمات المفتاحية، السنوات الإدارية، أو الفلاتر الزمنية لعرض نتائج المطابقة.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        dir={dir}
+        icon={<Search className="h-6 w-6 text-[#2c5282] dark:text-sky-400" />}
+        title={isFr ? 'Prêt pour la recherche avancée' : 'جاهز للبحث المتقدم'}
+        description={
+          isFr
+            ? 'Utilisez le formulaire ci-dessus pour saisir des mots-clés, une année ou des filtres de date afin d’afficher les résultats.'
+            : 'استخدم النموذج أعلاه لتحديد الكلمات المفتاحية، السنوات الإدارية، أو الفلاتر الزمنية لعرض نتائج المطابقة.'
+        }
+        className="rounded-xl shadow-xs py-14"
+      />
     );
   }
 
   // State: No results found
   if (combinedResultsCount === 0 && !isLoading) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-8 sm:p-12 min-h-[300px] flex flex-col items-center justify-center text-center space-y-4" dir="rtl">
-        <div className="w-14 h-14 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-[#FFD758] dark:border-amber-800/70 flex items-center justify-center text-[#78350f] dark:text-amber-300">
-          <Search className="h-7 w-7" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-[#1a202c] dark:text-slate-100">لم يتم العثور على أي نتائج</h3>
-          <p className="text-base text-slate-700 dark:text-slate-300 mt-2 max-w-lg mx-auto leading-relaxed">
-            لم تطابق أي وثيقة المعايير المحددة. جرب استخدام كلمات مفتاحية أخرى أو توسيع نطاق البحث الزمني.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        dir={dir}
+        icon={<Search className="h-6 w-6 text-amber-600 dark:text-amber-300" />}
+        title={isFr ? 'Aucun résultat trouvé' : 'لم يتم العثور على أي نتائج'}
+        description={
+          isFr
+            ? 'Aucun document ne correspond aux critères sélectionnés. Essayez d’autres mots-clés ou élargissez la période.'
+            : 'لم تطابق أي وثيقة المعايير المحددة. جرب استخدام كلمات مفتاحية أخرى أو توسيع نطاق البحث الزمني.'
+        }
+        className="rounded-xl shadow-xs py-14"
+      />
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm p-6 sm:p-8 space-y-6" dir="rtl">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-6 sm:p-8 space-y-6" dir={dir}>
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
         <div className="flex items-center gap-3">
@@ -122,17 +139,17 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-[#1a202c] dark:text-slate-100 leading-normal flex items-center gap-2">
-              نتائج البحث
+              {isFr ? 'Résultats de recherche' : 'نتائج البحث'}
             </h2>
             <p className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-0.5">
-              تم العثور على وثائق مطابقة وفقاً للمعايير المدخلة
+              {isFr ? 'Documents correspondants aux critères saisis' : 'تم العثور على وثائق مطابقة وفقاً للمعايير المدخلة'}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center px-3.5 py-1 rounded-full text-sm font-semibold bg-[#FFCB56]/90 dark:bg-amber-950/60 text-[#78350f] dark:text-amber-300 border border-[#FFD758] dark:border-amber-800/70 tabular-nums">
-            {totalCount || combinedResultsCount} وثيقة متطابقة
+            {totalCount || combinedResultsCount} {isFr ? 'document(s)' : 'وثيقة متطابقة'}
           </span>
 
           {/* View mode toggle */}
@@ -145,23 +162,23 @@ const SearchResults: React.FC<SearchResultsProps> = ({
                   ? 'bg-[#2c5282] text-white'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
-              title="عرض كجدول"
+              title={isFr ? 'Vue tableau' : 'عرض كجدول'}
             >
               <TableIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">جدول</span>
+              <span className="hidden sm:inline">{isFr ? 'Tableau' : 'جدول'}</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('grid')}
-              className={`h-9 px-3 text-base flex items-center gap-1.5 border-r border-slate-300 dark:border-slate-700 transition-colors duration-150 ${
+              className={`h-9 px-3 text-base flex items-center gap-1.5 border-s border-slate-300 dark:border-slate-700 transition-colors duration-150 ${
                 viewMode === 'grid'
                   ? 'bg-[#2c5282] text-white'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
-              title="عرض كبطاقات"
+              title={isFr ? 'Vue cartes' : 'عرض كبطاقات'}
             >
               <GridIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">بطاقات</span>
+              <span className="hidden sm:inline">{isFr ? 'Cartes' : 'بطاقات'}</span>
             </button>
           </div>
         </div>
@@ -171,15 +188,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       {viewMode === 'table' ? (
         /* TABULAR VIEW - Professional AdminLTE Data Table */
         <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-lg">
-          <table className="w-full text-right border-collapse text-base">
+          <table className="w-full text-start border-collapse text-base">
             <thead>
               <tr className="bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 text-[#1a202c] dark:text-slate-200">
-                <th className="py-3.5 px-4 font-semibold text-sm">النوع</th>
-                <th className="py-3.5 px-4 font-semibold text-sm">الرقم / السنة</th>
-                <th className="py-3.5 px-4 font-semibold text-sm">الموضوع</th>
-                <th className="py-3.5 px-4 font-semibold text-sm">الجهة / المصدر</th>
-                <th className="py-3.5 px-4 font-semibold text-sm">التاريخ</th>
-                <th className="py-3.5 px-4 font-semibold text-sm text-center">الإجراءات</th>
+                <th className="py-3.5 px-4 font-semibold text-sm">{isFr ? 'Type' : 'النوع'}</th>
+                <th className="py-3.5 px-4 font-semibold text-sm">{isFr ? 'N° / Année' : 'الرقم / السنة'}</th>
+                <th className="py-3.5 px-4 font-semibold text-sm">{isFr ? 'Objet' : 'الموضوع'}</th>
+                <th className="py-3.5 px-4 font-semibold text-sm">{isFr ? 'Source / Service' : 'الجهة / المصدر'}</th>
+                <th className="py-3.5 px-4 font-semibold text-sm">{isFr ? 'Date' : 'التاريخ'}</th>
+                <th className="py-3.5 px-4 font-semibold text-sm text-center">{isFr ? 'Actions' : 'الإجراءات'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/70 dark:divide-slate-800 bg-white dark:bg-slate-900">
@@ -449,8 +466,17 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       {/* Pagination & Load More Section */}
       <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-base text-slate-700 dark:text-slate-300 tabular-nums">
-          تم عرض <span className="font-semibold text-[#1a202c] dark:text-slate-100">{combinedResultsCount}</span> من أصل{' '}
-          <span className="font-semibold text-[#1a202c] dark:text-slate-100">{totalCount || combinedResultsCount}</span> وثيقة
+          {isFr ? (
+            <>
+              Affichage de <span className="font-semibold text-[#1a202c] dark:text-slate-100">{combinedResultsCount}</span> sur{' '}
+              <span className="font-semibold text-[#1a202c] dark:text-slate-100">{totalCount || combinedResultsCount}</span> document(s)
+            </>
+          ) : (
+            <>
+              تم عرض <span className="font-semibold text-[#1a202c] dark:text-slate-100">{combinedResultsCount}</span> من أصل{' '}
+              <span className="font-semibold text-[#1a202c] dark:text-slate-100">{totalCount || combinedResultsCount}</span> وثيقة
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -464,17 +490,17 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               {isFetchingNextPage ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>جاري تحميل المزيد...</span>
+                  <span>{isFr ? 'Chargement...' : 'جاري تحميل المزيد...'}</span>
                 </>
               ) : (
-                <span>تحميل المزيد من النتائج</span>
+                <span>{isFr ? 'Charger plus de résultats' : 'تحميل المزيد من النتائج'}</span>
               )}
             </Button>
           )}
 
           {!hasNextPage && combinedResultsCount > 0 && (
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700">
-              تم الوصول لنهاية النتائج
+              {isFr ? 'Fin des résultats' : 'تم الوصول لنهاية النتائج'}
             </span>
           )}
         </div>

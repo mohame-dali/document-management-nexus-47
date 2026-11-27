@@ -5,6 +5,7 @@ import SearchResults from '@/components/search/SearchResults';
 import { Search, Building2 } from 'lucide-react';
 import { useInfiniteSearch } from '@/hooks/useInfiniteSearch';
 import { useLanguage } from '@/contexts/LanguageProvider';
+import PageBreadcrumb from '@/components/common/PageBreadcrumb';
 
 const AdvancedSearchPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -37,15 +38,26 @@ const AdvancedSearchPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#f7fafc] p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Institutional AdminLTE Page Header */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950 p-4 sm:p-6 lg:p-8 space-y-5">
+      {/* Breadcrumb */}
+      <PageBreadcrumb
+        showHomeIcon
+        homeTo="/dashboard"
+        homeLabel={t('common.home')}
+        items={[
+          { label: t('documents.viewIncoming.breadcrumb.mailHub'), to: '/dashboard/mail/incoming' },
+          { label: t('search.pageTitle') },
+        ]}
+      />
+
+      {/* Institutional Page Header */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs p-5 sm:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-lg bg-[#2c5282] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
             <Search className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] leading-normal flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#2c5282] dark:text-sky-300 leading-normal flex items-center gap-2.5">
               {t('search.pageTitle')}
             </h1>
             <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-normal mt-1">
@@ -56,8 +68,8 @@ const AdvancedSearchPage: React.FC = () => {
 
         <div className="flex items-center gap-3 flex-wrap">
           {currentUser?.activeDepartment && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-semibold bg-white border border-[#cbd5e1] text-[#2d3748]">
-              <Building2 className="h-4 w-4 text-[#2c5282]" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200">
+              <Building2 className="h-4 w-4 text-[#2c5282] dark:text-sky-400" />
               <span>{currentUser.activeDepartment.name}</span>
             </span>
           )}

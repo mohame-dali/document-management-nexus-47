@@ -11,12 +11,12 @@ export const LanguageSwitcher: React.FC = () => {
       variant="ghost"
       size="sm"
       onClick={() => setLanguage(isAr ? 'fr' : 'ar')}
-      className="h-9 px-3 flex items-center gap-1.5 text-sm font-medium"
+      className="h-9 sm:h-10 px-2.5 flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-200 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
       title={isAr ? 'Passer au français' : 'التبديل إلى العربية'}
       aria-label={isAr ? 'Passer au français' : 'التبديل إلى العربية'}
     >
       <Globe className="w-4 h-4" />
-      {isAr ? 'FR' : 'AR'}
+      <span>{isAr ? 'FR' : 'AR'}</span>
     </Button>
   );
 };

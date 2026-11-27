@@ -36,9 +36,15 @@ import {
   FilterType
 } from '@/services/trashService';
 import { formatDateTime } from '@/utils/formatDate';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import PageBreadcrumb from '@/components/common/PageBreadcrumb';
+import { useLanguage } from '@/contexts/LanguageProvider';
 
 const TrashPage: React.FC = () => {
   const queryClient = useQueryClient();
+  const { t, language } = useLanguage();
+  const isFr = language === 'fr';
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -192,48 +198,58 @@ const TrashPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-[#e53e3e]/10 dark:bg-red-950/50 text-[#e53e3e] dark:text-red-400 border border-[#e53e3e]/20 dark:border-red-900/60 rounded-lg">
-            <Trash2 className="h-7 w-7" />
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/70 dark:bg-slate-950">
+      <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-5">
+        <PageBreadcrumb
+          showHomeIcon
+          homeTo="/dashboard"
+          homeLabel={t('common.home')}
+          items={[
+            { label: isFr ? 'Corbeille' : 'سلة المحذوفات' },
+          ]}
+        />
+
+        {/* Header */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-[#e53e3e]/10 dark:bg-red-950/50 text-[#e53e3e] dark:text-red-400 border border-[#e53e3e]/20 dark:border-red-900/60 rounded-lg">
+              <Trash2 className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">سلة المحذوفات</h1>
+              <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                إدارة العناصر المحذوفة واستعادتها أو حذفها نهائياً من النظام
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#1a202c] dark:text-slate-100">سلة المحذوفات</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
-              إدارة العناصر المحذوفة واستعادتها أو حذفها نهائياً من النظام
-            </p>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 min-h-[44px] px-4 gap-2 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              <span>تحديث</span>
+            </Button>
+
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-11 min-h-[44px] px-5 gap-2 rounded-lg bg-[#e53e3e] hover:bg-[#c53030] text-white font-medium shadow-xs"
+              onClick={() => setIsEmptyTrashOpen(true)}
+              disabled={items.length === 0 || isLoading || emptyTrashMutation.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>إفراغ السلة</span>
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 min-h-[44px] px-4 gap-2 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
-            onClick={() => refetch()}
-            disabled={isFetching}
-          >
-            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>تحديث</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="destructive"
-            className="h-11 min-h-[44px] px-5 gap-2 rounded-lg bg-[#e53e3e] hover:bg-[#c53030] text-white font-medium shadow-sm"
-            onClick={() => setIsEmptyTrashOpen(true)}
-            disabled={items.length === 0 || isLoading || emptyTrashMutation.isPending}
-          >
-            <Trash2 className="h-4 w-4" />
-            <span>إفراغ السلة</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters and Search Bar */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Filters and Search Bar */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Type Tabs */}
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -355,42 +371,38 @@ const TrashPage: React.FC = () => {
       </div>
 
       {/* Main Table / Content Area */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
         {isLoading ? (
-          <div className="p-16 text-center space-y-3">
-            <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] dark:text-sky-400 mx-auto" />
-            <p className="text-slate-700 dark:text-slate-300 text-sm font-medium">جاري تحميل عناصر سلة المحذوفات...</p>
-          </div>
+          <TableSkeleton columns={5} rows={6} />
         ) : isError ? (
-          <div className="p-16 text-center space-y-4">
-            <div className="p-3 bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/60 rounded-full w-fit mx-auto">
-              <AlertTriangle className="h-8 w-8" />
-            </div>
-            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100">تعذر تحميل سلة المحذوفات</h3>
-            <p className="text-sm text-slate-700 dark:text-slate-300 max-w-md mx-auto">
-              {(error as Error)?.message || 'حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 min-h-[44px] px-4 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700"
-              onClick={() => refetch()}
-            >
-              إعادة المحاولة
-            </Button>
-          </div>
+          <EmptyState
+            icon={<AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />}
+            title="تعذر تحميل سلة المحذوفات"
+            description={(error as Error)?.message || 'حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.'}
+            className="border-0 rounded-none py-14"
+            action={
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 min-h-[44px] px-4 rounded-lg text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 inline-flex items-center gap-2"
+                onClick={() => refetch()}
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>إعادة المحاولة</span>
+              </Button>
+            }
+          />
         ) : filteredItems.length === 0 ? (
-          <div className="p-16 text-center space-y-3">
-            <div className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
-              <Trash2 className="h-8 w-8" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">السلة فارغة</h3>
-            <p className="text-sm text-slate-700 dark:text-slate-300 max-w-sm mx-auto">
-              {searchQuery.trim()
+          <EmptyState
+            icon={<Trash2 className="h-6 w-6 text-slate-600 dark:text-slate-300" />}
+            title="السلة فارغة"
+            description={
+              searchQuery.trim()
                 ? 'لا توجد نتائج تطابق معايير البحث الحالية.'
-                : 'لا توجد عناصر محذوفة حالياً.'}
-            </p>
-          </div>
+                : 'لا توجد عناصر محذوفة حالياً.'
+            }
+            className="border-0 rounded-none py-14"
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
@@ -622,6 +634,7 @@ const TrashPage: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>
   );
 };
