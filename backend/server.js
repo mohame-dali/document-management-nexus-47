@@ -191,7 +191,7 @@ const globalLimiter = rateLimit({
 // Limiteur strict pour le login (anti brute-force)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,                           // 5 tentatives max par IP
+  max: 50,                          // Plafond IP anti-flood (la politique maxLoginAttempts est appliquée par loginController)
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,     // Ne compte pas les logins réussis

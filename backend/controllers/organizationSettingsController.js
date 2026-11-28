@@ -16,6 +16,7 @@ exports.getOrganizationSettings = async (req, res, next) => {
         logoAdministration: '',
         rhDepartmentId: null,
         typesAssociationPersonnel: ['Stage', 'Formation', 'Diplôme', 'Autre'],
+        maxLoginAttempts: 5,
         dateInitialisation: new Date(),
         misAJourPar: null
       });
@@ -35,7 +36,7 @@ exports.getOrganizationSettings = async (req, res, next) => {
 // @access  Private (Admin, Director)
 exports.updateOrganizationSettings = async (req, res, next) => {
   try {
-    const { nomAdministration, logoAdministration, typesAssociationPersonnel } = req.body;
+    const { nomAdministration, logoAdministration, typesAssociationPersonnel, maxLoginAttempts } = req.body;
 
     let settings = await OrganizationSettings.findOne();
 
@@ -45,6 +46,7 @@ exports.updateOrganizationSettings = async (req, res, next) => {
         logoAdministration: '',
         rhDepartmentId: null,
         typesAssociationPersonnel: ['Stage', 'Formation', 'Diplôme', 'Autre'],
+        maxLoginAttempts: 5,
         dateInitialisation: new Date(),
         misAJourPar: null
       });
@@ -66,6 +68,17 @@ exports.updateOrganizationSettings = async (req, res, next) => {
         });
       }
       settings.typesAssociationPersonnel = typesAssociationPersonnel;
+    }
+
+    if (maxLoginAttempts !== undefined) {
+      const parsedAttempts = Number(maxLoginAttempts);
+      if (!Number.isInteger(parsedAttempts) || parsedAttempts < 1 || parsedAttempts > 50) {
+        return res.status(400).json({
+          success: false,
+          message: 'maxLoginAttempts doit être un entier compris entre 1 et 50'
+        });
+      }
+      settings.maxLoginAttempts = parsedAttempts;
     }
 
     settings.misAJourPar = req.user ? (req.user._id || req.user.id) : null;

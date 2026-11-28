@@ -33,6 +33,12 @@ const organizationSettingsSchema = new mongoose.Schema({
     type: [String],
     default: ['Stage', 'Formation', 'Diplôme', 'Autre']
   },
+  maxLoginAttempts: {
+    type: Number,
+    default: 5,
+    min: 1,
+    max: 50
+  },
   dateInitialisation: {
     type: Date,
     default: Date.now

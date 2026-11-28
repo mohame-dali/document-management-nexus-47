@@ -37,6 +37,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSetupStatus } from '@/hooks/useSetupStatus';
+import { updateOrganizationSettings } from '@/services/organizationSettingsService';
 import ScannerWorkstationSettings from '@/components/scanner/ScannerWorkstationSettings';
 import OrganizationIdentityPanel from '@/components/settings/OrganizationIdentityPanel';
 import BackupManagementPanel from '@/components/settings/BackupManagementPanel';
@@ -70,8 +73,10 @@ function normalizeTabParam(rawTab: string | null): SettingsSectionId {
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser } = useAuth();
+  const { settings: orgSettings } = useSetupStatus();
   const { language } = useLanguage();
   const { dir } = useDirection();
   const isRTL = language !== 'fr';
@@ -129,6 +134,15 @@ const SettingsPage: React.FC = () => {
   const [maxLoginAttempts, setMaxLoginAttempts] = useState(
     () => localStorage.getItem('app_max_login_attempts') || '5'
   );
+  const [isSavingPreferences, setIsSavingPreferences] = useState(false);
+
+  useEffect(() => {
+    if (orgSettings?.maxLoginAttempts !== undefined && orgSettings.maxLoginAttempts !== null) {
+      const valueStr = String(orgSettings.maxLoginAttempts);
+      setMaxLoginAttempts(valueStr);
+      localStorage.setItem('app_max_login_attempts', valueStr);
+    }
+  }, [orgSettings?.maxLoginAttempts]);
   const [twoFactorAuth, setTwoFactorAuth] = useState(
     () => localStorage.getItem('app_2fa_enabled') === 'true'
   );
@@ -157,7 +171,10 @@ const SettingsPage: React.FC = () => {
     () => localStorage.getItem('pref_daily_digest') === 'true'
   );
 
-  const handleSavePreferencesAndSecurity = () => {
+  const canManageOrg =
+    currentUser?.role === 'Admin' || currentUser?.role === 'Director';
+
+  const handleSavePreferencesAndSecurity = async () => {
     localStorage.setItem('pref_table_density', tableDensity);
     localStorage.setItem('pref_items_per_page', itemsPerPage);
     localStorage.setItem('pref_sort_order', defaultSortOrder);
@@ -168,6 +185,27 @@ const SettingsPage: React.FC = () => {
     localStorage.setItem('app_2fa_enabled', String(twoFactorAuth));
     localStorage.setItem('app_audit_logging', String(auditLogging));
     localStorage.setItem('app_strong_pwd', String(requireStrongPassword));
+
+    if (canManageOrg) {
+      try {
+        setIsSavingPreferences(true);
+        const parsedAttempts = Number(maxLoginAttempts);
+        if (Number.isInteger(parsedAttempts) && parsedAttempts >= 1 && parsedAttempts <= 50) {
+          await updateOrganizationSettings({ maxLoginAttempts: parsedAttempts });
+          await queryClient.invalidateQueries({ queryKey: ['organization-settings'] });
+        }
+      } catch (_err) {
+        toast.error(
+          isRTL
+            ? 'تعذر حفظ سياسة محاولات الدخول على الخادم'
+            : "Impossible d'enregistrer la politique de tentatives sur le serveur"
+        );
+        setIsSavingPreferences(false);
+        return;
+      } finally {
+        setIsSavingPreferences(false);
+      }
+    }
 
     toast.success(
       isRTL
@@ -197,9 +235,6 @@ const SettingsPage: React.FC = () => {
         : 'Toutes les autres sessions actives ont été fermées'
     );
   };
-
-  const canManageOrg =
-    currentUser?.role === 'Admin' || currentUser?.role === 'Director';
 
   const navGroups: Array<{
     id: string;
@@ -540,6 +575,7 @@ const SettingsPage: React.FC = () => {
                   <Button
                     type="button"
                     onClick={handleSavePreferencesAndSecurity}
+                    disabled={isSavingPreferences}
                     className="h-10 px-6 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg gap-2 whitespace-nowrap"
                   >
                     <Save className="h-4 w-4" />

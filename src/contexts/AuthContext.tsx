@@ -161,14 +161,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setCurrentUser(null);
       
       let errorMessage = 'فشل في تسجيل الدخول';
-      const err = error as { message?: string; code?: string; response?: { data?: { error?: string } }; request?: unknown };
+      const err = error as {
+        message?: string;
+        code?: string;
+        response?: {
+          status?: number;
+          data?: {
+            error?: string;
+            message?: string;
+            locked?: boolean;
+            attempts?: number;
+            maxAttempts?: number;
+          };
+        };
+        request?: unknown;
+      };
       
       if (err.message === 'Network Error') {
         errorMessage = 'لا يمكن الاتصال بالخادم. يرجى التحقق من تشغيل الخادم الخلفي.';
       } else if (err.code === 'ERR_NETWORK') {
         errorMessage = 'خطأ في الشبكة. يرجى التحقق من تشغيل خادم النظام.';
       } else if (err.response) {
-        errorMessage = err.response.data?.error || 'فشل في المصادقة';
+        const resData = err.response.data;
+        if (resData?.locked && resData.attempts && resData.maxAttempts) {
+          errorMessage = `تم تجاوز الحد الأقصى لمحاولات الدخول (${resData.attempts}/${resData.maxAttempts})`;
+        } else if (resData?.attempts && resData?.maxAttempts) {
+          errorMessage = `فشل في المصادقة — المحاولة ${resData.attempts}/${resData.maxAttempts}`;
+        } else {
+          errorMessage = resData?.error || resData?.message || 'فشل في المصادقة';
+        }
       } else if (err.request) {
         errorMessage = 'لا يوجد رد من الخادم. يرجى التحقق من الاتصال.';
       }

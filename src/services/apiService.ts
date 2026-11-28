@@ -50,10 +50,18 @@ api.interceptors.response.use(
 
     // Handle specific error cases
     if (error.response?.status === 401) {
-      // Unauthorized - redirect to login
+      const requestUrl = String(error.config?.url || '');
+      const isAuthEndpoint =
+        requestUrl.includes('/auth/login') || requestUrl.includes('/auth/me');
+      const isAlreadyOnLoginPage =
+        typeof window !== 'undefined' && window.location.pathname === '/login';
+
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+
+      if (!isAuthEndpoint && !isAlreadyOnLoginPage) {
+        window.location.href = '/login';
+      }
     } else if (error.response?.status === 403) {
       // Forbidden - show access denied message
       console.warn('Access denied:', error.response.data?.error || 'Insufficient permissions');

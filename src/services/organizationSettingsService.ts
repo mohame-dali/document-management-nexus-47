@@ -23,6 +23,7 @@ export interface OrganizationSettings {
   bureauDirecteurDepartmentId: string | { _id: string; name?: string } | null;
   bureauOrdreDepartmentId: string | { _id: string; name?: string } | null;
   typesAssociationPersonnel?: string[];
+  maxLoginAttempts?: number;
   dateInitialisation?: string;
   misAJourPar?: string | null;
 }
@@ -35,6 +36,7 @@ export const getOrganizationSettings = async (): Promise<OrganizationSettings> =
 export const updateOrganizationSettings = async (data: {
   nomAdministration?: string;
   logoAdministration?: string;
+  maxLoginAttempts?: number;
 }): Promise<OrganizationSettings> => {
   const response = await api.put('', data);
   return response.data?.data || response.data;
