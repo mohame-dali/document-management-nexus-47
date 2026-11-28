@@ -1,49 +1,47 @@
-# Architecture réelle du DMS — Analyse du code source (Partie 1/4)
+# Architecture réelle du DMS — Référence technique & RBAC
 
-> **Statut du document** : Analyse statique fondée exclusivement sur la lecture du code source présent dans le dépôt (`FAIT`). Les éléments non observables dans le code ou dépendant de l'infrastructure cible sont marqués `[NON VÉRIFIÉ]`, `[À CONFIRMER]`, `[À VÉRIFIER]`, `[FICHIER ABSENT]` ou `DÉCISION DU PROPRIÉTAIRE`.
+> **Statut du document** : Architecture vérifiée dans le code source (`server.ts`, `src/`, `backend/`, `ecosystem.config.cjs`, `deploy/`). Cible de production Ubuntu 24.04 LTS : **`172.16.90.131`** sous **`/var/www/dms`**.
 
 ---
 
-## 0. État de sécurité et points bloquants (`FAIT`)
+## 0. État de sécurité & contrôles actifs (`FAIT`)
 
-> **AVERTISSEMENT IMPÉRATIF :** **Ne pas exposer l'application sur le réseau (LAN, intranet ou Internet) tant que les défauts bloquants encore ouverts ci-dessous n'ont pas été corrigés et prouvés.** L'application traite des données administratives et RH sensibles (courriers, dossiers du personnel, pièces d'identité/CIN, sanctions, assiduité).
+> **Rappel d'exploitation** : L'application traite des données administratives et RH sensibles (courriers, dossiers du personnel, pièces d'identité/CIN, sanctions, assiduité). Vérifier avant toute exposition réseau la configuration `.env`, le compte administrateur initial (`backend/scripts/create-superadmin.js`) et les règles Nginx/UFW.
 
-### Éléments déjà durcis dans le code actuel (`FAIT`)
-- **Suppression du contournement DB hors ligne & de l'auth mock (`backend/config/db.js:24-73` ; `backend/controllers/auth/loginController.js:28-44` ; `backend/middleware/auth.js:44-60` ; `server.ts:352-364`)** : `loginController` et `protect` refusent l'accès avec **`HTTP 503`** si MongoDB est hors ligne (aucun fallback `MOCK_ADMIN_ID` ni mot de passe par défaut), et `server.ts` quitte (`exit(1)`) en `NODE_ENV=production` si MongoDB est injoignable au démarrage.
+### Contrôles durcis dans le code actif (`server.ts` & `backend/`)
+- **Refus strict MongoDB hors ligne (`backend/config/db.js` ; `backend/controllers/auth/loginController.js` ; `backend/middleware/auth.js:43-60` ; `server.ts:385-422,470-480`)** : En `NODE_ENV=production`, `server.ts` s'arrête (`exit(1)`) si MongoDB est injoignable au démarrage, `protect` et le gestionnaire d'erreurs global renvoient **`HTTP 503`** si la base tombe, sans aucun fallback ni auth mock.
 - **Bootstrap administrateur CLI (`backend/scripts/create-superadmin.js:1-175`)** : script interactif TTY avec saisie masquée et mot de passe fort (>= 12 caractères, minuscule/majuscule/chiffre) créant le premier compte `Admin`.
-- **Protection des routes de fichiers statiques (`server.ts:169-177`)** : `/api/files/:type/:id/:filename`, `/courrier`, `/uploads/usersphoto`, `/uploads/personnelphoto` et `/uploads` sont tous protégés par le middleware `protect`.
-- **Durcissement des sous-processus OCR & Scanner Linux (`backend/utils/ocrProcessor.js:11-14,64-100` ; `backend/utils/scanner/linux/scanExecutor.js`)** : exécution via `execFile` / `runCommand` sans interpolation shell, cap mémoire (10 Mio) et timeout (`60s` par défaut), `OCR_DPI = 300`, et liaison `User <-> Personnel` encapsulée en transaction Mongoose + compensation (`backend/controllers/personnelController.js:795-937`).
-
-### Défauts encore ouverts dans le code actif (`FAIT`)
-
-| Gravité | Défaut constaté dans le code actif | Preuve vérifiée (`fichier:ligne`) | Impact / Risque |
-|---|---|---|---|
-| **CRITIQUE** | **Fallback `GET` hors ligne renvoyant `200` si une erreur Mongoose remonte** | `server.ts:257-306` | Si une erreur Mongoose/MongoNetworkError échappe à un contrôleur sur un `GET`, `server.ts` renvoie `HTTP 200` avec des données JSON vides/par défaut au lieu d'une erreur `503`. |
-| **CRITIQUE** | **Secrets JWT fallback en dev (`30d` par défaut), stockage `localStorage` et `?token=` en URL** | `server.ts:53-64` ; `backend/middleware/auth.js:23-25` ; `src/services/apiService.ts:16,54` | Exige `JWT_SECRET` en `production` (`server.ts:54-57`), mais conserve `30d` par défaut (`:63`), le jeton lisible en `localStorage` et `?token=` accepté en requête (`auth.js:23-25`). |
-| **HAUTE** | **CORS ouvert (`origin: true`), Socket.IO `origin: '*'`, absence de `helmet` et de rate-limiting login dans `server.ts`** | `server.ts:122-127,156-161` ; `backend/routes/auth.js:16` (`helmet`/`rateLimit` absents de `server.ts`, présents dans `backend/server.js:148-206`) | `ALLOWED_ORIGINS` ignorée par `server.ts` ; absence d'en-têtes `helmet` côté Express (partiellement compensée en prod par Nginx) et absence de protection anti-brute-force sur `POST /api/auth/login`. |
-| **HAUTE** | **Documentation Swagger `/api-docs` exposée sans authentification** | `server.ts:183-187` | `/api-docs` et `/api-docs.json` restent accessibles sans `protect` ni restriction `Admin`. |
-| **HAUTE** | **Contrôles d'accès incomplets / Mass Assignment / mot de passe en clair à la réinitialisation** | `backend/routes/rhPersonnelHistoryRoutes.js` ; `backend/controllers/incomingDocuments/detailControllers.js` ; `backend/controllers/scan/documentScanController.js` ; `backend/controllers/users/managementControllers.js` ; `backend/controllers/users/accountControllers.js` | Points signalés lors de l'audit statique nécessitant validation/durcissement ciblé sur les routes RH, scan, gestion utilisateurs et réinitialisation de mot de passe avant ouverture réseau. |
-| **MOYENNE** | **Remédiations partiellement câblées (fichiers présents sur disk mais non appelés dans le flux actif)** | `backend/workers/aiWorker.js` (non appelé par `backend/services/ollamaService.js`) ; `backend/utils/documentVersionHelper.js` (non appelé par `incomingDocuments/.../documentUpdateController.js:112-123` qui utilise encore `fs.unlinkSync`) ; `backend/models/SemanticIndex.js:58-61` & `semanticIndexer.js:99` (`nomic-embed-text` par défaut sans `embeddingDimension`) ; `startIndexRetryScheduler()` absent de `server.ts` | L'inférence `node-llama-cpp` tourne toujours dans le processus principal Express, l'édition de fichier écrase toujours l'ancien PDF sur disque, et le rattrapage RAG automatique n'est pas déclenché dans `server.ts`. |
+- **Protection des fichiers, dossiers sensibles & Swagger (`server.ts:276-305`)** : `/api/files/:type/:id/:filename`, `/courrier`, `/uploads/usersphoto`, `/uploads/personnelphoto` et `/uploads` sont protégés par `protect` ; `/uploads/attachments`, `/uploads/temp` et `/uploads/templates` renvoient **`403`** en accès direct ; `/api-docs` et `/api-docs.json` exigent `protect, authorize('Admin')`.
+- **CORS, Helmet, NoSQL Sanitize & Rate-Limiting (`server.ts:124-269`)** : `app.set('trust proxy', 1)`, liste blanche dynamique `ALLOWED_ORIGINS` sur Express et Socket.IO, en-têtes `helmet` (`hsts` en production), `express-mongo-sanitize` (Express 5), `globalLimiter` et `loginLimiter` (5 tentatives / 15 min sur `POST /api/auth/login`), et arrêt fatal si `JWT_SECRET` est absent en production (`server.ts:53-58`).
+- **Protection Tableau de bord Exécutif & RH (`backend/middleware/auth.js:165-243`)** : `/api/dashboard/summary` et `/api/dashboard/stats` exigent `authorizeExecutiveDashboard` (`Admin` / `Director`, sinon **`403`**) ; `/api/hr/*` exige `checkRHAccess` (`Admin`, `Director`, ou `AdminDepartment` rattaché à `OrganizationSettings.rhDepartmentId`).
+- **Sous-processus OCR, Scanner & Worker IA isolé (`backend/utils/ocrProcessor.js` ; `backend/utils/scanner/linux/scanExecutor.js` ; `backend/workers/aiWorker.js`)** : OCR/scan via `execFile` sans interpolation shell (`OCR_DPI = 300`, timeout `60s`, buffer 10 Mio), inférence `node-llama-cpp` isolée en processus fils IPC (`aiWorker.js`) avec arrêt propre `shutdownAIWorker()` (`server.ts:539-543`), ordonnanceur `startIndexRetryScheduler()` actif (`server.ts:87-95`), et versioning immuable des courriers numérisés (`backend/utils/documentVersionHelper.js`).
 
 ---
 
 ## 1. Inventaire détaillé des composants (`FAIT` observé dans le code)
 
-### 1.1 Frontend (SPA React + Vite)
-- **Framework & bibliothèques** : React `^18.3.1` (`package.json:89,93`), TypeScript `^5.5.3` (`package.json:138`), React Router `^6.26.2` (`package.json:98`), Tailwind CSS `^3.4.11` (`package.json:136`), i18next / react-i18next (`package.json:75,96`), Axios (`package.json:59`, configuré avec `VITE_API_URL || '/api'` dans `src/services/apiService.ts:4`).
-- **Build & sortie** : `npm run build` exécute `vite build` (`package.json:11`), générant le bundle statique dans `dist/` (`server.ts:361`).
-- **Mode dev vs prod** : En hors-production (`NODE_ENV !== 'production'`), `server.ts:354-359` monte `vite.middlewares` en mémoire ; en production (`NODE_ENV === 'production'`), `server.ts:360-366` sert `dist/` avec fallback SPA vers `dist/index.html` (ce qui permet aussi à un reverse proxy Nginx/IIS de servir `dist/` directement en amont).
+### 1.1 Frontend (SPA React + Vite), Navigation & RBAC
+
+- **Framework & bibliothèques** : React `^18.3.1`, TypeScript `^5.5.3`, React Router `^6.26.2`, Tailwind CSS `^3.4.11`, i18next / react-i18next (FR / AR avec direction RTL/LTR dynamique, `Cairo` / `Inter`, `tabular-nums`), Axios (`VITE_API_URL || '/api'` dans `src/services/apiService.ts`).
+- **Build & sortie** : `npm run build` exécute `vite build`, générant le bundle statique dans `dist/`. En développement (`NODE_ENV !== 'production'`), `server.ts:484-494` monte `vite.middlewares` ; en production (`NODE_ENV === 'production'`), `server.ts:495-501` sert `dist/` avec fallback SPA vers `dist/index.html`.
+- **Architecture de navigation (barre latérale à 7 entrées principales + hub Administration)** :
+
+| Entrée / Module | Route(s) canonique(s) | Rôles autorisés (`src/` & `backend/`) | Capacités clés finalisées |
+|---|---|---|---|
+| **Tableau de bord exécutif** | `/dashboard` | **`Admin`**, **`Director`** (`Directeur`) — `403` backend pour les autres rôles | KPIs de goulets d'étranglement, courriers urgents/en retard ou sans responsable ; les rôles non exécutifs (`AdminDepartment`, `AdminTuningDesk`, `User`) atterrissent directement sur **`/dashboard/mail/incoming`**. |
+| **Courrier & Documents** | `/dashboard/mail/{incoming,outgoing,search}` | Tous (création/édition `Admin`, `AdminTuningDesk` ; lecture/traitement selon département) | Formulaires à divulgation progressive, autocomplétion intelligente des organismes, suggestion de sujet OCR/IA en 1 clic, actions rapides au survol (tiroir PDF latéral, copie référence 1 clic, affectation rapide), classement dossiers en ligne/lot, déduplication audit `document_view` de **10 minutes** (`backend/utils/auditLogger.js`). |
+| **Archives & Dossiers** | `/dashboard/folders` *(redirect depuis `/dashboard/mail/folders`)* | Tous (isolation par département pour `AdminDepartment`/`User`) | Explorateur d'archives **Master-Detail** à deux volets promu au premier niveau de la barre latérale. |
+| **Ressources Humaines** | `/dashboard/hr/{personnel,attendance,all-personnel-situation,stages}` & `/dashboard/hr/attendance/report` | `Admin`, `Director`, et `AdminDepartment` du département RH configuré (`rhDepartmentId`) | Hub à **4 onglets** (`Personnel`, `Registre de présence` matriciel en 1 clic avec visibilité cloisonnée par département, `Situation globale`, `Stages`), + rapport mensuel imprimable `@media print` **A4 paysage**. |
+| **Administration & Modèles** *(« الإدارة والنماذج » / « Administration & Modèles »)* | `/dashboard/organization/{templates,chart,settings,document-options}` | Tous (`templates`, `chart`) ; `settings` (`Admin`) ; `document-options` (`AdminTuningDesk` / `Admin`) | Hub unifié regroupant la galerie de modèles sur 3 colonnes, l'organigramme interactif (annuaire / arbre) et les réglages ciblés. Redirections rétrocompatibles depuis `/dashboard/tools/templates`, `/dashboard/tools/document-options`, `/dashboard/organization-chart` et `/dashboard/admin/organization-chart`. |
+| **Profil & Présence** | `/dashboard/profile/{my-profile,my-attendance}` | Tous les utilisateurs authentifiés | Profil personnel, calendrier individuel de présence et suivi du solde de congés. |
+| **Messagerie & Corbeille** | `/dashboard/messages` · `/dashboard/trash` | Messagerie : Tous · Corbeille : `Admin`, `AdminTuningDesk`, `AdminDepartment` | Messagerie interne temps réel Socket.IO et **corbeille persistante isolée par utilisateur** (`backend/controllers/trashController.js`). |
+| **Administration système** *(Hub 5)* | `/dashboard/admin/{users,departments,audit-trail,settings,guide}` | `Admin`, `Director` (`settings` réservé `Admin`) | Gestion des utilisateurs, départements, piste d'audit, sauvegardes/rétention et guide d'installation. |
 
 ### 1.2 Serveur de référence et commande réelle de démarrage
-- **Serveur de référence** : `server.ts` à la racine du dépôt (`package.json:7-9`, `ecosystem.config.cjs:26`, `deploy/windows/install-service.ps1:55-62`). Il unifie Express `^5.2.1` (`package.json:70`), Socket.IO `^4.8.3` (`package.json:101`), les routes `./backend/routes/*` (`server.ts:201-235`), le service des fichiers protégés (`server.ts:169-177`), les tâches `node-cron` (`server.ts:83-116`), et la distribution du frontend Vite/`dist/` (`server.ts:366-383`).
-- **Serveur historique secondaire** : `backend/server.js`, qui n'expose que l'API (pas le frontend SPA), active `helmet` (`backend/server.js:150`), `rateLimit` (`backend/server.js:174-206`), CORS restreint via `FRONTEND_URL` (`backend/server.js:65-73`) et `startIndexRetryScheduler()` (`backend/server.js:323`). Il est ciblé par `backend/Dockerfile.backend:25` mais **n'est pas** le point d'entrée utilisé par `ecosystem.config.cjs:26`, `deploy/ubuntu/deploy.sh` ni `deploy/windows/install-service.ps1`.
-- **Commande réelle de démarrage** :
-  - Scripts PM2 et NSSM existants : `./node_modules/.bin/tsx server.ts` (`ecosystem.config.cjs:26-27`, `deploy/windows/install-service.ps1:55-62`) et `npm run dev` (`package.json:7`).
-  - Script `"start": "node server.ts"` (`package.json:9`) : **`[À VÉRIFIER]`**. `server.ts` contient des annotations de type TypeScript (`err: Error`, `_req: express.Request`, `interface AppError`, `server.ts:34,184,252`). Sans exécution de preuve sous la version exacte de Node 22 installée sur la cible (ex. `NODE_ENV=production PORT=${PORT} node server.ts` ou `node --experimental-strip-types server.ts`), le démarrage direct par `node server.ts` n'est pas garanti ; **recommander `tsx` (`./node_modules/.bin/tsx server.ts`) tant que `node server.ts` n'est pas prouvé**.
-- **Port par défaut et variable `PORT`** :
-  - `server.ts:318` : `const PORT = Number(portFromArgs || (process.env.PORT && process.env.PORT !== '8080' ? process.env.PORT : 3000));` — écoute sur `0.0.0.0:${PORT}` (`server.ts:393`).
-  - `backend/server.js:354` : `const PORT = process.env.PORT || 5000;`.
-  - **DÉCISION DU PROPRIÉTAIRE** : le choix définitif du port interne (`${PORT}`) reste `5000` dans les configurations de production (`ecosystem.config.cjs:42`, `.env.production.example:15`, Nginx/IIS, `deploy.sh:48`) vs `3000` par défaut dans `server.ts:318` (voir section 5).
+- **Serveur de référence** : `server.ts` à la racine du dépôt (`package.json:7-9`, `ecosystem.config.cjs:25-27`, `deploy/windows/install-service.ps1:55-62`). Il unifie Express `^5.2.1`, Socket.IO `^4.8.3`, les routes `./backend/routes/*` (`server.ts:320-352`), les fichiers protégés (`server.ts:276-296`), les tâches `node-cron` (`server.ts:85-119`), et le frontend Vite/`dist/` (`server.ts:484-501`).
+- **Serveur historique secondaire** : `backend/server.js`, qui n'expose que l'API (ciblé uniquement par `backend/Dockerfile.backend`), **n'est pas** utilisé par `ecosystem.config.cjs`, `deploy/ubuntu/deploy.sh` ni `deploy/windows/install-service.ps1`.
+- **Exécution recommandée** : **Node.js `v22.22.1`** (`>= 22.x`) avec **`./node_modules/.bin/tsx server.ts`** via `ecosystem.config.cjs` (`exec_mode: 'fork'`, `instances: 1`, `name: 'dms-backend'`).
+- **Port interne de production** : **`PORT=5000`** (`ecosystem.config.cjs:42`, `deploy/ubuntu/dms.nginx.conf`, `deploy/scripts/check-env.mjs:38`). (`server.ts:436` utilise `3000` par défaut en développement local hors `PORT`.)
 
 ### 1.3 Base de données MongoDB & Mongoose
 - **Version MongoDB** :
@@ -70,15 +68,13 @@
   - Écart observé : `server.ts` ne transmet pas les événements `scannerService` (`scanStart`, `scanComplete`, `scanError`) vers `io`, contrairement à `backend/server.js:374,408-418`.
 
 ### 1.5 Intelligence Artificielle locale (`node-llama-cpp`, `.gguf`)
-- **Moteur** : `node-llama-cpp` `^3.22.1` (`package.json:85`, `backend/package.json:24`), importé dynamiquement en ESM par `backend/services/ollamaService.js:49-55` (nom de service historique conservé, aucune dépendance à un serveur Ollama externe).
+- **Moteur** : `node-llama-cpp` `^3.22.1` (`package.json:85`, `backend/package.json:24`), exécuté dans un worker IPC isolé (`backend/workers/aiWorker.js` piloté par `backend/services/ollamaService.js`, aucune dépendance à un serveur Ollama externe).
 - **Modèles `.gguf` attendus** :
-  - **Chat / Extraction / Résumé / Traduction** : `ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf` (`server.ts:321`, `backend/services/ollamaService.js:17-20`, `scripts/download-models.js:50`), avec fallback de détection `qwen2.5-7b-instruct-q4_k_m.gguf` dans `server.ts:327` (`MODELS.md:11` documente également Qwen 2.5 7B).
-  - **Embeddings / RAG** : `bge-m3-q4_k_m.gguf` (`server.ts:322`, `backend/services/ollamaService.js:22-25`, `scripts/download-models.js:61`), avec fallback de détection `nomic-embed-text-v1.5.Q8_0.gguf` dans `server.ts:328`.
+  - **Chat / Extraction / Résumé / Traduction** : `ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf` (`server.ts:441`, `backend/services/ollamaService.js`, `scripts/download-models.js:50`), avec repli détecté `qwen2.5-7b-instruct-q4_k_m.gguf` (`server.ts:447`, [`MODELS.md`](../MODELS.md)).
+  - **Embeddings / RAG** : `bge-m3-q4_k_m.gguf` (`server.ts:442`, `backend/services/ollamaService.js`, `scripts/download-models.js:61`), avec repli détecté `nomic-embed-text-v1.5.Q8_0.gguf` (`server.ts:448`).
 - **Chargement et exécution** :
-  - Au démarrage de `server.ts:67-80`, un `setTimeout(..., 5000)` appelle `checkOllamaHealth()` qui déclenche `initModels()` (`backend/services/ollamaService.js:60`) si les deux fichiers existent.
-  - `initModels()` (`backend/services/ollamaService.js:60-124`) charge en singleton dans le processus principal `chatModel` (`contextSize: 2048`, `threads: LLAMA_THREADS`, `gpuLayers: LLAMA_GPU_LAYERS`) puis `embeddingModel` (`threads: LLAMA_THREADS`, `gpuLayers: LLAMA_GPU_LAYERS`). Un module worker IPC isolé `backend/workers/aiWorker.js` (incluant `embeddingDimension`) existe sur disque mais n'est pas encore câblé dans `ollamaService.js`.
-  - `SemanticIndex` (`backend/models/SemanticIndex.js:58-61`) et `semanticIndexer.js:99` conservent encore `embeddingModel: 'nomic-embed-text'` par défaut sans champ `embeddingDimension` persisté en schéma.
-  - `ecosystem.config.cjs:28-31` impose `exec_mode: 'fork'` et `instances: 1` pour éviter de dupliquer les ~5 Go de modèles en RAM.
+  - Au démarrage de `server.ts:67-82`, si `DISABLE_AI_WARMUP !== 'true'`, un `setTimeout(..., 5000)` appelle `checkOllamaHealth()` pour précharger `chatModel` (`LLAMA_CONTEXT_SIZE=2048`, `LLAMA_THREADS`, `LLAMA_GPU_LAYERS=0`) et `embeddingModel` dans le worker IPC.
+  - `ecosystem.config.cjs:28-34` impose `exec_mode: 'fork'`, `instances: 1` et `max_memory_restart: '6G'` pour éviter de dupliquer les ~5 Go de modèles en RAM.
 
 ### 1.6 Pipeline OCR et manipulation PDF/Images
 - Implémentation active dans `backend/utils/ocrProcessor.js` (appelée lors de l'upload via `backend/utils/fileUploadHandler.js:4,51`) :
@@ -100,10 +96,10 @@
 
 ### 1.9 Tâches planifiées (`node-cron` et systemd)
 - Dans `server.ts` (en processus, via `node-cron` `^4.6.0`, `package.json:83`) :
-  1. `startBackupScheduler()` (`server.ts:84-90`, `backend/services/backupScheduler.js:31-97`) : déclenché selon la collection `BackupPolicy` en MongoDB (défaut `0 2 * * *`), lance `mongodump` + archive ZIP (`backend/controllers/backup.js:164-201`) + purge selon `retentionCount`.
-  2. `startCleanupScheduler()` (`server.ts:97-98`, `backend/services/cleanupScheduler.js:73-90`) : tous les jours à `02:00` (`0 2 * * *`), supprime les fichiers temporaires de plus de 24h.
-  3. Notification quotidienne d'activité (`server.ts:105-110`) : tous les jours à `08:00` (`0 8 * * *`), exécute `checkDailyNotifications()`.
-  4. **Non démarré dans `server.ts`** : `startIndexRetryScheduler()` (`backend/services/indexRetryScheduler.js:233-252`, variable `INDEX_RETRY_CRON`, défaut `0 * * * *`) est appelé dans `backend/server.js:323` mais **absent de `server.ts`**.
+  1. `startBackupScheduler()` (`server.ts:86-95`, `backend/services/backupScheduler.js`) : déclenché selon la collection `BackupPolicy` en MongoDB (défaut `0 2 * * *`), lance `mongodump` + archive ZIP (`backend/controllers/backup.js`) + purge selon `retentionCount`.
+  2. `startIndexRetryScheduler()` (`server.ts:87-95,533-537`, `backend/services/indexRetryScheduler.js`, variable `INDEX_RETRY_CRON`) : rattrapage automatique des documents non indexés pour la recherche RAG.
+  3. `startCleanupScheduler()` (`server.ts:102-103`, `backend/services/cleanupScheduler.js`) : tous les jours à `02:00` (`0 2 * * *`), supprime les fichiers temporaires de plus de 24h.
+  4. Notification quotidienne d'activité (`server.ts:110-118`) : tous les jours à `08:00` (`0 8 * * *`), exécute `checkDailyNotifications()`.
 - Au niveau système Ubuntu : `deploy/ubuntu/systemd/dms-backup.timer` (`OnCalendar=*-*-* 02:00:00`) déclenche `deploy/ubuntu/systemd/dms-backup.service` (`ExecStart=/bin/bash /var/www/dms/deploy/scripts/backup-all.sh /var/backups/dms 14`).
 
 ---
@@ -188,52 +184,61 @@ Navigateur utilisateur (HTTPS :443 / HTTP :80 -> redirect 301)
 | **OCR & PDF** | Extraction texte arabe/français des PDF scannés | `tesseract-ocr` (`ara`, `fra`, `eng`), `poppler-utils` (`pdftoppm`), `ImageMagick` (`convert`/`magick`), `pdf-parse` | Aucune dédiée | `backend/utils/ocrProcessor.js:48-52,119-121,301-303,493-496` |
 | **Scanner local** | Numérisation directe poste/serveur | Linux : `sane-utils` (`scanimage`), `img2pdf` (opt.) ; Windows : WIA COM via PowerShell | `SCANNER_ENABLED`, `SCANNER_DEVICE_ID`, `SCANNER_RESOLUTION`, `SCANNER_FORMAT`, `UPLOAD_PATH` | `backend/utils/scanner/index.js:9-23` ; `scannerConfig.js:11-18` ; `linux/scanExecutor.js` ; `windows/scannerDetection.js` |
 | **Supervision / Service** | Maintien en vie, logs, redémarrage | Ubuntu : `pm2` ; Windows : `nssm` | `NODE_ENV`, `PORT` | `ecosystem.config.cjs:22-51` ; `deploy/windows/install-service.ps1:64-100` |
-| **Reverse Proxy** | TLS/HTTPS, compression, limites upload, WebSocket | Ubuntu : `nginx` ; Windows : IIS + URL Rewrite + ARR + WebSocket | Aucune dans Node (`ALLOWED_ORIGINS` ignorée par `server.ts`) | `deploy/ubuntu/dms.nginx.conf` ; `dms.nginx.conf` ; `deploy/windows/web.config` |
-| **Planificateur** | Sauvegardes BDD/ZIP, purge temp, notifs | `node-cron`, `mongodump`, `systemd` timer (Ubuntu) | `BACKUP_DIR`, `BACKUP_PATH` | `server.ts:83-113` ; `backupScheduler.js` ; `cleanupScheduler.js` ; `deploy/ubuntu/systemd/dms-backup.timer` |
+| **Reverse Proxy** | TLS/HTTPS, compression, limites upload, WebSocket | Ubuntu : `nginx` ; Windows : IIS + URL Rewrite + ARR + WebSocket | `ALLOWED_ORIGINS` (`server.ts:139-144`) | `deploy/ubuntu/dms.nginx.conf` ; `dms.nginx.conf` ; `deploy/windows/web.config` |
+| **Planificateur** | Sauvegardes BDD/ZIP, purge temp, notifs, RAG | `node-cron`, `mongodump`, `systemd` timer (Ubuntu) | `BACKUP_DIR`, `BACKUP_PATH`, `INDEX_RETRY_CRON` | `server.ts:85-119` ; `backupScheduler.js` ; `cleanupScheduler.js` ; `indexRetryScheduler.js` ; `deploy/ubuntu/systemd/dms-backup.timer` |
 | **Files Redis/Bull** | File OCR asynchrone (code mort) | Redis + `bull` *(non installés ni branchés)* | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` *(inutilisées)* | `backend/jobs/ocrQueue.js:1-19` ; `backend/jobs/ocrProcessor.js:1-120` |
 
 ---
 
-## 4. Exigences matérielles déduites du code
+## 4. Exigences matérielles & environnement de production (`172.16.90.131` / `/var/www/dms`)
 
-- **OCR & PDF** :
-  - `ecosystem.config.cjs:34` fixe `max_memory_restart: '6G'` pour le seul processus `dms-backend` (`server.ts`, mode `fork` à `1` instance obligatoire, lignes `28-31`).
-  - `server.ts:80` indique le chargement de `~5 Go` pour les modèles IA au démarrage.
-  - `scripts/download-models.js:55-67` attend ALLaM 7B (`~4.26 Go`, seuil min `3.0 Go`) et BGE-M3 (`~417 Mo`, seuil min `300 Mo`).
-  - `MODELS.md:17` recommande **16 Go de RAM minimum** sur Server (**18–24 Go** avec bureau GNOME Desktop actif) pour héberger le chat 7B (~4.5–5.5 Go RAM), les embeddings (~500 Mo RAM), MongoDB, Nginx/IIS et l'OS.
-  - Pics mémoire additionnels lors de l'OCR à **300 DPI** (`pdftoppm -png -r 300` + ImageMagick dans `backend/utils/ocrProcessor.js:11`) : **`[À CONFIRMER]`** selon le nombre de pages et la concurrence d'utilisation.
-- **CPU** :
-  - `server.ts:44` calcule automatiquement `LLAMA_THREADS = Math.max(1, Math.floor(os.cpus().length / 2))` (cœurs physiques).
-  - `.env.production.example:77` et `MODELS.md:17` retiennent **`4` cœurs CPU minimum** (`LLAMA_THREADS=4`). **`[À CONFIRMER]`** selon les temps de réponse tolérés sur l'inférence CPU.
-- **GPU (optionnel)** :
-  - Par défaut `LLAMA_GPU_LAYERS=0` (exécution 100 % CPU, `.env.production.example:80`, `backend/services/ollamaService.js:28`). Si un GPU compatible CUDA/Vulkan est présent, `LLAMA_GPU_LAYERS > 0` active `gpu: 'auto'` (`backend/services/ollamaService.js:86`).
-- **Disque** :
-  - ~`4.7 Go` à `5 Go` minimum pour les 2 modèles `.gguf` (`scripts/download-models.js:56,66` ; `MODELS.md:11-12`), plus les dépendances npm (avec binaires natifs `node-llama-cpp`), la base MongoDB, les archives `courrier/`, `uploads/` et la rétention de `backups/` (14 jours dans les scripts). Capacité totale **`[À CONFIRMER]`** selon la volumétrie documentaire annuelle.
+- **Runtime & OS cible Ubuntu 24.04 LTS** :
+  - **Node.js `v22.22.1`** (`>= 22.x`, NodeSource `22.x`), **MongoDB 8.0** (`127.0.0.1:27017`), **Tesseract OCR** (`ara`, `fra`, `eng`), `poppler-utils`, `ImageMagick`, **PM2** (`ecosystem.config.cjs`, mode `fork`, 1 instance, `PORT=5000`) et **Nginx** (`https://172.16.90.131`, `client_max_body_size 100M`).
+- **RAM & Modèles IA** :
+  - `ecosystem.config.cjs:34` fixe `max_memory_restart: '6G'` pour le seul processus `dms-backend` (`server.ts`, mode `fork` à `1` instance obligatoire).
+  - `scripts/download-models.js` attend `ALLaM-AI_ALLaM-7B-Instruct-preview-Q4_K_M.gguf` (~4.26 Go) et `bge-m3-q4_k_m.gguf` (~417 Mo).
+  - [`MODELS.md`](../MODELS.md) recommande **16 Go de RAM minimum** sur Server (**18–24 Go** avec bureau GNOME Desktop actif) et **4 cœurs CPU minimum** (`LLAMA_THREADS=4`, `LLAMA_GPU_LAYERS=0` par défaut en inférence CPU).
 
 ---
 
-## 5. Écarts, incohérences et état des correctifs de déploiement (`FAIT`)
+## 5. Procédure de mise à jour & synchronisation production (`172.16.90.131`)
 
-1. **Incohérence de port `3000` vs `5000` (`DÉCISION DU PROPRIÉTAIRE`)** :
-   - `server.ts:318` prend `3000` par défaut si `PORT` est absent ou vaut `'8080'`. `.env.example:1` et `vite.config.ts:14,17` utilisent `3000`.
-   - `5000` est utilisé en production dans `backend/server.js:354`, `.env.production.example:15`, `ecosystem.config.cjs:42`, `deploy/ubuntu/dms.nginx.conf:7`, `dms.nginx.conf:89`, `deploy/ubuntu/deploy.sh:48`, `deploy/ubuntu/rollback.sh:31`, `deploy/windows/install-service.ps1:83`, `deploy/windows/web.config:30,39,45,51,57` et `deploy/scripts/check-env.mjs:38`.
-   - `deploy/ubuntu/setup-system.sh:148-149` bloque désormais **à la fois `3000/tcp` et `5000/tcp`** dans UFW, et `deploy.sh` / `rollback.sh` lisent dynamiquement `${PORT:-5000}` depuis `.env`.
-2. **Script `"start": "node server.ts"` (`package.json:9`) — `[À VÉRIFIER]`** :
-   - `server.ts` est en TypeScript avec typage explicite (`server.ts:34,184,252`). Commande de test avant basculement : `NODE_ENV=production PORT=${PORT} node server.ts` (ou `--experimental-strip-types`). **Conserver `tsx` (`./node_modules/.bin/tsx server.ts`) tant que `node server.ts` n'est pas prouvé.**
-3. **Variables d'environnement documentées mais encore ignorées par `server.ts`** :
-   - `ALLOWED_ORIGINS` (`.env.production.example:44`) : **ignorée** par `server.ts:157` (`origin: true`) et `server.ts:124` (`origin: '*'`).
-   - `AI_WARMUP` (`.env.production.example:84`) : **ignorée** par `server.ts:67-80` (le préchargement démarre toujours après 5s).
-   - `INDEX_RETRY_CRON` (`.env.production.example:87`) : lue dans `backend/services/indexRetryScheduler.js:239`, mais `startIndexRetryScheduler()` n'est **pas appelée** par `server.ts` (seulement dans `backend/server.js:323`).
-4. **Chemins de stockage et scripts harmonisés vs écriture applicative** :
-   - `DOCUMENT_PATH` : honorée à la lecture (`backend/controllers/fileController.js:43,86`) et par `backup-all.sh:70` / `restore-all.sh:152` / `check-env.mjs:148`, **mais ignorée à l'écriture** (`backend/utils/documentHelper.js:62-70` écrit toujours dans `backend/courrier/<année>/<type>`).
-   - `UPLOAD_DIR` / `UPLOAD_PATH` & `BACKUP_DIR` / `BACKUP_PATH` / `BACKUP_ROOT` : harmonisés dans `.env.production.example:57-65` et les scripts `deploy/ubuntu/deploy.sh`, `deploy/scripts/backup-all.sh`, `deploy/scripts/restore-all.sh`, `deploy/scripts/check-env.mjs` (`/var/backups/dms`), même si Multer (`upload.js:6-9`) et `backup.js` conservent leurs repli relatifs en code applicatif.
-5. **Correctifs de déploiement appliqués dans le dépôt (`FAIT` — à valider sur VM cible)** :
-   - `package-lock.json` généré à la racine (permet `npm ci` dans `deploy.sh:67`) et `backend/package.json` aligné avec la racine (`express ^5.2.1`, `mongoose ^9.10.2`, `helmet ^8.3.0`, `express-rate-limit ^8.7.0`).
-   - `deploy/ubuntu/setup-system.sh` : attente de verrou APT/DPKG (`wait_for_apt_lock`), ajout d'`imagemagick` et `img2pdf` (`:86-88`), groupes `scanner` & `lp` pour `dms` (`:99-103`), création `/var/backups/dms` (`:136-138`) et `ufw deny 3000` + `5000` (`:148-149`).
-   - `deploy/ubuntu/install-mongodb.sh` : sélection dynamique `jammy -> 7.0` / `noble -> 8.0` (`:48-61`), URI corrigée en `?authSource=document-management` (`:141`) cohérente avec `.env.production.example:23`.
-   - `deploy/ubuntu/dms.nginx.conf:72,82` : ajout de **`^~`** sur `location ^~ /courrier/` et `location ^~ /uploads/` pour éviter l'interception par la règle regex statique `:142`.
-   - `deploy/ubuntu/deploy.sh`, `rollback.sh`, `deploy/scripts/backup-all.sh` & `restore-all.sh` : chargement automatique du `.env` racine, `PORT` et `BACKUP_*` dynamiques, et correction du `sed` dans `restore-all.sh:130` pour préserver `?authSource=document-management`.
-6. **Artefacts secondaires et scripts Windows incomplets (`FAIT`)** :
-   - **Nginx / Docker secondaires** : `/dms.nginx.conf` (Let's Encrypt) et `/nginx/default.conf` (Docker, sans `/courrier` ni `/uploads`) ; `docker-compose.yml`, `Dockerfile.frontend`, `backend/Dockerfile.backend` ciblent l'ancien `backend/server.js` avec `mongo:6.0`.
-   - **Windows Server** : `deploy/windows/install-prereqs.ps1` ne couvre pas ImageMagick, URL Rewrite 2.1 / ARR 3.0, liaison HTTPS IIS ni règles pare-feu Windows, et aucun `deploy.ps1` / `rollback.ps1` / `restore-all.ps1` n'existe sous `deploy/windows/`.
-   - **Protection path traversal `serveProtectedFile`** (`backend/controllers/fileController.js:44,68`) : impose `targetFile.startsWith(ALLOWED_ROOT)` où `ALLOWED_ROOT = path.resolve(process.cwd())`, ce qui bloquerait un `DOCUMENT_PATH` déplacé hors du répertoire applicatif.
+Pour déployer une mise à jour applicative sur le serveur Ubuntu 24.04 (`172.16.90.131`, `/var/www/dms`) :
+
+```bash
+# 1. Sur le poste de build : vérifier TypeScript, lint et compiler dist/
+npx tsc --noEmit
+npm run lint
+npm run build
+
+# 2. Synchroniser vers /var/www/dms en préservant node_modules/, uploads/, courrier/, models/ et .env
+rsync -avz --delete \
+  --exclude='.git/' \
+  --exclude='node_modules/' \
+  --exclude='backend/node_modules/' \
+  --exclude='uploads/' \
+  --exclude='backend/uploads/' \
+  --exclude='backend/courrier/' \
+  --exclude='models/*.gguf' \
+  --exclude='.env' \
+  --exclude='backend/.env' \
+  --exclude='logs/' \
+  --exclude='backups/' \
+  ./ dms@172.16.90.131:/var/www/dms/
+```
+
+Puis sur le serveur **`172.16.90.131`** :
+
+```bash
+cd /var/www/dms
+pm2 restart dms || pm2 restart dms-backend
+sudo nginx -t && sudo systemctl reload nginx
+
+# Vérification post-déploiement
+pm2 status
+pm2 logs dms --lines 50 || pm2 logs dms-backend --lines 50
+test -w /var/www/dms/backend/uploads && echo "backend/uploads writable OK"
+curl -sk https://172.16.90.131/api/health
+```
+
+*(Pour le déploiement complet initial étape par étape, l'automatisation `deploy/ubuntu/deploy.sh` et le rollback, voir [`GUIDE_INSTALLATION_UBUNTU_WINDOWS.md`](GUIDE_INSTALLATION_UBUNTU_WINDOWS.md).)*

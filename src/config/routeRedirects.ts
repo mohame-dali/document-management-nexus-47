@@ -36,7 +36,7 @@ export const PRIMARY_REDIRECTS: RouteRedirect[] = [
   { from: 'mail/folders',        to: '/dashboard/folders' },
   { from: 'advanced-search',     to: '/dashboard/mail/search' },
 
-  // Hub 3 — المؤسسة والنماذج
+  // Hub 3 — الإدارة والنماذج
   { from: 'templates',           to: '/dashboard/organization/templates' },
   { from: 'document-options',    to: '/dashboard/organization/document-options' },
   { from: 'organization-chart',  to: '/dashboard/organization/chart' },

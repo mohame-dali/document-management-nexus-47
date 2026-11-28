@@ -149,12 +149,12 @@ export const HR_HUB: HubDefinition = {
 };
 
 /**
- * Hub 3 : المؤسسة والنماذج (Organisation & Modèles)
+ * Hub 3 : الإدارة والنماذج (Administration & Modèles)
  */
 export const ORGANIZATION_HUB: HubDefinition = {
   id: 'organization',
-  labelAr: 'المؤسسة والنماذج',
-  labelFr: 'Organisation & Modèles',
+  labelAr: 'الإدارة والنماذج',
+  labelFr: 'Administration & Modèles',
   basePath: '/dashboard/organization',
   defaultPath: '/dashboard/organization/templates',
   icon: 'Building2',

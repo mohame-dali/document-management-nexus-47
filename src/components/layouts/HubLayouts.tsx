@@ -130,7 +130,7 @@ export const HRHubLayout: React.FC = () => {
 };
 
 /**
- * Hub 3 : المؤسسة والنماذج (Organisation & Modèles)
+ * Hub 3 : الإدارة والنماذج (Administration & Modèles)
  */
 export const OrganizationHubLayout: React.FC = () => {
   const { currentUser } = useAuth();

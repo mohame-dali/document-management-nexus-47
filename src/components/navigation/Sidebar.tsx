@@ -131,7 +131,7 @@ const Sidebar = () => {
         location.pathname.startsWith('/dashboard/hr/my-'),
     },
 
-    // 5. 🏢 المؤسسة والنماذج (hub unifié : النماذج + الهيكل التنظيمي + الإعدادات لـ Admin)
+    // 5. 🏢 الإدارة والنماذج (hub unifié : النماذج + الهيكل التنظيمي + الإعدادات لـ Admin)
     {
       id: 'organization',
       path: '/dashboard/organization',

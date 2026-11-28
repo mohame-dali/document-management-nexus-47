@@ -1,7 +1,7 @@
 # Guide d'installation et de déploiement DMS — Ubuntu 24.04 LTS VM (QEMU/KVM) & Windows Server
 
 > **AVERTISSEMENT CRITIQUE DE RECETTE ET DE SÉCURITÉ — DONNÉES FICTIVES UNIQUEMENT**  
-> **Ne pas exposer l'application en production réelle ni importer de données réelles (courriers, pièces jointes, dossiers RH, comptes nominatifs réels) tant que vous n'avez pas testé sur des données fictives et validé les lots S1, S2 et RBAC directement sur `https://192.168.100.131`.**  
+> **Ne pas exposer l'application en production réelle ni importer de données réelles (courriers, pièces jointes, dossiers RH, comptes nominatifs réels) tant que vous n'avez pas testé sur des données fictives et validé les lots S1, S2 et RBAC directement sur `https://172.16.90.131`.**  
 > - Les remédiations de sécurité `server.ts`, du worker IA isolé (`aiWorker.js`), du versioning documentaire (`documentVersionHelper.js`) et des scripts `deploy/ubuntu/` sont marquées **`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`** : elles sont présentes dans le code source actuel du dépôt, mais toute procédure d'installation reste **`[NON TESTÉ EN RÉEL]`** sur la VM cible jusqu'à exécution de la recette complète (Étape 7).  
 > - Chaque assertion technique distingue **`FAIT`** (vérifié dans le code avec `fichier:ligne`), **`HYPOTHÈSE`** (comportement système déduit), et **`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`**.
 
@@ -13,9 +13,9 @@
 |---|---|---|
 | **OS & Hyperviseur** | **Ubuntu 24.04 LTS (`noble`) Desktop** sous **QEMU/KVM** (`virt-manager`) | Nom de domaine KVM : **`dms-Ubuntu-24-04-PC-Q35-ICH9-2009`**. Gestion veille GNOME + `NetworkManager` + `apt` détaillés dès l'**Étape 0**. |
 | **Compte système / connexion** | Utilisateur existant **`dms`** | Déploiement **strictement sous `/var/www/dms`** détenu par `dms:dms` — **ne jamais déployer dans `/home/dms/Desktop`**. |
-| **Interface réseau & IP** | Interface **`enp1s0`**, actuellement en `192.168.100.131/24` (DHCP) | Épinglage en **IP fixe `192.168.100.131/24`** via `nmcli` / Netplan à l'**Étape 0**, impérativement **avant** la génération des certificats TLS. |
+| **Interface réseau & IP** | Interface **`enp1s0`**, actuellement en `172.16.90.131/24` (DHCP) | Épinglage en **IP fixe `172.16.90.131/24`** via `nmcli` / Netplan à l'**Étape 0**, impérativement **avant** la génération des certificats TLS. |
 | **Base de données** | **MongoDB 8.0** pour Ubuntu 24.04 (`noble`) | Installée et durcie via `deploy/ubuntu/install-mongodb.sh` (`?authSource=document-management`, `bindIp: 127.0.0.1`). |
-| **URL d'accès & CORS** | **`https://192.168.100.131`** (port interne Node `5000`, HTTPS `443` via Nginx) | `ALLOWED_ORIGINS=https://192.168.100.131` dans `/var/www/dms/.env`, certificat SAN `IP:192.168.100.131` sous `/etc/ssl/dms/`, UFW bloque `3000`, `5000`, `27017`. |
+| **URL d'accès & CORS** | **`https://172.16.90.131`** (port interne Node `5000`, HTTPS `443` via Nginx) | `ALLOWED_ORIGINS=https://172.16.90.131` dans `/var/www/dms/.env`, certificat SAN `IP:172.16.90.131` sous `/etc/ssl/dms/`, UFW bloque `3000`, `5000`, `27017`. |
 
 > **Variante Ubuntu 24.04 Server VM (sans bureau GNOME)** : consultez également la fiche synthétique dédiée en 7 étapes dans [`deploy/DEPLOY_KVM_UBUNTU.md`](../deploy/DEPLOY_KVM_UBUNTU.md).
 
@@ -25,13 +25,13 @@
 
 - **Partie 1 — Prérequis communs & référence technique** (Matériel, Node 22, MongoDB 8.0, paquets, variables `.env`, `tsx` vs `node server.ts`)
 - **Partie 2 — Déploiement linéaire sur Ubuntu 24.04 LTS Desktop en VM (`dms-Ubuntu-24-04-PC-Q35-ICH9-2009`) : Étape 0 → Étape 7**
-  - **Étape 0** : Préparation VM QEMU/KVM, IP fixe `192.168.100.131/24` sur `enp1s0` (`nmcli`/Netplan), RAM/énergie (veille/GNOME), SSH, agents & verrous `apt`
+  - **Étape 0** : Préparation VM QEMU/KVM, IP fixe `172.16.90.131/24` sur `enp1s0` (`nmcli`/Netplan), RAM/énergie (veille/GNOME), SSH, agents & verrous `apt`
   - **Étape 1** : Initialisation système via `deploy/ubuntu/setup-system.sh`
   - **Étape 2** : Installation et sécurisation de MongoDB 8.0 (`noble`) via `deploy/ubuntu/install-mongodb.sh`
-  - **Étape 3** : Déploiement dans `/var/www/dms` (`dms:dms`), `npm ci`, `.env` unique (`chmod 600`) avec `ALLOWED_ORIGINS=https://192.168.100.131`
+  - **Étape 3** : Déploiement dans `/var/www/dms` (`dms:dms`), `npm ci`, `.env` unique (`chmod 600`) avec `ALLOWED_ORIGINS=https://172.16.90.131`
   - **Étape 4** : Modèles `.gguf`, `npm run build` et création du premier administrateur (`backend/scripts/create-superadmin.js`)
   - **Étape 5** : Supervision PM2 (`ecosystem.config.cjs`), `pm2 startup` et validation reboot sans session GNOME
-  - **Étape 6** : Nginx, certificat auto-signé SAN `IP:192.168.100.131`, import sur poste client et pare-feu `ufw`
+  - **Étape 6** : Nginx, certificat auto-signé SAN `IP:172.16.90.131`, import sur poste client et pare-feu `ufw`
   - **Étape 7** : `logrotate`, sauvegarde `/var/backups/dms`, test de restauration, scanner USB QEMU/KVM et recette `smoke-test.mjs` / S1 / S2 / RBAC sur données fictives
 - **Partie 3 — Exploitation, dépannage VM Ubuntu 24.04 & consolidation des correctifs**
 - **Partie 4 — Déploiement sur Windows Server & recette Windows** (`[NON TESTÉ EN RÉEL]`)
@@ -55,7 +55,7 @@
 
 - **OS cible Ubuntu VM (`FAIT`)** : **Ubuntu 24.04 LTS (`noble`) Desktop** sous QEMU/KVM (`dms-Ubuntu-24-04-PC-Q35-ICH9-2009`).
 - **OS cible Windows Server** : **Windows Server 2019 / 2022** (traité en Partie 4).
-- **Runtime Node.js (`FAIT`)** : `deploy/scripts/check-env.mjs:48-56` exige **Node.js `>= 22.x`**. `deploy/ubuntu/setup-system.sh:112-121` installe **Node.js 22.x LTS** via NodeSource (ne jamais installer Node via Snap).
+- **Runtime Node.js (`FAIT`)** : `deploy/scripts/check-env.mjs:48-56` exige **Node.js `>= 22.x`** (cible de production validée : **Node.js `v22.22.1`**). `deploy/ubuntu/setup-system.sh:112-121` installe **Node.js 22.x LTS** via NodeSource (ne jamais installer Node via Snap).
 - **Alignement Mongoose & Express (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** : `package.json:70,81` (racine) et `backend/package.json:15,21` sont alignés sur **`"express": "^5.2.1"`** et **`"mongoose": "^9.10.2"`**. Toutes les installations NPM doivent être exécutées **uniquement à la racine** (`/var/www/dms`) afin de conserver un unique `node_modules/`.
 - **Version MongoDB (`FAIT` — `[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** : sur Ubuntu 24.04 (`noble`), `deploy/ubuntu/install-mongodb.sh:48-61` détecte `noble` et installe automatiquement **MongoDB 8.0 Community** + `mongodb-database-tools` (`mongodump`, `mongorestore`).
 
@@ -68,7 +68,7 @@
 | **Port interne Node.js (`PORT`)** | **`5000`** (écoute sur `0.0.0.0:5000`, `server.ts:511`) | `ecosystem.config.cjs:42` (`PORT: 5000`), `deploy/ubuntu/dms.nginx.conf:7,73,83,94,114,130`, `deploy/ubuntu/deploy.sh:48`, `deploy/ubuntu/rollback.sh:31`, `deploy/scripts/check-env.mjs:38` (`EXPECTED_PORT = '5000'`), `deploy/windows/web.config:30`. *(Note : `server.ts:436` utilise `3000` uniquement si `PORT` est absent ou vaut `8080`.)* |
 | **Ports exposés via Nginx / IIS** | **`80/tcp`** (redirection `301` → HTTPS) et **`443/tcp`** (HTTPS) | `deploy/ubuntu/dms.nginx.conf:17-36`, `deploy/ubuntu/setup-system.sh:144-146`. |
 | **Ports bloqués de l'extérieur** | **`3000/tcp`**, **`5000/tcp`** et **`27017/tcp`** (MongoDB sur `127.0.0.1`) | `deploy/ubuntu/setup-system.sh:148-150` (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`), `deploy/ubuntu/install-mongodb.sh:121`. |
-| **Adresse et origine HTTPS** | **`https://192.168.100.131`** (`server_name 192.168.100.131`, SAN `IP:192.168.100.131`) | `deploy/ubuntu/scripts/gen-selfsigned-cert.sh:18,48-63`, `server.ts:139-159,218-232`. Obligatoire en HTTPS car `NODE_ENV=production` force `cookie.secure = true` (`backend/controllers/auth/utils.js:17-19`). |
+| **Adresse et origine HTTPS** | **`https://172.16.90.131`** (`server_name 172.16.90.131`, SAN `IP:172.16.90.131`) | `deploy/ubuntu/scripts/gen-selfsigned-cert.sh:18,48-63`, `server.ts:139-159,218-232`. Obligatoire en HTTPS car `NODE_ENV=production` force `cookie.secure = true` (`backend/controllers/auth/utils.js:17-19`). |
 
 ---
 
@@ -92,7 +92,7 @@
 
 ### Tableau de référence des variables `.env`
 
-| Variable | Obligatoire | Rôle vérifié dans le code (`fichier:ligne`) | Valeur cible VM Ubuntu (`192.168.100.131`) |
+| Variable | Obligatoire | Rôle vérifié dans le code (`fichier:ligne`) | Valeur cible VM Ubuntu (`172.16.90.131`) |
 |---|---|---|---|
 | `NODE_ENV` | **Oui** | Sert `dist/` (`server.ts:496-501`), exige `JWT_SECRET` (`server.ts:53-58`), exige MongoDB au boot (`server.ts:470-480`), active `cookie.secure=true` (`auth/utils.js:17-19`) et HSTS (`server.ts:189-193`). | `production` |
 | `PORT` | **Oui** | Port d'écoute Express (`server.ts:436,511`) et contrôle `check-env.mjs:38,69-76`. | `5000` |
@@ -100,7 +100,7 @@
 | `JWT_SECRET` | **Oui** | Signature/vérification JWT (`server.ts:53-58`, `auth.js:34-40`, `sockets/index.js`). Minimum 32 car. (`check-env.mjs:37`), recommandé 96 car. hex (`openssl rand -hex 48`). | `<SORTIE_OPENSSL_RAND_HEX_48>` |
 | `JWT_EXPIRE` | Recommandée | Durée du jeton JWT (`server.ts:63`, `User.js` ; défaut code `30d`). | `8h` |
 | `JWT_COOKIE_EXPIRE` | Recommandée | Durée du cookie HTTP-only en jours (`server.ts:64`, `auth/utils.js:8` ; défaut code `30`). | `1` |
-| `ALLOWED_ORIGINS` | **Oui** | **Actif (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** : liste blanche CORS Express & Socket.IO séparée par virgules (`server.ts:139-159,161-175,218-232`). | `https://192.168.100.131` |
+| `ALLOWED_ORIGINS` | **Oui** | **Actif (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** : liste blanche CORS Express & Socket.IO séparée par virgules (`server.ts:139-159,161-175,218-232`). | `https://172.16.90.131` |
 | `DOCUMENT_PATH` | Recommandée | Lecture fichiers (`fileController.js`), `check-env.mjs:148`, `backup-all.sh:70`, `restore-all.sh:152`. *(Note : l'écriture de nouveaux courriers utilise `backend/courrier` via `documentHelper.js` — garder cette valeur exacte.)* | `/var/www/dms/backend/courrier` |
 | `UPLOAD_DIR` | Recommandée | Téléversements & scans (`check-env.mjs:149`, `backup-all.sh:71`, `restore-all.sh:153`). *(Multer écrit dans `backend/uploads` — garder cette valeur exacte.)* | `/var/www/dms/backend/uploads` |
 | `UPLOAD_PATH` | Recommandée | Module scanner (`scannerConfig.js:11`). Aligner sur `UPLOAD_DIR`. | `/var/www/dms/backend/uploads` |
@@ -129,24 +129,24 @@
 
 ---
 
-## Étape 0 — Préparation VM QEMU/KVM, IP fixe `192.168.100.131` sur `enp1s0`, énergie/GNOME et verrous `apt` (`[NON TESTÉ EN RÉEL]`)
+## Étape 0 — Préparation VM QEMU/KVM, IP fixe `172.16.90.131` sur `enp1s0`, énergie/GNOME et verrous `apt` (`[NON TESTÉ EN RÉEL]`)
 
-> **Objectif** : Transformer un Ubuntu 24.04 Desktop fraîchement installé dans la VM QEMU/KVM **`dms-Ubuntu-24-04-PC-Q35-ICH9-2009`** en hôte serveur fiable avant toute installation de paquets DMS. **L'IP `192.168.100.131/24` sur `enp1s0` doit être épinglée en statique avant de générer le certificat TLS à l'Étape 6.**
+> **Objectif** : Transformer un Ubuntu 24.04 Desktop fraîchement installé dans la VM QEMU/KVM **`dms-Ubuntu-24-04-PC-Q35-ICH9-2009`** en hôte serveur fiable avant toute installation de paquets DMS. **L'IP `172.16.90.131/24` sur `enp1s0` doit être épinglée en statique avant de générer le certificat TLS à l'Étape 6.**
 
 ### 0.1 Réglages hyperviseur QEMU/KVM sur l'hôte physique
 1. **CPU, Firmware, Disque & Réseau (`virt-manager` / `virsh`)** :
    - **CPU** : mode **`host-passthrough`** (expose AVX/AVX2 pour `node-llama-cpp`), **4 à 8 vCPU** sans dépasser les cœurs physiques de l'hôte.
    - **RAM** : **18 à 24 Go** si le bureau GNOME reste actif (ou **16 Go** si bascule en `multi-user.target` au §0.3), et désactiver le *Memory Ballooning* (`<memballoon model='none'/>` dans `sudo virsh edit dms-Ubuntu-24-04-PC-Q35-ICH9-2009`) pour éviter les conflits OOM avec les ~5 Go de modèles GGUF chargés en permanence.
    - **Disque** : format **`qcow2`** sur bus **VirtIO** (`/dev/vda`).
-   - **Réseau KVM** : vérifier que la VM est en mode **Bridge** sur le LAN (si elle est déjà joignable en `192.168.100.131` depuis les postes clients, vérifier simplement que la passerelle et le sous-réseau `192.168.100.0/24` correspondent au LAN cible).
+   - **Réseau KVM** : vérifier que la VM est en mode **Bridge** sur le LAN (si elle est déjà joignable en `172.16.90.131` depuis les postes clients, vérifier simplement que la passerelle et le sous-réseau `172.16.90.0/24` correspondent au LAN cible).
 2. **Démarrage automatique de la VM avec l'hôte KVM** (sur l'hôte physique) :
    ```bash
    sudo virsh autostart dms-Ubuntu-24-04-PC-Q35-ICH9-2009
    virsh dominfo dms-Ubuntu-24-04-PC-Q35-ICH9-2009 | grep -iE 'Name|State|Autostart|CPU|Max memory'
    ```
 
-### 0.2 Épingler l'IP fixe `192.168.100.131/24` sur `enp1s0` (`nmcli` / Netplan) — OBLIGATOIRE AVANT TLS
-> Sur Ubuntu 24.04 Desktop, `NetworkManager` pilote souvent l'interface via un profil `netplan-enp1s0` ou `"Wired connection 1"`. Un renouvellement DHCP qui changerait `192.168.100.131` casserait l'URL applicative, `ALLOWED_ORIGINS` et le certificat TLS.
+### 0.2 Épingler l'IP fixe `172.16.90.131/24` sur `enp1s0` (`nmcli` / Netplan) — OBLIGATOIRE AVANT TLS
+> Sur Ubuntu 24.04 Desktop, `NetworkManager` pilote souvent l'interface via un profil `netplan-enp1s0` ou `"Wired connection 1"`. Un renouvellement DHCP qui changerait `172.16.90.131` casserait l'URL applicative, `ALLOWED_ORIGINS` et le certificat TLS.
 
 1. **Relever la passerelle, le DNS et le profil actif actuels dans la VM** :
    ```bash
@@ -155,7 +155,7 @@
    resolvectl status enp1s0 | grep -E 'DNS Servers|Current DNS'
    nmcli -t -f NAME,UUID,DEVICE,STATE con show
    ```
-   *(Noter la passerelle `<PASSERELLE>`, ex. `192.168.100.1`, et le(s) serveur(s) DNS `<DNS>`, ex. `192.168.100.1` ou votre DNS interne.)*
+   *(Noter la passerelle `<PASSERELLE>`, ex. `172.16.90.1`, et le(s) serveur(s) DNS `<DNS>`, ex. `172.16.90.1` ou votre DNS interne.)*
 
 2. **Méthode A — Via `nmcli` (si `NetworkManager` gère `enp1s0`)** :
    ```bash
@@ -163,11 +163,11 @@
    CON_NAME="$(nmcli -t -f NAME,DEVICE con show --active | awk -F: '$2=="enp1s0"{print $1; exit}')"
    echo "Profil actif : ${CON_NAME}"
 
-   # Épingler 192.168.100.131/24 en manuel (remplacer <PASSERELLE> et <DNS> par les valeurs relevées ci-dessus) :
+   # Épingler 172.16.90.131/24 en manuel (remplacer <PASSERELLE> et <DNS> par les valeurs relevées ci-dessus) :
    sudo nmcli con mod "${CON_NAME}" \
      connection.interface-name enp1s0 \
      ipv4.method manual \
-     ipv4.addresses "192.168.100.131/24" \
+     ipv4.addresses "172.16.90.131/24" \
      ipv4.gateway "<PASSERELLE>" \
      ipv4.dns "<DNS>" \
      ipv4.ignore-auto-dns yes \
@@ -193,7 +193,7 @@
        enp1s0:
          dhcp4: false
          addresses:
-           - 192.168.100.131/24
+           - 172.16.90.131/24
          routes:
            - to: default
              via: <PASSERELLE>
@@ -208,13 +208,13 @@
 4. **Nom d'hôte & `/etc/hosts`, puis vérification réseau** :
    ```bash
    sudo hostnamectl set-hostname dms-vm
-   grep -q "192.168.100.131" /etc/hosts || echo "192.168.100.131 dms-vm dms.local" | sudo tee -a /etc/hosts
+   grep -q "172.16.90.131" /etc/hosts || echo "172.16.90.131 dms-vm dms.local" | sudo tee -a /etc/hosts
 
    ip -br addr show dev enp1s0
    ip route
    nmcli -f ipv4.method,ipv4.addresses,ipv4.gateway,ipv4.dns con show "${CON_NAME}"
    ```
-   Attendu : `192.168.100.131/24` en `manual`, passerelle par défaut active, résolution DNS OK (`getent hosts dms-vm`).
+   Attendu : `172.16.90.131/24` en `manual`, passerelle par défaut active, résolution DNS OK (`getent hosts dms-vm`).
 
 ### 0.3 RAM, énergie (veille/hibernation/GNOME), agents invité & locales
 1. **Empêcher toute mise en veille ou hibernation (obligatoire sur Ubuntu Desktop)** :
@@ -271,8 +271,8 @@
    Depuis le poste d'administration (copier votre clé SSH avant de désactiver l'auth par mot de passe) :
    ```bash
    ssh-keygen -t ed25519 -C "admin-dms"   # Si vous n'avez pas encore de clé
-   ssh-copy-id dms@192.168.100.131
-   ssh dms@192.168.100.131                # Vérifier que la connexion par clé fonctionne !
+   ssh-copy-id dms@172.16.90.131
+   ssh dms@172.16.90.131                # Vérifier que la connexion par clé fonctionne !
    ```
    Une fois la connexion par clé confirmée dans un second terminal, durcir SSH dans la VM :
    ```bash
@@ -302,7 +302,7 @@
    watch -n 2 virsh domstate dms-Ubuntu-24-04-PC-Q35-ICH9-2009   # Attendre "shut off"
    sudo virsh snapshot-create-as --domain dms-Ubuntu-24-04-PC-Q35-ICH9-2009 \
      --name "etape0-vm-prete-$(date +%Y%m%d-%H%M)" \
-     --description "Ubuntu 24.04 Desktop pret, IP 192.168.100.131 figee, SSH durci"
+     --description "Ubuntu 24.04 Desktop pret, IP 172.16.90.131 figee, SSH durci"
    sudo virsh start dms-Ubuntu-24-04-PC-Q35-ICH9-2009
    ```
 
@@ -379,7 +379,7 @@ Attendu : `active`, `enabled`, écoute exclusivement sur `127.0.0.1:27017`, `con
 - **Règle d'emplacement stricte** : le code applicatif et les données (`backend/courrier`, `backend/uploads`, `models`, `dist`, `logs`) doivent résider **strictement dans `/var/www/dms`** sous **`dms:dms`**, **jamais dans `/home/dms/Desktop`**.
 - **État du dépôt (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** :
   - `package.json:70,81` et `backend/package.json:15,21` sont alignés sur `express ^5.2.1` et `mongoose ^9.10.2` (installation racine unique pour `npm ci`).
-  - `server.ts:127-159,161-175,217-232` applique la liste blanche dynamique **`ALLOWED_ORIGINS`** sur Express et Socket.IO : fixer **`ALLOWED_ORIGINS=https://192.168.100.131`** dans `/var/www/dms/.env`.
+  - `server.ts:127-159,161-175,217-232` applique la liste blanche dynamique **`ALLOWED_ORIGINS`** sur Express et Socket.IO : fixer **`ALLOWED_ORIGINS=https://172.16.90.131`** dans `/var/www/dms/.env`.
 
 ### Commandes
 ```bash
@@ -390,7 +390,7 @@ Attendu : `active`, `enabled`, écoute exclusivement sur `127.0.0.1:27017`, `con
 #   --exclude='dist/' --exclude='.env' --exclude='.env.*' --exclude='backend/.env*' \
 #   --exclude='models/*.gguf' --exclude='backend/courrier/' --exclude='backend/uploads/' \
 #   --exclude='backups/' --exclude='logs/' --exclude='*.log' \
-#   ./ dms@192.168.100.131:/var/www/dms/
+#   ./ dms@172.16.90.131:/var/www/dms/
 
 # 1) Vérifier l'emplacement, supprimer tout backend/.env concurrent et garantir dms:dms sur /var/www/dms
 sudo mkdir -p /var/www/dms/{backend/courrier,backend/uploads/attachments,backend/uploads/usersphoto,backend/uploads/personnelphoto,backend/uploads/templates,backend/uploads/temp,models,backups,logs}
@@ -424,8 +424,8 @@ JWT_SECRET=<JWT_SECRET_HEX>
 JWT_EXPIRE=8h
 JWT_COOKIE_EXPIRE=1
 
-ALLOWED_ORIGINS=https://192.168.100.131
-FRONTEND_URL=https://192.168.100.131
+ALLOWED_ORIGINS=https://172.16.90.131
+FRONTEND_URL=https://172.16.90.131
 
 DOCUMENT_PATH=/var/www/dms/backend/courrier
 UPLOAD_DIR=/var/www/dms/backend/uploads
@@ -536,24 +536,24 @@ Attendu : `mongod` et `pm2-dms` `active`, `dms-backend` `online` (`1` instance `
 
 ---
 
-## Étape 6 — Nginx, certificat auto-signé SAN `IP:192.168.100.131`, import poste client et `ufw` (`[NON TESTÉ EN RÉEL]`)
+## Étape 6 — Nginx, certificat auto-signé SAN `IP:172.16.90.131`, import poste client et `ufw` (`[NON TESTÉ EN RÉEL]`)
 
 - **Fichiers sources (`FAIT`)** : `deploy/ubuntu/scripts/gen-selfsigned-cert.sh:1-73`, `deploy/ubuntu/dms.nginx.conf:1-148`.
 - **Points intégrés (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** :
-  - `gen-selfsigned-cert.sh 192.168.100.131` génère un certificat RSA 4096 bits valide 3 ans dans **`/etc/ssl/dms/`** avec **`IP.2 = 192.168.100.131`** dans l'extension **Subject Alternative Name (SAN)** (`:19-63`), exigé par Chrome/Edge.
+  - `gen-selfsigned-cert.sh 172.16.90.131` génère un certificat RSA 4096 bits valide 3 ans dans **`/etc/ssl/dms/`** avec **`IP.2 = 172.16.90.131`** dans l'extension **Subject Alternative Name (SAN)** (`:19-63`), exigé par Chrome/Edge.
   - `deploy/ubuntu/dms.nginx.conf` configure **`client_max_body_size 100M;`**, les en-têtes WebSocket `/socket.io/`, les certificats sous `/etc/ssl/dms/` et le préfixe **`^~`** sur `location ^~ /courrier/` et `location ^~ /uploads/` (`:72,82`) afin qu'aucune règle regex statique (`:142`) ne contourne l'authentification Express (`protect`).
 
 ### Commandes (dans la VM)
 ```bash
-# 1) Générer le certificat auto-signé SAN pour 192.168.100.131 sous /etc/ssl/dms/
-sudo bash /var/www/dms/deploy/ubuntu/scripts/gen-selfsigned-cert.sh 192.168.100.131
+# 1) Générer le certificat auto-signé SAN pour 172.16.90.131 sous /etc/ssl/dms/
+sudo bash /var/www/dms/deploy/ubuntu/scripts/gen-selfsigned-cert.sh 172.16.90.131
 
-# Vérifier que IP Address:192.168.100.131 figure bien dans le SAN :
+# Vérifier que IP Address:172.16.90.131 figure bien dans le SAN :
 openssl x509 -in /etc/ssl/dms/dms-selfsigned.crt -noout -text | grep -A3 "Subject Alternative Name"
 
-# 2) Installer et adapter la configuration Nginx pour 192.168.100.131
+# 2) Installer et adapter la configuration Nginx pour 172.16.90.131
 sudo cp /var/www/dms/deploy/ubuntu/dms.nginx.conf /etc/nginx/sites-available/dms.conf
-sudo sed -i 's|server_name dms.local;|server_name 192.168.100.131;|g' /etc/nginx/sites-available/dms.conf
+sudo sed -i 's|server_name dms.local;|server_name 172.16.90.131;|g' /etc/nginx/sites-available/dms.conf
 
 sudo ln -sf /etc/nginx/sites-available/dms.conf /etc/nginx/sites-enabled/dms.conf
 sudo rm -f /etc/nginx/sites-enabled/default
@@ -567,10 +567,10 @@ sudo ufw status verbose
 ```
 
 ### Import obligatoire du certificat sur chaque poste client (et navigateur local)
-> `NODE_ENV=production` active `cookie.secure = true` (`backend/controllers/auth/utils.js:17-19`). Sans confiance TLS sur le certificat, le navigateur bloquera l'accès ou refusera les cookies/WebSockets (`wss://192.168.100.131`).
+> `NODE_ENV=production` active `cookie.secure = true` (`backend/controllers/auth/utils.js:17-19`). Sans confiance TLS sur le certificat, le navigateur bloquera l'accès ou refusera les cookies/WebSockets (`wss://172.16.90.131`).
 
 - **Récupérer le certificat public depuis la VM** : `/etc/ssl/dms/dms-selfsigned.crt` (ne **jamais** copier `.key` !).
-  - Exemple depuis un poste admin : `scp dms@192.168.100.131:/etc/ssl/dms/dms-selfsigned.crt ./dms-selfsigned.crt`
+  - Exemple depuis un poste admin : `scp dms@172.16.90.131:/etc/ssl/dms/dms-selfsigned.crt ./dms-selfsigned.crt`
 - **Poste client Windows (PowerShell Administrateur)** :
   ```powershell
   certutil -addstore -f "Root" .\dms-selfsigned.crt
@@ -588,9 +588,9 @@ sudo ufw status verbose
 sudo nginx -t
 sudo nginx -T | grep -nE 'server_name|client_max_body_size|ssl_certificate|location \^~ /(courrier|uploads)'
 ss -ltnp | grep -E ':(80|443)\b'
-curl -skI https://192.168.100.131/api/health
-curl -sk -o /dev/null -w "%{http_code}\n" https://192.168.100.131/uploads/attachments/test.jpg
-curl -sk -i "https://192.168.100.131/socket.io/?EIO=4&transport=polling" | head -n 5
+curl -skI https://172.16.90.131/api/health
+curl -sk -o /dev/null -w "%{http_code}\n" https://172.16.90.131/uploads/attachments/test.jpg
+curl -sk -i "https://172.16.90.131/socket.io/?EIO=4&transport=polling" | head -n 5
 ```
 Attendu : `/api/health` retourne `200` ; `/uploads/attachments/test.jpg` sans jeton retourne `401` ou `403` (jamais `404` Nginx) ; `/socket.io/` répond sans `502`/`404` Nginx.
 
@@ -664,12 +664,12 @@ sudo -u dms -H bash -c "
    ```
    *(Vigilance Ubuntu Desktop : ne pas laisser **Document Scanner / `simple-scan`** ouvert sur le bureau GNOME, et vérifier `sudo fuser -v /dev/bus/usb/*/*` en cas d'erreur `device busy` / conflit `ipp-usb`.)*
 
-### 7.4 Recette complète (`smoke-test.mjs` + tests S1 / S2 / RBAC sur `https://192.168.100.131` avec données fictives)
+### 7.4 Recette complète (`smoke-test.mjs` + tests S1 / S2 / RBAC sur `https://172.16.90.131` avec données fictives)
 
 1. **Suite automatisée `deploy/scripts/smoke-test.mjs`** :
    ```bash
    # Depuis la VM (NODE_TLS_REJECT_UNAUTHORIZED=0 uniquement pour le test local du certificat auto-signé) :
-   NODE_TLS_REJECT_UNAUTHORIZED=0 node /var/www/dms/deploy/scripts/smoke-test.mjs "https://192.168.100.131" --strict-security
+   NODE_TLS_REJECT_UNAUTHORIZED=0 node /var/www/dms/deploy/scripts/smoke-test.mjs "https://172.16.90.131" --strict-security
    ```
    - **Attendu avec le code actuel (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** :
      - **Groupe 1 Déploiement (`DEP-01`..`DEP-04`)** : `4/4 PASS` (`/api/health` 200 `connected`, `/api/departments` sans jeton `401`, `GET /` HTML SPA, route inconnue `404`).
@@ -681,27 +681,71 @@ sudo -u dms -H bash -c "
        - `SEC-09` (`/api/departments?x=/messages` sans jeton → `401`).
    - *Note opérationnelle (`server.ts:124,255-268`)* : `SEC-08` déclenche volontairement le rate-limiter `loginLimiter` (fenêtre de 15 minutes par IP) depuis l'IP qui lance `smoke-test.mjs`. Si vous testez ensuite le login depuis la même IP, attendez 15 minutes ou exécutez `sudo -u dms -H pm2 reload dms-backend` pour réinitialiser le compteur en mémoire.
 
-2. **Matrice de recette fonctionnelle et sécurité sur données fictives (`https://192.168.100.131`)** :
+2. **Matrice de recette fonctionnelle et sécurité sur données fictives (`https://172.16.90.131`)** :
 
 | Contrôle à valider avant toute donnée réelle | Commande / Action de vérification | Résultat attendu (critère de passage) |
 |---|---|---|
-| **R-01 : Protection fichiers (`/courrier/`, `/uploads/`)** | `for p in /courrier/2026/test.pdf /uploads/attachments/test.pdf /uploads/attachments/test.jpg /uploads/usersphoto/test.jpg /uploads/personnelphoto/test.jpg; do printf "$p -> "; curl -sk -o /dev/null -w "%{http_code}\n" "https://192.168.100.131$p"; done` | HTTP **`401` ou `403`** sur les 5 chemins (jamais `404` Nginx ni `200`). |
-| **R-02 : Swagger Admin-only (`/api-docs`)** | `curl -sk -o /dev/null -w "%{http_code}\n" https://192.168.100.131/api-docs` *(sans jeton puis avec jeton rôle `User`)* | `401` sans jeton ; `403` avec rôle `User` ; accessible uniquement avec rôle `Admin` (`server.ts:301-305`). |
-| **R-03 : Coupure MongoDB → refus strict (S1)** | `sudo systemctl stop mongod && sleep 2 && curl -sk -w " (HTTP %{http_code})\n" https://192.168.100.131/api/health && curl -sk -o /dev/null -w "LOGIN:%{http_code}\n" -X POST -H "Content-Type: application/json" -d '{"username":"x","password":"y"}' https://192.168.100.131/api/auth/login` *(puis `sudo systemctl start mongod`)* | `/api/health` indique `"database":"disconnected"` ; `POST /api/auth/login` retourne **`503`** (aucun login hors ligne ni fallback `200` en production, `server.ts:418-421`). |
-| **R-04 : Validation S1 / S2 / RBAC dans le navigateur (données fictives)** | Depuis un poste client ayant importé `dms-selfsigned.crt`, ouvrir **`https://192.168.100.131`**, vérifier l'absence de compte par défaut, créer des départements/utilisateurs **fictifs** (`Admin`, `AdminDepartment`, `AdminTuningDesk`, `User`), créer un courrier et un agent RH fictifs, tester la mise à jour d'un PDF scanné (versioning `v1`/`v2`), le chat RAG IA, et l'isolation RBAC entre départements. | Cadenas HTTPS valide, cookie `Secure` conservé, chaque rôle ne voit/modifie que son périmètre, l'ancien PDF n'est pas écrasé (`documentVersionHelper`), `pm2 logs dms-backend` sans erreur critique. |
-| **R-05 : Isolation réseau externe** | Depuis un poste du LAN : `curl -sI http://192.168.100.131/` et `nc -zv 192.168.100.131 5000` / `27017` / `3000` | Port `80` redirige `301` vers `https://192.168.100.131/...` ; ports `3000`, `5000` et `27017` filtrés/refusés. |
+| **R-01 : Protection fichiers (`/courrier/`, `/uploads/`)** | `for p in /courrier/2026/test.pdf /uploads/attachments/test.pdf /uploads/attachments/test.jpg /uploads/usersphoto/test.jpg /uploads/personnelphoto/test.jpg; do printf "$p -> "; curl -sk -o /dev/null -w "%{http_code}\n" "https://172.16.90.131$p"; done` | HTTP **`401` ou `403`** sur les 5 chemins (jamais `404` Nginx ni `200`). |
+| **R-02 : Swagger Admin-only (`/api-docs`)** | `curl -sk -o /dev/null -w "%{http_code}\n" https://172.16.90.131/api-docs` *(sans jeton puis avec jeton rôle `User`)* | `401` sans jeton ; `403` avec rôle `User` ; accessible uniquement avec rôle `Admin` (`server.ts:301-305`). |
+| **R-03 : Coupure MongoDB → refus strict (S1)** | `sudo systemctl stop mongod && sleep 2 && curl -sk -w " (HTTP %{http_code})\n" https://172.16.90.131/api/health && curl -sk -o /dev/null -w "LOGIN:%{http_code}\n" -X POST -H "Content-Type: application/json" -d '{"username":"x","password":"y"}' https://172.16.90.131/api/auth/login` *(puis `sudo systemctl start mongod`)* | `/api/health` indique `"database":"disconnected"` ; `POST /api/auth/login` retourne **`503`** (aucun login hors ligne ni fallback `200` en production, `server.ts:418-421`). |
+| **R-04 : Validation S1 / S2 / RBAC dans le navigateur (données fictives)** | Depuis un poste client ayant importé `dms-selfsigned.crt`, ouvrir **`https://172.16.90.131`**, vérifier l'absence de compte par défaut, créer des départements/utilisateurs **fictifs** (`Admin`, `AdminDepartment`, `AdminTuningDesk`, `User`), créer un courrier et un agent RH fictifs, tester la mise à jour d'un PDF scanné (versioning `v1`/`v2`), le chat RAG IA, et l'isolation RBAC entre départements. | Cadenas HTTPS valide, cookie `Secure` conservé, chaque rôle ne voit/modifie que son périmètre, l'ancien PDF n'est pas écrasé (`documentVersionHelper`), `pm2 logs dms-backend` sans erreur critique. |
+| **R-05 : Isolation réseau externe** | Depuis un poste du LAN : `curl -sI http://172.16.90.131/` et `nc -zv 172.16.90.131 5000` / `27017` / `3000` | Port `80` redirige `301` vers `https://172.16.90.131/...` ; ports `3000`, `5000` et `27017` filtrés/refusés. |
 
 ---
 
-# PARTIE 3 : EXPLOITATION, DÉPANNAGE VM UBUNTU 24.04 & CONSOLIDATION DES CORRECTIFS
+# PARTIE 3 : EXPLOITATION, MISE À JOUR & DÉPANNAGE UBUNTU 24.04 (`172.16.90.131`)
 
-## 3.1 Mise à jour applicative et retour arrière (`deploy.sh` & `rollback.sh`) (`[NON TESTÉ EN RÉEL]`)
+## 3.1 Mise à jour et déploiement des modifications (`Updating & Deploying Changes`)
+
+### A. Synchronisation rapide depuis le poste de développement (`rsync` → `172.16.90.131:/var/www/dms`)
+
+```bash
+# 1. Sur le poste source : valider TypeScript, lint et compiler le bundle dist/
+npx tsc --noEmit
+npm run lint
+npm run build
+
+# 2. Synchroniser vers /var/www/dms en excluant impérativement node_modules/, uploads/, courrier/, models/*.gguf et .env
+rsync -avz --delete \
+  --exclude='.git/' \
+  --exclude='node_modules/' \
+  --exclude='backend/node_modules/' \
+  --exclude='uploads/' \
+  --exclude='backend/uploads/' \
+  --exclude='backend/courrier/' \
+  --exclude='models/*.gguf' \
+  --exclude='.env' \
+  --exclude='backend/.env' \
+  --exclude='logs/' \
+  --exclude='backups/' \
+  ./ dms@172.16.90.131:/var/www/dms/
+```
+
+Sur le serveur Ubuntu 24.04 (`172.16.90.131`) dans **`/var/www/dms`** :
+
+```bash
+# 3. Redémarrer PM2 (ecosystem.config.cjs déclare le nom 'dms-backend', ou alias 'dms')
+cd /var/www/dms
+pm2 restart dms || pm2 restart dms-backend
+
+# 4. Valider et recharger Nginx
+sudo nginx -t && sudo systemctl reload nginx
+
+# 5. Vérification post-déploiement (PM2, logs, santé API et permissions d'écriture backend/uploads/)
+pm2 status
+pm2 logs dms --lines 50 || pm2 logs dms-backend --lines 50
+curl -sk https://172.16.90.131/api/health
+sudo chown -R dms:dms /var/www/dms/backend/uploads /var/www/dms/backend/courrier
+test -w /var/www/dms/backend/uploads && echo "OK : backend/uploads/ accessible en écriture"
+```
+
+### B. Mise à jour automatisée avec sauvegarde & rollback (`deploy.sh` & `rollback.sh`)
 
 - **Fichiers sources (`[INTÉGRÉ DANS LE DÉPÔT — À VALIDER SUR VM]`)** : `deploy/ubuntu/deploy.sh:1-106`, `deploy/ubuntu/rollback.sh:1-59`.
 - `deploy.sh` source `/var/www/dms/.env` (`:43-46`), exécute `check-env.mjs` (`:51`), lance une sauvegarde préalable dans `/var/backups/dms` (`:55-57`), conserve `dist.bak` (`:60-63`), exécute `npm ci` (`:67`) et `npm run build` (`:71`), recharge `dms-backend` (`:75-82`), puis lance `smoke-test.mjs` (`:91`) avec **rollback automatique** en cas d'échec (`:95-100`).
 
 ```bash
-# Mise à jour applicative (sous l'utilisateur dms) :
+# Mise à jour applicative complète (sous l'utilisateur dms) :
 sudo -u dms -H bash /var/www/dms/deploy/ubuntu/deploy.sh
 
 # Retour arrière manuel d'urgence :
@@ -715,13 +759,13 @@ sudo -u dms -H bash /var/www/dms/deploy/ubuntu/rollback.sh
 | Symptôme | Cause probable vérifiée | Diagnostic et résolution |
 |---|---|---|
 | **Erreur `apt` / `dpkg` verrouillé** | `unattended-upgrades` ou `packagekitd` détient `/var/lib/dpkg/lock-frontend`. | `sudo lsof /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock` ; attendre ou désactiver `unattended-upgrades` (Étape 0.4). Si `dpkg` interrompu : `sudo dpkg --configure -a`. |
-| **Changement d'IP ou conflit DNS sur `enp1s0`** | Profil DHCP résiduel ou conflit Netplan/NetworkManager. | `ip -br a && nmcli -f NAME,UUID,DEVICE,STATE con show` ; supprimer l'ancien profil DHCP et réappliquer `192.168.100.131/24` (Étape 0.2). |
-| **HTTP `502 Bad Gateway` sur `https://192.168.100.131`** | `dms-backend` arrêté (crash `JWT_SECRET` absent, MongoDB arrêté, OOM) ou désaccord de port (`5000`). | `sudo -u dms -H pm2 status && tail -n 50 /var/www/dms/logs/err.log` ; `ss -ltnp \| grep ':5000'` ; `sudo systemctl status mongod`. |
-| **CORS bloqué (`Origine non autorisée par CORS`)** | Requête depuis une origine non listée dans `ALLOWED_ORIGINS` (`server.ts:139-159`). | Vérifier `grep ALLOWED_ORIGINS /var/www/dms/.env` (`https://192.168.100.131`) puis `sudo -u dms -H pm2 reload dms-backend --update-env`. |
+| **Changement d'IP ou conflit DNS sur `enp1s0`** | Profil DHCP résiduel ou conflit Netplan/NetworkManager. | `ip -br a && nmcli -f NAME,UUID,DEVICE,STATE con show` ; supprimer l'ancien profil DHCP et réappliquer `172.16.90.131/24` (Étape 0.2). |
+| **HTTP `502 Bad Gateway` sur `https://172.16.90.131`** | `dms-backend` arrêté (crash `JWT_SECRET` absent, MongoDB arrêté, OOM) ou désaccord de port (`5000`). | `sudo -u dms -H pm2 status && tail -n 50 /var/www/dms/logs/err.log` ; `ss -ltnp \| grep ':5000'` ; `sudo systemctl status mongod`. |
+| **CORS bloqué (`Origine non autorisée par CORS`)** | Requête depuis une origine non listée dans `ALLOWED_ORIGINS` (`server.ts:139-159`). | Vérifier `grep ALLOWED_ORIGINS /var/www/dms/.env` (`https://172.16.90.131`) puis `sudo -u dms -H pm2 reload dms-backend --update-env`. |
 | **HTTP `429` au login après `smoke-test.mjs`** | `loginLimiter` (`server.ts:255-268`, max 5 échecs / 15 min) activé par `SEC-08`. | Attendre 15 min ou recharger PM2 (`sudo -u dms -H pm2 reload dms-backend`). |
-| **Cookie de session rejeté / TLS avertissement** | Certificat `dms-selfsigned.crt` non importé dans les autorités racines du poste client (`cookie.secure=true`). | Réimporter `/etc/ssl/dms/dms-selfsigned.crt` sur le poste client (Étape 6) et vérifier la présence de `IP:192.168.100.131` dans le SAN. |
+| **Cookie de session rejeté / TLS avertissement** | Certificat `dms-selfsigned.crt` non importé dans les autorités racines du poste client (`cookie.secure=true`). | Réimporter `/etc/ssl/dms/dms-selfsigned.crt` sur le poste client (Étape 6) et vérifier la présence de `IP:172.16.90.131` dans le SAN. |
 | **OOM / PM2 redémarre (`↺` augmente)** | GNOME Desktop + `.gguf` (~5 Go) + build Vite dépassent la RAM VM. | `free -h && sudo dmesg -T \| grep -iE 'oom|killed process'`. Basculer la VM en `sudo systemctl set-default multi-user.target` ou augmenter la RAM VM à 24 Go. |
-| **Écran noir console `virt-manager`** | Veille `gdm3` / pilote QXL/Virtio sous Wayland. | Tester en SSH (`ssh dms@192.168.100.131`), vérifier Étape 0.3 (cibles `sleep`/`suspend` masquées), basculer TTY (`Ctrl+Alt+F3`) ou passer en `multi-user.target`. |
+| **Écran noir console `virt-manager`** | Veille `gdm3` / pilote QXL/Virtio sous Wayland. | Tester en SSH (`ssh dms@172.16.90.131`), vérifier Étape 0.3 (cibles `sleep`/`suspend` masquées), basculer TTY (`Ctrl+Alt+F3`) ou passer en `multi-user.target`. |
 | **Scanner USB non vu sous `dms`** | Passthrough absent, droits `/dev/bus/usb`, ou conflit *Simple Scan* / `ipp-usb`. | `lsusb`, `sudo -u dms -H scanimage -L`, fermer *Simple Scan*, vérifier `id dms` (`scanner,lp`) et `SCANNER_ENABLED=true` dans `.env`. |
 
 ---
@@ -751,10 +795,10 @@ sudo -u dms -H bash /var/www/dms/deploy/ubuntu/rollback.sh
 
 ## 3.4 Résumé exécutif Ubuntu 24.04 VM
 
-1. La VM cible **`dms-Ubuntu-24-04-PC-Q35-ICH9-2009`** tourne sous **Ubuntu 24.04 LTS (`noble`) Desktop**, avec le compte **`dms`**, l'interface **`enp1s0`** épinglée en IP fixe **`192.168.100.131/24`**, et **MongoDB 8.0**.
-2. Avant toute donnée réelle, tout déploiement se fait sur **données fictives** jusqu'à validation de **S1, S2 et RBAC** sur **`https://192.168.100.131`**.
-3. Le déploiement applicatif vit exclusivement sous **`/var/www/dms`** (`dms:dms`, jamais dans `/home/dms/Desktop`), avec un unique **`.env`** (`chmod 600`), `PORT=5000`, `ALLOWED_ORIGINS=https://192.168.100.131` et `BACKUP_*=/var/backups/dms`.
-4. L'enchaînement complet suit linéairement **Étape 0** (VM, `enp1s0` statique, énergie/GNOME, SSH, `apt`) → **Étape 1** (`setup-system.sh`) → **Étape 2** (`install-mongodb.sh`) → **Étape 3** (`npm ci` & `.env`) → **Étape 4** (`.gguf`, `build`, `create-superadmin.js`) → **Étape 5** (PM2 + `pm2 startup` + reboot sans GNOME) → **Étape 6** (Nginx `^~`, certificat SAN `192.168.100.131`, import client, `ufw`) → **Étape 7** (`logrotate`, backups, restauration test, scanner USB, recette `smoke-test.mjs`).
+1. La VM cible **`dms-Ubuntu-24-04-PC-Q35-ICH9-2009`** tourne sous **Ubuntu 24.04 LTS (`noble`) Desktop**, avec le compte **`dms`**, l'interface **`enp1s0`** épinglée en IP fixe **`172.16.90.131/24`**, et **MongoDB 8.0**.
+2. Avant toute donnée réelle, tout déploiement se fait sur **données fictives** jusqu'à validation de **S1, S2 et RBAC** sur **`https://172.16.90.131`**.
+3. Le déploiement applicatif vit exclusivement sous **`/var/www/dms`** (`dms:dms`, jamais dans `/home/dms/Desktop`), avec un unique **`.env`** (`chmod 600`), `PORT=5000`, `ALLOWED_ORIGINS=https://172.16.90.131` et `BACKUP_*=/var/backups/dms`.
+4. L'enchaînement complet suit linéairement **Étape 0** (VM, `enp1s0` statique, énergie/GNOME, SSH, `apt`) → **Étape 1** (`setup-system.sh`) → **Étape 2** (`install-mongodb.sh`) → **Étape 3** (`npm ci` & `.env`) → **Étape 4** (`.gguf`, `build`, `create-superadmin.js`) → **Étape 5** (PM2 + `pm2 startup` + reboot sans GNOME) → **Étape 6** (Nginx `^~`, certificat SAN `172.16.90.131`, import client, `ufw`) → **Étape 7** (`logrotate`, backups, restauration test, scanner USB, recette `smoke-test.mjs`).
 
 ---
 

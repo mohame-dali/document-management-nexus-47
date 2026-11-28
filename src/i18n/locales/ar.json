@@ -1857,7 +1857,7 @@
   "dashboard.executive.emptyTitle": "لا توجد اختناقات تشغيلية حالياً",
   "dashboard.executive.emptyDesc": "جميع المراسلات الواردة العاجلة معالجة أو مسندة لمسؤولين عبر الأقسام.",
   "dashboard.executive.errorLoading": "تعذر تحميل بيانات المتابعة القيادية من الخادم.",
-  "sidebar.organizationAndTemplates": "المؤسسة والنماذج",
+  "sidebar.organizationAndTemplates": "الإدارة والنماذج",
   "organizationHub.description": "النماذج الإدارية المعتمدة والهيكل التنظيمي للمؤسسة",
   "organizationHub.tabTemplates": "النماذج الإدارية",
   "organizationHub.tabChart": "الهيكل التنظيمي",

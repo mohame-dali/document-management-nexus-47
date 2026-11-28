@@ -24,6 +24,7 @@ import {
   Plus,
   Zap,
   Info,
+  Building2,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -286,13 +287,23 @@ const GlobalSearch: React.FC = () => {
         icon: CalendarCheck,
       },
       {
+        id: 'qa-organization',
+        url: '/dashboard/organization',
+        labelAr: 'الإدارة والنماذج',
+        labelFr: 'Administration & Modèles',
+        badgeAr: 'إدارة',
+        badgeFr: 'Modèles',
+        keywords: 'administration modeles templates organigramme الإدارة والنماذج النماذج الهيكل التنظيمي',
+        icon: Building2,
+      },
+      {
         id: 'qa-org-chart',
         url: '/dashboard/organization/chart',
         labelAr: 'الهيكل التنظيمي',
         labelFr: 'Organigramme',
-        badgeAr: 'الهيكل',
-        badgeFr: 'Structure',
-        keywords: 'organization chart organigramme الهيكل التنظيمي',
+        badgeAr: 'الإدارة والنماذج',
+        badgeFr: 'Admin & Modèles',
+        keywords: 'organization chart organigramme administration modeles الهيكل التنظيمي الإدارة والنماذج',
         icon: Network,
       },
       {
@@ -300,9 +311,9 @@ const GlobalSearch: React.FC = () => {
         url: '/dashboard/organization/templates',
         labelAr: 'النماذج الإدارية',
         labelFr: 'Modèles administratifs',
-        badgeAr: 'نماذج',
-        badgeFr: 'Modèles',
-        keywords: 'templates modèles النماذج القوالب',
+        badgeAr: 'الإدارة والنماذج',
+        badgeFr: 'Admin & Modèles',
+        keywords: 'templates modèles administration الإدارة والنماذج النماذج القوالب',
         icon: FileText,
       },
     ];

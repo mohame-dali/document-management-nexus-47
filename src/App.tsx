@@ -273,7 +273,7 @@ function App() {
                           <Route path="stages" element={<RHStagesPage />} />
                         </Route>
 
-                        {/* Hub 3 : المؤسسة والنماذج (Organisation & Modèles) */}
+                        {/* Hub 3 : الإدارة والنماذج (Administration & Modèles) */}
                         <Route path="organization" element={<OrganizationHubLayout />}>
                           <Route index element={<Navigate to="/dashboard/organization/templates" replace />} />
                           <Route path="templates" element={<TemplatesPage />} />
