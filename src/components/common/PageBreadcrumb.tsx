@@ -10,6 +10,8 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { useDirection } from '@/i18n/useDirection';
+import { useAuth } from '@/contexts/AuthContext';
+import { getDefaultLandingRoute } from '@/utils/roleUtils';
 import { cn } from '@/lib/utils';
 
 export interface PageBreadcrumbItem {
@@ -35,7 +37,10 @@ export const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({
   className,
 }) => {
   const { isRTL } = useDirection();
+  const { currentUser } = useAuth();
   const SeparatorIcon = isRTL ? ChevronLeft : ChevronRight;
+  const resolvedHomeTo =
+    homeTo === '/dashboard' && currentUser ? getDefaultLandingRoute(currentUser) : homeTo;
 
   return (
     <Breadcrumb
@@ -46,10 +51,10 @@ export const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({
         {homeLabel && (
           <>
             <BreadcrumbItem>
-              {homeTo ? (
+              {resolvedHomeTo ? (
                 <BreadcrumbLink asChild>
                   <Link
-                    to={homeTo}
+                    to={resolvedHomeTo}
                     className="inline-flex items-center gap-1 font-medium text-slate-600 dark:text-slate-300 hover:text-[#2c5282] dark:hover:text-blue-300 transition-colors"
                   >
                     {showHomeIcon && <Home className="h-3.5 w-3.5 shrink-0" />}

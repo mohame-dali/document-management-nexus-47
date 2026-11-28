@@ -288,6 +288,7 @@ export const DIRECT_ITEMS: DirectNavigationItem[] = [
     labelFr: 'Tableau de bord',
     path: '/dashboard',
     icon: 'LayoutDashboard',
+    roles: ['Admin', 'Director'],
   },
   {
     id: 'messages',

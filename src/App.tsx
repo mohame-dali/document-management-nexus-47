@@ -43,7 +43,6 @@ import ScanDocumentPage from './pages/documents/ScanDocumentPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import FoldersPage from './pages/folders/FolderManagementPage';
 import MessagesPage from './pages/messages/MessagesPage';
-import AdminDepartmentDashboard from './pages/department/AdminDepartmentDashboard';
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import DocumentOptionsPage from './pages/documents/DocumentOptionsPage';
 import NotFound from './pages/NotFound';
@@ -156,7 +155,7 @@ const HRProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       return <>{children}</>;
     }
 
-    return <Navigate to="/dashboard/admin-department" replace />;
+    return <Navigate to="/dashboard/mail/incoming" replace />;
   }
 
   return <Navigate to="/403" replace />;
@@ -196,7 +195,11 @@ function App() {
                             <DashboardLayout />
                           </ProtectedRoute>
                         }>
-                          <Route index element={<DashboardPage />} />
+                          <Route index element={
+                            <ProtectedRoute requireExecutiveDashboard redirectTo="/dashboard/mail/incoming">
+                              <DashboardPage />
+                            </ProtectedRoute>
+                          } />
                           
                           {/* Route Scanner */}
                           <Route path="scan" element={<ScanDocumentPage />} />
@@ -349,10 +352,10 @@ function App() {
                           <Route path="guide" element={<InstallationGuidePage />} />
                         </Route>
 
-                        {/* Admin Department specific dashboard */}
+                        {/* Restricted admin-department route (redirects non-executives to mail, executives to /dashboard) */}
                         <Route path="admin-department" element={
-                          <ProtectedRoute allowedRoles={['AdminDepartment']}>
-                            <AdminDepartmentDashboard />
+                          <ProtectedRoute requireExecutiveDashboard redirectTo="/dashboard/mail/incoming">
+                            <Navigate to="/dashboard" replace />
                           </ProtectedRoute>
                         } />
                         

@@ -32,6 +32,7 @@ import { getOrganizationSettings } from '@/services/hr/personnelApi';
 import FolderSidebar from '@/components/folders/FolderSidebar';
 import { useHubBadges } from '@/hooks/useHubBadges';
 import { useServerConnection } from '@/hooks/useServerConnection';
+import { isExecutiveDashboardUser } from '@/utils/roleUtils';
 
 const Sidebar = () => {
   const { currentUser } = useAuth();
@@ -74,16 +75,18 @@ const Sidebar = () => {
       Boolean(userActiveDeptId) &&
       String(userActiveDeptId) === String(rhDepartmentId));
 
+  const canAccessDashboard = isExecutiveDashboardUser(currentUser);
+
   // Définition des 5-8 items directs de la sidebar (SANS accordéon, approche Hubs Gmail)
   const directMenuItems = [
-    // 1. لوحة التحكم (direct)
-    {
+    // 1. لوحة التحكم — réservé exclusivement à Admin et Directeur
+    ...(canAccessDashboard ? [{
       id: 'dashboard',
-      path: currentUser?.role === 'AdminDepartment' ? '/dashboard/admin-department' : '/dashboard',
-      label: currentUser?.role === 'AdminDepartment' ? t('sidebar.departmentDashboard') : t('sidebar.dashboard'),
-      icon: currentUser?.role === 'AdminDepartment' ? Building2 : LayoutDashboard,
-      isActive: () => location.pathname === '/dashboard' || location.pathname === '/dashboard/admin-department',
-    },
+      path: '/dashboard',
+      label: t('sidebar.dashboard'),
+      icon: LayoutDashboard,
+      isActive: () => location.pathname === '/dashboard',
+    }] : []),
 
     // 2. 📁 البريد والمستندات (hub 1)
     {

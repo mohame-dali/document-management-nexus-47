@@ -13,6 +13,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, ArrowLeft, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import { getDefaultLandingRoute } from '@/utils/roleUtils';
 
 const getFormSchema = (t: (key: string) => string) => z.object({
   username: z.string().min(1, t('login.usernameRequired')),
@@ -64,11 +65,7 @@ const LoginPage = () => {
     // If user is already logged in and didn't explicitly logout, redirect them
     if (currentUser && !hasExplicitLogout) {
       console.log('User already logged in without explicit logout, redirecting...');
-      if (currentUser.role === 'AdminDepartment' && currentUser.departments.length > 0) {
-        navigate('/dashboard/admin-department');
-      } else {
-        navigate('/dashboard');
-      }
+      navigate(getDefaultLandingRoute(currentUser), { replace: true });
     }
     
     // Clear the explicit logout flag once we've handled it

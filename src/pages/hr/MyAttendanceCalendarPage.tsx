@@ -569,9 +569,9 @@ export const MyAttendanceCalendarPage: React.FC = () => {
           <div className="space-y-1.5">
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-              <Link to="/dashboard" className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
+              <Link to={currentUser?.role === 'Admin' || currentUser?.role === 'Director' ? '/dashboard' : '/dashboard/mail/incoming'} className="hover:text-[#2c5282] dark:hover:text-sky-400 flex items-center gap-1 transition-colors">
                 <Home className="h-3.5 w-3.5" />
-                <span>{isRTL ? 'لوحة التحكم' : 'Tableau de bord'}</span>
+                <span>{isRTL ? (currentUser?.role === 'Admin' || currentUser?.role === 'Director' ? 'لوحة التحكم' : 'الرئيسية') : (currentUser?.role === 'Admin' || currentUser?.role === 'Director' ? 'Tableau de bord' : 'Accueil')}</span>
               </Link>
               <BreadcrumbChevron className="h-3.5 w-3.5 text-slate-400" />
               <Link to="/dashboard/hr/my-profile" className="hover:text-[#2c5282] dark:hover:text-sky-400 transition-colors">

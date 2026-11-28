@@ -40,7 +40,7 @@ const MainNav = () => {
       title: "Dashboard",
       href: "/dashboard",
       icon: <Home className="h-5 w-5" />,
-      roles: ["Director", "Admin", "AdminDepartment", "AdminTuningDesk", "User"],
+      roles: ["Director", "Admin"],
     },
     {
       title: "Users",

@@ -51,11 +51,34 @@ export interface DashboardCriticalAuditItem {
   createdAt: string;
 }
 
+export interface ExecutiveFollowUpDocument {
+  _id: string;
+  serialNumber: number;
+  year: number;
+  subject: string;
+  correspondenceNumber?: string;
+  arrivalDate?: string | null;
+  activity?: string;
+  dateActivity?: string | null;
+  departments: string[];
+  hasResponsible: boolean;
+  isUrgentOrOverdue: boolean;
+  urgencyStatus: 'overdue' | 'urgent' | 'unassigned';
+}
+
+export interface ExecutiveDashboardData {
+  urgentOrOverdueCount: number;
+  unassignedResponsibleCount: number;
+  pendingHrRequestsCount: number;
+  followUpDocuments: ExecutiveFollowUpDocument[];
+}
+
 export interface DashboardSummaryData {
   role: string;
   isRHAdmin: boolean;
   year: number;
   timestamp: string;
+  executive?: ExecutiveDashboardData;
   admin?: {
     system: {
       mongodb: 'connected' | 'disconnected';

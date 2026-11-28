@@ -2,15 +2,20 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { isExecutiveDashboardUser } from '@/utils/roleUtils';
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
   allowedRoles?: Array<'Director' | 'Admin' | 'AdminDepartment' | 'AdminTuningDesk' | 'User'>;
+  requireExecutiveDashboard?: boolean;
+  redirectTo?: string;
 };
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  allowedRoles = [] 
+  allowedRoles = [],
+  requireExecutiveDashboard = false,
+  redirectTo = '/403',
 }) => {
   const { currentUser, loading } = useAuth();
   const location = useLocation();
@@ -29,12 +34,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
+  // Executive dashboard guard (Admin & Director/Directeur only)
+  if (requireExecutiveDashboard && !isExecutiveDashboardUser(currentUser)) {
+    return <Navigate to={redirectTo === '/403' ? '/dashboard/mail/incoming' : redirectTo} replace />;
+  }
+
   // Check role-based access
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentUser.role)) {
-    return <Navigate to="/403" state={{ from: location }} replace />;
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
 };
 
 export default ProtectedRoute;
+

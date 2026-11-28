@@ -3,9 +3,13 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getDefaultLandingRoute } from '@/utils/roleUtils';
 
 const UnauthorizedPage = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const homeRoute = getDefaultLandingRoute(currentUser);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f7fafc]" dir="rtl">
@@ -19,7 +23,7 @@ const UnauthorizedPage = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(homeRoute)}
             className="h-11 px-6 bg-[#2c5282] text-white hover:bg-[#2a4365] rounded font-medium"
           >
             الصفحة الرئيسية

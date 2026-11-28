@@ -1832,7 +1832,32 @@
   "trash.confirmEmptyWarning": "Aucun de ces éléments ne pourra être récupéré !",
   "trash.emptying": "Vidage...",
   "trash.confirmEmptyAction": "Oui, vider la corbeille",
-  "trash.back": "Annuler"
+  "trash.back": "Annuler",
+  "dashboard.executive.title": "Tableau de suivi exécutif",
+  "dashboard.executive.subtitle": "Vue opérationnelle des courriers urgents, non affectés et demandes RH en attente",
+  "dashboard.executive.refresh": "Actualiser",
+  "dashboard.executive.kpi.urgentOverdue": "Courriers urgents ou en retard",
+  "dashboard.executive.kpi.urgentOverdueDesc": "Courriers entrants arrivés à échéance ou nécessitant une réponse rapide",
+  "dashboard.executive.kpi.unassigned": "Courriers en attente d’affectation",
+  "dashboard.executive.kpi.unassignedDesc": "Courriers entrants ouverts sans responsable désigné",
+  "dashboard.executive.kpi.pendingHr": "Demandes RH en attente",
+  "dashboard.executive.kpi.pendingHrDesc": "Déclarations de présence et demandes de congés à valider",
+  "dashboard.executive.table.title": "Courriers nécessitant une action prioritaire",
+  "dashboard.executive.table.subtitle": "Cliquez sur une ligne pour consulter le courrier et désigner un responsable",
+  "dashboard.executive.table.colReference": "Référence",
+  "dashboard.executive.table.colSubject": "Objet",
+  "dashboard.executive.table.colDepartment": "Département affecté",
+  "dashboard.executive.table.colArrivalDate": "Date d'arrivée",
+  "dashboard.executive.table.colStatus": "Statut / Priorité",
+  "dashboard.executive.table.noDepartment": "Non orienté",
+  "dashboard.executive.table.noResponsibleBadge": "Sans responsable",
+  "dashboard.executive.status.overdue": "En retard",
+  "dashboard.executive.status.urgent": "Urgent",
+  "dashboard.executive.status.unassigned": "Sans responsable",
+  "dashboard.executive.emptyTitle": "Aucun point de blocage opérationnel",
+  "dashboard.executive.emptyDesc": "Tous les courriers entrants urgents sont pris en charge ou affectés à un responsable.",
+  "dashboard.executive.errorLoading": "Impossible de charger les indicateurs exécutifs depuis le serveur."
 }
+
 
 

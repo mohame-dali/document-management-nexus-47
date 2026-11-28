@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { LucideIcon, ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDirection } from '@/i18n/useDirection';
+import { useAuth } from '@/contexts/AuthContext';
+import { getDefaultLandingRoute } from '@/utils/roleUtils';
 import { AutoRefreshIndicator } from '@/components/common/AutoRefreshIndicator';
 
 export interface HubTab {
@@ -37,7 +39,9 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
   compact = false,
 }) => {
   const { isRTL } = useDirection();
+  const { currentUser } = useAuth();
   const location = useLocation();
+  const homePath = getDefaultLandingRoute(currentUser);
 
   // Filtrer les onglets selon le rôle
   const visibleTabs = React.useMemo(() => {
@@ -71,7 +75,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
           {/* Breadcrumb */}
           {breadcrumb && breadcrumb.length > 0 && (
             <nav className={`flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 ${compact ? 'mb-1.5' : 'mb-3'}`} aria-label="Breadcrumb">
-              <Link to="/dashboard" className="flex items-center gap-1 hover:text-[#2c5282] dark:hover:text-blue-400 transition-colors">
+              <Link to={homePath} className="flex items-center gap-1 hover:text-[#2c5282] dark:hover:text-blue-400 transition-colors">
                 <Home className="w-3.5 h-3.5" />
                 <span>{isRTL ? 'الرئيسية' : 'Accueil'}</span>
               </Link>

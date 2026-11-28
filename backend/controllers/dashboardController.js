@@ -4,12 +4,10 @@ const OutgoingDocument = require('../models/OutgoingDocument');
 const Personnel = require('../models/Personnel');
 const AuditLog = require('../models/AuditLog');
 const SemanticIndex = require('../models/SemanticIndex');
-const OrganizationSettings = require('../models/OrganizationSettings');
-const Attendance = require('../models/Attendance');
 const AttendanceDeclaration = require('../models/AttendanceDeclaration');
 const Department = require('../models/Department');
-const Message = require('../models/Message');
 const { getWorkerRuntimeStatus } = require('../services/ollamaService');
+const { isExecutiveDashboardUser } = require('../middleware/auth');
 
 const CRITICAL_AUDIT_ACTIONS = [
   'user_create',
@@ -25,21 +23,137 @@ const CRITICAL_AUDIT_ACTIONS = [
   'presence_settings_balance_change',
 ];
 
-const toId = (val) => {
-  if (!val) return null;
-  if (typeof val === 'object' && val._id) return String(val._id);
-  return String(val);
+const PRIORITY_RANK = {
+  overdue: 0,
+  urgent: 1,
+  unassigned: 2,
 };
+
+async function buildExecutiveBottleneckData({ startOfToday, tomorrowEnd }) {
+  const pendingAnswerOr = [{ answer: null }, { answer: { $exists: false } }];
+
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const deletedAnswerIds = await OutgoingDocument.distinct('_id', { isDeleted: true });
+      if (Array.isArray(deletedAnswerIds) && deletedAnswerIds.length > 0) {
+        pendingAnswerOr.push({ answer: { $in: deletedAnswerIds } });
+      }
+    } catch {
+      // Fallback safely to null/missing answers if distinct fails
+    }
+  }
+
+  const urgentCriteria = {
+    activity: { $nin: [null, ''] },
+    dateActivity: { $ne: null, $lte: tomorrowEnd },
+  };
+  const unassignedCriteria = {
+    $or: [{ responsibleUser: null }, { responsibleUser: { $exists: false } }],
+  };
+
+  const [
+    urgentOrOverdueCount,
+    unassignedResponsibleCount,
+    pendingHrRequestsCount,
+    rawFollowUpDocs,
+  ] = await Promise.all([
+    IncomingDocument.countDocuments({
+      isDeleted: { $ne: true },
+      $or: pendingAnswerOr,
+      ...urgentCriteria,
+    }),
+    IncomingDocument.countDocuments({
+      isDeleted: { $ne: true },
+      $and: [{ $or: pendingAnswerOr }, unassignedCriteria],
+    }),
+    AttendanceDeclaration.countDocuments({ validationStatus: 'en_attente' }),
+    IncomingDocument.find({
+      isDeleted: { $ne: true },
+      $and: [
+        { $or: pendingAnswerOr },
+        { $or: [urgentCriteria, unassignedCriteria] },
+      ],
+    })
+      .select('serialNumber year subject arrivalDate activity dateActivity correspondenceNumber assignedTo responsibleUser')
+      .populate('assignedTo.id', 'name code')
+      .sort({ dateActivity: 1, arrivalDate: -1, createdAt: -1 })
+      .limit(40)
+      .lean(),
+  ]);
+
+  const mappedDocs = (Array.isArray(rawFollowUpDocs) ? rawFollowUpDocs : []).map((doc) => {
+    const hasActivityDeadline = Boolean(doc.activity && String(doc.activity).trim() !== '' && doc.dateActivity);
+    const deadlineDate = hasActivityDeadline ? new Date(doc.dateActivity) : null;
+    const isValidDeadline = Boolean(deadlineDate && !Number.isNaN(deadlineDate.getTime()));
+    const isOverdue = Boolean(isValidDeadline && deadlineDate < startOfToday);
+    const isUrgent = Boolean(isValidDeadline && deadlineDate >= startOfToday && deadlineDate <= tomorrowEnd);
+    const isUnassigned = !doc.responsibleUser;
+
+    let urgencyStatus = 'unassigned';
+    if (isOverdue) {
+      urgencyStatus = 'overdue';
+    } else if (isUrgent) {
+      urgencyStatus = 'urgent';
+    }
+
+    const departments = Array.isArray(doc.assignedTo)
+      ? doc.assignedTo
+          .map((dept) => (dept?.id && typeof dept.id === 'object' ? dept.id.name : dept?.name) || '')
+          .filter(Boolean)
+      : [];
+
+    return {
+      _id: String(doc._id),
+      serialNumber: doc.serialNumber,
+      year: doc.year,
+      subject: doc.subject || '',
+      correspondenceNumber: doc.correspondenceNumber || '',
+      arrivalDate: doc.arrivalDate || null,
+      activity: doc.activity || '',
+      dateActivity: doc.dateActivity || null,
+      departments,
+      hasResponsible: !isUnassigned,
+      isUrgentOrOverdue: isOverdue || isUrgent,
+      urgencyStatus,
+    };
+  });
+
+  mappedDocs.sort((a, b) => {
+    const rankDiff = (PRIORITY_RANK[a.urgencyStatus] ?? 9) - (PRIORITY_RANK[b.urgencyStatus] ?? 9);
+    if (rankDiff !== 0) return rankDiff;
+    if (a.dateActivity && b.dateActivity) {
+      const deadlineDiff = new Date(a.dateActivity).getTime() - new Date(b.dateActivity).getTime();
+      if (deadlineDiff !== 0) return deadlineDiff;
+    }
+    const arrivalA = a.arrivalDate ? new Date(a.arrivalDate).getTime() : 0;
+    const arrivalB = b.arrivalDate ? new Date(b.arrivalDate).getTime() : 0;
+    return arrivalB - arrivalA;
+  });
+
+  return {
+    urgentOrOverdueCount,
+    unassignedResponsibleCount,
+    pendingHrRequestsCount,
+    followUpDocuments: mappedDocs.slice(0, 20),
+  };
+}
 
 /**
  * @desc    Obtenir les statistiques réelles et précises du dashboard (KPIs)
  * @route   GET /api/dashboard/stats?year=2024
- * @access  Private
+ * @access  Private (Admin & Director only)
  */
 exports.getDashboardStats = async (req, res, next) => {
   try {
-    const currentYear = req.query.year 
-      ? parseInt(req.query.year, 10) 
+    if (!isExecutiveDashboardUser(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Dashboard access is restricted to Admin and Director roles',
+      });
+    }
+
+    const currentYear = req.query.year
+      ? parseInt(req.query.year, 10)
       : new Date().getFullYear();
 
     const incomingFilter = {
@@ -52,23 +166,11 @@ exports.getDashboardStats = async (req, res, next) => {
       year: currentYear,
     };
 
-    // Cloisonnement RBAC par département si applicable
-    const userRole = req.user?.role;
-    const isGlobalRole = ['Director', 'AdminTuningDesk', 'Admin'].includes(userRole);
-
-    if (!isGlobalRole && req.user?.activeDepartment) {
-      const activeDeptId = req.user.activeDepartment._id || req.user.activeDepartment;
-      incomingFilter['assignedTo.id'] = activeDeptId;
-      outgoingFilter['source.id'] = activeDeptId;
-    }
-
-    // Filtre des courriers entrants en attente de réponse
     const pendingFilter = {
       ...incomingFilter,
       answer: null,
     };
 
-    // Exécution parallélisée des 3 compteurs sur MongoDB
     const [incomingTotal, outgoingTotal, pending] = await Promise.all([
       IncomingDocument.countDocuments(incomingFilter),
       OutgoingDocument.countDocuments(outgoingFilter),
@@ -91,48 +193,41 @@ exports.getDashboardStats = async (req, res, next) => {
 };
 
 /**
- * @desc    Obtenir un résumé exécutif en lecture seule adapté au rôle de l'utilisateur connecté
+ * @desc    Obtenir le résumé exécutif de suivi opérationnel (Admin et Directeur uniquement)
  * @route   GET /api/dashboard/summary?year=2026
- * @access  Private
+ * @access  Private (Admin & Director only)
  */
 exports.getDashboardSummary = async (req, res, next) => {
   try {
-    const role = req.user?.role || 'User';
+    if (!isExecutiveDashboardUser(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Dashboard access is restricted to Admin and Director roles',
+      });
+    }
+
+    const role = req.user?.role || 'Director';
+    const normalizedRole = String(role).trim().toLowerCase();
+    const isAdminRole = normalizedRole === 'admin';
     const currentYear = req.query.year
       ? parseInt(req.query.year, 10) || new Date().getFullYear()
       : new Date().getFullYear();
 
-    const activeDeptId = toId(req.user?.activeDepartment);
-    const activeDeptName =
-      typeof req.user?.activeDepartment === 'object' && req.user?.activeDepartment !== null
-        ? req.user.activeDepartment.name || ''
-        : '';
-
-    const settings = await OrganizationSettings.findOne()
-      .select('rhDepartmentId')
-      .lean();
-    const rhDeptId = toId(settings?.rhDepartmentId);
-    const isRHAdmin =
-      role === 'AdminDepartment' &&
-      Boolean(rhDeptId) &&
-      Boolean(activeDeptId) &&
-      activeDeptId === rhDeptId;
-
     const now = new Date();
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(now);
-    endOfToday.setHours(23, 59, 59, 999);
     const tomorrowEnd = new Date(startOfToday.getTime() + 2 * 24 * 60 * 60 * 1000 - 1);
 
     const summary = {
       role,
-      isRHAdmin,
+      isRHAdmin: false,
       year: currentYear,
       timestamp: now.toISOString(),
     };
 
-    if (role === 'Admin') {
+    const executivePromise = buildExecutiveBottleneckData({ startOfToday, tomorrowEnd });
+
+    if (isAdminRole) {
       const failedIndexFilter = {
         isDeleted: { $ne: true },
         isIndexed: false,
@@ -143,6 +238,7 @@ exports.getDashboardSummary = async (req, res, next) => {
       };
 
       const [
+        executiveData,
         indexedIncoming,
         indexedOutgoing,
         failedIncoming,
@@ -151,6 +247,7 @@ exports.getDashboardSummary = async (req, res, next) => {
         pendingPersonnelCount,
         criticalLogs,
       ] = await Promise.all([
+        executivePromise,
         IncomingDocument.countDocuments({ isDeleted: { $ne: true }, isIndexed: true }),
         OutgoingDocument.countDocuments({ isDeleted: { $ne: true }, isIndexed: true }),
         IncomingDocument.countDocuments(failedIndexFilter),
@@ -168,6 +265,7 @@ exports.getDashboardSummary = async (req, res, next) => {
           .lean(),
       ]);
 
+      summary.executive = executiveData;
       summary.admin = {
         system: {
           mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
@@ -189,80 +287,21 @@ exports.getDashboardSummary = async (req, res, next) => {
           createdAt: log.createdAt,
         })),
       };
-    } else if (role === 'AdminTuningDesk') {
-      const [todayIncoming, todayOutgoing, unroutedIncoming, activeOcrIncoming, activeOcrOutgoing] =
-        await Promise.all([
-          IncomingDocument.countDocuments({
-            isDeleted: { $ne: true },
-            createdAt: { $gte: startOfToday, $lte: endOfToday },
-          }),
-          OutgoingDocument.countDocuments({
-            isDeleted: { $ne: true },
-            createdAt: { $gte: startOfToday, $lte: endOfToday },
-          }),
-          IncomingDocument.countDocuments({
-            isDeleted: { $ne: true },
-            $or: [{ assignedTo: { $exists: false } }, { assignedTo: { $size: 0 } }],
-          }),
-          IncomingDocument.countDocuments({
-            isDeleted: { $ne: true },
-            ocrStatus: { $in: ['pending', 'processing'] },
-          }),
-          OutgoingDocument.countDocuments({
-            isDeleted: { $ne: true },
-            ocrStatus: { $in: ['pending', 'processing'] },
-          }),
-        ]);
-
-      summary.bureauOrdre = {
-        todayIncoming,
-        todayOutgoing,
-        unroutedIncoming,
-        activeOcrJobs: activeOcrIncoming + activeOcrOutgoing,
-      };
-    } else if (isRHAdmin) {
-      const [
-        activePersonnel,
-        pendingAccounts,
-        todayPresent,
-        todayAbsent,
-        pendingDeclarations,
-      ] = await Promise.all([
-        Personnel.countDocuments({ isDeleted: { $ne: true }, statut: 'actif' }),
-        Personnel.countDocuments({ isDeleted: { $ne: true }, statut: 'en_attente' }),
-        Attendance.countDocuments({
-          date: { $gte: startOfToday, $lte: endOfToday },
-          statut: 'present',
-        }),
-        Attendance.countDocuments({
-          date: { $gte: startOfToday, $lte: endOfToday },
-          statut: 'absent',
-        }),
-        AttendanceDeclaration.countDocuments({ validationStatus: 'en_attente' }),
-      ]);
-
-      summary.hr = {
-        activePersonnel,
-        pendingAccounts,
-        todayAttendance: {
-          present: todayPresent,
-          absent: todayAbsent,
-        },
-        pendingDeclarations,
-      };
-    } else if (role === 'Director') {
+    } else {
       const unansweredFilter = {
         isDeleted: { $ne: true },
         $or: [{ answer: null }, { answer: { $exists: false } }],
       };
 
       const [
+        executiveData,
         incomingTotal,
         outgoingTotal,
         unansweredIncoming,
         unansweredUrgentIncoming,
         activeDepartments,
       ] = await Promise.all([
+        executivePromise,
         IncomingDocument.countDocuments({ isDeleted: { $ne: true }, year: currentYear }),
         OutgoingDocument.countDocuments({ isDeleted: { $ne: true }, year: currentYear }),
         IncomingDocument.countDocuments(unansweredFilter),
@@ -274,79 +313,13 @@ exports.getDashboardSummary = async (req, res, next) => {
         Department.countDocuments({ isActive: true }),
       ]);
 
+      summary.executive = executiveData;
       summary.director = {
         incomingTotal,
         outgoingTotal,
         unansweredIncoming,
         unansweredUrgentIncoming,
         activeDepartments,
-      };
-    } else {
-      // AdminDepartment (non-RH) or User — strict department + user scoping
-      const deptUnansweredFilter = activeDeptId
-        ? {
-            isDeleted: { $ne: true },
-            'assignedTo.id': activeDeptId,
-            $or: [{ answer: null }, { answer: { $exists: false } }],
-          }
-        : null;
-
-      const userId = req.user?._id;
-      const inboxFilter = userId
-        ? {
-            'recipients.user': userId,
-            deletedBy: { $ne: userId },
-            permanentlyDeletedBy: { $ne: userId },
-          }
-        : null;
-
-      const [unansweredIncoming, urgentIncoming, unreadMessagesCount, recentMsgDocs] =
-        await Promise.all([
-          deptUnansweredFilter ? IncomingDocument.countDocuments(deptUnansweredFilter) : 0,
-          deptUnansweredFilter
-            ? IncomingDocument.countDocuments({
-                ...deptUnansweredFilter,
-                activity: { $nin: [null, ''] },
-                dateActivity: { $ne: null, $lte: tomorrowEnd },
-              })
-            : 0,
-          userId
-            ? Message.countDocuments({
-                recipients: { $elemMatch: { user: userId, read: false } },
-                deletedBy: { $ne: userId },
-                permanentlyDeletedBy: { $ne: userId },
-              })
-            : 0,
-          inboxFilter
-            ? Message.find(inboxFilter)
-                .sort({ createdAt: -1 })
-                .limit(4)
-                .select('subject priority sender recipients createdAt')
-                .populate('sender', 'username role')
-                .lean()
-            : [],
-        ]);
-
-      summary.department = {
-        departmentId: activeDeptId,
-        departmentName: activeDeptName,
-        unansweredIncoming,
-        urgentIncoming,
-        unreadMessagesCount,
-        myPersonnelId: toId(req.user?.personnelId),
-        recentMessages: (recentMsgDocs || []).map((msg) => {
-          const recipientEntry = Array.isArray(msg.recipients)
-            ? msg.recipients.find((r) => toId(r.user) === toId(userId))
-            : null;
-          return {
-            _id: String(msg._id),
-            subject: msg.subject || '',
-            priority: msg.priority || 'normal',
-            senderUsername: msg.sender?.username || '',
-            read: Boolean(recipientEntry?.read),
-            createdAt: msg.createdAt,
-          };
-        }),
       };
     }
 
@@ -358,3 +331,4 @@ exports.getDashboardSummary = async (req, res, next) => {
     next(err);
   }
 };
+

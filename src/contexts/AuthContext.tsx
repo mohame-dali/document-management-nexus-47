@@ -13,6 +13,7 @@ import {
 } from '../services/authService';
 import { clearAllAuthData } from '../services/auth/authStorage';
 import { getOrganizationSettings } from '../services/organizationSettingsService';
+import { getDefaultLandingRoute } from '@/utils/roleUtils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -80,11 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               
               // Redirect if user is at login page
               if (window.location.pathname === '/login') {
-                if (freshUser.role === 'AdminDepartment' && freshUser.departments.length > 0) {
-                  navigate('/dashboard/admin-department');
-                } else {
-                  navigate('/dashboard');
-                }
+                navigate(getDefaultLandingRoute(freshUser), { replace: true });
               }
             }
           } catch (validationError) {
@@ -155,11 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      if (finalUser.role === 'AdminDepartment' && finalUser.departments.length > 0) {
-        navigate('/dashboard/admin-department');
-      } else {
-        navigate('/dashboard');
-      }
+      navigate(getDefaultLandingRoute(finalUser), { replace: true });
     } catch (error: unknown) {
       console.error('Login error:', error);
       

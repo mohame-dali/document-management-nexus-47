@@ -36,6 +36,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { useAuth } from '@/contexts/AuthContext';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
+import { isExecutiveDashboardUser } from '@/utils/roleUtils';
 
 interface IncomingSearchResult {
   _id: string;
@@ -208,17 +209,22 @@ const GlobalSearch: React.FC = () => {
   // Role-filtered Quick Access destinations
   const quickAccessAll: QuickAccessItem[] = useMemo(() => {
     const role = currentUser?.role;
+    const canAccessDashboard = isExecutiveDashboardUser(currentUser);
     const items: QuickAccessItem[] = [
-      {
-        id: 'qa-dashboard',
-        url: role === 'AdminDepartment' ? '/dashboard/admin-department' : '/dashboard',
-        labelAr: 'لوحة التحكم الرئيسية',
-        labelFr: 'Tableau de bord principal',
-        badgeAr: 'الرئيسية',
-        badgeFr: 'Accueil',
-        keywords: 'dashboard home accueil لوحة التحكم الرئيسية',
-        icon: LayoutDashboard,
-      },
+      ...(canAccessDashboard
+        ? [
+            {
+              id: 'qa-dashboard',
+              url: '/dashboard',
+              labelAr: 'لوحة التحكم الرئيسية',
+              labelFr: 'Tableau de bord principal',
+              badgeAr: 'الرئيسية',
+              badgeFr: 'Accueil',
+              keywords: 'dashboard home accueil لوحة التحكم الرئيسية',
+              icon: LayoutDashboard,
+            },
+          ]
+        : []),
       {
         id: 'qa-incoming',
         url: '/dashboard/mail/incoming',
@@ -353,7 +359,7 @@ const GlobalSearch: React.FC = () => {
     }
 
     return items;
-  }, [currentUser?.role, canAccessHR]);
+  }, [currentUser, canAccessHR]);
 
   const canCreateMail =
     currentUser?.role === 'Admin' || currentUser?.role === 'AdminTuningDesk';

@@ -12,12 +12,10 @@ const OutgoingDocument = require('../models/OutgoingDocument');
 const Personnel = require('../models/Personnel');
 const AuditLog = require('../models/AuditLog');
 const SemanticIndex = require('../models/SemanticIndex');
-const OrganizationSettings = require('../models/OrganizationSettings');
-const Attendance = require('../models/Attendance');
 const AttendanceDeclaration = require('../models/AttendanceDeclaration');
 const Department = require('../models/Department');
-const Message = require('../models/Message');
-const { getDashboardSummary } = require('../controllers/dashboardController');
+const { getDashboardSummary, getDashboardStats } = require('../controllers/dashboardController');
+const { authorizeExecutiveDashboard } = require('../middleware/auth');
 
 function createChainableQuery(resolvedValue) {
   const query = {
@@ -75,8 +73,7 @@ function withStubs(stubs, fn) {
     });
 }
 
-test('getDashboardSummary returns Admin system health, pending personnel, and up to 5 critical audit items', async () => {
-  const rhDeptId = new mongoose.Types.ObjectId();
+test('getDashboardSummary returns Admin executive bottlenecks, system health, and critical audit items', async () => {
   const auditLogs = [
     {
       _id: new mongoose.Types.ObjectId(),
@@ -86,39 +83,48 @@ test('getDashboardSummary returns Admin system health, pending personnel, and up
       userId: { username: 'admin1', role: 'Admin' },
       createdAt: new Date('2026-04-01T10:00:00Z'),
     },
+  ];
+
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const mockFollowUpDocs = [
     {
       _id: new mongoose.Types.ObjectId(),
-      action: 'user_delete',
-      entityType: 'User',
-      entityId: 'u2',
-      userDetails: { username: 'admin1', role: 'Admin' },
-      createdAt: new Date('2026-04-01T09:00:00Z'),
+      serialNumber: 12,
+      year: 2026,
+      subject: 'Courrier urgent sans responsable',
+      arrivalDate: yesterday,
+      activity: 'Réponse urgente',
+      dateActivity: yesterday,
+      assignedTo: [{ id: { _id: new mongoose.Types.ObjectId(), name: 'Direction Générale' }, name: 'Direction Générale' }],
+      responsibleUser: null,
     },
   ];
 
-  let incomingCountIdx = 0;
-  let outgoingCountIdx = 0;
-
   await withStubs(
     [
-      [OrganizationSettings, 'findOne', () => createChainableQuery({ rhDepartmentId: rhDeptId })],
       [
         IncomingDocument,
         'countDocuments',
-        async () => {
-          incomingCountIdx += 1;
-          return incomingCountIdx === 1 ? 14 : 2;
+        async (filter) => {
+          if (filter.isIndexed) return 14;
+          if (filter.isDeleted && filter.$or && filter.$or.some((c) => c.indexError)) return 2;
+          if (filter.activity) return 3;
+          if (filter.$and) return 5;
+          return 0;
         },
+      ],
+      [
+        IncomingDocument,
+        'find',
+        () => createChainableQuery(mockFollowUpDocs),
       ],
       [
         OutgoingDocument,
         'countDocuments',
-        async () => {
-          outgoingCountIdx += 1;
-          return outgoingCountIdx === 1 ? 9 : 1;
-        },
+        async (filter) => (filter.isIndexed ? 9 : 1),
       ],
       [SemanticIndex, 'countDocuments', async () => 85],
+      [AttendanceDeclaration, 'countDocuments', async () => 4],
       [
         Personnel,
         'countDocuments',
@@ -145,131 +151,59 @@ test('getDashboardSummary returns Admin system health, pending personnel, and up
       assert.equal(res.statusCode, 200);
       assert.equal(res.body.success, true);
       assert.equal(res.body.data.role, 'Admin');
-      assert.equal(res.body.data.isRHAdmin, false);
+      assert.equal(res.body.data.executive.urgentOrOverdueCount, 3);
+      assert.equal(res.body.data.executive.unassignedResponsibleCount, 5);
+      assert.equal(res.body.data.executive.pendingHrRequestsCount, 4);
+      assert.equal(res.body.data.executive.followUpDocuments.length, 1);
+      assert.equal(res.body.data.executive.followUpDocuments[0].urgencyStatus, 'overdue');
       assert.equal(res.body.data.admin.system.semanticIndex.indexedDocs, 23);
-      assert.equal(res.body.data.admin.system.semanticIndex.failedDocs, 3);
-      assert.equal(res.body.data.admin.system.semanticIndex.totalVectors, 85);
       assert.equal(res.body.data.admin.pendingPersonnelCount, 4);
-      assert.equal(res.body.data.admin.recentCriticalAudit.length, 2);
-      assert.equal(res.body.data.admin.recentCriticalAudit[0].username, 'admin1');
     }
   );
 });
 
-test('getDashboardSummary returns Bureau dOrdre (AdminTuningDesk) today mail pulse and OCR jobs', async () => {
-  const capturedIncomingFilters = [];
-  const capturedOutgoingFilters = [];
+test('getDashboardSummary returns cross-department Director and Directeur executive summary', async () => {
+  const today = new Date();
+  const mockFollowUpDocs = [
+    {
+      _id: new mongoose.Types.ObjectId(),
+      serialNumber: 44,
+      year: 2026,
+      subject: 'Demande en attente d’affectation',
+      arrivalDate: today,
+      activity: '',
+      dateActivity: null,
+      assignedTo: [{ id: { _id: new mongoose.Types.ObjectId(), name: 'Finances' }, name: 'Finances' }],
+      responsibleUser: null,
+    },
+    {
+      _id: new mongoose.Types.ObjectId(),
+      serialNumber: 45,
+      year: 2026,
+      subject: 'Dossier urgent à traiter',
+      arrivalDate: today,
+      activity: 'Suivi urgent',
+      dateActivity: today,
+      assignedTo: [{ id: { _id: new mongoose.Types.ObjectId(), name: 'RH' }, name: 'RH' }],
+      responsibleUser: new mongoose.Types.ObjectId(),
+    },
+  ];
 
   await withStubs(
     [
-      [OrganizationSettings, 'findOne', () => createChainableQuery(null)],
-      [
-        IncomingDocument,
-        'countDocuments',
-        async (filter) => {
-          capturedIncomingFilters.push(filter);
-          if (filter.createdAt) return 7;
-          if (filter.$or) return 3;
-          if (filter.ocrStatus) return 2;
-          return 0;
-        },
-      ],
-      [
-        OutgoingDocument,
-        'countDocuments',
-        async (filter) => {
-          capturedOutgoingFilters.push(filter);
-          if (filter.createdAt) return 5;
-          if (filter.ocrStatus) return 1;
-          return 0;
-        },
-      ],
-    ],
-    async () => {
-      const req = {
-        user: { _id: new mongoose.Types.ObjectId(), role: 'AdminTuningDesk', activeDepartment: null },
-        query: { year: '2026' },
-      };
-      const res = createMockRes();
-      let err = null;
-      await getDashboardSummary(req, res, (e) => {
-        err = e;
-      });
-
-      assert.equal(err, null);
-      assert.equal(res.statusCode, 200);
-      assert.deepEqual(res.body.data.bureauOrdre, {
-        todayIncoming: 7,
-        todayOutgoing: 5,
-        unroutedIncoming: 3,
-        activeOcrJobs: 3,
-      });
-      assert.equal(capturedIncomingFilters.length, 3);
-      assert.equal(capturedOutgoingFilters.length, 2);
-    }
-  );
-});
-
-test('getDashboardSummary detects HR Admin when AdminDepartment matches rhDepartmentId', async () => {
-  const rhDeptId = new mongoose.Types.ObjectId();
-
-  await withStubs(
-    [
-      [OrganizationSettings, 'findOne', () => createChainableQuery({ rhDepartmentId: rhDeptId })],
-      [
-        Personnel,
-        'countDocuments',
-        async (filter) => (filter.statut === 'actif' ? 42 : 6),
-      ],
-      [
-        Attendance,
-        'countDocuments',
-        async (filter) => (filter.statut === 'present' ? 38 : 4),
-      ],
-      [AttendanceDeclaration, 'countDocuments', async () => 5],
-    ],
-    async () => {
-      const req = {
-        user: {
-          _id: new mongoose.Types.ObjectId(),
-          role: 'AdminDepartment',
-          activeDepartment: { _id: rhDeptId, name: 'Ressources Humaines' },
-        },
-        query: { year: '2026' },
-      };
-      const res = createMockRes();
-      let err = null;
-      await getDashboardSummary(req, res, (e) => {
-        err = e;
-      });
-
-      assert.equal(err, null);
-      assert.equal(res.statusCode, 200);
-      assert.equal(res.body.data.isRHAdmin, true);
-      assert.deepEqual(res.body.data.hr, {
-        activePersonnel: 42,
-        pendingAccounts: 6,
-        todayAttendance: { present: 38, absent: 4 },
-        pendingDeclarations: 5,
-      });
-    }
-  );
-});
-
-test('getDashboardSummary returns cross-department Director summary', async () => {
-  await withStubs(
-    [
-      [OrganizationSettings, 'findOne', () => createChainableQuery(null)],
       [
         IncomingDocument,
         'countDocuments',
         async (filter) => {
           if (filter.year) return 120;
-          if (filter.activity) return 8;
+          if (filter.activity && filter.$or && !filter.$and) return 8;
+          if (filter.$and) return 6;
           return 25;
         },
       ],
+      [IncomingDocument, 'find', () => createChainableQuery(mockFollowUpDocs)],
       [OutgoingDocument, 'countDocuments', async () => 74],
+      [AttendanceDeclaration, 'countDocuments', async () => 7],
       [Department, 'countDocuments', async () => 9],
     ],
     async () => {
@@ -285,6 +219,14 @@ test('getDashboardSummary returns cross-department Director summary', async () =
 
       assert.equal(err, null);
       assert.equal(res.statusCode, 200);
+      assert.equal(res.body.data.executive.urgentOrOverdueCount, 8);
+      assert.equal(res.body.data.executive.unassignedResponsibleCount, 6);
+      assert.equal(res.body.data.executive.pendingHrRequestsCount, 7);
+      // Urgent item is prioritized before unassigned-only item
+      assert.equal(res.body.data.executive.followUpDocuments[0].serialNumber, 45);
+      assert.equal(res.body.data.executive.followUpDocuments[0].urgencyStatus, 'urgent');
+      assert.equal(res.body.data.executive.followUpDocuments[1].serialNumber, 44);
+      assert.equal(res.body.data.executive.followUpDocuments[1].urgencyStatus, 'unassigned');
       assert.deepEqual(res.body.data.director, {
         incomingTotal: 120,
         outgoingTotal: 74,
@@ -292,89 +234,47 @@ test('getDashboardSummary returns cross-department Director summary', async () =
         unansweredUrgentIncoming: 8,
         activeDepartments: 9,
       });
+
+      // Also verify case-insensitive Directeur position access
+      const directeurReq = {
+        user: { _id: new mongoose.Types.ObjectId(), role: 'AdminDepartment', position: 'Directeur' },
+        query: { year: '2026' },
+      };
+      const directeurRes = createMockRes();
+      await getDashboardSummary(directeurReq, directeurRes, (e) => {
+        err = e;
+      });
+      assert.equal(err, null);
+      assert.equal(directeurRes.statusCode, 200);
+      assert.ok(directeurRes.body.data.executive);
     }
   );
 });
 
-test('getDashboardSummary strictly scopes non-RH AdminDepartment and User to activeDepartment and recipient inbox', async () => {
-  const rhDeptId = new mongoose.Types.ObjectId();
-  const financeDeptId = new mongoose.Types.ObjectId();
-  const userId = new mongoose.Types.ObjectId();
-  const personnelId = new mongoose.Types.ObjectId();
-
-  const capturedIncomingFilters = [];
-  const capturedInboxFilters = [];
-
-  const mockMessages = [
-    {
-      _id: new mongoose.Types.ObjectId(),
-      subject: 'Note budgétaire urgente',
-      priority: 'urgent',
-      sender: { username: 'director', role: 'Director' },
-      recipients: [{ user: userId, read: false }],
-      createdAt: new Date('2026-04-02T08:30:00Z'),
-    },
+test('dashboard summary, stats, and middleware return 403 Forbidden for AdminDepartment, AdminTuningDesk (bo), and User roles', async () => {
+  const nonExecutiveUsers = [
+    { _id: new mongoose.Types.ObjectId(), role: 'AdminDepartment', activeDepartment: { name: 'RH' } },
+    { _id: new mongoose.Types.ObjectId(), role: 'AdminTuningDesk', activeDepartment: null },
+    { _id: new mongoose.Types.ObjectId(), role: 'User', activeDepartment: { name: 'Finances' } },
   ];
 
-  await withStubs(
-    [
-      [OrganizationSettings, 'findOne', () => createChainableQuery({ rhDepartmentId: rhDeptId })],
-      [
-        IncomingDocument,
-        'countDocuments',
-        async (filter) => {
-          capturedIncomingFilters.push(filter);
-          return filter.activity ? 2 : 11;
-        },
-      ],
-      [
-        Message,
-        'countDocuments',
-        async (filter) => {
-          capturedInboxFilters.push(filter);
-          return 3;
-        },
-      ],
-      [
-        Message,
-        'find',
-        (filter) => {
-          capturedInboxFilters.push(filter);
-          return createChainableQuery(mockMessages);
-        },
-      ],
-    ],
-    async () => {
-      const req = {
-        user: {
-          _id: userId,
-          role: 'AdminDepartment',
-          activeDepartment: { _id: financeDeptId, name: 'Finances' },
-          personnelId,
-        },
-        query: { year: '2026' },
-      };
-      const res = createMockRes();
-      let err = null;
-      await getDashboardSummary(req, res, (e) => {
-        err = e;
-      });
+  for (const user of nonExecutiveUsers) {
+    const summaryRes = createMockRes();
+    await getDashboardSummary({ user, query: { year: '2026' } }, summaryRes, () => {});
+    assert.equal(summaryRes.statusCode, 403);
+    assert.equal(summaryRes.body.success, false);
 
-      assert.equal(err, null);
-      assert.equal(res.statusCode, 200);
-      assert.equal(res.body.data.isRHAdmin, false);
-      assert.equal(capturedIncomingFilters.length, 2);
-      assert.equal(capturedIncomingFilters[0]['assignedTo.id'], String(financeDeptId));
-      assert.equal(capturedIncomingFilters[1]['assignedTo.id'], String(financeDeptId));
-      assert.equal(String(capturedInboxFilters[0].recipients.$elemMatch.user), String(userId));
-      assert.equal(String(capturedInboxFilters[1]['recipients.user']), String(userId));
-      assert.equal(res.body.data.department.departmentName, 'Finances');
-      assert.equal(res.body.data.department.unansweredIncoming, 11);
-      assert.equal(res.body.data.department.urgentIncoming, 2);
-      assert.equal(res.body.data.department.unreadMessagesCount, 3);
-      assert.equal(res.body.data.department.myPersonnelId, String(personnelId));
-      assert.equal(res.body.data.department.recentMessages[0].read, false);
-      assert.equal(res.body.data.department.recentMessages[0].senderUsername, 'director');
-    }
-  );
+    const statsRes = createMockRes();
+    await getDashboardStats({ user, query: { year: '2026' } }, statsRes, () => {});
+    assert.equal(statsRes.statusCode, 403);
+    assert.equal(statsRes.body.success, false);
+
+    let nextCalled = false;
+    const mwRes = createMockRes();
+    authorizeExecutiveDashboard({ user }, mwRes, () => {
+      nextCalled = true;
+    });
+    assert.equal(nextCalled, false);
+    assert.equal(mwRes.statusCode, 403);
+  }
 });

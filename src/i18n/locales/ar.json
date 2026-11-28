@@ -1832,7 +1832,32 @@
   "trash.confirmEmptyWarning": "لا يمكن استرجاع أي من هذه العناصر أو التراجع عن هذه العملية بأي شكل!",
   "trash.emptying": "جاري الإفراغ...",
   "trash.confirmEmptyAction": "نعم، إفراغ السلة الآن",
-  "trash.back": "تراجع"
+  "trash.back": "تراجع",
+  "dashboard.executive.title": "لوحة المتابعة القيادية",
+  "dashboard.executive.subtitle": "متابعة فورية للمراسلات العاجلة وغير المسندة وإشعارات الموارد البشرية المعلقة",
+  "dashboard.executive.refresh": "تحديث البيانات",
+  "dashboard.executive.kpi.urgentOverdue": "المراسلات العاجلة أو المتأخرة",
+  "dashboard.executive.kpi.urgentOverdueDesc": "مراسلات واردة تجاوزت الأجل أو تستحق المعالجة الفورية",
+  "dashboard.executive.kpi.unassigned": "مراسلات بانتظار تعيين مسؤول",
+  "dashboard.executive.kpi.unassignedDesc": "مراسلات واردة مفتوحة لم يُسند لها مسؤول متابعة بعد",
+  "dashboard.executive.kpi.pendingHr": "إشعارات الموارد البشرية المعلقة",
+  "dashboard.executive.kpi.pendingHrDesc": "تصاريح الحضور وطلبات الإجازات بانتظار المصادقة",
+  "dashboard.executive.table.title": "المراسلات التي تتطلب تدخلاً فورياً",
+  "dashboard.executive.table.subtitle": "انقر على أي صف لفتح تفاصيل المراسلة وتوجيهها أو تعيين المسؤول مباشرة",
+  "dashboard.executive.table.colReference": "المرجع",
+  "dashboard.executive.table.colSubject": "الموضوع",
+  "dashboard.executive.table.colDepartment": "القسم الموجه إليه",
+  "dashboard.executive.table.colArrivalDate": "تاريخ الوصول",
+  "dashboard.executive.table.colStatus": "الحالة / الأولوية",
+  "dashboard.executive.table.noDepartment": "غير موجه لقسم",
+  "dashboard.executive.table.noResponsibleBadge": "بانتظار مسؤول",
+  "dashboard.executive.status.overdue": "متأخر",
+  "dashboard.executive.status.urgent": "عاجل",
+  "dashboard.executive.status.unassigned": "بانتظار مسؤول",
+  "dashboard.executive.emptyTitle": "لا توجد اختناقات تشغيلية حالياً",
+  "dashboard.executive.emptyDesc": "جميع المراسلات الواردة العاجلة معالجة أو مسندة لمسؤولين عبر الأقسام.",
+  "dashboard.executive.errorLoading": "تعذر تحميل بيانات المتابعة القيادية من الخادم."
 }
+
 
 

@@ -215,3 +215,30 @@ exports.checkRHAccess = async (req, res, next) => {
   }
 };
 
+const EXECUTIVE_DASHBOARD_ROLES = new Set(['admin', 'director', 'directeur']);
+
+exports.isExecutiveDashboardUser = (user) => {
+  if (!user) return false;
+  const role = String(user.role || '').trim().toLowerCase();
+  const position = String(user.position || user.title || user.poste || '').trim().toLowerCase();
+  return EXECUTIVE_DASHBOARD_ROLES.has(role) || EXECUTIVE_DASHBOARD_ROLES.has(position);
+};
+
+exports.authorizeExecutiveDashboard = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized to access this route'
+    });
+  }
+
+  if (!exports.isExecutiveDashboardUser(req.user)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Dashboard access is restricted to Admin and Director roles'
+    });
+  }
+
+  next();
+};
+

@@ -3,11 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, ArrowLeft, Home, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDefaultLandingRoute } from '@/utils/roleUtils';
 
 const ForbiddenPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser } = useAuth();
+  const homeRoute = getDefaultLandingRoute(currentUser);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f7fafc] p-4 text-right" dir="rtl">
@@ -49,11 +51,11 @@ const ForbiddenPage: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <Button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(homeRoute)}
             className="w-full sm:w-auto bg-[#2c5282] hover:bg-[#2a4365] text-white text-xs h-9 px-4"
           >
             <Home className="w-4 h-4 ml-1.5" />
-            لوحة القيادة
+            الصفحة الرئيسية
           </Button>
           <Button
             variant="outline"

@@ -1,10 +1,14 @@
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, AlertTriangle, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { getDefaultLandingRoute } from "@/utils/roleUtils";
 
 const NotFound = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const homeRoute = currentUser ? getDefaultLandingRoute(currentUser) : "/";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f7fafc] p-4 text-right" dir="rtl">
@@ -34,9 +38,9 @@ const NotFound = () => {
             asChild 
             className="w-full sm:w-auto bg-[#2c5282] hover:bg-[#2a4365] text-white text-xs h-9 px-4 font-medium"
           >
-            <Link to="/dashboard">
+            <Link to={homeRoute}>
               <Home className="h-4 w-4 ml-1.5" />
-              لوحة القيادة
+              الصفحة الرئيسية
             </Link>
           </Button>
           <Button 
