@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import { Department } from '@/types';
 import PersonnelStatusBadge from '@/components/hr/PersonnelStatusBadge';
 import PersonnelAvatar from '@/components/hr/PersonnelAvatar';
 import MyDocumentsList from '@/components/hr/MyDocumentsList';
+import PersonalAccountSecurityCard from '@/components/profile/PersonalAccountSecurityCard';
 import { Button } from '@/components/ui/button';
 import {
   User as UserIcon,
@@ -33,6 +34,8 @@ import { useDirection } from '@/i18n/useDirection';
 
 export const MyProfilePage: React.FC = () => {
   const { dir, isRTL } = useDirection();
+  const [searchParams] = useSearchParams();
+  const openPasswordOnMount = searchParams.get('action') === 'change-password';
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // 1. Récupération de la fiche Personnel de l'utilisateur connecté
@@ -125,39 +128,38 @@ export const MyProfilePage: React.FC = () => {
   }
 
   // Si l'utilisateur n'a PAS de fiche Personnel (404 ou null) :
-  // Afficher un message d'information sobre, sans erreur bloquante
+  // Afficher les paramètres du compte et sécurité + notice informative sur la fiche RH
   if (!personnel || isProfileError) {
     return (
       <div className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6 text-start" dir={dir}>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-8 shadow-sm">
-          <div className="max-w-xl mx-auto text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[#2c5282] dark:text-blue-300 flex items-center justify-center mx-auto">
-              <Info className="w-8 h-8" />
+        <PersonalAccountSecurityCard openPasswordOnMount={openPasswordOnMount} />
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-[#2c5282] dark:text-blue-300 flex items-center justify-center shrink-0">
+              <Info className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {isRTL ? 'ملفي الشخصي' : 'Mon Profil'}
-            </h1>
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300">
-              <p className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-1">
+            <div>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 {isRTL
                   ? 'لا توجد بطاقة موظف مرتبطة بحسابك الحالي.'
                   : "Aucune fiche Personnel n'est associée à votre compte."}
               </p>
-              <p className="text-sm text-slate-700 dark:text-slate-300">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
                 {isRTL
-                  ? 'لا توجد أي بطاقة موظف مرتبطة بحسابك الحالي في قسم الموارد البشرية. إذا كنت بحاجة إلى ربط حسابك، يرجى التواصل مع مسؤول النظام أو إدارة الموارد البشرية.'
-                  : "Aucune fiche employé n'est actuellement liée à votre compte utilisateur. Veuillez contacter l'administrateur ou la direction des ressources humaines."}
+                  ? 'هذا الحساب مخصص لإدارة النظام أو لم يتم ربطه بملف الموارد البشرية بعد.'
+                  : "Ce compte est un compte système ou n'est pas encore lié à une fiche RH."}
               </p>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => refetchProfile()}
-              className="h-11 px-5 text-sm font-medium border-slate-300 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>{isRTL ? 'تحديث الصفحة' : 'Actualiser'}</span>
-            </Button>
           </div>
+          <Button
+            variant="outline"
+            onClick={() => refetchProfile()}
+            className="h-10 px-4 text-sm font-medium border-slate-300 dark:border-slate-700 rounded-lg text-[#2c5282] dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center gap-2 shrink-0 self-start sm:self-center"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>{isRTL ? 'تحديث' : 'Actualiser'}</span>
+          </Button>
         </div>
       </div>
     );
@@ -403,6 +405,9 @@ export const MyProfilePage: React.FC = () => {
 
       {/* 3. Section "الوثائق الإدارية والتدريبية" (Formation et Stage) */}
       <MyDocumentsList documents={documents} isLoading={isDocsLoading} />
+
+      {/* 4. Compte utilisateur & sécurité personnelle (Photo + mot de passe) */}
+      <PersonalAccountSecurityCard openPasswordOnMount={openPasswordOnMount} />
     </div>
   );
 };

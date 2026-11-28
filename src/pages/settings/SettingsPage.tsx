@@ -1,31 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import { uploadUserPhoto } from '@/services/userService';
-import { updatePassword } from '@/services/authService';
-import { backupService, BackupStats } from '@/services/backupService';
-import { getRetentionPolicy, getMessagesStats, RetentionPolicy, MessagesStats } from '@/services/messageSettingsService';
 import { toast } from 'sonner';
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Bell,
+  Building2,
+  Database,
+  LogOut,
+  MessageCircle,
+  Save,
+  Scan,
+  Shield,
+  Sliders,
+  User as UserIcon,
+} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,222 +37,143 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
-import {
-  Settings,
-  User,
-  Shield,
-  Bell,
-  Sliders,
-  Database,
-  MessageCircle,
-  Lock,
-  Camera,
-  Save,
-  RefreshCw,
-  ChevronLeft,
-  ExternalLink,
-  HardDrive,
-  FileText,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  Key,
-  LogOut,
-  Laptop,
-  Smartphone,
-  Eye,
-  EyeOff,
-  Check,
-  Building2,
-  Scan
-} from 'lucide-react';
-import { useSetupStatus } from '@/hooks/useSetupStatus';
-import { formatLongDate } from '@/utils/formatDate';
 import ScannerWorkstationSettings from '@/components/scanner/ScannerWorkstationSettings';
+import OrganizationIdentityPanel from '@/components/settings/OrganizationIdentityPanel';
+import BackupManagementPanel from '@/components/settings/BackupManagementPanel';
+import MessageRetentionPanel from '@/components/settings/MessageRetentionPanel';
 
-const VALID_SETTINGS_TABS = new Set([
-  'profile',
-  'security',
-  'notifications',
-  'preferences',
+type SettingsSectionId =
+  | 'organization'
+  | 'scanner'
+  | 'preferences'
+  | 'backup'
+  | 'retention'
+  | 'notifications';
+
+const VALID_SECTIONS = new Set<SettingsSectionId>([
+  'organization',
   'scanner',
+  'preferences',
   'backup',
   'retention',
-  'organization',
+  'notifications',
 ]);
 
-const SettingsPage = () => {
+function normalizeTabParam(rawTab: string | null): SettingsSectionId {
+  if (!rawTab) return 'organization';
+  if (rawTab === 'security') return 'preferences';
+  if (VALID_SECTIONS.has(rawTab as SettingsSectionId)) {
+    return rawTab as SettingsSectionId;
+  }
+  return 'organization';
+}
+
+const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser } = useAuth();
-  const queryClient = useQueryClient();
-  const { isSetupComplete, settings: orgSettings } = useSetupStatus();
+  const { language } = useLanguage();
+  const { dir } = useDirection();
+  const isRTL = language !== 'fr';
 
-  const initialTabParam = searchParams.get('tab');
-  // Active tab state
-  const [activeTab, setActiveTab] = useState(
-    initialTabParam && VALID_SETTINGS_TABS.has(initialTabParam) ? initialTabParam : 'profile'
+  const rawTabParam = searchParams.get('tab');
+
+  // Legacy ?tab=profile redirects cleanly to My Profile personal account card
+  useEffect(() => {
+    if (rawTabParam === 'profile') {
+      navigate('/dashboard/profile/my-profile', { replace: true });
+    }
+  }, [rawTabParam, navigate]);
+
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>(() =>
+    normalizeTabParam(rawTabParam)
   );
 
   useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam && VALID_SETTINGS_TABS.has(tabParam) && tabParam !== activeTab) {
-      setActiveTab(tabParam);
+    if (rawTabParam === 'profile') return;
+    const normalized = normalizeTabParam(rawTabParam);
+    if (normalized !== activeSection) {
+      setActiveSection(normalized);
     }
-  }, [searchParams, activeTab]);
+  }, [rawTabParam, activeSection]);
 
-  const handleTabChange = (nextTab: string) => {
-    setActiveTab(nextTab);
+  const handleSectionChange = (nextSection: SettingsSectionId) => {
+    setActiveSection(nextSection);
     const nextParams = new URLSearchParams(searchParams);
-    if (nextTab === 'profile') {
+    if (nextSection === 'organization') {
       nextParams.delete('tab');
     } else {
-      nextParams.set('tab', nextTab);
+      nextParams.set('tab', nextSection);
     }
     setSearchParams(nextParams, { replace: true });
   };
 
-  // Profile states
-  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // System & Display preferences
+  const [tableDensity, setTableDensity] = useState(
+    () => localStorage.getItem('pref_table_density') || 'comfortable'
+  );
+  const [itemsPerPage, setItemsPerPage] = useState(
+    () => localStorage.getItem('pref_items_per_page') || '25'
+  );
+  const [defaultSortOrder, setDefaultSortOrder] = useState(
+    () => localStorage.getItem('pref_sort_order') || 'desc'
+  );
+  const [autoOpenPdf, setAutoOpenPdf] = useState(
+    () => localStorage.getItem('pref_auto_open_pdf') !== 'false'
+  );
 
-  // Security states
-  const [sessionTimeout, setSessionTimeout] = useState(() => localStorage.getItem('app_session_timeout') || '30');
-  const [maxLoginAttempts, setMaxLoginAttempts] = useState(() => localStorage.getItem('app_max_login_attempts') || '5');
-  const [twoFactorAuth, setTwoFactorAuth] = useState(() => localStorage.getItem('app_2fa_enabled') === 'true');
-  const [auditLogging, setAuditLogging] = useState(() => localStorage.getItem('app_audit_logging') !== 'false');
-  const [requireStrongPassword, setRequireStrongPassword] = useState(() => localStorage.getItem('app_strong_pwd') !== 'false');
+  // Security & Session Policy states
+  const [sessionTimeout, setSessionTimeout] = useState(
+    () => localStorage.getItem('app_session_timeout') || '30'
+  );
+  const [maxLoginAttempts, setMaxLoginAttempts] = useState(
+    () => localStorage.getItem('app_max_login_attempts') || '5'
+  );
+  const [twoFactorAuth, setTwoFactorAuth] = useState(
+    () => localStorage.getItem('app_2fa_enabled') === 'true'
+  );
+  const [auditLogging, setAuditLogging] = useState(
+    () => localStorage.getItem('app_audit_logging') !== 'false'
+  );
+  const [requireStrongPassword, setRequireStrongPassword] = useState(
+    () => localStorage.getItem('app_strong_pwd') !== 'false'
+  );
   const [isTerminateSessionsOpen, setIsTerminateSessionsOpen] = useState(false);
 
   // Notification states
-  const [emailNotifications, setEmailNotifications] = useState(() => localStorage.getItem('pref_email_notif') !== 'false');
-  const [instantAlerts, setInstantAlerts] = useState(() => localStorage.getItem('pref_instant_alerts') !== 'false');
-  const [deadlineReminders, setDeadlineReminders] = useState(() => localStorage.getItem('pref_deadline_alerts') !== 'false');
-  const [soundAlerts, setSoundAlerts] = useState(() => localStorage.getItem('pref_sound_alerts') === 'true');
-  const [dailyDigest, setDailyDigest] = useState(() => localStorage.getItem('pref_daily_digest') === 'true');
+  const [emailNotifications, setEmailNotifications] = useState(
+    () => localStorage.getItem('pref_email_notif') !== 'false'
+  );
+  const [instantAlerts, setInstantAlerts] = useState(
+    () => localStorage.getItem('pref_instant_alerts') !== 'false'
+  );
+  const [deadlineReminders, setDeadlineReminders] = useState(
+    () => localStorage.getItem('pref_deadline_alerts') !== 'false'
+  );
+  const [soundAlerts, setSoundAlerts] = useState(
+    () => localStorage.getItem('pref_sound_alerts') === 'true'
+  );
+  const [dailyDigest, setDailyDigest] = useState(
+    () => localStorage.getItem('pref_daily_digest') === 'true'
+  );
 
-  // System & Display preferences
-  const [tableDensity, setTableDensity] = useState(() => localStorage.getItem('pref_table_density') || 'comfortable');
-  const [itemsPerPage, setItemsPerPage] = useState(() => localStorage.getItem('pref_items_per_page') || '25');
-  const [defaultSortOrder, setDefaultSortOrder] = useState(() => localStorage.getItem('pref_sort_order') || 'desc');
-  const [autoOpenPdf, setAutoOpenPdf] = useState(() => localStorage.getItem('pref_auto_open_pdf') !== 'false');
+  const handleSavePreferencesAndSecurity = () => {
+    localStorage.setItem('pref_table_density', tableDensity);
+    localStorage.setItem('pref_items_per_page', itemsPerPage);
+    localStorage.setItem('pref_sort_order', defaultSortOrder);
+    localStorage.setItem('pref_auto_open_pdf', String(autoOpenPdf));
 
-  // Backup & Retention overview states
-  const [backupStats, setBackupStats] = useState<BackupStats | null>(null);
-  const [retentionPolicy, setRetentionPolicy] = useState<RetentionPolicy | null>(null);
-  const [messagesStats, setMessagesStats] = useState<MessagesStats | null>(null);
-  const [loadingOverview, setLoadingOverview] = useState(false);
-
-  // Load overview data for the backup & retention tabs
-  useEffect(() => {
-    const loadOverviewData = async () => {
-      try {
-        setLoadingOverview(true);
-        const [bStats, rPolicy, mStats] = await Promise.allSettled([
-          backupService.getBackupStats(),
-          getRetentionPolicy(),
-          getMessagesStats()
-        ]);
-        if (bStats.status === 'fulfilled') setBackupStats(bStats.value);
-        if (rPolicy.status === 'fulfilled') setRetentionPolicy(rPolicy.value);
-        if (mStats.status === 'fulfilled') setMessagesStats(mStats.value);
-      } catch (err) {
-        console.error('Error fetching settings overview data:', err);
-      } finally {
-        setLoadingOverview(false);
-      }
-    };
-    loadOverviewData();
-  }, []);
-
-  // Photo upload mutation
-  const uploadPhotoMutation = useMutation({
-    mutationFn: (file: File) => {
-      if (!currentUser?._id) throw new Error('لا يوجد مستخدم مسجل');
-      return uploadUserPhoto(currentUser._id, file);
-    },
-    onSuccess: () => {
-      toast.success('تم تحديث الصورة الشخصية بنجاح');
-      setSelectedPhoto(null);
-      setPhotoPreview(null);
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-    },
-    onError: (err: unknown) => {
-      const errResp = err as { response?: { data?: { error?: string } } };
-      const errorMsg = errResp?.response?.data?.error || 'فشل في تحديث الصورة الشخصية';
-      toast.error(errorMsg);
-    }
-  });
-
-  // Password update mutation
-  const updatePasswordMutation = useMutation({
-    mutationFn: () => updatePassword(currentPassword, newPassword),
-    onSuccess: () => {
-      toast.success('تم تحديث كلمة المرور بنجاح');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setIsPasswordModalOpen(false);
-    },
-    onError: (err: unknown) => {
-      const errResp = err as { response?: { data?: { error?: string } } };
-      const errorMsg = errResp?.response?.data?.error || 'فشل في تغيير كلمة المرور';
-      toast.error(errorMsg);
-    }
-  });
-
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('حجم الصورة يجب أن لا يتجاوز 5 ميغابايت');
-        return;
-      }
-      setSelectedPhoto(file);
-      const reader = new FileReader();
-      reader.onload = () => setPhotoPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSavePhoto = () => {
-    if (selectedPhoto) {
-      uploadPhotoMutation.mutate(selectedPhoto);
-    }
-  };
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPassword) {
-      toast.error('يرجى إدخال كلمة المرور الحالية');
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error('كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error('كلمة المرور الجديدة غير متطابقة مع تأكيد كلمة المرور');
-      return;
-    }
-    updatePasswordMutation.mutate();
-  };
-
-  const handleSaveSecuritySettings = () => {
     localStorage.setItem('app_session_timeout', sessionTimeout);
     localStorage.setItem('app_max_login_attempts', maxLoginAttempts);
     localStorage.setItem('app_2fa_enabled', String(twoFactorAuth));
     localStorage.setItem('app_audit_logging', String(auditLogging));
     localStorage.setItem('app_strong_pwd', String(requireStrongPassword));
-    toast.success('تم حفظ إعدادات الأمان بنجاح');
+
+    toast.success(
+      isRTL
+        ? 'تم حفظ تفضيلات النظام وسياسات الأمان بنجاح'
+        : 'Préférences système et politiques de sécurité enregistrées'
+    );
   };
 
   const handleSaveNotificationPreferences = () => {
@@ -260,458 +182,403 @@ const SettingsPage = () => {
     localStorage.setItem('pref_deadline_alerts', String(deadlineReminders));
     localStorage.setItem('pref_sound_alerts', String(soundAlerts));
     localStorage.setItem('pref_daily_digest', String(dailyDigest));
-    toast.success('تم حفظ تفضيلات الإشعارات والتنبيهات بنجاح');
-  };
-
-  const handleSaveDisplayPreferences = () => {
-    localStorage.setItem('pref_table_density', tableDensity);
-    localStorage.setItem('pref_items_per_page', itemsPerPage);
-    localStorage.setItem('pref_sort_order', defaultSortOrder);
-    localStorage.setItem('pref_auto_open_pdf', String(autoOpenPdf));
-    toast.success('تم حفظ تفضيلات العرض والنظام بنجاح');
+    toast.success(
+      isRTL
+        ? 'تم حفظ تفضيلات الإشعارات والتنبيهات بنجاح'
+        : 'Préférences de notifications enregistrées'
+    );
   };
 
   const handleTerminateAllOtherSessions = () => {
     setIsTerminateSessionsOpen(false);
-    toast.success('تم إنهاء جميع الجلسات النشطة الأخرى بنجاح');
+    toast.success(
+      isRTL
+        ? 'تم إنهاء جميع الجلسات النشطة الأخرى بنجاح'
+        : 'Toutes les autres sessions actives ont été fermées'
+    );
   };
 
+  const canManageOrg =
+    currentUser?.role === 'Admin' || currentUser?.role === 'Director';
+
+  const navGroups: Array<{
+    id: string;
+    title: string;
+    items: Array<{
+      id: SettingsSectionId;
+      label: string;
+      icon: React.ComponentType<{ className?: string }>;
+    }>;
+  }> = [
+    {
+      id: 'institution',
+      title: isRTL ? 'إعدادات المؤسسة' : "Paramètres de l'institution",
+      items: [
+        ...(canManageOrg
+          ? [
+              {
+                id: 'organization' as SettingsSectionId,
+                label: isRTL ? 'هوية المؤسسة' : "Identité de l'institution",
+                icon: Building2,
+              },
+            ]
+          : []),
+        {
+          id: 'scanner',
+          label: isRTL ? 'إعدادات الماسح الضوئي' : 'Scanner & OCR',
+          icon: Scan,
+        },
+        {
+          id: 'preferences',
+          label: isRTL ? 'تفضيلات النظام' : 'Préférences & Sécurité',
+          icon: Sliders,
+        },
+      ],
+    },
+    {
+      id: 'data',
+      title: isRTL ? 'البيانات والأرشفة' : 'Données & Archivage',
+      items: [
+        {
+          id: 'backup',
+          label: isRTL ? 'النسخ الاحتياطي' : 'Sauvegardes',
+          icon: Database,
+        },
+        {
+          id: 'retention',
+          label: isRTL ? 'حفظ الرسائل' : 'Rétention des messages',
+          icon: MessageCircle,
+        },
+        {
+          id: 'notifications',
+          label: isRTL ? 'الإشعارات' : 'Notifications',
+          icon: Bell,
+        },
+      ],
+    },
+  ];
+
   return (
-    <div className="w-full max-w-[1400px] mx-auto space-y-5">
-      {/* 1. Header Section - Clean Institutional AdminLTE */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded bg-[#2c5282]/10 border border-[#2c5282]/20 flex items-center justify-center text-[#2c5282] shrink-0">
-            <Settings className="h-7 w-7 text-[#2c5282]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">
-                إعدادات المنظومة
-              </h1>
-              <span className="inline-flex items-center px-3 py-1 rounded text-sm font-bold bg-[#FFCB56] text-[#1a202c]">
-                الإعدادات العامة
-              </span>
+    <div dir={dir} className="w-full max-w-[1400px] mx-auto">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Left / Right Vertical Navigation Rail (RTL = Right, LTR = Left) */}
+        <aside className="w-full lg:w-64 shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-5 lg:sticky lg:top-20">
+          {navGroups.map((group) => (
+            <div key={group.id} className="space-y-1">
+              <p className="px-3 py-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+                {group.title}
+              </p>
+              <nav className="space-y-0.5" aria-label={group.title}>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSectionChange(item.id)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={cn(
+                        'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors text-start relative',
+                        isActive
+                          ? 'bg-[#2c5282]/10 dark:bg-blue-950/60 text-[#2c5282] dark:text-blue-300 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 font-medium'
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          'w-4 h-4 shrink-0',
+                          isActive
+                            ? 'text-[#2c5282] dark:text-blue-400'
+                            : 'text-slate-500 dark:text-slate-400'
+                        )}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
-            <p className="text-base text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
-              إدارة إعدادات الحساب، معايير الأمان، قنوات الإشعارات والنسخ الاحتياطي للوثائق
-            </p>
-          </div>
-        </div>
+          ))}
 
-        {/* Quick Nav Badges & Shortcuts */}
-        <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard/settings/backup')}
-            className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded gap-2"
-          >
-            <Database className="h-5 w-5 text-[#2c5282]" />
-            <span>النسخ الاحتياطي</span>
-            <ExternalLink className="h-4 w-4 opacity-70" />
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard/settings/message-retention')}
-            className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded gap-2"
-          >
-            <MessageCircle className="h-5 w-5 text-[#2c5282]" />
-            <span>إدارة الرسائل</span>
-            <ExternalLink className="h-4 w-4 opacity-70" />
-          </Button>
-        </div>
-      </div>
-
-      {/* 2. Main Tab Navigation & Content */}
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-6">
-        <TabsList className="w-full flex flex-wrap h-auto p-1.5 bg-[#edf2f7] border border-[#e2e8f0] rounded gap-1.5">
-          <TabsTrigger
-            value="profile"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
-          >
-            <User className="h-5 w-5" />
-            <span>الملف الشخصي</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="security"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
-          >
-            <Shield className="h-5 w-5" />
-            <span>الأمان والخصوصية</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="notifications"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
-          >
-            <Bell className="h-5 w-5" />
-            <span>الإشعارات</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="preferences"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
-          >
-            <Sliders className="h-5 w-5" />
-            <span>تفضيلات النظام</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="scanner"
-            className="flex-1 min-w-[155px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
-          >
-            <Scan className="h-5 w-5" />
-            <span>إعدادات الماسح الضوئي</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="backup"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
-          >
-            <Database className="h-5 w-5" />
-            <span>النسخ الاحتياطي</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="retention"
-            className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
-          >
-            <MessageCircle className="h-5 w-5" />
-            <span>حفظ الرسائل</span>
-          </TabsTrigger>
-
-          {(currentUser?.role === 'Admin' || currentUser?.role === 'Director') && (
-            <TabsTrigger
-              value="organization"
-              className="flex-1 min-w-[140px] py-3 text-base font-semibold rounded data-[state=active]:bg-white data-[state=active]:text-[#2c5282] data-[state=active]:shadow-sm text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2"
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard/profile/my-profile')}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 text-start transition-colors"
             >
-              <Building2 className="h-5 w-5" />
-              <span>هوية المؤسسة</span>
-            </TabsTrigger>
+              <UserIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+              <span className="truncate">
+                {isRTL ? 'حسابي وكلمة المرور' : 'Mon compte & mot de passe'}
+              </span>
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content Panel (renders ONLY the active section) */}
+        <main className="flex-1 min-w-0 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 sm:p-7 shadow-xs">
+          {activeSection === 'organization' && canManageOrg && (
+            <OrganizationIdentityPanel />
           )}
-        </TabsList>
 
-        {/* ========================================================= */}
-        {/* TAB 1: Profile & Account Settings                         */}
-        {/* ========================================================= */}
-        <TabsContent value="profile" className="space-y-6 mt-0">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* User Photo & Basic Role Card */}
-            <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
-              <CardHeader className="p-6 border-b border-[#e2e8f0]">
-                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
-                  <Camera className="h-5 w-5 text-[#2c5282]" />
-                  <span>الصورة الشخصية</span>
-                </CardTitle>
-                <CardDescription className="text-base text-slate-700 dark:text-slate-300">
-                  صورتك تظهر في التوقيعات وسجلات العمليات
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
-                <Avatar className="h-28 w-28 border-2 border-[#2c5282] shadow-sm">
-                  <AvatarImage
-                    src={photoPreview || (currentUser?.photo ? `${import.meta.env.VITE_API_URL || ''}${currentUser.photo}` : undefined)}
-                    alt={currentUser?.username}
-                  />
-                  <AvatarFallback className="bg-[#2c5282] text-white text-2xl font-bold">
-                    {currentUser?.username ? currentUser.username.slice(0, 2).toUpperCase() : 'US'}
-                  </AvatarFallback>
-                </Avatar>
+          {activeSection === 'scanner' && (
+            <div className="space-y-6">
+              <div className="pb-5 border-b border-slate-200 dark:border-slate-800">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {isRTL
+                    ? 'إعدادات الماسح الضوئي والتعرف الضوئي (OCR)'
+                    : 'Station de numérisation & OCR'}
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                  {isRTL
+                    ? 'ضبط الدقة الافتراضية، وضع الألوان، وحدة التغذية التلقائية (ADF)، ولغات OCR الخاصة بهذا الجهاز.'
+                    : 'Configurez la résolution, le mode couleur, le chargeur ADF et les langues OCR pour ce poste.'}
+                </p>
+              </div>
+              <ScannerWorkstationSettings compact />
+            </div>
+          )}
 
-                <div>
-                  <h3 className="text-xl font-bold text-[#1a202c]">{currentUser?.username || 'المستخدم'}</h3>
-                  <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
-                    <span className="inline-flex items-center px-3 py-1 rounded text-sm font-semibold bg-[#2c5282] text-white">
-                      {currentUser?.role || 'Admin'}
-                    </span>
-                    {currentUser?.activeDepartment && (
-                      <span className="inline-flex items-center px-3 py-1 rounded text-sm font-bold bg-[#FFCB56] text-[#1a202c]">
-                        {currentUser.activeDepartment.name}
-                      </span>
-                    )}
+          {activeSection === 'preferences' && (
+            <div className="space-y-8">
+              <div className="pb-5 border-b border-slate-200 dark:border-slate-800">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {isRTL ? 'تفضيلات النظام وسياسات الأمان' : 'Préférences système et sécurité'}
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                  {isRTL
+                    ? 'ضبط طريقة عرض الجداول والمستندات، ومهلة الجلسات وضوابط الأمان العامة.'
+                    : "Réglez l'affichage des tableaux, l'ouverture PDF et les politiques de session."}
+                </p>
+              </div>
+
+              {/* Display Preferences */}
+              <div className="space-y-5">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
+                  <span>{isRTL ? 'تفضيلات العرض' : "Préférences d'affichage"}</span>
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pref-density" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {isRTL ? 'كثافة جداول الوثائق' : 'Densité des tableaux'}
+                    </Label>
+                    <Select value={tableDensity} onValueChange={setTableDensity}>
+                      <SelectTrigger id="pref-density" className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="comfortable">{isRTL ? 'مريح (مسافات واسعة)' : 'Confortable'}</SelectItem>
+                        <SelectItem value="standard">{isRTL ? 'قياسي (متوازن)' : 'Standard'}</SelectItem>
+                        <SelectItem value="compact">{isRTL ? 'مدمج (كثافة عالية)' : 'Compact'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pref-items-per-page" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {isRTL ? 'عدد العناصر في الصفحة' : 'Éléments par page'}
+                    </Label>
+                    <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
+                      <SelectTrigger id="pref-items-per-page" className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">{isRTL ? '10 عناصر' : '10 éléments'}</SelectItem>
+                        <SelectItem value="25">{isRTL ? '25 عنصراً (موصى به)' : '25 éléments (recommandé)'}</SelectItem>
+                        <SelectItem value="50">{isRTL ? '50 عنصراً' : '50 éléments'}</SelectItem>
+                        <SelectItem value="100">{isRTL ? '100 عنصر' : '100 éléments'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pref-sort-order" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {isRTL ? 'الترتيب الافتراضي للمراسلات' : 'Tri par défaut'}
+                    </Label>
+                    <Select value={defaultSortOrder} onValueChange={setDefaultSortOrder}>
+                      <SelectTrigger id="pref-sort-order" className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="desc">{isRTL ? 'الأحدث تسجيلاً أولاً' : 'Plus récents en premier'}</SelectItem>
+                        <SelectItem value="asc">{isRTL ? 'الأقدم تسجيلاً أولاً' : 'Plus anciens en premier'}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <div className="w-full pt-4 border-t border-[#e2e8f0] space-y-3">
-                  <input
-                    type="file"
-                    id="user-photo-input"
-                    accept="image/*"
-                    onChange={handlePhotoSelect}
-                    className="hidden"
+                <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div>
+                    <Label htmlFor="pref-auto-open" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                      {isRTL ? 'معاينة الـ PDF تلقائياً' : 'Aperçu PDF automatique'}
+                    </Label>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      {isRTL
+                        ? 'فتح ملف الوثيقة الممسوحة مباشرة عند النقر على السجل'
+                        : "Ouvrir automatiquement le PDF numérisé à l'ouverture d'un dossier"}
+                    </p>
+                  </div>
+                  <Switch
+                    id="pref-auto-open"
+                    checked={autoOpenPdf}
+                    onCheckedChange={setAutoOpenPdf}
                   />
+                </div>
+              </div>
+
+              {/* System Security Policies */}
+              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-5">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-[#2c5282] dark:text-blue-400" />
+                  <span>{isRTL ? 'سياسات الأمان والجلسات' : 'Politiques de sécurité et sessions'}</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="session-timeout" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {isRTL ? 'مهلة انتهاء الجلسة عند عدم النشاط' : "Expiration de session d'inactivité"}
+                    </Label>
+                    <Select value={sessionTimeout} onValueChange={setSessionTimeout}>
+                      <SelectTrigger id="session-timeout" className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">{isRTL ? '15 دقيقة' : '15 minutes'}</SelectItem>
+                        <SelectItem value="30">{isRTL ? '30 دقيقة (موصى به)' : '30 minutes (recommandé)'}</SelectItem>
+                        <SelectItem value="60">{isRTL ? 'ساعة واحدة' : '1 heure'}</SelectItem>
+                        <SelectItem value="120">{isRTL ? 'ساعتان' : '2 heures'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="max-login-attempts" className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {isRTL ? 'الحد الأقصى لمحاولات الدخول الخاطئة' : 'Tentatives de connexion maximales'}
+                    </Label>
+                    <Select value={maxLoginAttempts} onValueChange={setMaxLoginAttempts}>
+                      <SelectTrigger id="max-login-attempts" className="h-10 text-sm border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">{isRTL ? '3 محاولات' : '3 tentatives'}</SelectItem>
+                        <SelectItem value="5">{isRTL ? '5 محاولات (قياسي)' : '5 tentatives (standard)'}</SelectItem>
+                        <SelectItem value="10">{isRTL ? '10 محاولات' : '10 tentatives'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                    <div>
+                      <Label htmlFor="require-strong-pwd" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                        {isRTL ? 'فرض كلمات مرور قوية ومعقدة' : 'Exiger des mots de passe robustes'}
+                      </Label>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        {isRTL
+                          ? 'إلزام المستخدمين بكلمات مرور تحتوي على حروف وأرقام ورموز'
+                          : 'Imposer majuscules, minuscules, chiffres et caractères spéciaux'}
+                      </p>
+                    </div>
+                    <Switch
+                      id="require-strong-pwd"
+                      checked={requireStrongPassword}
+                      onCheckedChange={setRequireStrongPassword}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                    <div>
+                      <Label htmlFor="audit-logging" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                        {isRTL ? 'سجل المراقبة والتدقيق الأمني' : "Journalisation d'audit"}
+                      </Label>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        {isRTL
+                          ? 'تسجيل كافة عمليات الدخول وتعديلات الوثائق في سجل التدقيق'
+                          : 'Enregistrer les connexions et modifications de documents'}
+                      </p>
+                    </div>
+                    <Switch
+                      id="audit-logging"
+                      checked={auditLogging}
+                      onCheckedChange={setAuditLogging}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                    <div>
+                      <Label htmlFor="2fa-toggle" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                        {isRTL ? 'التحقق بخطوتين (2FA)' : 'Authentification à deux facteurs (2FA)'}
+                      </Label>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        {isRTL
+                          ? 'طلب رمز تحقق إضافي عند الدخول من جهاز غير معروف'
+                          : "Exiger un code supplémentaire depuis un nouvel appareil"}
+                      </p>
+                    </div>
+                    <Switch
+                      id="2fa-toggle"
+                      checked={twoFactorAuth}
+                      onCheckedChange={setTwoFactorAuth}
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => document.getElementById('user-photo-input')?.click()}
-                    className="w-full h-11 text-base font-semibold border-[#cbd5e1] text-[#2d3748] hover:bg-gray-50 rounded"
+                    onClick={() => setIsTerminateSessionsOpen(true)}
+                    className="h-10 px-4 text-sm font-semibold border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg gap-2 whitespace-nowrap"
                   >
-                    <Camera className="h-5 w-5 ml-2 text-[#2c5282]" />
-                    اختيار صورة جديدة
+                    <LogOut className="h-4 w-4" />
+                    <span>{isRTL ? 'إنهاء جميع الجلسات الأخرى' : 'Fermer les autres sessions'}</span>
                   </Button>
 
-                  {selectedPhoto && (
-                    <Button
-                      type="button"
-                      onClick={handleSavePhoto}
-                      disabled={uploadPhotoMutation.isPending}
-                      className="w-full h-11 text-base font-bold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] rounded shadow-none"
-                    >
-                      {uploadPhotoMutation.isPending ? 'جاري التحميل...' : 'حفظ الصورة الجديدة'}
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    onClick={handleSavePreferencesAndSecurity}
+                    className="h-10 px-6 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg gap-2 whitespace-nowrap"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{isRTL ? 'حفظ التفضيلات والأمان' : 'Enregistrer'}</span>
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Profile Information Form */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
-                <CardHeader className="p-6 border-b border-[#e2e8f0]">
-                  <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
-                    <User className="h-5 w-5 text-[#2c5282]" />
-                    <span>بيانات الحساب</span>
-                  </CardTitle>
-                  <CardDescription className="text-base text-slate-700 dark:text-slate-300">
-                    المعلومات الإدارية المسجلة لحسابك في المنظومة
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="p-6 space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="space-y-2">
-                      <Label htmlFor="account-username" className="text-base font-bold text-[#1a202c]">
-                        اسم المستخدم
-                      </Label>
-                      <Input
-                        id="account-username"
-                        value={currentUser?.username || ''}
-                        disabled
-                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium"
-                      />
-                      <p className="text-sm text-slate-700 dark:text-slate-300">اسم الدخول المسجل في النظام</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="account-role" className="text-base font-bold text-[#1a202c]">
-                        الدور والصلاحية
-                      </Label>
-                      <Input
-                        id="account-role"
-                        value={currentUser?.role || ''}
-                        disabled
-                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium"
-                      />
-                      <p className="text-sm text-slate-700 dark:text-slate-300">مستوى الصلاحيات المعطى للحساب</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="account-department" className="text-base font-bold text-[#1a202c]">
-                        القسم الحالي النشط
-                      </Label>
-                      <Input
-                        id="account-department"
-                        value={currentUser?.activeDepartment?.name || 'غير محدد'}
-                        disabled
-                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="account-created" className="text-base font-bold text-[#1a202c]">
-                        تاريخ إنشاء الحساب
-                      </Label>
-                      <Input
-                        id="account-created"
-                        value={currentUser?.createdAt ? formatLongDate(currentUser.createdAt, 'ar') : 'غير متوفر'}
-                        disabled
-                        className="h-11 text-base bg-gray-50 border-slate-300 dark:border-slate-700 rounded text-gray-700 font-medium tabular-nums"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                      <h4 className="text-base font-bold text-[#1a202c]">كلمة المرور والأمان</h4>
-                      <p className="text-sm text-slate-700 dark:text-slate-300">
-                        ينصح بتغيير كلمة المرور دورياً كل 90 يوماً للحفاظ على سرية النظام
-                      </p>
-                    </div>
-
-                    <Button
-                      type="button"
-                      onClick={() => setIsPasswordModalOpen(true)}
-                      className="h-11 px-6 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded shrink-0 shadow-none"
-                    >
-                      <Key className="h-5 w-5 ml-2" />
-                      تغيير كلمة المرور
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             </div>
-          </div>
-        </TabsContent>
+          )}
 
-        {/* ========================================================= */}
-        {/* TAB 2: Security & Privacy Settings                        */}
-        {/* ========================================================= */}
-        <TabsContent value="security" className="space-y-6 mt-0">
-          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
-            <CardHeader className="p-6 border-b border-[#e2e8f0]">
-              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
-                <Shield className="h-5 w-5 text-[#2c5282]" />
-                <span>سياسات الأمان والحماية</span>
-              </CardTitle>
-              <CardDescription className="text-base text-slate-700 dark:text-slate-300">
-                تكوين معايير الجلسات وحماية الدخول ضد المحاولات المشبوهة
-              </CardDescription>
-            </CardHeader>
+          {activeSection === 'backup' && <BackupManagementPanel />}
 
-            <CardContent className="p-6 space-y-6">
-              {/* Row 1: Session & Attempt Settings */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="session-timeout" className="text-base font-bold text-[#1a202c]">
-                    مهلة انتهاء الجلسة عند عدم النشاط
-                  </Label>
-                  <Select value={sessionTimeout} onValueChange={setSessionTimeout}>
-                    <SelectTrigger id="session-timeout" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 دقيقة</SelectItem>
-                      <SelectItem value="30">30 دقيقة (موصى به)</SelectItem>
-                      <SelectItem value="60">ساعة واحدة</SelectItem>
-                      <SelectItem value="120">ساعتان</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">يتم قفل الشاشة تلقائياً بعد مرور هذه المدة دون نشاط</p>
-                </div>
+          {activeSection === 'retention' && (
+            <MessageRetentionPanel onOpenBackup={() => handleSectionChange('backup')} />
+          )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="max-login-attempts" className="text-base font-bold text-[#1a202c]">
-                    الحد الأقصى لمحاولات الدخول الخاطئة
-                  </Label>
-                  <Select value={maxLoginAttempts} onValueChange={setMaxLoginAttempts}>
-                    <SelectTrigger id="max-login-attempts" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3">3 محاولات</SelectItem>
-                      <SelectItem value="5">5 محاولات (قياسي)</SelectItem>
-                      <SelectItem value="10">10 محاولات</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">يتم تعليق الحساب مؤقتاً عند تجاوز هذا العدد</p>
-                </div>
+          {activeSection === 'notifications' && (
+            <div className="space-y-6">
+              <div className="pb-5 border-b border-slate-200 dark:border-slate-800">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  {isRTL ? 'قنوات وتفضيلات الإشعارات' : 'Canaux et préférences de notifications'}
+                </h2>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                  {isRTL
+                    ? 'تخصيص التنبيهات الفورية وتنبيهات المواعيد وإشعارات البريد الإلكتروني.'
+                    : 'Personnalisez les alertes en temps réel, rappels de délais et notifications.'}
+                </p>
               </div>
 
-              <Separator className="bg-[#e2e8f0]" />
-
-              {/* Switches */}
-              <div className="space-y-5">
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="require-strong-pwd" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      فرض كلمات مرور قوية ومعقدة
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div>
+                    <Label htmlFor="instant-alerts" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                      {isRTL ? 'إشعارات فورية على الشاشة' : "Notifications instantanées à l'écran"}
                     </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      إلزام المستخدمين بكلمات مرور تحتوي على حروف كبيرة وصغيرة وأرقام ورموز
-                    </p>
-                  </div>
-                  <Switch
-                    id="require-strong-pwd"
-                    checked={requireStrongPassword}
-                    onCheckedChange={setRequireStrongPassword}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="audit-logging" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      سجل المراقبة والتدقيق الأمني
-                    </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      تسجيل كافة عمليات الدخول وتعديلات الوثائق في سجل التدقيق للنظام
-                    </p>
-                  </div>
-                  <Switch
-                    id="audit-logging"
-                    checked={auditLogging}
-                    onCheckedChange={setAuditLogging}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="2fa-toggle" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      التحقق بخطوتين (2FA)
-                    </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      طلب رمز تحقق إضافي عبر التطبيق أو البريد عند الدخول من جهاز جديد
-                    </p>
-                  </div>
-                  <Switch
-                    id="2fa-toggle"
-                    checked={twoFactorAuth}
-                    onCheckedChange={setTwoFactorAuth}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-center justify-between gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsTerminateSessionsOpen(true)}
-                  className="h-11 px-6 text-base font-semibold border-red-200 text-red-700 hover:bg-red-50 rounded"
-                >
-                  <LogOut className="h-5 w-5 ml-2 text-red-600" />
-                  إنهاء جميع الجلسات النشطة الأخرى
-                </Button>
-
-                <Button
-                  type="button"
-                  onClick={handleSaveSecuritySettings}
-                  className="h-11 px-8 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded shadow-none"
-                >
-                  <Save className="h-5 w-5 ml-2" />
-                  حفظ إعدادات الأمان
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ========================================================= */}
-        {/* TAB 3: Notifications & Alerts                             */}
-        {/* ========================================================= */}
-        <TabsContent value="notifications" className="space-y-6 mt-0">
-          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
-            <CardHeader className="p-6 border-b border-[#e2e8f0]">
-              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
-                <Bell className="h-5 w-5 text-[#2c5282]" />
-                <span>قنوات وتفضيلات التنبيهات</span>
-              </CardTitle>
-              <CardDescription className="text-base text-slate-700 dark:text-slate-300">
-                تخصيص الإشعارات الفورية والتنبيهات البريدية للأحداث الهامة
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-5">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="instant-alerts" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      إشعارات فورية على الشاشة
-                    </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      إظهار إشعارات منبثقة عند استلام معاملات أو توجيهات جديدة
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      {isRTL
+                        ? 'إظهار تنبيهات منبثقة عند استلام معاملات أو توجيهات جديدة'
+                        : 'Afficher une notification à la réception de nouveaux courriers'}
                     </p>
                   </div>
                   <Switch
@@ -721,13 +588,15 @@ const SettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="deadline-reminders" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      تنبيهات مواعيد المعالجة والتأخيرات
+                <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div>
+                    <Label htmlFor="deadline-reminders" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                      {isRTL ? 'تنبيهات مواعيد المعالجة والتأخيرات' : 'Rappels de délais et retards'}
                     </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      تنبيه عند اقتراب المهلة المحددة للرد على المعاملات الواردة
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      {isRTL
+                        ? 'تنبيه عند اقتراب المهلة المحددة للرد على المعاملات الواردة'
+                        : "Alerter à l'approche des échéances de traitement"}
                     </p>
                   </div>
                   <Switch
@@ -737,13 +606,15 @@ const SettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="email-notifications" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      إشعارات البريد الإلكتروني
+                <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div>
+                    <Label htmlFor="email-notifications" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                      {isRTL ? 'إشعارات البريد الإلكتروني' : 'Notifications par e-mail'}
                     </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      إرسال رسالة بريد إلكتروني عند إسناد وثيقة أو إحالتها إلى قسمك
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      {isRTL
+                        ? 'إرسال إشعار بريدي عند إسناد وثيقة أو إحالتها إلى قسمك'
+                        : "Envoyer un e-mail lors de l'attribution d'un document"}
                     </p>
                   </div>
                   <Switch
@@ -753,13 +624,15 @@ const SettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="sound-alerts" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      التنبيه الصوتي
+                <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div>
+                    <Label htmlFor="sound-alerts" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                      {isRTL ? 'التنبيه الصوتي' : 'Alerte sonore'}
                     </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      تشغيل نغمة تنبيه هادئة وموجزة عند ورود رسالة جديدة
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      {isRTL
+                        ? 'تشغيل نغمة تنبيه هادئة عند ورود رسالة داخلية جديدة'
+                        : "Jouer un son discret à la réception d'un message"}
                     </p>
                   </div>
                   <Switch
@@ -769,13 +642,15 @@ const SettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded">
-                  <div className="space-y-1">
-                    <Label htmlFor="daily-digest" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      التقرير الصباحي اليومي
+                <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div>
+                    <Label htmlFor="daily-digest" className="text-sm font-bold text-slate-900 dark:text-slate-100 cursor-pointer">
+                      {isRTL ? 'التقرير الصباحي اليومي' : 'Résumé quotidien du matin'}
                     </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">
-                      تلقي ملخص يومي في بداية ساعات الدوام بجميع المعاملات المعلقة
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      {isRTL
+                        ? 'تلقي ملخص يومي في بداية الدوام بجميع المعاملات المعلقة'
+                        : 'Recevoir un récapitulatif matinal des dossiers en attente'}
                     </p>
                   </div>
                   <Switch
@@ -786,562 +661,51 @@ const SettingsPage = () => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#e2e8f0] flex justify-end">
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
                 <Button
                   type="button"
                   onClick={handleSaveNotificationPreferences}
-                  className="h-11 px-8 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded shadow-none"
+                  className="h-10 px-6 text-sm font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded-lg gap-2 whitespace-nowrap"
                 >
-                  <Save className="h-5 w-5 ml-2" />
-                  حفظ تفضيلات الإشعارات
+                  <Save className="h-4 w-4" />
+                  <span>{isRTL ? 'حفظ تفضيلات الإشعارات' : 'Enregistrer'}</span>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ========================================================= */}
-        {/* TAB 4: System & Display Preferences                       */}
-        {/* ========================================================= */}
-        <TabsContent value="preferences" className="space-y-6 mt-0">
-          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
-            <CardHeader className="p-6 border-b border-[#e2e8f0]">
-              <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
-                <Sliders className="h-5 w-5 text-[#2c5282]" />
-                <span>تفضيلات العرض والمظهر</span>
-              </CardTitle>
-              <CardDescription className="text-base text-slate-700 dark:text-slate-300">
-                ضبط كثافة الجداول، عدد النتائج الافتراضي، وطريقة ترتيب السجلات
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="pref-density" className="text-base font-bold text-[#1a202c]">
-                    كثافة العرض في جداول الوثائق
-                  </Label>
-                  <Select value={tableDensity} onValueChange={setTableDensity}>
-                    <SelectTrigger id="pref-density" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="comfortable">مريح (مسافات واسعة)</SelectItem>
-                      <SelectItem value="standard">قياسي (متوازن 8 ساعات عمل)</SelectItem>
-                      <SelectItem value="compact">مدمج (كثافة بيانات عالية)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">يحدد ارتفاع أسطر الجداول وتناسق الخطوط</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pref-items-per-page" className="text-base font-bold text-[#1a202c]">
-                    عدد العناصر الافتراضي في الصفحة
-                  </Label>
-                  <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
-                    <SelectTrigger id="pref-items-per-page" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10 عناصر</SelectItem>
-                      <SelectItem value="25">25 عنصراً (موصى به)</SelectItem>
-                      <SelectItem value="50">50 عنصراً</SelectItem>
-                      <SelectItem value="100">100 عنصر</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">عدد سجلات المراسلات المعروضة قبل الانتقال للصفحة التالية</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="pref-sort-order" className="text-base font-bold text-[#1a202c]">
-                    الترتيب الافتراضي للمراسلات
-                  </Label>
-                  <Select value={defaultSortOrder} onValueChange={setDefaultSortOrder}>
-                    <SelectTrigger id="pref-sort-order" className="h-11 text-base border-slate-300 dark:border-slate-700 rounded bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="desc">الأحدث تسجيلاً أولاً</SelectItem>
-                      <SelectItem value="asc">الأقدم تسجيلاً أولاً</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded self-end h-11 sm:h-auto">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="pref-auto-open" className="text-base font-bold text-[#1a202c] cursor-pointer">
-                      معاينة الـ PDF تلقائياً
-                    </Label>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">فتح ملف الوثيقة الممسوحة عند النقر على السجل</p>
-                  </div>
-                  <Switch
-                    id="pref-auto-open"
-                    checked={autoOpenPdf}
-                    onCheckedChange={setAutoOpenPdf}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-[#e2e8f0] flex justify-end">
-                <Button
-                  type="button"
-                  onClick={handleSaveDisplayPreferences}
-                  className="h-11 px-8 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded shadow-none"
-                >
-                  <Save className="h-5 w-5 ml-2" />
-                  حفظ تفضيلات العرض
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ========================================================= */}
-        {/* TAB 4B: Scanner & OCR Workstation Configuration           */}
-        {/* ========================================================= */}
-        <TabsContent value="scanner" className="space-y-6 mt-0">
-          <ScannerWorkstationSettings />
-        </TabsContent>
-
-        {/* ========================================================= */}
-        {/* TAB 5: Backup & Archiving Overview                        */}
-        {/* ========================================================= */}
-        <TabsContent value="backup" className="space-y-6 mt-0">
-          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
-            <CardHeader className="p-6 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
-                  <Database className="h-5 w-5 text-[#2c5282]" />
-                  <span>النسخ الاحتياطي وأرشفة البيانات</span>
-                </CardTitle>
-                <CardDescription className="text-base text-slate-700 dark:text-slate-300">
-                  متابعة وتأمين الوثائق والمرفقات بصيغة رقمية متكاملة
-                </CardDescription>
-              </div>
-
-              <Button
-                onClick={() => navigate('/dashboard/settings/backup')}
-                className="h-11 px-6 text-base font-bold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] rounded gap-2 shadow-none"
-              >
-                <span>الانتقال لإدارة النسخ الاحتياطي الكاملة</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-6">
-              {/* Stats overview cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <div className="flex items-center gap-2 text-[#2c5282] mb-1">
-                    <FileText className="h-5 w-5" />
-                    <span className="text-base font-semibold">الوثائق الواردة</span>
-                  </div>
-                  <div className="text-3xl font-bold text-[#1a202c]">
-                    {backupStats?.totalIncomingDocuments ?? '—'}
-                  </div>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">مشمولة في الأرشيف</p>
-                </div>
-
-                <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <div className="flex items-center gap-2 text-[#2c5282] mb-1">
-                    <FileText className="h-5 w-5" />
-                    <span className="text-base font-semibold">الوثائق الصادرة</span>
-                  </div>
-                  <div className="text-3xl font-bold text-[#1a202c]">
-                    {backupStats?.totalOutgoingDocuments ?? '—'}
-                  </div>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">مشمولة في الأرشيف</p>
-                </div>
-
-                <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <div className="flex items-center gap-2 text-[#2c5282] mb-1">
-                    <HardDrive className="h-5 w-5" />
-                    <span className="text-base font-semibold">حجم البيانات الكلي</span>
-                  </div>
-                  <div className="text-2xl font-bold text-[#1a202c]">
-                    {backupStats?.totalFileSize ?? '—'}
-                  </div>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">المستندات والمرفقات</p>
-                </div>
-
-                <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <div className="flex items-center gap-2 text-[#2c5282] mb-1">
-                    <Clock className="h-5 w-5" />
-                    <span className="text-base font-semibold">آخر نسخة احتياطية</span>
-                  </div>
-                  <div className="text-lg font-bold text-[#1a202c] tabular-nums">
-                    {backupStats?.lastBackupDate ? (
-                      <bdi dir="rtl" className="tabular-nums">{formatLongDate(backupStats.lastBackupDate, 'ar')}</bdi>
-                    ) : 'لا توجد بعد'}
-                  </div>
-                  <span className="inline-flex items-center mt-2 px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c]">
-                    محفوظة محلياً
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h4 className="text-base font-bold text-[#1a202c]">النسخ الاحتياطي التلقائي المجدول</h4>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">
-                    يمكنك ضبط التكرار الأسبوعي أو الشهري وتحديد مجلد التصدير من خلال صفحة النسخ الاحتياطي
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/dashboard/settings/backup')}
-                  className="h-11 px-6 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded"
-                >
-                  فتح إعدادات الجدولة
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ========================================================= */}
-        {/* TAB 6: Message Retention & Cleanup Overview               */}
-        {/* ========================================================= */}
-        <TabsContent value="retention" className="space-y-6 mt-0">
-          <Card className="bg-white border border-[#e2e8f0] rounded shadow-sm">
-            <CardHeader className="p-6 border-b border-[#e2e8f0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl font-bold text-[#1a202c] flex items-center gap-2 border-r-4 border-[#2c5282] pr-3">
-                  <MessageCircle className="h-5 w-5 text-[#2c5282]" />
-                  <span>سياسة حفظ وحذف المراسلات</span>
-                </CardTitle>
-                <CardDescription className="text-base text-slate-700 dark:text-slate-300">
-                  إدارة سعة التخزين وتحديد فترة الاحتفاظ بالمراسلات والمرفقات
-                </CardDescription>
-              </div>
-
-              <Button
-                onClick={() => navigate('/dashboard/settings/message-retention')}
-                className="h-11 px-6 text-base font-bold bg-[#FFCB56] hover:bg-[#FFD758] text-[#1a202c] rounded gap-2 shadow-none"
-              >
-                <span>الانتقال لإدارة الرسائل الكاملة</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <span className="text-base font-semibold text-slate-700 dark:text-slate-300">إجمالي الرسائل في النظام</span>
-                  <div className="text-3xl font-bold text-[#2c5282] mt-2">
-                    {messagesStats?.totalMessages ?? 0}
-                  </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#2c5282] border border-blue-200 mt-2">
-                    مراسلة مسجلة
-                  </span>
-                </div>
-
-                <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <span className="text-base font-semibold text-slate-700 dark:text-slate-300">إجمالي المرفقات</span>
-                  <div className="text-3xl font-bold text-emerald-700 mt-2">
-                    {messagesStats?.totalAttachments ?? 0}
-                  </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mt-2">
-                    ملف مرفق
-                  </span>
-                </div>
-
-                <div className="p-5 bg-white border border-[#e2e8f0] rounded">
-                  <span className="text-base font-semibold text-slate-700 dark:text-slate-300">حالة الحذف التلقائي</span>
-                  <div className="text-2xl font-bold text-[#1a202c] mt-2">
-                    {retentionPolicy?.enabled ? 'مفعّل' : 'معطّل'}
-                  </div>
-                  <div className="mt-2">
-                    {retentionPolicy?.enabled ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-[#FFCB56] text-[#1a202c]">
-                        كل {retentionPolicy.period} {retentionPolicy.unit === 'months' ? 'أشهر' : retentionPolicy.unit === 'years' ? 'سنوات' : 'أيام'}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                        الاحتفاظ دائم
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h4 className="text-base font-bold text-[#1a202c]">التنظيف اليدوي والأرشفة</h4>
-                  <p className="text-sm text-slate-700 dark:text-slate-300">
-                    يمكنك حذف الرسائل الأقدم من مدة محددة أو تصديرها قبل الحذف من خلال صفحة إدارة الرسائل
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/dashboard/settings/message-retention')}
-                  className="h-11 px-6 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-blue-50 rounded"
-                >
-                  تخصيص سياسة الحفظ
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ========================================================= */}
-        {/* TAB 6: Organization & Setup Wizard Settings               */}
-        {/* ========================================================= */}
-        {(currentUser?.role === 'Admin' || currentUser?.role === 'Director') && (
-          <TabsContent value="organization" className="space-y-6 mt-0">
-            <Card className="border-[#e2e8f0] rounded shadow-sm">
-              <CardHeader className="border-b border-[#e2e8f0] pb-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-[#ebf8ff] text-[#2c5282] rounded">
-                      <Building2 className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-[#1a202c]">
-                        هوية المؤسسة والأقسام السيادية
-                      </CardTitle>
-                      <CardDescription className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
-                        إدارة التسمية الرسمية، شعار المؤسسة، وتعيين الأقسام الوظيفية الرئيسية (RH، مكتب الضبط، الإدارة العامة)
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => navigate('/setup')}
-                    className="bg-[#2c5282] hover:bg-[#234269] text-white h-11 px-5 text-sm font-semibold rounded gap-2 self-start sm:self-auto"
-                  >
-                    <Sliders className="h-4 w-4" />
-                    تشغيل معالج الإعداد (Setup Wizard)
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  
-                  <div className="p-5 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-3">
-                    <span className="text-sm font-bold text-[#2c5282] block border-b border-gray-200 pb-2">
-                      الهوية والتسمية الرسمية
-                    </span>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700 dark:text-slate-300">اسم الإدارة الحالي :</span>
-                        <strong className="text-gray-900 font-bold">
-                          {orgSettings?.nomAdministration || 'غير محدد'}
-                        </strong>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700 dark:text-slate-300">حالة التكوين الإجمالي :</span>
-                        {isSetupComplete ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800">
-                            مكتمل وجاهز
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800">
-                            بحاجة إلى تهيئة
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-5 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-3">
-                    <span className="text-sm font-bold text-[#2c5282] block border-b border-gray-200 pb-2">
-                      الأقسام الوظيفية الرئيسية
-                    </span>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700 dark:text-slate-300">قسم الموارد البشرية (RH) :</span>
-                        <strong className="text-gray-900 font-semibold">
-                          {typeof orgSettings?.rhDepartmentId === 'object' && orgSettings?.rhDepartmentId !== null
-                            ? (orgSettings.rhDepartmentId as { name?: string }).name || 'معرّف'
-                            : orgSettings?.rhDepartmentId ? 'معرّف' : 'غير معيّن'}
-                        </strong>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700 dark:text-slate-300">مكتب الضبط (BO) :</span>
-                        <strong className="text-gray-900 font-semibold">
-                          {typeof orgSettings?.bureauOrdreDepartmentId === 'object' && orgSettings?.bureauOrdreDepartmentId !== null
-                            ? (orgSettings.bureauOrdreDepartmentId as { name?: string }).name || 'معرّف'
-                            : orgSettings?.bureauOrdreDepartmentId ? 'معرّف' : 'غير معيّن'}
-                        </strong>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-700 dark:text-slate-300">الإدارة العامة (Direction) :</span>
-                        <strong className="text-gray-900 font-semibold">
-                          {typeof orgSettings?.bureauDirecteurDepartmentId === 'object' && orgSettings?.bureauDirecteurDepartmentId !== null
-                            ? (orgSettings.bureauDirecteurDepartmentId as { name?: string }).name || 'معرّف'
-                            : orgSettings?.bureauDirecteurDepartmentId ? 'معرّف' : 'غير معيّن'}
-                        </strong>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-[#2c5282]">إعادة تشغيل معالج الإعداد الموجه</h4>
-                    <p className="text-xs text-gray-600">
-                      يمكنك في أي وقت تحديث اسم المؤسسة أو إعادة توزيع الأقسام السيادية والوظائف الرئيسية من خلال المعالج الموجه المكون من 4 خطوات.
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate('/setup')}
-                    className="h-10 px-5 text-sm font-semibold border-[#2c5282] text-[#2c5282] hover:bg-[#ebf8ff] rounded shrink-0"
-                  >
-                    تعديل عبر المعالج
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
-      </Tabs>
-
-      {/* ========================================================= */}
-      {/* DIALOG 1: Change Password Modal (≥ 700px on desktop)     */}
-      {/* ========================================================= */}
-      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
-        <DialogContent
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-sm"
-        >
-          <DialogHeader className="pb-4 border-b border-[#e2e8f0]">
-            <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] flex items-center gap-3">
-              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
-                <Key className="h-5 w-5 text-[#2c5282]" />
-              </div>
-              <span>تغيير كلمة المرور</span>
-            </DialogTitle>
-            <DialogDescription className="text-base text-slate-700 dark:text-slate-300 mt-1">
-              أدخل كلمة المرور الحالية ثم كلمة المرور الجديدة مع تأكيدها
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handlePasswordSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="modal-current-password" className="text-base font-bold text-[#1a202c]">
-                كلمة المرور الحالية <span className="text-red-600">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="modal-current-password"
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور الحالية"
-                  className="h-11 text-base border-slate-300 dark:border-slate-700 rounded pl-10 focus:border-[#2c5282]"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 hover:text-[#2c5282]"
-                >
-                  {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
               </div>
             </div>
+          )}
+        </main>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="modal-new-password" className="text-base font-bold text-[#1a202c]">
-                كلمة المرور الجديدة <span className="text-red-600">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="modal-new-password"
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="6 أحرف على الأقل"
-                  className="h-11 text-base border-slate-300 dark:border-slate-700 rounded pl-10 focus:border-[#2c5282]"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 hover:text-[#2c5282]"
-                >
-                  {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="modal-confirm-password" className="text-base font-bold text-[#1a202c]">
-                تأكيد كلمة المرور الجديدة <span className="text-red-600">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="modal-confirm-password"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="أعد كتابة كلمة المرور الجديدة"
-                  className="h-11 text-base border-slate-300 dark:border-slate-700 rounded pl-10 focus:border-[#2c5282]"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-300 hover:text-[#2c5282]"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-
-            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-[#e2e8f0]">
-              <Button
-                type="submit"
-                disabled={updatePasswordMutation.isPending}
-                className="h-11 px-7 rounded bg-[#2c5282] hover:bg-[#234269] text-white text-base font-semibold shadow-none"
-              >
-                {updatePasswordMutation.isPending ? 'جاري التحديث...' : 'تأكيد التغيير'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsPasswordModalOpen(false)}
-                className="h-11 px-6 rounded border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 text-base font-medium"
-              >
-                إلغاء
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* ========================================================= */}
-      {/* DIALOG 2: Terminate Sessions Modal (≥ 700px on desktop)  */}
-      {/* ========================================================= */}
+      {/* Terminate Other Sessions Modal */}
       <AlertDialog open={isTerminateSessionsOpen} onOpenChange={setIsTerminateSessionsOpen}>
         <AlertDialogContent
-          className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-sm"
+          dir={dir}
+          className="w-[95vw] sm:max-w-[520px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-4"
         >
-          <AlertDialogHeader>
-            <div className="w-12 h-12 rounded bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mb-2">
-              <LogOut className="h-6 w-6 text-red-600" />
+          <AlertDialogHeader className="text-start">
+            <div className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 flex items-center justify-center mb-2">
+              <LogOut className="h-5 w-5" />
             </div>
-            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
-              تأكيد إنهاء الجلسات النشطة الأخرى
+            <AlertDialogTitle className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              {isRTL ? 'تأكيد إنهاء الجلسات النشطة الأخرى' : 'Fermer les autres sessions'}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-slate-700 dark:text-slate-300 leading-relaxed mt-2">
-              سيتم تسجيل الخروج الفوري من كافة الأجهزة والمتصفحات الأخرى المسجل الدخول إليها بحسابك، مع الإبقاء على الجلسة الحالية فقط.
+            <AlertDialogDescription className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
+              {isRTL
+                ? 'سيتم تسجيل الخروج من كافة الأجهزة والمتصفحات الأخرى المسجل الدخول إليها بحسابك، مع الإبقاء على الجلسة الحالية فقط.'
+                : 'Toutes les autres sessions actives sur vos autres appareils seront fermées.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-[#e2e8f0]">
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <AlertDialogCancel className="h-10 px-5 rounded-lg border-slate-300 dark:border-slate-700 text-sm">
+              {isRTL ? 'إلغاء' : 'Annuler'}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleTerminateAllOtherSessions}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none"
+              className="h-10 px-6 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold"
             >
-              تأكيد إنهاء الجلسات
+              {isRTL ? 'تأكيد إنهاء الجلسات' : 'Confirmer'}
             </AlertDialogAction>
-            <AlertDialogCancel className="border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100 font-medium text-base h-11 px-6 rounded">
-              إلغاء
-            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

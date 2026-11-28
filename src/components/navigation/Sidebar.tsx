@@ -21,7 +21,6 @@ import {
   FolderTree,
   MessageCircle,
   LayoutDashboard,
-  ShieldCheck,
   User,
   UserCheck,
   Trash2,
@@ -145,23 +144,7 @@ const Sidebar = () => {
         location.pathname.startsWith('/dashboard/admin/organization-chart'),
     },
 
-    // 6. 🛡️ الإدارة (hub 5) — Admin et Director
-    ...(['Admin', 'Director'].includes(currentUser?.role || '') ? [{
-      id: 'admin',
-      path: '/dashboard/admin',
-      label: t('sidebar.administration'),
-      icon: ShieldCheck,
-      isActive: () =>
-        (location.pathname.startsWith('/dashboard/admin') &&
-          !location.pathname.startsWith('/dashboard/admin/organization-chart')) ||
-        location.pathname.startsWith('/dashboard/users') ||
-        location.pathname.startsWith('/dashboard/departments') ||
-        location.pathname.startsWith('/dashboard/audit-trail') ||
-        location.pathname.startsWith('/dashboard/settings') ||
-        location.pathname.startsWith('/dashboard/guide'),
-    }] : []),
-
-    // 7. 💬 الرسائل (direct)
+    // 6. 💬 الرسائل (direct)
     {
       id: 'messages',
       path: '/dashboard/messages',

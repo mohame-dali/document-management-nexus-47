@@ -16,7 +16,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MessageSquare, User, Menu, LogOut, FileText, Shield, Users, Settings, Network, ChevronDown } from 'lucide-react';
+import {
+  MessageSquare,
+  User,
+  Menu,
+  LogOut,
+  FileText,
+  Users,
+  Settings,
+  Network,
+  ChevronDown,
+  Key,
+  Building2,
+  History,
+  BookOpen,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import { useSetupStatus } from '@/hooks/useSetupStatus';
@@ -26,9 +40,10 @@ import GlobalSearch from '@/components/navigation/GlobalSearch';
 const Header = () => {
   const { currentUser, logout } = useAuth();
   const { toggle } = useSidebar();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { nomAdmin } = useSetupStatus();
+  const isRTL = language !== 'fr';
 
   // Charger la fiche Personnel liée via React Query
   const { data: myProfile } = useQuery({
@@ -172,22 +187,61 @@ const Header = () => {
                 <ChevronDown className="hidden lg:block h-4 w-4 text-slate-700 dark:text-slate-300 shrink-0" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 text-start">
-              <DropdownMenuItem onClick={() => navigate('/dashboard/hr/my-profile')} className="cursor-pointer">
+            <DropdownMenuContent align="end" className="w-60 text-start">
+              <DropdownMenuItem onClick={() => navigate('/dashboard/profile/my-profile')} className="cursor-pointer">
                 <User className="w-4 h-4 ms-2" />
                 <span>{t('header.myProfile')}</span>
               </DropdownMenuItem>
-              
+
+              <DropdownMenuItem
+                onClick={() => navigate('/dashboard/profile/my-profile?action=change-password')}
+                className="cursor-pointer"
+              >
+                <Key className="w-4 h-4 ms-2" />
+                <span>{isRTL ? 'كلمة المرور والأمان' : 'Mot de passe & sécurité'}</span>
+              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={() => navigate('/dashboard/organization/chart')} className="cursor-pointer">
                 <Network className="w-4 h-4 ms-2" />
                 <span>{t('header.organizationChart')}</span>
               </DropdownMenuItem>
 
+              {(currentUser.role === 'Admin' || currentUser.role === 'Director') && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/dashboard/admin/users')} className="cursor-pointer">
+                    <Users className="w-4 h-4 ms-2" />
+                    <span>{t('sidebar.users')}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/dashboard/admin/departments')} className="cursor-pointer">
+                    <Building2 className="w-4 h-4 ms-2" />
+                    <span>{t('sidebar.departments')}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/dashboard/admin/audit-trail')} className="cursor-pointer">
+                    <History className="w-4 h-4 ms-2" />
+                    <span>{t('sidebar.auditTrail')}</span>
+                  </DropdownMenuItem>
+                  {currentUser.role === 'Admin' && (
+                    <DropdownMenuItem
+                      onClick={() => navigate('/dashboard/organization/settings')}
+                      className="cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4 ms-2" />
+                      <span>{isRTL ? 'إعدادات النظام' : 'Paramètres système'}</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => navigate('/dashboard/admin/guide')} className="cursor-pointer">
+                    <BookOpen className="w-4 h-4 ms-2" />
+                    <span>{t('sidebar.setupGuide')}</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+
               <DropdownMenuSeparator />
 
               <DropdownMenuItem 
                 onClick={logout} 
-                className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 focus:text-red-700 focus:bg-red-50"
+                className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 focus:text-red-700 focus:bg-red-50"
               >
                 <LogOut className="w-4 h-4 ms-2" />
                 <span>{t('header.logout')}</span>

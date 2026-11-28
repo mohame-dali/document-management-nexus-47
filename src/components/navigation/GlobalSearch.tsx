@@ -25,6 +25,10 @@ import {
   Zap,
   Info,
   Building2,
+  Settings,
+  History,
+  BookOpen,
+  User,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -353,16 +357,72 @@ const GlobalSearch: React.FC = () => {
       );
     }
 
+    items.push({
+      id: 'qa-my-profile',
+      url: '/dashboard/profile/my-profile',
+      labelAr: 'ملفي الشخصي وكلمة المرور',
+      labelFr: 'Mon profil et sécurité',
+      badgeAr: 'الحساب',
+      badgeFr: 'Profil',
+      keywords: 'profile password security account الملف الشخصي كلمة المرور الأمان',
+      icon: User,
+    });
+
     if (role === 'Admin' || role === 'Director') {
+      items.push(
+        {
+          id: 'qa-users',
+          url: '/dashboard/admin/users',
+          labelAr: 'حسابات المستخدمين',
+          labelFr: 'Comptes utilisateurs',
+          badgeAr: 'إدارة',
+          badgeFr: 'Admin',
+          keywords: 'users accounts utilisateurs المستخدمون الحسابات',
+          icon: Users,
+        },
+        {
+          id: 'qa-departments',
+          url: '/dashboard/admin/departments',
+          labelAr: 'الأقسام والوحدات',
+          labelFr: 'Départements',
+          badgeAr: 'إدارة',
+          badgeFr: 'Admin',
+          keywords: 'departments services الأقسام المصالح',
+          icon: Building2,
+        },
+        {
+          id: 'qa-audit-trail',
+          url: '/dashboard/admin/audit-trail',
+          labelAr: 'سجل العمليات والمراقبة',
+          labelFr: "Piste d'audit",
+          badgeAr: 'التدقيق',
+          badgeFr: 'Audit',
+          keywords: 'audit trail logs history سجل العمليات المراقبة',
+          icon: History,
+        },
+        {
+          id: 'qa-setup-guide',
+          url: '/dashboard/admin/guide',
+          labelAr: 'دليل التثبيت والإعداد',
+          labelFr: "Guide d'installation",
+          badgeAr: 'دليل',
+          badgeFr: 'Guide',
+          keywords: 'guide installation setup دليل التثبيت',
+          icon: BookOpen,
+        }
+      );
+    }
+
+    if (role === 'Admin') {
       items.push({
-        id: 'qa-users',
-        url: '/dashboard/admin/users',
-        labelAr: 'حسابات المستخدمين',
-        labelFr: 'Comptes utilisateurs',
-        badgeAr: 'إدارة',
-        badgeFr: 'Admin',
-        keywords: 'users accounts utilisateurs المستخدمون الحسابات',
-        icon: Users,
+        id: 'qa-system-settings',
+        url: '/dashboard/organization/settings',
+        labelAr: 'إعدادات النظام والمؤسسة',
+        labelFr: 'Paramètres du système',
+        badgeAr: 'الإعدادات',
+        badgeFr: 'Paramètres',
+        keywords: 'settings backup scanner retention organization الإعدادات النسخ الاحتياطي الماسح حفظ الرسائل',
+        icon: Settings,
       });
     }
 

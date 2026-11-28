@@ -149,7 +149,7 @@ const ScannerTab: React.FC<ScannerTabProps> = ({
 
   const handleOpenScannerPreferences = () => {
     if (currentUser?.role === 'Admin') {
-      navigate('/dashboard/admin/settings?tab=scanner');
+      navigate('/dashboard/organization/settings?tab=scanner');
       return;
     }
     setIsWorkstationSettingsOpen(true);
