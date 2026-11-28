@@ -1,0 +1,1478 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { 
+  PlusCircle, 
+  LayoutGrid, 
+  LayoutList, 
+  Search, 
+  Calendar, 
+  Send, 
+  FileOutput,
+  Clock, 
+  Users, 
+  Loader2,
+  Eye,
+  FileText,
+  FolderOpen, 
+  MoreHorizontal, 
+  Download, 
+  Edit, 
+  Trash2, 
+  RotateCcw, 
+  ArrowUpDown, 
+  CheckCircle2, 
+  AlertCircle, 
+  Building2, 
+  ChevronRight, 
+  ChevronLeft, 
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  Share2,
+  Tag,
+  Building,
+  Check,
+  Copy
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
+import { getDepartments } from '@/services/departmentService';
+import { getDocumentOptions } from '@/services/documentOptionsService';
+import { deleteOutgoingDocument, downloadDocument, getOutgoingDocuments } from '@/services/documentService';
+import { useAuth } from '@/contexts/AuthContext';
+import { OutgoingDocument, Department } from '@/types';
+import { useYearPersistence } from '@/hooks/useYearPersistence';
+import { formatArabicDate } from '@/utils/arabicDateFormatter';
+import DocumentFolderDialog from '@/components/documents/DocumentFolderDialog';
+import DocumentPreviewModal from '@/components/documents/DocumentPreviewModal';
+import ScrollToTop from '@/components/common/ScrollToTop';
+import { useLocalStorageState } from '@/hooks/useLocalStorageState';
+import { usePdfExport } from '@/hooks/usePdfExport';
+import { TableSkeleton } from '@/components/ui/TableSkeleton';
+import { exportToCsv } from '@/utils/exportCsv';
+
+const OutgoingDocumentsPage: React.FC = () => {
+  const { t } = useTranslation();
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isExporting, exportPdf } = usePdfExport();
+
+  // Filters & UI State with persistence
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search query by 300ms and reset to page 1
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const [viewMode, setViewMode] = useLocalStorageState<'table' | 'grid'>('outgoingDocs_viewMode', 'table');
+  const [selectedDepartment, setSelectedDepartment] = useLocalStorageState<string>('outgoingDocs_selectedDepartment', 'all');
+  const [selectedType, setSelectedType] = useLocalStorageState<string>('outgoingDocs_selectedType', 'all_types');
+  const [folderFilter, setFolderFilter] = useLocalStorageState<string>('outgoingDocs_folderFilter', 'all');
+  const [sortBy, setSortBy] = useLocalStorageState<string>('outgoingDocs_sortBy', 'newest-issue');
+  const [sortField, setSortField] = useLocalStorageState<string>('outgoingDocs_sortField', 'issueDate');
+  const [sortDirection, setSortDirection] = useLocalStorageState<'asc' | 'desc'>('outgoingDocs_sortDirection', 'desc');
+
+  const handleTableSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  // Dialogs State
+  const [folderDoc, setFolderDoc] = useState<OutgoingDocument | null>(null);
+  const [deleteDoc, setDeleteDoc] = useState<OutgoingDocument | null>(null);
+  const [transferDoc, setTransferDoc] = useState<OutgoingDocument | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<OutgoingDocument | null>(null);
+
+  // Transfer Form State
+  const [transferTargetDept, setTransferTargetDept] = useState<string>('');
+  const [transferNotes, setTransferNotes] = useState<string>(t('outgoing.transfer.defaultNotes'));
+  const [isTransferSubmitting, setIsTransferSubmitting] = useState<boolean>(false);
+
+  // Year persistence hook
+  const { selectedYear, handleYearChange, isValidYear } = useYearPersistence('outgoingDocumentsSelectedYear');
+
+  // Role permissions
+  const isDirector = currentUser?.role === 'Director';
+  const isAdmin = currentUser?.role === 'Admin';
+  const isAdminTuningDesk = currentUser?.role === 'AdminTuningDesk';
+  const isAdminDepartment = currentUser?.role === 'AdminDepartment';
+
+  const canAddDocuments = isAdmin || isAdminTuningDesk;
+  const canEdit = isAdmin || isAdminTuningDesk;
+  const canDelete = isAdmin || isAdminTuningDesk;
+  const canOrganizeDocuments = isAdminDepartment || isAdmin;
+  const canViewCategorization = isAdmin || isDirector || isAdminTuningDesk || isAdminDepartment || currentUser?.role === 'User';
+
+  // Fetch departments
+  const { data: departments = [] } = useQuery<Department[]>({
+    queryKey: ['departments'],
+    queryFn: getDepartments,
+    enabled: true,
+  });
+
+  // Fetch document types
+  const { data: typeOptions = [] } = useQuery({
+    queryKey: ['documentOptions', 'typeDocument', 'outgoing'],
+    queryFn: () => getDocumentOptions({ category: 'typeDocument', documentType: 'outgoing' }),
+    enabled: true,
+  });
+
+  // Server-paginated documents query
+  const {
+    data: docsResponse,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ['outgoingDocuments', selectedYear, selectedDepartment, currentPage, pageSize, debouncedSearch],
+    queryFn: () => getOutgoingDocuments({
+      year: selectedYear,
+      department: selectedDepartment === 'all' ? undefined : selectedDepartment,
+      page: currentPage,
+      limit: pageSize,
+      q: debouncedSearch,
+    }),
+    enabled: isValidYear,
+  });
+
+  const documents = useMemo(() => docsResponse?.data || [], [docsResponse]);
+  const totalCount = docsResponse?.totalCount || 0;
+
+  // Auto-refresh when user returns to tab
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isValidYear) {
+        refetch();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refetch, isValidYear]);
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (docId: string) => deleteOutgoingDocument(docId),
+    onSuccess: () => {
+      toast.success(t('outgoing.toasts.deleteSuccess'));
+      queryClient.invalidateQueries({ queryKey: ['outgoingDocuments'] });
+      setDeleteDoc(null);
+    },
+    onError: (err: unknown) => {
+      console.error('Error deleting outgoing document:', err);
+      toast.error(t('outgoing.toasts.deleteError'));
+    },
+  });
+
+  // Filter documents on current page
+  const filteredDocuments = useMemo(() => {
+    return (documents as OutgoingDocument[]).filter((doc: OutgoingDocument) => {
+      // Document Type filter
+      if (selectedType !== 'all_types') {
+        if (doc.typeDocument !== selectedType) {
+          return false;
+        }
+      }
+
+      // Folder / Categorization filter
+      if (folderFilter === 'categorized' && !doc.folder) return false;
+      if (folderFilter === 'uncategorized' && doc.folder) return false;
+
+      return true;
+    });
+  }, [documents, selectedType, folderFilter]);
+
+  // Sort documents on current page
+  const sortedDocuments = useMemo(() => {
+    return [...filteredDocuments].sort((a, b) => {
+      let valA: string | number = '';
+      let valB: string | number = '';
+
+      if (sortField === 'serialNumber') {
+        valA = Number(a.serialNumber) || 0;
+        valB = Number(b.serialNumber) || 0;
+      } else if (sortField === 'issueDate') {
+        valA = a.issueDate ? new Date(a.issueDate).getTime() : 0;
+        valB = b.issueDate ? new Date(b.issueDate).getTime() : 0;
+      } else if (sortField === 'subject') {
+        valA = (a.subject || '').toLowerCase();
+        valB = (b.subject || '').toLowerCase();
+      } else if (sortField === 'status') {
+        valA = (a.folder || a.status || '').toLowerCase();
+        valB = (b.folder || b.status || '').toLowerCase();
+      } else {
+        if (sortBy === 'newest-issue') {
+          return new Date(b.issueDate || 0).getTime() - new Date(a.issueDate || 0).getTime();
+        }
+        if (sortBy === 'oldest-issue') {
+          return new Date(a.issueDate || 0).getTime() - new Date(b.issueDate || 0).getTime();
+        }
+        if (sortBy === 'serial-desc') {
+          return (Number(b.serialNumber) || 0) - (Number(a.serialNumber) || 0);
+        }
+        if (sortBy === 'serial-asc') {
+          return (Number(a.serialNumber) || 0) - (Number(b.serialNumber) || 0);
+        }
+        return 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredDocuments, sortField, sortDirection, sortBy]);
+
+  // Pagination calculation
+  const totalFiltered = totalCount;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const clampedPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+  const startIndex = (clampedPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + sortedDocuments.length, totalCount);
+  const paginatedDocuments = sortedDocuments;
+
+  // Reset filters
+  const handleFilterReset = () => {
+    setSearchQuery('');
+    setSelectedDepartment('all');
+    setSelectedType('all_types');
+    setFolderFilter('all');
+    setSortBy('newest-issue');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() ||
+    selectedDepartment !== 'all' ||
+    selectedType !== 'all_types' ||
+    folderFilter !== 'all' ||
+    sortBy !== 'newest-issue'
+  );
+
+  // Document action handlers
+  const handleView = (id: string) => {
+    navigate(`/dashboard/outgoing-documents/${id}`);
+  };
+
+  const handleEdit = (id: string) => {
+    navigate(`/dashboard/outgoing-documents/${id}/edit`);
+  };
+
+  const handleExportPdf = async () => {
+    if (sortedDocuments.length === 0) {
+      toast.info(t('outgoing.toasts.noDocsToExport'));
+      return;
+    }
+
+    const rows = sortedDocuments.map((doc: OutgoingDocument) => {
+      const recipientText = Array.isArray(doc.recipients) && doc.recipients.length > 0
+        ? doc.recipients.join(', ')
+        : (doc.recipient || t('outgoing.source.unspecified'));
+
+      return {
+        serialNumber: doc.serialNumber || '',
+        issueDate: formatArabicDate(doc.issueDate),
+        subject: doc.subject || '',
+        recipient: recipientText,
+        typeDocument: doc.typeDocument || t('outgoing.type.general'),
+      };
+    });
+
+    await exportPdf({
+      title: t('outgoing.exportPdf.title'),
+      subtitle: t('outgoing.exportPdf.subtitle', { year: selectedYear, count: rows.length }),
+      columns: [
+        { header: t('outgoing.exportPdf.colSerial'), dataKey: 'serialNumber', align: 'center', width: 28 },
+        { header: t('outgoing.exportPdf.colIssueDate'), dataKey: 'issueDate', align: 'center', width: 32 },
+        { header: t('outgoing.exportPdf.colSubject'), dataKey: 'subject', align: 'right' },
+        { header: t('outgoing.exportPdf.colRecipient'), dataKey: 'recipient', align: 'right', width: 44 },
+        { header: t('outgoing.exportPdf.colType'), dataKey: 'typeDocument', align: 'center', width: 28 },
+      ],
+      rows,
+      fileName: t('outgoing.exportPdf.fileName', { year: selectedYear }),
+      orientation: 'landscape',
+      footerText: t('outgoing.exportPdf.footer'),
+    });
+  };
+
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
+
+  const handleDownload = async (doc: OutgoingDocument) => {
+    if (doc.scannedDocument) {
+      try {
+        setDownloadingDocId(doc._id);
+        toast.info(t('outgoing.toasts.downloadStarting'));
+        await downloadDocument(
+          doc.scannedDocument, 
+          `outgoing-doc-${doc.serialNumber}-${doc.year}.pdf`
+        );
+        toast.success(t('outgoing.toasts.downloadSuccess'));
+      } catch (err) {
+        console.error('Download error:', err);
+        toast.error(t('outgoing.toasts.downloadError'));
+      } finally {
+        setDownloadingDocId(null);
+      }
+    } else {
+      toast.error(t('outgoing.toasts.noScannedDoc'));
+    }
+  };
+
+  // Handle transfer submission
+  const handleTransferSubmit = () => {
+    if (!transferDoc) return;
+    setIsTransferSubmitting(true);
+    setTimeout(() => {
+      setIsTransferSubmitting(false);
+      toast.success(t('outgoing.toasts.transferSuccess', { serialNumber: transferDoc.serialNumber }));
+      setTransferDoc(null);
+      setTransferNotes(t('outgoing.transfer.defaultNotes'));
+      setTransferTargetDept('');
+    }, 400);
+  };
+
+  // Helper for highlighting search matches
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim() || !text) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <mark key={index} className="bg-[#FFD758]/40 text-[#1a202c] font-semibold px-0.5 rounded">
+          {part}
+        </mark>
+      ) : part
+    );
+  };
+
+  // Loading view — Afficher un skeleton pendant le chargement initial
+  if (isLoading && isValidYear) {
+    return (
+      <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
+          <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xs">
+            <TableSkeleton columns={7} rows={8} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f7fafc] text-[#1a202c] py-6 sm:py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6 max-w-7xl">
+        
+        {/* Fil d'Ariane (Breadcrumbs) */}
+        <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm text-gray-500">
+          <Link to="/dashboard" className="hover:text-[#2c5282] transition-colors">{t('common.home')}</Link>
+          <ChevronLeft className="w-4 h-4 text-gray-400" />
+          <span className="text-[#1a202c] font-medium">{t('outgoing.page.title')}</span>
+        </nav>
+
+        {/* 1. Header Section */}
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 shadow-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded bg-[#ebf8f1] border border-[#bbf0d0] flex items-center justify-center text-[#276749] flex-shrink-0 mt-0.5">
+                <Send className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c] leading-tight">
+                  {t('outgoing.page.headerTitle')}
+                </h1>
+                <p className="text-base text-[#4a5568] mt-1.5 leading-relaxed">
+                  {t('outgoing.page.headerSubtitle')}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap sm:flex-nowrap justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExportPdf}
+                disabled={isExporting || sortedDocuments.length === 0}
+                title={t('outgoing.actions.exportPdfTooltip')}
+                className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200 shadow-xs flex items-center gap-2"
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin ml-1" />
+                ) : (
+                  <Download className="h-4 w-4 ml-1" />
+                )}
+                <span>{t('outgoing.actions.exportPdf')}</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => exportToCsv('courriers-sortants.csv', documents)}
+                disabled={documents.length === 0}
+                className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200 shadow-xs flex items-center gap-2"
+                title="تصدير Excel"
+              >
+                <Download className="h-4 w-4 ml-1" />
+                <span>تصدير Excel</span>
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                title={t('outgoing.actions.refreshTooltip')}
+                className="h-11 px-4 text-base font-semibold border-[#cbd5e1] text-[#2c5282] hover:bg-[#f7fafc] rounded transition-colors duration-200"
+              >
+                <RotateCcw className={`h-4 w-4 ml-2 ${isFetching ? 'animate-spin' : ''}`} />
+                {t('common.refresh')}
+              </Button>
+
+              {canAddDocuments && (
+                <Button
+                  type="button"
+                  onClick={() => navigate('/dashboard/outgoing-documents/create')}
+                  className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200 shadow-xs"
+                >
+                  <PlusCircle className="h-5 w-5 ml-2" />
+                  {t('outgoing.actions.create')}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Filters & Controls Bar */}
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-xs space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+            
+            {/* Search Input */}
+            <div className="lg:col-span-4 relative">
+              <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
+                {t('outgoing.filters.searchLabel')}
+              </label>
+              <div className="relative">
+                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#718096]" />
+                <Input
+                  type="text"
+                  placeholder={t('outgoing.filters.searchPlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-11 pr-10 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#5f6b7d] hover:text-[#1a202c] px-1.5 py-0.5 rounded bg-slate-100"
+                  >
+                    {t('outgoing.filters.clear')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Year Selector */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
+                {t('outgoing.filters.yearLabel')}
+              </label>
+              <div className="relative">
+                <Calendar className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#718096]" />
+                <Input
+                  type="text"
+                  maxLength={4}
+                  value={selectedYear}
+                  onChange={(e) => {
+                    handleYearChange(e);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="2026"
+                  className="h-11 pr-10 text-base font-bold text-[#1a202c] border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Department Filter (if AdminTuningDesk or for general source filter) */}
+            {currentUser?.role === 'AdminTuningDesk' && (
+              <div className="lg:col-span-3">
+                <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
+                  {t('outgoing.filters.departmentLabel')}
+                </label>
+                <Select
+                  value={selectedDepartment}
+                  onValueChange={(val) => {
+                    setSelectedDepartment(val);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-11 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white">
+                    <SelectValue placeholder={t('outgoing.filters.allDepartments')} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded border-[#cbd5e1] text-base">
+                    <SelectItem value="all">{t('outgoing.filters.allDepartments')}</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept._id} value={dept._id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Document Type Filter */}
+            <div className={currentUser?.role === 'AdminTuningDesk' ? "lg:col-span-3" : "lg:col-span-3"}>
+              <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
+                {t('outgoing.filters.typeLabel')}
+              </label>
+              <Select
+                value={selectedType}
+                onValueChange={(val) => {
+                  setSelectedType(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="h-11 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white">
+                  <SelectValue placeholder={t('outgoing.filters.allTypesPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent className="rounded border-[#cbd5e1] text-base">
+                  <SelectItem value="all_types">{t('outgoing.filters.allTypes')}</SelectItem>
+                  {typeOptions.map((opt: { _id?: string; value?: string; name: string; label?: string }) => (
+                    <SelectItem key={opt._id || opt.value || opt.name} value={opt.value || opt.name}>
+                      {opt.label || opt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Classification/Folder Filter */}
+            <div className={currentUser?.role === 'AdminTuningDesk' ? "lg:col-span-4" : "lg:col-span-3"}>
+              <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
+                {t('outgoing.filters.folderFilterLabel')}
+              </label>
+              <Select
+                value={folderFilter}
+                onValueChange={(val) => {
+                  setFolderFilter(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="h-11 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white">
+                  <SelectValue placeholder={t('outgoing.filters.folderPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent className="rounded border-[#cbd5e1] text-base">
+                  <SelectItem value="all">{t('outgoing.filters.folderAll')}</SelectItem>
+                  <SelectItem value="categorized">{t('outgoing.filters.folderCategorized')}</SelectItem>
+                  <SelectItem value="uncategorized">{t('outgoing.filters.folderUncategorized')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort Order */}
+            <div className={currentUser?.role === 'AdminTuningDesk' ? "lg:col-span-4" : "lg:col-span-3"}>
+              <label className="block text-sm font-semibold text-[#2d3748] mb-1.5">
+                {t('outgoing.filters.sortLabel')}
+              </label>
+              <Select
+                value={sortBy}
+                onValueChange={(val) => {
+                  setSortBy(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="h-11 text-base border-[#cbd5e1] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282] rounded bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded border-[#cbd5e1] text-base">
+                  <SelectItem value="newest-issue">{t('outgoing.sort.newestIssue')}</SelectItem>
+                  <SelectItem value="oldest-issue">{t('outgoing.sort.oldestIssue')}</SelectItem>
+                  <SelectItem value="serial-desc">{t('outgoing.sort.serialDesc')}</SelectItem>
+                  <SelectItem value="serial-asc">{t('outgoing.sort.serialAsc')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Active Filters Reset (if any) */}
+            {hasActiveFilters && (
+              <div className="lg:col-span-4 flex items-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleFilterReset}
+                  className="h-11 px-4 text-base font-semibold text-[#c53030] hover:bg-red-50 hover:text-[#9b2c2c] rounded transition-colors duration-200 w-full sm:w-auto"
+                >
+                  <RotateCcw className="h-4 w-4 ml-1.5" />
+                  {t('outgoing.filters.reset')}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Sub-bar: Badges & View Switcher */}
+          <div className="pt-3 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-base">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Year badge */}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
+                <Calendar className="h-4 w-4" />
+                {t('outgoing.stats.yearBadge', { year: selectedYear })}
+              </span>
+
+              {/* Total count badge with institutional amber accent */}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-sm font-bold bg-[#FFD758]/20 text-[#1a202c] border border-[#FFCB56]">
+                <FileOutput className="h-4 w-4 text-[#1a202c]" />
+                {t('outgoing.stats.resultsCount', { filtered: totalFiltered, total: totalCount })}
+              </span>
+
+              {isFetching && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 text-[#4a5568] border border-slate-300">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
+                  {t('outgoing.stats.syncing')}
+                </span>
+              )}
+            </div>
+
+            {/* View Mode Toggle: Table or Grid */}
+            <div className="inline-flex items-center border border-[#cbd5e1] rounded overflow-hidden bg-white">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                aria-label={t('outgoing.view.tableLabel')}
+                className={`h-11 px-3.5 text-base flex items-center gap-1.5 transition-colors duration-200 ${
+                  viewMode === 'table'
+                    ? 'bg-[#2c5282] text-white'
+                    : 'text-[#4a5568] hover:bg-gray-50'
+                }`}
+                title={t('outgoing.view.tableLabel')}
+              >
+                <LayoutList className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('outgoing.view.table')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                aria-label={t('outgoing.view.gridLabel')}
+                className={`h-11 px-3.5 text-base flex items-center gap-1.5 border-r border-[#cbd5e1] transition-colors duration-200 ${
+                  viewMode === 'grid'
+                    ? 'bg-[#2c5282] text-white'
+                    : 'text-[#4a5568] hover:bg-gray-50'
+                }`}
+                title={t('outgoing.view.gridLabel')}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('outgoing.view.grid')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Main Documents Content: Table or Grid */}
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 sm:p-8 space-y-6 shadow-xs">
+          
+          {/* Validation on year */}
+          {!isValidYear ? (
+            <div className="border border-[#e2e8f0] rounded p-12 text-center bg-[#f7fafc] space-y-3">
+              <div className="w-12 h-12 rounded bg-amber-50 border border-[#FFD758] flex items-center justify-center mx-auto text-[#1a202c]">
+                <Calendar className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold text-[#1a202c]">{t('outgoing.yearValidation.title')}</h3>
+              <p className="text-base text-[#4a5568] max-w-md mx-auto">
+                {t('outgoing.yearValidation.description')}
+              </p>
+            </div>
+          ) : isError ? (
+            <EmptyState
+              icon={<AlertCircle className="h-6 w-6 text-[#b91c1c]" />}
+              title={t('outgoing.error.title')}
+              description={t('outgoing.error.description')}
+              className="border-red-200 bg-red-50/40"
+              action={
+                <Button
+                  type="button"
+                  onClick={() => refetch()}
+                  className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded inline-flex items-center gap-2 transition-colors duration-200"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  <span>{t('common.retry')}</span>
+                </Button>
+              }
+            />
+          ) : totalFiltered === 0 ? (
+            /* Empty State */
+            <EmptyState
+              icon={<FileOutput className="h-6 w-6 text-[#2c5282]" />}
+              title={t('outgoing.empty.title')}
+              description={
+                hasActiveFilters
+                  ? t('outgoing.empty.filtered')
+                  : t('outgoing.empty.noDocsYear', { year: selectedYear })
+              }
+              action={
+                hasActiveFilters ? (
+                  <Button
+                    type="button"
+                    onClick={handleFilterReset}
+                    className="h-11 px-5 text-base font-semibold bg-[#2c5282] hover:bg-[#234269] text-white rounded transition-colors duration-200"
+                  >
+                    {t('outgoing.empty.showAll', { year: selectedYear })}
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : viewMode === 'table' ? (
+            /* TABULAR VIEW (AdminLTE style, 8h/day professional ergonomics, line height >= 64px) */
+            <div className="overflow-x-auto border border-[#e2e8f0] rounded">
+              <table className="w-full text-right border-collapse text-sm">
+                <thead>
+                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0] text-[#2d3748]">
+                    <th 
+                      className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('serialNumber')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>{t('outgoing.table.serialNumber')}</span>
+                        {sortField === 'serialNumber' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'serialNumber' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'serialNumber' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
+                    <th 
+                      className="py-3 px-4 font-bold text-sm cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('subject')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>{t('outgoing.table.subjectAndType')}</span>
+                        {sortField === 'subject' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'subject' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'subject' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
+                    <th 
+                      className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('issueDate')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>{t('outgoing.table.issueDate')}</span>
+                        {sortField === 'issueDate' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'issueDate' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'issueDate' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
+                    <th className="py-3 px-4 font-bold text-sm">{t('outgoing.table.source')}</th>
+                    <th className="py-3 px-4 font-bold text-sm">{t('outgoing.table.recipients')}</th>
+                    <th 
+                      className="py-3 px-4 font-bold text-sm whitespace-nowrap cursor-pointer hover:bg-[#edf2f7] select-none transition-colors"
+                      onClick={() => handleTableSort('status')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>{t('outgoing.table.classification')}</span>
+                        {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="w-4 h-4 text-[#2c5282]" />}
+                        {sortField !== 'status' && <ChevronsUpDown className="w-4 h-4 text-gray-300" />}
+                      </div>
+                    </th>
+                    <th className="py-3 px-4 font-bold text-sm text-center whitespace-nowrap">{t('common.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e2e8f0] bg-white">
+                  {paginatedDocuments.map((doc: OutgoingDocument) => {
+                    return (
+                      <tr 
+                        key={doc._id}
+                        className="hover:bg-slate-50/80 transition-colors duration-200 min-h-[64px]"
+                      >
+                        {/* Serial Number & Year */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#2c5282] flex-shrink-0" />
+                            <div className="flex flex-col">
+                              <span className="font-bold text-base text-[#1a202c]">
+                                #{highlightMatch(String(doc.serialNumber), searchQuery)}
+                              </span>
+                              <span className="text-xs text-[#5f6b7d]">
+                                {doc.year}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Subject & Type */}
+                        <td className="py-3 px-4">
+                          <div className="max-w-[340px] space-y-1.5">
+                            <div 
+                              onClick={() => handleView(doc._id)}
+                              className="font-bold text-base text-[#1a202c] hover:text-[#2c5282] cursor-pointer leading-relaxed transition-colors duration-200"
+                              title={doc.subject}
+                            >
+                              {highlightMatch(doc.subject, searchQuery)}
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {doc.typeDocument && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-[#2d3748] border border-slate-300">
+                                  {doc.typeDocument}
+                                </span>
+                              )}
+
+                              {doc.scannedDocument && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#2c5282] border border-blue-200">
+                                  <FileOutput className="h-3 w-3" />
+                                  {t('outgoing.table.attachedFile')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Issue Date */}
+                        <td className="py-3 px-4 whitespace-nowrap text-sm text-[#4a5568]">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Clock className="h-4 w-4 text-[#718096]" />
+                            <span>{formatArabicDate(doc.issueDate)}</span>
+                          </div>
+                        </td>
+
+                        {/* Source */}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1.5 text-sm font-normal text-[#2d3748]">
+                            <Building2 className="h-4 w-4 text-[#718096] flex-shrink-0" />
+                            <span className="line-clamp-1" title={doc.source?.name || t('outgoing.source.unspecified')}>
+                              {highlightMatch(doc.source?.name || t('outgoing.source.unspecified'), searchQuery)}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Assigned To / Recipients */}
+                        <td className="py-3 px-4">
+                          {Array.isArray(doc.assignedTo) && doc.assignedTo.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 max-w-[240px]">
+                              {doc.assignedTo.slice(0, 2).map((dest, idx) => (
+                                <span 
+                                  key={idx}
+                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#ebf8f1] text-[#22543d] border border-[#bbf0d0]"
+                                >
+                                  {dest}
+                                </span>
+                              ))}
+                              {doc.assignedTo.length > 2 && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-[#4a5568] border border-slate-200">
+                                  {t('outgoing.table.otherRecipients', { count: doc.assignedTo.length - 2 })}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-[#5f6b7d]">{t('outgoing.source.unspecified')}</span>
+                          )}
+                        </td>
+
+                        {/* Folder / Classification */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {doc.folder ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              <FolderOpen className="h-3.5 w-3.5 text-emerald-600" />
+                              {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorizedInFolder')}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-[#5f6b7d] bg-slate-100 border border-slate-200">
+                              {t('outgoing.status.uncategorized')}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Actions: Voir, Modifier, Archiver, Transférer, PDF + More */}
+                        <td className="py-3 px-4 whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            {/* 1. Voir (عرض) */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleView(doc._id)}
+                              title={t('outgoing.actions.viewTooltip')}
+                              className="h-11 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100 transition-colors duration-200"
+                            >
+                              <Eye className="h-3.5 w-3.5 ml-1" />
+                              {t('common.view')}
+                            </Button>
+
+                            {/* معاينة (Aperçu) */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPreviewDoc(doc)}
+                              title={t('outgoing.actions.previewTooltip')}
+                              className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100 transition-colors duration-200"
+                            >
+                              <FileText className="h-3.5 w-3.5 ml-1" />
+                              {t('outgoing.actions.preview')}
+                            </Button>
+
+                            {/* 2. Modifier (تعديل) */}
+                            {canEdit && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(doc._id)}
+                                title={t('outgoing.actions.editTooltip')}
+                                className="h-11 px-2.5 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100 transition-colors duration-200"
+                              >
+                                <Edit className="h-3.5 w-3.5 ml-1" />
+                                {t('common.edit')}
+                              </Button>
+                            )}
+
+                            {/* 3. Archiver (أرشفة في مجلد) */}
+                            {canViewCategorization && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setFolderDoc(doc)}
+                                title={canOrganizeDocuments ? t('outgoing.actions.archiveTooltip') : t('outgoing.actions.viewArchiveTooltip')}
+                                className="h-11 px-2.5 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56] transition-colors duration-200"
+                              >
+                                <FolderOpen className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
+                                {t('outgoing.actions.archive')}
+                              </Button>
+                            )}
+
+                            {/* 4. Transférer (تحويل / توجيه) */}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setTransferDoc(doc)}
+                              title={t('outgoing.actions.transferTooltip')}
+                              className="h-11 px-2.5 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
+                            >
+                              <Share2 className="h-3.5 w-3.5 ml-1" />
+                              {t('outgoing.actions.transfer')}
+                            </Button>
+
+                            {/* 5. Télécharger PDF */}
+                            {doc.scannedDocument && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownload(doc)}
+                                disabled={downloadingDocId === doc._id}
+                                title={t('outgoing.actions.downloadPdfTooltip')}
+                                aria-label={t('outgoing.actions.downloadPdfAria')}
+                                className="h-11 px-2 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-white hover:bg-blue-50 transition-colors duration-200"
+                              >
+                                {downloadingDocId === doc._id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
+                                ) : (
+                                  <Download className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            )}
+
+                            {/* Dropdown Menu for Delete */}
+                            {canDelete && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    aria-label={t('outgoing.actions.moreActions')}
+                                    className="h-11 w-11 p-0 rounded hover:bg-slate-100 text-[#5f6b7d]"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="text-base rounded border-[#cbd5e1]">
+                                  <DropdownMenuItem 
+                                    onClick={() => setDeleteDoc(doc)}
+                                    className="text-[#e53e3e] focus:text-[#c53030] focus:bg-red-50 text-sm font-semibold cursor-pointer"
+                                  >
+                                    <Trash2 className="h-4 w-4 ml-2" />
+                                    {t('outgoing.actions.deleteDocument')}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* GRID VIEW (Cards Layout) */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {paginatedDocuments.map((doc: OutgoingDocument) => {
+                return (
+                  <div
+                    key={doc._id}
+                    className="bg-white border border-[#e2e8f0] rounded p-5 hover:border-[#cbd5e1] hover:shadow-xs transition-all duration-200 flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Card Top: Serial & Type */}
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded text-sm font-bold bg-[#ebf4ff] text-[#2c5282] border border-[#bee3f8]">
+                            #{doc.serialNumber} / {doc.year}
+                          </span>
+                        </div>
+
+                        {doc.folder ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <FolderOpen className="h-3 w-3" />
+                            {typeof doc.folder === 'object' ? doc.folder.name : t('outgoing.status.categorized')}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-[#5f6b7d] border border-slate-200">
+                            {t('outgoing.status.uncategorized')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Subject */}
+                      <h3 
+                        onClick={() => handleView(doc._id)}
+                        className="font-bold text-base text-[#1a202c] hover:text-[#2c5282] cursor-pointer mb-3 line-clamp-2 leading-relaxed"
+                        title={doc.subject}
+                      >
+                        {highlightMatch(doc.subject, searchQuery)}
+                      </h3>
+
+                      {/* Meta Information */}
+                      <div className="space-y-2 text-sm text-[#4a5568] mb-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-[#718096] flex-shrink-0" />
+                          <span>{t('outgoing.cards.issueDate', { date: formatArabicDate(doc.issueDate) })}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-[#718096] flex-shrink-0" />
+                          <span className="truncate">{t('outgoing.cards.source', { source: doc.source?.name || t('outgoing.source.unspecified') })}</span>
+                        </div>
+
+                        {Array.isArray(doc.assignedTo) && doc.assignedTo.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <Users className="h-4 w-4 text-[#718096] flex-shrink-0 mt-0.5" />
+                            <div className="flex flex-wrap gap-1">
+                              {doc.assignedTo.slice(0, 2).map((d, i) => (
+                                <span key={i} className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-[#2d3748] border border-slate-200">
+                                  {d}
+                                </span>
+                              ))}
+                              {doc.assignedTo.length > 2 && (
+                                <span className="text-xs text-[#5f6b7d]">
+                                  +{doc.assignedTo.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card Actions Bottom */}
+                    <div className="pt-3 border-t border-[#e2e8f0] flex items-center justify-between gap-1 flex-wrap">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleView(doc._id)}
+                        className="h-11 px-2.5 text-xs font-semibold rounded text-[#2c5282] border-blue-200 bg-blue-50/60 hover:bg-blue-100"
+                      >
+                        <Eye className="h-3.5 w-3.5 ml-1" />
+                        {t('common.view')}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviewDoc(doc)}
+                        className="h-11 px-2.5 text-xs font-semibold rounded text-amber-700 border-amber-300 bg-amber-50/60 hover:bg-amber-100"
+                        title={t('outgoing.actions.previewTooltip')}
+                      >
+                        <FileText className="h-3.5 w-3.5 ml-1" />
+                        {t('outgoing.actions.preview')}
+                      </Button>
+
+                      {canEdit && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(doc._id)}
+                          className="h-11 px-2 text-xs font-semibold rounded text-[#4a5568] border-slate-300 bg-slate-50 hover:bg-slate-100"
+                        >
+                          <Edit className="h-3.5 w-3.5 ml-1" />
+                          {t('common.edit')}
+                        </Button>
+                      )}
+
+                      {canViewCategorization && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFolderDoc(doc)}
+                          className="h-11 px-2 text-xs font-bold rounded text-[#1a202c] border-[#FFD758] bg-amber-50 hover:bg-[#FFCB56]"
+                        >
+                          <FolderOpen className="h-3.5 w-3.5 ml-1 text-[#1a202c]" />
+                          {t('outgoing.actions.archive')}
+                        </Button>
+                      )}
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTransferDoc(doc)}
+                        className="h-11 px-2 text-xs font-semibold rounded text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
+                      >
+                        <Share2 className="h-3.5 w-3.5 ml-1" />
+                        {t('outgoing.actions.transfer')}
+                      </Button>
+
+                      {doc.scannedDocument && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(doc)}
+                          disabled={downloadingDocId === doc._id}
+                          className="h-11 px-2 text-xs rounded text-[#2c5282] border-blue-200"
+                          title={t('outgoing.actions.downloadPdfTooltip')}
+                          aria-label={t('outgoing.actions.downloadPdfAria')}
+                        >
+                          {downloadingDocId === doc._id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2c5282]" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 4. Pagination Section (En-tête → filtres/tri → tableau → pagination) */}
+          {totalFiltered > 0 && (
+            <div className="pt-5 border-t border-[#e2e8f0] flex flex-col sm:flex-row items-center justify-between gap-4 text-base">
+              
+              {/* Counter Display */}
+              <div className="text-sm font-medium text-[#4a5568]">
+                {t('outgoing.pagination.info', {
+                  from: startIndex + 1,
+                  to: endIndex,
+                  total: totalFiltered
+                })}
+              </div>
+
+              {/* Page Controls */}
+              <div className="flex items-center gap-2">
+                {/* Page Size Selector */}
+                <div className="flex items-center gap-1.5 ml-3">
+                  <span className="text-xs font-semibold text-[#5f6b7d]">{t('outgoing.pagination.itemsLabel')}</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="h-11 px-2 text-xs font-semibold border border-[#cbd5e1] rounded bg-white text-[#1a202c] focus:border-[#2c5282] focus:ring-1 focus:ring-[#2c5282]"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+
+                {/* Prev Page Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={clampedPage <= 1 || isFetching}
+                  className="h-11 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
+                >
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                  {t('common.previous')}
+                </Button>
+
+                {/* Page Numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum = i + 1;
+                    if (totalPages > 5 && clampedPage > 3) {
+                      pageNum = clampedPage - 2 + i;
+                      if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        disabled={isFetching}
+                        className={`h-11 w-11 text-xs font-bold rounded transition-colors duration-200 ${
+                          clampedPage === pageNum
+                            ? 'bg-[#2c5282] text-white'
+                            : 'border border-[#cbd5e1] text-[#2d3748] hover:bg-slate-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Next Page Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={clampedPage >= totalPages || isFetching}
+                  className="h-11 px-2.5 text-xs font-semibold rounded border-[#cbd5e1] text-[#1a202c] disabled:opacity-40"
+                >
+                  {t('common.next')}
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Dialog 1: Folder Classification Dialog (Archiver) */}
+      {folderDoc && (
+        <DocumentFolderDialog
+          open={Boolean(folderDoc)}
+          onOpenChange={(open) => {
+            if (!open) setFolderDoc(null);
+          }}
+          document={folderDoc}
+          documentType="outgoing"
+          readOnly={!canOrganizeDocuments}
+        />
+      )}
+
+      {/* Dialog 2: Delete Confirmation Dialog */}
+      <AlertDialog 
+        open={Boolean(deleteDoc)} 
+        onOpenChange={(open) => {
+          if (!open) setDeleteDoc(null);
+        }}
+      >
+        <AlertDialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-[#1a202c]">
+              {t('outgoing.delete.title')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-[#4a5568] mt-3 leading-relaxed">
+              {t('outgoing.delete.description', {
+                serialNumber: deleteDoc?.serialNumber,
+                subject: deleteDoc?.subject
+              })}
+              <br />
+              <span className="text-sm text-[#c53030] block mt-2 font-medium">
+                {t('outgoing.delete.warning')}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-[#e2e8f0]">
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteDoc) {
+                  deleteMutation.mutate(deleteDoc._id);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-[#e53e3e] hover:bg-[#c53030] text-white rounded font-semibold text-base h-11 px-7 transition-colors duration-200 shadow-none inline-flex items-center gap-2"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{t('outgoing.delete.deleting')}</span>
+                </>
+              ) : (
+                t('outgoing.delete.confirmButton')
+              )}
+            </AlertDialogAction>
+            <AlertDialogCancel 
+              className="rounded font-medium text-base h-11 px-6 border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100"
+              disabled={deleteMutation.isPending}
+            >
+              {t('common.cancel')}
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog 3: Transfer / Dispatch Dialog (Transférer / توجيه) */}
+      <Dialog 
+        open={Boolean(transferDoc)} 
+        onOpenChange={(open) => {
+          if (!open) setTransferDoc(null);
+        }}
+      >
+        <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[720px] p-6 sm:p-8 bg-white rounded border border-[#e2e8f0] text-right shadow-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-[#2c5282] flex items-center gap-3">
+              <div className="w-10 h-10 rounded bg-[#2c5282]/10 flex items-center justify-center text-[#2c5282] shrink-0">
+                <Share2 className="h-5 w-5 text-[#2c5282]" />
+              </div>
+              <span>{t('outgoing.transfer.title')}</span>
+            </DialogTitle>
+            <DialogDescription className="text-base text-[#4a5568] mt-1.5 leading-relaxed">
+              {t('outgoing.transfer.description', { serialNumber: transferDoc?.serialNumber })}
+            </DialogDescription>
+          </DialogHeader>
+
+          {transferDoc && (
+            <div className="space-y-5 py-3">
+              {/* Document mini-summary */}
+              <div className="p-4 bg-[#f7fafc] border border-[#e2e8f0] rounded space-y-1.5 text-base">
+                <div className="font-bold text-[#1a202c]">
+                  {t('outgoing.transfer.subjectLabel', { subject: transferDoc.subject })}
+                </div>
+                <div className="text-sm text-[#5f6b7d] flex items-center gap-4">
+                  <span>{t('outgoing.transfer.issueDateLabel', { date: formatArabicDate(transferDoc.issueDate) })}</span>
+                  <span>{t('outgoing.transfer.sourceLabel', { source: transferDoc.source?.name || t('outgoing.source.unspecified') })}</span>
+                </div>
+              </div>
+
+              {/* Destination department */}
+              <div className="space-y-2">
+                <Label className="text-base font-bold text-[#1a202c]">
+                  {t('outgoing.transfer.targetDeptLabel')} <span className="text-red-600">*</span>
+                </Label>
+                <Select value={transferTargetDept} onValueChange={setTransferTargetDept}>
+                  <SelectTrigger className="h-11 text-base border-[#cbd5e1] rounded bg-white">
+                    <SelectValue placeholder={t('outgoing.transfer.targetDeptPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent className="rounded border-[#cbd5e1] text-base">
+                    {departments.map((dept) => (
+                      <SelectItem key={dept._id} value={dept._id} className="text-base py-2">
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Instructions / Orientation note */}
+              <div className="space-y-2">
+                <Label className="text-base font-bold text-[#1a202c]">
+                  {t('outgoing.transfer.notesLabel')}
+                </Label>
+                <Textarea
+                  value={transferNotes}
+                  onChange={(e) => setTransferNotes(e.target.value)}
+                  placeholder={t('outgoing.transfer.notesPlaceholder')}
+                  className="text-base border-[#cbd5e1] rounded min-h-[100px] p-3 focus:border-[#2c5282]"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-[#e2e8f0] mt-2">
+            <Button
+              type="button"
+              onClick={handleTransferSubmit}
+              disabled={isTransferSubmitting}
+              className="h-11 px-7 bg-[#2c5282] hover:bg-[#234269] text-white rounded font-semibold text-base transition-colors duration-200 shadow-none"
+            >
+              {isTransferSubmitting ? t('outgoing.transfer.submitting') : t('outgoing.transfer.confirmButton')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setTransferDoc(null)}
+              className="h-11 px-6 rounded font-medium text-base border-[#cbd5e1] text-[#2d3748] hover:bg-gray-100"
+              disabled={isTransferSubmitting}
+            >
+              {t('common.cancel')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        open={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+        direction="outgoing"
+      />
+
+      <ScrollToTop />
+    </div>
+  );
+};
+
+export default OutgoingDocumentsPage;

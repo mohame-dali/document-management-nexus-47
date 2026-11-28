@@ -4,7 +4,9 @@ import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
 import { getDepartments } from '@/services/departmentService';
-import { getOrganizationSettings } from '@/services/organizationSettingsService';
+import { getOrganizationSettings, OrganizationSettings } from '@/services/organizationSettingsService';
+import { resolveFrontendAttendanceScope } from '@/utils/attendanceScope';
+import { getErrorMessage } from '@/utils/errorMessages';
 import { Department } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +64,8 @@ export const MonthlyAttendanceReport: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
 
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [rhDepartmentId, setRhDepartmentId] = useState<string | null>(null);
+  const [orgSettings, setOrgSettings] = useState<OrganizationSettings | null>(null);
+  const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false);
   const [reportData, setReportData] = useState<MonthlyAttendanceSheetData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -74,32 +77,16 @@ export const MonthlyAttendanceReport: React.FC = () => {
     return years;
   }, [currentYear]);
 
-  const userRole = currentUser?.role;
-  const userDeptId = currentUser?.activeDepartment
-    ? typeof currentUser.activeDepartment === 'object'
-      ? (currentUser.activeDepartment as { _id?: string })._id || null
-      : String(currentUser.activeDepartment)
-    : null;
-
-  const userDepartmentName =
-    (typeof currentUser?.activeDepartment === 'object'
-      ? (currentUser.activeDepartment as { name?: string }).name
-      : null) ||
-    departments.find((d) => String(d._id) === String(userDeptId))?.name ||
-    '';
-
-  const isRHDepartment =
-    Boolean(rhDepartmentId && userDeptId && String(rhDepartmentId) === String(userDeptId)) ||
-    userDepartmentName.toUpperCase().includes('RH') ||
-    userDepartmentName === 'الموارد البشرية' ||
-    currentUser?.username === 'RHadmin';
-
-  const canSeeAllDepartments =
-    userRole === 'Admin' ||
-    userRole === 'Director' ||
-    (userRole === 'AdminDepartment' && isRHDepartment);
-
-  const isDepartmentRestricted = !canSeeAllDepartments;
+  const {
+    isFullMultiDeptRole,
+    allowAllOption,
+    userDeptId,
+    visibleDepartments,
+    defaultDepartmentId,
+  } = useMemo(
+    () => resolveFrontendAttendanceScope(currentUser, departments, orgSettings),
+    [currentUser, departments, orgSettings]
+  );
 
   // Activer la classe CSS d'impression A4 paysage sur body uniquement sur cette page
   useEffect(() => {
@@ -114,21 +101,19 @@ export const MonthlyAttendanceReport: React.FC = () => {
     let active = true;
     const loadMetadata = async () => {
       try {
-        const [depts, orgSettings] = await Promise.all([
+        const [depts, settings] = await Promise.all([
           getDepartments(),
           getOrganizationSettings().catch(() => null),
         ]);
         if (!active) return;
         setDepartments(depts || []);
-        if (orgSettings?.rhDepartmentId) {
-          const rhId =
-            typeof orgSettings.rhDepartmentId === 'object'
-              ? orgSettings.rhDepartmentId._id
-              : orgSettings.rhDepartmentId;
-          setRhDepartmentId(rhId || null);
-        }
+        setOrgSettings(settings);
       } catch (err) {
         console.error('Erreur chargement métadonnées rapport mensuel:', err);
+      } finally {
+        if (active) {
+          setMetadataLoaded(true);
+        }
       }
     };
     loadMetadata();
@@ -137,12 +122,22 @@ export const MonthlyAttendanceReport: React.FC = () => {
     };
   }, []);
 
-  // Verrouiller le département pour un AdminDepartment non-RH
+  // Verrouiller les choix sur les départements autorisés pour AdminDepartment
   useEffect(() => {
-    if (isDepartmentRestricted && userDeptId) {
-      setSelectedDepartment(userDeptId);
+    if (!metadataLoaded) return;
+    if (allowAllOption) {
+      if (!selectedDepartment) setSelectedDepartment('all');
+      return;
     }
-  }, [isDepartmentRestricted, userDeptId]);
+    const allowedIds = new Set(visibleDepartments.map((d) => String(d._id)));
+    const isCurrentAllowed =
+      selectedDepartment &&
+      selectedDepartment !== 'all' &&
+      (allowedIds.size === 0 || allowedIds.has(String(selectedDepartment)));
+    if (!isCurrentAllowed && defaultDepartmentId) {
+      setSelectedDepartment(defaultDepartmentId);
+    }
+  }, [metadataLoaded, allowAllOption, visibleDepartments, defaultDepartmentId, selectedDepartment]);
 
   const fetchMonthlyReport = useCallback(
     async (yearVal: number, monthVal: number, deptVal: string) => {
@@ -170,11 +165,13 @@ export const MonthlyAttendanceReport: React.FC = () => {
         }
       } catch (err: unknown) {
         console.error('Erreur génération fiche mensuelle:', err);
-        const msg =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          (isAr
+        const msg = getErrorMessage(
+          err,
+          isAr
             ? 'حدث خطأ أثناء استخراج بطاقة الحضور الشهرية'
-            : 'Erreur lors de la génération de la fiche mensuelle');
+            : 'Erreur lors de la génération de la fiche mensuelle',
+          isAr ? 'ar' : 'fr'
+        );
         toast.error(msg);
       } finally {
         setLoading(false);
@@ -185,14 +182,20 @@ export const MonthlyAttendanceReport: React.FC = () => {
 
   // Chargement initial pour le mois courant
   useEffect(() => {
-    const initialDept = isDepartmentRestricted && userDeptId ? userDeptId : 'all';
+    if (!isFullMultiDeptRole && !metadataLoaded) return;
+    const initialDept = allowAllOption ? 'all' : defaultDepartmentId || userDeptId || '';
+    if (!allowAllOption && !initialDept) return;
     void fetchMonthlyReport(selectedYear, selectedMonth, initialDept);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDepartmentRestricted, userDeptId]);
+  }, [isFullMultiDeptRole, metadataLoaded, allowAllOption, defaultDepartmentId, userDeptId]);
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
-    const effectiveDept = isDepartmentRestricted && userDeptId ? userDeptId : selectedDepartment;
+    const effectiveDept = allowAllOption
+      ? selectedDepartment
+      : selectedDepartment && selectedDepartment !== 'all'
+        ? selectedDepartment
+        : defaultDepartmentId || userDeptId || '';
     void fetchMonthlyReport(selectedYear, selectedMonth, effectiveDept);
   };
 
@@ -288,11 +291,15 @@ export const MonthlyAttendanceReport: React.FC = () => {
               <Building2 className="h-3.5 w-3.5 text-[#2c5282] dark:text-sky-400" />
               <span>{isAr ? 'القسم / المصلحة' : 'Département'}</span>
             </label>
-            {isDepartmentRestricted ? (
+            {!allowAllOption && visibleDepartments.length === 0 ? (
               <Input
                 type="text"
                 disabled
-                value={userDepartmentName || (isAr ? 'القسم المخصص' : 'Département assigné')}
+                value={
+                  (typeof currentUser?.activeDepartment === 'object'
+                    ? (currentUser.activeDepartment as { name?: string })?.name
+                    : '') || (isAr ? 'القسم المخصص' : 'Département assigné')
+                }
                 className="h-10 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-sm cursor-not-allowed"
               />
             ) : (
@@ -301,13 +308,25 @@ export const MonthlyAttendanceReport: React.FC = () => {
                 onValueChange={(val) => setSelectedDepartment(val)}
               >
                 <SelectTrigger className="h-10 border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 dark:text-slate-100 text-sm">
-                  <SelectValue placeholder={isAr ? 'جميع الأقسام' : 'Tous les départements'} />
+                  <SelectValue
+                    placeholder={
+                      allowAllOption
+                        ? isAr
+                          ? 'جميع الأقسام'
+                          : 'Tous les départements'
+                        : isAr
+                        ? 'اختر القسم'
+                        : 'Choisir le département'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent dir={dir}>
-                  <SelectItem value="all">
-                    {isAr ? 'جميع الأقسام والمصالح' : 'Tous les départements'}
-                  </SelectItem>
-                  {departments.map((dept) => (
+                  {allowAllOption && (
+                    <SelectItem value="all">
+                      {isAr ? 'جميع الأقسام والمصالح' : 'Tous les départements'}
+                    </SelectItem>
+                  )}
+                  {visibleDepartments.map((dept) => (
                     <SelectItem key={dept._id} value={dept._id}>
                       {dept.name}
                     </SelectItem>

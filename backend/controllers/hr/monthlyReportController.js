@@ -5,31 +5,7 @@ const Department = require('../../models/Department');
 const OrganizationSettings = require('../../models/OrganizationSettings');
 const LeaveReason = require('../../models/LeaveReason');
 const PresenceSettings = require('../../models/PresenceSettings');
-
-/**
- * Détermine si l'utilisateur peut consulter tous les départements
- * (Admin, Director ou AdminDepartment rattaché au département RH)
- */
-const canUserSeeAllDepartments = async (req) => {
-  if (!req.user) return false;
-  const role = req.user.role;
-  if (role === 'Admin' || role === 'Director') {
-    return true;
-  }
-  if (role === 'AdminDepartment') {
-    if (req.isAdminRH === true) return true;
-    try {
-      const settings = await OrganizationSettings.findOne().lean();
-      const rhDeptId = settings?.rhDepartmentId?.toString();
-      const userDept = req.user.activeDepartment;
-      const userDeptId = (userDept?._id || userDept)?.toString();
-      return Boolean(rhDeptId && userDeptId && userDeptId === rhDeptId);
-    } catch (_err) {
-      return false;
-    }
-  }
-  return false;
-};
+const { resolveAttendanceDepartmentScope } = require('../../utils/attendanceScopeHelper');
 
 /**
  * Retourne le symbole court affiché dans la grille papier (31 colonnes)
@@ -85,33 +61,36 @@ const getMonthlyAttendanceSheet = async (req, res, next) => {
       });
     }
 
-    const canSeeAll = await canUserSeeAllDepartments(req);
+    const scope = await resolveAttendanceDepartmentScope(req);
     let effectiveDepartmentId = null;
+    const personnelFilter = { isDeleted: { $ne: true } };
 
-    if (!canSeeAll) {
-      effectiveDepartmentId =
-        req.userRestrictedToDepartment ||
-        req.user.activeDepartment?._id ||
-        req.user.activeDepartment ||
-        null;
-    } else if (departmentId && departmentId !== 'all') {
-      if (!mongoose.Types.ObjectId.isValid(departmentId)) {
+    if (departmentId && departmentId !== 'all') {
+      if (!mongoose.Types.ObjectId.isValid(String(departmentId))) {
         return res.status(400).json({
           success: false,
           message: 'Identifiant de département invalide'
         });
       }
-      effectiveDepartmentId = departmentId;
+      const reqDeptStr = String(departmentId);
+      if (!scope.isUnrestricted && !scope.allowedDepartmentIds.includes(reqDeptStr)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Accès refusé à ce département'
+        });
+      }
+      effectiveDepartmentId = reqDeptStr;
+      personnelFilter.activeDepartment = reqDeptStr;
+    } else if (!scope.isUnrestricted) {
+      personnelFilter.activeDepartment =
+        scope.allowedDepartmentIds.length > 0
+          ? { $in: scope.allowedDepartmentIds }
+          : { $in: [] };
     }
 
     const daysInMonth = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate();
     const start = new Date(Date.UTC(targetYear, targetMonth - 1, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, targetMonth, 0, 23, 59, 59, 999));
-
-    const personnelFilter = { isDeleted: { $ne: true } };
-    if (effectiveDepartmentId) {
-      personnelFilter.activeDepartment = effectiveDepartmentId;
-    }
 
     const [personnels, departmentInfo, orgSettings, leaveReasons, presenceSettings] = await Promise.all([
       Personnel.find(personnelFilter)

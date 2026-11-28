@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ import { PersonnelAvatar } from '@/components/hr/PersonnelAvatar';
 import { TableSkeleton } from '@/components/ui/TableSkeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatDateWithWeekday } from '@/utils/formatDate';
+import { getErrorMessage } from '@/utils/errorMessages';
+import { resolveFrontendAttendanceScope } from '@/utils/attendanceScope';
 import {
   Calendar,
   Building2,
@@ -44,6 +46,7 @@ import {
 } from '@/services/attendanceService';
 import { LeaveReason, getLeaveReasons } from '@/services/leaveReasonService';
 import { getDepartments } from '@/services/departmentService';
+import { getOrganizationSettings, OrganizationSettings } from '@/services/organizationSettingsService';
 import { Department } from '@/types';
 
 type AttendancePillMode = 'present' | 'late' | 'absent' | 'leave_mission';
@@ -98,6 +101,8 @@ export const AttendancePage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [orgSettings, setOrgSettings] = useState<OrganizationSettings | null>(null);
+  const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false);
   const [leaveReasons, setLeaveReasons] = useState<LeaveReason[]>([]);
   const [attendanceRows, setAttendanceRows] = useState<AgentAttendanceRow[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,53 +113,48 @@ export const AttendancePage: React.FC = () => {
   const [rowSaveStatus, setRowSaveStatus] = useState<Record<string, 'saving' | 'saved' | 'error'>>({});
   const [expandedNoteIds, setExpandedNoteIds] = useState<Record<string, boolean>>({});
 
-  // Rôles et département de l'utilisateur connecté
-  const userRole = currentUser?.role;
-  const userDeptId = currentUser?.activeDepartment
-    ? typeof currentUser.activeDepartment === 'object'
-      ? (currentUser.activeDepartment as { _id?: string })._id || null
-      : currentUser.activeDepartment
-    : null;
+  const inFlightRowsRef = useRef<Set<string>>(new Set());
+  const pendingRowsRef = useRef<Map<string, AgentAttendanceRow>>(new Map());
 
-  const userDepartmentName =
-    (typeof currentUser?.activeDepartment === 'object'
-      ? (currentUser.activeDepartment as { name?: string }).name
-      : null) ||
-    departments.find((d) => String(d._id) === String(userDeptId))?.name ||
-    '';
+  // Périmètre départemental strict :
+  // - Admin / Director : tous les départements + option « جميع الأقسام »
+  // - AdminDepartment (RH) : RH + Bureau Directeur + Bureau d'Ordre uniquement
+  // - AdminDepartment (autre) : propre département + Bureau Directeur uniquement
+  const {
+    isFullMultiDeptRole,
+    allowAllOption,
+    userDeptId,
+    visibleDepartments,
+    defaultDepartmentId,
+  } = useMemo(
+    () => resolveFrontendAttendanceScope(currentUser, departments, orgSettings),
+    [currentUser, departments, orgSettings]
+  );
 
-  const userDepartmentCode =
-    (typeof currentUser?.activeDepartment === 'object'
-      ? (currentUser.activeDepartment as { code?: string }).code
-      : null) ||
-    departments.find((d) => String(d._id) === String(userDeptId))?.code ||
-    '';
-
-  const isRHDepartment =
-    userDepartmentName === 'RH' ||
-    userDepartmentCode === 'RH' ||
-    userDepartmentName.toUpperCase().includes('RH') ||
-    userDepartmentName === 'الموارد البشرية' ||
-    currentUser?.username === 'RHadmin';
-
-  const canSeeAllDepartments =
-    userRole === 'Admin' ||
-    userRole === 'Director' ||
-    (userRole === 'AdminDepartment' && (userDepartmentName === 'RH' || isRHDepartment));
-
-  const isDepartmentRestricted = !canSeeAllDepartments;
-
-  // 1. Charger les départements
+  // 1. Charger les départements et paramètres organisation
   useEffect(() => {
-    const fetchDepts = async () => {
+    let active = true;
+    const fetchMetadata = async () => {
       try {
-        const data = await getDepartments();
-        setDepartments(data || []);
+        const [deptData, settingsData] = await Promise.all([
+          getDepartments(),
+          getOrganizationSettings().catch(() => null),
+        ]);
+        if (!active) return;
+        setDepartments(deptData || []);
+        setOrgSettings(settingsData);
       } catch (err) {
         console.error('Erreur chargement départements:', err);
+      } finally {
+        if (active) {
+          setMetadataLoaded(true);
+        }
       }
     };
-    fetchDepts();
+    fetchMetadata();
+    return () => {
+      active = false;
+    };
   }, []);
 
   // 2. Charger les motifs actifs
@@ -172,21 +172,47 @@ export const AttendancePage: React.FC = () => {
   }, [isRTL]);
 
   useEffect(() => {
-    if (isDepartmentRestricted && userDeptId) {
-      setSelectedDepartment(userDeptId);
+    if (!metadataLoaded) return;
+    if (allowAllOption) {
+      if (!selectedDepartment) {
+        setSelectedDepartment('all');
+      }
+      return;
     }
-  }, [isDepartmentRestricted, userDeptId]);
+
+    const allowedIds = new Set(visibleDepartments.map((d) => String(d._id)));
+    const isCurrentAllowed =
+      selectedDepartment &&
+      selectedDepartment !== 'all' &&
+      (allowedIds.size === 0 || allowedIds.has(String(selectedDepartment)));
+
+    if (!isCurrentAllowed && defaultDepartmentId) {
+      setSelectedDepartment(defaultDepartmentId);
+    }
+  }, [metadataLoaded, allowAllOption, visibleDepartments, defaultDepartmentId, selectedDepartment]);
 
   // 3. Charger les présences du jour sélectionné
   const loadDailyAttendance = useCallback(async () => {
+    if (!isFullMultiDeptRole && !metadataLoaded) {
+      return;
+    }
+
+    const effectiveDept = allowAllOption
+      ? selectedDepartment !== 'all'
+        ? selectedDepartment
+        : undefined
+      : selectedDepartment && selectedDepartment !== 'all'
+        ? selectedDepartment
+        : defaultDepartmentId || userDeptId || undefined;
+
+    if (!allowAllOption && !effectiveDept) {
+      setAttendanceRows([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const effectiveDept = canSeeAllDepartments
-        ? selectedDepartment !== 'all'
-          ? selectedDepartment
-          : undefined
-        : userDeptId || undefined;
-
       const res = await getDailyAttendance(selectedDate, effectiveDept);
       const agentList = res.data || [];
 
@@ -228,11 +254,26 @@ export const AttendancePage: React.FC = () => {
       setExpandedNoteIds({});
     } catch (err: unknown) {
       console.error('Erreur chargement des présences:', err);
-      toast.error(isRTL ? 'حدث خطأ أثناء تحميل لائحة الحضور' : 'Erreur lors du chargement des présences');
+      toast.error(
+        getErrorMessage(
+          err,
+          isRTL ? 'حدث خطأ أثناء تحميل لائحة الحضور' : 'Erreur lors du chargement des présences',
+          isRTL ? 'ar' : 'fr'
+        )
+      );
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, selectedDepartment, canSeeAllDepartments, userDeptId, isRTL]);
+  }, [
+    selectedDate,
+    selectedDepartment,
+    isFullMultiDeptRole,
+    metadataLoaded,
+    allowAllOption,
+    defaultDepartmentId,
+    userDeptId,
+    isRTL,
+  ]);
 
   useEffect(() => {
     loadDailyAttendance();
@@ -258,39 +299,59 @@ export const AttendancePage: React.FC = () => {
   );
 
   // Construire payload API pour une ligne
-  const buildEntryPayload = (r: AgentAttendanceRow): AttendanceEntry => ({
-    personnelId: r.personnel._id,
-    statut: r.statut,
-    motif: r.statut === 'present' ? null : r.motif || null,
-    leaveReasonId: r.statut === 'present' ? null : r.leaveReasonId || null,
-    impacteSolde: r.statut === 'present' ? false : r.impacteSolde,
-    detailsMotif:
-      r.statut === 'present'
-        ? {}
-        : {
-            serviceNom: r.detailsMotif.serviceNom || '',
-            missionLieu: r.detailsMotif.missionLieu || '',
-            missionObjet: r.detailsMotif.missionObjet || '',
-            formationIntitule: r.detailsMotif.formationIntitule || '',
-            formationOrganisme: r.detailsMotif.formationOrganisme || '',
-            formationDuree: r.detailsMotif.formationDuree || '',
-            formationDocumentId: r.detailsMotif.formationDocumentId,
-            commentaire: r.detailsMotif.commentaire || '',
-          },
-    heureArrivee: r.statut === 'present' ? r.heureArrivee || null : null,
-  });
+  const buildEntryPayload = useCallback((r: AgentAttendanceRow): AttendanceEntry => {
+    const trimmedNote = (r.detailsMotif?.commentaire || '').trim();
+    if (r.statut === 'present') {
+      return {
+        personnelId: r.personnel._id,
+        statut: 'present',
+        motif: null,
+        leaveReasonId: null,
+        impacteSolde: false,
+        detailsMotif: trimmedNote ? { commentaire: trimmedNote } : {},
+        heureArrivee: r.heureArrivee?.trim() || null,
+      };
+    }
 
-  // Sauvegarde immédiate d'une ligne (1 clic)
+    return {
+      personnelId: r.personnel._id,
+      statut: 'absent',
+      motif: r.motif?.trim() || 'absence_injustifiee',
+      leaveReasonId: r.leaveReasonId || null,
+      impacteSolde: r.impacteSolde,
+      detailsMotif: {
+        serviceNom: r.detailsMotif.serviceNom || '',
+        missionLieu: r.detailsMotif.missionLieu || '',
+        missionObjet: r.detailsMotif.missionObjet || '',
+        formationIntitule: r.detailsMotif.formationIntitule || '',
+        formationOrganisme: r.detailsMotif.formationOrganisme || '',
+        formationDuree: r.detailsMotif.formationDuree || '',
+        formationDocumentId: r.detailsMotif.formationDocumentId,
+        commentaire: trimmedNote,
+      },
+      heureArrivee: null,
+    };
+  }, []);
+
+  // Sauvegarde immédiate d'une ligne avec file séquentielle par employé (évite les conflits concurrents E11000)
   const persistSingleRow = useCallback(
     async (updatedRow: AgentAttendanceRow) => {
       const id = updatedRow.personnel._id;
-      if (updatedRow.statut === 'absent' && (!updatedRow.motif || updatedRow.motif.trim() === '')) {
+      const normalizedRow: AgentAttendanceRow =
+        updatedRow.statut === 'absent' && (!updatedRow.motif || updatedRow.motif.trim() === '')
+          ? { ...updatedRow, motif: 'absence_injustifiee' }
+          : updatedRow;
+
+      if (inFlightRowsRef.current.has(id)) {
+        pendingRowsRef.current.set(id, normalizedRow);
         return;
       }
 
+      inFlightRowsRef.current.add(id);
       setRowSaveStatus((prev) => ({ ...prev, [id]: 'saving' }));
+
       try {
-        await saveBatchAttendance(selectedDate, [buildEntryPayload(updatedRow)]);
+        await saveBatchAttendance(selectedDate, [buildEntryPayload(normalizedRow)]);
         setAttendanceRows((prev) =>
           prev.map((r) => (r.personnel._id === id ? { ...r, hasSavedRecord: true } : r))
         );
@@ -299,13 +360,22 @@ export const AttendancePage: React.FC = () => {
       } catch (err: unknown) {
         console.error('Erreur sauvegarde ligne:', err);
         setRowSaveStatus((prev) => ({ ...prev, [id]: 'error' }));
-        const msg =
-          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          (isRTL ? 'تعذر حفظ حالة الموظف' : 'Échec de l’enregistrement');
+        const msg = getErrorMessage(
+          err,
+          isRTL ? 'تعذر حفظ حالة الموظف' : 'Échec de l’enregistrement',
+          isRTL ? 'ar' : 'fr'
+        );
         toast.error(msg);
+      } finally {
+        inFlightRowsRef.current.delete(id);
+        const queued = pendingRowsRef.current.get(id);
+        if (queued) {
+          pendingRowsRef.current.delete(id);
+          void persistSingleRow(queued);
+        }
       }
     },
-    [selectedDate, isRTL, refetchBadges]
+    [selectedDate, buildEntryPayload, isRTL, refetchBadges]
   );
 
   // Changement immédiat par clic sur l'un des 4 boutons segmentés
@@ -313,6 +383,7 @@ export const AttendancePage: React.FC = () => {
     const current = attendanceRows[index];
     if (!current) return;
 
+    const preservedNote = current.detailsMotif?.commentaire || '';
     let nextRow: AgentAttendanceRow = { ...current };
 
     if (mode === 'present') {
@@ -323,7 +394,7 @@ export const AttendancePage: React.FC = () => {
         motif: '',
         leaveReasonId: null,
         impacteSolde: false,
-        detailsMotif: {},
+        detailsMotif: preservedNote ? { commentaire: preservedNote } : {},
       };
     } else if (mode === 'late') {
       nextRow = {
@@ -333,7 +404,7 @@ export const AttendancePage: React.FC = () => {
         motif: '',
         leaveReasonId: null,
         impacteSolde: false,
-        detailsMotif: {},
+        detailsMotif: preservedNote ? { commentaire: preservedNote } : {},
       };
     } else if (mode === 'absent') {
       const currentMode = getRowPillMode(current);
@@ -481,7 +552,13 @@ export const AttendancePage: React.FC = () => {
       );
     } catch (err: unknown) {
       console.error('Erreur lors de la sauvegarde groupée:', err);
-      toast.error(isRTL ? 'حدث خطأ أثناء الحفظ الجماعي' : 'Erreur lors de l’enregistrement groupé');
+      toast.error(
+        getErrorMessage(
+          err,
+          isRTL ? 'حدث خطأ أثناء الحفظ الجماعي' : 'Erreur lors de l’enregistrement groupé',
+          isRTL ? 'ar' : 'fr'
+        )
+      );
     } finally {
       setBulkSaving(false);
     }
@@ -569,9 +646,9 @@ export const AttendancePage: React.FC = () => {
   const NextIcon = isRTL ? ChevronLeft : ChevronRight;
 
   return (
-    <div className="space-y-3.5 text-start" dir={dir}>
+    <div className="space-y-3.5 text-start px-1 sm:px-2 max-w-full" dir={dir}>
       {/* 1. Single-Row Compact KPI Strip + Secondary HR Actions */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-xs print:hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xs print:hidden">
         <div className="flex flex-wrap items-center gap-1.5 text-xs tabular-nums">
           <button
             type="button"
@@ -634,7 +711,7 @@ export const AttendancePage: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 max-w-full">
           <Button
             asChild
             variant="outline"
@@ -711,7 +788,9 @@ export const AttendancePage: React.FC = () => {
               <Input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value) setSelectedDate(e.target.value);
+                }}
                 aria-label={isRTL ? 'تاريخ الحضور' : 'Date de présence'}
                 className="h-9 w-40 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100 tabular-nums"
               />
@@ -739,8 +818,8 @@ export const AttendancePage: React.FC = () => {
         </div>
 
         {/* Department & Search Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute start-3 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400 pointer-events-none" />
             <Input
               type="text"
@@ -749,12 +828,12 @@ export const AttendancePage: React.FC = () => {
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 border-slate-300 dark:border-slate-700 rounded-lg text-xs ps-9 bg-white dark:bg-slate-950 dark:text-slate-100"
+              className="h-9 w-full border-slate-300 dark:border-slate-700 rounded-lg text-xs ps-9 bg-white dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
 
-          <div>
-            {isDepartmentRestricted ? (
+          <div className="w-full sm:w-48 shrink-0">
+            {!allowAllOption && visibleDepartments.length === 0 ? (
               <div className="h-9 px-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 rounded-lg text-xs flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">
@@ -768,17 +847,29 @@ export const AttendancePage: React.FC = () => {
               </div>
             ) : (
               <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                <SelectTrigger className="h-9 border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
+                <SelectTrigger className="h-9 w-full border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-950 dark:text-slate-100">
                   <div className="flex items-center gap-1.5 truncate">
                     <Building2 className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400 shrink-0" />
-                    <SelectValue placeholder={isRTL ? 'جميع الأقسام' : 'Tous les départements'} />
+                    <SelectValue
+                      placeholder={
+                        allowAllOption
+                          ? isRTL
+                            ? 'جميع الأقسام'
+                            : 'Tous les départements'
+                          : isRTL
+                          ? 'اختر القسم'
+                          : 'Choisir le département'
+                      }
+                    />
                   </div>
                 </SelectTrigger>
                 <SelectContent dir={dir}>
-                  <SelectItem value="all">
-                    {isRTL ? 'جميع الأقسام' : 'Tous les départements'}
-                  </SelectItem>
-                  {departments.map((d) => (
+                  {allowAllOption && (
+                    <SelectItem value="all">
+                      {isRTL ? 'جميع الأقسام' : 'Tous les départements'}
+                    </SelectItem>
+                  )}
+                  {visibleDepartments.map((d) => (
                     <SelectItem key={d._id} value={d._id}>
                       {d.name}
                     </SelectItem>
@@ -1133,45 +1224,34 @@ export const AttendancePage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Optional Inline Note Row */}
+                  {/* Optional Inline Note Row (supported for all statuses) */}
                   {isNoteOpen && (
                     <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center gap-2">
-                      {isAbsentMode ? (
-                        <>
-                          <Input
-                            type="text"
-                            placeholder={isRTL ? 'أضف ملاحظة حول الحالة...' : 'Ajouter une remarque...'}
-                            value={row.detailsMotif.commentaire || ''}
-                            onChange={(e) =>
-                              handleDetailChange(originalIndex, 'commentaire', e.target.value)
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                void persistSingleRow(row);
-                              }
-                            }}
-                            onBlur={() => void persistSingleRow(row)}
-                            className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100 flex-1 max-w-lg"
-                          />
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => void persistSingleRow(row)}
-                            className="h-8 px-3 text-xs rounded-md whitespace-nowrap shrink-0"
-                          >
-                            {isRTL ? 'حفظ الملاحظة' : 'Enregistrer'}
-                          </Button>
-                        </>
-                      ) : (
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                          <span>
-                            {isRTL
-                              ? 'تُحفظ الملاحظات النصية مع حالات الغياب أو الإجازة / المهمة. لحالة التأخر، حدد ساعة الوصول أعلاه.'
-                              : 'Les remarques s’enregistrent avec les absences, congés ou missions. Pour un retard, saisissez l’heure d’arrivée.'}
-                          </span>
-                        </div>
-                      )}
+                      <Input
+                        type="text"
+                        placeholder={isRTL ? 'أضف ملاحظة حول الحالة...' : 'Ajouter une remarque...'}
+                        value={row.detailsMotif.commentaire || ''}
+                        onChange={(e) =>
+                          handleDetailChange(originalIndex, 'commentaire', e.target.value)
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            void persistSingleRow(row);
+                          }
+                        }}
+                        className="h-8 text-xs border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 dark:text-slate-100 flex-1 max-w-lg"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={saveStatus === 'saving'}
+                        onClick={() => void persistSingleRow(row)}
+                        className="h-8 px-3 text-xs rounded-md whitespace-nowrap shrink-0"
+                      >
+                        {isRTL ? 'حفظ الملاحظة' : 'Enregistrer'}
+                      </Button>
                     </div>
                   )}
                 </div>

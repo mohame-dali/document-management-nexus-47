@@ -118,13 +118,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+const normalizeDateYMD = (date: string): string => {
+  const trimmed = String(date || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    const y = parsed.getUTCFullYear();
+    const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  return trimmed;
+};
+
 // 1. Obtenir la feuille de présence quotidienne (collectif)
 export const getDailyAttendance = async (
   date: string,
   departmentId?: string
 ): Promise<DailyAttendanceResponse> => {
   try {
-    const params: Record<string, string> = { date };
+    const params: Record<string, string> = { date: normalizeDateYMD(date) };
     if (departmentId && departmentId !== 'all') {
       params.departmentId = departmentId;
     }
@@ -142,7 +155,12 @@ export const saveBatchAttendance = async (
   entries: AttendanceEntry[]
 ): Promise<BatchSaveResponse> => {
   try {
-    const response = await api.post('/batch', { date, entries });
+    const normalizedDate = normalizeDateYMD(date);
+    const normalizedEntries = entries.map((entry) => ({
+      ...entry,
+      ...(entry.date ? { date: normalizeDateYMD(entry.date) } : {}),
+    }));
+    const response = await api.post('/batch', { date: normalizedDate, entries: normalizedEntries });
     return response.data;
   } catch (error) {
     console.error('Error in saveBatchAttendance:', error);

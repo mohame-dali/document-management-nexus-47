@@ -22,7 +22,7 @@ const errorHandler = (err, req, res, next) => {
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map(val => val.message);
+    const message = Object.values(err.errors).map(val => val.message).join(', ');
     error = new ErrorResponse(message, 400);
   }
 
@@ -35,9 +35,14 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  const finalMessage = Array.isArray(error.message)
+    ? error.message.join(', ')
+    : (error.message || 'Server Error');
+
   res.status(error.statusCode || 500).json({
     success: false,
-    error: error.message || 'Server Error'
+    message: finalMessage,
+    error: finalMessage
   });
 };
 

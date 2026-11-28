@@ -3,9 +3,9 @@ const Attendance = require('../models/Attendance');
 const PresenceSettings = require('../models/PresenceSettings');
 const LeaveReason = require('../models/LeaveReason');
 const Personnel = require('../models/Personnel');
-const Department = require('../models/Department');
-const OrganizationSettings = require('../models/OrganizationSettings');
+const User = require('../models/User');
 const { logAuditAction } = require('../utils/auditLogger');
+const { extractId, resolveAttendanceDepartmentScope } = require('../utils/attendanceScopeHelper');
 
 // 4 Motifs par défaut qui impactent le solde annuel de 45 jours
 const DEFAULT_DEDUCTIBLE_MOTIFS = [
@@ -37,17 +37,25 @@ const toTrimmedString = (value) => (typeof value === 'string' ? value.trim() : '
 /**
  * Table de correspondance detailsMotif (entrée frontend canonique ou alias legacy -> schéma canonique Attendance)
  */
-const normalizeDetailsMotif = (raw) => {
-  if (!raw || typeof raw !== 'object') return {};
+const normalizeDetailsMotif = (raw, fallbackComment = '') => {
+  const safeRaw = raw && typeof raw === 'object' ? raw : {};
+  let formationDocId = safeRaw.formationDocumentId || null;
+  if (formationDocId && typeof formationDocId === 'object' && formationDocId._id) {
+    formationDocId = formationDocId._id;
+  }
+  if (!formationDocId || !mongoose.Types.ObjectId.isValid(String(formationDocId))) {
+    formationDocId = null;
+  }
+
   return {
-    serviceNom: toTrimmedString(raw.serviceNom ?? raw.nomService),
-    missionLieu: toTrimmedString(raw.missionLieu ?? raw.lieuMission),
-    missionObjet: toTrimmedString(raw.missionObjet ?? raw.objetMission),
-    formationIntitule: toTrimmedString(raw.formationIntitule ?? raw.intituleFormation),
-    formationOrganisme: toTrimmedString(raw.formationOrganisme ?? raw.organismeFormation),
-    formationDuree: toTrimmedString(raw.formationDuree ?? raw.dureeFormation),
-    formationDocumentId: raw.formationDocumentId || null,
-    commentaire: toTrimmedString(raw.commentaire)
+    serviceNom: toTrimmedString(safeRaw.serviceNom ?? safeRaw.nomService),
+    missionLieu: toTrimmedString(safeRaw.missionLieu ?? safeRaw.lieuMission),
+    missionObjet: toTrimmedString(safeRaw.missionObjet ?? safeRaw.objetMission),
+    formationIntitule: toTrimmedString(safeRaw.formationIntitule ?? safeRaw.intituleFormation),
+    formationOrganisme: toTrimmedString(safeRaw.formationOrganisme ?? safeRaw.organismeFormation),
+    formationDuree: toTrimmedString(safeRaw.formationDuree ?? safeRaw.dureeFormation),
+    formationDocumentId: formationDocId,
+    commentaire: toTrimmedString(safeRaw.commentaire ?? safeRaw.notes ?? safeRaw.remarks ?? fallbackComment)
   };
 };
 
@@ -94,7 +102,23 @@ const parseDateToUTCStartOfDay = (dateInput) => {
     const now = new Date();
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
   }
-  const d = new Date(dateInput);
+  const str = String(dateInput).trim();
+  const ymdMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+  if (ymdMatch) {
+    const year = parseInt(ymdMatch[1], 10);
+    const month = parseInt(ymdMatch[2], 10);
+    const day = parseInt(ymdMatch[3], 10);
+    const d = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    if (
+      d.getUTCFullYear() !== year ||
+      d.getUTCMonth() !== month - 1 ||
+      d.getUTCDate() !== day
+    ) {
+      throw new Error('Format de date invalide');
+    }
+    return d;
+  }
+  const d = new Date(str);
   if (isNaN(d.getTime())) {
     throw new Error('Format de date invalide');
   }
@@ -149,33 +173,48 @@ const isWeekendOrHoliday = (dateInput, joursWeekend = [0, 6], holidayDatesSet = 
 };
 
 /**
- * Détermine si l'utilisateur peut voir/gérer tous les départements :
- * - Admin ou Director
- * - AdminDepartment du département RH (via req.isAdminRH ou validation dynamique OrganizationSettings.rhDepartmentId)
+ * Construit le filtre MongoDB sur Personnel.activeDepartment selon le périmètre de l'utilisateur connecté.
+ * Retourne { errorStatus, errorMessage, effectiveDepartmentId, personnelFilter, scope }
  */
-const canUserSeeAllDepartments = async (req) => {
-  if (!req.user) return false;
-  const role = req.user.role;
-  if (role === 'Admin' || role === 'Director') {
-    return true;
-  }
-  if (role === 'AdminDepartment') {
-    if (req.isAdminRH === true) return true;
-    try {
-      const settings = await OrganizationSettings.findOne();
-      const rhDeptId = settings?.rhDepartmentId?.toString();
-      const userDept = req.user.activeDepartment;
-      const userDeptId = (userDept?._id || userDept)?.toString();
-      const isRH = Boolean(rhDeptId && userDeptId && userDeptId === rhDeptId);
+const applyScopedDepartmentFilter = async (req, requestedDepartmentId) => {
+  const scope = await resolveAttendanceDepartmentScope(req);
+  const personnelFilter = { isDeleted: { $ne: true } };
+  let effectiveDepartmentId = null;
 
-      if (isRH) {
-        return true;
-      }
-    } catch (e) {
-      // Ignorer erreur de lecture settings
+  const hasRequestedDept = Boolean(requestedDepartmentId && requestedDepartmentId !== 'all');
+
+  if (hasRequestedDept) {
+    if (!mongoose.Types.ObjectId.isValid(String(requestedDepartmentId))) {
+      return {
+        errorStatus: 400,
+        errorMessage: 'Identifiant de département invalide',
+        scope,
+      };
     }
+    const reqDeptStr = String(requestedDepartmentId);
+    if (!scope.isUnrestricted && !scope.allowedDepartmentIds.includes(reqDeptStr)) {
+      return {
+        errorStatus: 403,
+        errorMessage: 'Accès refusé à ce département',
+        scope,
+      };
+    }
+    effectiveDepartmentId = reqDeptStr;
+    personnelFilter.activeDepartment = reqDeptStr;
+  } else if (!scope.isUnrestricted) {
+    personnelFilter.activeDepartment =
+      scope.allowedDepartmentIds.length > 0
+        ? { $in: scope.allowedDepartmentIds }
+        : { $in: [] };
   }
-  return false;
+
+  return {
+    errorStatus: null,
+    errorMessage: null,
+    effectiveDepartmentId,
+    personnelFilter,
+    scope,
+  };
 };
 
 // @desc    Obtenir la feuille de présence quotidienne (collectif)
@@ -194,22 +233,15 @@ const getDailyAttendance = async (req, res, next) => {
 
     const { start, end } = getUTCDayRange(targetDate);
 
-    // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
-    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = await canUserSeeAllDepartments(req);
-    let effectiveDepartmentId = null;
+    const {
+      errorStatus,
+      errorMessage,
+      effectiveDepartmentId,
+      personnelFilter,
+    } = await applyScopedDepartmentFilter(req, departmentId);
 
-    if (!canSeeAll) {
-      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
-    } else if (departmentId && departmentId !== 'all') {
-      effectiveDepartmentId = departmentId;
-    }
-
-    // Filtre des personnels : tous les personnels actifs (non supprimés)
-    const personnelFilter = { isDeleted: { $ne: true } };
-    if (effectiveDepartmentId) {
-      personnelFilter.activeDepartment = effectiveDepartmentId;
+    if (errorStatus) {
+      return res.status(errorStatus).json({ success: false, message: errorMessage });
     }
 
     const personnels = await Personnel.find(personnelFilter)
@@ -249,16 +281,19 @@ const getDailyAttendance = async (req, res, next) => {
   }
 };
 
+const getDefaultHHMM = () => {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+};
+
 // @desc    Enregistrer ou mettre à jour un lot de présences (saisie collective)
 // @route   POST /api/attendance/batch
 // @access  Private (Admin, Director, AdminDepartment)
 const saveBatchAttendance = async (req, res, next) => {
   try {
     const { date, entries } = req.body;
-
-    if (!date) {
-      return res.status(400).json({ success: false, message: 'La date est requise' });
-    }
 
     if (!entries || !Array.isArray(entries) || entries.length === 0) {
       return res.status(400).json({ success: false, message: 'La liste des entrées est requise' });
@@ -269,7 +304,7 @@ const saveBatchAttendance = async (req, res, next) => {
       try {
         targetDate = parseDateToUTCStartOfDay(date);
       } catch (err) {
-        return res.status(400).json({ success: false, message: 'Date invalide' });
+        return res.status(400).json({ success: false, message: 'Format de date invalide' });
       }
     } else if (entries.some(e => !e.date)) {
       return res.status(400).json({ success: false, message: 'La date est requise' });
@@ -288,6 +323,13 @@ const saveBatchAttendance = async (req, res, next) => {
     const resolvedEntryDates = [];
 
     for (const entry of entries) {
+      if (!entry || !entry.personnelId || !mongoose.Types.ObjectId.isValid(String(entry.personnelId))) {
+        return res.status(400).json({
+          success: false,
+          message: 'Identifiant de personnel invalide dans la requête'
+        });
+      }
+
       let entryDate;
       try {
         entryDate = entry.date ? parseDateToUTCStartOfDay(entry.date) : targetDate;
@@ -325,12 +367,16 @@ const saveBatchAttendance = async (req, res, next) => {
       }
     }
 
-    // Charger les types de motifs pour correspondance dynamique par code (système + personnalisés)
+    // Charger les types de motifs pour correspondance dynamique par code ou ID
     const leaveReasons = await LeaveReason.find().lean();
-    const leaveReasonMap = new Map();
+    const leaveReasonByCode = new Map();
+    const leaveReasonById = new Map();
     leaveReasons.forEach(lr => {
       if (lr.code) {
-        leaveReasonMap.set(String(lr.code).trim().toLowerCase(), lr);
+        leaveReasonByCode.set(String(lr.code).trim().toLowerCase(), lr);
+      }
+      if (lr._id) {
+        leaveReasonById.set(lr._id.toString(), lr);
       }
     });
 
@@ -343,41 +389,116 @@ const saveBatchAttendance = async (req, res, next) => {
     const personnelMap = new Map();
     personnels.forEach(p => personnelMap.set(p._id.toString(), p));
 
-    // Vérification de sécurité stricte : un Chef de département hors RH ne peut modifier que son département
-    if (!await canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
-      const restrictedDeptStr = req.userRestrictedToDepartment.toString();
-      for (const entry of entries) {
-        const agent = personnelMap.get(entry.personnelId.toString());
-        if (!agent) {
-          return res.status(404).json({
-            success: false,
-            message: `Personnel introuvable pour l'identifiant ${entry.personnelId}`
-          });
-        }
-        const agentDeptStr = agent.activeDepartment ? agent.activeDepartment.toString() : '';
-        if (agentDeptStr !== restrictedDeptStr) {
+    // Charger d'éventuels Users liés pour fallback de département si activeDepartment est null
+    const linkedUsers = await User.find({
+      $or: [
+        { personnelId: { $in: personnelIds } },
+        { _id: { $in: personnels.map(p => p.userId).filter(Boolean) } }
+      ],
+      isDeleted: { $ne: true }
+    })
+      .select('_id personnelId role activeDepartment')
+      .lean();
+    const linkedUserByPersonnelId = new Map();
+    linkedUsers.forEach((u) => {
+      if (u.personnelId) linkedUserByPersonnelId.set(u.personnelId.toString(), u);
+      linkedUserByPersonnelId.set(u._id.toString(), u);
+    });
+
+    const scope = await resolveAttendanceDepartmentScope(req);
+
+    const resolveAgentDepartmentId = (agent) => {
+      const direct = extractId(agent.activeDepartment);
+      if (direct) return direct;
+      if (Array.isArray(agent.departments) && agent.departments.length > 0) {
+        const firstDept = extractId(agent.departments[0]);
+        if (firstDept) return firstDept;
+      }
+      const linked =
+        linkedUserByPersonnelId.get(agent._id.toString()) ||
+        (agent.userId ? linkedUserByPersonnelId.get(agent.userId.toString()) : null);
+      if (linked) {
+        const uDept = extractId(linked.activeDepartment);
+        if (uDept) return uDept;
+        if (linked.role === 'Director' && scope.bdDeptId) return scope.bdDeptId;
+        if (linked.role === 'AdminTuningDesk' && scope.boDeptId) return scope.boDeptId;
+      }
+      return null;
+    };
+
+    // Vérification de sécurité stricte : respect du périmètre départemental
+    for (const entry of entries) {
+      const agent = personnelMap.get(entry.personnelId.toString());
+      if (!agent) {
+        return res.status(404).json({
+          success: false,
+          message: `Personnel introuvable pour l'identifiant ${entry.personnelId}`
+        });
+      }
+
+      if (!scope.isUnrestricted) {
+        const agentDeptStr = resolveAgentDepartmentId(agent);
+        const agentDeptList = [
+          agentDeptStr,
+          ...(Array.isArray(agent.departments) ? agent.departments.map(extractId) : [])
+        ].filter(Boolean);
+        const hasAllowedDept = agentDeptList.some((dId) => scope.allowedDepartmentIds.includes(dId));
+        if (!hasAllowedDept) {
           return res.status(403).json({
             success: false,
-            message: 'Opération refusée : certains agents ne font pas partie de votre département'
+            message: 'Opération refusée : certains agents ne font pas partie des départements autorisés'
           });
         }
       }
     }
 
+    const actorId = req.user._id || req.user.id;
     let savedCount = 0;
+
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       const entryDate = resolvedEntryDates[i];
       const agent = personnelMap.get(entry.personnelId.toString());
       if (!agent) continue;
 
-      const isPresent = entry.statut === 'present';
-      const normalizedMotif = !isPresent && entry.motif
-        ? String(entry.motif).trim().toLowerCase()
+      const rawStatus = String(entry.statut ?? entry.status ?? '').trim().toLowerCase();
+      let isPresent;
+      let isLateAlias = false;
+
+      if (rawStatus === 'present') {
+        isPresent = true;
+      } else if (rawStatus === 'late') {
+        isPresent = true;
+        isLateAlias = true;
+      } else if (rawStatus === 'absent' || rawStatus === 'leave' || rawStatus === 'leave_mission') {
+        isPresent = false;
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: `Statut de présence invalide : ${entry.statut ?? entry.status ?? 'vide'}`
+        });
+      }
+
+      const rawMotifInput = entry.motif ?? entry.leaveType ?? entry.reason ?? null;
+      const rawLeaveReasonId =
+        entry.leaveReasonId && mongoose.Types.ObjectId.isValid(String(entry.leaveReasonId))
+          ? String(entry.leaveReasonId)
+          : null;
+
+      let normalizedMotif = !isPresent && rawMotifInput
+        ? String(rawMotifInput).trim().toLowerCase()
         : null;
 
+      if (!isPresent && !normalizedMotif && rawLeaveReasonId && leaveReasonById.has(rawLeaveReasonId)) {
+        normalizedMotif = String(leaveReasonById.get(rawLeaveReasonId).code).trim().toLowerCase();
+      }
+
+      if (!isPresent && !normalizedMotif) {
+        normalizedMotif = 'absence_injustifiee';
+      }
+
       if (!isPresent && normalizedMotif) {
-        const isKnownReason = leaveReasonMap.has(normalizedMotif) || SYSTEM_MOTIFS.includes(normalizedMotif);
+        const isKnownReason = leaveReasonByCode.has(normalizedMotif) || SYSTEM_MOTIFS.includes(normalizedMotif);
         if (!isKnownReason) {
           return res.status(400).json({
             success: false,
@@ -390,7 +511,7 @@ const saveBatchAttendance = async (req, res, next) => {
       let leaveReasonId = null;
 
       if (!isPresent && normalizedMotif) {
-        const foundReason = leaveReasonMap.get(normalizedMotif);
+        const foundReason = leaveReasonByCode.get(normalizedMotif);
         if (foundReason) {
           impacteSolde = Boolean(foundReason.impacteSolde);
           leaveReasonId = foundReason._id;
@@ -402,37 +523,77 @@ const saveBatchAttendance = async (req, res, next) => {
         }
       }
 
-      const heureArrivee = isPresent ? (entry.heureArrivee || null) : null;
-      const detailsMotif = isPresent ? {} : normalizeDetailsMotif(entry.detailsMotif);
-      const departmentId = agent.activeDepartment || req.userRestrictedToDepartment;
+      const rawArrival = entry.heureArrivee ?? entry.arrivalTime ?? null;
+      const trimmedArrival = typeof rawArrival === 'string' && rawArrival.trim() !== '' ? rawArrival.trim() : null;
+      const heureArrivee = isPresent ? (trimmedArrival || (isLateAlias ? getDefaultHHMM() : null)) : null;
 
-      await Attendance.findOneAndUpdate(
-        {
-          personnelId: entry.personnelId,
-          date: entryDate
-        },
-        {
-          $set: {
-            departmentId,
-            statut: isPresent ? 'present' : 'absent',
-            motif: normalizedMotif,
-            leaveReasonId,
-            impacteSolde,
-            detailsMotif,
-            heureArrivee,
-            modifiePar: req.user._id
-          },
-          $setOnInsert: {
-            saisiPar: req.user._id
-          }
-        },
-        {
-          upsert: true,
-          new: true,
-          setDefaultsOnInsert: true,
-          runValidators: true
-        }
+      const fallbackComment = entry.notes ?? entry.remarks ?? '';
+      const presentComment = toTrimmedString(
+        entry.detailsMotif?.commentaire ?? entry.detailsMotif?.notes ?? entry.detailsMotif?.remarks ?? fallbackComment
       );
+      const detailsMotif = isPresent
+        ? (presentComment ? { commentaire: presentComment } : {})
+        : normalizeDetailsMotif(entry.detailsMotif, fallbackComment);
+
+      const departmentId =
+        resolveAgentDepartmentId(agent) ||
+        scope.userDeptId ||
+        extractId(req.user.activeDepartment);
+
+      if (!departmentId || !mongoose.Types.ObjectId.isValid(String(departmentId))) {
+        return res.status(400).json({
+          success: false,
+          message: `Aucun département assigné pour l'agent ${agent.nom} ${agent.prenom}`
+        });
+      }
+
+      const updatePayload = {
+        $set: {
+          departmentId,
+          statut: isPresent ? 'present' : 'absent',
+          motif: normalizedMotif,
+          leaveReasonId,
+          impacteSolde,
+          detailsMotif,
+          heureArrivee,
+          modifiePar: actorId
+        },
+        $setOnInsert: {
+          saisiPar: actorId
+        }
+      };
+
+      const filterQuery = {
+        personnelId: entry.personnelId,
+        date: entryDate
+      };
+
+      try {
+        await Attendance.findOneAndUpdate(
+          filterQuery,
+          updatePayload,
+          {
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true,
+            runValidators: true
+          }
+        );
+      } catch (upsertErr) {
+        if (upsertErr && upsertErr.code === 11000) {
+          await Attendance.findOneAndUpdate(
+            filterQuery,
+            { $set: updatePayload.$set },
+            {
+              upsert: false,
+              new: true,
+              runValidators: true
+            }
+          );
+        } else {
+          throw upsertErr;
+        }
+      }
       savedCount++;
     }
 
@@ -443,12 +604,12 @@ const saveBatchAttendance = async (req, res, next) => {
       'attendance_batch_save',
       'Attendance',
       auditDateStr,
-      req.user._id,
+      actorId,
       req.user,
       {
         date: auditDateStr,
         count: savedCount,
-        departmentId: req.userRestrictedToDepartment || null
+        departmentId: scope.userDeptId || null
       }
     );
 
@@ -494,10 +655,13 @@ const getPersonnelCalendar = async (req, res, next) => {
     } else if (req.user.role === 'User' || req.user.role === 'AdminTuningDesk') {
       // Un simple agent ou AdminTuningDesk ne peut pas consulter le calendrier d'un tiers
       return res.status(403).json({ success: false, message: 'Accès refusé au calendrier d\'un autre agent' });
-    } else if (!await canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
-      const agentDept = personnel.activeDepartment ? personnel.activeDepartment.toString() : '';
-      if (agentDept !== req.userRestrictedToDepartment.toString()) {
-        return res.status(403).json({ success: false, message: 'Accès refusé aux agents hors de votre département' });
+    } else {
+      const scope = await resolveAttendanceDepartmentScope(req);
+      if (!scope.isUnrestricted) {
+        const agentDept = extractId(personnel.activeDepartment);
+        if (!agentDept || !scope.allowedDepartmentIds.includes(agentDept)) {
+          return res.status(403).json({ success: false, message: 'Accès refusé aux agents hors de votre département' });
+        }
       }
     }
 
@@ -571,10 +735,13 @@ const getPersonnelBalance = async (req, res, next) => {
     } else if (req.user.role === 'User' || req.user.role === 'AdminTuningDesk') {
       // Un simple agent ou AdminTuningDesk ne peut pas consulter le solde d'un tiers
       return res.status(403).json({ success: false, message: 'Accès refusé au solde d\'un autre agent' });
-    } else if (!await canUserSeeAllDepartments(req) && req.userRestrictedToDepartment) {
-      const agentDept = personnel.activeDepartment ? personnel.activeDepartment.toString() : '';
-      if (agentDept !== req.userRestrictedToDepartment.toString()) {
-        return res.status(403).json({ success: false, message: 'Accès refusé' });
+    } else {
+      const scope = await resolveAttendanceDepartmentScope(req);
+      if (!scope.isUnrestricted) {
+        const agentDept = extractId(personnel.activeDepartment);
+        if (!agentDept || !scope.allowedDepartmentIds.includes(agentDept)) {
+          return res.status(403).json({ success: false, message: 'Accès refusé' });
+        }
       }
     }
 
@@ -676,22 +843,15 @@ const getDailyReport = async (req, res, next) => {
 
     const { start, end } = getUTCDayRange(targetDate);
 
-    // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
-    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = await canUserSeeAllDepartments(req);
-    let effectiveDepartmentId = null;
+    const {
+      errorStatus,
+      errorMessage,
+      effectiveDepartmentId,
+      personnelFilter,
+    } = await applyScopedDepartmentFilter(req, departmentId);
 
-    if (!canSeeAll) {
-      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
-    } else if (departmentId && departmentId !== 'all') {
-      effectiveDepartmentId = departmentId;
-    }
-
-    // Filtre des personnels : tous les personnels actifs (non supprimés)
-    const personnelFilter = { isDeleted: { $ne: true } };
-    if (effectiveDepartmentId) {
-      personnelFilter.activeDepartment = effectiveDepartmentId;
+    if (errorStatus) {
+      return res.status(errorStatus).json({ success: false, message: errorMessage });
     }
 
     const personnels = await Personnel.find(personnelFilter)
@@ -761,22 +921,15 @@ const getMonthlyReport = async (req, res, next) => {
     const start = new Date(Date.UTC(targetYear, targetMonth - 1, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, targetMonth, 0, 23, 59, 59, 999));
 
-    // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
-    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = await canUserSeeAllDepartments(req);
-    let effectiveDepartmentId = null;
+    const {
+      errorStatus,
+      errorMessage,
+      effectiveDepartmentId,
+      personnelFilter,
+    } = await applyScopedDepartmentFilter(req, departmentId);
 
-    if (!canSeeAll) {
-      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
-    } else if (departmentId && departmentId !== 'all') {
-      effectiveDepartmentId = departmentId;
-    }
-
-    // Filtre des personnels : tous les personnels actifs (non supprimés)
-    const personnelFilter = { isDeleted: { $ne: true } };
-    if (effectiveDepartmentId) {
-      personnelFilter.activeDepartment = effectiveDepartmentId;
+    if (errorStatus) {
+      return res.status(errorStatus).json({ success: false, message: errorMessage });
     }
 
     const totalPersonnel = await Personnel.countDocuments(personnelFilter);
@@ -886,22 +1039,15 @@ const getYearlyReport = async (req, res, next) => {
     const start = new Date(Date.UTC(targetYear, 0, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, 11, 31, 23, 59, 59, 999));
 
-    // Filtrage départemental conditionnel :
-    // - RH AdminDepartment, Admin, Director : pas de filtre forcé (voit tout, sauf si un filtre départemental est demandé)
-    // - Autres AdminDepartment : filtre strictement restreint à leur propre département
-    const canSeeAll = await canUserSeeAllDepartments(req);
-    let effectiveDepartmentId = null;
+    const {
+      errorStatus,
+      errorMessage,
+      effectiveDepartmentId,
+      personnelFilter,
+    } = await applyScopedDepartmentFilter(req, departmentId);
 
-    if (!canSeeAll) {
-      effectiveDepartmentId = req.userRestrictedToDepartment || req.user.activeDepartment?._id || req.user.activeDepartment;
-    } else if (departmentId && departmentId !== 'all') {
-      effectiveDepartmentId = departmentId;
-    }
-
-    // Filtre des personnels : tous les personnels actifs (non supprimés)
-    const personnelFilter = { isDeleted: { $ne: true } };
-    if (effectiveDepartmentId) {
-      personnelFilter.activeDepartment = effectiveDepartmentId;
+    if (errorStatus) {
+      return res.status(errorStatus).json({ success: false, message: errorMessage });
     }
 
     const totalPersonnel = await Personnel.countDocuments(personnelFilter);

@@ -1,0 +1,25 @@
+# ---------- Backend build stage ----------
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+# ---------- Backend runtime stage ----------
+FROM node:20-slim
+
+WORKDIR /app
+
+COPY --from=builder /app .
+
+RUN mkdir -p /app/uploads /app/courrier && \
+    chown -R node:node /app && \
+    chmod -R 755 /app
+
+USER node
+EXPOSE 5000
+
+CMD ["node", "server.js"]
