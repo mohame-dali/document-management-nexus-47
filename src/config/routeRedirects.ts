@@ -36,9 +36,10 @@ export const PRIMARY_REDIRECTS: RouteRedirect[] = [
   { from: 'mail/folders',        to: '/dashboard/folders' },
   { from: 'advanced-search',     to: '/dashboard/mail/search' },
 
-  // Hub 3 — الأدوات
-  { from: 'templates',           to: '/dashboard/tools/templates' },
-  { from: 'document-options',    to: '/dashboard/tools/document-options' },
+  // Hub 3 — المؤسسة والنماذج
+  { from: 'templates',           to: '/dashboard/organization/templates' },
+  { from: 'document-options',    to: '/dashboard/organization/document-options' },
+  { from: 'organization-chart',  to: '/dashboard/organization/chart' },
 
   // Hub 4 — الملف والحضور
   { from: 'hr/my-profile',       to: '/dashboard/profile/my-profile' },
@@ -48,7 +49,6 @@ export const PRIMARY_REDIRECTS: RouteRedirect[] = [
   { from: 'users',               to: '/dashboard/admin/users' },
   { from: 'departments',         to: '/dashboard/admin/departments' },
   { from: 'audit-trail',         to: '/dashboard/admin/audit-trail' },
-  { from: 'organization-chart',  to: '/dashboard/admin/organization-chart' },
   { from: 'settings',            to: '/dashboard/admin/settings' },
   { from: 'guide',               to: '/dashboard/admin/guide' },
 

@@ -12,6 +12,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PersonnelAvatar from '../hr/PersonnelAvatar';
+import { useLanguage } from '@/contexts/LanguageProvider';
+import { useDirection } from '@/i18n/useDirection';
+import {
+  matchesPersonnelQuery,
+  resolveDepartmentManager,
+} from '@/utils/organizationTemplatesUtils';
 
 interface DepartmentNodeProps {
   data: {
@@ -20,102 +26,109 @@ interface DepartmentNodeProps {
     unitType: 'bureau_ordre' | 'rh' | 'service';
     totalPersonnel: number;
     personnel: ChartPersonnel[];
+    isDimmed?: boolean;
     onPersonnelClick?: (personnelId: string) => void;
   };
 }
 
 const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
+  const { language } = useLanguage();
+  const { dir } = useDirection();
+  const isFr = language === 'fr';
   const [expanded, setExpanded] = useState(false);
   const [showAllModal, setShowAllModal] = useState(false);
   const [modalSearch, setModalSearch] = useState('');
 
+  const manager = useMemo(
+    () => resolveDepartmentManager(data.personnel),
+    [data.personnel]
+  );
+
   const filteredModalPersonnel = useMemo(() => {
     const list = data.personnel || [];
-    const q = modalSearch.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((p) => {
-      const fullName = `${p.prenom || ''} ${p.nom || ''}`.toLowerCase();
-      const poste = (p.poste || '').toLowerCase();
-      const username = (p.username || '').toLowerCase();
-      return fullName.includes(q) || poste.includes(q) || username.includes(q);
-    });
+    if (!modalSearch.trim()) return list;
+    return list.filter((p) => matchesPersonnelQuery(p, modalSearch));
   }, [data.personnel, modalSearch]);
 
   const getBorderColor = () => {
     switch (data.unitType) {
       case 'bureau_ordre':
-        return 'border-amber-300';
+        return 'border-amber-300 dark:border-amber-700';
       case 'rh':
-        return 'border-emerald-400';
+        return 'border-emerald-400 dark:border-emerald-700';
       case 'service':
       default:
-        return 'border-blue-200';
+        return 'border-slate-200 dark:border-slate-700';
     }
   };
 
-  const getBadgeStyle = (unitType: string) => {
+  const getUnitLabel = (unitType: string) => {
     switch (unitType) {
       case 'bureau_ordre':
-        return {
-          label: 'مكتب الضبط',
-          className: 'bg-amber-100 text-amber-900 border border-amber-300',
-        };
+        return isFr ? "Bureau d'Ordre" : 'مكتب الضبط';
       case 'rh':
-        return {
-          label: 'الموارد البشرية',
-          className: 'bg-emerald-100 text-emerald-900 border border-emerald-300',
-        };
+        return isFr ? 'Ressources Humaines' : 'الموارد البشرية';
       case 'service':
       default:
-        return {
-          label: 'مصلحة',
-          className: 'bg-blue-100 text-blue-900 border border-blue-300',
-        };
+        return isFr ? 'Service' : 'مصلحة';
     }
   };
-
-  const badgeInfo = getBadgeStyle(data.unitType);
 
   return (
     <div
-      className={`bg-white border-2 ${getBorderColor()} rounded-lg shadow-sm hover:shadow-md hover:scale-[1.02] p-4 w-[280px] text-right select-none transition-all duration-200`}
-      dir="rtl"
+      className={`bg-white dark:bg-slate-900 border-2 ${getBorderColor()} rounded-lg shadow-sm hover:shadow-md p-4 w-[280px] text-start select-none transition-all duration-200 ${
+        data.isDimmed ? 'opacity-40' : 'opacity-100'
+      }`}
+      dir={dir}
     >
-      <Handle type="target" position={Position.Top} className="!bg-[#cbd5e1] !w-2.5 !h-2.5" />
+      <Handle type="target" position={Position.Top} className="!bg-slate-400 !w-2.5 !h-2.5" />
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h4 className="font-bold text-sm text-[#1a202c] leading-tight break-words flex-1">
+      <div className="space-y-1 mb-2">
+        <span className="text-xs font-medium text-slate-600 dark:text-slate-300 block">
+          {getUnitLabel(data.unitType)}
+        </span>
+        <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-snug break-words">
           {data.name}
         </h4>
-        <div className="shrink-0">
-          <span className={`inline-flex items-center px-2 py-0.5 text-[13px] font-semibold rounded-full ${badgeInfo.className}`}>
-            {badgeInfo.label}
-          </span>
-        </div>
+        {manager && (
+          <p className="text-xs text-slate-600 dark:text-slate-300 truncate">
+            {isFr ? 'Resp.' : 'الرئيس'}:{' '}
+            <span className="font-semibold text-slate-800 dark:text-slate-200">
+              {manager.prenom} {manager.nom}
+            </span>
+          </p>
+        )}
       </div>
 
       {/* Staff count toggle */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 hover:text-[#2c5282] hover:bg-[#f7fafc] px-2 py-1.5 rounded border border-[#edf2f7] transition-colors mt-2"
+        className="w-full flex items-center justify-between text-xs text-slate-700 dark:text-slate-200 hover:text-[#2c5282] dark:hover:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 transition-colors mt-2"
       >
-        <span className="flex items-center gap-1.5 font-medium">
-          <Users className="w-3.5 h-3.5 text-[#2c5282]" />
+        <span className="flex items-center gap-1.5 font-medium tabular-nums">
+          <Users className="w-3.5 h-3.5 text-[#2c5282] dark:text-blue-400" />
           <span>
-            {data.totalPersonnel} موظف{data.totalPersonnel > 1 ? 'ين' : ''}
+            {data.totalPersonnel}{' '}
+            {isFr
+              ? data.totalPersonnel <= 1
+                ? 'agent'
+                : 'agents'
+              : data.totalPersonnel > 1
+                ? 'موظفين'
+                : 'موظف'}
           </span>
         </span>
-        <span className="flex items-center gap-1 text-[13px] text-slate-700 dark:text-slate-300">
+        <span className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
           {expanded ? (
             <>
-              <span>إخفاء</span>
+              <span>{isFr ? 'Masquer' : 'إخفاء'}</span>
               <ChevronUp className="w-3.5 h-3.5" />
             </>
           ) : (
             <>
-              <span>عرض</span>
+              <span>{isFr ? 'Voir' : 'عرض'}</span>
               <ChevronDown className="w-3.5 h-3.5" />
             </>
           )}
@@ -124,7 +137,7 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
 
       {/* Collapsible list */}
       {expanded && (
-        <div className="mt-3 border-t border-[#edf2f7] pt-2 max-h-48 overflow-y-auto space-y-1.5 nodrag nowheel">
+        <div className="mt-3 border-t border-slate-200 dark:border-slate-800 pt-2 max-h-48 overflow-y-auto space-y-1 nodrag nowheel">
           {data.personnel && data.personnel.length > 0 ? (
             data.personnel.map((p) => (
               <div
@@ -135,42 +148,37 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                     data.onPersonnelClick(p._id);
                   }
                 }}
-                className="flex items-center gap-2 p-1.5 hover:bg-[#edf2f7] rounded cursor-pointer transition-colors text-right"
-                title={`${p.prenom} ${p.nom} - انقر لعرض الملف`}
+                className="flex items-center gap-2 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer transition-colors text-start"
+                title={`${p.prenom} ${p.nom}`}
               >
-                <PersonnelAvatar
-                  photo={p.photo}
-                  nom={p.nom}
-                  prenom={p.prenom}
-                  size="xs"
-                />
+                <PersonnelAvatar photo={p.photo} nom={p.nom} prenom={p.prenom} size="xs" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <p className="text-xs font-semibold text-[#1a202c] truncate">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                       {p.prenom} {p.nom}
                     </p>
                     {p.username && (
                       <span
                         dir="ltr"
-                        className="inline-block shrink-0 max-w-[95px] truncate text-[13px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1 py-0"
+                        className="inline-block shrink-0 max-w-[90px] truncate text-xs font-mono text-[#2c5282] dark:text-blue-300"
                       >
                         @{p.username}
                       </span>
                     )}
                   </div>
-                  {p.poste ? (
-                    <p className="text-[13px] text-slate-700 dark:text-slate-300 truncate">{p.poste}</p>
-                  ) : (
-                    <p className="text-[13px] text-slate-700 dark:text-slate-300 italic truncate">بدون خطة</p>
-                  )}
+                  <p className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                    {p.poste || (isFr ? 'Sans poste' : 'بدون خطة')}
+                  </p>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-[13px] text-slate-700 dark:text-slate-300 text-center py-2">لا يوجد موظفين مسجلين</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300 text-center py-2">
+              {isFr ? 'Aucun agent affecté' : 'لا يوجد موظفون مسجلون'}
+            </p>
           )}
           {data.totalPersonnel > 10 && (
-            <div className="pt-1.5 border-t border-dashed border-[#e2e8f0]">
+            <div className="pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-700">
               <Button
                 type="button"
                 variant="ghost"
@@ -180,9 +188,11 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                   setModalSearch('');
                   setShowAllModal(true);
                 }}
-                className="w-full h-8 text-[13px] font-semibold text-[#2c5282] hover:text-[#1a365d] hover:bg-blue-50"
+                className="w-full h-8 text-xs font-semibold text-[#2c5282] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800"
               >
-                عرض القائمة الكاملة (+ {data.totalPersonnel - 10} موظفين آخرين)
+                {isFr
+                  ? `Voir toute la liste (${data.totalPersonnel})`
+                  : `عرض القائمة الكاملة (${data.totalPersonnel})`}
               </Button>
             </div>
           )}
@@ -190,31 +200,37 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
       )}
 
       <Dialog open={showAllModal} onOpenChange={setShowAllModal}>
-        <DialogContent className="sm:max-w-[540px] text-right" dir="rtl">
+        <DialogContent className="sm:max-w-[540px]" dir={dir}>
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-[#1a202c] flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#2c5282]" />
-              <span>قائمة موظفي {data.name}</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#2c5282] border border-blue-200">
-                {data.personnel?.length || data.totalPersonnel}
+            <DialogTitle className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#2c5282] dark:text-blue-400" />
+              <span>
+                {isFr ? `Équipe — ${data.name}` : `قائمة موظفي ${data.name}`}
+              </span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
+                ({data.personnel?.length || data.totalPersonnel})
               </span>
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-700 dark:text-slate-300">
-              القائمة الكاملة للموظفين المسجلين بهذا القسم ({data.personnel?.length || data.totalPersonnel} موظف)
+            <DialogDescription className="text-xs text-slate-600 dark:text-slate-300">
+              {isFr
+                ? `Liste complète des membres rattachés (${data.personnel?.length || data.totalPersonnel})`
+                : `القائمة الكاملة للموظفين المسجلين بهذا القسم (${data.personnel?.length || data.totalPersonnel})`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="relative mt-1">
-            <Search className="w-4 h-4 text-slate-700 dark:text-slate-300 absolute right-3 top-3" />
+            <Search className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute start-3 top-3" />
             <Input
               value={modalSearch}
               onChange={(e) => setModalSearch(e.target.value)}
-              placeholder="ابحث بالاسم أو الخطة..."
-              className="h-10 pr-9 border-slate-300 dark:border-slate-700 text-sm"
+              placeholder={
+                isFr ? 'Rechercher par nom ou poste...' : 'ابحث بالاسم أو الخطة...'
+              }
+              className="h-10 ps-9 border-slate-300 dark:border-slate-700 text-sm"
             />
           </div>
 
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-[#edf2f7] border border-[#e2e8f0] rounded-md mt-2">
+          <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-md mt-2">
             {filteredModalPersonnel.length > 0 ? (
               filteredModalPersonnel.map((p) => (
                 <button
@@ -226,44 +242,39 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ data }) => {
                       data.onPersonnelClick(p._id);
                     }
                   }}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-[#f7fafc] transition-colors text-right"
+                  className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors text-start"
                 >
-                  <PersonnelAvatar
-                    photo={p.photo}
-                    nom={p.nom}
-                    prenom={p.prenom}
-                    size="sm"
-                  />
+                  <PersonnelAvatar photo={p.photo} nom={p.nom} prenom={p.prenom} size="sm" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 min-w-0">
-                      <p className="text-sm font-semibold text-[#1a202c] truncate">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {p.prenom} {p.nom}
                       </p>
                       {p.username && (
                         <span
                           dir="ltr"
-                          className="inline-block shrink-0 max-w-[140px] truncate text-[13px] font-mono text-[#2c5282] bg-[#ebf4ff] border border-[#bee3f8] rounded px-1.5 py-0.5"
+                          className="inline-block shrink-0 max-w-[140px] truncate text-xs font-mono text-[#2c5282] dark:text-blue-300"
                         >
                           @{p.username}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 truncate">
-                      {p.poste || 'بدون خطة'}
+                    <p className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                      {p.poste || (isFr ? 'Sans poste' : 'بدون خطة')}
                     </p>
                   </div>
                 </button>
               ))
             ) : (
-              <p className="text-sm text-slate-700 dark:text-slate-300 text-center py-6">
-                لا توجد نتائج مطابقة للبحث
+              <p className="text-sm text-slate-600 dark:text-slate-300 text-center py-6">
+                {isFr ? 'Aucun résultat correspondant' : 'لا توجد نتائج مطابقة للبحث'}
               </p>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-[#cbd5e1] !w-2.5 !h-2.5" />
+      <Handle type="source" position={Position.Bottom} className="!bg-slate-400 !w-2.5 !h-2.5" />
     </div>
   );
 };

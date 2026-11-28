@@ -1856,7 +1856,13 @@
   "dashboard.executive.status.unassigned": "بانتظار مسؤول",
   "dashboard.executive.emptyTitle": "لا توجد اختناقات تشغيلية حالياً",
   "dashboard.executive.emptyDesc": "جميع المراسلات الواردة العاجلة معالجة أو مسندة لمسؤولين عبر الأقسام.",
-  "dashboard.executive.errorLoading": "تعذر تحميل بيانات المتابعة القيادية من الخادم."
+  "dashboard.executive.errorLoading": "تعذر تحميل بيانات المتابعة القيادية من الخادم.",
+  "sidebar.organizationAndTemplates": "المؤسسة والنماذج",
+  "organizationHub.description": "النماذج الإدارية المعتمدة والهيكل التنظيمي للمؤسسة",
+  "organizationHub.tabTemplates": "النماذج الإدارية",
+  "organizationHub.tabChart": "الهيكل التنظيمي",
+  "organizationHub.tabSettings": "إعدادات المؤسسة والنظام",
+  "organizationHub.tabDocumentOptions": "خيارات المستندات"
 }
 
 

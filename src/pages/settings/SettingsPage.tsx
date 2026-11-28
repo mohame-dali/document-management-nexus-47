@@ -277,7 +277,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="w-full max-w-[1400px] mx-auto space-y-5">
       {/* 1. Header Section - Clean Institutional AdminLTE */}
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">

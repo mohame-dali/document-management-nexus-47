@@ -1856,7 +1856,13 @@
   "dashboard.executive.status.unassigned": "Sans responsable",
   "dashboard.executive.emptyTitle": "Aucun point de blocage opérationnel",
   "dashboard.executive.emptyDesc": "Tous les courriers entrants urgents sont pris en charge ou affectés à un responsable.",
-  "dashboard.executive.errorLoading": "Impossible de charger les indicateurs exécutifs depuis le serveur."
+  "dashboard.executive.errorLoading": "Impossible de charger les indicateurs exécutifs depuis le serveur.",
+  "sidebar.organizationAndTemplates": "Organisation & Modèles",
+  "organizationHub.description": "Modèles administratifs officiels et organigramme de l'institution",
+  "organizationHub.tabTemplates": "Modèles administratifs",
+  "organizationHub.tabChart": "Organigramme",
+  "organizationHub.tabSettings": "Paramètres du système",
+  "organizationHub.tabDocumentOptions": "Options des documents"
 }
 
 

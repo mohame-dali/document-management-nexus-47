@@ -149,30 +149,45 @@ export const HR_HUB: HubDefinition = {
 };
 
 /**
- * Hub 3 : الأدوات (Outils & Modèles)
+ * Hub 3 : المؤسسة والنماذج (Organisation & Modèles)
  */
-export const TOOLS_HUB: HubDefinition = {
-  id: 'tools',
-  labelAr: 'الأدوات',
-  labelFr: 'Outils',
-  basePath: '/dashboard/tools',
-  defaultPath: '/dashboard/tools/templates',
-  icon: 'Sliders',
+export const ORGANIZATION_HUB: HubDefinition = {
+  id: 'organization',
+  labelAr: 'المؤسسة والنماذج',
+  labelFr: 'Organisation & Modèles',
+  basePath: '/dashboard/organization',
+  defaultPath: '/dashboard/organization/templates',
+  icon: 'Building2',
   tabs: [
     {
       id: 'templates',
-      labelAr: 'النماذج',
-      labelFr: 'Modèles',
-      path: '/dashboard/tools/templates',
+      labelAr: 'النماذج الإدارية',
+      labelFr: 'Modèles administratifs',
+      path: '/dashboard/organization/templates',
       icon: 'FileText',
+    },
+    {
+      id: 'chart',
+      labelAr: 'الهيكل التنظيمي',
+      labelFr: 'Organigramme',
+      path: '/dashboard/organization/chart',
+      icon: 'Network',
+    },
+    {
+      id: 'settings',
+      labelAr: 'إعدادات المؤسسة والنظام',
+      labelFr: 'Paramètres du système',
+      path: '/dashboard/organization/settings',
+      icon: 'Settings',
+      roles: ['Admin'],
     },
     {
       id: 'document-options',
       labelAr: 'خيارات المستندات',
       labelFr: 'Options de documents',
-      path: '/dashboard/tools/document-options',
+      path: '/dashboard/organization/document-options',
       icon: 'Sliders',
-      roles: ['Admin', 'AdminTuningDesk'],
+      roles: ['AdminTuningDesk'],
     },
   ],
 };
@@ -242,13 +257,6 @@ export const ADMIN_HUB: HubDefinition = {
       roles: ['Admin', 'Director'],
     },
     {
-      id: 'organization-chart',
-      labelAr: 'الهيكل التنظيمي',
-      labelFr: 'Organigramme',
-      path: '/dashboard/admin/organization-chart',
-      icon: 'Network',
-    },
-    {
       id: 'settings',
       labelAr: 'الإعدادات',
       labelFr: 'Paramètres',
@@ -273,7 +281,7 @@ export const ADMIN_HUB: HubDefinition = {
 export const ALL_HUBS: HubDefinition[] = [
   MAIL_HUB,
   HR_HUB,
-  TOOLS_HUB,
+  ORGANIZATION_HUB,
   PROFILE_HUB,
   ADMIN_HUB,
 ];

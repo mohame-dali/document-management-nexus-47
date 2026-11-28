@@ -15,7 +15,7 @@ import DashboardLayout from './components/layouts/DashboardLayout';
 import {
   MailHubLayout,
   HRHubLayout,
-  ToolsHubLayout,
+  OrganizationHubLayout,
   ProfileHubLayout,
   AdminHubLayout,
 } from './components/layouts/HubLayouts';
@@ -273,15 +273,28 @@ function App() {
                           <Route path="stages" element={<RHStagesPage />} />
                         </Route>
 
-                        {/* Hub 3 : الأدوات (Outils & Modèles - 2 onglets) */}
-                        <Route path="tools" element={<ToolsHubLayout />}>
-                          <Route index element={<Navigate to="/dashboard/tools/templates" replace />} />
+                        {/* Hub 3 : المؤسسة والنماذج (Organisation & Modèles) */}
+                        <Route path="organization" element={<OrganizationHubLayout />}>
+                          <Route index element={<Navigate to="/dashboard/organization/templates" replace />} />
                           <Route path="templates" element={<TemplatesPage />} />
+                          <Route path="chart" element={<OrganizationChartPage />} />
+                          <Route path="settings" element={
+                            <ProtectedRoute allowedRoles={['Admin']}>
+                              <SettingsPage />
+                            </ProtectedRoute>
+                          } />
                           <Route path="document-options" element={
                             <ProtectedRoute allowedRoles={['Admin', 'AdminTuningDesk']}>
                               <DocumentOptionsPage />
                             </ProtectedRoute>
                           } />
+                        </Route>
+
+                        {/* Redirections rétrocompatibles de l'ancien Hub الأدوات */}
+                        <Route path="tools">
+                          <Route index element={<Navigate to="/dashboard/organization/templates" replace />} />
+                          <Route path="templates" element={<Navigate to="/dashboard/organization/templates" replace />} />
+                          <Route path="document-options" element={<Navigate to="/dashboard/organization/document-options" replace />} />
                         </Route>
 
                         {/* Hub 4 : الملف والحضور (Profil & Présence - 2 onglets) */}
@@ -291,19 +304,13 @@ function App() {
                           <Route path="my-attendance" element={<MyAttendanceCalendarPage />} />
                         </Route>
 
-                        {/* Route spécifique Organigramme (accessible à TOUS les utilisateurs connectés) */}
+                        {/* Redirection rétrocompatible Organigramme (/dashboard/admin/organization-chart -> /dashboard/organization/chart) */}
                         <Route
                           path="admin/organization-chart"
-                          element={
-                            <ProtectedRoute>
-                              <AdminHubLayout />
-                            </ProtectedRoute>
-                          }
-                        >
-                          <Route index element={<OrganizationChartPage />} />
-                        </Route>
+                          element={<Navigate to="/dashboard/organization/chart" replace />}
+                        />
 
-                        {/* Hub 5 : الإدارة (Administration - 6 onglets) */}
+                        {/* Hub 5 : الإدارة (Administration - 5 onglets) */}
                         <Route path="admin" element={
                           <ProtectedRoute allowedRoles={['Admin', 'Director']}>
                             <AdminHubLayout />
@@ -333,7 +340,6 @@ function App() {
                             </ProtectedRoute>
                           } />
                           <Route path="audit-trail" element={<AuditTrailPage />} />
-                          <Route path="organization-chart" element={<OrganizationChartPage />} />
                           <Route path="settings" element={
                             <ProtectedRoute allowedRoles={['Admin']}>
                               <SettingsPage />
@@ -509,7 +515,7 @@ function App() {
                         {/* Document Options route */}
                         <Route path="document-options" element={
                           ENABLE_REDIRECTS ? (
-                            <Navigate to="/dashboard/tools/document-options" replace />
+                            <Navigate to="/dashboard/organization/document-options" replace />
                           ) : (
                             <ProtectedRoute allowedRoles={['AdminTuningDesk']}>
                               <DocumentOptionsPage />
@@ -520,7 +526,7 @@ function App() {
                         {/* Templates route */}
                         <Route path="templates" element={
                           ENABLE_REDIRECTS ? (
-                            <Navigate to="/dashboard/tools/templates" replace />
+                            <Navigate to="/dashboard/organization/templates" replace />
                           ) : (
                             <ProtectedRoute>
                               <TemplatesPage />
@@ -605,7 +611,7 @@ function App() {
                         {/* Organization Chart route */}
                         <Route path="organization-chart" element={
                           ENABLE_REDIRECTS ? (
-                            <Navigate to="/dashboard/admin/organization-chart" replace />
+                            <Navigate to="/dashboard/organization/chart" replace />
                           ) : (
                             <OrganizationChartPage />
                           )

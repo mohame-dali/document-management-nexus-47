@@ -90,7 +90,7 @@ const STEPS: Step[] = [
       },
       {
         label: 'خيارات الوثائق',
-        path: '/dashboard/document-options',
+        path: '/dashboard/organization/document-options',
         variant: 'outline',
         icon: Sliders
       }
@@ -103,7 +103,7 @@ const STEPS: Step[] = [
     actions: [
       {
         label: 'المخطط التنظيمي',
-        path: '/dashboard/organization-chart',
+        path: '/dashboard/organization/chart',
         variant: 'default',
         icon: Network
       }

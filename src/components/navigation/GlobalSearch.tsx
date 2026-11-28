@@ -287,13 +287,23 @@ const GlobalSearch: React.FC = () => {
       },
       {
         id: 'qa-org-chart',
-        url: '/dashboard/admin/organization-chart',
+        url: '/dashboard/organization/chart',
         labelAr: 'الهيكل التنظيمي',
         labelFr: 'Organigramme',
         badgeAr: 'الهيكل',
         badgeFr: 'Structure',
         keywords: 'organization chart organigramme الهيكل التنظيمي',
         icon: Network,
+      },
+      {
+        id: 'qa-templates',
+        url: '/dashboard/organization/templates',
+        labelAr: 'النماذج الإدارية',
+        labelFr: 'Modèles administratifs',
+        badgeAr: 'نماذج',
+        badgeFr: 'Modèles',
+        keywords: 'templates modèles النماذج القوالب',
+        icon: FileText,
       },
     ];
 

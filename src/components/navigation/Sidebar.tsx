@@ -21,11 +21,10 @@ import {
   FolderTree,
   MessageCircle,
   LayoutDashboard,
+  ShieldCheck,
   User,
   UserCheck,
   Trash2,
-  Sliders,
-  Network,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrganizationSettings } from '@/services/hr/personnelApi';
@@ -121,19 +120,7 @@ const Sidebar = () => {
         !location.pathname.startsWith('/dashboard/hr/my-'),
     }] : []),
 
-    // 4. ⚙️ الأدوات (hub 3) — non-User
-    ...(currentUser?.role !== 'User' ? [{
-      id: 'tools',
-      path: '/dashboard/tools',
-      label: t('sidebar.tools'),
-      icon: Sliders,
-      isActive: () =>
-        location.pathname.startsWith('/dashboard/tools') ||
-        location.pathname.startsWith('/dashboard/templates') ||
-        location.pathname.startsWith('/dashboard/document-options'),
-    }] : []),
-
-    // 5. 👤 الملف والحضور (hub 4)
+    // 4. 👤 الملف والحضور (hub 4)
     {
       id: 'profile',
       path: '/dashboard/profile',
@@ -144,29 +131,34 @@ const Sidebar = () => {
         location.pathname.startsWith('/dashboard/hr/my-'),
     },
 
-    // 6. 🏢 الإدارة (hub 5) — Admin et Director
+    // 5. 🏢 المؤسسة والنماذج (hub unifié : النماذج + الهيكل التنظيمي + الإعدادات لـ Admin)
+    {
+      id: 'organization',
+      path: '/dashboard/organization',
+      label: t('sidebar.organizationAndTemplates'),
+      icon: Building2,
+      isActive: () =>
+        location.pathname.startsWith('/dashboard/organization') ||
+        location.pathname.startsWith('/dashboard/tools') ||
+        location.pathname.startsWith('/dashboard/templates') ||
+        location.pathname.startsWith('/dashboard/document-options') ||
+        location.pathname.startsWith('/dashboard/admin/organization-chart'),
+    },
+
+    // 6. 🛡️ الإدارة (hub 5) — Admin et Director
     ...(['Admin', 'Director'].includes(currentUser?.role || '') ? [{
       id: 'admin',
       path: '/dashboard/admin',
       label: t('sidebar.administration'),
-      icon: Building2,
+      icon: ShieldCheck,
       isActive: () =>
-        location.pathname.startsWith('/dashboard/admin') ||
+        (location.pathname.startsWith('/dashboard/admin') &&
+          !location.pathname.startsWith('/dashboard/admin/organization-chart')) ||
         location.pathname.startsWith('/dashboard/users') ||
         location.pathname.startsWith('/dashboard/departments') ||
         location.pathname.startsWith('/dashboard/audit-trail') ||
-        location.pathname.startsWith('/dashboard/organization-chart') ||
         location.pathname.startsWith('/dashboard/settings') ||
         location.pathname.startsWith('/dashboard/guide'),
-    }] : []),
-
-    // 6b. 🌐 الهيكل التنظيمي (organigramme) — Pour tous les rôles non-Admin/Director (AdminTuningDesk, AdminDepartment, User)
-    ...(!['Admin', 'Director'].includes(currentUser?.role || '') ? [{
-      id: 'organization-chart',
-      path: '/dashboard/admin/organization-chart',
-      label: t('sidebar.organizationChart'),
-      icon: Network,
-      isActive: () => location.pathname.startsWith('/dashboard/admin/organization-chart'),
     }] : []),
 
     // 7. 💬 الرسائل (direct)

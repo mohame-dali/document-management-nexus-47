@@ -178,7 +178,7 @@ const Header = () => {
                 <span>{t('header.myProfile')}</span>
               </DropdownMenuItem>
               
-              <DropdownMenuItem onClick={() => navigate('/dashboard/organization-chart')} className="cursor-pointer">
+              <DropdownMenuItem onClick={() => navigate('/dashboard/organization/chart')} className="cursor-pointer">
                 <Network className="w-4 h-4 ms-2" />
                 <span>{t('header.organizationChart')}</span>
               </DropdownMenuItem>

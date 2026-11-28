@@ -650,7 +650,7 @@ const RoleExecutiveSection: React.FC<RoleExecutiveSectionProps> = ({
             <Button
               type="button"
               size="sm"
-              onClick={() => navigate('/dashboard/admin/organization-chart')}
+              onClick={() => navigate('/dashboard/organization/chart')}
               className="h-9 px-3 bg-[#2c5282] hover:bg-[#1e3a5f] text-white text-xs font-medium whitespace-nowrap shrink-0"
             >
               <Network className="h-3.5 w-3.5 me-1.5" />

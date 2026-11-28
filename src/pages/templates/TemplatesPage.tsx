@@ -1,27 +1,61 @@
-
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageProvider';
-import { getTemplates, deleteTemplate, downloadTemplate, Template } from '@/services/templateService';
+import { useDirection } from '@/i18n/useDirection';
+import {
+  getTemplates,
+  deleteTemplate,
+  downloadTemplate,
+  Template,
+} from '@/services/templateService';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { FileText, Download, Edit, Trash2, Plus, Upload, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  FileText,
+  Download,
+  Edit,
+  Trash2,
+  Plus,
+  Search,
+  X,
+  AlertCircle,
+  RotateCcw,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { formatLongDate } from '@/utils/formatDate';
 import TemplateDialog from '@/components/templates/TemplateDialog';
+import {
+  filterTemplates,
+  formatTemplateFileSize,
+  getTemplateFileInfo,
+} from '@/utils/organizationTemplatesUtils';
 
-const TemplatesPage = () => {
+const TemplatesPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const { dir } = useDirection();
+  const isFr = language === 'fr';
   const queryClient = useQueryClient();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [extensionFilter, setExtensionFilter] = useState<string>('ALL');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['templates'],
     queryFn: getTemplates,
   });
@@ -30,23 +64,30 @@ const TemplatesPage = () => {
     mutationFn: deleteTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
-      toast.success('تم حذف النموذج بنجاح');
+      toast.success(isFr ? 'Modèle supprimé avec succès' : 'تم حذف النموذج بنجاح');
       setDeleteDialogOpen(false);
       setTemplateToDelete(null);
     },
     onError: (error: unknown) => {
       const err = error as { response?: { data?: { message?: string } }; message?: string };
-      toast.error('فشل في حذف النموذج: ' + (err.response?.data?.message || err.message || 'خطأ غير معروف'));
+      toast.error(
+        (isFr ? 'Échec de la suppression : ' : 'فشل في حذف النموذج: ') +
+          (err.response?.data?.message || err.message || '')
+      );
     },
   });
 
   const handleDownload = async (template: Template) => {
     try {
       await downloadTemplate(template._id, template.fileName);
-      toast.success('تم تحميل النموذج بنجاح');
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      toast.success(isFr ? 'Téléchargement démarré' : 'تم تحميل النموذج بنجاح');
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } }; message?: string };
-      toast.error('فشل في تحميل النموذج: ' + (err.response?.data?.message || err.message || 'خطأ غير معروف'));
+      toast.error(
+        (isFr ? 'Échec du téléchargement : ' : 'فشل في تحميل النموذج: ') +
+          (err.response?.data?.message || err.message || '')
+      );
     }
   };
 
@@ -65,163 +106,307 @@ const TemplatesPage = () => {
     setTemplateDialogOpen(true);
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
+  // Match exact backend RBAC in backend/routes/templates.js (Admin, AdminTuningDesk)
   const canManageTemplates = ['Admin', 'AdminTuningDesk'].includes(currentUser?.role || '');
+
+  const availableExtensions = useMemo(() => {
+    const exts = new Set<string>();
+    templates.forEach((tpl) => {
+      const info = getTemplateFileInfo(tpl.fileName);
+      if (info.ext && info.ext !== 'FILE') {
+        exts.add(info.ext);
+      }
+    });
+    return Array.from(exts).sort();
+  }, [templates]);
+
+  const filteredTemplates = useMemo(
+    () => filterTemplates(templates, searchQuery, extensionFilter),
+    [templates, searchQuery, extensionFilter]
+  );
+
+  const hasActiveFilters = searchQuery.trim().length > 0 || extensionFilter !== 'ALL';
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-4" dir={dir}>
+        <div className="h-11 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-52 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div
+        className="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/60 rounded-lg p-10 text-center space-y-3"
+        dir={dir}
+      >
+        <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400 mx-auto" />
+        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+          {isFr ? 'Impossible de charger les modèles' : 'تعذر تحميل النماذج'}
+        </h3>
+        <Button
+          type="button"
+          onClick={() => refetch()}
+          className="h-9 px-4 bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded-md gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          <span>{isFr ? 'Réessayer' : 'إعادة المحاولة'}</span>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6" dir="rtl">
-      {/* Header */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#ebf4ff] rounded text-[#2c5282]">
-            <FileText className="h-6 w-6" />
+    <div className="space-y-4" dir={dir}>
+      {/* Action & Filter Toolbar */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
+          {/* Instant search */}
+          <div className="relative flex-1 max-w-md min-w-0">
+            <Search className="h-4 w-4 text-slate-500 dark:text-slate-400 absolute top-1/2 -translate-y-1/2 start-3 pointer-events-none" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={isFr ? 'Rechercher un modèle...' : 'بحث في النماذج...'}
+              aria-label={isFr ? 'Rechercher un modèle' : 'بحث في النماذج'}
+              className="h-10 ps-9 pe-9 bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-sm"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label={isFr ? 'Effacer la recherche' : 'مسح البحث'}
+                className="absolute top-1/2 -translate-y-1/2 end-2.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 p-0.5 rounded"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#1a202c]">النماذج</h1>
-            <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
-              إدارة نماذج الوثائق المتاحة للتحميل والاستخدام
-            </p>
-          </div>
-        </div>
-        
-        {canManageTemplates && (
-          <Button 
-            onClick={handleCreateNew} 
-            className="gap-2 h-10 px-5 bg-[#2c5282] hover:bg-[#2a4365] text-white rounded font-medium shadow-sm"
-          >
-            <Plus className="h-4 w-4" />
-            إضافة نموذج جديد
-          </Button>
-        )}
-      </div>
 
-      {/* Info Banner: كيفية استخدام النماذج */}
-      <div className="bg-[#ebf4ff] border border-[#bee3f8] rounded p-4 flex items-center gap-3 text-[#2c5282]">
-        <Upload className="h-5 w-5 text-[#2c5282] flex-shrink-0" />
-        <div className="text-sm">
-          <span className="font-semibold ml-1">كيفية استخدام النماذج:</span>
-          <span>
-            يمكن لجميع المستخدمين تحميل النماذج المتاحة وتعديلها حسب احتياجاتهم
-            {canManageTemplates && ' • يمكنك كمدير مكتب الضبط إضافة وتعديل وحذف النماذج'}
-          </span>
-        </div>
-      </div>
-
-      {/* Templates Grid */}
-      {templates && templates.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map((template) => (
+          {/* Interactive File-Type Segmented Filter */}
+          {availableExtensions.length > 0 && (
             <div
-              key={template._id}
-              className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm hover:shadow-md hover:border-[#2c5282] transition-all flex flex-col justify-between"
+              className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg self-start sm:self-auto overflow-x-auto max-w-full"
+              role="group"
+              aria-label={isFr ? 'Filtrer par format' : 'تصفية حسب الصيغة'}
             >
-              <div>
-                {/* File Icon Header */}
-                <div className="flex items-start justify-between">
-                  <div className="h-10 w-10 rounded bg-[#ebf4ff] text-[#2c5282] flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <Badge variant="secondary" className="text-xs bg-[#f7fafc] text-slate-700 dark:text-slate-300 border border-[#e2e8f0] font-normal">
-                    {formatFileSize(template.fileSize)}
-                  </Badge>
-                </div>
-
-                {/* Title */}
-                <h3 className="text-base font-semibold text-[#1a202c] mt-3 line-clamp-1">
-                  {template.name}
-                </h3>
-
-                {/* Description */}
-                {template.description && (
-                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-1 line-clamp-2">
-                    {template.description}
-                  </p>
-                )}
-
-                {/* Metadata */}
-                <div className="text-xs text-slate-700 dark:text-slate-300 flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[#f1f5f9]">
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3 text-slate-700 dark:text-slate-300" />
-                    <span>{template.downloads} تحميل</span>
-                  </div>
-                  <span>•</span>
-                  <bdi dir="rtl" className="tabular-nums">{formatLongDate(template.createdAt, 'ar')}</bdi>
-                  <span>•</span>
-                  <span>بواسطة: {template.uploadedBy.username}</span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-4 pt-3 border-t border-[#f1f5f9] flex flex-col gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => handleDownload(template)}
-                  className="w-full h-10 bg-[#2c5282] text-white rounded font-medium hover:bg-[#2a4365] gap-2 flex items-center justify-center transition-colors"
+              <button
+                type="button"
+                onClick={() => setExtensionFilter('ALL')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 ${
+                  extensionFilter === 'ALL'
+                    ? 'bg-white dark:bg-slate-900 text-[#2c5282] dark:text-blue-300 shadow-xs'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {isFr ? 'Tous' : 'الكل'}
+              </button>
+              {availableExtensions.map((ext) => (
+                <button
+                  key={ext}
+                  type="button"
+                  onClick={() => setExtensionFilter(ext)}
+                  className={`px-3 py-1.5 text-xs font-semibold font-mono rounded-md transition-colors whitespace-nowrap shrink-0 ${
+                    extensionFilter === ext
+                      ? 'bg-white dark:bg-slate-900 text-[#2c5282] dark:text-blue-300 shadow-xs'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                  }`}
                 >
-                  <Download className="h-4 w-4" />
-                  تحميل
-                </Button>
-                
-                {canManageTemplates && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(template)}
-                      className="flex-1 h-9 border border-[#e2e8f0] text-slate-700 dark:text-slate-300 hover:bg-[#f7fafc] rounded text-xs gap-1.5"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                      تعديل
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDelete(template)}
-                      className="flex-1 h-9 border border-[#e2e8f0] text-red-600 hover:bg-red-50 hover:border-red-200 rounded text-xs gap-1.5"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      حذف
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  {ext}
+                </button>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      ) : (
-        /* Empty State */
-        <div className="bg-white border border-[#e2e8f0] rounded p-12 text-center shadow-sm">
-          <FileText className="h-12 w-12 mx-auto mb-3 text-[#cbd5e0]" />
-          <h3 className="text-base font-medium text-slate-700 dark:text-slate-300 mb-1">لا توجد نماذج متاحة</h3>
-          <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">
-            {canManageTemplates 
-              ? 'ابدأ بإضافة النموذج الأول للمستخدمين'
-              : 'لم يتم رفع أي نماذج بعد'
-            }
-          </p>
+
+        <div className="flex items-center justify-between lg:justify-end gap-3 shrink-0">
+          <span className="text-xs font-medium text-slate-600 dark:text-slate-300 tabular-nums whitespace-nowrap">
+            {filteredTemplates.length}{' '}
+            {isFr
+              ? filteredTemplates.length <= 1
+                ? 'modèle'
+                : 'modèles'
+              : 'نموذج'}
+          </span>
+
           {canManageTemplates && (
-            <Button 
-              onClick={handleCreateNew} 
-              className="gap-2 h-10 px-5 bg-[#2c5282] hover:bg-[#2a4365] text-white rounded font-medium shadow-sm inline-flex items-center"
+            <Button
+              type="button"
+              onClick={handleCreateNew}
+              className="h-10 px-4 bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded-md text-sm font-semibold flex items-center gap-2 whitespace-nowrap shrink-0"
             >
               <Plus className="h-4 w-4" />
-              إضافة نموذج جديد
+              <span>{isFr ? 'Importer un modèle' : 'رفع نموذج جديد'}</span>
             </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Templates Card Grid or Empty State */}
+      {filteredTemplates.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTemplates.map((template) => {
+            const fileInfo = getTemplateFileInfo(template.fileName);
+            return (
+              <article
+                key={template._id}
+                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 hover:border-[#2c5282]/60 dark:hover:border-blue-500/60 transition-colors flex flex-col justify-between"
+              >
+                <div>
+                  {/* File Type Badge + Quiet Unboxed Size & Downloads */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      dir="ltr"
+                      className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-mono font-bold tracking-tight ${fileInfo.badgeClass}`}
+                    >
+                      {fileInfo.label}
+                    </span>
+
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 tabular-nums">
+                      <span dir="ltr">{formatTemplateFileSize(template.fileSize)}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>
+                        {template.downloads}{' '}
+                        {isFr ? 'téléch.' : 'تحميل'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-3 line-clamp-1">
+                    {template.name}
+                  </h3>
+
+                  {/* Description */}
+                  {template.description && (
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mt-1.5 line-clamp-2 leading-relaxed">
+                      {template.description}
+                    </p>
+                  )}
+
+                  {/* Clean Unboxed Metadata */}
+                  <div className="text-xs text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <time className="tabular-nums" dateTime={template.createdAt}>
+                      {formatLongDate(template.createdAt, language)}
+                    </time>
+                    {template.uploadedBy?.username && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span className="truncate max-w-[160px]">
+                          {template.uploadedBy.username}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => handleDownload(template)}
+                    className="flex-1 h-10 bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded-md font-semibold flex items-center justify-center gap-2 whitespace-nowrap"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>{isFr ? 'Télécharger' : 'تحميل'}</span>
+                  </Button>
+
+                  {canManageTemplates && (
+                    <>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleEdit(template)}
+                        title={isFr ? 'Modifier' : 'تعديل'}
+                        aria-label={isFr ? `Modifier ${template.name}` : `تعديل ${template.name}`}
+                        className="h-10 w-10 shrink-0 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleDelete(template)}
+                        title={isFr ? 'Supprimer' : 'حذف'}
+                        aria-label={isFr ? `Supprimer ${template.name}` : `حذف ${template.name}`}
+                        className="h-10 w-10 shrink-0 border-slate-200 dark:border-slate-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 hover:border-red-200 dark:hover:border-red-800 rounded-md"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        /* Compact Actionable Empty State */
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-10 text-center space-y-3">
+          <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center mx-auto">
+            <FileText className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              {hasActiveFilters
+                ? isFr
+                  ? 'Aucun modèle ne correspond à votre recherche'
+                  : 'لا توجد نماذج مطابقة للبحث'
+                : isFr
+                  ? 'Aucun modèle disponible'
+                  : 'لا توجد نماذج متاحة بعد'}
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
+              {hasActiveFilters
+                ? isFr
+                  ? 'Essayez un autre mot-clé ou réinitialisez le filtre de format.'
+                  : 'جرّب كلمة بحث أخرى أو أعد ضبط التصفية.'
+                : canManageTemplates
+                  ? isFr
+                    ? 'Ajoutez un premier modèle Word (.doc, .docx) pour le rendre accessible à tous les services.'
+                    : 'ابدأ برفع أول نموذج رسمي ليتمكن الموظفون من تحميله واستخدامه.'
+                  : isFr
+                    ? 'Aucun modèle n’a encore été publié par le bureau d’ordre.'
+                    : 'لم يتم نشر أي نماذج إدارية بعد.'}
+            </p>
+          </div>
+
+          {hasActiveFilters ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setSearchQuery('');
+                setExtensionFilter('ALL');
+              }}
+              className="h-9 px-4 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-md inline-flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              <span>{isFr ? 'Réinitialiser' : 'إعادة ضبط البحث'}</span>
+            </Button>
+          ) : (
+            canManageTemplates && (
+              <Button
+                type="button"
+                onClick={handleCreateNew}
+                className="h-10 px-5 bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded-md text-sm font-semibold inline-flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{isFr ? 'Importer le premier modèle' : 'رفع أول نموذج'}</span>
+              </Button>
+            )
           )}
         </div>
       )}
@@ -240,24 +425,34 @@ const TemplatesPage = () => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir={dir}>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl sm:text-2xl font-bold text-red-600 text-right">تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription className="text-base text-gray-600 mt-2 text-right">
-              هل أنت متأكد من حذف النموذج "{templateToDelete?.name}"؟ 
-              هذا الإجراء لا يمكن التراجع عنه.
+            <AlertDialogTitle className="text-lg font-bold text-red-600 dark:text-red-400">
+              {isFr ? 'Confirmer la suppression' : 'تأكيد الحذف'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+              {isFr
+                ? `Voulez-vous supprimer définitivement le modèle « ${templateToDelete?.name || ''} » ? Cette action est irréversible.`
+                : `هل أنت متأكد من حذف النموذج "${templateToDelete?.name || ''}"؟ هذا الإجراء لا يمكن التراجع عنه.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-row-reverse justify-start gap-3 mt-4 pt-4 border-t border-[#e2e8f0]">
+          <AlertDialogFooter className="gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <AlertDialogCancel className="h-10 px-5 rounded-md border-slate-300 dark:border-slate-700">
+              {isFr ? 'Annuler' : 'إلغاء'}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => templateToDelete && deleteMutation.mutate(templateToDelete._id)}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-base h-11 px-7 rounded shadow-none"
+              disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold h-10 px-6 rounded-md"
             >
-              حذف
+              {deleteMutation.isPending
+                ? isFr
+                  ? 'Suppression...'
+                  : 'جاري الحذف...'
+                : isFr
+                  ? 'Supprimer'
+                  : 'حذف'}
             </AlertDialogAction>
-            <AlertDialogCancel className="h-11 px-6 rounded border-[#cbd5e1] text-gray-700 hover:bg-gray-100 text-base font-medium">
-              إلغاء
-            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -130,40 +130,54 @@ export const HRHubLayout: React.FC = () => {
 };
 
 /**
- * Hub 3 : الأدوات (Outils & Modèles - 2 onglets)
+ * Hub 3 : المؤسسة والنماذج (Organisation & Modèles)
  */
-export const ToolsHubLayout: React.FC = () => {
+export const OrganizationHubLayout: React.FC = () => {
   const { currentUser } = useAuth();
   const { t } = useLanguage();
 
   const tabs: HubTab[] = [
     {
-      to: '/dashboard/tools/templates',
-      label: t('sidebar.templates'),
+      to: '/dashboard/organization/templates',
+      label: t('organizationHub.tabTemplates'),
       icon: FileText,
-      color: 'text-blue-500',
+      color: 'text-[#2c5282] dark:text-blue-400',
     },
     {
-      to: '/dashboard/tools/document-options',
-      label: t('sidebar.documentOptions'),
+      to: '/dashboard/organization/chart',
+      label: t('organizationHub.tabChart'),
+      icon: Network,
+      color: 'text-emerald-600 dark:text-emerald-400',
+    },
+    {
+      to: '/dashboard/organization/settings',
+      label: t('organizationHub.tabSettings'),
+      icon: Settings,
+      color: 'text-slate-700 dark:text-slate-300',
+      allowedRoles: ['Admin'],
+    },
+    {
+      to: '/dashboard/organization/document-options',
+      label: t('organizationHub.tabDocumentOptions'),
       icon: Sliders,
-      color: 'text-purple-500',
-      allowedRoles: ['Admin', 'AdminTuningDesk'],
+      color: 'text-purple-600 dark:text-purple-400',
+      allowedRoles: ['AdminTuningDesk'],
     },
   ];
 
   const breadcrumb = [
-    { label: t('sidebar.tools') },
+    { label: t('sidebar.organizationAndTemplates') },
   ];
 
   return (
     <HubLayout
-      title={t('sidebar.tools')}
-      description="النماذج وإعدادات الوثائق"
-      icon={Sliders}
+      title={t('sidebar.organizationAndTemplates')}
+      description={t('organizationHub.description')}
+      icon={Building2}
       tabs={tabs}
       currentUserRole={currentUser?.role}
       breadcrumb={breadcrumb}
+      compact
     />
   );
 };
@@ -173,7 +187,7 @@ export const ToolsHubLayout: React.FC = () => {
  */
 export const ProfileHubLayout: React.FC = () => {
   const { currentUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const tabs: HubTab[] = [
     {
@@ -197,21 +211,26 @@ export const ProfileHubLayout: React.FC = () => {
   return (
     <HubLayout
       title={t('sidebar.profileAndAttendance')}
-      description="معلوماتك الشخصية وسجل الحضور"
+      description={
+        language === 'fr'
+          ? 'Informations personnelles et suivi de présence'
+          : 'معلوماتك الشخصية وسجل الحضور'
+      }
       icon={User}
       tabs={tabs}
       currentUserRole={currentUser?.role}
       breadcrumb={breadcrumb}
+      compact
     />
   );
 };
 
 /**
- * Hub 5 : الإدارة (Administration - 6 onglets)
+ * Hub 5 : الإدارة (Administration - 5 onglets)
  */
 export const AdminHubLayout: React.FC = () => {
   const { currentUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const tabs: HubTab[] = [
     {
@@ -236,12 +255,6 @@ export const AdminHubLayout: React.FC = () => {
       allowedRoles: ['Admin', 'Director'],
     },
     {
-      to: '/dashboard/admin/organization-chart',
-      label: t('sidebar.organizationChart'),
-      icon: Network,
-      color: 'text-emerald-500',
-    },
-    {
       to: '/dashboard/admin/settings',
       label: t('sidebar.settings'),
       icon: Settings,
@@ -264,11 +277,16 @@ export const AdminHubLayout: React.FC = () => {
   return (
     <HubLayout
       title={t('sidebar.administration')}
-      description="إدارة النظام والمستخدمين والإعدادات"
+      description={
+        language === 'fr'
+          ? 'Administration du système, utilisateurs et paramètres'
+          : 'إدارة النظام والمستخدمين والإعدادات'
+      }
       icon={Building2}
       tabs={tabs}
       currentUserRole={currentUser?.role}
       breadcrumb={breadcrumb}
+      compact
     />
   );
 };
