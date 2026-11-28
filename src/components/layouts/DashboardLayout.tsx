@@ -8,7 +8,6 @@ import DepartmentSwitcher from '../department/DepartmentSwitcher';
 import NotificationSystem from '../notifications/NotificationSystem';
 import ResponsibleNotificationOverlay from '../notifications/ResponsibleNotificationOverlay';
 import { FloatingAIChat } from '@/components/ai/FloatingAIChat';
-import { Department } from '@/types';
 import { useDirection } from '@/i18n/useDirection';
 
 const DashboardLayout = () => {
@@ -23,22 +22,6 @@ const DashboardLayout = () => {
     }
     window.scrollTo(0, 0);
   }, [location.pathname]);
-
-  const getActiveDepartmentName = (): string => {
-    if (!currentUser?.activeDepartment) return 'None';
-    
-    // If activeDepartment is a populated object
-    if (typeof currentUser.activeDepartment === 'object' && 'name' in currentUser.activeDepartment) {
-      return (currentUser.activeDepartment as Department).name;
-    }
-    
-    // If activeDepartment is just an ObjectId string
-    if (typeof currentUser.activeDepartment === 'string') {
-      return (currentUser.activeDepartment as string).slice(-4); // Show last 4 chars
-    }
-    
-    return 'None';
-  };
 
   return (
     <SidebarProvider>
@@ -57,14 +40,6 @@ const DashboardLayout = () => {
              currentUser?.departments?.length > 1 && (
               <div className="container-responsive py-2 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-sm flex-shrink-0 print:hidden">
                 <DepartmentSwitcher />
-              </div>
-            )}
-            
-            {/* Development Debug Info - Responsive */}
-            {process.env.NODE_ENV === 'development' && currentUser?.role === 'AdminDepartment' && (
-              <div className="hidden container-responsive py-1 bg-yellow-50 border-b text-responsive-xs text-yellow-800 flex-shrink-0">
-                Debug: Active Department: {getActiveDepartmentName()} | 
-                Total Departments: {currentUser.departments?.length || 0}
               </div>
             )}
             

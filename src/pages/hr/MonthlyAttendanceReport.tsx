@@ -79,6 +79,7 @@ export const MonthlyAttendanceReport: React.FC = () => {
 
   const {
     isFullMultiDeptRole,
+    isRHManager,
     allowAllOption,
     userDeptId,
     visibleDepartments,
@@ -87,6 +88,49 @@ export const MonthlyAttendanceReport: React.FC = () => {
     () => resolveFrontendAttendanceScope(currentUser, departments, orgSettings),
     [currentUser, departments, orgSettings]
   );
+
+  const scopedDepartmentLabel = useMemo(() => {
+    if (allowAllOption) return undefined;
+    const selectedObj = visibleDepartments.find(
+      (d) => String(d._id) === String(selectedDepartment)
+    );
+    if (selectedObj?.name) return selectedObj.name;
+    if (visibleDepartments.length > 0) {
+      return visibleDepartments.map((d) => d.name).join(' + ');
+    }
+    const activeDeptName =
+      typeof currentUser?.activeDepartment === 'object'
+        ? (currentUser.activeDepartment as { name?: string })?.name
+        : undefined;
+    if (activeDeptName) return activeDeptName;
+    if (isRHManager) {
+      return isAr
+        ? 'الموارد البشرية (RH) + مكتب المدير ومكتب الضبط'
+        : 'RH + Bureau Directeur & BO';
+    }
+    return isAr ? 'القسم المخصص' : 'Département assigné';
+  }, [allowAllOption, visibleDepartments, selectedDepartment, currentUser, isRHManager, isAr]);
+
+  const scopedReportData = useMemo(() => {
+    if (!reportData) return null;
+    if (allowAllOption || visibleDepartments.length === 0) return reportData;
+    const allowedIds = new Set(visibleDepartments.map((d) => String(d._id)));
+    const filteredRecords = reportData.records.filter((rec) => {
+      const dept = rec.personnel.activeDepartment;
+      const deptId =
+        dept && typeof dept === 'object'
+          ? String(dept._id)
+          : dept
+          ? String(dept)
+          : null;
+      return deptId ? allowedIds.has(deptId) : false;
+    });
+    return {
+      ...reportData,
+      records: filteredRecords,
+      totalPersonnel: filteredRecords.length,
+    };
+  }, [reportData, allowAllOption, visibleDepartments]);
 
   // Activer la classe CSS d'impression A4 paysage sur body uniquement sur cette page
   useEffect(() => {
@@ -204,7 +248,7 @@ export const MonthlyAttendanceReport: React.FC = () => {
   return (
     <div className="space-y-5 pb-10 text-start" dir={dir}>
       {/* En-tête de contrôle (masqué à l'impression) */}
-      <div className="no-print bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 space-y-4 shadow-sm">
+      <div className="no-print print:hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg p-5 space-y-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-[#2c5282] dark:bg-sky-700 text-white rounded-lg shadow-sm">
@@ -355,15 +399,19 @@ export const MonthlyAttendanceReport: React.FC = () => {
       </div>
 
       {/* Contenu généré */}
-      {loading && !reportData ? (
-        <div className="no-print bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg py-20 text-center space-y-3 shadow-sm">
+      {loading && !scopedReportData ? (
+        <div className="no-print print:hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg py-20 text-center space-y-3 shadow-sm">
           <Loader2 className="h-8 w-8 animate-spin text-[#2c5282] dark:text-sky-400 mx-auto" />
           <p className="text-sm text-slate-700 dark:text-slate-300">
             {isAr ? 'جاري تحميل بيانات الحضور الشهري...' : 'Chargement de la fiche mensuelle...'}
           </p>
         </div>
-      ) : reportData ? (
-        <PrintableAttendanceSheet reportData={reportData} language={language} />
+      ) : scopedReportData ? (
+        <PrintableAttendanceSheet
+          reportData={scopedReportData}
+          language={language}
+          scopedDepartmentLabel={scopedDepartmentLabel}
+        />
       ) : null}
     </div>
   );

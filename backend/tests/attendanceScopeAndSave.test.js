@@ -155,7 +155,13 @@ test('Attendance Scope & Save Behavior', async (t) => {
         nomAdministration: 'Admin Test',
       });
 
-    Department.find = () => createChainableQuery(ALL_DEPARTMENTS);
+    Department.find = (filter) => {
+      if (filter && filter._id && Array.isArray(filter._id.$in)) {
+        const ids = filter._id.$in.map(String);
+        return createChainableQuery(ALL_DEPARTMENTS.filter((d) => ids.includes(String(d._id))));
+      }
+      return createChainableQuery(ALL_DEPARTMENTS);
+    };
     Department.findById = (id) =>
       createChainableQuery(ALL_DEPARTMENTS.find((d) => String(d._id) === String(id)) || null);
 
@@ -285,6 +291,8 @@ test('Attendance Scope & Save Behavior', async (t) => {
     const ids = resAll.body.data.records.map((r) => r.personnel._id);
     assert.ok(!ids.includes(AGENT_LABO_ID));
     assert.equal(ids.length, 3);
+    assert.equal(resAll.body.data.totalPersonnel, 3);
+    assert.equal(resAll.body.data.department.name, "RH + Bureau Directeur + Bureau d'Ordre");
 
     const reqLabo = {
       user: { _id: ACTOR_ID, role: 'AdminDepartment', activeDepartment: RH_DEPT_ID },

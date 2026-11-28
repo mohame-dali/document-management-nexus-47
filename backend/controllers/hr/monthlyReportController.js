@@ -92,7 +92,7 @@ const getMonthlyAttendanceSheet = async (req, res, next) => {
     const start = new Date(Date.UTC(targetYear, targetMonth - 1, 1, 0, 0, 0, 0));
     const end = new Date(Date.UTC(targetYear, targetMonth, 0, 23, 59, 59, 999));
 
-    const [personnels, departmentInfo, orgSettings, leaveReasons, presenceSettings] = await Promise.all([
+    const [personnels, departmentInfo, scopedDepts, orgSettings, leaveReasons, presenceSettings] = await Promise.all([
       Personnel.find(personnelFilter)
         .select('nom prenom cin poste posteActuel numeroUnite numeroArmee activeDepartment statut')
         .populate('activeDepartment', 'name')
@@ -101,6 +101,9 @@ const getMonthlyAttendanceSheet = async (req, res, next) => {
       effectiveDepartmentId
         ? Department.findById(effectiveDepartmentId).select('name').lean()
         : Promise.resolve(null),
+      !effectiveDepartmentId && !scope.isUnrestricted && scope.allowedDepartmentIds.length > 0
+        ? Department.find({ _id: { $in: scope.allowedDepartmentIds } }).select('_id name').lean()
+        : Promise.resolve([]),
       OrganizationSettings.findOne().select('nomAdministration logoAdministration').lean(),
       LeaveReason.find({ isActive: true }).sort({ order: 1 }).lean(),
       PresenceSettings.findOne({ annee: targetYear }).lean()
@@ -219,15 +222,25 @@ const getMonthlyAttendanceSheet = async (req, res, next) => {
       };
     });
 
+    const orderedScopedDepts = [...scopedDepts].sort((a, b) => {
+      if (scope.userDeptId && String(a._id) === String(scope.userDeptId)) return -1;
+      if (scope.userDeptId && String(b._id) === String(scope.userDeptId)) return 1;
+      return 0;
+    });
+
+    const resolvedDepartment = departmentInfo
+      ? { _id: departmentInfo._id, name: departmentInfo.name }
+      : orderedScopedDepts.length > 0
+      ? { _id: 'scoped', name: orderedScopedDepts.map((d) => d.name).join(' + ') }
+      : null;
+
     return res.json({
       success: true,
       data: {
         year: targetYear,
         month: targetMonth,
         daysInMonth,
-        department: departmentInfo
-          ? { _id: departmentInfo._id, name: departmentInfo.name }
-          : null,
+        department: resolvedDepartment,
         organization: {
           nomAdministration: orgSettings?.nomAdministration || '',
           logoAdministration: orgSettings?.logoAdministration || ''

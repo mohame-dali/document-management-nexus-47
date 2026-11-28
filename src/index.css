@@ -590,22 +590,9 @@ html.dark *:focus-visible,
     print-color-adjust: exact !important;
   }
 
-  aside,
-  header,
-  [data-floating-ai-chat],
-  [data-responsible-overlay],
-  [data-sonner-toaster],
-  nav[role="tablist"],
-  nav[aria-label="Breadcrumb"],
-  nav[aria-label="Fil d'Ariane"],
-  .no-print,
-  .print\:hidden {
-    display: none !important;
-  }
-
-  .h-screen,
-  .min-h-screen,
-  .overflow-hidden,
+  .h-screen:not(.print\:hidden):not(.no-print):not(aside):not(header),
+  .min-h-screen:not(.print\:hidden):not(.no-print):not(aside):not(header),
+  .overflow-hidden:not(.print\:hidden):not(.no-print):not(aside):not(header),
   main,
   main > div,
   .container-responsive,
@@ -617,6 +604,19 @@ html.dark *:focus-visible,
     max-width: 100% !important;
     overflow: visible !important;
     background: #ffffff !important;
+  }
+
+  aside,
+  header,
+  [data-floating-ai-chat],
+  [data-responsible-overlay],
+  [data-sonner-toaster],
+  nav[role="tablist"],
+  nav[aria-label="Breadcrumb"],
+  nav[aria-label="Fil d'Ariane"],
+  .no-print,
+  .print\:hidden {
+    display: none !important;
   }
 
   table {

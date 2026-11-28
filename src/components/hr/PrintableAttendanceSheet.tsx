@@ -71,6 +71,7 @@ export interface MonthlyAttendanceSheetData {
 interface PrintableAttendanceSheetProps {
   reportData: MonthlyAttendanceSheetData;
   language?: string;
+  scopedDepartmentLabel?: string;
 }
 
 const ARABIC_MONTH_NAMES: Record<number, string> = {
@@ -120,7 +121,9 @@ const DEFAULT_SYMBOL_LEGEND: Array<{ symbol: string; labelAr: string }> = [
 export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> = ({
   reportData,
   language = 'ar',
+  scopedDepartmentLabel,
 }) => {
+  const isAr = language === 'ar';
   const {
     year,
     month,
@@ -184,6 +187,10 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
   const monthNameAr = ARABIC_MONTH_NAMES[month] || String(month);
   const monthNameFr = FRENCH_MONTH_NAMES[month] || String(month);
   const printedDateStr = useMemo(() => formatShortDate(new Date()), []);
+  const displayDepartmentName =
+    department?.name ||
+    scopedDepartmentLabel ||
+    (isAr ? 'جميع الأقسام والمصالح' : 'Tous les départements');
 
   const getCellStyle = (entry: MonthlyDayEntry | undefined, isOutOfMonth: boolean, isNonWorking: boolean) => {
     if (isOutOfMonth) {
@@ -214,18 +221,18 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
   return (
     <div className="space-y-4">
       {/* Barre d'actions écran uniquement (masquée à l'impression) */}
-      <div className="no-print flex flex-wrap items-center justify-between gap-3 bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="no-print print:hidden flex flex-wrap items-center justify-between gap-3 bg-white border border-[#e2e8f0] rounded p-4">
         <div className="text-sm text-[#4a5568]">
           <span className="font-bold text-[#1a202c] tabular-nums">
-            <bdi dir="rtl" className="tabular-nums">{monthNameAr} {year}</bdi>
+            <bdi dir={isAr ? 'rtl' : 'ltr'} className="tabular-nums">
+              {isAr ? `${monthNameAr} ${year}` : `${monthNameFr} ${year}`}
+            </bdi>
           </span>
           <span className="mx-2 text-slate-300">|</span>
-          <span>
-            {department?.name || (language === 'ar' ? 'جميع الأقسام والمصالح' : 'Tous les départements')}
-          </span>
+          <span>{displayDepartmentName}</span>
           <span className="mx-2 text-slate-300">|</span>
           <span>
-            {language === 'ar' ? `عدد الأعوان: ${totalPersonnel}` : `Total agents : ${totalPersonnel}`}
+            {isAr ? `عدد الأعوان: ${totalPersonnel}` : `Total agents : ${totalPersonnel}`}
           </span>
         </div>
 
@@ -235,7 +242,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
           className="bg-[#2c5282] hover:bg-[#1e3a5f] text-white rounded font-medium gap-2 h-10 px-5"
         >
           <Printer className="h-4 w-4" />
-          <span>{language === 'ar' ? 'طباعة / PDF' : 'Imprimer / PDF'}</span>
+          <span>{isAr ? 'طباعة / PDF' : 'Imprimer / PDF'}</span>
         </Button>
       </div>
 
@@ -245,7 +252,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
         className="printable-attendance-sheet bg-white border border-[#cbd5e1] rounded p-4 sm:p-6 text-[#0f172a] shadow-none"
       >
         {/* En-tête administratif type modèle papier */}
-        <div className="grid grid-cols-3 items-start gap-4 border-b-2 border-[#0f172a] pb-3 mb-3">
+        <div className="printable-attendance-header grid grid-cols-3 items-start gap-4 border-b-2 border-[#0f172a] pb-3 mb-3">
           {/* Droite : Administration et Département */}
           <div className="text-right space-y-1 text-xs leading-relaxed">
             <p className="font-bold text-sm text-[#0f172a]">
@@ -254,11 +261,15 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
             <p className="font-semibold text-[#1e293b]">
               القسم / المصلحة :{' '}
               <span className="underline decoration-dotted underline-offset-4">
-                {department?.name || 'جميع الأقسام والمصالح'}
+                {displayDepartmentName}
               </span>
             </p>
             <p className="text-[13px] text-slate-700">
-              المرجع : كشف المواظبة الشهري ({monthNameFr} {year})
+              {isAr ? (
+                `المرجع : كشف المواظبة الشهري - ${monthNameAr} ${year}`
+              ) : (
+                <bdi dir="ltr">{`Réf : Feuille de présence mensuelle - ${monthNameFr} ${year}`}</bdi>
+              )}
             </p>
           </div>
 
@@ -303,13 +314,13 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
 
         {/* Tableau 31 colonnes + identité + totaux + observations */}
         <div className="printable-attendance-scroll overflow-x-auto">
-          <table className="printable-attendance-table text-[11px]">
+          <table className="printable-attendance-table min-w-[920px] print:min-w-0 text-[11px]">
             <thead>
               <tr className="bg-slate-100 text-[#0f172a] font-bold">
-                <th rowSpan={2} className="w-[26px] py-1 px-0.5 text-[10px]">
+                <th rowSpan={2} className="w-[2.4%] py-1 px-0.5 text-[10px]">
                   ر.ت
                 </th>
-                <th rowSpan={2} className="w-[140px] py-1 px-2 text-right text-[11px]">
+                <th rowSpan={2} className="w-[13.5%] py-1 px-1.5 text-right text-[11px]">
                   الاسم واللقب
                   <div className="text-[9px] font-normal text-slate-600">الخطة / ب.ت.و</div>
                 </th>
@@ -319,7 +330,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                 <th colSpan={4} className="py-1 text-[10px] bg-slate-200/70">
                   المجاميع
                 </th>
-                <th rowSpan={2} className="w-[74px] py-1 px-1 text-[10px]">
+                <th rowSpan={2} className="w-[6.65%] py-1 px-1 text-[10px]">
                   ملاحظات
                 </th>
               </tr>
@@ -336,7 +347,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                   return (
                     <th
                       key={day}
-                      className={`w-[22px] py-1 px-0 text-[9px] leading-tight ${
+                      className={`w-[2.15%] py-1 px-0 text-[9px] leading-tight ${
                         isOutOfMonth
                           ? 'bg-slate-200 text-slate-600'
                           : isHoliday
@@ -355,16 +366,16 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                     </th>
                   );
                 })}
-                <th className="w-[28px] py-1 px-0.5 text-[9px] bg-emerald-50/70" title="أيام الحضور">
+                <th className="w-[2.7%] py-1 px-0.5 text-[9px] bg-emerald-50/70" title="أيام الحضور">
                   حضور
                 </th>
-                <th className="w-[26px] py-1 px-0.5 text-[9px] bg-amber-50/70" title="أيام العطل">
+                <th className="w-[2.7%] py-1 px-0.5 text-[9px] bg-amber-50/70" title="أيام العطل">
                   عطل
                 </th>
-                <th className="w-[28px] py-1 px-0.5 text-[9px] bg-sky-50/70" title="مهمة / تكوين / خدمة">
+                <th className="w-[2.7%] py-1 px-0.5 text-[9px] bg-sky-50/70" title="مهمة / تكوين / خدمة">
                   م/ت
                 </th>
-                <th className="w-[28px] py-1 px-0.5 text-[9px] bg-red-50/70" title="الغيابات">
+                <th className="w-[2.7%] py-1 px-0.5 text-[9px] bg-red-50/70" title="الغيابات">
                   غياب
                 </th>
               </tr>
@@ -409,7 +420,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
                         const isNonWorking = isWeekend || isHoliday;
 
                         const tooltip = entry
-                          ? `${entry.statut === 'present' ? 'حاضر (Présent)' : entry.motifLabelAr || entry.motif || 'غائب'}${
+                          ? `${entry.statut === 'present' ? (isAr ? 'حاضر' : 'Présent') : entry.motifLabelAr || entry.motif || (isAr ? 'غائب' : 'Absent')}${
                               entry.heureArrivee ? ` - ${entry.heureArrivee}` : ''
                             }`
                           : undefined;
@@ -455,7 +466,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
         </div>
 
         {/* Légende des symboles + Zone signatures officielle */}
-        <div className="mt-4 pt-3 border-t border-[#cbd5e1] space-y-4">
+        <div className="printable-attendance-footer mt-4 pt-3 border-t border-[#cbd5e1] space-y-4">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#1e293b]">
             <span className="font-bold">دليل الرموز :</span>
             {legendItems.map((item) => (
@@ -474,7 +485,7 @@ export const PrintableAttendanceSheet: React.FC<PrintableAttendanceSheetProps> =
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 pt-2 pb-6 text-xs text-center font-bold text-[#0f172a]">
+          <div className="printable-attendance-signatures grid grid-cols-3 gap-6 pt-2 pb-6 text-xs text-center font-bold text-[#0f172a]">
             <div>
               <p className="mb-10">رئيس القسم / المصلحة</p>
               <p className="text-xs font-medium text-slate-700">الإمضاء والختم</p>

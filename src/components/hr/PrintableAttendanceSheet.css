@@ -1,6 +1,6 @@
 @page {
   size: A4 landscape;
-  margin: 7mm 8mm;
+  margin: 10mm;
 }
 
 .printable-attendance-table {
@@ -26,34 +26,23 @@
 }
 
 @media print {
-  .no-print {
-    display: none !important;
-  }
-
+  html,
   body.monthly-attendance-print-active {
     background: #ffffff !important;
+    color: #0f172a !important;
+    width: 100% !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Cacher la Sidebar, le Header, les onglets HubLayout, les overlays et boutons */
-  body.monthly-attendance-print-active aside,
-  body.monthly-attendance-print-active header,
-  body.monthly-attendance-print-active nav[role="tablist"],
-  body.monthly-attendance-print-active [aria-label="Breadcrumb"],
-  body.monthly-attendance-print-active div:has(> div > nav[role="tablist"]),
-  body.monthly-attendance-print-active .fixed,
-  body.monthly-attendance-print-active [data-sonner-toaster],
-  body.monthly-attendance-print-active .no-print {
-    display: none !important;
-  }
-
-  /* Déplier les conteneurs flex/scroll du layout pour impression multi-pages */
-  body.monthly-attendance-print-active .h-screen,
-  body.monthly-attendance-print-active .min-h-screen,
-  body.monthly-attendance-print-active .overflow-hidden,
+  /* Déplier les conteneurs flex/scroll du layout sans jamais réafficher les éléments masqués */
+  body.monthly-attendance-print-active .h-screen:not(.print\:hidden):not(.no-print):not(aside):not(header),
+  body.monthly-attendance-print-active .min-h-screen:not(.print\:hidden):not(.no-print):not(aside):not(header),
+  body.monthly-attendance-print-active .overflow-hidden:not(.print\:hidden):not(.no-print):not(aside):not(header),
   body.monthly-attendance-print-active main,
   body.monthly-attendance-print-active main > div,
   body.monthly-attendance-print-active .container-responsive,
@@ -70,7 +59,23 @@
     background: #ffffff !important;
   }
 
-  /* Forcer la fiche et le tableau à occuper 100% de la page A4 paysage */
+  /* Cacher la Sidebar, le Header, les onglets HubLayout, les overlays et boutons */
+  body.monthly-attendance-print-active aside,
+  body.monthly-attendance-print-active header,
+  body.monthly-attendance-print-active nav[role="tablist"],
+  body.monthly-attendance-print-active [aria-label="Breadcrumb"],
+  body.monthly-attendance-print-active [aria-label="Fil d'Ariane"],
+  body.monthly-attendance-print-active div:has(> div > nav[role="tablist"]),
+  body.monthly-attendance-print-active .fixed,
+  body.monthly-attendance-print-active [data-floating-ai-chat],
+  body.monthly-attendance-print-active [data-responsible-overlay],
+  body.monthly-attendance-print-active [data-sonner-toaster],
+  body.monthly-attendance-print-active .no-print,
+  body.monthly-attendance-print-active .print\:hidden {
+    display: none !important;
+  }
+
+  /* Forcer la fiche et les 31 colonnes + totaux à tenir proprement sur une page A4 paysage */
   body.monthly-attendance-print-active .printable-attendance-sheet {
     width: 100% !important;
     max-width: 100% !important;
@@ -81,6 +86,13 @@
     background: #ffffff !important;
   }
 
+  body.monthly-attendance-print-active .printable-attendance-header {
+    padding-bottom: 6px !important;
+    margin-bottom: 6px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   body.monthly-attendance-print-active .printable-attendance-scroll {
     overflow: visible !important;
     width: 100% !important;
@@ -88,14 +100,32 @@
 
   body.monthly-attendance-print-active .printable-attendance-table {
     width: 100% !important;
+    min-width: 0 !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
 
   body.monthly-attendance-print-active .printable-attendance-table th,
   body.monthly-attendance-print-active .printable-attendance-table td {
     border: 1px solid #0f172a !important;
-    padding: 2px 1px !important;
+    padding: 1.5px 0.5px !important;
+    line-height: 1.15 !important;
+  }
+
+  body.monthly-attendance-print-active .printable-attendance-footer {
+    margin-top: 6px !important;
+    padding-top: 4px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.monthly-attendance-print-active .printable-attendance-signatures {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+  }
+
+  body.monthly-attendance-print-active .printable-attendance-signatures p.mb-10 {
+    margin-bottom: 18px !important;
   }
 }

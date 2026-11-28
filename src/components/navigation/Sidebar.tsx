@@ -347,7 +347,7 @@ const Sidebar = () => {
           <SheetContent
             side={dir === 'rtl' ? 'right' : 'left'}
             dir={dir}
-            className="w-72 sm:max-w-72 p-0 bg-[#1a202c] text-slate-100 border-slate-800 flex flex-col gap-0"
+            className="w-72 sm:max-w-72 p-0 bg-[#1a202c] text-slate-100 border-slate-800 flex flex-col gap-0 print:hidden"
             closeButtonClassName="text-slate-200 hover:text-white hover:bg-[#2d3748] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#FFCB56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a202c]"
           >
             <SheetTitle className="sr-only">{t('sidebar.dmsSystem')}</SheetTitle>
